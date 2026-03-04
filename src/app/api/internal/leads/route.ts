@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ leads: data ?? [], total: count ?? 0 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error) },
       { status: 500 }
     );
   }

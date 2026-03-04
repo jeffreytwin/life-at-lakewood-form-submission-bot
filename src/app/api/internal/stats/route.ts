@@ -5,12 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const [
-      { count: totalLeads },
-      { count: totalAgents },
-      { count: activeAgents },
-      { count: totalLocations },
-    ] = await Promise.all([
+    const results = await Promise.all([
       supabase.from("leads").select("*", { count: "exact", head: true }),
       supabase.from("agents").select("*", { count: "exact", head: true }),
       supabase
@@ -19,6 +14,19 @@ export async function GET() {
         .eq("is_active", true),
       supabase.from("locations").select("*", { count: "exact", head: true }),
     ]);
+
+    // Check if any query failed (indicates DB connection issue)
+    const firstError = results.find((r) => r.error);
+    if (firstError?.error) {
+      throw firstError.error;
+    }
+
+    const [
+      { count: totalLeads },
+      { count: totalAgents },
+      { count: activeAgents },
+      { count: totalLocations },
+    ] = results;
 
     // Count leads by status
     const { data: leads } = await supabase
@@ -60,7 +68,7 @@ export async function GET() {
     return NextResponse.json(
       {
         error: "Failed to fetch stats",
-        details: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error),
       },
       { status: 500 }
     );
