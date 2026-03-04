@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { scoreLocationMatch } from "@/lib/scoring/factors/location-match";
+import { agentMatchesLocation } from "@/lib/scoring/factors/location-match";
 import { scoreCloseRate } from "@/lib/scoring/factors/close-rate";
 import { scoreLeadLoad } from "@/lib/scoring/factors/lead-load";
 import { scoreAvailability } from "@/lib/scoring/factors/availability";
 import { scoreOptimalLoad } from "@/lib/scoring/factors/optimal-load";
 import { parsePriceToMidpoint } from "@/lib/scoring/factors/lead-value";
-import type { Agent, Lead, ScoringWeights } from "@/lib/supabase/types";
+import type { Agent, Lead } from "@/lib/supabase/types";
+import { DEFAULT_SCORING_PRIORITY } from "@/lib/supabase/types";
 import type { ScoringContext } from "@/lib/scoring/types";
 
 function makeAgent(overrides: Partial<Agent> = {}): Agent {
@@ -24,6 +25,7 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
     availability_windows: null,
+    scoring_priority: DEFAULT_SCORING_PRIORITY,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -64,49 +66,46 @@ function makeContext(overrides: Partial<ScoringContext> = {}): ScoringContext {
     lead: makeLead(),
     locationName: "Life At Lakewood",
     currentMonthLeadCounts: new Map(),
-    weights: {
-      id: "w-1",
-      location_match: 25,
-      close_rate: 20,
-      lead_load: 20,
-      lead_value: 15,
-      availability: 10,
-      optimal_load: 10,
-    },
     currentTime: new Date("2026-03-03T14:00:00"),
     ...overrides,
   };
 }
 
-describe("scoreLocationMatch", () => {
-  it("returns 1.0 for matching location specialty", () => {
+describe("agentMatchesLocation (hard filter)", () => {
+  it("returns true for matching location specialty", () => {
     const agent = makeAgent({ location_specialties: ["Lakewood Ranch"] });
     const ctx = makeContext({ locationName: "Life At Lakewood" });
-    expect(scoreLocationMatch(agent, ctx)).toBe(1.0);
+    expect(agentMatchesLocation(agent, ctx)).toBe(true);
   });
 
-  it("returns 0.1 for non-matching location", () => {
+  it("returns false for non-matching location", () => {
     const agent = makeAgent({ location_specialties: ["Wellen Park"] });
     const ctx = makeContext({ locationName: "Life At Lakewood" });
-    expect(scoreLocationMatch(agent, ctx)).toBe(0.1);
+    expect(agentMatchesLocation(agent, ctx)).toBe(false);
   });
 
-  it("returns 0.5 for unknown location", () => {
+  it("returns true when no location info on lead", () => {
     const agent = makeAgent();
     const ctx = makeContext({
       locationName: "",
       lead: makeLead({ village: null }),
     });
-    expect(scoreLocationMatch(agent, ctx)).toBe(0.5);
+    expect(agentMatchesLocation(agent, ctx)).toBe(true);
   });
 
-  it("returns 0.8 for LWR agent on Parrish lead", () => {
+  it("returns true for LWR agent on Parrish lead", () => {
     const agent = makeAgent({ location_specialties: ["Lakewood Ranch"] });
     const ctx = makeContext({
       locationName: "Life At Parrish",
       lead: makeLead({ village: "Parrish" }),
     });
-    expect(scoreLocationMatch(agent, ctx)).toBe(0.8);
+    expect(agentMatchesLocation(agent, ctx)).toBe(true);
+  });
+
+  it("returns true for agents with no specialties", () => {
+    const agent = makeAgent({ location_specialties: [] });
+    const ctx = makeContext({ locationName: "Life At Lakewood" });
+    expect(agentMatchesLocation(agent, ctx)).toBe(true);
   });
 });
 
@@ -124,8 +123,6 @@ describe("scoreCloseRate", () => {
       close_rate_trailing_12m: 0.25,
       close_rate_all_time: 0.20,
     });
-    // Blended: 0.25 * 0.7 + 0.20 * 0.3 = 0.175 + 0.06 = 0.235
-    // Normalized: 0.235 / 0.30 ≈ 0.783
     const score = scoreCloseRate(agent);
     expect(score).toBeCloseTo(0.783, 2);
   });
@@ -162,7 +159,7 @@ describe("scoreLeadLoad", () => {
 
   it("returns intermediate value in between", () => {
     const agent = makeAgent({ monthly_lead_goal_min: 30, monthly_lead_goal_max: 40 });
-    const counts = new Map([["agent-1", 30]]); // Between 15 (full) and 48 (zero)
+    const counts = new Map([["agent-1", 30]]);
     const ctx = makeContext({ currentMonthLeadCounts: counts });
     const score = scoreLeadLoad(agent, ctx);
     expect(score).toBeGreaterThan(0);
@@ -178,7 +175,7 @@ describe("scoreAvailability", () => {
   });
 
   it("returns 1.0 when within availability window", () => {
-    const tuesday = new Date("2026-03-03T14:00:00"); // Tuesday = day 2
+    const tuesday = new Date("2026-03-03T14:00:00");
     const agent = makeAgent({
       availability_windows: [{ day: 2, start: "08:00", end: "19:00" }],
     });
@@ -187,7 +184,7 @@ describe("scoreAvailability", () => {
   });
 
   it("returns 0.0 when outside availability window", () => {
-    const tuesday = new Date("2026-03-03T21:00:00"); // 9 PM
+    const tuesday = new Date("2026-03-03T21:00:00");
     const agent = makeAgent({
       availability_windows: [{ day: 2, start: "08:00", end: "19:00" }],
     });
@@ -208,11 +205,9 @@ describe("scoreOptimalLoad", () => {
       optimal_load_factor: 0.7,
       monthly_lead_goal_max: 40,
     });
-    // Adjusted cap: 40 * 0.7 = 28
     const counts = new Map([["agent-1", 14]]);
     const ctx = makeContext({ currentMonthLeadCounts: counts });
     const score = scoreOptimalLoad(agent, ctx);
-    // (28 - 14) / 28 = 0.5
     expect(score).toBe(0.5);
   });
 
@@ -221,7 +216,7 @@ describe("scoreOptimalLoad", () => {
       optimal_load_factor: 0.7,
       monthly_lead_goal_max: 40,
     });
-    const counts = new Map([["agent-1", 28]]); // At cap
+    const counts = new Map([["agent-1", 28]]);
     const ctx = makeContext({ currentMonthLeadCounts: counts });
     expect(scoreOptimalLoad(agent, ctx)).toBe(0.0);
   });

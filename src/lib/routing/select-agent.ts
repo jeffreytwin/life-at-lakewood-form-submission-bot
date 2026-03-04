@@ -2,7 +2,7 @@ import { getActiveAgents } from "@/lib/supabase/queries/agents";
 import { getDeclinedAgentIdsForLead } from "@/lib/supabase/queries/routing-attempts";
 import { supabase } from "@/lib/supabase/client";
 import { selectBestAgent } from "@/lib/scoring/engine";
-import type { Lead, ScoringWeights } from "@/lib/supabase/types";
+import type { Lead } from "@/lib/supabase/types";
 import type { AgentScore } from "@/lib/scoring/types";
 
 async function getCurrentMonthLeadCounts(): Promise<Map<string, number>> {
@@ -21,33 +21,24 @@ async function getCurrentMonthLeadCounts(): Promise<Map<string, number>> {
   return counts;
 }
 
-async function getScoringWeights(): Promise<ScoringWeights> {
-  const { data, error } = await supabase
-    .from("scoring_weights")
-    .select("*")
-    .limit(1)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
 export async function selectNextAgent(
   lead: Lead,
   locationName: string
 ): Promise<AgentScore | null> {
-  const [agents, excludedIds, leadCounts, weights] = await Promise.all([
+  const [agents, excludedIds, leadCounts] = await Promise.all([
     getActiveAgents(),
     getDeclinedAgentIdsForLead(lead.id),
     getCurrentMonthLeadCounts(),
-    getScoringWeights(),
   ]);
 
-  return selectBestAgent(agents, {
-    lead,
-    locationName,
-    currentMonthLeadCounts: leadCounts,
-    weights,
-    currentTime: new Date(),
-  }, excludedIds);
+  return selectBestAgent(
+    agents,
+    {
+      lead,
+      locationName,
+      currentMonthLeadCounts: leadCounts,
+      currentTime: new Date(),
+    },
+    excludedIds
+  );
 }
