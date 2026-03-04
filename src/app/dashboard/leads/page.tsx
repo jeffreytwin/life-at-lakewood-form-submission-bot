@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 interface Lead {
   id: string;
@@ -131,9 +131,8 @@ export default function LeadsPage() {
               </thead>
               <tbody>
                 {leads.map((lead) => (
-                  <>
+                  <Fragment key={lead.id}>
                     <tr
-                      key={lead.id}
                       onClick={() =>
                         setExpandedLead(
                           expandedLead === lead.id ? null : lead.id
@@ -277,7 +276,7 @@ export default function LeadsPage() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
