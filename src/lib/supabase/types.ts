@@ -63,9 +63,28 @@ export interface Agent {
   monthly_lead_goal_max: number;
   optimal_load_factor: number;
   availability_windows: AvailabilityWindow[] | null;
+  scoring_priority: ScoringFactorKey[];
   created_at: string;
   updated_at: string;
 }
+
+export type ScoringFactorKey =
+  | "close_rate"
+  | "lead_load"
+  | "lead_value"
+  | "availability"
+  | "optimal_load";
+
+export const DEFAULT_SCORING_PRIORITY: ScoringFactorKey[] = [
+  "close_rate",
+  "lead_load",
+  "lead_value",
+  "availability",
+  "optimal_load",
+];
+
+/** Weights assigned by rank position (index 0 = rank 1 = highest priority) */
+export const RANK_WEIGHTS = [30, 25, 20, 15, 10] as const;
 
 export interface AvailabilityWindow {
   day: number; // 0 = Sunday, 6 = Saturday

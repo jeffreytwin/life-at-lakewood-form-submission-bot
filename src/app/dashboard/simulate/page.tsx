@@ -339,8 +339,8 @@ export default function SimulatePage() {
                   frontlines instead
                 </li>
                 <li>
-                  <strong>Score agents</strong> - 6 weighted factors determine
-                  best match
+                  <strong>Score agents</strong> - Location filter + 5 ranked
+                  factors determine best match
                 </li>
                 <li>
                   <strong>Send SMS</strong> - Notify selected agent with lead

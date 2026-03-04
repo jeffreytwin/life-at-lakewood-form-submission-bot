@@ -1,35 +1,46 @@
 import type { Agent } from "@/lib/supabase/types";
 import type { ScoringContext } from "../types";
 
-export function scoreLocationMatch(agent: Agent, context: ScoringContext): number {
+/**
+ * Hard filter: returns true if the agent's location specialties
+ * match the lead's location or village. Agents without any
+ * specialties are considered a match (they take all locations).
+ */
+export function agentMatchesLocation(
+  agent: Agent,
+  context: ScoringContext
+): boolean {
+  const specialties = agent.location_specialties;
+
+  // Agents with no specialties match everything
+  if (!specialties || specialties.length === 0) return true;
+
   const leadLocation = context.locationName?.toLowerCase() ?? "";
   const leadVillage = context.lead.village?.toLowerCase() ?? "";
 
-  if (!leadLocation && !leadVillage) {
-    return 0.5; // Unknown location
-  }
+  // If we have no location info at all, allow the agent
+  if (!leadLocation && !leadVillage) return true;
 
-  const specialties = agent.location_specialties.map((s) => s.toLowerCase());
+  const lowerSpecialties = specialties.map((s) => s.toLowerCase());
 
-  // Check if agent specializes in the lead's location or village
-  for (const specialty of specialties) {
+  for (const specialty of lowerSpecialties) {
     if (
       leadLocation.includes(specialty) ||
       specialty.includes(leadLocation) ||
       leadVillage.includes(specialty) ||
       specialty.includes(leadVillage)
     ) {
-      return 1.0;
+      return true;
     }
   }
 
   // LWR agents can also take Parrish leads
   if (
     leadLocation.includes("parrish") &&
-    specialties.some((s) => s.includes("lakewood"))
+    lowerSpecialties.some((s) => s.includes("lakewood"))
   ) {
-    return 0.8;
+    return true;
   }
 
-  return 0.1; // No match
+  return false;
 }

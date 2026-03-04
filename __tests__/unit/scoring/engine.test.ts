@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { scoreAgent, selectBestAgent } from "@/lib/scoring/engine";
-import type { Agent, ScoringWeights } from "@/lib/supabase/types";
+import type { Agent } from "@/lib/supabase/types";
+import { DEFAULT_SCORING_PRIORITY } from "@/lib/supabase/types";
 import type { ScoringContext } from "@/lib/scoring/types";
 
 function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
@@ -19,6 +20,7 @@ function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
     availability_windows: null,
+    scoring_priority: DEFAULT_SCORING_PRIORITY,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -53,15 +55,6 @@ const defaultContext: ScoringContext = {
   },
   locationName: "Life At Lakewood",
   currentMonthLeadCounts: new Map(),
-  weights: {
-    id: "w-1",
-    location_match: 25,
-    close_rate: 20,
-    lead_load: 20,
-    lead_value: 15,
-    availability: 10,
-    optimal_load: 10,
-  },
   currentTime: new Date("2026-03-03T14:00:00"),
 };
 
@@ -72,7 +65,6 @@ describe("scoreAgent", () => {
 
     expect(result.agentId).toBe("a1");
     expect(result.totalScore).toBeGreaterThan(0);
-    expect(result.factors).toHaveProperty("location_match");
     expect(result.factors).toHaveProperty("close_rate");
     expect(result.factors).toHaveProperty("lead_load");
     expect(result.factors).toHaveProperty("lead_value");
@@ -113,7 +105,7 @@ describe("selectBestAgent", () => {
     expect(result).toBeNull();
   });
 
-  it("favors agents matching location over non-matching", () => {
+  it("excludes agents that don't match location (hard filter)", () => {
     const agents = [
       makeAgent("wp", { location_specialties: ["Wellen Park"] }),
       makeAgent("lwr", { location_specialties: ["Lakewood Ranch"] }),
@@ -121,5 +113,14 @@ describe("selectBestAgent", () => {
 
     const result = selectBestAgent(agents, defaultContext);
     expect(result?.agentId).toBe("lwr");
+  });
+
+  it("returns null when no agents match location", () => {
+    const agents = [
+      makeAgent("wp", { location_specialties: ["Wellen Park"] }),
+    ];
+
+    const result = selectBestAgent(agents, defaultContext);
+    expect(result).toBeNull();
   });
 });

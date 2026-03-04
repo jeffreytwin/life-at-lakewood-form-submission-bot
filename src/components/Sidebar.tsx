@@ -8,8 +8,7 @@ const navItems = [
   { href: "/dashboard/leads", label: "Leads", icon: "\u2709" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
   { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
-  { href: "/dashboard/weights", label: "Scoring Weights", icon: "\u2696" },
-  { href: "/dashboard/audit", label: "Audit Log", icon: "\u2630" },
+{ href: "/dashboard/audit", label: "Audit Log", icon: "\u2630" },
   { href: "/dashboard/simulate", label: "Test Lead", icon: "\u26A1" },
 ];
 

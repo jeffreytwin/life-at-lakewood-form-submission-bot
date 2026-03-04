@@ -1,10 +1,9 @@
-import type { Agent, Lead, ScoringWeights } from "@/lib/supabase/types";
+import type { Agent, Lead } from "@/lib/supabase/types";
 
 export interface ScoringContext {
   lead: Lead;
   locationName: string;
   currentMonthLeadCounts: Map<string, number>; // agentId -> count
-  weights: ScoringWeights;
   currentTime: Date;
 }
 
@@ -13,7 +12,6 @@ export interface AgentScore {
   agentName: string;
   totalScore: number;
   factors: {
-    location_match: number;
     close_rate: number;
     lead_load: number;
     lead_value: number;
