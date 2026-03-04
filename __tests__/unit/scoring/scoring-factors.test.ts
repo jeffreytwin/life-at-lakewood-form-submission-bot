@@ -1,10 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { agentMatchesLocation } from "@/lib/scoring/factors/location-match";
+import { agentMatchesPriceRange, parsePriceToMidpoint, priceToBucket } from "@/lib/scoring/factors/price-range";
 import { scoreCloseRate } from "@/lib/scoring/factors/close-rate";
 import { scoreLeadLoad } from "@/lib/scoring/factors/lead-load";
 import { scoreAvailability } from "@/lib/scoring/factors/availability";
-import { scoreOptimalLoad } from "@/lib/scoring/factors/optimal-load";
-import { parsePriceToMidpoint } from "@/lib/scoring/factors/lead-value";
 import type { Agent, Lead } from "@/lib/supabase/types";
 import { DEFAULT_SCORING_PRIORITY } from "@/lib/supabase/types";
 import type { ScoringContext } from "@/lib/scoring/types";
@@ -25,7 +24,8 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
     availability_windows: null,
-    scoring_priority: DEFAULT_SCORING_PRIORITY,
+    scoring_priority: [...DEFAULT_SCORING_PRIORITY],
+    price_ranges: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -106,6 +106,70 @@ describe("agentMatchesLocation (hard filter)", () => {
     const agent = makeAgent({ location_specialties: [] });
     const ctx = makeContext({ locationName: "Life At Lakewood" });
     expect(agentMatchesLocation(agent, ctx)).toBe(true);
+  });
+});
+
+describe("agentMatchesPriceRange (hard filter)", () => {
+  it("returns true when agent has no price ranges (accepts all)", () => {
+    const agent = makeAgent({ price_ranges: null });
+    const ctx = makeContext();
+    expect(agentMatchesPriceRange(agent, ctx)).toBe(true);
+  });
+
+  it("returns true when agent's price range matches lead price", () => {
+    const agent = makeAgent({ price_ranges: ["500k_to_1m"] });
+    const ctx = makeContext({ lead: makeLead({ price: "$550,000" }) });
+    expect(agentMatchesPriceRange(agent, ctx)).toBe(true);
+  });
+
+  it("returns false when agent's price range doesn't match", () => {
+    const agent = makeAgent({ price_ranges: ["under_500k"] });
+    const ctx = makeContext({ lead: makeLead({ price: "$750,000" }) });
+    expect(agentMatchesPriceRange(agent, ctx)).toBe(false);
+  });
+
+  it("returns true when lead has no price", () => {
+    const agent = makeAgent({ price_ranges: ["under_500k"] });
+    const ctx = makeContext({ lead: makeLead({ price: null }) });
+    expect(agentMatchesPriceRange(agent, ctx)).toBe(true);
+  });
+
+  it("returns true for empty price_ranges array", () => {
+    const agent = makeAgent({ price_ranges: [] });
+    const ctx = makeContext();
+    expect(agentMatchesPriceRange(agent, ctx)).toBe(true);
+  });
+});
+
+describe("parsePriceToMidpoint", () => {
+  it("parses range format", () => {
+    expect(parsePriceToMidpoint("$500,000 - $600,000")).toBe(550_000);
+  });
+
+  it("parses single value", () => {
+    expect(parsePriceToMidpoint("$450,000")).toBe(450_000);
+  });
+
+  it("returns null for no numbers", () => {
+    expect(parsePriceToMidpoint("Contact for price")).toBeNull();
+  });
+});
+
+describe("priceToBucket", () => {
+  it("maps under $500k correctly", () => {
+    expect(priceToBucket(350_000)).toBe("under_500k");
+    expect(priceToBucket(499_999)).toBe("under_500k");
+  });
+
+  it("maps $500k-$1M correctly", () => {
+    expect(priceToBucket(500_000)).toBe("500k_to_1m");
+    expect(priceToBucket(750_000)).toBe("500k_to_1m");
+    expect(priceToBucket(1_000_000)).toBe("500k_to_1m");
+  });
+
+  it("maps $1M+ correctly", () => {
+    expect(priceToBucket(1_000_001)).toBe("1m_plus");
+    expect(priceToBucket(2_000_000)).toBe("1m_plus");
   });
 });
 
@@ -190,48 +254,5 @@ describe("scoreAvailability", () => {
     });
     const ctx = makeContext({ currentTime: tuesday });
     expect(scoreAvailability(agent, ctx)).toBe(0.0);
-  });
-});
-
-describe("scoreOptimalLoad", () => {
-  it("returns 1.0 for normal agents (factor = 1.0)", () => {
-    const agent = makeAgent({ optimal_load_factor: 1.0 });
-    const ctx = makeContext();
-    expect(scoreOptimalLoad(agent, ctx)).toBe(1.0);
-  });
-
-  it("decreases for agents with low optimal load factor", () => {
-    const agent = makeAgent({
-      optimal_load_factor: 0.7,
-      monthly_lead_goal_max: 40,
-    });
-    const counts = new Map([["agent-1", 14]]);
-    const ctx = makeContext({ currentMonthLeadCounts: counts });
-    const score = scoreOptimalLoad(agent, ctx);
-    expect(score).toBe(0.5);
-  });
-
-  it("returns 0.0 when at adjusted cap", () => {
-    const agent = makeAgent({
-      optimal_load_factor: 0.7,
-      monthly_lead_goal_max: 40,
-    });
-    const counts = new Map([["agent-1", 28]]);
-    const ctx = makeContext({ currentMonthLeadCounts: counts });
-    expect(scoreOptimalLoad(agent, ctx)).toBe(0.0);
-  });
-});
-
-describe("parsePriceToMidpoint", () => {
-  it("parses range format", () => {
-    expect(parsePriceToMidpoint("$500,000 - $600,000")).toBe(550_000);
-  });
-
-  it("parses single value", () => {
-    expect(parsePriceToMidpoint("$450,000")).toBe(450_000);
-  });
-
-  it("returns null for no numbers", () => {
-    expect(parsePriceToMidpoint("Contact for price")).toBeNull();
   });
 });

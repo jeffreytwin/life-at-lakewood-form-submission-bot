@@ -20,7 +20,8 @@ function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
     availability_windows: null,
-    scoring_priority: DEFAULT_SCORING_PRIORITY,
+    scoring_priority: [...DEFAULT_SCORING_PRIORITY],
+    price_ranges: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -67,9 +68,7 @@ describe("scoreAgent", () => {
     expect(result.totalScore).toBeGreaterThan(0);
     expect(result.factors).toHaveProperty("close_rate");
     expect(result.factors).toHaveProperty("lead_load");
-    expect(result.factors).toHaveProperty("lead_value");
     expect(result.factors).toHaveProperty("availability");
-    expect(result.factors).toHaveProperty("optimal_load");
   });
 });
 
@@ -122,5 +121,25 @@ describe("selectBestAgent", () => {
 
     const result = selectBestAgent(agents, defaultContext);
     expect(result).toBeNull();
+  });
+
+  it("excludes agents that don't match price range (hard filter)", () => {
+    const agents = [
+      makeAgent("cheap", { price_ranges: ["under_500k"] }),
+      makeAgent("mid", { price_ranges: ["500k_to_1m"] }),
+    ];
+
+    // Lead price is $500,000 which maps to "500k_to_1m"
+    const result = selectBestAgent(agents, defaultContext);
+    expect(result?.agentId).toBe("mid");
+  });
+
+  it("allows agents with null price_ranges (accepts all)", () => {
+    const agents = [
+      makeAgent("any", { price_ranges: null }),
+    ];
+
+    const result = selectBestAgent(agents, defaultContext);
+    expect(result?.agentId).toBe("any");
   });
 });

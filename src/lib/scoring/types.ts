@@ -1,4 +1,4 @@
-import type { Agent, Lead } from "@/lib/supabase/types";
+import type { Lead } from "@/lib/supabase/types";
 
 export interface ScoringContext {
   lead: Lead;
@@ -14,10 +14,8 @@ export interface AgentScore {
   factors: {
     close_rate: number;
     lead_load: number;
-    lead_value: number;
     availability: number;
-    optimal_load: number;
   };
 }
 
-export type ScoringFactor = (agent: Agent, context: ScoringContext) => number;
+export type ScoringFactor = (agent: import("@/lib/supabase/types").Agent, context: ScoringContext) => number;

@@ -48,6 +48,24 @@ export interface Location {
   created_at: string;
 }
 
+/** Predefined price range buckets for agent eligibility */
+export type PriceRange =
+  | "under_500k"
+  | "500k_to_1m"
+  | "1m_plus";
+
+export const PRICE_RANGE_LABELS: Record<PriceRange, string> = {
+  under_500k: "Under $500K",
+  "500k_to_1m": "$500K - $1M",
+  "1m_plus": "$1M+",
+};
+
+export const ALL_PRICE_RANGES: PriceRange[] = [
+  "under_500k",
+  "500k_to_1m",
+  "1m_plus",
+];
+
 export interface Agent {
   id: string;
   salesforce_user_id: string | null;
@@ -64,6 +82,7 @@ export interface Agent {
   optimal_load_factor: number;
   availability_windows: AvailabilityWindow[] | null;
   scoring_priority: ScoringFactorKey[];
+  price_ranges: PriceRange[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,20 +90,16 @@ export interface Agent {
 export type ScoringFactorKey =
   | "close_rate"
   | "lead_load"
-  | "lead_value"
-  | "availability"
-  | "optimal_load";
+  | "availability";
 
 export const DEFAULT_SCORING_PRIORITY: ScoringFactorKey[] = [
   "close_rate",
   "lead_load",
-  "lead_value",
   "availability",
-  "optimal_load",
 ];
 
 /** Weights assigned by rank position (index 0 = rank 1 = highest priority) */
-export const RANK_WEIGHTS = [30, 25, 20, 15, 10] as const;
+export const RANK_WEIGHTS = [50, 30, 20] as const;
 
 export interface AvailabilityWindow {
   day: number; // 0 = Sunday, 6 = Saturday
