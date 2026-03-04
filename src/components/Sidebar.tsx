@@ -9,7 +9,7 @@ const navItems = [
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
   { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
 { href: "/dashboard/audit", label: "Audit Log", icon: "\u2630" },
-  { href: "/dashboard/simulate", label: "Test Lead", icon: "\u26A1" },
+  { href: "/dashboard/simulate", label: "Simulation", icon: "\u26A1" },
 ];
 
 export default function Sidebar() {
