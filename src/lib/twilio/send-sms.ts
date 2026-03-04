@@ -1,4 +1,4 @@
-import { twilioClient, twilioPhoneNumber } from "./client";
+import { getTwilioClient, getTwilioPhoneNumber } from "./client";
 import { logger } from "@/lib/shared/logger";
 import type { Lead } from "@/lib/supabase/types";
 
@@ -51,9 +51,9 @@ export async function sendLeadNotification(
     "Reply YES to accept or NO to pass.",
   ].join("\n");
 
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: agentPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body,
   });
 
@@ -81,9 +81,9 @@ export async function sendOwnedByNotification(
     `Lead Owner: ${ownerName}`,
   ].join("\n");
 
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: frontlinesPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body,
   });
 
@@ -98,9 +98,9 @@ export async function sendOwnedByNotification(
 }
 
 export async function sendFollowUp(agentPhone: string): Promise<string> {
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: agentPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body: "Following up!",
   });
 
@@ -109,9 +109,9 @@ export async function sendFollowUp(agentPhone: string): Promise<string> {
 }
 
 export async function sendDeclineAck(agentPhone: string): Promise<string> {
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: agentPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body: "No worries! We'll catch you on the next one.",
   });
 
@@ -120,9 +120,9 @@ export async function sendDeclineAck(agentPhone: string): Promise<string> {
 }
 
 export async function sendMovedOn(agentPhone: string): Promise<string> {
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: agentPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body: "We've moved on to another agent. We'll catch you on the next one!",
   });
 
@@ -136,9 +136,9 @@ export async function sendAcceptedNotification(
   leadFirstName: string,
   leadLastName: string
 ): Promise<string> {
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: frontlinesPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body: `${agentName} accepted the lead for ${leadFirstName} ${leadLastName}.`,
   });
 
@@ -156,9 +156,9 @@ export async function sendManualFallbackNotification(
   leadFirstName: string,
   leadLastName: string
 ): Promise<string> {
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: frontlinesPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body: `No agent accepted the lead for ${leadFirstName} ${leadLastName}. Manual routing needed.`,
   });
 
@@ -177,9 +177,9 @@ export async function sendUnclearResponseNotification(
   leadFirstName: string,
   leadLastName: string
 ): Promise<string> {
-  const message = await twilioClient.messages.create({
+  const message = await getTwilioClient().messages.create({
     to: frontlinesPhone,
-    from: twilioPhoneNumber,
+    from: getTwilioPhoneNumber(),
     body: `${agentName} replied with an unclear response to the lead for ${leadFirstName} ${leadLastName}: "${responseText}". Please follow up manually.`,
   });
 
