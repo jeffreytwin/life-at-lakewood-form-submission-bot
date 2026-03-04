@@ -14,7 +14,7 @@ export async function GET() {
     return NextResponse.json(data ?? []);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error) },
       { status: 500 }
     );
   }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error) },
       { status: 500 }
     );
   }
@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error) },
       { status: 500 }
     );
   }
