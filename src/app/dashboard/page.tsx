@@ -188,7 +188,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
 
       <div className="card mb-4">
         <div className="card-header">
-          <h3>Lead Distribution This Month (Team)</h3>
+          <h3>Overall Hand Raise Distribution This Month</h3>
           {leadDist && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {leadDist.asOf && (
@@ -224,7 +224,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         ) : leadDist.distribution.length === 0 ? (
           <div className="empty-state" style={{ padding: "32px 20px" }}>
-            <p>No leads this month yet</p>
+            <p>No form submissions this month yet</p>
           </div>
         ) : (
           <LeadDistributionChart data={leadDist.distribution} />
@@ -234,11 +234,11 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
       <div className="grid-2">
         <div className="card">
           <div className="card-header">
-            <h3>Recent Leads</h3>
+            <h3>Recent Form Submissions</h3>
           </div>
           {stats.recentLeads.length === 0 ? (
             <div className="empty-state">
-              <p>No leads yet</p>
+              <p>No form submissions yet</p>
             </div>
           ) : (
             <div className="table-wrapper">
@@ -280,7 +280,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
 
         <div className="card">
           <div className="card-header">
-            <h3>Leads Generated This Year (Team)</h3>
+            <h3>Hand Raises Generated This Year</h3>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {monthlyLeads?.asOf && (
                 <span className="text-muted text-sm">
