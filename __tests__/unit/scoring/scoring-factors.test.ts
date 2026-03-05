@@ -73,7 +73,7 @@ function makeContext(overrides: Partial<ScoringContext> = {}): ScoringContext {
 
 describe("agentMatchesLocation (hard filter)", () => {
   it("returns true for matching location specialty", () => {
-    const agent = makeAgent({ location_specialties: ["Lakewood Ranch"] });
+    const agent = makeAgent({ location_specialties: ["Life At Lakewood"] });
     const ctx = makeContext({ locationName: "Life At Lakewood" });
     expect(agentMatchesLocation(agent, ctx)).toBe(true);
   });
@@ -199,13 +199,14 @@ describe("scoreCloseRate", () => {
     expect(scoreCloseRate(agent)).toBe(0.5);
   });
 
-  it("calculates blended rate correctly", () => {
+  it("calculates normalized rate correctly", () => {
     const agent = makeAgent({
       close_rate_trailing_12m: 0.25,
       close_rate_all_time: 0.20,
     });
     const score = scoreCloseRate(agent);
-    expect(score).toBeCloseTo(0.783, 2);
+    // 0.25 / 0.30 (MAX_EXPECTED_CLOSE_RATE) ≈ 0.833
+    expect(score).toBeCloseTo(0.833, 2);
   });
 
   it("caps at 1.0 for very high close rates", () => {
@@ -224,27 +225,43 @@ describe("scoreLeadLoad", () => {
     expect(scoreLeadLoad(agent, ctx)).toBe(1.0);
   });
 
-  it("returns 1.0 at 50% of min goal", () => {
+  it("returns 0.5 exactly at min goal", () => {
     const agent = makeAgent({ monthly_lead_goal_min: 30, monthly_lead_goal_max: 40 });
-    const counts = new Map([["agent-1", 15]]);
+    const counts = new Map([["agent-1", 30]]);
     const ctx = makeContext({ currentMonthLeadCounts: counts });
-    expect(scoreLeadLoad(agent, ctx)).toBe(1.0);
+    expect(scoreLeadLoad(agent, ctx)).toBeCloseTo(0.5, 5);
   });
 
-  it("returns 0.0 at 120% of max goal", () => {
+  it("returns 0.0 at max goal", () => {
     const agent = makeAgent({ monthly_lead_goal_min: 30, monthly_lead_goal_max: 40 });
-    const counts = new Map([["agent-1", 48]]);
+    const counts = new Map([["agent-1", 40]]);
     const ctx = makeContext({ currentMonthLeadCounts: counts });
     expect(scoreLeadLoad(agent, ctx)).toBe(0.0);
   });
 
-  it("returns intermediate value in between", () => {
+  it("differentiates from the very first lead (no plateau)", () => {
     const agent = makeAgent({ monthly_lead_goal_min: 30, monthly_lead_goal_max: 40 });
-    const counts = new Map([["agent-1", 30]]);
+    const countsZero = new Map<string, number>();
+    const countsOne = new Map([["agent-1", 1]]);
+    const ctx0 = makeContext({ currentMonthLeadCounts: countsZero });
+    const ctx1 = makeContext({ currentMonthLeadCounts: countsOne });
+    expect(scoreLeadLoad(agent, ctx0)).toBeGreaterThan(scoreLeadLoad(agent, ctx1));
+  });
+
+  it("agents below min always score above 0.5", () => {
+    const agent = makeAgent({ monthly_lead_goal_min: 30, monthly_lead_goal_max: 40 });
+    const counts = new Map([["agent-1", 15]]);
+    const ctx = makeContext({ currentMonthLeadCounts: counts });
+    expect(scoreLeadLoad(agent, ctx)).toBeGreaterThan(0.5);
+  });
+
+  it("agents above min but below max score between 0 and 0.5", () => {
+    const agent = makeAgent({ monthly_lead_goal_min: 30, monthly_lead_goal_max: 40 });
+    const counts = new Map([["agent-1", 35]]);
     const ctx = makeContext({ currentMonthLeadCounts: counts });
     const score = scoreLeadLoad(agent, ctx);
     expect(score).toBeGreaterThan(0);
-    expect(score).toBeLessThan(1);
+    expect(score).toBeLessThan(0.5);
   });
 });
 

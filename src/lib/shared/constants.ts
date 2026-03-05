@@ -6,10 +6,6 @@ export const MAX_ESCALATION_ATTEMPTS = 5;
 export const DEFAULT_CLOSE_RATE = 0.5; // For agents with no data
 export const MAX_EXPECTED_CLOSE_RATE = 0.30; // Normalization ceiling
 
-// Lead load scoring thresholds
-export const LEAD_LOAD_FULL_SCORE_PCT = 0.5; // 1.0 score at 50% of min goal
-export const LEAD_LOAD_ZERO_SCORE_PCT = 1.2; // 0.0 score at 120% of max goal
-
 // Location specialty bonus: multiplier for agents with a specific area match
 // vs generalists (no specialties = match all). 1.15 = 15% boost for specialists.
 export const SPECIALTY_BONUS_MULTIPLIER = 1.15;
