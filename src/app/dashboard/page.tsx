@@ -172,11 +172,11 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           <div className="stat-sub">{stats.totalAgents} total</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Locations</div>
+          <div className="stat-label">Active Locations</div>
           <div className="stat-value">{stats.totalLocations}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Accepted</div>
+          <div className="stat-label">Accepted Form Submissions</div>
           <div className="stat-value" style={{ color: "var(--success)" }}>
             {stats.statusCounts.accepted ?? 0}
           </div>
