@@ -5,8 +5,6 @@ export const MAX_ESCALATION_ATTEMPTS = 5;
 // Scoring defaults
 export const DEFAULT_CLOSE_RATE = 0.5; // For agents with no data
 export const MAX_EXPECTED_CLOSE_RATE = 0.30; // Normalization ceiling
-export const CLOSE_RATE_TRAILING_WEIGHT = 0.7;
-export const CLOSE_RATE_ALLTIME_WEIGHT = 0.3;
 
 // Lead load scoring thresholds
 export const LEAD_LOAD_FULL_SCORE_PCT = 0.5; // 1.0 score at 50% of min goal

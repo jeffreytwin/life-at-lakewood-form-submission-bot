@@ -67,8 +67,14 @@ export function scoreAgent(
   const w = weights ?? DEFAULT_GLOBAL_WEIGHTS;
   const total = w.close_rate + w.lead_load;
 
-  // Normalize weights so they sum to 1.0
+  // Normalize weights, then apply power curve (^1.5) to amplify
+  // differentiation: pushing a weight higher has more-than-proportional effect.
   const norm = total > 0 ? total : 1;
+  const rawCR = w.close_rate / norm;
+  const rawLL = w.lead_load / norm;
+  const ampCR = Math.pow(rawCR, 1.5);
+  const ampLL = Math.pow(rawLL, 1.5);
+  const ampNorm = ampCR + ampLL > 0 ? ampCR + ampLL : 1;
 
   const factors = {
     close_rate: scoreCloseRate(agent),
@@ -76,8 +82,8 @@ export function scoreAgent(
   };
 
   const baseScore =
-    factors.close_rate * (w.close_rate / norm) +
-    factors.lead_load * (w.lead_load / norm);
+    factors.close_rate * (ampCR / ampNorm) +
+    factors.lead_load * (ampLL / ampNorm);
 
   // Apply specialty bonus and monthly over-cap penalty
   const specBonus = specialtyMultiplier(agent, context);

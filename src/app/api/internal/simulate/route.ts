@@ -209,9 +209,9 @@ export async function POST(request: NextRequest) {
           const price = selectedPrices[Math.floor(Math.random() * selectedPrices.length)];
 
           const matchedLocation = locationsList.find(
-            (l) =>
-              l.name.toLowerCase().includes(loc.toLowerCase()) ||
-              loc.toLowerCase().includes(l.slug.toLowerCase())
+            (l) => l.name.toLowerCase() === loc.toLowerCase()
+          ) ?? locationsList.find(
+            (l) => l.slug.toLowerCase() === loc.toLowerCase()
           );
           const locationName = matchedLocation?.name ?? loc;
 
@@ -413,9 +413,9 @@ export async function POST(request: NextRequest) {
       const input = leads[i];
 
       const matchedLocation = locationsList.find(
-        (loc) =>
-          loc.name.toLowerCase().includes(input.location.toLowerCase()) ||
-          input.location.toLowerCase().includes(loc.slug.toLowerCase())
+        (loc) => loc.name.toLowerCase() === input.location.toLowerCase()
+      ) ?? locationsList.find(
+        (loc) => loc.slug.toLowerCase() === input.location.toLowerCase()
       );
       const locationName = matchedLocation?.name ?? input.location;
 

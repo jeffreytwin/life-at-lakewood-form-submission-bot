@@ -334,12 +334,13 @@ export default function SimulatePage() {
                   type="number"
                   min={1}
                   max={500}
-                  value={bulkCount}
+                  value={bulkCount || ""}
                   onChange={(e) =>
                     setBulkCount(
-                      Math.min(500, Math.max(1, parseInt(e.target.value) || 1))
+                      e.target.value === "" ? 1 : Math.min(500, Math.max(1, parseInt(e.target.value, 10)))
                     )
                   }
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
               <div className="form-group">
@@ -376,12 +377,13 @@ export default function SimulatePage() {
                   type="number"
                   min={1}
                   max={50}
-                  value={leadsPerDay}
+                  value={leadsPerDay || ""}
                   onChange={(e) =>
                     setLeadsPerDay(
-                      Math.min(50, Math.max(1, parseInt(e.target.value) || 1))
+                      e.target.value === "" ? 1 : Math.min(50, Math.max(1, parseInt(e.target.value, 10)))
                     )
                   }
+                  onFocus={(e) => e.target.select()}
                   style={{ maxWidth: 120 }}
                 />
               </div>
@@ -498,7 +500,7 @@ function ThirtyDayResults({
             {data.totalLeads} leads / {data.totalAssigned} assigned /{" "}
             {data.totalUnassigned} unassigned
             {data.totalOverflow > 0 &&
-              ` / ${data.totalOverflow} overflow (all at cap)`}
+              ` / ${data.totalOverflow} overflow (assigned despite all eligible agents hitting daily cap)`}
           </span>
         </div>
 
@@ -610,7 +612,7 @@ function ThirtyDayResults({
                 <th>Day of Week</th>
                 <th>Assigned</th>
                 <th>Unassigned</th>
-                <th>Overflow</th>
+                <th title="Leads assigned when all eligible agents had already hit their daily cap">Overflow</th>
               </tr>
             </thead>
             <tbody>
