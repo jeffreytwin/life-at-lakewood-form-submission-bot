@@ -105,19 +105,21 @@ export interface Agent {
   monthly_lead_goal_min: number;
   monthly_lead_goal_max: number;
   optimal_load_factor: number;
+  daily_lead_max: number;
   unavailability_windows: UnavailabilityWindow[] | null;
   price_ranges: PriceRange[] | null;
   created_at: string;
   updated_at: string;
 }
 
-/** Global scoring factor keys (close_rate and lead_load only; availability is a hard filter) */
-export type ScoringFactorKey = "close_rate" | "lead_load";
+/** Global scoring factor keys (location/price/availability are hard filters) */
+export type ScoringFactorKey = "close_rate" | "lead_load" | "daily_load";
 
-/** Default global weights: 60% close rate, 40% lead load */
+/** Default global weights: must sum to 100 */
 export const DEFAULT_GLOBAL_WEIGHTS: Record<ScoringFactorKey, number> = {
-  close_rate: 60,
-  lead_load: 40,
+  close_rate: 50,
+  lead_load: 30,
+  daily_load: 20,
 };
 
 export interface Lead {
@@ -185,12 +187,9 @@ export interface MonthlyLeadCount {
 
 export interface ScoringWeights {
   id: string;
-  location_match: number;
   close_rate: number;
   lead_load: number;
-  lead_value: number;
-  availability: number;
-  optimal_load: number;
+  daily_load: number;
 }
 
 export type AuditEventType =

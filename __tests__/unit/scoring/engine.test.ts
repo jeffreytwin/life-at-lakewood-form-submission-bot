@@ -18,6 +18,7 @@ function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
     monthly_lead_goal_min: 30,
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
+    daily_lead_max: 5,
     unavailability_windows: null,
     price_ranges: null,
     created_at: new Date().toISOString(),
@@ -54,6 +55,7 @@ const defaultContext: ScoringContext = {
   },
   locationName: "Life At Lakewood",
   currentMonthLeadCounts: new Map(),
+  dailyLeadCounts: new Map(),
   currentTime: new Date("2026-03-03T14:00:00"),
 };
 
@@ -66,6 +68,7 @@ describe("scoreAgent", () => {
     expect(result.totalScore).toBeGreaterThan(0);
     expect(result.factors).toHaveProperty("close_rate");
     expect(result.factors).toHaveProperty("lead_load");
+    expect(result.factors).toHaveProperty("daily_load");
   });
 });
 

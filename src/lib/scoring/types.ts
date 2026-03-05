@@ -4,6 +4,7 @@ export interface ScoringContext {
   lead: Lead;
   locationName: string;
   currentMonthLeadCounts: Map<string, number>; // agentId -> count
+  dailyLeadCounts: Map<string, number>; // agentId -> count today
   currentTime: Date;
 }
 
@@ -14,6 +15,7 @@ export interface AgentScore {
   factors: {
     close_rate: number;
     lead_load: number;
+    daily_load: number;
   };
 }
 

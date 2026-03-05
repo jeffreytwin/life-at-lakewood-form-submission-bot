@@ -4,7 +4,8 @@ import { scoreAgents } from "@/lib/scoring/engine";
 import { agentMatchesLocation } from "@/lib/scoring/factors/location-match";
 import { agentMatchesPriceRange } from "@/lib/scoring/factors/price-range";
 import { agentIsAvailable } from "@/lib/scoring/factors/availability";
-import type { Agent, Lead } from "@/lib/supabase/types";
+import type { Agent, Lead, ScoringFactorKey } from "@/lib/supabase/types";
+import { DEFAULT_GLOBAL_WEIGHTS } from "@/lib/supabase/types";
 import type { ScoringContext } from "@/lib/scoring/types";
 
 export const dynamic = "force-dynamic";
@@ -60,31 +61,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch agents and current month lead counts (read-only)
-    const [agentsResult, countsResult, locationsResult] = await Promise.all([
-      supabase
-        .from("agents")
-        .select("*")
-        .eq("is_active", true)
-        .eq("is_frontlines", false),
-      supabase
-        .from("monthly_lead_counts")
-        .select("agent_id, lead_count")
-        .eq("year_month", new Date().toISOString().slice(0, 7)),
-      supabase.from("locations").select("*").eq("is_active", true),
-    ]);
+    // Fetch agents, lead counts, locations, and weights (read-only)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [agentsResult, countsResult, locationsResult, dailyResult, weightsResult] =
+      await Promise.all([
+        supabase
+          .from("agents")
+          .select("*")
+          .eq("is_active", true)
+          .eq("is_frontlines", false),
+        supabase
+          .from("monthly_lead_counts")
+          .select("agent_id, lead_count")
+          .eq("year_month", new Date().toISOString().slice(0, 7)),
+        supabase.from("locations").select("*").eq("is_active", true),
+        supabase
+          .from("leads")
+          .select("final_agent_id")
+          .gte("created_at", todayStart.toISOString())
+          .not("final_agent_id", "is", null),
+        supabase
+          .from("scoring_weights")
+          .select("close_rate, lead_load, daily_load")
+          .limit(1)
+          .single(),
+      ]);
 
     if (agentsResult.error) throw agentsResult.error;
     if (countsResult.error) throw countsResult.error;
     if (locationsResult.error) throw locationsResult.error;
+    // dailyResult and weightsResult errors are non-fatal
 
     const agents: Agent[] = agentsResult.data;
     const locationsList = locationsResult.data;
 
-    // Build mutable lead counts (simulates accumulation across the batch)
+    // Build mutable monthly lead counts (simulates accumulation across the batch)
     const leadCounts = new Map<string, number>();
     for (const row of countsResult.data ?? []) {
       leadCounts.set(row.agent_id, row.lead_count);
+    }
+
+    // Build mutable daily lead counts
+    const dailyCounts = new Map<string, number>();
+    for (const row of dailyResult.data ?? []) {
+      const id = row.final_agent_id as string;
+      dailyCounts.set(id, (dailyCounts.get(id) ?? 0) + 1);
+    }
+
+    // Load weights from DB or fall back to defaults
+    let weights: Record<ScoringFactorKey, number> = DEFAULT_GLOBAL_WEIGHTS;
+    if (weightsResult.data) {
+      weights = {
+        close_rate: weightsResult.data.close_rate,
+        lead_load: weightsResult.data.lead_load,
+        daily_load: weightsResult.data.daily_load,
+      };
     }
 
     const results: SimulatedAssignment[] = [];
@@ -131,6 +164,7 @@ export async function POST(request: NextRequest) {
         lead: fakeLead,
         locationName,
         currentMonthLeadCounts: leadCounts,
+        dailyLeadCounts: dailyCounts,
         currentTime: new Date(),
       };
 
@@ -181,7 +215,7 @@ export async function POST(request: NextRequest) {
           agentMatchesPriceRange(a, context) &&
           agentIsAvailable(a, context)
       );
-      const scored = scoreAgents(eligible, context);
+      const scored = scoreAgents(eligible, context, weights);
 
       // Merge scored results
       for (const s of scored) {
@@ -211,8 +245,10 @@ export async function POST(request: NextRequest) {
 
       // Simulate lead count increment for batch mode
       if (winner) {
-        const current = leadCounts.get(winner.agentId) ?? 0;
-        leadCounts.set(winner.agentId, current + 1);
+        const currentMonthly = leadCounts.get(winner.agentId) ?? 0;
+        leadCounts.set(winner.agentId, currentMonthly + 1);
+        const currentDaily = dailyCounts.get(winner.agentId) ?? 0;
+        dailyCounts.set(winner.agentId, currentDaily + 1);
       }
     }
 
