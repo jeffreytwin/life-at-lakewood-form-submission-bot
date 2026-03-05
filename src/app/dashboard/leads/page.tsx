@@ -72,13 +72,13 @@ export default function LeadsPage() {
   return (
     <>
       <div className="page-header">
-        <h2>Leads</h2>
-        <p>Track incoming leads and their routing status</p>
+        <h2>Form Submissions</h2>
+        <p>Track incoming form submissions and their routing status</p>
       </div>
 
       <div className="card">
         <div className="card-header">
-          <h3>{total} leads</h3>
+          <h3>{total} form submissions</h3>
           <select
             className="form-input"
             style={{ width: "auto" }}
@@ -107,11 +107,11 @@ export default function LeadsPage() {
         ) : leads.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">&#9993;</div>
-            <h3>No leads found</h3>
+            <h3>No form submissions found</h3>
             <p>
               {statusFilter === "all"
-                ? "Leads will appear here when they come in via Zapier webhook."
-                : `No leads with status "${statusFilter}".`}
+                ? "Form submissions will appear here when they come in via Zapier webhook."
+                : `No form submissions with status "${statusFilter}".`}
             </p>
           </div>
         ) : (

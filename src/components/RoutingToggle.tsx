@@ -54,7 +54,7 @@ export default function RoutingToggle() {
     if (
       !newValue &&
       !confirm(
-        "Are you sure you want to pause routing? Incoming leads will be saved but NOT routed to agents until you resume."
+        "Are you sure you want to pause routing? Incoming form submissions will be saved but NOT routed to agents until you resume."
       )
     ) {
       return;
