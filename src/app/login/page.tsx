@@ -39,7 +39,7 @@ export default function LoginPage() {
     <div style={styles.page}>
       <div style={styles.container}>
         <div style={styles.logoSection}>
-          <img src="/logo.svg" alt="Logo" style={styles.logo} />
+          <img src="/logo.png" alt="Logo" style={styles.logo} />
           <div style={styles.brandText}>FORM SUBMISSIONS</div>
         </div>
 
