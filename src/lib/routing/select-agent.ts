@@ -45,7 +45,7 @@ async function getDailyLeadCounts(): Promise<Map<string, number>> {
 async function getWeights(): Promise<Record<ScoringFactorKey, number>> {
   const { data } = await supabase
     .from("scoring_weights")
-    .select("close_rate, lead_load, daily_load")
+    .select("close_rate, lead_load")
     .limit(1)
     .single();
 
@@ -53,7 +53,6 @@ async function getWeights(): Promise<Record<ScoringFactorKey, number>> {
     return {
       close_rate: data.close_rate,
       lead_load: data.lead_load,
-      daily_load: data.daily_load,
     };
   }
 

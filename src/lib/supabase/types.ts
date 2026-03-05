@@ -112,14 +112,13 @@ export interface Agent {
   updated_at: string;
 }
 
-/** Global scoring factor keys (location/price/availability are hard filters) */
-export type ScoringFactorKey = "close_rate" | "lead_load" | "daily_load";
+/** Global scoring factor keys (location/price/availability/daily cap are hard filters) */
+export type ScoringFactorKey = "close_rate" | "lead_load";
 
 /** Default global weights: must sum to 100 */
 export const DEFAULT_GLOBAL_WEIGHTS: Record<ScoringFactorKey, number> = {
-  close_rate: 50,
-  lead_load: 30,
-  daily_load: 20,
+  close_rate: 60,
+  lead_load: 40,
 };
 
 export interface Lead {
@@ -189,7 +188,6 @@ export interface ScoringWeights {
   id: string;
   close_rate: number;
   lead_load: number;
-  daily_load: number;
 }
 
 export type AuditEventType =

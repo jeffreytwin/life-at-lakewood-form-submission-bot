@@ -15,7 +15,6 @@ export interface AgentScore {
   factors: {
     close_rate: number;
     lead_load: number;
-    daily_load: number;
   };
 }
 
