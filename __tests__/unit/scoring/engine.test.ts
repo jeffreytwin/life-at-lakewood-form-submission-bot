@@ -14,7 +14,7 @@ function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
     is_active: true,
     close_rate_trailing_12m: 0.2,
     close_rate_all_time: 0.15,
-    location_specialties: ["Lakewood Ranch"],
+    location_specialties: ["Life At Lakewood"],
     monthly_lead_goal_min: 30,
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
@@ -106,7 +106,7 @@ describe("selectBestAgent", () => {
   it("excludes agents that don't match location (hard filter)", () => {
     const agents = [
       makeAgent("wp", { location_specialties: ["Wellen Park"] }),
-      makeAgent("lwr", { location_specialties: ["Lakewood Ranch"] }),
+      makeAgent("lwr", { location_specialties: ["Life At Lakewood"] }),
     ];
 
     const result = selectBestAgent(agents, defaultContext);
