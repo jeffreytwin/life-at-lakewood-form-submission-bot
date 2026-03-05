@@ -85,12 +85,14 @@ export function scoreAgent(
     factors.close_rate * (ampCR / ampNorm) +
     factors.lead_load * (ampLL / ampNorm);
 
-  // Scale specialty bonus by close_rate weight proportion.
-  // At 100% lead load the bonus is 1.0 (disabled) so it can't overpower
-  // the lead-load signal. At 100% close rate the full bonus applies.
+  // Scale specialty bonus by close_rate weight proportion, with a floor.
+  // At 100% lead load: 1/3 of the bonus still applies (~5% boost)
+  // so specialists get a small edge without overpowering fair distribution.
+  // At 100% close rate: full bonus applies.
   const fullBonus = specialtyMultiplier(agent, context);
-  const closeRatePct = rawCR; // 0..1
-  const scaledBonus = 1.0 + (fullBonus - 1.0) * closeRatePct;
+  const SPECIALTY_MIN_SCALE = 0.33;
+  const bonusScale = SPECIALTY_MIN_SCALE + (1 - SPECIALTY_MIN_SCALE) * rawCR;
+  const scaledBonus = 1.0 + (fullBonus - 1.0) * bonusScale;
 
   const monthlyCap = monthlyCapMultiplier(agent, context);
   const totalScore = baseScore * scaledBonus * monthlyCap;
