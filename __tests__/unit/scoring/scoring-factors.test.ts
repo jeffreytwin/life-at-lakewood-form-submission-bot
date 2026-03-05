@@ -3,9 +3,8 @@ import { agentMatchesLocation } from "@/lib/scoring/factors/location-match";
 import { agentMatchesPriceRange, parsePriceToMidpoint, priceToBucket } from "@/lib/scoring/factors/price-range";
 import { scoreCloseRate } from "@/lib/scoring/factors/close-rate";
 import { scoreLeadLoad } from "@/lib/scoring/factors/lead-load";
-import { scoreAvailability } from "@/lib/scoring/factors/availability";
+import { agentIsAvailable } from "@/lib/scoring/factors/availability";
 import type { Agent, Lead } from "@/lib/supabase/types";
-import { DEFAULT_SCORING_PRIORITY } from "@/lib/supabase/types";
 import type { ScoringContext } from "@/lib/scoring/types";
 
 function makeAgent(overrides: Partial<Agent> = {}): Agent {
@@ -23,8 +22,7 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     monthly_lead_goal_min: 30,
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
-    availability_windows: null,
-    scoring_priority: [...DEFAULT_SCORING_PRIORITY],
+    unavailability_windows: null,
     price_ranges: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -117,19 +115,19 @@ describe("agentMatchesPriceRange (hard filter)", () => {
   });
 
   it("returns true when agent's price range matches lead price", () => {
-    const agent = makeAgent({ price_ranges: ["500k_to_1m"] });
+    const agent = makeAgent({ price_ranges: ["500k_to_750k"] });
     const ctx = makeContext({ lead: makeLead({ price: "$550,000" }) });
     expect(agentMatchesPriceRange(agent, ctx)).toBe(true);
   });
 
   it("returns false when agent's price range doesn't match", () => {
-    const agent = makeAgent({ price_ranges: ["under_500k"] });
+    const agent = makeAgent({ price_ranges: ["under_250k"] });
     const ctx = makeContext({ lead: makeLead({ price: "$750,000" }) });
     expect(agentMatchesPriceRange(agent, ctx)).toBe(false);
   });
 
   it("returns true when lead has no price", () => {
-    const agent = makeAgent({ price_ranges: ["under_500k"] });
+    const agent = makeAgent({ price_ranges: ["under_250k"] });
     const ctx = makeContext({ lead: makeLead({ price: null }) });
     expect(agentMatchesPriceRange(agent, ctx)).toBe(true);
   });
@@ -156,20 +154,37 @@ describe("parsePriceToMidpoint", () => {
 });
 
 describe("priceToBucket", () => {
-  it("maps under $500k correctly", () => {
-    expect(priceToBucket(350_000)).toBe("under_500k");
-    expect(priceToBucket(499_999)).toBe("under_500k");
+  it("maps under $250k correctly", () => {
+    expect(priceToBucket(150_000)).toBe("under_250k");
+    expect(priceToBucket(249_999)).toBe("under_250k");
   });
 
-  it("maps $500k-$1M correctly", () => {
-    expect(priceToBucket(500_000)).toBe("500k_to_1m");
-    expect(priceToBucket(750_000)).toBe("500k_to_1m");
-    expect(priceToBucket(1_000_000)).toBe("500k_to_1m");
+  it("maps $250k-$500k correctly", () => {
+    expect(priceToBucket(250_000)).toBe("250k_to_500k");
+    expect(priceToBucket(350_000)).toBe("250k_to_500k");
+    expect(priceToBucket(499_999)).toBe("250k_to_500k");
   });
 
-  it("maps $1M+ correctly", () => {
-    expect(priceToBucket(1_000_001)).toBe("1m_plus");
-    expect(priceToBucket(2_000_000)).toBe("1m_plus");
+  it("maps $500k-$750k correctly", () => {
+    expect(priceToBucket(500_000)).toBe("500k_to_750k");
+    expect(priceToBucket(600_000)).toBe("500k_to_750k");
+    expect(priceToBucket(749_999)).toBe("500k_to_750k");
+  });
+
+  it("maps $750k-$1M correctly", () => {
+    expect(priceToBucket(750_000)).toBe("750k_to_1m");
+    expect(priceToBucket(999_999)).toBe("750k_to_1m");
+  });
+
+  it("maps $1M-$1.5M correctly", () => {
+    expect(priceToBucket(1_000_000)).toBe("1m_to_1_5m");
+    expect(priceToBucket(1_250_000)).toBe("1m_to_1_5m");
+    expect(priceToBucket(1_499_999)).toBe("1m_to_1_5m");
+  });
+
+  it("maps $1.5M+ correctly", () => {
+    expect(priceToBucket(1_500_000)).toBe("1_5m_plus");
+    expect(priceToBucket(2_000_000)).toBe("1_5m_plus");
   });
 });
 
@@ -231,28 +246,37 @@ describe("scoreLeadLoad", () => {
   });
 });
 
-describe("scoreAvailability", () => {
-  it("returns 1.0 when no availability windows set", () => {
-    const agent = makeAgent({ availability_windows: null });
+describe("agentIsAvailable (hard filter)", () => {
+  it("returns true when no unavailability windows set", () => {
+    const agent = makeAgent({ unavailability_windows: null });
     const ctx = makeContext();
-    expect(scoreAvailability(agent, ctx)).toBe(1.0);
+    expect(agentIsAvailable(agent, ctx)).toBe(true);
   });
 
-  it("returns 1.0 when within availability window", () => {
+  it("returns true when outside unavailability window", () => {
     const tuesday = new Date("2026-03-03T14:00:00");
     const agent = makeAgent({
-      availability_windows: [{ day: 2, start: "08:00", end: "19:00" }],
+      unavailability_windows: [{ day: 2, start: "18:00", end: "23:00" }],
     });
     const ctx = makeContext({ currentTime: tuesday });
-    expect(scoreAvailability(agent, ctx)).toBe(1.0);
+    expect(agentIsAvailable(agent, ctx)).toBe(true);
   });
 
-  it("returns 0.0 when outside availability window", () => {
-    const tuesday = new Date("2026-03-03T21:00:00");
+  it("returns false when inside unavailability window", () => {
+    const tuesday = new Date("2026-03-03T14:00:00");
     const agent = makeAgent({
-      availability_windows: [{ day: 2, start: "08:00", end: "19:00" }],
+      unavailability_windows: [{ day: 2, start: "08:00", end: "19:00" }],
     });
     const ctx = makeContext({ currentTime: tuesday });
-    expect(scoreAvailability(agent, ctx)).toBe(0.0);
+    expect(agentIsAvailable(agent, ctx)).toBe(false);
+  });
+
+  it("returns true on a different day than the unavailability window", () => {
+    const wednesday = new Date("2026-03-04T14:00:00");
+    const agent = makeAgent({
+      unavailability_windows: [{ day: 2, start: "08:00", end: "19:00" }],
+    });
+    const ctx = makeContext({ currentTime: wednesday });
+    expect(agentIsAvailable(agent, ctx)).toBe(true);
   });
 });

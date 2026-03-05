@@ -1,12 +1,18 @@
-import type { Agent, AvailabilityWindow } from "@/lib/supabase/types";
+import type { Agent, UnavailabilityWindow } from "@/lib/supabase/types";
 import type { ScoringContext } from "../types";
 
-export function scoreAvailability(agent: Agent, context: ScoringContext): number {
-  const windows = agent.availability_windows as AvailabilityWindow[] | null;
+/**
+ * Hard filter: returns true if the agent is currently available.
+ *
+ * Agents are available by default. They become unavailable only during
+ * the time windows they explicitly mark as unavailable.
+ */
+export function agentIsAvailable(agent: Agent, context: ScoringContext): boolean {
+  const windows = agent.unavailability_windows as UnavailabilityWindow[] | null;
 
-  // Null windows = always available during business hours (default)
+  // No unavailability windows = always available
   if (!windows || windows.length === 0) {
-    return 1.0;
+    return true;
   }
 
   const now = context.currentTime;
@@ -17,11 +23,11 @@ export function scoreAvailability(agent: Agent, context: ScoringContext): number
 
   for (const window of windows) {
     if (window.day === currentDay) {
-      if (currentTime >= window.start && currentTime <= window.end) {
-        return 1.0;
+      if (currentTime >= window.start && currentTime < window.end) {
+        return false; // Currently in an unavailable window
       }
     }
   }
 
-  return 0.0; // Outside all availability windows
+  return true; // Not in any unavailability window
 }

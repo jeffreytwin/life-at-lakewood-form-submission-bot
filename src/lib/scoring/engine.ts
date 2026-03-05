@@ -1,45 +1,23 @@
-import type { Agent, ScoringFactorKey } from "@/lib/supabase/types";
-import { DEFAULT_SCORING_PRIORITY, RANK_WEIGHTS } from "@/lib/supabase/types";
+import type { Agent } from "@/lib/supabase/types";
+import { DEFAULT_GLOBAL_WEIGHTS } from "@/lib/supabase/types";
 import type { AgentScore, ScoringContext } from "./types";
 import { scoreCloseRate } from "./factors/close-rate";
 import { scoreLeadLoad } from "./factors/lead-load";
-import { scoreAvailability } from "./factors/availability";
 import { agentMatchesLocation } from "./factors/location-match";
 import { agentMatchesPriceRange } from "./factors/price-range";
-
-const factorFns: Record<
-  ScoringFactorKey,
-  (agent: Agent, context: ScoringContext) => number
-> = {
-  close_rate: (a) => scoreCloseRate(a),
-  lead_load: scoreLeadLoad,
-  availability: scoreAvailability,
-};
-
-function getWeightsFromPriority(
-  priority: ScoringFactorKey[]
-): Record<ScoringFactorKey, number> {
-  const weights: Record<string, number> = {};
-  for (let i = 0; i < priority.length; i++) {
-    weights[priority[i]] = RANK_WEIGHTS[i];
-  }
-  return weights as Record<ScoringFactorKey, number>;
-}
+import { agentIsAvailable } from "./factors/availability";
 
 export function scoreAgent(agent: Agent, context: ScoringContext): AgentScore {
-  const priority = agent.scoring_priority ?? DEFAULT_SCORING_PRIORITY;
-  const weights = getWeightsFromPriority(priority);
+  const weights = DEFAULT_GLOBAL_WEIGHTS;
 
   const factors = {
-    close_rate: factorFns.close_rate(agent, context),
-    lead_load: factorFns.lead_load(agent, context),
-    availability: factorFns.availability(agent, context),
+    close_rate: scoreCloseRate(agent),
+    lead_load: scoreLeadLoad(agent, context),
   };
 
   const totalScore =
     factors.close_rate * weights.close_rate +
-    factors.lead_load * weights.lead_load +
-    factors.availability * weights.availability;
+    factors.lead_load * weights.lead_load;
 
   return {
     agentId: agent.id,
@@ -59,7 +37,8 @@ export function scoreAgents(
 }
 
 /**
- * Hard-filter agents by location and price range, then score and rank.
+ * Hard-filter agents by location, price range, and availability,
+ * then score and rank.
  */
 export function selectBestAgent(
   agents: Agent[],
@@ -70,7 +49,8 @@ export function selectBestAgent(
     (agent) =>
       !excludeAgentIds.includes(agent.id) &&
       agentMatchesLocation(agent, context) &&
-      agentMatchesPriceRange(agent, context)
+      agentMatchesPriceRange(agent, context) &&
+      agentIsAvailable(agent, context)
   );
 
   if (eligible.length === 0) return null;

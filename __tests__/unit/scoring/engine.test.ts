@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { scoreAgent, selectBestAgent } from "@/lib/scoring/engine";
 import type { Agent } from "@/lib/supabase/types";
-import { DEFAULT_SCORING_PRIORITY } from "@/lib/supabase/types";
 import type { ScoringContext } from "@/lib/scoring/types";
 
 function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
@@ -19,8 +18,7 @@ function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
     monthly_lead_goal_min: 30,
     monthly_lead_goal_max: 40,
     optimal_load_factor: 1.0,
-    availability_windows: null,
-    scoring_priority: [...DEFAULT_SCORING_PRIORITY],
+    unavailability_windows: null,
     price_ranges: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -68,7 +66,6 @@ describe("scoreAgent", () => {
     expect(result.totalScore).toBeGreaterThan(0);
     expect(result.factors).toHaveProperty("close_rate");
     expect(result.factors).toHaveProperty("lead_load");
-    expect(result.factors).toHaveProperty("availability");
   });
 });
 
@@ -125,11 +122,11 @@ describe("selectBestAgent", () => {
 
   it("excludes agents that don't match price range (hard filter)", () => {
     const agents = [
-      makeAgent("cheap", { price_ranges: ["under_500k"] }),
-      makeAgent("mid", { price_ranges: ["500k_to_1m"] }),
+      makeAgent("cheap", { price_ranges: ["under_250k"] }),
+      makeAgent("mid", { price_ranges: ["500k_to_750k"] }),
     ];
 
-    // Lead price is $500,000 which maps to "500k_to_1m"
+    // Lead price is $500,000 which maps to "500k_to_750k"
     const result = selectBestAgent(agents, defaultContext);
     expect(result?.agentId).toBe("mid");
   });
@@ -141,5 +138,29 @@ describe("selectBestAgent", () => {
 
     const result = selectBestAgent(agents, defaultContext);
     expect(result?.agentId).toBe("any");
+  });
+
+  it("excludes unavailable agents (hard filter)", () => {
+    // Tuesday at 14:00
+    const agents = [
+      makeAgent("unavail", {
+        unavailability_windows: [{ day: 2, start: "08:00", end: "17:00" }],
+      }),
+      makeAgent("avail", { unavailability_windows: null }),
+    ];
+
+    const result = selectBestAgent(agents, defaultContext);
+    expect(result?.agentId).toBe("avail");
+  });
+
+  it("returns null when all agents are unavailable", () => {
+    const agents = [
+      makeAgent("a1", {
+        unavailability_windows: [{ day: 2, start: "08:00", end: "17:00" }],
+      }),
+    ];
+
+    const result = selectBestAgent(agents, defaultContext);
+    expect(result).toBeNull();
   });
 });

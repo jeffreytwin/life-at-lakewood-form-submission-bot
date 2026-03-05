@@ -1,28 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import type { Agent, Location, ScoringFactorKey, PriceRange } from "@/lib/supabase/types";
+import type { Agent, Location, PriceRange, UnavailabilityWindow } from "@/lib/supabase/types";
 import {
-  DEFAULT_SCORING_PRIORITY,
-  RANK_WEIGHTS,
   PRICE_RANGE_LABELS,
   ALL_PRICE_RANGES,
+  DAY_LABELS,
 } from "@/lib/supabase/types";
-
-const FACTOR_LABELS: Record<ScoringFactorKey, { label: string; desc: string }> = {
-  close_rate: {
-    label: "Close Rate",
-    desc: "Agent's blended close rate performance",
-  },
-  lead_load: {
-    label: "Lead Load",
-    desc: "Monthly lead count relative to goal range",
-  },
-  availability: {
-    label: "Availability",
-    desc: "Whether agent is within working hours",
-  },
-};
 
 type AgentForm = {
   name: string;
@@ -34,8 +18,7 @@ type AgentForm = {
   location_specialties: string[];
   monthly_lead_goal_min: number;
   monthly_lead_goal_max: number;
-  availability_windows: Agent["availability_windows"];
-  scoring_priority: ScoringFactorKey[];
+  unavailability_windows: UnavailabilityWindow[];
   price_ranges: PriceRange[];
 };
 
@@ -49,8 +32,7 @@ const emptyAgent: AgentForm = {
   location_specialties: [],
   monthly_lead_goal_min: 5,
   monthly_lead_goal_max: 15,
-  availability_windows: null,
-  scoring_priority: [...DEFAULT_SCORING_PRIORITY],
+  unavailability_windows: [],
   price_ranges: [...ALL_PRICE_RANGES],
 };
 
@@ -63,7 +45,6 @@ export default function AgentsPage() {
   const [editing, setEditing] = useState<Agent | null>(null);
   const [form, setForm] = useState(emptyAgent);
   const [saving, setSaving] = useState(false);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const fetchData = useCallback(() => {
     Promise.all([
@@ -106,8 +87,7 @@ export default function AgentsPage() {
       location_specialties: agent.location_specialties,
       monthly_lead_goal_min: agent.monthly_lead_goal_min,
       monthly_lead_goal_max: agent.monthly_lead_goal_max,
-      availability_windows: agent.availability_windows,
-      scoring_priority: agent.scoring_priority ?? [...DEFAULT_SCORING_PRIORITY],
+      unavailability_windows: agent.unavailability_windows ?? [],
       price_ranges: agent.price_ranges ?? [...ALL_PRICE_RANGES],
     });
     setShowModal(true);
@@ -119,6 +99,10 @@ export default function AgentsPage() {
       ...form,
       email: form.email || null,
       salesforce_user_id: form.salesforce_user_id || null,
+      unavailability_windows:
+        form.unavailability_windows.length > 0
+          ? form.unavailability_windows
+          : null,
     };
 
     try {
@@ -170,13 +154,35 @@ export default function AgentsPage() {
     });
   }
 
-  function movePriority(fromIndex: number, toIndex: number) {
+  function addUnavailabilityWindow() {
+    setForm((prev) => ({
+      ...prev,
+      unavailability_windows: [
+        ...prev.unavailability_windows,
+        { day: 1, start: "08:00", end: "17:00" },
+      ],
+    }));
+  }
+
+  function updateUnavailabilityWindow(
+    index: number,
+    field: keyof UnavailabilityWindow,
+    value: string | number
+  ) {
     setForm((prev) => {
-      const newPriority = [...prev.scoring_priority];
-      const [moved] = newPriority.splice(fromIndex, 1);
-      newPriority.splice(toIndex, 0, moved);
-      return { ...prev, scoring_priority: newPriority };
+      const updated = [...prev.unavailability_windows];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, unavailability_windows: updated };
     });
+  }
+
+  function removeUnavailabilityWindow(index: number) {
+    setForm((prev) => ({
+      ...prev,
+      unavailability_windows: prev.unavailability_windows.filter(
+        (_, i) => i !== index
+      ),
+    }));
   }
 
   if (loading) {
@@ -194,7 +200,7 @@ export default function AgentsPage() {
     <>
       <div className="page-header">
         <h2>Agents</h2>
-        <p>Manage sales agents, locations, and scoring priorities</p>
+        <p>Manage sales agents, locations, and routing filters</p>
       </div>
 
       {error ? (
@@ -470,6 +476,92 @@ export default function AgentsPage() {
                   </div>
                 </div>
 
+                {/* Unavailability Windows */}
+                <div className="form-group">
+                  <label>Unavailable Times</label>
+                  <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
+                    Set times when this agent should NOT receive leads. Available by default.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {form.unavailability_windows.map((window, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "8px 12px",
+                          background: "rgba(248, 113, 113, 0.08)",
+                          border: "1px solid #2a2e3a",
+                          borderRadius: 6,
+                        }}
+                      >
+                        <select
+                          className="form-input"
+                          value={window.day}
+                          onChange={(e) =>
+                            updateUnavailabilityWindow(
+                              index,
+                              "day",
+                              parseInt(e.target.value, 10)
+                            )
+                          }
+                          style={{ flex: 1, minWidth: 0 }}
+                        >
+                          {DAY_LABELS.map((label, dayIndex) => (
+                            <option key={dayIndex} value={dayIndex}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          className="form-input font-mono"
+                          type="time"
+                          value={window.start}
+                          onChange={(e) =>
+                            updateUnavailabilityWindow(index, "start", e.target.value)
+                          }
+                          style={{ width: 110 }}
+                        />
+                        <span className="text-muted" style={{ fontSize: 12 }}>to</span>
+                        <input
+                          className="form-input font-mono"
+                          type="time"
+                          value={window.end}
+                          onChange={(e) =>
+                            updateUnavailabilityWindow(index, "end", e.target.value)
+                          }
+                          style={{ width: 110 }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeUnavailabilityWindow(index)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "#f87171",
+                            cursor: "pointer",
+                            fontSize: 18,
+                            padding: "0 4px",
+                            lineHeight: 1,
+                          }}
+                          title="Remove"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={addUnavailabilityWindow}
+                      style={{ alignSelf: "flex-start" }}
+                    >
+                      + Add Unavailable Time
+                    </button>
+                  </div>
+                </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Monthly Lead Goal Min</label>
@@ -512,83 +604,6 @@ export default function AgentsPage() {
                     />
                     Active
                   </label>
-                </div>
-
-                {/* Drag-to-Rank Scoring Priority */}
-                <div className="form-group">
-                  <label>Scoring Priority</label>
-                  <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
-                    Drag to reorder. Top factor = {RANK_WEIGHTS[0]}% weight, bottom = {RANK_WEIGHTS[RANK_WEIGHTS.length - 1]}%.
-                    Location and price range are hard filters (not ranked).
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    {form.scoring_priority.map((factorKey, index) => (
-                      <div
-                        key={factorKey}
-                        draggable
-                        onDragStart={() => setDragIndex(index)}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          if (dragIndex !== null && dragIndex !== index) {
-                            movePriority(dragIndex, index);
-                            setDragIndex(index);
-                          }
-                        }}
-                        onDragEnd={() => setDragIndex(null)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          padding: "10px 14px",
-                          background:
-                            dragIndex === index
-                              ? "rgba(79, 143, 247, 0.1)"
-                              : "transparent",
-                          border: "1px solid",
-                          borderColor:
-                            dragIndex === index ? "#4f8ff7" : "#2a2e3a",
-                          borderRadius: 6,
-                          cursor: "grab",
-                          userSelect: "none",
-                          transition: "all 0.15s",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: "#8b8fa3",
-                            minWidth: 20,
-                          }}
-                        >
-                          #{index + 1}
-                        </span>
-                        <span style={{ fontSize: 16, color: "#8b8fa3" }}>
-                          &#9776;
-                        </span>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, fontSize: 14 }}>
-                            {FACTOR_LABELS[factorKey].label}
-                          </div>
-                          <div style={{ fontSize: 11, color: "#8b8fa3" }}>
-                            {FACTOR_LABELS[factorKey].desc}
-                          </div>
-                        </div>
-                        <span
-                          className="font-mono"
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: "#4f8ff7",
-                            minWidth: 36,
-                            textAlign: "right",
-                          }}
-                        >
-                          {RANK_WEIGHTS[index]}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </>
             )}

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 import { scoreAgents } from "@/lib/scoring/engine";
 import { agentMatchesLocation } from "@/lib/scoring/factors/location-match";
 import { agentMatchesPriceRange } from "@/lib/scoring/factors/price-range";
+import { agentIsAvailable } from "@/lib/scoring/factors/availability";
 import type { Agent, Lead } from "@/lib/supabase/types";
 import type { ScoringContext } from "@/lib/scoring/types";
 
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
       const allAgentScores = agents.map((agent) => {
         const locMatch = agentMatchesLocation(agent, context);
         const priceMatch = agentMatchesPriceRange(agent, context);
+        const available = agentIsAvailable(agent, context);
 
         if (!locMatch) {
           return {
@@ -158,13 +160,26 @@ export async function POST(request: NextRequest) {
             filterReason: "Price range mismatch",
           };
         }
+        if (!available) {
+          return {
+            agentName: agent.name,
+            agentId: agent.id,
+            totalScore: 0,
+            factors: {},
+            filtered: true,
+            filterReason: "Currently unavailable",
+          };
+        }
 
         return { agentName: agent.name, agentId: agent.id, totalScore: 0, factors: {}, filtered: false };
       });
 
       // Score eligible agents
       const eligible = agents.filter(
-        (a) => agentMatchesLocation(a, context) && agentMatchesPriceRange(a, context)
+        (a) =>
+          agentMatchesLocation(a, context) &&
+          agentMatchesPriceRange(a, context) &&
+          agentIsAvailable(a, context)
       );
       const scored = scoreAgents(eligible, context);
 
