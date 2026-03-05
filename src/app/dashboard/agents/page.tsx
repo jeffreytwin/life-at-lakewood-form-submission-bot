@@ -98,8 +98,19 @@ export default function AgentsPage() {
 
   async function handleSave() {
     setSaving(true);
+    // If all active locations are selected, treat as "All" (empty array)
+    const activeLocationNames = locations
+      .filter((l) => l.is_active)
+      .map((l) => l.name);
+    const allLocationsSelected =
+      activeLocationNames.length > 0 &&
+      activeLocationNames.every((name) =>
+        form.location_specialties.includes(name)
+      );
+
     const payload = {
       ...form,
+      location_specialties: allLocationsSelected ? [] : form.location_specialties,
       email: form.email || null,
       salesforce_user_id: form.salesforce_user_id || null,
       unavailability_windows:
@@ -427,6 +438,14 @@ export default function AgentsPage() {
                       </span>
                     )}
                   </div>
+                  {locations.filter((l) => l.is_active).length > 0 &&
+                    locations
+                      .filter((l) => l.is_active)
+                      .every((l) => form.location_specialties.includes(l.name)) && (
+                      <p className="text-muted text-sm" style={{ marginTop: 6 }}>
+                        All locations selected &mdash; will be saved as &quot;All&quot; (no specialty bonus).
+                      </p>
+                    )}
                 </div>
 
                 {/* Price Range Multi-Select */}

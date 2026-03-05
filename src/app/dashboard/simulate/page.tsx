@@ -80,8 +80,8 @@ export default function SimulatePage() {
   // Single lead form
   const [singleForm, setSingleForm] = useState({
     location: "",
-    village: "",
     price: "$500,000 - $750,000",
+    simulateAt: "", // ISO datetime-local string for availability testing
   });
 
   // Bulk form
@@ -136,7 +136,14 @@ export default function SimulatePage() {
           prices: thirtyDayPrices,
         };
       } else if (mode === "single") {
-        body = { leads: [singleForm] };
+        body = {
+          leads: [{
+            location: singleForm.location,
+            village: "",
+            price: singleForm.price,
+          }],
+          ...(singleForm.simulateAt ? { simulateAt: singleForm.simulateAt } : {}),
+        };
       } else {
         const locs =
           bulkLocations.length > 0
@@ -298,17 +305,6 @@ export default function SimulatePage() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Village (optional)</label>
-                <input
-                  className="form-input"
-                  value={singleForm.village}
-                  onChange={(e) =>
-                    setSingleForm({ ...singleForm, village: e.target.value })
-                  }
-                  placeholder="e.g. Waterside"
-                />
-              </div>
-              <div className="form-group">
                 <label>Price</label>
                 <select
                   className="form-input"
@@ -323,6 +319,20 @@ export default function SimulatePage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="form-group">
+                <label>Date &amp; Time (ET)</label>
+                <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
+                  Test agent availability windows at a specific date/time. Leave empty for now.
+                </p>
+                <input
+                  className="form-input"
+                  type="datetime-local"
+                  value={singleForm.simulateAt}
+                  onChange={(e) =>
+                    setSingleForm({ ...singleForm, simulateAt: e.target.value })
+                  }
+                />
               </div>
             </>
           ) : mode === "bulk" ? (
