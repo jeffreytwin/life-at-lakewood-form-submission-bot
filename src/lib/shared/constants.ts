@@ -12,6 +12,14 @@ export const CLOSE_RATE_ALLTIME_WEIGHT = 0.3;
 export const LEAD_LOAD_FULL_SCORE_PCT = 0.5; // 1.0 score at 50% of min goal
 export const LEAD_LOAD_ZERO_SCORE_PCT = 1.2; // 0.0 score at 120% of max goal
 
+// Location specialty bonus: multiplier for agents with a specific area match
+// vs generalists (no specialties = match all). 1.15 = 15% boost for specialists.
+export const SPECIALTY_BONUS_MULTIPLIER = 1.15;
+
+// Monthly over-cap penalty: multiplier applied when agent exceeds monthly_lead_goal_max
+// At max_goal, score is multiplied by this. Further over = even lower (floor 0.1).
+export const MONTHLY_OVER_CAP_MULTIPLIER = 0.4;
+
 // Lead value scoring
 export const LEAD_VALUE_CLOSE_MATCH_THRESHOLD = 100_000; // Within $100K = 0.5 score
 

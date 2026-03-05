@@ -15,8 +15,9 @@ export interface AgentScore {
   factors: {
     close_rate: number;
     lead_load: number;
-    daily_load: number;
   };
+  specialtyBonus: number; // 1.0 = generalist, 1.15 = specialist match
+  monthlyCapMultiplier: number; // 1.0 = under max goal, 0.4 = at max, ramps to 0.1
 }
 
 export type ScoringFactor = (agent: import("@/lib/supabase/types").Agent, context: ScoringContext) => number;

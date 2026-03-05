@@ -68,7 +68,6 @@ describe("scoreAgent", () => {
     expect(result.totalScore).toBeGreaterThan(0);
     expect(result.factors).toHaveProperty("close_rate");
     expect(result.factors).toHaveProperty("lead_load");
-    expect(result.factors).toHaveProperty("daily_load");
   });
 });
 
@@ -165,5 +164,37 @@ describe("selectBestAgent", () => {
 
     const result = selectBestAgent(agents, defaultContext);
     expect(result).toBeNull();
+  });
+
+  it("prefers agents under their daily cap", () => {
+    const agents = [
+      makeAgent("capped", { daily_lead_max: 3, close_rate_trailing_12m: 0.3, close_rate_all_time: 0.25 }),
+      makeAgent("available", { daily_lead_max: 3, close_rate_trailing_12m: 0.1, close_rate_all_time: 0.1 }),
+    ];
+
+    const ctx: ScoringContext = {
+      ...defaultContext,
+      dailyLeadCounts: new Map([["capped", 3]]), // at cap
+    };
+
+    // "capped" has better close rate but is at cap, so "available" should win
+    const result = selectBestAgent(agents, ctx);
+    expect(result?.agentId).toBe("available");
+  });
+
+  it("allows overflow when all agents are at daily cap", () => {
+    const agents = [
+      makeAgent("best", { daily_lead_max: 2, close_rate_trailing_12m: 0.3, close_rate_all_time: 0.25 }),
+      makeAgent("other", { daily_lead_max: 2, close_rate_trailing_12m: 0.1, close_rate_all_time: 0.1 }),
+    ];
+
+    const ctx: ScoringContext = {
+      ...defaultContext,
+      dailyLeadCounts: new Map([["best", 2], ["other", 2]]), // both at cap
+    };
+
+    // Both at cap, so overflow to highest scored
+    const result = selectBestAgent(agents, ctx);
+    expect(result?.agentId).toBe("best");
   });
 });

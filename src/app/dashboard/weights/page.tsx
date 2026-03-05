@@ -2,50 +2,25 @@
 
 import { useEffect, useState } from "react";
 
-interface Weights {
-  id: string;
-  close_rate: number;
-  lead_load: number;
-  daily_load: number;
-}
-
-const weightLabels: Record<string, { label: string; desc: string }> = {
-  close_rate: {
-    label: "Close Rate",
-    desc: "Agent's blended 12-month and all-time close rate performance",
-  },
-  lead_load: {
-    label: "Monthly Lead Load",
-    desc: "Monthly lead count relative to agent's goal range",
-  },
-  daily_load: {
-    label: "Daily Lead Load",
-    desc: "How many leads the agent has received today vs their daily max",
-  },
-};
-
-const weightKeys = ["close_rate", "lead_load", "daily_load"] as const;
-
 export default function WeightsPage() {
-  const [weights, setWeights] = useState<Weights | null>(null);
-  const [draft, setDraft] = useState<Record<string, number>>({});
+  const [closeRate, setCloseRate] = useState(60);
+  const [savedCloseRate, setSavedCloseRate] = useState(60);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const leadLoad = 100 - closeRate;
+  const hasChanges = closeRate !== savedCloseRate;
+
   useEffect(() => {
-    fetch("/api/internal/weights")
+    fetch("/api/internal/weights", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);
         else {
-          setWeights(data);
-          setDraft({
-            close_rate: data.close_rate,
-            lead_load: data.lead_load,
-            daily_load: data.daily_load,
-          });
+          setCloseRate(data.close_rate ?? 60);
+          setSavedCloseRate(data.close_rate ?? 60);
         }
         setLoading(false);
       })
@@ -55,25 +30,17 @@ export default function WeightsPage() {
       });
   }, []);
 
-  const sum = Object.values(draft).reduce((a, b) => a + b, 0);
-  const isValid = sum === 100;
-  const hasChanges =
-    weights &&
-    weightKeys.some(
-      (k) => draft[k] !== weights[k as keyof Weights]
-    );
-
   async function handleSave() {
     setSaving(true);
     try {
       const res = await fetch("/api/internal/weights", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
+        body: JSON.stringify({ close_rate: closeRate, lead_load: leadLoad }),
       });
-      if (!res.ok) throw new Error((await res.json()).error);
       const data = await res.json();
-      setWeights(data);
+      if (!res.ok) throw new Error(data.error);
+      setSavedCloseRate(data.close_rate);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
@@ -99,9 +66,7 @@ export default function WeightsPage() {
       <div className="page-header">
         <h2>Scoring Weights</h2>
         <p>
-          Adjust how much each factor contributes to agent scoring. Weights must
-          sum to 100. Location, price range, and availability are hard
-          filters (pass/fail) and not weighted.
+          Balance how much close rate vs monthly lead load affects agent scoring.
         </p>
       </div>
 
@@ -115,131 +80,114 @@ export default function WeightsPage() {
       ) : (
         <div className="card">
           <div className="card-header">
-            <h3>Weight Configuration</h3>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span
+            <h3>Weight Balance</h3>
+            <button
+              className="btn btn-primary"
+              onClick={handleSave}
+              disabled={saving || !hasChanges}
+            >
+              {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
+            </button>
+          </div>
+
+          <div style={{ padding: "8px 0 24px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Close Rate</div>
+                <div className="text-muted text-sm">
+                  Blended 12-month and all-time performance
+                </div>
+              </div>
+              <div
                 className="font-mono"
-                style={{
-                  color: isValid ? "var(--success)" : "var(--danger)",
-                  fontWeight: 600,
-                }}
+                style={{ fontSize: 24, fontWeight: 700, color: "#34d399" }}
               >
-                Total: {sum}/100
-              </span>
-              <button
-                className="btn btn-primary"
-                onClick={handleSave}
-                disabled={saving || !isValid || !hasChanges}
+                {closeRate}%
+              </div>
+            </div>
+
+            <input
+              type="range"
+              className="weight-slider"
+              min={0}
+              max={100}
+              value={closeRate}
+              onChange={(e) => setCloseRate(parseInt(e.target.value, 10))}
+              style={{ width: "100%", margin: "12px 0" }}
+            />
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: 8,
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>
+                  Monthly Lead Load
+                </div>
+                <div className="text-muted text-sm">
+                  Monthly count relative to agent&apos;s goal range
+                </div>
+              </div>
+              <div
+                className="font-mono"
+                style={{ fontSize: 24, fontWeight: 700, color: "#fbbf24" }}
               >
-                {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
-              </button>
+                {leadLoad}%
+              </div>
             </div>
           </div>
 
-          {weightKeys.map((key) => (
-            <div className="weight-row" key={key}>
-              <div className="weight-label">
-                <div>{weightLabels[key].label}</div>
-                <div className="text-muted text-sm">
-                  {weightLabels[key].desc}
-                </div>
+          {/* Visual bar */}
+          <div
+            style={{
+              display: "flex",
+              height: 32,
+              borderRadius: "var(--radius)",
+              overflow: "hidden",
+              gap: 2,
+            }}
+          >
+            {closeRate > 0 && (
+              <div
+                style={{
+                  flex: closeRate,
+                  background: "#34d399",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#fff",
+                }}
+              >
+                {closeRate >= 15 ? `Close Rate ${closeRate}%` : `${closeRate}%`}
               </div>
-              <input
-                type="range"
-                className="weight-slider"
-                min={0}
-                max={100}
-                value={draft[key] ?? 0}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    [key]: parseInt(e.target.value, 10),
-                  })
-                }
-              />
-              <div className="weight-value">{draft[key] ?? 0}%</div>
-            </div>
-          ))}
-
-          <div className="mt-4">
-            <h4
-              style={{
-                fontSize: 12,
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-                marginBottom: 12,
-              }}
-            >
-              Visual Breakdown
-            </h4>
-            <div
-              style={{
-                display: "flex",
-                height: 32,
-                borderRadius: "var(--radius)",
-                overflow: "hidden",
-                gap: 2,
-              }}
-            >
-              {weightKeys.map((key, i) => {
-                const colors = ["#34d399", "#fbbf24", "#4f8ff7"];
-                const val = draft[key] ?? 0;
-                if (val === 0) return null;
-                return (
-                  <div
-                    key={key}
-                    style={{
-                      flex: val,
-                      background: colors[i],
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: "#fff",
-                      minWidth: val > 5 ? 0 : undefined,
-                    }}
-                    title={`${weightLabels[key].label}: ${val}%`}
-                  >
-                    {val >= 10 ? `${val}%` : ""}
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 16,
-                marginTop: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              {weightKeys.map((key, i) => {
-                const colors = ["#34d399", "#fbbf24", "#4f8ff7"];
-                return (
-                  <div
-                    key={key}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      fontSize: 11,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: 2,
-                        background: colors[i],
-                      }}
-                    />
-                    {weightLabels[key].label}
-                  </div>
-                );
-              })}
-            </div>
+            )}
+            {leadLoad > 0 && (
+              <div
+                style={{
+                  flex: leadLoad,
+                  background: "#fbbf24",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#fff",
+                }}
+              >
+                {leadLoad >= 15 ? `Lead Load ${leadLoad}%` : `${leadLoad}%`}
+              </div>
+            )}
           </div>
 
           <div
@@ -252,8 +200,8 @@ export default function WeightsPage() {
               color: "var(--text-muted)",
             }}
           >
-            <strong style={{ color: "var(--text)" }}>Hard Filters</strong> (not
-            weighted &mdash; agents must pass all three to be eligible):
+            <strong style={{ color: "var(--text)" }}>Hard Filters</strong> (agents
+            must pass all to be eligible):
             <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
               <li>
                 <strong>Location</strong> &mdash; Agent specialties must match
@@ -266,6 +214,27 @@ export default function WeightsPage() {
               <li>
                 <strong>Availability</strong> &mdash; Agent must not be in an
                 unavailability window
+              </li>
+              <li>
+                <strong>Daily Lead Cap</strong> &mdash; Agents under their cap
+                are preferred; overflow only when all eligible agents have hit
+                their cap
+              </li>
+            </ul>
+            <br />
+            <strong style={{ color: "var(--text)" }}>Score Modifiers</strong> (applied
+            after weighted scoring):
+            <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
+              <li>
+                <strong>Specialty Bonus</strong> &mdash; 1.15x multiplier for
+                agents with a specific area match (vs generalists who accept
+                all locations)
+              </li>
+              <li>
+                <strong>Monthly Over-Cap Penalty</strong> &mdash; 0.4x
+                multiplier when an agent exceeds their monthly max goal;
+                not a hard stop, but heavily favors agents still below
+                their minimum target
               </li>
             </ul>
           </div>

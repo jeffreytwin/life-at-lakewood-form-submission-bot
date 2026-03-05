@@ -7,15 +7,17 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("scoring_weights")
-      .select("*")
+      .select("id, close_rate, lead_load")
       .limit(1)
       .single();
 
     if (error) throw error;
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error) },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -24,15 +26,19 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, ...weights } = body;
+    const closeRate = typeof body.close_rate === "number" ? body.close_rate : null;
+    const leadLoad = typeof body.lead_load === "number" ? body.lead_load : null;
 
-    const weightValues = Object.values(weights).filter(
-      (v): v is number => typeof v === "number"
-    );
-    const sum = weightValues.reduce((a, b) => a + b, 0);
-    if (sum !== 100) {
+    if (closeRate === null || leadLoad === null) {
       return NextResponse.json(
-        { error: `Weights must sum to 100, got ${sum}` },
+        { error: "close_rate and lead_load are required" },
+        { status: 400 }
+      );
+    }
+
+    if (closeRate + leadLoad !== 100) {
+      return NextResponse.json(
+        { error: `Weights must sum to 100, got ${closeRate + leadLoad}` },
         { status: 400 }
       );
     }
@@ -52,16 +58,16 @@ export async function PATCH(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("scoring_weights")
-      .update(weights)
+      .update({ close_rate: closeRate, lead_load: leadLoad })
       .eq("id", existing.id)
-      .select()
+      .select("id, close_rate, lead_load")
       .single();
 
     if (error) throw error;
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error) },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
