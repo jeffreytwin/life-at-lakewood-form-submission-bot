@@ -41,20 +41,21 @@ export default function WeightsPage() {
     }
   }
 
-  function handleCloseRateBlur() {
+  async function handleSave() {
+    // Normalize the input before saving (replaces onBlur normalization
+    // which caused a React re-render that swallowed the first click)
     const num = parseInt(closeRateInput, 10);
     const val = isNaN(num) ? 0 : Math.min(100, Math.max(0, num));
+    const finalLeadLoad = 100 - val;
     setCloseRate(val);
     setCloseRateInput(String(val));
-  }
 
-  async function handleSave() {
     setSaving(true);
     try {
       const res = await fetch("/api/internal/weights", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ close_rate: closeRate, lead_load: leadLoad }),
+        body: JSON.stringify({ close_rate: val, lead_load: finalLeadLoad }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -130,7 +131,6 @@ export default function WeightsPage() {
                   className="form-input font-mono"
                   value={closeRateInput}
                   onChange={(e) => handleCloseRateChange(e.target.value)}
-                  onBlur={handleCloseRateBlur}
                   onFocus={(e) => e.target.select()}
                   style={{
                     width: 64,
