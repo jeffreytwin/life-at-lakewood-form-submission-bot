@@ -1,23 +1,34 @@
-import type { Agent } from "@/lib/supabase/types";
+import type { Agent, ScoringFactorKey } from "@/lib/supabase/types";
 import { DEFAULT_GLOBAL_WEIGHTS } from "@/lib/supabase/types";
 import type { AgentScore, ScoringContext } from "./types";
 import { scoreCloseRate } from "./factors/close-rate";
 import { scoreLeadLoad } from "./factors/lead-load";
+import { scoreDailyLoad } from "./factors/daily-load";
 import { agentMatchesLocation } from "./factors/location-match";
 import { agentMatchesPriceRange } from "./factors/price-range";
 import { agentIsAvailable } from "./factors/availability";
 
-export function scoreAgent(agent: Agent, context: ScoringContext): AgentScore {
-  const weights = DEFAULT_GLOBAL_WEIGHTS;
+export function scoreAgent(
+  agent: Agent,
+  context: ScoringContext,
+  weights?: Record<ScoringFactorKey, number>
+): AgentScore {
+  const w = weights ?? DEFAULT_GLOBAL_WEIGHTS;
+  const total = w.close_rate + w.lead_load + w.daily_load;
+
+  // Normalize weights so they sum to 1.0
+  const norm = total > 0 ? total : 1;
 
   const factors = {
     close_rate: scoreCloseRate(agent),
     lead_load: scoreLeadLoad(agent, context),
+    daily_load: scoreDailyLoad(agent, context),
   };
 
   const totalScore =
-    factors.close_rate * weights.close_rate +
-    factors.lead_load * weights.lead_load;
+    factors.close_rate * (w.close_rate / norm) +
+    factors.lead_load * (w.lead_load / norm) +
+    factors.daily_load * (w.daily_load / norm);
 
   return {
     agentId: agent.id,
@@ -29,10 +40,11 @@ export function scoreAgent(agent: Agent, context: ScoringContext): AgentScore {
 
 export function scoreAgents(
   agents: Agent[],
-  context: ScoringContext
+  context: ScoringContext,
+  weights?: Record<ScoringFactorKey, number>
 ): AgentScore[] {
   return agents
-    .map((agent) => scoreAgent(agent, context))
+    .map((agent) => scoreAgent(agent, context, weights))
     .sort((a, b) => b.totalScore - a.totalScore);
 }
 
@@ -43,7 +55,8 @@ export function scoreAgents(
 export function selectBestAgent(
   agents: Agent[],
   context: ScoringContext,
-  excludeAgentIds: string[] = []
+  excludeAgentIds: string[] = [],
+  weights?: Record<ScoringFactorKey, number>
 ): AgentScore | null {
   const eligible = agents.filter(
     (agent) =>
@@ -55,6 +68,6 @@ export function selectBestAgent(
 
   if (eligible.length === 0) return null;
 
-  const scored = scoreAgents(eligible, context);
+  const scored = scoreAgents(eligible, context, weights);
   return scored[0] ?? null;
 }

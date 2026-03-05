@@ -18,6 +18,7 @@ type AgentForm = {
   location_specialties: string[];
   monthly_lead_goal_min: number;
   monthly_lead_goal_max: number;
+  daily_lead_max: number;
   unavailability_windows: UnavailabilityWindow[];
   price_ranges: PriceRange[];
 };
@@ -32,6 +33,7 @@ const emptyAgent: AgentForm = {
   location_specialties: [],
   monthly_lead_goal_min: 5,
   monthly_lead_goal_max: 15,
+  daily_lead_max: 5,
   unavailability_windows: [],
   price_ranges: [...ALL_PRICE_RANGES],
 };
@@ -87,6 +89,7 @@ export default function AgentsPage() {
       location_specialties: agent.location_specialties,
       monthly_lead_goal_min: agent.monthly_lead_goal_min,
       monthly_lead_goal_max: agent.monthly_lead_goal_max,
+      daily_lead_max: agent.daily_lead_max,
       unavailability_windows: agent.unavailability_windows ?? [],
       price_ranges: agent.price_ranges ?? [...ALL_PRICE_RANGES],
     });
@@ -591,6 +594,27 @@ export default function AgentsPage() {
                       }
                     />
                   </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Daily Lead Max</label>
+                  <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
+                    Soft cap on leads per day. Agent&apos;s score drops as they
+                    approach this limit. Set to 0 to disable.
+                  </p>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min={0}
+                    value={form.daily_lead_max}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        daily_lead_max: parseInt(e.target.value, 10) || 0,
+                      })
+                    }
+                    style={{ maxWidth: 120 }}
+                  />
                 </div>
 
                 <div className="form-group" style={{ display: "flex", gap: 16 }}>

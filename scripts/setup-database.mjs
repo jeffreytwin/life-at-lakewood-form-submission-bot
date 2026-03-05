@@ -58,6 +58,10 @@ const migrations = [
   'supabase/migrations/001_initial_schema.sql',
   'supabase/migrations/002_seed_data.sql',
   'supabase/migrations/003_increment_lead_count_function.sql',
+  'supabase/migrations/004_per_agent_scoring_priority.sql',
+  'supabase/migrations/005_price_ranges_and_cleanup.sql',
+  'supabase/migrations/006_scoring_simplification.sql',
+  'supabase/migrations/007_daily_load_and_weights_cleanup.sql',
 ];
 
 async function runMigrationViaManagementAPI(sql, label) {

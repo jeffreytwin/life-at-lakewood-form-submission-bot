@@ -4,49 +4,27 @@ import { useEffect, useState } from "react";
 
 interface Weights {
   id: string;
-  location_match: number;
   close_rate: number;
   lead_load: number;
-  lead_value: number;
-  availability: number;
-  optimal_load: number;
+  daily_load: number;
 }
 
 const weightLabels: Record<string, { label: string; desc: string }> = {
-  location_match: {
-    label: "Location Match",
-    desc: "How well the agent's specialties match the lead's location",
-  },
   close_rate: {
     label: "Close Rate",
     desc: "Agent's blended 12-month and all-time close rate performance",
   },
   lead_load: {
-    label: "Lead Load",
+    label: "Monthly Lead Load",
     desc: "Monthly lead count relative to agent's goal range",
   },
-  lead_value: {
-    label: "Lead Value",
-    desc: "Lead price/value matching (currently neutral placeholder)",
-  },
-  availability: {
-    label: "Availability",
-    desc: "Whether the agent is within their working hours",
-  },
-  optimal_load: {
-    label: "Optimal Load",
-    desc: "Cap adjustment for agents with custom load factors",
+  daily_load: {
+    label: "Daily Lead Load",
+    desc: "How many leads the agent has received today vs their daily max",
   },
 };
 
-const weightKeys = [
-  "location_match",
-  "close_rate",
-  "lead_load",
-  "lead_value",
-  "availability",
-  "optimal_load",
-] as const;
+const weightKeys = ["close_rate", "lead_load", "daily_load"] as const;
 
 export default function WeightsPage() {
   const [weights, setWeights] = useState<Weights | null>(null);
@@ -64,12 +42,9 @@ export default function WeightsPage() {
         else {
           setWeights(data);
           setDraft({
-            location_match: data.location_match,
             close_rate: data.close_rate,
             lead_load: data.lead_load,
-            lead_value: data.lead_value,
-            availability: data.availability,
-            optimal_load: data.optimal_load,
+            daily_load: data.daily_load,
           });
         }
         setLoading(false);
@@ -125,7 +100,8 @@ export default function WeightsPage() {
         <h2>Scoring Weights</h2>
         <p>
           Adjust how much each factor contributes to agent scoring. Weights must
-          sum to 100.
+          sum to 100. Location, price range, and availability are hard
+          filters (pass/fail) and not weighted.
         </p>
       </div>
 
@@ -207,14 +183,7 @@ export default function WeightsPage() {
               }}
             >
               {weightKeys.map((key, i) => {
-                const colors = [
-                  "#4f8ff7",
-                  "#34d399",
-                  "#fbbf24",
-                  "#f97316",
-                  "#a78bfa",
-                  "#f87171",
-                ];
+                const colors = ["#34d399", "#fbbf24", "#4f8ff7"];
                 const val = draft[key] ?? 0;
                 if (val === 0) return null;
                 return (
@@ -247,14 +216,7 @@ export default function WeightsPage() {
               }}
             >
               {weightKeys.map((key, i) => {
-                const colors = [
-                  "#4f8ff7",
-                  "#34d399",
-                  "#fbbf24",
-                  "#f97316",
-                  "#a78bfa",
-                  "#f87171",
-                ];
+                const colors = ["#34d399", "#fbbf24", "#4f8ff7"];
                 return (
                   <div
                     key={key}
@@ -278,6 +240,34 @@ export default function WeightsPage() {
                 );
               })}
             </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 24,
+              padding: "12px 16px",
+              background: "#1a1d27",
+              borderRadius: "var(--radius)",
+              fontSize: 12,
+              color: "var(--text-muted)",
+            }}
+          >
+            <strong style={{ color: "var(--text)" }}>Hard Filters</strong> (not
+            weighted &mdash; agents must pass all three to be eligible):
+            <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
+              <li>
+                <strong>Location</strong> &mdash; Agent specialties must match
+                the lead&apos;s location
+              </li>
+              <li>
+                <strong>Price Range</strong> &mdash; Agent must accept the
+                lead&apos;s price bracket
+              </li>
+              <li>
+                <strong>Availability</strong> &mdash; Agent must not be in an
+                unavailability window
+              </li>
+            </ul>
           </div>
         </div>
       )}

@@ -538,7 +538,7 @@ export default function SimulatePage() {
                           {expandedLead === r.leadIndex && (
                             <tr>
                               <td
-                                colSpan={5}
+                                colSpan={6}
                                 style={{
                                   padding: "8px 16px",
                                   background: "#111318",
@@ -560,7 +560,10 @@ export default function SimulatePage() {
                                           Close Rate
                                         </th>
                                         <th style={{ fontSize: 11 }}>
-                                          Lead Load
+                                          Mo. Load
+                                        </th>
+                                        <th style={{ fontSize: 11 }}>
+                                          Daily Load
                                         </th>
                                       </tr>
                                     </thead>
@@ -627,6 +630,16 @@ export default function SimulatePage() {
                                               ? "-"
                                               : (
                                                   s.factors.lead_load ?? 0
+                                                ).toFixed(2)}
+                                          </td>
+                                          <td
+                                            className="font-mono"
+                                            style={{ fontSize: 12 }}
+                                          >
+                                            {s.filtered
+                                              ? "-"
+                                              : (
+                                                  s.factors.daily_load ?? 0
                                                 ).toFixed(2)}
                                           </td>
                                         </tr>
