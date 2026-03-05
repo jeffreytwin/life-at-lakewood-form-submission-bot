@@ -8,9 +8,18 @@ import { agentMatchesPriceRange } from "./factors/price-range";
 import { agentIsAvailable } from "./factors/availability";
 import {
   SPECIALTY_BONUS_MULTIPLIER,
-  DAILY_CAP_AT_MAX_MULTIPLIER,
-  DAILY_CAP_RAMP_START_PCT,
+  MONTHLY_OVER_CAP_MULTIPLIER,
 } from "@/lib/shared/constants";
+
+/**
+ * Returns true if agent is under their daily lead cap.
+ * Agents with daily_lead_max <= 0 have no cap (always under).
+ */
+function agentUnderDailyCap(agent: Agent, context: ScoringContext): boolean {
+  if (agent.daily_lead_max <= 0) return true;
+  const todayCount = context.dailyLeadCounts.get(agent.id) ?? 0;
+  return todayCount < agent.daily_lead_max;
+}
 
 /**
  * Returns a multiplier for location specialty match.
@@ -28,27 +37,26 @@ function specialtyMultiplier(agent: Agent, context: ScoringContext): number {
 }
 
 /**
- * Returns a multiplier based on how close the agent is to their daily cap.
- * - Well under cap: 1.0 (no penalty)
- * - Approaching cap: gentle ramp down
- * - At/over cap: DAILY_CAP_AT_MAX_MULTIPLIER (e.g. 0.3)
+ * Returns a multiplier based on how far the agent is past their monthly max goal.
+ * - Under max goal: 1.0 (no penalty)
+ * - At max goal: MONTHLY_OVER_CAP_MULTIPLIER (e.g. 0.4)
+ * - Further over: ramps down to floor of 0.1
  *
- * Agents with daily_lead_max <= 0 have no cap (always 1.0).
+ * This is NOT a hard stop — agents over their monthly max can still receive
+ * leads, but they're heavily deprioritized so agents under their min get fed first.
  */
-function dailyCapMultiplier(agent: Agent, context: ScoringContext): number {
-  if (agent.daily_lead_max <= 0) return 1.0;
+function monthlyCapMultiplier(agent: Agent, context: ScoringContext): number {
+  const maxGoal = agent.monthly_lead_goal_max;
+  if (maxGoal <= 0) return 1.0; // No goal set
 
-  const todayCount = context.dailyLeadCounts.get(agent.id) ?? 0;
-  const max = agent.daily_lead_max;
+  const currentCount = context.currentMonthLeadCounts.get(agent.id) ?? 0;
+  if (currentCount < maxGoal) return 1.0;
 
-  if (todayCount >= max) return DAILY_CAP_AT_MAX_MULTIPLIER;
-
-  const rampStart = Math.floor(max * DAILY_CAP_RAMP_START_PCT);
-  if (todayCount <= rampStart) return 1.0;
-
-  // Linear ramp from 1.0 down to DAILY_CAP_AT_MAX_MULTIPLIER
-  const progress = (todayCount - rampStart) / (max - rampStart);
-  return 1.0 - progress * (1.0 - DAILY_CAP_AT_MAX_MULTIPLIER);
+  // At max goal, apply the base penalty. Further over, ramp down more.
+  // Each additional lead beyond max reduces multiplier, floored at 0.1
+  const overBy = currentCount - maxGoal;
+  const penalty = MONTHLY_OVER_CAP_MULTIPLIER - overBy * 0.05;
+  return Math.max(penalty, 0.1);
 }
 
 export function scoreAgent(
@@ -71,10 +79,10 @@ export function scoreAgent(
     factors.close_rate * (w.close_rate / norm) +
     factors.lead_load * (w.lead_load / norm);
 
-  // Apply specialty bonus and daily cap penalty
+  // Apply specialty bonus and monthly over-cap penalty
   const specBonus = specialtyMultiplier(agent, context);
-  const capPenalty = dailyCapMultiplier(agent, context);
-  const totalScore = baseScore * specBonus * capPenalty;
+  const monthlyCap = monthlyCapMultiplier(agent, context);
+  const totalScore = baseScore * specBonus * monthlyCap;
 
   return {
     agentId: agent.id,
@@ -82,7 +90,7 @@ export function scoreAgent(
     totalScore,
     factors,
     specialtyBonus: specBonus,
-    dailyCapMultiplier: capPenalty,
+    monthlyCapMultiplier: monthlyCap,
   };
 }
 
@@ -98,8 +106,10 @@ export function scoreAgents(
 
 /**
  * Hard-filter agents by location, price range, and availability,
- * then score and rank. Daily cap is now a soft penalty in scoring
- * (agents at/over cap get a 0.3x multiplier but are NOT excluded).
+ * then score and rank. Daily cap is a hard filter: prefer agents
+ * under their cap, but if ALL eligible agents have hit their cap,
+ * allow overflow to the highest-scored agent anyway.
+ * Monthly over-cap is a soft penalty (0.4x multiplier, not a hard stop).
  * Specialty bonus gives a 1.15x multiplier to area specialists.
  */
 export function selectBestAgent(
@@ -118,6 +128,13 @@ export function selectBestAgent(
 
   if (eligible.length === 0) return null;
 
-  const scored = scoreAgents(eligible, context, weights);
+  // Prefer agents under their daily cap
+  const underCap = eligible.filter((a) => agentUnderDailyCap(a, context));
+
+  // If at least one agent is under cap, only score those.
+  // If ALL are at/over cap, allow overflow to any eligible agent.
+  const pool = underCap.length > 0 ? underCap : eligible;
+
+  const scored = scoreAgents(pool, context, weights);
   return scored[0] ?? null;
 }

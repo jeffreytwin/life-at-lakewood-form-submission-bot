@@ -54,7 +54,8 @@ interface LeadDecision {
   assignedAgentId: string | null;
   totalScore: number | null;
   specialtyBonus: number | null;
-  dailyCapMult: number | null;
+  monthlyCapMult: number | null;
+  dailyCapped: boolean; // true if assigned via overflow (all at daily cap)
   factors: Record<string, number> | null;
 }
 
@@ -65,7 +66,7 @@ interface DaySummary {
   leadsAssigned: number;
   leadsUnassigned: number;
   agentBreakdown: Record<string, number>;
-  overflowCount: number; // leads assigned despite daily cap penalty
+  overflowCount: number; // leads assigned despite daily cap
   leadDecisions: LeadDecision[];
 }
 
@@ -123,11 +124,10 @@ function formatEasternTime(utcDate: Date): string {
   });
 }
 
-/** Check if agent is at/over daily cap (for overflow tracking only) */
-function agentAtDailyCap(agent: Agent, dailyCounts: Map<string, number>): boolean {
-  if (agent.daily_lead_max <= 0) return false;
+function agentUnderDailyCap(agent: Agent, dailyCounts: Map<string, number>): boolean {
+  if (agent.daily_lead_max <= 0) return true;
   const count = dailyCounts.get(agent.id) ?? 0;
-  return count >= agent.daily_lead_max;
+  return count < agent.daily_lead_max;
 }
 
 export async function POST(request: NextRequest) {
@@ -268,20 +268,20 @@ export async function POST(request: NextRequest) {
               assignedAgentId: null,
               totalScore: null,
               specialtyBonus: null,
-              dailyCapMult: null,
+              monthlyCapMult: null,
+              dailyCapped: false,
               factors: null,
             });
             continue;
           }
 
-          // Score all eligible agents (daily cap is now a soft penalty in scoring)
-          const scored = scoreAgents(eligible, context, weights);
-          const winner = scored[0];
+          // Daily cap: hard filter with overflow
+          const underCap = eligible.filter((a) => agentUnderDailyCap(a, dailyCounts));
+          const pool = underCap.length > 0 ? underCap : eligible;
+          const isOverflow = underCap.length === 0;
 
-          // Track if the winner was at/over their daily cap (overflow)
-          const isOverflow = winner
-            ? agentAtDailyCap(agents.find((a) => a.id === winner.agentId)!, dailyCounts)
-            : false;
+          const scored = scoreAgents(pool, context, weights);
+          const winner = scored[0];
 
           if (winner) {
             dayAssigned++;
@@ -306,7 +306,8 @@ export async function POST(request: NextRequest) {
             assignedAgentId: winner?.agentId ?? null,
             totalScore: winner?.totalScore ?? null,
             specialtyBonus: winner?.specialtyBonus ?? null,
-            dailyCapMult: winner?.dailyCapMultiplier ?? null,
+            monthlyCapMult: winner?.monthlyCapMultiplier ?? null,
+            dailyCapped: isOverflow && winner !== null,
             factors: winner?.factors ?? null,
           });
         }
@@ -500,8 +501,12 @@ export async function POST(request: NextRequest) {
           agentIsAvailable(a, context)
       );
 
-      // Score all eligible (daily cap is now a soft penalty in scoring)
-      const scored = scoreAgents(eligible, context, weights);
+      // Daily cap with overflow
+      const underCap = eligible.filter((a) => agentUnderDailyCap(a, dailyCounts));
+      const pool = underCap.length > 0 ? underCap : eligible;
+      const isOverflow = underCap.length === 0 && eligible.length > 0;
+
+      const scored = scoreAgents(pool, context, weights);
 
       for (const s of scored) {
         const entry = allAgentScores.find((a) => a.agentId === s.agentId);
@@ -519,17 +524,12 @@ export async function POST(request: NextRequest) {
 
       const winner = scored[0] ?? null;
 
-      // Check if the winner was at/over their daily cap
-      const winnerAtCap = winner
-        ? agentAtDailyCap(agents.find((a) => a.id === winner.agentId)!, dailyCounts)
-        : false;
-
       results.push({
         leadIndex: i,
         lead: input,
         assignedAgent: winner?.agentName ?? null,
         assignedAgentId: winner?.agentId ?? null,
-        dailyCapped: winnerAtCap,
+        dailyCapped: isOverflow && winner !== null,
         scores: allAgentScores,
       });
 

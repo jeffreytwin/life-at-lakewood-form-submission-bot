@@ -16,11 +16,9 @@ export const LEAD_LOAD_ZERO_SCORE_PCT = 1.2; // 0.0 score at 120% of max goal
 // vs generalists (no specialties = match all). 1.15 = 15% boost for specialists.
 export const SPECIALTY_BONUS_MULTIPLIER = 1.15;
 
-// Daily cap soft penalty: multiplier applied as agent approaches daily max
-// At daily max or above, score is multiplied by this (not excluded)
-export const DAILY_CAP_AT_MAX_MULTIPLIER = 0.3;
-// Fraction of daily max at which penalty starts ramping down
-export const DAILY_CAP_RAMP_START_PCT = 0.6;
+// Monthly over-cap penalty: multiplier applied when agent exceeds monthly_lead_goal_max
+// At max_goal, score is multiplied by this. Further over = even lower (floor 0.1).
+export const MONTHLY_OVER_CAP_MULTIPLIER = 0.4;
 
 // Lead value scoring
 export const LEAD_VALUE_CLOSE_MATCH_THRESHOLD = 100_000; // Within $100K = 0.5 score

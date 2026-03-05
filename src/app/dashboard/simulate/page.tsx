@@ -38,7 +38,8 @@ interface LeadDecision {
   assignedAgentId: string | null;
   totalScore: number | null;
   specialtyBonus: number | null;
-  dailyCapMult: number | null;
+  monthlyCapMult: number | null;
+  dailyCapped: boolean;
   factors: Record<string, number> | null;
 }
 
@@ -754,7 +755,7 @@ function ThirtyDayResults({
                                 <th style={{ fontSize: 11 }}>Assigned To</th>
                                 <th style={{ fontSize: 11 }}>Score</th>
                                 <th style={{ fontSize: 11 }}>Spec.</th>
-                                <th style={{ fontSize: 11 }}>Cap</th>
+                                <th style={{ fontSize: 11 }}>Mo. Cap</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -780,6 +781,17 @@ function ThirtyDayResults({
                                     }}
                                   >
                                     {ld.assignedAgent ?? "No match"}
+                                    {ld.dailyCapped && (
+                                      <span
+                                        style={{
+                                          marginLeft: 4,
+                                          fontSize: 9,
+                                          color: "#fbbf24",
+                                        }}
+                                      >
+                                        overflow
+                                      </span>
+                                    )}
                                   </td>
                                   <td
                                     className="font-mono"
@@ -809,14 +821,14 @@ function ThirtyDayResults({
                                     style={{
                                       fontSize: 11,
                                       color:
-                                        ld.dailyCapMult != null &&
-                                        ld.dailyCapMult < 1
+                                        ld.monthlyCapMult != null &&
+                                        ld.monthlyCapMult < 1
                                           ? "#fbbf24"
                                           : undefined,
                                     }}
                                   >
-                                    {ld.dailyCapMult != null
-                                      ? `${ld.dailyCapMult.toFixed(2)}x`
+                                    {ld.monthlyCapMult != null
+                                      ? `${ld.monthlyCapMult.toFixed(2)}x`
                                       : "-"}
                                   </td>
                                 </tr>

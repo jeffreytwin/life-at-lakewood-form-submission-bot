@@ -215,6 +215,11 @@ export default function WeightsPage() {
                 <strong>Availability</strong> &mdash; Agent must not be in an
                 unavailability window
               </li>
+              <li>
+                <strong>Daily Lead Cap</strong> &mdash; Agents under their cap
+                are preferred; overflow only when all eligible agents have hit
+                their cap
+              </li>
             </ul>
             <br />
             <strong style={{ color: "var(--text)" }}>Score Modifiers</strong> (applied
@@ -226,8 +231,10 @@ export default function WeightsPage() {
                 all locations)
               </li>
               <li>
-                <strong>Daily Cap Penalty</strong> &mdash; Gradual penalty as
-                agents approach their daily max (0.3x at cap); not a hard stop
+                <strong>Monthly Over-Cap Penalty</strong> &mdash; 0.4x
+                multiplier when an agent exceeds their monthly max goal;
+                not a hard stop, but heavily favors agents still below
+                their minimum target
               </li>
             </ul>
           </div>
