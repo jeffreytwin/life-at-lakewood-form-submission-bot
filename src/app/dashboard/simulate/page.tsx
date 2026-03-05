@@ -29,8 +29,8 @@ interface SimResponse {
 }
 
 const PRICE_OPTIONS = [
-  "$250,000 - $350,000",
-  "$350,000 - $500,000",
+  "$150,000 - $250,000",
+  "$250,000 - $500,000",
   "$500,000 - $750,000",
   "$750,000 - $1,000,000",
   "$1,000,000 - $1,500,000",
@@ -45,7 +45,7 @@ export default function SimulatePage() {
   const [singleForm, setSingleForm] = useState({
     location: "",
     village: "",
-    price: "$450,000 - $550,000",
+    price: "$500,000 - $750,000",
   });
 
   // Bulk form
@@ -361,8 +361,8 @@ export default function SimulatePage() {
 
                 {Object.keys(result.summary).length === 0 ? (
                   <p className="text-muted" style={{ padding: 16 }}>
-                    No agents matched any leads. Check location and price range
-                    filters.
+                    No agents matched any leads. Check location, price range,
+                    and availability filters.
                   </p>
                 ) : (
                   <div
@@ -562,9 +562,6 @@ export default function SimulatePage() {
                                         <th style={{ fontSize: 11 }}>
                                           Lead Load
                                         </th>
-                                        <th style={{ fontSize: 11 }}>
-                                          Availability
-                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody>
@@ -630,16 +627,6 @@ export default function SimulatePage() {
                                               ? "-"
                                               : (
                                                   s.factors.lead_load ?? 0
-                                                ).toFixed(2)}
-                                          </td>
-                                          <td
-                                            className="font-mono"
-                                            style={{ fontSize: 12 }}
-                                          >
-                                            {s.filtered
-                                              ? "-"
-                                              : (
-                                                  s.factors.availability ?? 0
                                                 ).toFixed(2)}
                                           </td>
                                         </tr>

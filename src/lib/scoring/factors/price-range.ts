@@ -16,11 +16,14 @@ export function parsePriceToMidpoint(priceStr: string): number | null {
   return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
-/** Map a dollar amount to a price range bucket */
+/** Map a dollar amount to a price range bucket (250K increments) */
 export function priceToBucket(price: number): PriceRange {
-  if (price < 500_000) return "under_500k";
-  if (price <= 1_000_000) return "500k_to_1m";
-  return "1m_plus";
+  if (price < 250_000) return "under_250k";
+  if (price < 500_000) return "250k_to_500k";
+  if (price < 750_000) return "500k_to_750k";
+  if (price < 1_000_000) return "750k_to_1m";
+  if (price < 1_500_000) return "1m_to_1_5m";
+  return "1_5m_plus";
 }
 
 /**

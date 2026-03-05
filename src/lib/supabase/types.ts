@@ -48,23 +48,48 @@ export interface Location {
   created_at: string;
 }
 
-/** Predefined price range buckets for agent eligibility */
+/** Predefined price range buckets in ~$250K increments */
 export type PriceRange =
-  | "under_500k"
-  | "500k_to_1m"
-  | "1m_plus";
+  | "under_250k"
+  | "250k_to_500k"
+  | "500k_to_750k"
+  | "750k_to_1m"
+  | "1m_to_1_5m"
+  | "1_5m_plus";
 
 export const PRICE_RANGE_LABELS: Record<PriceRange, string> = {
-  under_500k: "Under $500K",
-  "500k_to_1m": "$500K - $1M",
-  "1m_plus": "$1M+",
+  under_250k: "Under $250K",
+  "250k_to_500k": "$250K - $500K",
+  "500k_to_750k": "$500K - $750K",
+  "750k_to_1m": "$750K - $1M",
+  "1m_to_1_5m": "$1M - $1.5M",
+  "1_5m_plus": "$1.5M+",
 };
 
 export const ALL_PRICE_RANGES: PriceRange[] = [
-  "under_500k",
-  "500k_to_1m",
-  "1m_plus",
+  "under_250k",
+  "250k_to_500k",
+  "500k_to_750k",
+  "750k_to_1m",
+  "1m_to_1_5m",
+  "1_5m_plus",
 ];
+
+export interface UnavailabilityWindow {
+  day: number; // 0 = Sunday, 6 = Saturday
+  start: string; // "08:00"
+  end: string; // "17:00"
+}
+
+export const DAY_LABELS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
 
 export interface Agent {
   id: string;
@@ -80,32 +105,20 @@ export interface Agent {
   monthly_lead_goal_min: number;
   monthly_lead_goal_max: number;
   optimal_load_factor: number;
-  availability_windows: AvailabilityWindow[] | null;
-  scoring_priority: ScoringFactorKey[];
+  unavailability_windows: UnavailabilityWindow[] | null;
   price_ranges: PriceRange[] | null;
   created_at: string;
   updated_at: string;
 }
 
-export type ScoringFactorKey =
-  | "close_rate"
-  | "lead_load"
-  | "availability";
+/** Global scoring factor keys (close_rate and lead_load only; availability is a hard filter) */
+export type ScoringFactorKey = "close_rate" | "lead_load";
 
-export const DEFAULT_SCORING_PRIORITY: ScoringFactorKey[] = [
-  "close_rate",
-  "lead_load",
-  "availability",
-];
-
-/** Weights assigned by rank position (index 0 = rank 1 = highest priority) */
-export const RANK_WEIGHTS = [50, 30, 20] as const;
-
-export interface AvailabilityWindow {
-  day: number; // 0 = Sunday, 6 = Saturday
-  start: string; // "08:00"
-  end: string; // "19:00"
-}
+/** Default global weights: 60% close rate, 40% lead load */
+export const DEFAULT_GLOBAL_WEIGHTS: Record<ScoringFactorKey, number> = {
+  close_rate: 60,
+  lead_load: 40,
+};
 
 export interface Lead {
   id: string;
