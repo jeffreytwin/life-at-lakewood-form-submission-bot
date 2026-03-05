@@ -249,9 +249,11 @@ export default function WeightsPage() {
             after weighted scoring):
             <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
               <li>
-                <strong>Specialty Bonus</strong> &mdash; 1.15x multiplier for
+                <strong>Specialty Bonus</strong> &mdash; Up to 1.15x multiplier for
                 agents with a specific area match (vs generalists who accept
-                all locations)
+                all locations). Scales with Close Rate weight &mdash; at 100%
+                Lead Load the bonus is disabled so it can&apos;t overpower
+                fair distribution
               </li>
               <li>
                 <strong>Monthly Over-Cap Penalty</strong> &mdash; 0.4x

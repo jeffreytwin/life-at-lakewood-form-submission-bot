@@ -85,17 +85,22 @@ export function scoreAgent(
     factors.close_rate * (ampCR / ampNorm) +
     factors.lead_load * (ampLL / ampNorm);
 
-  // Apply specialty bonus and monthly over-cap penalty
-  const specBonus = specialtyMultiplier(agent, context);
+  // Scale specialty bonus by close_rate weight proportion.
+  // At 100% lead load the bonus is 1.0 (disabled) so it can't overpower
+  // the lead-load signal. At 100% close rate the full bonus applies.
+  const fullBonus = specialtyMultiplier(agent, context);
+  const closeRatePct = rawCR; // 0..1
+  const scaledBonus = 1.0 + (fullBonus - 1.0) * closeRatePct;
+
   const monthlyCap = monthlyCapMultiplier(agent, context);
-  const totalScore = baseScore * specBonus * monthlyCap;
+  const totalScore = baseScore * scaledBonus * monthlyCap;
 
   return {
     agentId: agent.id,
     agentName: agent.name,
     totalScore,
     factors,
-    specialtyBonus: specBonus,
+    specialtyBonus: scaledBonus,
     monthlyCapMultiplier: monthlyCap,
   };
 }
