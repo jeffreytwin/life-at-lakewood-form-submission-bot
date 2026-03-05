@@ -29,6 +29,19 @@ interface SimResponse {
   unassigned: number;
 }
 
+interface LeadDecision {
+  index: number;
+  time: string;
+  location: string;
+  price: string;
+  assignedAgent: string | null;
+  assignedAgentId: string | null;
+  totalScore: number | null;
+  specialtyBonus: number | null;
+  dailyCapMult: number | null;
+  factors: Record<string, number> | null;
+}
+
 interface DaySummary {
   day: number;
   date: string;
@@ -37,6 +50,7 @@ interface DaySummary {
   leadsUnassigned: number;
   agentBreakdown: Record<string, number>;
   overflowCount: number;
+  leadDecisions: LeadDecision[];
 }
 
 interface ThirtyDayResponse {
@@ -669,6 +683,7 @@ function ThirtyDayResults({
                               flexDirection: "column",
                               gap: 4,
                               marginTop: 8,
+                              marginBottom: 16,
                             }}
                           >
                             {Object.entries(day.agentBreakdown)
@@ -728,6 +743,86 @@ function ThirtyDayResults({
                               </span>
                             )}
                           </div>
+
+                          <strong>Lead-by-lead decisions:</strong>
+                          <table style={{ width: "100%", marginTop: 8 }}>
+                            <thead>
+                              <tr>
+                                <th style={{ fontSize: 11 }}>Time (ET)</th>
+                                <th style={{ fontSize: 11 }}>Location</th>
+                                <th style={{ fontSize: 11 }}>Price</th>
+                                <th style={{ fontSize: 11 }}>Assigned To</th>
+                                <th style={{ fontSize: 11 }}>Score</th>
+                                <th style={{ fontSize: 11 }}>Spec.</th>
+                                <th style={{ fontSize: 11 }}>Cap</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {day.leadDecisions.map((ld) => (
+                                <tr key={ld.index}>
+                                  <td
+                                    className="font-mono"
+                                    style={{ fontSize: 11 }}
+                                  >
+                                    {ld.time}
+                                  </td>
+                                  <td style={{ fontSize: 11 }}>
+                                    {ld.location}
+                                  </td>
+                                  <td style={{ fontSize: 11 }}>{ld.price}</td>
+                                  <td
+                                    style={{
+                                      fontSize: 11,
+                                      fontWeight: 600,
+                                      color: ld.assignedAgent
+                                        ? undefined
+                                        : "#f87171",
+                                    }}
+                                  >
+                                    {ld.assignedAgent ?? "No match"}
+                                  </td>
+                                  <td
+                                    className="font-mono"
+                                    style={{ fontSize: 11 }}
+                                  >
+                                    {ld.totalScore != null
+                                      ? ld.totalScore.toFixed(2)
+                                      : "-"}
+                                  </td>
+                                  <td
+                                    className="font-mono"
+                                    style={{
+                                      fontSize: 11,
+                                      color:
+                                        ld.specialtyBonus != null &&
+                                        ld.specialtyBonus > 1
+                                          ? "#34d399"
+                                          : undefined,
+                                    }}
+                                  >
+                                    {ld.specialtyBonus != null
+                                      ? `${ld.specialtyBonus.toFixed(2)}x`
+                                      : "-"}
+                                  </td>
+                                  <td
+                                    className="font-mono"
+                                    style={{
+                                      fontSize: 11,
+                                      color:
+                                        ld.dailyCapMult != null &&
+                                        ld.dailyCapMult < 1
+                                          ? "#fbbf24"
+                                          : undefined,
+                                    }}
+                                  >
+                                    {ld.dailyCapMult != null
+                                      ? `${ld.dailyCapMult.toFixed(2)}x`
+                                      : "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </td>
                     </tr>

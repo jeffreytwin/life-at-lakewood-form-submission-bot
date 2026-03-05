@@ -6,15 +6,49 @@ import { scoreLeadLoad } from "./factors/lead-load";
 import { agentMatchesLocation } from "./factors/location-match";
 import { agentMatchesPriceRange } from "./factors/price-range";
 import { agentIsAvailable } from "./factors/availability";
+import {
+  SPECIALTY_BONUS_MULTIPLIER,
+  DAILY_CAP_AT_MAX_MULTIPLIER,
+  DAILY_CAP_RAMP_START_PCT,
+} from "@/lib/shared/constants";
 
 /**
- * Returns true if agent is under their daily lead cap.
- * Agents with daily_lead_max <= 0 have no cap (always under).
+ * Returns a multiplier for location specialty match.
+ * Agents with specific matching specialties get a bonus (1.15x).
+ * Generalists (no specialties = match all) get 1.0x.
  */
-function agentUnderDailyCap(agent: Agent, context: ScoringContext): boolean {
-  if (agent.daily_lead_max <= 0) return true;
+function specialtyMultiplier(agent: Agent, context: ScoringContext): number {
+  const specialties = agent.location_specialties;
+
+  // Generalists (no specialties) get no bonus
+  if (!specialties || specialties.length === 0) return 1.0;
+
+  // Agent has specialties and passed the hard filter, so they match — give bonus
+  return SPECIALTY_BONUS_MULTIPLIER;
+}
+
+/**
+ * Returns a multiplier based on how close the agent is to their daily cap.
+ * - Well under cap: 1.0 (no penalty)
+ * - Approaching cap: gentle ramp down
+ * - At/over cap: DAILY_CAP_AT_MAX_MULTIPLIER (e.g. 0.3)
+ *
+ * Agents with daily_lead_max <= 0 have no cap (always 1.0).
+ */
+function dailyCapMultiplier(agent: Agent, context: ScoringContext): number {
+  if (agent.daily_lead_max <= 0) return 1.0;
+
   const todayCount = context.dailyLeadCounts.get(agent.id) ?? 0;
-  return todayCount < agent.daily_lead_max;
+  const max = agent.daily_lead_max;
+
+  if (todayCount >= max) return DAILY_CAP_AT_MAX_MULTIPLIER;
+
+  const rampStart = Math.floor(max * DAILY_CAP_RAMP_START_PCT);
+  if (todayCount <= rampStart) return 1.0;
+
+  // Linear ramp from 1.0 down to DAILY_CAP_AT_MAX_MULTIPLIER
+  const progress = (todayCount - rampStart) / (max - rampStart);
+  return 1.0 - progress * (1.0 - DAILY_CAP_AT_MAX_MULTIPLIER);
 }
 
 export function scoreAgent(
@@ -33,15 +67,22 @@ export function scoreAgent(
     lead_load: scoreLeadLoad(agent, context),
   };
 
-  const totalScore =
+  const baseScore =
     factors.close_rate * (w.close_rate / norm) +
     factors.lead_load * (w.lead_load / norm);
+
+  // Apply specialty bonus and daily cap penalty
+  const specBonus = specialtyMultiplier(agent, context);
+  const capPenalty = dailyCapMultiplier(agent, context);
+  const totalScore = baseScore * specBonus * capPenalty;
 
   return {
     agentId: agent.id,
     agentName: agent.name,
     totalScore,
     factors,
+    specialtyBonus: specBonus,
+    dailyCapMultiplier: capPenalty,
   };
 }
 
@@ -57,9 +98,9 @@ export function scoreAgents(
 
 /**
  * Hard-filter agents by location, price range, and availability,
- * then score and rank. Daily cap is a soft-hard filter: prefer agents
- * under their cap, but if ALL eligible agents have hit their cap,
- * allow overflow to the highest-scored agent anyway.
+ * then score and rank. Daily cap is now a soft penalty in scoring
+ * (agents at/over cap get a 0.3x multiplier but are NOT excluded).
+ * Specialty bonus gives a 1.15x multiplier to area specialists.
  */
 export function selectBestAgent(
   agents: Agent[],
@@ -77,13 +118,6 @@ export function selectBestAgent(
 
   if (eligible.length === 0) return null;
 
-  // Prefer agents under their daily cap
-  const underCap = eligible.filter((a) => agentUnderDailyCap(a, context));
-
-  // If at least one agent is under cap, only score those.
-  // If ALL are at/over cap, allow overflow to any eligible agent.
-  const pool = underCap.length > 0 ? underCap : eligible;
-
-  const scored = scoreAgents(pool, context, weights);
+  const scored = scoreAgents(eligible, context, weights);
   return scored[0] ?? null;
 }

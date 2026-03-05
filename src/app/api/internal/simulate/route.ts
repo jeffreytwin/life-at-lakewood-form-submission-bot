@@ -45,6 +45,19 @@ interface SimulatedAssignment {
   }>;
 }
 
+interface LeadDecision {
+  index: number;
+  time: string; // formatted Eastern time e.g. "2:35 PM"
+  location: string;
+  price: string;
+  assignedAgent: string | null;
+  assignedAgentId: string | null;
+  totalScore: number | null;
+  specialtyBonus: number | null;
+  dailyCapMult: number | null;
+  factors: Record<string, number> | null;
+}
+
 interface DaySummary {
   day: number; // 1-30
   date: string; // "2026-03-01"
@@ -52,7 +65,8 @@ interface DaySummary {
   leadsAssigned: number;
   leadsUnassigned: number;
   agentBreakdown: Record<string, number>;
-  overflowCount: number; // leads assigned despite cap
+  overflowCount: number; // leads assigned despite daily cap penalty
+  leadDecisions: LeadDecision[];
 }
 
 /** Generate a random Eastern time during business-ish hours (7am-8pm) */
@@ -109,10 +123,11 @@ function formatEasternTime(utcDate: Date): string {
   });
 }
 
-function agentUnderDailyCap(agent: Agent, dailyCounts: Map<string, number>): boolean {
-  if (agent.daily_lead_max <= 0) return true;
+/** Check if agent is at/over daily cap (for overflow tracking only) */
+function agentAtDailyCap(agent: Agent, dailyCounts: Map<string, number>): boolean {
+  if (agent.daily_lead_max <= 0) return false;
   const count = dailyCounts.get(agent.id) ?? 0;
-  return count < agent.daily_lead_max;
+  return count >= agent.daily_lead_max;
 }
 
 export async function POST(request: NextRequest) {
@@ -186,6 +201,7 @@ export async function POST(request: NextRequest) {
         let dayUnassigned = 0;
         let dayOverflow = 0;
         const dayAgents: Record<string, number> = {};
+        const leadDecisions: LeadDecision[] = [];
 
         for (let i = 0; i < leadsPerDay; i++) {
           const simTime = randomEasternTime(day, baseDate);
@@ -243,16 +259,29 @@ export async function POST(request: NextRequest) {
 
           if (eligible.length === 0) {
             dayUnassigned++;
+            leadDecisions.push({
+              index: i,
+              time: formatEasternTime(simTime),
+              location: locationName,
+              price,
+              assignedAgent: null,
+              assignedAgentId: null,
+              totalScore: null,
+              specialtyBonus: null,
+              dailyCapMult: null,
+              factors: null,
+            });
             continue;
           }
 
-          // Daily cap with overflow
-          const underCap = eligible.filter((a) => agentUnderDailyCap(a, dailyCounts));
-          const pool = underCap.length > 0 ? underCap : eligible;
-          const isOverflow = underCap.length === 0;
-
-          const scored = scoreAgents(pool, context, weights);
+          // Score all eligible agents (daily cap is now a soft penalty in scoring)
+          const scored = scoreAgents(eligible, context, weights);
           const winner = scored[0];
+
+          // Track if the winner was at/over their daily cap (overflow)
+          const isOverflow = winner
+            ? agentAtDailyCap(agents.find((a) => a.id === winner.agentId)!, dailyCounts)
+            : false;
 
           if (winner) {
             dayAssigned++;
@@ -267,6 +296,19 @@ export async function POST(request: NextRequest) {
           } else {
             dayUnassigned++;
           }
+
+          leadDecisions.push({
+            index: i,
+            time: formatEasternTime(simTime),
+            location: locationName,
+            price,
+            assignedAgent: winner?.agentName ?? null,
+            assignedAgentId: winner?.agentId ?? null,
+            totalScore: winner?.totalScore ?? null,
+            specialtyBonus: winner?.specialtyBonus ?? null,
+            dailyCapMult: winner?.dailyCapMultiplier ?? null,
+            factors: winner?.factors ?? null,
+          });
         }
 
         // Get day info in Eastern time
@@ -283,6 +325,13 @@ export async function POST(request: NextRequest) {
           weekday: "long",
         });
 
+        // Sort lead decisions by time for display
+        leadDecisions.sort((a, b) => {
+          const timeA = new Date(`1/1/2000 ${a.time}`).getTime();
+          const timeB = new Date(`1/1/2000 ${b.time}`).getTime();
+          return timeA - timeB;
+        });
+
         days.push({
           day: day + 1,
           date: etDateStr,
@@ -291,6 +340,7 @@ export async function POST(request: NextRequest) {
           leadsUnassigned: dayUnassigned,
           agentBreakdown: dayAgents,
           overflowCount: dayOverflow,
+          leadDecisions,
         });
       }
 
@@ -450,12 +500,8 @@ export async function POST(request: NextRequest) {
           agentIsAvailable(a, context)
       );
 
-      // Daily cap with overflow
-      const underCap = eligible.filter((a) => agentUnderDailyCap(a, dailyCounts));
-      const pool = underCap.length > 0 ? underCap : eligible;
-      const isOverflow = underCap.length === 0 && eligible.length > 0;
-
-      const scored = scoreAgents(pool, context, weights);
+      // Score all eligible (daily cap is now a soft penalty in scoring)
+      const scored = scoreAgents(eligible, context, weights);
 
       for (const s of scored) {
         const entry = allAgentScores.find((a) => a.agentId === s.agentId);
@@ -473,12 +519,17 @@ export async function POST(request: NextRequest) {
 
       const winner = scored[0] ?? null;
 
+      // Check if the winner was at/over their daily cap
+      const winnerAtCap = winner
+        ? agentAtDailyCap(agents.find((a) => a.id === winner.agentId)!, dailyCounts)
+        : false;
+
       results.push({
         leadIndex: i,
         lead: input,
         assignedAgent: winner?.agentName ?? null,
         assignedAgentId: winner?.agentId ?? null,
-        dailyCapped: isOverflow && winner !== null,
+        dailyCapped: winnerAtCap,
         scores: allAgentScores,
       });
 

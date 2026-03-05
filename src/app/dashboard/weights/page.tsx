@@ -14,7 +14,7 @@ export default function WeightsPage() {
   const hasChanges = closeRate !== savedCloseRate;
 
   useEffect(() => {
-    fetch("/api/internal/weights")
+    fetch("/api/internal/weights", { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);
@@ -200,8 +200,8 @@ export default function WeightsPage() {
               color: "var(--text-muted)",
             }}
           >
-            <strong style={{ color: "var(--text)" }}>Hard Filters</strong> (not
-            weighted &mdash; agents must pass all to be eligible):
+            <strong style={{ color: "var(--text)" }}>Hard Filters</strong> (agents
+            must pass all to be eligible):
             <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
               <li>
                 <strong>Location</strong> &mdash; Agent specialties must match
@@ -215,10 +215,19 @@ export default function WeightsPage() {
                 <strong>Availability</strong> &mdash; Agent must not be in an
                 unavailability window
               </li>
+            </ul>
+            <br />
+            <strong style={{ color: "var(--text)" }}>Score Modifiers</strong> (applied
+            after weighted scoring):
+            <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
               <li>
-                <strong>Daily Lead Cap</strong> &mdash; Agents under their cap
-                are preferred; overflow only when all eligible agents have hit
-                their cap
+                <strong>Specialty Bonus</strong> &mdash; 1.15x multiplier for
+                agents with a specific area match (vs generalists who accept
+                all locations)
+              </li>
+              <li>
+                <strong>Daily Cap Penalty</strong> &mdash; Gradual penalty as
+                agents approach their daily max (0.3x at cap); not a hard stop
               </li>
             </ul>
           </div>
