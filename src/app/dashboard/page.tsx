@@ -1,6 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+
+interface LeadDistEntry {
+  agentName: string;
+  leadCount: number;
+}
+
+interface LeadDistribution {
+  distribution: LeadDistEntry[];
+  asOf: string;
+}
 
 interface Stats {
   totalLeads: number;
@@ -48,6 +58,19 @@ const eventColors: Record<string, string> = {
 export default function DashboardOverview() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [leadDist, setLeadDist] = useState<LeadDistribution | null>(null);
+  const [leadDistLoading, setLeadDistLoading] = useState(true);
+
+  const refreshLeadDist = useCallback(() => {
+    setLeadDistLoading(true);
+    fetch("/api/internal/lead-distribution")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setLeadDist(data);
+      })
+      .catch(() => {})
+      .finally(() => setLeadDistLoading(false));
+  }, []);
 
   useEffect(() => {
     fetch("/api/internal/stats")
@@ -57,7 +80,9 @@ export default function DashboardOverview() {
         else setStats(data);
       })
       .catch((e) => setError(e.message));
-  }, []);
+
+    refreshLeadDist();
+  }, [refreshLeadDist]);
 
   if (error) {
     return (
@@ -136,6 +161,50 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
             {stats.statusCounts.manual ?? 0} manual fallbacks
           </div>
         </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-header">
+          <h3>Lead Distribution This Month (Team)</h3>
+          {leadDist && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span className="text-muted text-sm">
+                As of{" "}
+                {new Date(leadDist.asOf).toLocaleString("en-US", {
+                  timeZone: "America/New_York",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </span>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={refreshLeadDist}
+                disabled={leadDistLoading}
+              >
+                Refresh
+              </button>
+            </div>
+          )}
+        </div>
+        {leadDistLoading && !leadDist ? (
+          <div className="empty-state" style={{ padding: "32px 20px" }}>
+            <p>Loading from Salesforce...</p>
+          </div>
+        ) : !leadDist ? (
+          <div className="empty-state" style={{ padding: "32px 20px" }}>
+            <p>
+              Salesforce is not configured. Add SF_* environment variables to
+              enable this chart.
+            </p>
+          </div>
+        ) : leadDist.distribution.length === 0 ? (
+          <div className="empty-state" style={{ padding: "32px 20px" }}>
+            <p>No leads this month yet</p>
+          </div>
+        ) : (
+          <LeadDistributionChart data={leadDist.distribution} />
+        )}
       </div>
 
       <div className="grid-2">
@@ -227,5 +296,147 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
         </div>
       </div>
     </>
+  );
+}
+
+/* ── Bar Chart Component ─────────────────────────────────────── */
+
+function LeadDistributionChart({ data }: { data: LeadDistEntry[] }) {
+  const maxCount = Math.max(...data.map((d) => d.leadCount), 1);
+  // Round the y-axis ceiling up to the nearest multiple of 5
+  const yCeil = Math.ceil(maxCount / 5) * 5;
+  const ticks: number[] = [];
+  for (let i = 0; i <= yCeil; i += 5) ticks.push(i);
+
+  const barColor = "#4ade80"; // green matching the Salesforce report
+  const chartHeight = 220;
+
+  return (
+    <div style={{ position: "relative" }}>
+      {/* Y-axis labels + grid lines */}
+      <div
+        style={{
+          position: "relative",
+          marginLeft: 40,
+          marginRight: 12,
+          height: chartHeight,
+        }}
+      >
+        {ticks.map((tick) => {
+          const bottom = (tick / yCeil) * 100;
+          return (
+            <div key={tick} style={{ position: "absolute", bottom: `${bottom}%`, left: -40, right: 0 }}>
+              <span
+                className="text-muted"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: -7,
+                  fontSize: 11,
+                  width: 30,
+                  textAlign: "right",
+                }}
+              >
+                {tick}
+              </span>
+              <div
+                style={{
+                  marginLeft: 36,
+                  borderTop: "1px solid var(--border)",
+                  opacity: tick === 0 ? 0.6 : 0.3,
+                }}
+              />
+            </div>
+          );
+        })}
+
+        {/* Bars */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-around",
+            height: "100%",
+            marginLeft: 36,
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          {data.map((d) => {
+            const pct = (d.leadCount / yCeil) * 100;
+            return (
+              <div
+                key={d.agentName}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  flex: 1,
+                  maxWidth: 64,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "var(--text-heading)",
+                    marginBottom: 4,
+                  }}
+                >
+                  {d.leadCount}
+                </span>
+                <div
+                  style={{
+                    width: "60%",
+                    minWidth: 28,
+                    height: `${pct}%`,
+                    background: barColor,
+                    borderRadius: "4px 4px 0 0",
+                    transition: "height 0.3s ease",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* X-axis labels */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-around",
+          marginLeft: 76,
+          marginRight: 12,
+          marginTop: 8,
+        }}
+      >
+        {data.map((d) => (
+          <div
+            key={d.agentName}
+            style={{
+              flex: 1,
+              maxWidth: 64,
+              textAlign: "center",
+              fontSize: 11,
+              color: "var(--text-muted)",
+              lineHeight: 1.3,
+              overflow: "hidden",
+            }}
+          >
+            {d.agentName.split(" ").map((part, i) => (
+              <div key={i}>{part}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="text-muted"
+        style={{ textAlign: "center", fontSize: 11, marginTop: 12 }}
+      >
+        Lead Owner
+      </div>
+    </div>
   );
 }
