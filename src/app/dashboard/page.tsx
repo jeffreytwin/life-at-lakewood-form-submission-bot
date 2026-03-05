@@ -72,6 +72,8 @@ export default function DashboardOverview() {
   const [leadDistLoading, setLeadDistLoading] = useState(true);
   const [monthlyLeads, setMonthlyLeads] = useState<MonthlyLeads | null>(null);
   const [monthlyLoading, setMonthlyLoading] = useState(true);
+  const [routingEnabled, setRoutingEnabled] = useState<boolean | null>(null);
+  const [routingToggling, setRoutingToggling] = useState(false);
 
   const refreshLeadDist = useCallback(() => {
     setLeadDistLoading(true);
@@ -106,7 +108,47 @@ export default function DashboardOverview() {
 
     refreshLeadDist();
     refreshMonthlyLeads();
+
+    fetch("/api/internal/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.routing_enabled === "boolean") {
+          setRoutingEnabled(data.routing_enabled);
+        }
+      })
+      .catch(() => {});
   }, [refreshLeadDist, refreshMonthlyLeads]);
+
+  async function toggleRouting() {
+    if (routingEnabled === null) return;
+    const newValue = !routingEnabled;
+
+    if (
+      !newValue &&
+      !confirm(
+        "Are you sure you want to pause routing? Incoming leads will be saved but NOT routed to agents until you resume."
+      )
+    ) {
+      return;
+    }
+
+    setRoutingToggling(true);
+    try {
+      const res = await fetch("/api/internal/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routing_enabled: newValue }),
+      });
+      const data = await res.json();
+      if (typeof data.routing_enabled === "boolean") {
+        setRoutingEnabled(data.routing_enabled);
+      }
+    } catch {
+      alert("Failed to update routing status");
+    } finally {
+      setRoutingToggling(false);
+    }
+  }
 
   if (error) {
     return (
@@ -186,6 +228,59 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
       </div>
+
+      {routingEnabled !== null && (
+        <div
+          className="card mb-4"
+          style={{
+            border: routingEnabled
+              ? "1px solid var(--success)"
+              : "1px solid var(--danger)",
+            background: routingEnabled
+              ? "rgba(52, 211, 153, 0.06)"
+              : "rgba(239, 68, 68, 0.06)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 20px",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>
+                {routingEnabled ? (
+                  <span style={{ color: "var(--success)" }}>
+                    Routing is Active
+                  </span>
+                ) : (
+                  <span style={{ color: "var(--danger)" }}>
+                    Routing is Paused
+                  </span>
+                )}
+              </div>
+              <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+                {routingEnabled
+                  ? "Incoming leads are being routed to agents automatically."
+                  : "Incoming leads are being saved but NOT routed. Resume when ready."}
+              </div>
+            </div>
+            <button
+              className={`btn ${routingEnabled ? "btn-danger" : "btn-primary"}`}
+              onClick={toggleRouting}
+              disabled={routingToggling}
+            >
+              {routingToggling
+                ? "Updating..."
+                : routingEnabled
+                  ? "Pause Routing"
+                  : "Resume Routing"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card mb-4">
         <div className="card-header">
