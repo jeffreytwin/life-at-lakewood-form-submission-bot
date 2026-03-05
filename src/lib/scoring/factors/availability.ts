@@ -15,11 +15,25 @@ export function agentIsAvailable(agent: Agent, context: ScoringContext): boolean
     return true;
   }
 
+  // Unavailability windows are defined in Eastern time, so we must
+  // convert the current time to Eastern before comparing.
   const now = context.currentTime;
-  const currentDay = now.getDay(); // 0 = Sunday
-  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes()
-  ).padStart(2, "0")}`;
+  const etParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+
+  const dayStr = etParts.find((p) => p.type === "weekday")?.value ?? "";
+  const dayMap: Record<string, number> = {
+    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+  };
+  const currentDay = dayMap[dayStr] ?? now.getDay();
+  const hourStr = etParts.find((p) => p.type === "hour")?.value ?? "00";
+  const minStr = etParts.find((p) => p.type === "minute")?.value ?? "00";
+  const currentTime = `${hourStr}:${minStr}`;
 
   for (const window of windows) {
     if (window.day === currentDay) {
