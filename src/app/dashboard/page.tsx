@@ -9,7 +9,7 @@ interface LeadDistEntry {
 
 interface LeadDistribution {
   distribution: LeadDistEntry[];
-  asOf: string;
+  asOf: string | null;
 }
 
 interface Stats {
@@ -168,15 +168,17 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           <h3>Lead Distribution This Month (Team)</h3>
           {leadDist && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span className="text-muted text-sm">
-                As of{" "}
-                {new Date(leadDist.asOf).toLocaleString("en-US", {
-                  timeZone: "America/New_York",
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
-              </span>
+              {leadDist.asOf && (
+                <span className="text-muted text-sm">
+                  As of{" "}
+                  {new Date(leadDist.asOf).toLocaleString("en-US", {
+                    timeZone: "America/New_York",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
+              )}
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={refreshLeadDist}
@@ -194,8 +196,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
         ) : !leadDist ? (
           <div className="empty-state" style={{ padding: "32px 20px" }}>
             <p>
-              Salesforce is not configured. Add SF_* environment variables to
-              enable this chart.
+              Could not load lead distribution data.
             </p>
           </div>
         ) : leadDist.distribution.length === 0 ? (
