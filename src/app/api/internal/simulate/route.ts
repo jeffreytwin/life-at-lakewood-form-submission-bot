@@ -134,18 +134,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Fetch shared data
-    const [agentsResult, countsResult, locationsResult, weightsResult] =
+    // Fetch shared data (no monthly/daily counts — simulations start from zero)
+    const [agentsResult, locationsResult, weightsResult] =
       await Promise.all([
         supabase
           .from("agents")
           .select("*")
           .eq("is_active", true)
           .eq("is_frontlines", false),
-        supabase
-          .from("monthly_lead_counts")
-          .select("agent_id, lead_count")
-          .eq("year_month", new Date().toISOString().slice(0, 7)),
         supabase.from("locations").select("*").eq("is_active", true),
         supabase
           .from("scoring_weights")
@@ -155,7 +151,6 @@ export async function POST(request: NextRequest) {
       ]);
 
     if (agentsResult.error) throw agentsResult.error;
-    if (countsResult.error) throw countsResult.error;
     if (locationsResult.error) throw locationsResult.error;
 
     const agents: Agent[] = agentsResult.data;
@@ -187,10 +182,9 @@ export async function POST(request: NextRequest) {
           ];
 
       const baseDate = new Date();
+      // Start from zero — simulations should reflect scoring logic,
+      // not cumulative production history.
       const monthlyLeadCounts = new Map<string, number>();
-      for (const row of countsResult.data ?? []) {
-        monthlyLeadCounts.set(row.agent_id, row.lead_count);
-      }
 
       const days: DaySummary[] = [];
 
@@ -387,25 +381,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const dailyResult = await supabase
-      .from("leads")
-      .select("final_agent_id")
-      .gte("created_at", todayStart.toISOString())
-      .not("final_agent_id", "is", null);
-
+    // Start from zero — simulations should reflect scoring logic,
+    // not cumulative production history.
     const leadCounts = new Map<string, number>();
-    for (const row of countsResult.data ?? []) {
-      leadCounts.set(row.agent_id, row.lead_count);
-    }
-
     const dailyCounts = new Map<string, number>();
-    for (const row of dailyResult.data ?? []) {
-      const id = row.final_agent_id as string;
-      dailyCounts.set(id, (dailyCounts.get(id) ?? 0) + 1);
-    }
 
     const results: SimulatedAssignment[] = [];
 
