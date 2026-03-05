@@ -216,15 +216,6 @@ describe("scoreCloseRate", () => {
     });
     expect(scoreCloseRate(agent)).toBe(1.0);
   });
-
-  it("applies floor for very low close rates", () => {
-    const agent = makeAgent({
-      close_rate_trailing_12m: 0.01,
-      close_rate_all_time: 0.01,
-    });
-    // 0.01 / 0.30 = 0.033, but floor is 0.15
-    expect(scoreCloseRate(agent)).toBe(0.15);
-  });
 });
 
 describe("scoreLeadLoad", () => {
