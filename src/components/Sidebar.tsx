@@ -19,6 +19,11 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
+        <img
+          src="/logo.svg"
+          alt="Life at Lakewood"
+          style={{ width: 48, height: 48, marginBottom: 8 }}
+        />
         <h1>Life at Lakewood</h1>
         <span>Lead Routing System</span>
       </div>

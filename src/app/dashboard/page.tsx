@@ -140,7 +140,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Total Leads</div>
+          <div className="stat-label">Total Form Submissions</div>
           <div className="stat-value">{stats.totalLeads}</div>
         </div>
         <div className="stat-card">
