@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 export default function WeightsPage() {
   const [closeRate, setCloseRate] = useState(60);
+  const [closeRateInput, setCloseRateInput] = useState("60");
   const [savedCloseRate, setSavedCloseRate] = useState(60);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,8 +20,10 @@ export default function WeightsPage() {
       .then((data) => {
         if (data.error) setError(data.error);
         else {
-          setCloseRate(data.close_rate ?? 60);
-          setSavedCloseRate(data.close_rate ?? 60);
+          const cr = data.close_rate ?? 60;
+          setCloseRate(cr);
+          setCloseRateInput(String(cr));
+          setSavedCloseRate(cr);
         }
         setLoading(false);
       })
@@ -29,6 +32,21 @@ export default function WeightsPage() {
         setLoading(false);
       });
   }, []);
+
+  function handleCloseRateChange(raw: string) {
+    setCloseRateInput(raw);
+    const num = parseInt(raw, 10);
+    if (!isNaN(num)) {
+      setCloseRate(Math.min(100, Math.max(0, num)));
+    }
+  }
+
+  function handleCloseRateBlur() {
+    const num = parseInt(closeRateInput, 10);
+    const val = isNaN(num) ? 0 : Math.min(100, Math.max(0, num));
+    setCloseRate(val);
+    setCloseRateInput(String(val));
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -94,39 +112,44 @@ export default function WeightsPage() {
             <div
               style={{
                 display: "flex",
+                alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: 8,
+                marginBottom: 20,
               }}
             >
               <div>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>Close Rate</div>
                 <div className="text-muted text-sm">
-                  Blended 12-month and all-time performance
+                  Trailing 12-month performance
                 </div>
               </div>
-              <div
-                className="font-mono"
-                style={{ fontSize: 24, fontWeight: 700, color: "#34d399" }}
-              >
-                {closeRate}%
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="form-input font-mono"
+                  value={closeRateInput}
+                  onChange={(e) => handleCloseRateChange(e.target.value)}
+                  onBlur={handleCloseRateBlur}
+                  onFocus={(e) => e.target.select()}
+                  style={{
+                    width: 64,
+                    textAlign: "center",
+                    fontSize: 20,
+                    fontWeight: 700,
+                    padding: "4px 8px",
+                    color: "#34d399",
+                  }}
+                />
+                <span style={{ fontSize: 18, fontWeight: 600, color: "#34d399" }}>%</span>
               </div>
             </div>
-
-            <input
-              type="range"
-              className="weight-slider"
-              min={0}
-              max={100}
-              value={closeRate}
-              onChange={(e) => setCloseRate(parseInt(e.target.value, 10))}
-              style={{ width: "100%", margin: "12px 0" }}
-            />
 
             <div
               style={{
                 display: "flex",
+                alignItems: "center",
                 justifyContent: "space-between",
-                marginTop: 8,
               }}
             >
               <div>

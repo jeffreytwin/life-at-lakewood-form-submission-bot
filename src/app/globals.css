@@ -469,31 +469,6 @@ select.form-input {
   font-size: 13px;
 }
 
-.weight-slider {
-  flex: 1;
-  -webkit-appearance: none;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
-}
-
-.weight-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--accent);
-  cursor: pointer;
-}
-
-.weight-value {
-  width: 50px;
-  text-align: right;
-  font-weight: 600;
-  font-family: 'SF Mono', Monaco, Consolas, monospace;
-  font-size: 13px;
-}
 
 /* Timeline / Audit log */
 .timeline-item {

@@ -3,8 +3,11 @@ import type { ScoringContext } from "../types";
 
 /**
  * Hard filter: returns true if the agent's location specialties
- * match the lead's location or village. Agents without any
- * specialties are considered a match (they take all locations).
+ * match the lead's location. Agents without any specialties are
+ * considered a match (they take all locations).
+ *
+ * Uses exact case-insensitive equality (not substring matching)
+ * to prevent cross-location false positives.
  */
 export function agentMatchesLocation(
   agent: Agent,
@@ -15,23 +18,15 @@ export function agentMatchesLocation(
   // Agents with no specialties match everything
   if (!specialties || specialties.length === 0) return true;
 
-  const leadLocation = context.locationName?.toLowerCase() ?? "";
-  const leadVillage = context.lead.village?.toLowerCase() ?? "";
+  const leadLocation = context.locationName?.toLowerCase().trim() ?? "";
 
   // If we have no location info at all, allow the agent
-  if (!leadLocation && !leadVillage) return true;
+  if (!leadLocation) return true;
 
-  const lowerSpecialties = specialties.map((s) => s.toLowerCase());
+  const lowerSpecialties = specialties.map((s) => s.toLowerCase().trim());
 
-  for (const specialty of lowerSpecialties) {
-    if (
-      leadLocation.includes(specialty) ||
-      specialty.includes(leadLocation) ||
-      leadVillage.includes(specialty) ||
-      specialty.includes(leadVillage)
-    ) {
-      return true;
-    }
+  if (lowerSpecialties.includes(leadLocation)) {
+    return true;
   }
 
   // LWR agents can also take Parrish leads

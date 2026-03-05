@@ -98,8 +98,19 @@ export default function AgentsPage() {
 
   async function handleSave() {
     setSaving(true);
+    // If all active locations are selected, treat as "All" (empty array)
+    const activeLocationNames = locations
+      .filter((l) => l.is_active)
+      .map((l) => l.name);
+    const allLocationsSelected =
+      activeLocationNames.length > 0 &&
+      activeLocationNames.every((name) =>
+        form.location_specialties.includes(name)
+      );
+
     const payload = {
       ...form,
+      location_specialties: allLocationsSelected ? [] : form.location_specialties,
       email: form.email || null,
       salesforce_user_id: form.salesforce_user_id || null,
       unavailability_windows:
@@ -368,34 +379,20 @@ export default function AgentsPage() {
             {/* Everything below is hidden for frontlines agents */}
             {!isFrontlines && (
               <>
-                {/* Close Rates (read-only) */}
+                {/* Close Rate (read-only) */}
                 {editing && (
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Close Rate 12m (from Salesforce)</label>
-                      <div
-                        className="form-input font-mono"
-                        style={{
-                          background: "var(--bg-input, #111318)",
-                          opacity: 0.7,
-                          cursor: "default",
-                        }}
-                      >
-                        {(editing.close_rate_trailing_12m * 100).toFixed(1)}%
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label>Close Rate All-Time (from Salesforce)</label>
-                      <div
-                        className="form-input font-mono"
-                        style={{
-                          background: "var(--bg-input, #111318)",
-                          opacity: 0.7,
-                          cursor: "default",
-                        }}
-                      >
-                        {(editing.close_rate_all_time * 100).toFixed(1)}%
-                      </div>
+                  <div className="form-group">
+                    <label>Close Rate 12m (from Salesforce)</label>
+                    <div
+                      className="form-input font-mono"
+                      style={{
+                        background: "var(--bg-input, #111318)",
+                        opacity: 0.7,
+                        cursor: "default",
+                        maxWidth: 200,
+                      }}
+                    >
+                      {(editing.close_rate_trailing_12m * 100).toFixed(1)}%
                     </div>
                   </div>
                 )}
@@ -441,6 +438,14 @@ export default function AgentsPage() {
                       </span>
                     )}
                   </div>
+                  {locations.filter((l) => l.is_active).length > 0 &&
+                    locations
+                      .filter((l) => l.is_active)
+                      .every((l) => form.location_specialties.includes(l.name)) && (
+                      <p className="text-muted text-sm" style={{ marginTop: 6 }}>
+                        All locations selected &mdash; will be saved as &quot;All&quot; (no specialty bonus).
+                      </p>
+                    )}
                 </div>
 
                 {/* Price Range Multi-Select */}
@@ -571,13 +576,14 @@ export default function AgentsPage() {
                     <input
                       className="form-input"
                       type="number"
-                      value={form.monthly_lead_goal_min}
+                      value={form.monthly_lead_goal_min || ""}
                       onChange={(e) =>
                         setForm({
                           ...form,
-                          monthly_lead_goal_min: parseInt(e.target.value, 10) || 0,
+                          monthly_lead_goal_min: e.target.value === "" ? 0 : parseInt(e.target.value, 10),
                         })
                       }
+                      onFocus={(e) => e.target.select()}
                     />
                   </div>
                   <div className="form-group">
@@ -585,13 +591,14 @@ export default function AgentsPage() {
                     <input
                       className="form-input"
                       type="number"
-                      value={form.monthly_lead_goal_max}
+                      value={form.monthly_lead_goal_max || ""}
                       onChange={(e) =>
                         setForm({
                           ...form,
-                          monthly_lead_goal_max: parseInt(e.target.value, 10) || 0,
+                          monthly_lead_goal_max: e.target.value === "" ? 0 : parseInt(e.target.value, 10),
                         })
                       }
+                      onFocus={(e) => e.target.select()}
                     />
                   </div>
                 </div>
@@ -606,13 +613,14 @@ export default function AgentsPage() {
                     className="form-input"
                     type="number"
                     min={0}
-                    value={form.daily_lead_max}
+                    value={form.daily_lead_max || ""}
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        daily_lead_max: parseInt(e.target.value, 10) || 0,
+                        daily_lead_max: e.target.value === "" ? 0 : parseInt(e.target.value, 10),
                       })
                     }
+                    onFocus={(e) => e.target.select()}
                     style={{ maxWidth: 120 }}
                   />
                 </div>

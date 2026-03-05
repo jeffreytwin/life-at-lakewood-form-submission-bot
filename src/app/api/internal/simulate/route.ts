@@ -209,9 +209,9 @@ export async function POST(request: NextRequest) {
           const price = selectedPrices[Math.floor(Math.random() * selectedPrices.length)];
 
           const matchedLocation = locationsList.find(
-            (l) =>
-              l.name.toLowerCase().includes(loc.toLowerCase()) ||
-              loc.toLowerCase().includes(l.slug.toLowerCase())
+            (l) => l.name.toLowerCase() === loc.toLowerCase()
+          ) ?? locationsList.find(
+            (l) => l.slug.toLowerCase() === loc.toLowerCase()
           );
           const locationName = matchedLocation?.name ?? loc;
 
@@ -371,7 +371,7 @@ export async function POST(request: NextRequest) {
     }
 
     // --- SINGLE / BULK MODE ---
-    const { leads } = body as { leads: LeadInput[] };
+    const { leads, simulateAt } = body as { leads: LeadInput[]; simulateAt?: string };
 
     if (!leads || !Array.isArray(leads) || leads.length === 0) {
       return NextResponse.json(
@@ -413,9 +413,9 @@ export async function POST(request: NextRequest) {
       const input = leads[i];
 
       const matchedLocation = locationsList.find(
-        (loc) =>
-          loc.name.toLowerCase().includes(input.location.toLowerCase()) ||
-          input.location.toLowerCase().includes(loc.slug.toLowerCase())
+        (loc) => loc.name.toLowerCase() === input.location.toLowerCase()
+      ) ?? locationsList.find(
+        (loc) => loc.slug.toLowerCase() === input.location.toLowerCase()
       );
       const locationName = matchedLocation?.name ?? input.location;
 
@@ -445,12 +445,23 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       };
 
+      // If simulateAt is provided (datetime-local string in ET), convert to UTC
+      let simTime = new Date();
+      if (simulateAt) {
+        // datetime-local gives "YYYY-MM-DDTHH:MM" — interpret as Eastern
+        const probe = new Date(simulateAt + ":00");
+        const etString = probe.toLocaleString("en-US", { timeZone: "America/New_York" });
+        const etDate = new Date(etString);
+        const offsetMs = probe.getTime() - etDate.getTime();
+        simTime = new Date(probe.getTime() + offsetMs);
+      }
+
       const context: ScoringContext = {
         lead: fakeLead,
         locationName,
         currentMonthLeadCounts: leadCounts,
         dailyLeadCounts: dailyCounts,
-        currentTime: new Date(),
+        currentTime: simTime,
       };
 
       // Score all agents and show which ones are filtered

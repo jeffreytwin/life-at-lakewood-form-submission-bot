@@ -80,8 +80,8 @@ export default function SimulatePage() {
   // Single lead form
   const [singleForm, setSingleForm] = useState({
     location: "",
-    village: "",
     price: "$500,000 - $750,000",
+    simulateAt: "", // ISO datetime-local string for availability testing
   });
 
   // Bulk form
@@ -136,7 +136,14 @@ export default function SimulatePage() {
           prices: thirtyDayPrices,
         };
       } else if (mode === "single") {
-        body = { leads: [singleForm] };
+        body = {
+          leads: [{
+            location: singleForm.location,
+            village: "",
+            price: singleForm.price,
+          }],
+          ...(singleForm.simulateAt ? { simulateAt: singleForm.simulateAt } : {}),
+        };
       } else {
         const locs =
           bulkLocations.length > 0
@@ -298,17 +305,6 @@ export default function SimulatePage() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Village (optional)</label>
-                <input
-                  className="form-input"
-                  value={singleForm.village}
-                  onChange={(e) =>
-                    setSingleForm({ ...singleForm, village: e.target.value })
-                  }
-                  placeholder="e.g. Waterside"
-                />
-              </div>
-              <div className="form-group">
                 <label>Price</label>
                 <select
                   className="form-input"
@@ -324,6 +320,20 @@ export default function SimulatePage() {
                   ))}
                 </select>
               </div>
+              <div className="form-group">
+                <label>Date &amp; Time (ET)</label>
+                <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
+                  Test agent availability windows at a specific date/time. Leave empty for now.
+                </p>
+                <input
+                  className="form-input"
+                  type="datetime-local"
+                  value={singleForm.simulateAt}
+                  onChange={(e) =>
+                    setSingleForm({ ...singleForm, simulateAt: e.target.value })
+                  }
+                />
+              </div>
             </>
           ) : mode === "bulk" ? (
             <>
@@ -334,12 +344,13 @@ export default function SimulatePage() {
                   type="number"
                   min={1}
                   max={500}
-                  value={bulkCount}
+                  value={bulkCount || ""}
                   onChange={(e) =>
                     setBulkCount(
-                      Math.min(500, Math.max(1, parseInt(e.target.value) || 1))
+                      e.target.value === "" ? 1 : Math.min(500, Math.max(1, parseInt(e.target.value, 10)))
                     )
                   }
+                  onFocus={(e) => e.target.select()}
                 />
               </div>
               <div className="form-group">
@@ -376,12 +387,13 @@ export default function SimulatePage() {
                   type="number"
                   min={1}
                   max={50}
-                  value={leadsPerDay}
+                  value={leadsPerDay || ""}
                   onChange={(e) =>
                     setLeadsPerDay(
-                      Math.min(50, Math.max(1, parseInt(e.target.value) || 1))
+                      e.target.value === "" ? 1 : Math.min(50, Math.max(1, parseInt(e.target.value, 10)))
                     )
                   }
+                  onFocus={(e) => e.target.select()}
                   style={{ maxWidth: 120 }}
                 />
               </div>
@@ -498,7 +510,7 @@ function ThirtyDayResults({
             {data.totalLeads} leads / {data.totalAssigned} assigned /{" "}
             {data.totalUnassigned} unassigned
             {data.totalOverflow > 0 &&
-              ` / ${data.totalOverflow} overflow (all at cap)`}
+              ` / ${data.totalOverflow} overflow (assigned despite all eligible agents hitting daily cap)`}
           </span>
         </div>
 
@@ -610,7 +622,7 @@ function ThirtyDayResults({
                 <th>Day of Week</th>
                 <th>Assigned</th>
                 <th>Unassigned</th>
-                <th>Overflow</th>
+                <th title="Leads assigned when all eligible agents had already hit their daily cap">Overflow</th>
               </tr>
             </thead>
             <tbody>
