@@ -115,7 +115,6 @@ export default function LocationsPage() {
                   <tr>
                     <th>Status</th>
                     <th>Name</th>
-                    <th>Slug</th>
                     <th>Created</th>
                     <th></th>
                   </tr>
@@ -130,7 +129,6 @@ export default function LocationsPage() {
                         {loc.is_active ? "Active" : "Inactive"}
                       </td>
                       <td style={{ fontWeight: 600 }}>{loc.name}</td>
-                      <td className="font-mono text-sm">{loc.slug}</td>
                       <td className="text-muted text-sm font-mono">
                         {new Date(loc.created_at).toLocaleDateString()}
                       </td>
@@ -176,16 +174,6 @@ export default function LocationsPage() {
             </div>
 
             <div className="form-group">
-              <label>Slug *</label>
-              <input
-                className="form-input"
-                value={form.slug}
-                onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                placeholder="lakewood-ranch"
-              />
-            </div>
-
-            <div className="form-group">
               <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                 <input
                   type="checkbox"
@@ -208,7 +196,7 @@ export default function LocationsPage() {
               <button
                 className="btn btn-primary"
                 onClick={handleSave}
-                disabled={saving || !form.name || !form.slug}
+                disabled={saving || !form.name}
               >
                 {saving ? "Saving..." : editing ? "Update" : "Create"}
               </button>
