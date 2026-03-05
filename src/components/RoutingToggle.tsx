@@ -115,8 +115,8 @@ export default function RoutingToggle() {
         src={GIF_SRC[character]}
         alt="Character"
         style={{
-          width: 64,
-          height: 64,
+          width: 109,
+          height: 109,
           imageRendering: "pixelated",
           objectFit: "contain",
           marginBottom: -2,
