@@ -1,37 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
   <defs>
-    <linearGradient id="bg" x1="0.5" y1="0" x2="0.5" y2="1">
-      <stop offset="0%" stop-color="#9b7abf"/>
-      <stop offset="50%" stop-color="#7a9ad4"/>
-      <stop offset="100%" stop-color="#4db8e8"/>
+    <linearGradient id="grad" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#9370b8"/>
+      <stop offset="45%" stop-color="#7b94cc"/>
+      <stop offset="100%" stop-color="#3db4e9"/>
     </linearGradient>
+    <clipPath id="circleClip">
+      <circle cx="200" cy="190" r="175"/>
+    </clipPath>
   </defs>
+
   <!-- Background circle -->
-  <circle cx="100" cy="100" r="95" fill="url(#bg)"/>
-  <!-- Swan body (white) -->
-  <path d="
-    M 45 130
-    Q 45 105, 65 90
-    Q 72 85, 72 72
-    Q 72 55, 65 45
-    Q 58 35, 62 28
-    Q 67 22, 75 25
-    Q 80 28, 82 35
-    Q 85 42, 82 55
-    Q 80 65, 80 75
-    Q 80 85, 90 92
-    Q 110 105, 140 110
-    Q 158 114, 165 125
-    Q 168 130, 160 132
-    Q 145 136, 120 135
-    Q 90 132, 55 132
-    Z
-  " fill="white"/>
-  <!-- Water line -->
-  <line x1="30" y1="138" x2="170" y2="138" stroke="#4db8e8" stroke-width="2.5" opacity="0.7"/>
-  <!-- Water ripples -->
-  <line x1="40" y1="148" x2="55" y2="148" stroke="#5cc8f0" stroke-width="2" stroke-linecap="round"/>
-  <line x1="65" y1="155" x2="80" y2="155" stroke="#5cc8f0" stroke-width="2" stroke-linecap="round"/>
-  <line x1="120" y1="148" x2="140" y2="148" stroke="#5cc8f0" stroke-width="2" stroke-linecap="round"/>
-  <line x1="145" y1="155" x2="155" y2="155" stroke="#5cc8f0" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="200" cy="190" r="175" fill="url(#grad)"/>
+
+  <!-- Swan (white cutout) clipped to circle -->
+  <g clip-path="url(#circleClip)">
+    <!-- Swan neck and head -->
+    <path d="
+      M 108 268
+      C 100 230, 100 200, 112 170
+      C 120 148, 125 130, 125 110
+      C 125 88, 118 72, 108 58
+      C 100 48, 102 36, 112 32
+      C 122 28, 132 34, 136 46
+      C 142 60, 142 80, 138 100
+      C 134 120, 134 140, 140 158
+      C 148 178, 168 196, 200 210
+      C 240 228, 290 238, 330 244
+      C 360 248, 380 258, 385 270
+      L 385 290
+      L 30 290
+      L 30 268
+      Z
+    " fill="white"/>
+  </g>
+
+  <!-- Water line (extends to circle edges) -->
+  <line x1="28" y1="282" x2="372" y2="282" stroke="url(#grad)" stroke-width="5" opacity="0.6"/>
+
+  <!-- Water ripples below -->
+  <line x1="75" y1="310" x2="108" y2="310" stroke="#52c8f0" stroke-width="4" stroke-linecap="round"/>
+  <line x1="130" y1="330" x2="165" y2="330" stroke="#52c8f0" stroke-width="4" stroke-linecap="round"/>
+  <line x1="270" y1="312" x2="315" y2="312" stroke="#52c8f0" stroke-width="4" stroke-linecap="round"/>
 </svg>

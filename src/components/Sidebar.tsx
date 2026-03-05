@@ -1,20 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: "\u2302" },
   { href: "/dashboard/leads", label: "Leads", icon: "\u2709" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
   { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
-{ href: "/dashboard/audit", label: "Audit Log", icon: "\u2630" },
+  { href: "/dashboard/audit", label: "Audit Log", icon: "\u2630" },
   { href: "/dashboard/weights", label: "Weights", icon: "\u2696" },
   { href: "/dashboard/simulate", label: "Simulation", icon: "\u26A1" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/internal/logout", { method: "POST" });
+    router.push("/login");
+  }
 
   return (
     <aside className="sidebar">
@@ -40,6 +46,12 @@ export default function Sidebar() {
           </li>
         ))}
       </ul>
+      <div className="sidebar-footer">
+        <button onClick={handleLogout} className="sidebar-logout">
+          <span className="nav-icon">{"\u2190"}</span>
+          Log Out
+        </button>
+      </div>
     </aside>
   );
 }

@@ -12,6 +12,16 @@ interface LeadDistribution {
   asOf: string | null;
 }
 
+interface MonthlyEntry {
+  yearMonth: string;
+  leadCount: number;
+}
+
+interface MonthlyLeads {
+  months: MonthlyEntry[];
+  asOf: string | null;
+}
+
 interface Stats {
   totalLeads: number;
   totalAgents: number;
@@ -60,6 +70,10 @@ export default function DashboardOverview() {
   const [error, setError] = useState<string | null>(null);
   const [leadDist, setLeadDist] = useState<LeadDistribution | null>(null);
   const [leadDistLoading, setLeadDistLoading] = useState(true);
+  const [monthlyLeads, setMonthlyLeads] = useState<MonthlyLeads | null>(null);
+  const [monthlyLoading, setMonthlyLoading] = useState(true);
+  const [routingEnabled, setRoutingEnabled] = useState<boolean | null>(null);
+  const [routingToggling, setRoutingToggling] = useState(false);
 
   const refreshLeadDist = useCallback(() => {
     setLeadDistLoading(true);
@@ -72,6 +86,17 @@ export default function DashboardOverview() {
       .finally(() => setLeadDistLoading(false));
   }, []);
 
+  const refreshMonthlyLeads = useCallback(() => {
+    setMonthlyLoading(true);
+    fetch("/api/internal/leads-by-month")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setMonthlyLeads(data);
+      })
+      .catch(() => {})
+      .finally(() => setMonthlyLoading(false));
+  }, []);
+
   useEffect(() => {
     fetch("/api/internal/stats")
       .then((r) => r.json())
@@ -82,7 +107,48 @@ export default function DashboardOverview() {
       .catch((e) => setError(e.message));
 
     refreshLeadDist();
-  }, [refreshLeadDist]);
+    refreshMonthlyLeads();
+
+    fetch("/api/internal/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.routing_enabled === "boolean") {
+          setRoutingEnabled(data.routing_enabled);
+        }
+      })
+      .catch(() => {});
+  }, [refreshLeadDist, refreshMonthlyLeads]);
+
+  async function toggleRouting() {
+    if (routingEnabled === null) return;
+    const newValue = !routingEnabled;
+
+    if (
+      !newValue &&
+      !confirm(
+        "Are you sure you want to pause routing? Incoming leads will be saved but NOT routed to agents until you resume."
+      )
+    ) {
+      return;
+    }
+
+    setRoutingToggling(true);
+    try {
+      const res = await fetch("/api/internal/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ routing_enabled: newValue }),
+      });
+      const data = await res.json();
+      if (typeof data.routing_enabled === "boolean") {
+        setRoutingEnabled(data.routing_enabled);
+      }
+    } catch {
+      alert("Failed to update routing status");
+    } finally {
+      setRoutingToggling(false);
+    }
+  }
 
   if (error) {
     return (
@@ -162,6 +228,59 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
       </div>
+
+      {routingEnabled !== null && (
+        <div
+          className="card mb-4"
+          style={{
+            border: routingEnabled
+              ? "1px solid var(--success)"
+              : "1px solid var(--danger)",
+            background: routingEnabled
+              ? "rgba(52, 211, 153, 0.06)"
+              : "rgba(239, 68, 68, 0.06)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 20px",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>
+                {routingEnabled ? (
+                  <span style={{ color: "var(--success)" }}>
+                    Routing is Active
+                  </span>
+                ) : (
+                  <span style={{ color: "var(--danger)" }}>
+                    Routing is Paused
+                  </span>
+                )}
+              </div>
+              <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+                {routingEnabled
+                  ? "Incoming leads are being routed to agents automatically."
+                  : "Incoming leads are being saved but NOT routed. Resume when ready."}
+              </div>
+            </div>
+            <button
+              className={`btn ${routingEnabled ? "btn-danger" : "btn-primary"}`}
+              onClick={toggleRouting}
+              disabled={routingToggling}
+            >
+              {routingToggling
+                ? "Updating..."
+                : routingEnabled
+                  ? "Pause Routing"
+                  : "Resume Routing"}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card mb-4">
         <div className="card-header">
@@ -257,42 +376,38 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
 
         <div className="card">
           <div className="card-header">
-            <h3>Recent Activity</h3>
+            <h3>Leads Generated This Year (Team)</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {monthlyLeads?.asOf && (
+                <span className="text-muted text-sm">
+                  As of{" "}
+                  {new Date(monthlyLeads.asOf).toLocaleString("en-US", {
+                    timeZone: "America/New_York",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
+              )}
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={refreshMonthlyLeads}
+                disabled={monthlyLoading}
+              >
+                Refresh
+              </button>
+            </div>
           </div>
-          {stats.recentEvents.length === 0 ? (
-            <div className="empty-state">
-              <p>No activity yet</p>
+          {monthlyLoading && !monthlyLeads ? (
+            <div className="empty-state" style={{ padding: "32px 20px" }}>
+              <p>Loading from Salesforce...</p>
+            </div>
+          ) : !monthlyLeads || monthlyLeads.months.length === 0 ? (
+            <div className="empty-state" style={{ padding: "32px 20px" }}>
+              <p>No monthly data yet</p>
             </div>
           ) : (
-            <div>
-              {stats.recentEvents.map((event) => (
-                <div className="timeline-item" key={event.id}>
-                  <div
-                    className="timeline-dot"
-                    style={{
-                      background:
-                        eventColors[event.event_type] ?? "var(--text-muted)",
-                    }}
-                  />
-                  <div className="timeline-content">
-                    <div className="timeline-event">
-                      {event.event_type.replace(/_/g, " ")}
-                    </div>
-                    {event.details && (
-                      <div className="timeline-details">
-                        {Object.entries(event.details)
-                          .filter(([k]) => k !== "leadId" && k !== "routingAttemptId")
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(" | ")}
-                      </div>
-                    )}
-                    <div className="timeline-time">
-                      {new Date(event.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <MonthlyLeadsChart data={monthlyLeads.months} />
           )}
         </div>
       </div>
@@ -437,6 +552,177 @@ function LeadDistributionChart({ data }: { data: LeadDistEntry[] }) {
         style={{ textAlign: "center", fontSize: 11, marginTop: 12 }}
       >
         Lead Owner
+      </div>
+    </div>
+  );
+}
+
+/* ── Monthly Leads Bar Chart ─────────────────────────────────── */
+
+function formatMonthLabel(yearMonth: string): string {
+  const [year, month] = yearMonth.split("-");
+  const date = new Date(Number(year), Number(month) - 1);
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function MonthlyLeadsChart({ data }: { data: MonthlyEntry[] }) {
+  const maxCount = Math.max(...data.map((d) => d.leadCount), 1);
+  const yCeil = Math.ceil(maxCount / 50) * 50;
+  const ticks: number[] = [];
+  for (let i = 0; i <= yCeil; i += 50) ticks.push(i);
+
+  const barColor = "#4ade80";
+  const chartHeight = 240;
+
+  return (
+    <div style={{ position: "relative", padding: "0 12px 12px" }}>
+      {/* Y-axis label */}
+      <div
+        className="text-muted"
+        style={{
+          position: "absolute",
+          left: -2,
+          top: chartHeight / 2,
+          transform: "rotate(-90deg)",
+          transformOrigin: "center",
+          fontSize: 11,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Record Count
+      </div>
+
+      {/* Chart area */}
+      <div
+        style={{
+          position: "relative",
+          marginLeft: 50,
+          marginRight: 12,
+          height: chartHeight,
+        }}
+      >
+        {ticks.map((tick) => {
+          const bottom = (tick / yCeil) * 100;
+          return (
+            <div
+              key={tick}
+              style={{
+                position: "absolute",
+                bottom: `${bottom}%`,
+                left: -40,
+                right: 0,
+              }}
+            >
+              <span
+                className="text-muted"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: -7,
+                  fontSize: 11,
+                  width: 34,
+                  textAlign: "right",
+                }}
+              >
+                {tick}
+              </span>
+              <div
+                style={{
+                  marginLeft: 40,
+                  borderTop: "1px solid var(--border)",
+                  opacity: tick === 0 ? 0.6 : 0.3,
+                }}
+              />
+            </div>
+          );
+        })}
+
+        {/* Bars */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-around",
+            height: "100%",
+            marginLeft: 40,
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          {data.map((d) => {
+            const pct = (d.leadCount / yCeil) * 100;
+            return (
+              <div
+                key={d.yearMonth}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  flex: 1,
+                  maxWidth: 48,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: barColor,
+                    marginBottom: 2,
+                  }}
+                >
+                  {d.leadCount}
+                </span>
+                <div
+                  style={{
+                    width: "70%",
+                    minWidth: 24,
+                    height: `${pct}%`,
+                    background: barColor,
+                    borderRadius: "3px 3px 0 0",
+                    transition: "height 0.3s ease",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* X-axis labels */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-around",
+          marginLeft: 90,
+          marginRight: 12,
+          marginTop: 6,
+        }}
+      >
+        {data.map((d) => (
+          <div
+            key={d.yearMonth}
+            style={{
+              flex: 1,
+              maxWidth: 48,
+              textAlign: "center",
+              fontSize: 10,
+              color: "var(--text-muted)",
+              lineHeight: 1.2,
+              writingMode: "vertical-rl",
+              transform: "rotate(180deg)",
+              height: 80,
+            }}
+          >
+            {formatMonthLabel(d.yearMonth)}
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="text-muted"
+        style={{ textAlign: "center", fontSize: 11, marginTop: 8 }}
+      >
+        Date of Positive Response
       </div>
     </div>
   );

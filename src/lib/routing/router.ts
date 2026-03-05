@@ -73,6 +73,24 @@ export async function routeLead(payload: ZapierPayload): Promise<{
     return await handleOwnedByOther(lead, locationName, payload.owner_name);
   }
 
+  // Check if routing is paused system-wide
+  const { data: settings } = await supabase
+    .from("system_settings")
+    .select("routing_enabled")
+    .eq("id", 1)
+    .single();
+
+  if (settings && !settings.routing_enabled) {
+    logger.info("Routing is paused — lead queued as pending", {
+      leadId: lead.id,
+    });
+    await logAuditEvent("lead_received", {
+      leadId: lead.id,
+      details: { routing_decision: "paused", note: "System routing is paused" },
+    });
+    return { status: "paused", leadId: lead.id };
+  }
+
   // Route to best available agent
   await startRouting(lead, locationName);
 

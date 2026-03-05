@@ -122,8 +122,8 @@ export default function LeadsPage() {
                   <th></th>
                   <th>Name</th>
                   <th>Form</th>
-                  <th>Village</th>
-                  <th>Price</th>
+                  <th>Location</th>
+                  <th>Value</th>
                   <th>Status</th>
                   <th>Attempts</th>
                   <th>Received</th>
