@@ -15,10 +15,30 @@ const GIF_SRC: Record<CharacterState, string> = {
   "getting-out-of-box": "/getting-out-of-box.gif",
 };
 
+/**
+ * Check if the current Eastern time falls within a start→end range.
+ * Handles overnight spans (e.g. 21:00 → 08:30).
+ */
+function isCurrentlyInQuietHours(start: string, end: string): boolean {
+  const now = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const startMin = sh * 60 + sm;
+  const endMin = eh * 60 + em;
+
+  return startMin <= endMin
+    ? nowMin >= startMin && nowMin < endMin
+    : nowMin >= startMin || nowMin < endMin;
+}
+
 export default function RoutingToggle() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [character, setCharacter] = useState<CharacterState>("standing-there");
+  const [nightActive, setNightActive] = useState(false);
 
   useEffect(() => {
     fetch("/api/internal/settings")
@@ -28,6 +48,16 @@ export default function RoutingToggle() {
           setEnabled(data.routing_enabled);
           // Set initial character state without transition
           setCharacter(data.routing_enabled ? "standing-there" : "in-box");
+        }
+        // Check if night mode is currently active
+        if (
+          data.quiet_hours_enabled &&
+          data.quiet_hours_start &&
+          data.quiet_hours_end
+        ) {
+          setNightActive(
+            isCurrentlyInQuietHours(data.quiet_hours_start, data.quiet_hours_end)
+          );
         }
       })
       .catch(() => {});
@@ -84,8 +114,8 @@ export default function RoutingToggle() {
     >
       {/* Character gif */}
       <img
-        key={character}
-        src={GIF_SRC[character]}
+        key={nightActive ? "sneaking" : character}
+        src={nightActive ? "/sneaking.gif" : GIF_SRC[character]}
         alt="Character"
         style={{
           width: 109,
