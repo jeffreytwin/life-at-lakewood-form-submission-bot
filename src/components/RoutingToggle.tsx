@@ -106,6 +106,7 @@ export default function RoutingToggle() {
 
   return (
     <div
+      className="routing-toggle-wrapper"
       style={{
         position: "fixed",
         bottom: 20,
