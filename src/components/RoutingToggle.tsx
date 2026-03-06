@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 type CharacterState =
   | "standing-there"
@@ -15,15 +15,10 @@ const GIF_SRC: Record<CharacterState, string> = {
   "getting-out-of-box": "/getting-out-of-box.gif",
 };
 
-// Duration (ms) for the transition gifs before settling to steady state
-const TRANSITION_DURATION = 2000;
-
 export default function RoutingToggle() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [character, setCharacter] = useState<CharacterState>("standing-there");
-  const initialLoad = useRef(true);
-  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch("/api/internal/settings")
@@ -33,16 +28,9 @@ export default function RoutingToggle() {
           setEnabled(data.routing_enabled);
           // Set initial character state without transition
           setCharacter(data.routing_enabled ? "standing-there" : "in-box");
-          initialLoad.current = false;
         }
       })
       .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (transitionTimer.current) clearTimeout(transitionTimer.current);
-    };
   }, []);
 
   if (enabled === null) return null;
@@ -60,23 +48,8 @@ export default function RoutingToggle() {
       return;
     }
 
-    // Clear any existing transition timer
-    if (transitionTimer.current) clearTimeout(transitionTimer.current);
-
-    // Start transition animation
-    if (newValue) {
-      // Turning ON: play "getting out of box", then settle to "standing there"
-      setCharacter("getting-out-of-box");
-      transitionTimer.current = setTimeout(() => {
-        setCharacter("standing-there");
-      }, TRANSITION_DURATION);
-    } else {
-      // Turning OFF: play "get in box", then settle to "in box"
-      setCharacter("get-in-box");
-      transitionTimer.current = setTimeout(() => {
-        setCharacter("in-box");
-      }, TRANSITION_DURATION);
-    }
+    // Play transition animation (V2 GIFs don't loop — they stop on last frame)
+    setCharacter(newValue ? "getting-out-of-box" : "get-in-box");
 
     setBusy(true);
     try {
