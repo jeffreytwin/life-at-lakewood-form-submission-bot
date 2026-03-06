@@ -79,8 +79,22 @@ export async function POST(request: NextRequest) {
       // Format 1: Pre-formatted array
       const parsed = preformattedPayloadSchema.safeParse(body);
       if (!parsed.success) {
+        const firstAgent = Array.isArray(body.agents) ? body.agents[0] : body.agents;
         return NextResponse.json(
-          { error: "Invalid payload", details: parsed.error.flatten() },
+          {
+            error: "Invalid payload",
+            details: parsed.error.flatten(),
+            debug: {
+              agents_type: typeof body.agents,
+              agents_is_array: Array.isArray(body.agents),
+              agents_length: Array.isArray(body.agents) ? body.agents.length : null,
+              first_agent: firstAgent,
+              first_agent_keys: firstAgent ? Object.keys(firstAgent) : null,
+              first_agent_rate_type: firstAgent ? typeof firstAgent.close_rate_trailing_12m : null,
+              first_agent_rate_value: firstAgent ? firstAgent.close_rate_trailing_12m : null,
+              body_keys: Object.keys(body),
+            },
+          },
           { status: 400 }
         );
       }
