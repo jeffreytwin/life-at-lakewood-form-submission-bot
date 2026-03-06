@@ -319,28 +319,26 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
       <div className="card mb-4">
         <div className="card-header">
           <h3>Overall Hand Raise Distribution This Month</h3>
-          {leadDist && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {leadDist.asOf && (
-                <span className="text-muted text-sm">
-                  As of{" "}
-                  {new Date(leadDist.asOf).toLocaleString("en-US", {
-                    timeZone: "America/New_York",
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
-                </span>
-              )}
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={refreshLeadDist}
-                disabled={leadDistLoading}
-              >
-                Refresh
-              </button>
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {leadDist?.asOf && (
+              <span className="text-muted text-sm">
+                As of{" "}
+                {new Date(leadDist.asOf).toLocaleString("en-US", {
+                  timeZone: "America/New_York",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </span>
+            )}
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={refreshLeadDist}
+              disabled={leadDistLoading}
+            >
+              Refresh
+            </button>
+          </div>
         </div>
         {leadDistLoading && !leadDist ? (
           <div className="empty-state" style={{ padding: "32px 20px" }}>

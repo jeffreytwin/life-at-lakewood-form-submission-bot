@@ -249,7 +249,7 @@ export default function AgentsPage() {
                     <th>Locations</th>
                     <th>Price Ranges</th>
                     <th>Close Rate (12m)</th>
-                    <th>Lead Goal</th>
+                    <th>Hand Raise Goal</th>
                     <th>Role</th>
                     <th></th>
                   </tr>
@@ -401,7 +401,7 @@ export default function AgentsPage() {
                 <div className="form-group">
                   <label>Locations</label>
                   <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
-                    Only receives leads from selected locations. Leave empty for all.
+                    Only receives form submissions from selected locations. Leave empty for all.
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {locations
@@ -488,7 +488,7 @@ export default function AgentsPage() {
                 <div className="form-group">
                   <label>Unavailable Times</label>
                   <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
-                    Set times when this agent should NOT receive leads. Available by default.
+                    Set times when this agent should NOT receive hand raises. Available by default.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {form.unavailability_windows.map((window, index) => (
@@ -572,7 +572,7 @@ export default function AgentsPage() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Monthly Lead Goal Min</label>
+                    <label>Monthly Hand Raise Goal Min</label>
                     <input
                       className="form-input"
                       type="number"
@@ -587,7 +587,7 @@ export default function AgentsPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Monthly Lead Goal Max</label>
+                    <label>Monthly Hand Raise Goal Max</label>
                     <input
                       className="form-input"
                       type="number"
@@ -604,9 +604,9 @@ export default function AgentsPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Daily Lead Max</label>
+                  <label>Daily Hand Raise Max</label>
                   <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
-                    Soft cap on leads per day. Agent&apos;s score drops as they
+                    Soft cap on hand raises per day. Agent&apos;s score drops as they
                     approach this limit. Set to 0 to disable.
                   </p>
                   <input

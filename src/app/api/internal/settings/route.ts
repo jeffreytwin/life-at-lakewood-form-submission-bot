@@ -7,14 +7,30 @@ const SETTINGS_COLUMNS =
   "routing_enabled, quiet_hours_enabled, quiet_hours_start, quiet_hours_end, updated_at";
 
 export async function GET() {
-  const { data, error } = await supabase
+  // Try fetching all columns (including quiet hours).
+  // Fall back to just routing_enabled if quiet hours columns don't exist yet.
+  let { data, error } = await supabase
     .from("system_settings")
     .select(SETTINGS_COLUMNS)
     .eq("id", 1)
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const fallback = await supabase
+      .from("system_settings")
+      .select("routing_enabled, updated_at")
+      .eq("id", 1)
+      .single();
+
+    if (fallback.error) {
+      return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+    }
+    data = {
+      ...fallback.data,
+      quiet_hours_enabled: true,
+      quiet_hours_start: "21:00",
+      quiet_hours_end: "08:30",
+    };
   }
 
   return NextResponse.json(data);
