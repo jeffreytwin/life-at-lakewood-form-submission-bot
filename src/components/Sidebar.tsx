@@ -8,7 +8,6 @@ const navItems = [
   { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2709" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
   { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
-  { href: "/dashboard/audit", label: "Audit Log", icon: "\u2630" },
   { href: "/dashboard/weights", label: "Weights", icon: "\u2696" },
   { href: "/dashboard/simulate", label: "Simulation", icon: "\u26A1" },
 ];
@@ -47,6 +46,14 @@ export default function Sidebar() {
         ))}
       </ul>
       <div className="sidebar-footer">
+        <Link
+          href="/dashboard/audit"
+          className={pathname === "/dashboard/audit" ? "active" : ""}
+          style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", fontSize: 13 }}
+        >
+          <span className="nav-icon">{"\u2630"}</span>
+          Audit Log
+        </Link>
         <button onClick={handleLogout} className="sidebar-logout">
           <span className="nav-icon">{"\u2190"}</span>
           Log Out

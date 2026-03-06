@@ -85,7 +85,7 @@ export default function WeightsPage() {
       <div className="page-header">
         <h2>Scoring Weights</h2>
         <p>
-          Balance how much close rate vs monthly lead load affects agent scoring.
+          Balance how much close rate vs distribution goals affects agent scoring.
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export default function WeightsPage() {
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>Close Rate</div>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Distribute to Highest Close-Rate Performers</div>
                 <div className="text-muted text-sm">
                   Trailing 12-month performance
                 </div>
@@ -154,7 +154,7 @@ export default function WeightsPage() {
             >
               <div>
                 <div style={{ fontWeight: 600, fontSize: 14 }}>
-                  Monthly Lead Load
+                  Hit Agent Distribution Goals
                 </div>
                 <div className="text-muted text-sm">
                   Monthly count relative to agent&apos;s goal range
@@ -208,7 +208,7 @@ export default function WeightsPage() {
                   color: "#fff",
                 }}
               >
-                {leadLoad >= 15 ? `Lead Load ${leadLoad}%` : `${leadLoad}%`}
+                {leadLoad >= 15 ? `Dist. Goals ${leadLoad}%` : `${leadLoad}%`}
               </div>
             )}
           </div>
@@ -228,18 +228,18 @@ export default function WeightsPage() {
             <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
               <li>
                 <strong>Location</strong> &mdash; Agent specialties must match
-                the lead&apos;s location
+                the hand raise&apos;s location
               </li>
               <li>
                 <strong>Price Range</strong> &mdash; Agent must accept the
-                lead&apos;s price bracket
+                hand raise&apos;s price bracket
               </li>
               <li>
                 <strong>Availability</strong> &mdash; Agent must not be in an
                 unavailability window
               </li>
               <li>
-                <strong>Daily Lead Cap</strong> &mdash; Agents under their cap
+                <strong>Daily Hand Raise Cap</strong> &mdash; Agents under their cap
                 are preferred; overflow only when all eligible agents have hit
                 their cap
               </li>
@@ -252,7 +252,7 @@ export default function WeightsPage() {
                 <strong>Specialty Bonus</strong> &mdash; Up to 1.15x multiplier for
                 agents with a specific area match (vs generalists who accept
                 all locations). Scales with Close Rate weight &mdash; at 100%
-                Lead Load the bonus is disabled so it can&apos;t overpower
+                Distribution Goals the bonus is disabled so it can&apos;t overpower
                 fair distribution
               </li>
               <li>
