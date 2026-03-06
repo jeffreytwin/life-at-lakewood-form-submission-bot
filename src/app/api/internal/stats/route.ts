@@ -12,7 +12,7 @@ export async function GET() {
         .from("agents")
         .select("*", { count: "exact", head: true })
         .eq("is_active", true),
-      supabase.from("locations").select("*", { count: "exact", head: true }),
+      supabase.from("locations").select("*", { count: "exact", head: true }).eq("is_active", true),
     ]);
 
     // Check if any query failed (indicates DB connection issue)

@@ -3,10 +3,13 @@ import { supabase } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
+const SETTINGS_COLUMNS =
+  "routing_enabled, quiet_hours_enabled, quiet_hours_start, quiet_hours_end, updated_at";
+
 export async function GET() {
   const { data, error } = await supabase
     .from("system_settings")
-    .select("routing_enabled, updated_at")
+    .select(SETTINGS_COLUMNS)
     .eq("id", 1)
     .single();
 
@@ -20,21 +23,37 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
 
-  if (typeof body.routing_enabled !== "boolean") {
+  // Build update payload from allowed fields
+  const update: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (typeof body.routing_enabled === "boolean") {
+    update.routing_enabled = body.routing_enabled;
+  }
+  if (typeof body.quiet_hours_enabled === "boolean") {
+    update.quiet_hours_enabled = body.quiet_hours_enabled;
+  }
+  if (typeof body.quiet_hours_start === "string") {
+    update.quiet_hours_start = body.quiet_hours_start;
+  }
+  if (typeof body.quiet_hours_end === "string") {
+    update.quiet_hours_end = body.quiet_hours_end;
+  }
+
+  // Must include at least one real field
+  if (Object.keys(update).length <= 1) {
     return NextResponse.json(
-      { error: "routing_enabled must be a boolean" },
+      { error: "No valid fields to update" },
       { status: 400 }
     );
   }
 
   const { data, error } = await supabase
     .from("system_settings")
-    .update({
-      routing_enabled: body.routing_enabled,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("id", 1)
-    .select("routing_enabled, updated_at")
+    .select(SETTINGS_COLUMNS)
     .single();
 
   if (error) {

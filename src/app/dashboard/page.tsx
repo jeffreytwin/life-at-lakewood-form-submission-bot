@@ -65,6 +65,12 @@ const eventColors: Record<string, string> = {
   error: "#ef4444",
 };
 
+interface QuietHoursState {
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+}
+
 export default function DashboardOverview() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +78,8 @@ export default function DashboardOverview() {
   const [leadDistLoading, setLeadDistLoading] = useState(true);
   const [monthlyLeads, setMonthlyLeads] = useState<MonthlyLeads | null>(null);
   const [monthlyLoading, setMonthlyLoading] = useState(true);
+  const [quietHours, setQuietHours] = useState<QuietHoursState | null>(null);
+  const [qhBusy, setQhBusy] = useState(false);
   const refreshLeadDist = useCallback(() => {
     setLeadDistLoading(true);
     fetch("/api/internal/lead-distribution")
@@ -105,7 +113,66 @@ export default function DashboardOverview() {
 
     refreshLeadDist();
     refreshMonthlyLeads();
+
+    fetch("/api/internal/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.quiet_hours_enabled === "boolean") {
+          setQuietHours({
+            quiet_hours_enabled: data.quiet_hours_enabled,
+            quiet_hours_start: data.quiet_hours_start ?? "21:00",
+            quiet_hours_end: data.quiet_hours_end ?? "08:30",
+          });
+        }
+      })
+      .catch(() => {});
   }, [refreshLeadDist, refreshMonthlyLeads]);
+
+  async function toggleQuietHours() {
+    if (!quietHours) return;
+    setQhBusy(true);
+    try {
+      const res = await fetch("/api/internal/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quiet_hours_enabled: !quietHours.quiet_hours_enabled,
+        }),
+      });
+      const data = await res.json();
+      if (typeof data.quiet_hours_enabled === "boolean") {
+        setQuietHours((prev) => prev && { ...prev, quiet_hours_enabled: data.quiet_hours_enabled });
+      }
+    } catch {
+      alert("Failed to update quiet hours");
+    } finally {
+      setQhBusy(false);
+    }
+  }
+
+  async function updateQuietHoursTime(field: "quiet_hours_start" | "quiet_hours_end", value: string) {
+    if (!quietHours) return;
+    setQhBusy(true);
+    try {
+      const res = await fetch("/api/internal/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      const data = await res.json();
+      if (data.quiet_hours_start && data.quiet_hours_end) {
+        setQuietHours((prev) => prev && {
+          ...prev,
+          quiet_hours_start: data.quiet_hours_start,
+          quiet_hours_end: data.quiet_hours_end,
+        });
+      }
+    } catch {
+      alert("Failed to update quiet hours");
+    } finally {
+      setQhBusy(false);
+    }
+  }
 
   if (error) {
     return (
@@ -185,6 +252,69 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
       </div>
+
+      {quietHours && (
+        <div className="card mb-4">
+          <div className="card-header">
+            <h3>Night Mode (Quiet Hours)</h3>
+            <button
+              className={`btn btn-sm ${quietHours.quiet_hours_enabled ? "btn-danger" : "btn-primary"}`}
+              onClick={toggleQuietHours}
+              disabled={qhBusy}
+            >
+              {qhBusy ? "..." : quietHours.quiet_hours_enabled ? "Disable" : "Enable"}
+            </button>
+          </div>
+          <div style={{ padding: "16px 20px" }}>
+            <p className="text-muted text-sm" style={{ marginBottom: 12 }}>
+              During quiet hours, form submissions are still assigned and the agent
+              receives an SMS, but the follow-up sequence is deferred until the
+              morning. Agents can still reply YES/NO at any time.
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: quietHours.quiet_hours_enabled ? "var(--success)" : "var(--text-muted)",
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-heading)" }}>
+                  {quietHours.quiet_hours_enabled ? "Active" : "Disabled"}
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <label className="text-sm text-muted" htmlFor="qh-start">Start:</label>
+                <input
+                  id="qh-start"
+                  type="time"
+                  className="form-input"
+                  style={{ width: "auto", fontSize: 13, padding: "4px 8px" }}
+                  value={quietHours.quiet_hours_start}
+                  onChange={(e) => updateQuietHoursTime("quiet_hours_start", e.target.value)}
+                  disabled={qhBusy}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <label className="text-sm text-muted" htmlFor="qh-end">End:</label>
+                <input
+                  id="qh-end"
+                  type="time"
+                  className="form-input"
+                  style={{ width: "auto", fontSize: 13, padding: "4px 8px" }}
+                  value={quietHours.quiet_hours_end}
+                  onChange={(e) => updateQuietHoursTime("quiet_hours_end", e.target.value)}
+                  disabled={qhBusy}
+                />
+              </div>
+              <span className="text-muted text-sm">(Eastern Time)</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="card mb-4">
         <div className="card-header">

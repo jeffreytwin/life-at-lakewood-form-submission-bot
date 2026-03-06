@@ -65,6 +65,7 @@ interface ThirtyDayResponse {
 }
 
 const PRICE_OPTIONS = [
+  "",
   "$150,000 - $250,000",
   "$250,000 - $500,000",
   "$500,000 - $750,000",
@@ -268,7 +269,7 @@ export default function SimulatePage() {
               setThirtyDayResult(null);
             }}
           >
-            {m === "single" ? "Single Lead" : m === "bulk" ? "Bulk" : "30-Day"}
+            {m === "single" ? "Single Form Submission" : m === "bulk" ? "Bulk" : "30-Day"}
           </button>
         ))}
       </div>
@@ -279,7 +280,7 @@ export default function SimulatePage() {
           <div className="card-header">
             <h3>
               {mode === "single"
-                ? "Lead Details"
+                ? "Form Submission Details"
                 : mode === "bulk"
                   ? "Batch Configuration"
                   : "30-Day Configuration"}
@@ -314,8 +315,8 @@ export default function SimulatePage() {
                   }
                 >
                   {PRICE_OPTIONS.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
+                    <option key={p || "__blank"} value={p}>
+                      {p || "(Blank)"}
                     </option>
                   ))}
                 </select>
@@ -338,7 +339,7 @@ export default function SimulatePage() {
           ) : mode === "bulk" ? (
             <>
               <div className="form-group">
-                <label>Number of leads</label>
+                <label>Number of Hand Raises</label>
                 <input
                   className="form-input"
                   type="number"
@@ -367,7 +368,7 @@ export default function SimulatePage() {
               <div className="form-group">
                 <label>Price ranges</label>
                 <PillSelector
-                  items={PRICE_OPTIONS.map((p) => ({ key: p, label: p }))}
+                  items={PRICE_OPTIONS.map((p) => ({ key: p, label: p || "(Blank)" }))}
                   selected={bulkPrices}
                   onToggle={toggleBulkPrice}
                   color="#4f8ff7"
@@ -377,9 +378,9 @@ export default function SimulatePage() {
           ) : (
             <>
               <div className="form-group">
-                <label>Leads per day</label>
+                <label>Hand Raises per day</label>
                 <p className="text-muted text-sm" style={{ margin: "4px 0 8px" }}>
-                  Simulates this many leads each day for 30 days. Random times
+                  Simulates this many hand raises each day for 30 days. Random times
                   between 7 AM - 8 PM ET. Daily caps reset each day.
                 </p>
                 <input
@@ -411,7 +412,7 @@ export default function SimulatePage() {
               <div className="form-group">
                 <label>Price ranges</label>
                 <PillSelector
-                  items={PRICE_OPTIONS.map((p) => ({ key: p, label: p }))}
+                  items={PRICE_OPTIONS.map((p) => ({ key: p, label: p || "(Blank)" }))}
                   selected={thirtyDayPrices}
                   onToggle={toggle30DayPrice}
                   color="#4f8ff7"
@@ -434,10 +435,10 @@ export default function SimulatePage() {
               {running
                 ? "Running..."
                 : mode === "single"
-                  ? "Simulate Lead"
+                  ? "Simulate Form Submission"
                   : mode === "bulk"
-                    ? `Simulate ${bulkCount} Leads`
-                    : `Simulate 30 Days (${leadsPerDay * 30} leads)`}
+                    ? `Simulate ${bulkCount} Hand Raises`
+                    : `Simulate 30 Days (${leadsPerDay * 30} hand raises)`}
             </button>
           </div>
 
@@ -507,7 +508,7 @@ function ThirtyDayResults({
         <div className="card-header">
           <h3>30-Day Summary</h3>
           <span className="text-muted text-sm">
-            {data.totalLeads} leads / {data.totalAssigned} assigned /{" "}
+            {data.totalLeads} hand raises / {data.totalAssigned} assigned /{" "}
             {data.totalUnassigned} unassigned
             {data.totalOverflow > 0 &&
               ` / ${data.totalOverflow} overflow (assigned despite all eligible agents hitting daily cap)`}
@@ -622,7 +623,7 @@ function ThirtyDayResults({
                 <th>Day of Week</th>
                 <th>Assigned</th>
                 <th>Unassigned</th>
-                <th title="Leads assigned when all eligible agents had already hit their daily cap">Overflow</th>
+                <th title="Hand raises assigned when all eligible agents had already hit their daily cap">Overflow</th>
               </tr>
             </thead>
             <tbody>
@@ -752,12 +753,12 @@ function ThirtyDayResults({
                               ))}
                             {Object.keys(day.agentBreakdown).length === 0 && (
                               <span className="text-muted">
-                                No agents matched any leads this day
+                                No agents matched any hand raises this day
                               </span>
                             )}
                           </div>
 
-                          <strong>Lead-by-lead decisions:</strong>
+                          <strong>Form-by-form decisions:</strong>
                           <table style={{ width: "100%", marginTop: 8 }}>
                             <thead>
                               <tr>
@@ -885,7 +886,7 @@ function BulkResults({
 
         {Object.keys(result.summary).length === 0 ? (
           <p className="text-muted" style={{ padding: 16 }}>
-            No agents matched any leads. Check location, price range, and
+            No agents matched any hand raises. Check location, price range, and
             availability filters.
           </p>
         ) : (
@@ -999,7 +1000,7 @@ function BulkResults({
       {/* Lead-by-lead */}
       <div className="card">
         <div className="card-header">
-          <h3>Lead-by-Lead Results</h3>
+          <h3>Form-by-Form Results</h3>
         </div>
         <div className="table-wrapper">
           <table>
@@ -1064,7 +1065,7 @@ function BulkResults({
                                 <th style={{ fontSize: 11 }}>Status</th>
                                 <th style={{ fontSize: 11 }}>Score</th>
                                 <th style={{ fontSize: 11 }}>Close Rate</th>
-                                <th style={{ fontSize: 11 }}>Lead Load</th>
+                                <th style={{ fontSize: 11 }}>Dist. Goals</th>
                               </tr>
                             </thead>
                             <tbody>
