@@ -29,6 +29,8 @@ Go to **Vercel → Settings → Environment Variables** and add:
 | `LOGIN_PASSWORD` | your login password | For the dashboard |
 | `FRONTLINES_AGENT_PHONE` | frontlines agent phone | Gets notified of owned leads + fallbacks |
 | `ZAPIER_CATCH_HOOK_ACCEPTANCE` | (set in Phase 2) | Zapier Catch Hook URL for SF owner updates |
+| `ZAPIER_LEAD_DISTRIBUTION_WEBHOOK_SECRET` | generate a random string | Validates the hourly lead count sync webhook |
+| `ZAPIER_CLOSE_RATES_WEBHOOK_SECRET` | generate a random string | Validates the daily close rates sync webhook |
 
 **Important — Twilio Phone Number:**
 - **Option A (Recommended):** Buy a **new Twilio number** for the Hub so agents can distinguish "routing bot" texts from existing Zap texts during the transition. This prevents confusion if both systems send SMS at the same time.
@@ -48,10 +50,54 @@ In **Twilio Console → Phone Numbers → [your new number]**:
 - Set the **"A message comes in"** webhook to: `https://your-app.vercel.app/api/webhooks/twilio/inbound` (POST)
 - Set the **Status callback** to: `https://your-app.vercel.app/api/webhooks/twilio/status` (POST)
 
-### 0E. Set Up the Cron Job
-In **Vercel → Settings → Cron Jobs** (or via `vercel.json`):
-- Add a cron that hits `GET /api/cron/check-timeouts` every 1-2 minutes
-- Include the `Authorization: Bearer <CRON_SECRET>` header
+### 0E. Set Up Cron Jobs
+In **Vercel → Settings → Cron Jobs** (or via `vercel.json`), add these cron endpoints:
+
+| Cron Endpoint | Frequency | Purpose |
+|---------------|-----------|---------|
+| `GET /api/cron/check-timeouts` | Every 1-2 minutes | Catches expired routing attempts, sends follow-ups, escalates |
+| `GET /api/cron/sync-lead-counts` | Every hour | Pulls current hand-raise counts per agent from Salesforce via Zapier |
+| `GET /api/cron/sync-close-rates` | Once daily (e.g., 6 AM ET) | Pulls trailing close rates per agent from Salesforce via Zapier |
+
+All cron endpoints require `Authorization: Bearer <CRON_SECRET>`.
+
+### 0F. Set Up Salesforce Data Sync Zaps
+These Zapier Zaps feed Salesforce data into the Hub on a schedule:
+
+#### Zap: Hourly Lead Count Sync
+1. **Trigger:** Schedule by Zapier — every 1 hour
+2. **Action:** Salesforce — Find Records (query active agents + their current-month hand-raise / lead counts)
+3. **Action:** Webhooks by Zapier — POST to `https://your-app.vercel.app/api/webhooks/lead-distribution`
+4. **Payload:** Array of `{ salesforce_user_id, name, lead_count }` for each agent
+
+This keeps the Hub's `monthly_lead_counts` table in sync with Salesforce. Between syncs, the Hub tracks its own acceptances in real-time, so the count is always close to accurate. Each hourly sync resets the baseline to catch any leads assigned directly in Salesforce outside the Hub.
+
+#### Zap: Daily Close Rate Sync
+1. **Trigger:** Schedule by Zapier — once daily (e.g., 6 AM ET)
+2. **Action:** Salesforce — Find Records (query agents + trailing 12-month and all-time close rates)
+3. **Action:** Webhooks by Zapier — POST to `https://your-app.vercel.app/api/webhooks/close-rates`
+4. **Payload:** Array of `{ salesforce_user_id, name, close_rate_trailing_12m, close_rate_all_time }`
+
+This endpoint already exists in the codebase. Close rates change slowly, so daily is sufficient.
+
+#### How the Two Systems Work Together
+```
+Salesforce (source of truth)
+    │
+    ├─── Hourly Zapier Zap ──→ POST /api/webhooks/lead-distribution
+    │                              └─→ Resets monthly_lead_counts baseline
+    │
+    ├─── Daily Zapier Zap ───→ POST /api/webhooks/close-rates
+    │                              └─→ Updates agent close_rate fields
+    │
+    └─── (leads assigned directly in SF between syncs)
+              └─→ Caught at next hourly sync
+
+Hub (real-time tracking)
+    │
+    └─── On each lead acceptance ──→ Increments monthly_lead_counts immediately
+                                      └─→ Scoring always uses: (last SF sync count) + (Hub acceptances since sync)
+```
 
 ---
 
@@ -93,6 +139,9 @@ Run through these test cases by triggering the test Zap:
 | 6 | Routing paused | Pause routing in dashboard → submit lead → should queue as "paused" |
 | 7 | Quiet hours | Test during configured quiet hours → deferred follow-up |
 | 8 | Duplicate check | Send same `salesforce_record_id` twice → second should be skipped |
+| 9 | Hourly lead count sync | Trigger the lead distribution webhook with test data → verify `monthly_lead_counts` updates |
+| 10 | Daily close rate sync | Trigger the close rates webhook with test data → verify agent `close_rate_trailing_12m` updates |
+| 11 | Scoring after sync | Submit a lead after a sync → verify scoring uses the updated counts and rates |
 
 ### 1C. Test the Acceptance → Salesforce Loop
 1. Create a **Zapier Catch Hook** (this is a new Zap):
@@ -199,6 +248,8 @@ Once all 5 Zaps are routing through the Hub and you've verified a few days of su
 | Agent doesn't get SMS | Cron job catches timeouts → escalates to next agent → eventually hits manual fallback with frontlines notification |
 | Wrong SF owner update | `ZAPIER_CATCH_HOOK_ACCEPTANCE` only fires on explicit agent acceptance. Salesforce record ID must match. |
 | Duplicate leads | De-duplication check on `salesforce_record_id` prevents double-processing |
+| SF sync Zap fails | Hub continues routing with last-known counts. Scoring degrades gracefully — at worst, load balancing is slightly off until next successful sync. No hard failure. |
+| Lead counts drift between syncs | Hub increments its own count on each acceptance, so drift only applies to leads assigned directly in SF. Hourly sync resets the baseline. |
 
 ## Emergency Rollback
 If anything goes wrong during pilot:
