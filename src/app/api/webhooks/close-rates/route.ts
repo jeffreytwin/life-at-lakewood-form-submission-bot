@@ -35,7 +35,15 @@ export async function POST(request: NextRequest) {
     // Authenticate first
     const secret = body?.webhook_secret;
     if (secret !== process.env.ZAPIER_CLOSE_RATES_WEBHOOK_SECRET) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({
+        error: "Unauthorized",
+        debug: {
+          body_keys: Object.keys(body || {}),
+          body_type: typeof body,
+          secret_received: secret ? `${String(secret).substring(0, 4)}...` : null,
+          env_set: !!process.env.ZAPIER_CLOSE_RATES_WEBHOOK_SECRET,
+        },
+      }, { status: 401 });
     }
 
     // Detect format: does the payload have a "report" key or an "agents" key?
