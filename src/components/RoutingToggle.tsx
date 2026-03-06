@@ -92,6 +92,11 @@ export default function RoutingToggle() {
       if (typeof data.routing_enabled === "boolean") {
         setEnabled(data.routing_enabled);
       }
+
+      // After the transition GIF finishes (~1.2s), settle into the resting state
+      setTimeout(() => {
+        setCharacter(newValue ? "standing-there" : "in-box");
+      }, 1200);
     } catch {
       alert("Failed to update routing status");
     } finally {
@@ -112,19 +117,26 @@ export default function RoutingToggle() {
         gap: 0,
       }}
     >
-      {/* Character gif */}
-      <img
-        key={nightActive ? "sneaking" : character}
-        src={nightActive ? "/sneaking.gif" : GIF_SRC[character]}
-        alt="Character"
-        style={{
-          width: 109,
-          height: 109,
-          imageRendering: "pixelated",
-          objectFit: "contain",
-          marginBottom: -2,
-        }}
-      />
+      {/* Character gif — show sneaking only when night mode active and in resting "standing" state */}
+      {(() => {
+        const showSneaking = nightActive && character === "standing-there";
+        const src = showSneaking ? "/sneaking.gif" : GIF_SRC[character];
+        const size = showSneaking ? 87 : 109;
+        return (
+          <img
+            key={showSneaking ? "sneaking" : character}
+            src={src}
+            alt="Character"
+            style={{
+              width: size,
+              height: size,
+              imageRendering: "pixelated",
+              objectFit: "contain",
+              marginBottom: -2,
+            }}
+          />
+        );
+      })()}
       {/* Toggle bar */}
       <div
         style={{
