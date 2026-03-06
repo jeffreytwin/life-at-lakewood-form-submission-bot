@@ -2,6 +2,16 @@ import { getTwilioClient, getTwilioPhoneNumber } from "./client";
 import { logger } from "@/lib/shared/logger";
 import type { Lead } from "@/lib/supabase/types";
 
+/**
+ * Format "HH:MM" (24h) to a friendly "8:30am" style string for SMS.
+ */
+function formatTimeForSms(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const suffix = h >= 12 ? "pm" : "am";
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? `${hour12}${suffix}` : `${hour12}:${String(m).padStart(2, "0")}${suffix}`;
+}
+
 function buildLeadDetailsBlock(lead: Lead, locationName: string): string {
   const lines: string[] = [
     `Name: ${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim(),
@@ -36,20 +46,34 @@ function buildLeadDetailsBlock(lead: Lead, locationName: string): string {
   return lines.join("\n");
 }
 
+/**
+ * @param quietHoursEnd - If provided (e.g. "08:30"), indicates this is during
+ *   quiet hours and the follow-up will be deferred until that time.
+ */
 export async function sendLeadNotification(
   agentPhone: string,
   lead: Lead,
-  locationName: string
+  locationName: string,
+  quietHoursEnd?: string
 ): Promise<string> {
   const details = buildLeadDetailsBlock(lead, locationName);
 
-  const body = [
+  const lines = [
     `Heads up! You have a new form submission for ${locationName}. See below:`,
     "",
     details,
     "",
     "Reply YES to accept or NO to pass.",
-  ].join("\n");
+  ];
+
+  if (quietHoursEnd) {
+    lines.push(
+      "",
+      `(Night mode active — no rush, we'll follow up at ${formatTimeForSms(quietHoursEnd)} ET if we don't hear from you.)`
+    );
+  }
+
+  const body = lines.join("\n");
 
   const message = await getTwilioClient().messages.create({
     to: agentPhone,

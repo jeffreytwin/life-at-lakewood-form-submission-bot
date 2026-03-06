@@ -18,6 +18,11 @@ import {
   sendUnclearResponseNotification,
 } from "@/lib/twilio/send-sms";
 import { selectNextAgent } from "./select-agent";
+import {
+  getQuietHoursSettings,
+  isInQuietHours,
+  getDeferredExpiresAt,
+} from "./quiet-hours";
 import { logger } from "@/lib/shared/logger";
 import { ROUTING_TIMEOUT_MS, MAX_ESCALATION_ATTEMPTS } from "@/lib/shared/constants";
 import type { Lead, RoutingAttempt } from "@/lib/supabase/types";
@@ -66,18 +71,29 @@ async function sendToAgent(
     return;
   }
 
+  // Check if we're in quiet hours — if so, defer the follow-up timeout
+  const qhSettings = await getQuietHoursSettings();
+  const duringQuietHours =
+    qhSettings.quiet_hours_enabled &&
+    isInQuietHours(qhSettings.quiet_hours_start, qhSettings.quiet_hours_end);
+
   const messageSid = await sendLeadNotification(
     agent.phone,
     lead,
-    locationName
+    locationName,
+    duringQuietHours ? qhSettings.quiet_hours_end : undefined
   );
+
+  const expiresAt = duringQuietHours
+    ? getDeferredExpiresAt(qhSettings.quiet_hours_end)
+    : getExpiresAt();
 
   await createRoutingAttempt({
     lead_id: lead.id,
     agent_id: agent.id,
     attempt_number: attemptNumber,
     status: "sms_sent",
-    expires_at: getExpiresAt(),
+    expires_at: expiresAt,
     twilio_message_sid: messageSid,
     agent_response: null,
     score_snapshot: {
@@ -96,6 +112,7 @@ async function sendToAgent(
       attempt_number: attemptNumber,
       score: agentScore.totalScore,
       message_sid: messageSid,
+      quiet_hours: duringQuietHours,
     },
   });
 
@@ -104,6 +121,7 @@ async function sendToAgent(
     agentName: agent.name,
     attemptNumber,
     score: agentScore.totalScore,
+    quietHours: duringQuietHours,
   });
 }
 
