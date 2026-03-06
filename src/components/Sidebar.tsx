@@ -46,14 +46,17 @@ export default function Sidebar() {
         ))}
       </ul>
       <div className="sidebar-footer">
-        <Link
-          href="/dashboard/audit"
-          className={pathname === "/dashboard/audit" ? "active" : ""}
-          style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", fontSize: 13 }}
-        >
-          <span className="nav-icon">{"\u2630"}</span>
-          Audit Log
-        </Link>
+        <ul className="sidebar-nav" style={{ marginBottom: 0 }}>
+          <li>
+            <Link
+              href="/dashboard/audit"
+              className={pathname === "/dashboard/audit" ? "active" : ""}
+            >
+              <span className="nav-icon">{"\u2713"}</span>
+              Audit Log
+            </Link>
+          </li>
+        </ul>
         <button onClick={handleLogout} className="sidebar-logout">
           <span className="nav-icon">{"\u2190"}</span>
           Log Out
