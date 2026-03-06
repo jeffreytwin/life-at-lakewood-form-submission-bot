@@ -46,17 +46,17 @@ export default function Sidebar() {
         ))}
       </ul>
       <div className="sidebar-footer">
-        <ul className="sidebar-nav" style={{ marginBottom: 0 }}>
-          <li>
-            <Link
-              href="/dashboard/audit"
-              className={pathname === "/dashboard/audit" ? "active" : ""}
-            >
-              <span className="nav-icon">{"\u2713"}</span>
-              Audit Log
-            </Link>
-          </li>
-        </ul>
+        <Link
+          href="/dashboard/audit"
+          className={`sidebar-logout${pathname === "/dashboard/audit" ? " sidebar-footer-active" : ""}`}
+        >
+          <span className="nav-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+              <polyline points="3,8.5 6.5,12 13,4" />
+            </svg>
+          </span>
+          Audit Log
+        </Link>
         <button onClick={handleLogout} className="sidebar-logout">
           <span className="nav-icon">{"\u2190"}</span>
           Log Out
