@@ -143,6 +143,15 @@ a:hover {
   color: var(--danger);
 }
 
+a.sidebar-footer-active {
+  background: rgba(79, 143, 247, 0.12);
+  color: var(--accent);
+}
+
+a.sidebar-footer-active:hover {
+  color: var(--accent);
+}
+
 .main-content {
   margin-left: var(--sidebar-width);
   flex: 1;

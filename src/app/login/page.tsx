@@ -40,12 +40,12 @@ export default function LoginPage() {
       <div style={styles.container}>
         <div style={styles.logoSection}>
           <img src="/logo.png" alt="Logo" style={styles.logo} />
-          <div style={styles.brandText}>FORM SUBMISSIONS</div>
+          <div style={styles.brandText}>FORM SUBMISSION HUB</div>
         </div>
 
         <div style={styles.card}>
           <p style={styles.subtitle}>
-            To access this page, you have to log in to Form Submissions.
+            Log in to access the Form Submission Hub.
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -108,7 +108,7 @@ export default function LoginPage() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "#f4f6f9",
+    background: "#0f1117",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -136,18 +136,18 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 18,
     fontWeight: 700,
     letterSpacing: 3,
-    color: "#0070d2",
+    color: "#4f8ff7",
   },
   card: {
     width: "100%",
-    background: "#fff",
-    border: "1px solid #d8dde6",
-    borderRadius: 4,
+    background: "#1a1d27",
+    border: "1px solid #2a2e3a",
+    borderRadius: 8,
     padding: "28px 32px 24px",
   },
   subtitle: {
     fontSize: 14,
-    color: "#0070d2",
+    color: "#8b8fa3",
     marginBottom: 20,
   },
   fieldGroup: {
@@ -157,23 +157,23 @@ const styles: Record<string, React.CSSProperties> = {
     display: "block",
     fontSize: 13,
     fontWeight: 600,
-    color: "#3e3e3c",
+    color: "#8b8fa3",
     marginBottom: 6,
   },
   input: {
     width: "100%",
     padding: "10px 12px",
     fontSize: 14,
-    border: "1px solid #d8dde6",
-    borderRadius: 4,
+    border: "1px solid #2a2e3a",
+    borderRadius: 8,
     outline: "none",
-    color: "#16325c",
-    background: "#fff",
+    color: "#e4e6ed",
+    background: "#141620",
     boxSizing: "border-box" as const,
   },
   error: {
     fontSize: 13,
-    color: "#c23934",
+    color: "#f87171",
     marginBottom: 12,
   },
   button: {
@@ -182,9 +182,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 15,
     fontWeight: 600,
     color: "#fff",
-    background: "#0070d2",
+    background: "#4f8ff7",
     border: "none",
-    borderRadius: 4,
+    borderRadius: 8,
     cursor: "pointer",
     marginBottom: 16,
   },
@@ -201,22 +201,22 @@ const styles: Record<string, React.CSSProperties> = {
   },
   rememberLabel: {
     fontSize: 13,
-    color: "#3e3e3c",
+    color: "#8b8fa3",
     cursor: "pointer",
   },
   divider: {
-    borderTop: "1px solid #d8dde6",
+    borderTop: "1px solid #2a2e3a",
     marginBottom: 16,
   },
   forgotLink: {
     fontSize: 13,
-    color: "#0070d2",
+    color: "#4f8ff7",
     cursor: "pointer",
   },
   footer: {
     position: "fixed" as const,
     bottom: 24,
     fontSize: 12,
-    color: "#706e6b",
+    color: "#8b8fa3",
   },
 };
