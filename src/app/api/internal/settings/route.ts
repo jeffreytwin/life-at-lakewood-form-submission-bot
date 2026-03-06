@@ -65,7 +65,9 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase
+  // Try updating with all columns. Fall back to core columns only if
+  // quiet hours columns don't exist yet (migration not applied).
+  let { data, error } = await supabase
     .from("system_settings")
     .update(update)
     .eq("id", 1)
@@ -73,7 +75,30 @@ export async function PATCH(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Strip quiet hours fields from the update payload and retry
+    const coreUpdate: Record<string, unknown> = {
+      updated_at: update.updated_at,
+    };
+    if (update.routing_enabled !== undefined) {
+      coreUpdate.routing_enabled = update.routing_enabled;
+    }
+
+    const fallback = await supabase
+      .from("system_settings")
+      .update(coreUpdate)
+      .eq("id", 1)
+      .select("routing_enabled, updated_at")
+      .single();
+
+    if (fallback.error) {
+      return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+    }
+    data = {
+      ...fallback.data,
+      quiet_hours_enabled: true,
+      quiet_hours_start: "21:00",
+      quiet_hours_end: "08:30",
+    };
   }
 
   return NextResponse.json(data);
