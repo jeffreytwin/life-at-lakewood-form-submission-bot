@@ -363,17 +363,6 @@ export default function AgentsPage() {
                   readOnly={isFrontlines}
                 />
               </div>
-              <div className="form-group">
-                <label>Salesforce User ID</label>
-                <input
-                  className="form-input"
-                  value={form.salesforce_user_id}
-                  onChange={(e) =>
-                    setForm({ ...form, salesforce_user_id: e.target.value })
-                  }
-                  readOnly={isFrontlines}
-                />
-              </div>
             </div>
 
             {/* Everything below is hidden for frontlines agents */}

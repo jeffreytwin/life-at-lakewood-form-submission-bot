@@ -30,7 +30,7 @@ export default function Sidebar() {
           style={{ width: 48, height: 48, marginBottom: 8 }}
         />
         <h1>Life at Lakewood</h1>
-        <span>Lead Routing System</span>
+        <span>Form Submission Hub</span>
       </div>
       <ul className="sidebar-nav">
         {navItems.map((item) => (
