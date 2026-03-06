@@ -161,10 +161,21 @@ export default function RoutingToggle() {
             flexShrink: 0,
           }}
         />
-        <span style={{ color: "var(--text-heading)", whiteSpace: "nowrap" }}>
+        <span style={{ color: "var(--text-heading)", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 4 }}>
           {enabled
             ? nightActive
-              ? "Routing Active (Quiet Hours)"
+              ? <>Routing Active (Quiet Hours){" "}
+                  <span
+                    title="During quiet hours, form submissions are still assigned and the agent receives an SMS, but the follow-up sequence is deferred until the morning. Agents can still reply YES/NO at any time."
+                    style={{ cursor: "help", display: "inline-flex", alignItems: "center" }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text-muted)" strokeWidth="1.5">
+                      <circle cx="8" cy="8" r="6.5" />
+                      <line x1="8" y1="7" x2="8" y2="11" />
+                      <line x1="8" y1="5" x2="8" y2="5.01" strokeWidth="2" />
+                    </svg>
+                  </span>
+                </>
               : "Routing Active"
             : "Routing Paused"}
         </span>
