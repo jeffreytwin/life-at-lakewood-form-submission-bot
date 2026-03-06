@@ -162,7 +162,11 @@ export default function RoutingToggle() {
           }}
         />
         <span style={{ color: "var(--text-heading)", whiteSpace: "nowrap" }}>
-          {enabled ? "Routing Active" : "Routing Paused"}
+          {enabled
+            ? nightActive
+              ? "Routing Active (Quiet Hours)"
+              : "Routing Active"
+            : "Routing Paused"}
         </span>
         <button
           onClick={toggle}
