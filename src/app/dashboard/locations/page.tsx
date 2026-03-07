@@ -170,9 +170,9 @@ export default function LocationsPage() {
                       <td>
                         <div
                           style={{
-                            width: 48,
+                            width: 36,
                             height: 36,
-                            borderRadius: 4,
+                            borderRadius: "50%",
                             overflow: "hidden",
                             background: "var(--bg-input)",
                             border: "1px solid var(--border)",
