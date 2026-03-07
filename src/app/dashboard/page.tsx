@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { formatStatus } from "@/lib/shared/status-display";
 
 interface LeadDistEntry {
   agentName: string;
@@ -335,7 +336,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                         <span
                           className={`badge ${statusBadge[lead.routing_status] ?? "badge-muted"}`}
                         >
-                          {lead.routing_status}
+                          {formatStatus(lead.routing_status)}
                         </span>
                       </td>
                       <td className="text-muted text-sm font-mono">
