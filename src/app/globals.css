@@ -595,6 +595,11 @@ select.form-input {
   display: none;
 }
 
+/* Routing character — show hide button on hover */
+.routing-character:hover .routing-hide-btn {
+  display: flex !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   /* Mobile top bar */
@@ -746,15 +751,9 @@ select.form-input {
     right: 16px;
   }
 
-  /* Routing toggle — smaller on mobile */
+  /* Hide routing toggle on mobile */
   .routing-toggle-wrapper {
-    bottom: 12px !important;
-    right: 12px !important;
-  }
-
-  .routing-toggle-wrapper img {
-    width: 70px !important;
-    height: 70px !important;
+    display: none !important;
   }
 }
 
