@@ -30,33 +30,13 @@ const salesforceReportPayloadSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const rawText = await request.text();
-    let body: Record<string, unknown>;
-    try {
-      body = JSON.parse(rawText);
-    } catch {
-      return NextResponse.json({
-        error: "JSON parse failed",
-        raw_preview: rawText.substring(0, 200),
-        raw_type: typeof rawText,
-      }, { status: 400 });
-    }
+    const body = await request.json();
 
-    // TEMPORARY DEBUG: return body structure to diagnose auth issue
-    // TODO: Remove this debug block after fixing auth
-    const secret = body?.webhook_secret;
-    const envSecret = process.env.ZAPIER_CLOSE_RATES_WEBHOOK_SECRET;
-    if (secret !== envSecret) {
-      return NextResponse.json({
-        status: "AUTH_DEBUG",
-        body_keys: Object.keys(body || {}),
-        body_type: typeof body,
-        secret_received: secret ? `${String(secret).substring(0, 4)}...` : "(missing)",
-        secret_type: typeof secret,
-        env_var_set: !!envSecret,
-        env_var_preview: envSecret ? `${envSecret.substring(0, 4)}...` : "(not set)",
-        raw_preview: rawText.substring(0, 100),
-      });
+    // Authenticate (trim to handle whitespace in env vars)
+    const secret = String(body?.webhook_secret || "").trim();
+    const envSecret = String(process.env.ZAPIER_CLOSE_RATES_WEBHOOK_SECRET || "").trim();
+    if (!secret || secret !== envSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Detect format: does the payload have a "report" key or an "agents" key?
