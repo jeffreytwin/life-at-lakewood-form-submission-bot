@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 
 interface Lead {
   id: string;
@@ -107,25 +107,70 @@ export default function LeadsPage() {
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("received");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [stoppingId, setStoppingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/internal/leads?status=${statusFilter}&location=${locationFilter}&limit=50`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error);
-        else {
+  const fetchLeads = useCallback(
+    async (showLoading = false) => {
+      if (showLoading) setLoading(true);
+      try {
+        const r = await fetch(
+          `/api/internal/leads?status=${statusFilter}&location=${locationFilter}&limit=50`
+        );
+        const data = await r.json();
+        if (data.error) {
+          setError(data.error);
+        } else {
           setLeads(data.leads);
           setTotal(data.total);
           if (data.locations) setLocations(data.locations);
         }
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError(e.message);
-        setLoading(false);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (showLoading) setLoading(false);
+      }
+    },
+    [statusFilter, locationFilter]
+  );
+
+  // Initial fetch on mount / filter change
+  useEffect(() => {
+    fetchLeads(true);
+  }, [fetchLeads]);
+
+  // Poll every 15s for live status updates
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    pollRef.current = setInterval(() => fetchLeads(false), 15000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [fetchLeads]);
+
+  async function handleStop(leadId: string) {
+    setStoppingId(leadId);
+    try {
+      const r = await fetch(`/api/internal/leads/${leadId}/stop`, {
+        method: "POST",
       });
-  }, [statusFilter, locationFilter]);
+      const data = await r.json();
+      if (data.error) {
+        alert(`Failed to stop: ${data.error}`);
+      } else {
+        // Optimistic update — swap status locally, then background-refresh
+        setLeads((prev) =>
+          prev.map((l) =>
+            l.id === leadId ? { ...l, routing_status: "manual" } : l
+          )
+        );
+        fetchLeads(false);
+      }
+    } catch {
+      alert("Network error stopping lead routing");
+    } finally {
+      setStoppingId(null);
+    }
+  }
 
   const sortedLeads = sortLeads(leads, sortKey, sortDir);
 
@@ -256,10 +301,25 @@ export default function LeadsPage() {
                         {lead.price ?? "-"}
                       </td>
                       <td>
-                        <span
-                          className={`badge ${statusBadge[lead.routing_status] ?? "badge-muted"}`}
-                        >
-                          {lead.routing_status}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          <span
+                            className={`badge ${statusBadge[lead.routing_status] ?? "badge-muted"}`}
+                          >
+                            {lead.routing_status}
+                          </span>
+                          {(lead.routing_status === "pending" ||
+                            lead.routing_status === "routing") && (
+                            <button
+                              className="btn btn-danger btn-sm"
+                              disabled={stoppingId === lead.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStop(lead.id);
+                              }}
+                            >
+                              {stoppingId === lead.id ? "Stopping..." : "Stop"}
+                            </button>
+                          )}
                         </span>
                       </td>
                       <td className="text-sm">
