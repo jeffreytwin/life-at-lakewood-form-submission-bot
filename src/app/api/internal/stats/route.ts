@@ -11,7 +11,8 @@ export async function GET() {
       supabase
         .from("agents")
         .select("*", { count: "exact", head: true })
-        .eq("is_active", true),
+        .eq("is_active", true)
+        .eq("is_frontlines", false),
       supabase.from("locations").select("*", { count: "exact", head: true }).eq("is_active", true),
     ]);
 
