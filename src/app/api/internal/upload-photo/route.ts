@@ -61,12 +61,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get public URL
+    // Get public URL with cache-busting timestamp
     const { data: urlData } = supabase.storage
       .from(BUCKET)
       .getPublicUrl(filePath);
 
-    const photo_url = urlData.publicUrl;
+    const photo_url = `${urlData.publicUrl}?v=${Date.now()}`;
 
     // Update the record in the database
     const table = entityType === "agent" ? "agents" : "locations";
