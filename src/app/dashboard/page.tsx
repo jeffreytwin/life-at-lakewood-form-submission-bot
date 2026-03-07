@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 
 interface LeadDistEntry {
   agentName: string;
@@ -72,6 +73,7 @@ interface QuietHoursState {
 }
 
 export default function DashboardOverview() {
+  const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [leadDist, setLeadDist] = useState<LeadDistribution | null>(null);
@@ -318,7 +320,11 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                 </thead>
                 <tbody>
                   {stats.recentLeads.map((lead) => (
-                    <tr key={lead.id}>
+                    <tr
+                      key={lead.id}
+                      onClick={() => router.push("/dashboard/leads")}
+                      style={{ cursor: "pointer" }}
+                    >
                       <td>
                         {lead.first_name} {lead.last_name}
                       </td>
