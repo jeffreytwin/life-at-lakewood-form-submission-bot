@@ -107,38 +107,89 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update each agent's close rate in the database
+    // Upsert each agent's close rate in the database
     let updated = 0;
+    let created = 0;
     let skipped = 0;
 
     for (const agentData of agentUpdates) {
-      const updateFields: Record<string, number> = {
-        close_rate_trailing_12m: agentData.close_rate_trailing_12m,
-      };
-      if (agentData.close_rate_all_time !== undefined) {
-        updateFields.close_rate_all_time = agentData.close_rate_all_time;
-      }
-
-      const { error } = await supabase
+      // Check if agent exists by salesforce_user_id
+      const { data: existingAgent, error: lookupError } = await supabase
         .from("agents")
-        .update(updateFields)
-        .eq("salesforce_user_id", agentData.salesforce_user_id);
+        .select("id")
+        .eq("salesforce_user_id", agentData.salesforce_user_id)
+        .maybeSingle();
 
-      if (error) {
-        logger.warn("Failed to update close rate", {
+      if (lookupError) {
+        logger.warn("Failed to look up agent", {
           agent: agentData.name,
           salesforce_user_id: agentData.salesforce_user_id,
-          error: error.message,
+          error: lookupError.message,
         });
         skipped++;
+        continue;
+      }
+
+      if (existingAgent) {
+        // Update existing agent's close rates
+        const updateFields: Record<string, number> = {
+          close_rate_trailing_12m: agentData.close_rate_trailing_12m,
+        };
+        if (agentData.close_rate_all_time !== undefined) {
+          updateFields.close_rate_all_time = agentData.close_rate_all_time;
+        }
+
+        const { error: updateError } = await supabase
+          .from("agents")
+          .update(updateFields)
+          .eq("id", existingAgent.id);
+
+        if (updateError) {
+          logger.warn("Failed to update close rate", {
+            agent: agentData.name,
+            salesforce_user_id: agentData.salesforce_user_id,
+            error: updateError.message,
+          });
+          skipped++;
+        } else {
+          updated++;
+        }
       } else {
-        updated++;
+        // Create new agent
+        const newAgent: Record<string, string | number> = {
+          salesforce_user_id: agentData.salesforce_user_id,
+          name: agentData.name,
+          close_rate_trailing_12m: agentData.close_rate_trailing_12m,
+        };
+        if (agentData.close_rate_all_time !== undefined) {
+          newAgent.close_rate_all_time = agentData.close_rate_all_time;
+        }
+
+        const { error: insertError } = await supabase
+          .from("agents")
+          .insert(newAgent);
+
+        if (insertError) {
+          logger.warn("Failed to create new agent", {
+            agent: agentData.name,
+            salesforce_user_id: agentData.salesforce_user_id,
+            error: insertError.message,
+          });
+          skipped++;
+        } else {
+          logger.info("Auto-created new agent from close rate data", {
+            agent: agentData.name,
+            salesforce_user_id: agentData.salesforce_user_id,
+            close_rate_trailing_12m: agentData.close_rate_trailing_12m,
+          });
+          created++;
+        }
       }
     }
 
-    logger.info("Close rates synced", { updated, skipped, total: agentUpdates.length });
+    logger.info("Close rates synced", { updated, created, skipped, total: agentUpdates.length });
 
-    return NextResponse.json({ updated, skipped });
+    return NextResponse.json({ updated, created, skipped });
   } catch (error) {
     logger.error("Close rates webhook error", {
       error: error instanceof Error ? error.message : String(error),
