@@ -39,6 +39,7 @@ export default function RoutingToggle() {
   const [busy, setBusy] = useState(false);
   const [character, setCharacter] = useState<CharacterState>("standing-there");
   const [nightActive, setNightActive] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     fetch("/api/internal/settings")
@@ -64,6 +65,42 @@ export default function RoutingToggle() {
   }, []);
 
   if (enabled === null) return null;
+
+  if (hidden) {
+    return (
+      <button
+        className="routing-toggle-wrapper"
+        onClick={() => setHidden(false)}
+        style={{
+          position: "fixed",
+          bottom: 20,
+          right: 20,
+          zIndex: 1000,
+          background: "var(--bg-card)",
+          border: `1px solid ${enabled ? "var(--success)" : "var(--danger)"}`,
+          borderRadius: "var(--radius)",
+          padding: "6px 12px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
+          fontSize: 12,
+          color: "var(--text-muted)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}
+      >
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: enabled ? "var(--success)" : "var(--danger)",
+          }}
+        />
+        {enabled ? "Routing Active" : "Routing Paused"}
+      </button>
+    );
+  }
 
   async function toggle() {
     if (enabled === null) return;
@@ -124,18 +161,43 @@ export default function RoutingToggle() {
         const src = showSneaking ? "/sneaking.gif" : GIF_SRC[character];
         const size = showSneaking ? 87 : 109;
         return (
-          <img
-            key={showSneaking ? "sneaking" : character}
-            src={src}
-            alt="Character"
-            style={{
-              width: size,
-              height: size,
-              imageRendering: "pixelated",
-              objectFit: "contain",
-              marginBottom: -2,
-            }}
-          />
+          <div className="routing-character" style={{ position: "relative", marginBottom: -2 }}>
+            <img
+              key={showSneaking ? "sneaking" : character}
+              src={src}
+              alt="Character"
+              style={{
+                width: size,
+                height: size,
+                imageRendering: "pixelated",
+                objectFit: "contain",
+              }}
+            />
+            <button
+              className="routing-hide-btn"
+              onClick={() => setHidden(true)}
+              title="Hide animation"
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                border: "1px solid var(--border)",
+                background: "var(--bg-card)",
+                color: "var(--text-muted)",
+                fontSize: 12,
+                lineHeight: 1,
+                cursor: "pointer",
+                display: "none",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              &times;
+            </button>
+          </div>
         );
       })()}
       {/* Toggle bar */}

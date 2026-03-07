@@ -161,12 +161,11 @@ export default function LocationsPage() {
                     <th>Status</th>
                     <th>Name</th>
                     <th>Created</th>
-                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {locations.map((loc) => (
-                    <tr key={loc.id}>
+                    <tr key={loc.id} onClick={() => openEdit(loc)} style={{ cursor: "pointer" }}>
                       <td>
                         <div
                           style={{
@@ -181,7 +180,7 @@ export default function LocationsPage() {
                             justifyContent: "center",
                             cursor: "pointer",
                           }}
-                          onClick={() => triggerPhotoUpload(loc.id)}
+                          onClick={(e) => { e.stopPropagation(); triggerPhotoUpload(loc.id); }}
                           title="Click to upload photo"
                         >
                           {uploadingPhotoId === loc.id ? (
@@ -206,14 +205,6 @@ export default function LocationsPage() {
                       <td style={{ fontWeight: 600 }}>{loc.name}</td>
                       <td className="text-muted text-sm font-mono">
                         {new Date(loc.created_at).toLocaleDateString()}
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => openEdit(loc)}
-                        >
-                          Edit
-                        </button>
                       </td>
                     </tr>
                   ))}
