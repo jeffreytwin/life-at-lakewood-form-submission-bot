@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         year: "numeric",
         month: "2-digit",
       });
-      const [month, , year] = etMonth.split("/");
+      const [month, year] = etMonth.split("/");
       const yearMonth = `${year}-${month}`;
 
       // Delete existing snapshot for this month, then insert fresh data
