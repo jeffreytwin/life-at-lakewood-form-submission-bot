@@ -158,6 +158,10 @@ export default function LeadsPage() {
       if (data.error) {
         alert(`Failed to stop: ${data.error}`);
       } else {
+        // Play the manual fallback sound immediately
+        const audio = new Audio("/sounds/mgs - manual.mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
         // Optimistic update — swap status locally, then background-refresh
         setLeads((prev) =>
           prev.map((l) =>
