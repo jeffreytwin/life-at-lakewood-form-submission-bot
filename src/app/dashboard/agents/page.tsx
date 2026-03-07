@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { Agent, Location, PriceRange, UnavailabilityWindow } from "@/lib/supabase/types";
 import {
   PRICE_RANGE_LABELS,
@@ -38,6 +38,46 @@ const emptyAgent: AgentForm = {
   price_ranges: [...ALL_PRICE_RANGES],
 };
 
+function formatPhone(raw: string | null): string {
+  if (!raw) return "-";
+  const digits = raw.replace(/\D/g, "");
+  // Handle +1XXXXXXXXXX or 1XXXXXXXXXX or XXXXXXXXXX
+  const national = digits.length === 11 && digits.startsWith("1")
+    ? digits.slice(1)
+    : digits;
+  if (national.length === 10) {
+    return `(${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6)}`;
+  }
+  return raw; // fallback to raw if not 10 digits
+}
+
+type SortKey = "is_active" | "name" | "phone" | "locations" | "price_ranges" | "close_rate" | "goal" | "role";
+type SortDir = "asc" | "desc";
+
+function getAgentSortValue(agent: Agent, key: SortKey): string | number | boolean {
+  switch (key) {
+    case "is_active": return agent.is_active ? 1 : 0;
+    case "name": return agent.name.toLowerCase();
+    case "phone": return (agent.phone ?? "").toLowerCase();
+    case "locations": return agent.location_specialties.length > 0 ? agent.location_specialties.join(", ").toLowerCase() : "zzz all";
+    case "price_ranges": return !agent.price_ranges || agent.price_ranges.length === 0 ? "zzz all" : agent.price_ranges.map((r) => PRICE_RANGE_LABELS[r]).join(", ").toLowerCase();
+    case "close_rate": return agent.is_frontlines ? -1 : agent.close_rate_trailing_12m;
+    case "goal": return agent.is_frontlines ? -1 : agent.monthly_lead_goal_min;
+    case "role": return agent.is_frontlines ? 1 : 0;
+    default: return "";
+  }
+}
+
+function sortAgents(agents: Agent[], key: SortKey, dir: SortDir): Agent[] {
+  return [...agents].sort((a, b) => {
+    const aVal = getAgentSortValue(a, key);
+    const bVal = getAgentSortValue(b, key);
+    if (aVal < bVal) return dir === "asc" ? -1 : 1;
+    if (aVal > bVal) return dir === "asc" ? 1 : -1;
+    return 0;
+  });
+}
+
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -47,6 +87,10 @@ export default function AgentsPage() {
   const [editing, setEditing] = useState<Agent | null>(null);
   const [form, setForm] = useState(emptyAgent);
   const [saving, setSaving] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(() => {
     Promise.all([
@@ -70,6 +114,42 @@ export default function AgentsPage() {
   }, [fetchData]);
 
   const isFrontlines = editing?.is_frontlines ?? form.is_frontlines;
+
+  // Split agents into regular and frontlines, then sort each group
+  const regularAgents = sortAgents(
+    agents.filter((a) => !a.is_frontlines),
+    sortKey,
+    sortDir
+  );
+  const frontlinesAgents = sortAgents(
+    agents.filter((a) => a.is_frontlines),
+    sortKey,
+    sortDir
+  );
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  function SortHeader({ label, sortKeyName }: { label: string; sortKeyName: SortKey }) {
+    const active = sortKey === sortKeyName;
+    return (
+      <th
+        onClick={() => handleSort(sortKeyName)}
+        style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
+      >
+        {label}{" "}
+        <span style={{ opacity: active ? 1 : 0.3, fontSize: 10 }}>
+          {active && sortDir === "desc" ? "\u25BC" : "\u25B2"}
+        </span>
+      </th>
+    );
+  }
 
   function openAdd() {
     setEditing(null);
@@ -96,9 +176,35 @@ export default function AgentsPage() {
     setShowModal(true);
   }
 
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!editing || !e.target.files?.[0]) return;
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", e.target.files[0]);
+      formData.append("type", "agent");
+      formData.append("id", editing.id);
+      const res = await fetch("/api/internal/upload-photo", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      // Update local state
+      setEditing({ ...editing, photo_url: data.photo_url });
+      setAgents((prev) =>
+        prev.map((a) => (a.id === editing.id ? { ...a, photo_url: data.photo_url } : a))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  }
+
   async function handleSave() {
     setSaving(true);
-    // If all active locations are selected, treat as "All" (empty array)
     const activeLocationNames = locations
       .filter((l) => l.is_active)
       .map((l) => l.name);
@@ -199,6 +305,104 @@ export default function AgentsPage() {
     }));
   }
 
+  function renderAgentRow(agent: Agent) {
+    return (
+      <tr key={agent.id}>
+        <td>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              overflow: "hidden",
+              background: "var(--bg-input)",
+              border: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 14,
+              color: "var(--text-muted)",
+            }}
+          >
+            {agent.photo_url ? (
+              <img
+                src={agent.photo_url}
+                alt={agent.name}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              agent.name.charAt(0).toUpperCase()
+            )}
+          </div>
+        </td>
+        <td>
+          <span
+            className={`status-dot ${agent.is_active ? "active" : "inactive"}`}
+          />
+          {agent.is_active ? "Active" : "Inactive"}
+        </td>
+        <td style={{ fontWeight: 600 }}>{agent.name}</td>
+        <td className="font-mono text-sm">{formatPhone(agent.phone)}</td>
+        <td className="text-sm">
+          {agent.location_specialties.length > 0
+            ? agent.location_specialties.join(", ")
+            : "All"}
+        </td>
+        <td className="text-sm">
+          {!agent.price_ranges || agent.price_ranges.length === 0
+            ? "All"
+            : agent.price_ranges
+                .map((r) => PRICE_RANGE_LABELS[r])
+                .join(", ")}
+        </td>
+        <td className="font-mono">
+          {agent.is_frontlines
+            ? "-"
+            : `${(agent.close_rate_trailing_12m * 100).toFixed(1)}%`}
+        </td>
+        <td className="font-mono">
+          {agent.is_frontlines
+            ? "-"
+            : `${agent.monthly_lead_goal_min}-${agent.monthly_lead_goal_max}`}
+        </td>
+        <td>
+          {agent.is_frontlines ? (
+            <span className="badge badge-info">Frontlines</span>
+          ) : (
+            "Agent"
+          )}
+        </td>
+        <td>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => openEdit(agent)}
+          >
+            {agent.is_frontlines ? "View" : "Edit"}
+          </button>
+        </td>
+      </tr>
+    );
+  }
+
+  function renderTableHead() {
+    return (
+      <thead>
+        <tr>
+          <th style={{ width: 50 }}>Photo</th>
+          <SortHeader label="Status" sortKeyName="is_active" />
+          <SortHeader label="Name" sortKeyName="name" />
+          <SortHeader label="Phone" sortKeyName="phone" />
+          <SortHeader label="Locations" sortKeyName="locations" />
+          <SortHeader label="Price Ranges" sortKeyName="price_ranges" />
+          <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" />
+          <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" />
+          <SortHeader label="Role" sortKeyName="role" />
+          <th></th>
+        </tr>
+      </thead>
+    );
+  }
+
   if (loading) {
     return (
       <>
@@ -225,90 +429,50 @@ export default function AgentsPage() {
           </div>
         </div>
       ) : (
-        <div className="card">
-          <div className="card-header">
-            <h3>{agents.length} agents</h3>
-            <button className="btn btn-primary" onClick={openAdd}>
-              + Add Agent
-            </button>
-          </div>
-          {agents.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">&#9786;</div>
-              <h3>No agents yet</h3>
-              <p>Add your first sales agent to get started.</p>
+        <>
+          {/* Regular Agents */}
+          <div className="card">
+            <div className="card-header">
+              <h3>{regularAgents.length} agents</h3>
+              <button className="btn btn-primary" onClick={openAdd}>
+                + Add Agent
+              </button>
             </div>
-          ) : (
-            <div className="table-wrapper">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Status</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Locations</th>
-                    <th>Price Ranges</th>
-                    <th>Close Rate (12m)</th>
-                    <th>Hand Raise Goal</th>
-                    <th>Role</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {agents.map((agent) => (
-                    <tr key={agent.id}>
-                      <td>
-                        <span
-                          className={`status-dot ${agent.is_active ? "active" : "inactive"}`}
-                        />
-                        {agent.is_active ? "Active" : "Inactive"}
-                      </td>
-                      <td style={{ fontWeight: 600 }}>{agent.name}</td>
-                      <td className="font-mono text-sm">{agent.phone}</td>
-                      <td className="text-sm">
-                        {agent.location_specialties.length > 0
-                          ? agent.location_specialties.join(", ")
-                          : "All"}
-                      </td>
-                      <td className="text-sm">
-                        {!agent.price_ranges || agent.price_ranges.length === 0
-                          ? "All"
-                          : agent.price_ranges
-                              .map((r) => PRICE_RANGE_LABELS[r])
-                              .join(", ")}
-                      </td>
-                      <td className="font-mono">
-                        {agent.is_frontlines
-                          ? "-"
-                          : `${(agent.close_rate_trailing_12m * 100).toFixed(1)}%`}
-                      </td>
-                      <td className="font-mono">
-                        {agent.is_frontlines
-                          ? "-"
-                          : `${agent.monthly_lead_goal_min}-${agent.monthly_lead_goal_max}`}
-                      </td>
-                      <td>
-                        {agent.is_frontlines ? (
-                          <span className="badge badge-info">Frontlines</span>
-                        ) : (
-                          "Agent"
-                        )}
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => openEdit(agent)}
-                        >
-                          {agent.is_frontlines ? "View" : "Edit"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {regularAgents.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">&#9786;</div>
+                <h3>No agents yet</h3>
+                <p>Add your first sales agent to get started.</p>
+              </div>
+            ) : (
+              <div className="table-wrapper">
+                <table>
+                  {renderTableHead()}
+                  <tbody>
+                    {regularAgents.map((agent) => renderAgentRow(agent))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Frontlines Agents */}
+          {frontlinesAgents.length > 0 && (
+            <div className="card" style={{ marginTop: 20 }}>
+              <div className="card-header">
+                <h3>Frontlines ({frontlinesAgents.length})</h3>
+              </div>
+              <div className="table-wrapper">
+                <table>
+                  {renderTableHead()}
+                  <tbody>
+                    {frontlinesAgents.map((agent) => renderAgentRow(agent))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
-        </div>
+        </>
       )}
 
       {showModal && (
@@ -327,6 +491,55 @@ export default function AgentsPage() {
                 The frontlines agent receives manual fallback notifications.
                 Scoring configuration does not apply.
               </p>
+            )}
+
+            {/* Photo upload (only when editing) */}
+            {editing && (
+              <div className="form-group" style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    background: "var(--bg-input)",
+                    border: "2px solid var(--border)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    color: "var(--text-muted)",
+                    flexShrink: 0,
+                  }}
+                >
+                  {editing.photo_url ? (
+                    <img
+                      src={editing.photo_url}
+                      alt={editing.name}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    editing.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoUpload}
+                    style={{ display: "none" }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={uploadingPhoto}
+                  >
+                    {uploadingPhoto ? "Uploading..." : "Upload Photo"}
+                  </button>
+                </div>
+              </div>
             )}
 
             <div className="form-row">
@@ -640,7 +853,7 @@ export default function AgentsPage() {
                 <button
                   className="btn btn-primary"
                   onClick={handleSave}
-                  disabled={saving || !form.name || !form.phone}
+                  disabled={saving || !form.name}
                 >
                   {saving ? "Saving..." : editing ? "Update" : "Create"}
                 </button>

@@ -1,8 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Life at Lakewood - Lead Routing Dashboard",
-  icons: { icon: "/logo.png" },
+  title: "Life At Lakewood - Form Submission Hub",
 };
 
 export default function RootLayout({

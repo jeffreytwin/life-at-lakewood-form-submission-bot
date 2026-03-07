@@ -114,7 +114,7 @@ export default function RoutingToggle() {
         zIndex: 1000,
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "flex-end",
         gap: 0,
       }}
     >
