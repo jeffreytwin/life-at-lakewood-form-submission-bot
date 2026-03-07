@@ -51,27 +51,26 @@ function formatPhone(raw: string | null): string {
   return raw; // fallback to raw if not 10 digits
 }
 
-type SortKey = "is_active" | "name" | "phone" | "locations" | "price_ranges" | "close_rate" | "goal" | "role";
+type SortKey = "is_active" | "name" | "locations" | "price_ranges" | "close_rate" | "goal" | "handraises";
 type SortDir = "asc" | "desc";
 
-function getAgentSortValue(agent: Agent, key: SortKey): string | number | boolean {
+function getAgentSortValue(agent: Agent, key: SortKey, handRaiseCounts?: Record<string, number>): string | number | boolean {
   switch (key) {
     case "is_active": return agent.is_active ? 1 : 0;
     case "name": return agent.name.toLowerCase();
-    case "phone": return (agent.phone ?? "").toLowerCase();
     case "locations": return agent.location_specialties.length > 0 ? agent.location_specialties.join(", ").toLowerCase() : "zzz all";
     case "price_ranges": return !agent.price_ranges || agent.price_ranges.length === 0 ? "zzz all" : agent.price_ranges.map((r) => PRICE_RANGE_LABELS[r]).join(", ").toLowerCase();
     case "close_rate": return agent.is_frontlines ? -1 : agent.close_rate_trailing_12m;
     case "goal": return agent.is_frontlines ? -1 : agent.monthly_lead_goal_min;
-    case "role": return agent.is_frontlines ? 1 : 0;
+    case "handraises": return handRaiseCounts?.[agent.name] ?? 0;
     default: return "";
   }
 }
 
-function sortAgents(agents: Agent[], key: SortKey, dir: SortDir): Agent[] {
+function sortAgents(agents: Agent[], key: SortKey, dir: SortDir, handRaiseCounts?: Record<string, number>): Agent[] {
   return [...agents].sort((a, b) => {
-    const aVal = getAgentSortValue(a, key);
-    const bVal = getAgentSortValue(b, key);
+    const aVal = getAgentSortValue(a, key, handRaiseCounts);
+    const bVal = getAgentSortValue(b, key, handRaiseCounts);
     if (aVal < bVal) return dir === "asc" ? -1 : 1;
     if (aVal > bVal) return dir === "asc" ? 1 : -1;
     return 0;
@@ -90,17 +89,26 @@ export default function AgentsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [handRaiseCounts, setHandRaiseCounts] = useState<Record<string, number>>({});
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(() => {
     Promise.all([
       fetch("/api/internal/agents").then((r) => r.json()),
       fetch("/api/internal/locations").then((r) => r.json()),
+      fetch("/api/internal/lead-distribution").then((r) => r.json()),
     ])
-      .then(([agentsData, locationsData]) => {
+      .then(([agentsData, locationsData, distData]) => {
         if (Array.isArray(agentsData)) setAgents(agentsData);
         else setError(agentsData.error ?? "Failed to load agents");
         if (Array.isArray(locationsData)) setLocations(locationsData);
+        if (distData?.distribution) {
+          const counts: Record<string, number> = {};
+          for (const entry of distData.distribution) {
+            counts[entry.agentName] = entry.leadCount;
+          }
+          setHandRaiseCounts(counts);
+        }
         setLoading(false);
       })
       .catch((e) => {
@@ -119,12 +127,14 @@ export default function AgentsPage() {
   const regularAgents = sortAgents(
     agents.filter((a) => !a.is_frontlines),
     sortKey,
-    sortDir
+    sortDir,
+    handRaiseCounts
   );
   const frontlinesAgents = sortAgents(
     agents.filter((a) => a.is_frontlines),
     sortKey,
-    sortDir
+    sortDir,
+    handRaiseCounts
   );
 
   function handleSort(key: SortKey) {
@@ -306,8 +316,9 @@ export default function AgentsPage() {
   }
 
   function renderAgentRow(agent: Agent) {
+    const hrCount = handRaiseCounts[agent.name] ?? 0;
     return (
-      <tr key={agent.id}>
+      <tr key={agent.id} onClick={() => openEdit(agent)} style={{ cursor: "pointer" }}>
         <td>
           <div
             style={{
@@ -342,18 +353,21 @@ export default function AgentsPage() {
           {agent.is_active ? "Active" : "Inactive"}
         </td>
         <td style={{ fontWeight: 600 }}>{agent.name}</td>
-        <td className="font-mono text-sm">{formatPhone(agent.phone)}</td>
         <td className="text-sm">
           {agent.location_specialties.length > 0
             ? agent.location_specialties.join(", ")
             : "All"}
         </td>
         <td className="text-sm">
-          {!agent.price_ranges || agent.price_ranges.length === 0
-            ? "All"
-            : agent.price_ranges
-                .map((r) => PRICE_RANGE_LABELS[r])
-                .join(", ")}
+          {!agent.price_ranges || agent.price_ranges.length === 0 ? (
+            <span className="badge badge-muted">All</span>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {agent.price_ranges.map((r) => (
+                <span key={r} className="badge badge-info">{PRICE_RANGE_LABELS[r]}</span>
+              ))}
+            </div>
+          )}
         </td>
         <td className="font-mono">
           {agent.is_frontlines
@@ -365,21 +379,7 @@ export default function AgentsPage() {
             ? "-"
             : `${agent.monthly_lead_goal_min}-${agent.monthly_lead_goal_max}`}
         </td>
-        <td>
-          {agent.is_frontlines ? (
-            <span className="badge badge-info">Frontlines</span>
-          ) : (
-            "Agent"
-          )}
-        </td>
-        <td>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => openEdit(agent)}
-          >
-            {agent.is_frontlines ? "View" : "Edit"}
-          </button>
-        </td>
+        <td className="font-mono">{hrCount}</td>
       </tr>
     );
   }
@@ -391,13 +391,11 @@ export default function AgentsPage() {
           <th style={{ width: 50 }}>Photo</th>
           <SortHeader label="Status" sortKeyName="is_active" />
           <SortHeader label="Name" sortKeyName="name" />
-          <SortHeader label="Phone" sortKeyName="phone" />
           <SortHeader label="Locations" sortKeyName="locations" />
           <SortHeader label="Price Ranges" sortKeyName="price_ranges" />
           <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" />
           <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" />
-          <SortHeader label="Role" sortKeyName="role" />
-          <th></th>
+          <SortHeader label="Handraises This Month" sortKeyName="handraises" />
         </tr>
       </thead>
     );
@@ -460,7 +458,7 @@ export default function AgentsPage() {
           {frontlinesAgents.length > 0 && (
             <div className="card" style={{ marginTop: 20 }}>
               <div className="card-header">
-                <h3>Frontlines ({frontlinesAgents.length})</h3>
+                <h3>Current Bot on Duty</h3>
               </div>
               <div className="table-wrapper">
                 <table>
