@@ -11,7 +11,7 @@ const STATUS_SOUNDS: Record<string, string> = {
   accepted: "/sounds/metal-gear-victory.mp3",
   routing: "/sounds/mgs-codec.mp3",
   failed: "/sounds/metal-gear-alert.mp3",
-  manual: "/sounds/mgs-manual.mp3",
+  manual: "/sounds/mgs - manual.mp3",
 };
 
 const NEW_LEAD_SOUND = "/sounds/mgs-new-form.mp3";
