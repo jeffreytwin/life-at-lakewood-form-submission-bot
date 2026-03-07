@@ -12,12 +12,13 @@ export async function GET() {
       year: "numeric",
       month: "2-digit",
     });
-    const [month, , year] = etMonth.split("/");
+    const [month, year] = etMonth.split("/");
     const yearMonth = `${year}-${month}`;
 
     const { data, error } = await supabase
-      .from("lead_distribution_snapshots")
-      .select("agent_name, lead_count, synced_at")
+      .from("hand_raise_snapshots")
+      .select("agent_name, count, synced_at")
+      .eq("type", "monthly_by_agent")
       .eq("year_month", yearMonth)
       .order("agent_name");
 
@@ -29,7 +30,7 @@ export async function GET() {
 
     const distribution = data.map((r) => ({
       agentName: r.agent_name,
-      leadCount: r.lead_count,
+      leadCount: r.count,
     }));
 
     // Use the most recent synced_at as the "as of" time

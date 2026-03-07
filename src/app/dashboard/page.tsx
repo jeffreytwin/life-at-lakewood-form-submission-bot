@@ -131,6 +131,12 @@ export default function DashboardOverview() {
       .catch(() => {});
   }, [refreshLeadDist, refreshMonthlyLeads]);
 
+  // Auto-refresh the hand raise distribution every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(refreshLeadDist, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [refreshLeadDist]);
+
   async function toggleQuietHours() {
     if (!quietHours) return;
     setQhBusy(true);
