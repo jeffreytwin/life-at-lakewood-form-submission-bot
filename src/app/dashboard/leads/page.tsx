@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { formatStatus } from "@/lib/shared/status-display";
 
 interface Lead {
   id: string;
@@ -305,7 +306,7 @@ export default function LeadsPage() {
                           <span
                             className={`badge ${statusBadge[lead.routing_status] ?? "badge-muted"}`}
                           >
-                            {lead.routing_status}
+                            {formatStatus(lead.routing_status)}
                           </span>
                           {(lead.routing_status === "pending" ||
                             lead.routing_status === "routing") && (

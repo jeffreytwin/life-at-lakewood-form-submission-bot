@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import RoutingToggle from "@/components/RoutingToggle";
+import StatusSoundMonitor from "@/components/StatusSoundMonitor";
 
 export default function DashboardLayout({
   children,
@@ -31,6 +32,7 @@ export default function DashboardLayout({
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <main className="main-content">{children}</main>
       <RoutingToggle />
+      <StatusSoundMonitor />
     </div>
   );
 }
