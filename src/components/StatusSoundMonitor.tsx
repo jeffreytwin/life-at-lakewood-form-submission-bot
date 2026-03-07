@@ -16,6 +16,15 @@ const STATUS_SOUNDS: Record<string, string> = {
 
 const NEW_LEAD_SOUND = "/sounds/mgs-new-form.mp3";
 
+// Lead IDs whose next status-change sound should be suppressed
+// (because the caller already played the sound inline).
+const suppressedLeadIds = new Set<string>();
+
+/** Call this before playing a sound inline to prevent the monitor from duplicating it. */
+export function suppressNextSoundForLead(leadId: string) {
+  suppressedLeadIds.add(leadId);
+}
+
 function playSound(src: string) {
   const audio = new Audio(src);
   audio.volume = 0.6;
@@ -51,6 +60,11 @@ export default function StatusSoundMonitor() {
           // New lead appeared
           soundsToPlay.add(NEW_LEAD_SOUND);
         } else if (prev !== status) {
+          // If this lead was suppressed (sound already played inline), skip it
+          if (suppressedLeadIds.has(id)) {
+            suppressedLeadIds.delete(id);
+            continue;
+          }
           // Status changed — check if we have a sound for the new status
           const sound = STATUS_SOUNDS[status];
           if (sound) soundsToPlay.add(sound);

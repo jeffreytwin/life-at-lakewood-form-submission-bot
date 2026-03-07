@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { formatStatus } from "@/lib/shared/status-display";
+import { suppressNextSoundForLead } from "@/components/StatusSoundMonitor";
 
 interface Lead {
   id: string;
@@ -158,6 +159,8 @@ export default function LeadsPage() {
       if (data.error) {
         alert(`Failed to stop: ${data.error}`);
       } else {
+        // Suppress the monitor so it doesn't re-play the sound on next poll
+        suppressNextSoundForLead(leadId);
         // Play the manual fallback sound immediately
         const audio = new Audio("/sounds/mgs - manual.mp3");
         audio.volume = 0.6;
