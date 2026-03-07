@@ -16,3 +16,6 @@ CREATE UNIQUE INDEX idx_hand_raise_unique
   ON hand_raise_snapshots (type, year_month, COALESCE(agent_name, ''), COALESCE(salesforce_user_id, ''));
 CREATE INDEX idx_hand_raise_type ON hand_raise_snapshots (type);
 CREATE INDEX idx_hand_raise_month ON hand_raise_snapshots (year_month);
+
+ALTER TABLE hand_raise_snapshots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all for service role" ON hand_raise_snapshots FOR ALL USING (true) WITH CHECK (true);

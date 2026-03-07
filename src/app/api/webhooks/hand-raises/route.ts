@@ -91,7 +91,14 @@ export async function POST(request: NextRequest) {
       const [month, , year] = etMonth.split("/");
       const yearMonth = `${year}-${month}`;
 
-      const { error } = await supabase.from("hand_raise_snapshots").upsert(
+      // Delete existing snapshot for this month, then insert fresh data
+      await supabase
+        .from("hand_raise_snapshots")
+        .delete()
+        .eq("type", "monthly_by_agent")
+        .eq("year_month", yearMonth);
+
+      const { error } = await supabase.from("hand_raise_snapshots").insert(
         agents.map((a) => ({
           type: "monthly_by_agent",
           year_month: yearMonth,
@@ -99,8 +106,7 @@ export async function POST(request: NextRequest) {
           salesforce_user_id: a.salesforce_user_id,
           count: a.count,
           synced_at: syncedAt,
-        })),
-        { onConflict: "type,year_month,agent_name,salesforce_user_id" }
+        }))
       );
 
       if (error) {
@@ -137,11 +143,15 @@ export async function POST(request: NextRequest) {
         synced_at: syncedAt,
       }));
 
+      // Delete existing yearly snapshot, then insert fresh data
+      await supabase
+        .from("hand_raise_snapshots")
+        .delete()
+        .eq("type", "yearly_by_month");
+
       const { error } = await supabase
         .from("hand_raise_snapshots")
-        .upsert(rows, {
-          onConflict: "type,year_month,agent_name,salesforce_user_id",
-        });
+        .insert(rows);
 
       if (error) {
         logger.error("Failed to upsert hand raise monthly data", {
