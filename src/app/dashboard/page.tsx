@@ -532,8 +532,10 @@ function LeadDistributionChart({ data }: { data: LeadDistEntry[] }) {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
+                  justifyContent: "flex-end",
                   flex: 1,
                   maxWidth: 64,
+                  height: "100%",
                 }}
               >
                 <span
