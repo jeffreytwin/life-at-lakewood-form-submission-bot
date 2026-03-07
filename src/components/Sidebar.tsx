@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { onFailedCount, clearFailed } from "@/lib/lead-events";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: "\u2302" },
@@ -21,6 +23,18 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [failedBadge, setFailedBadge] = useState(0);
+
+  useEffect(() => {
+    return onFailedCount(setFailedBadge);
+  }, []);
+
+  // Clear failed count when user is on the leads page
+  useEffect(() => {
+    if (pathname === "/dashboard/leads") {
+      clearFailed();
+    }
+  }, [pathname]);
 
   async function handleLogout() {
     await fetch("/api/internal/logout", { method: "POST" });
@@ -50,9 +64,13 @@ export default function Sidebar({
                 href={item.href}
                 className={pathname === item.href ? "active" : ""}
                 onClick={onClose}
+                style={{ position: "relative" }}
               >
                 <span className="nav-icon">{item.icon}</span>
                 {item.label}
+                {item.href === "/dashboard/leads" && failedBadge > 0 && (
+                  <span className="nav-badge">{failedBadge}</span>
+                )}
               </Link>
             </li>
           ))}

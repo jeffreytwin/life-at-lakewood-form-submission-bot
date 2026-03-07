@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SpeechBubble from "./SpeechBubble";
 
 type CharacterState =
   | "standing-there"
@@ -161,7 +162,8 @@ export default function RoutingToggle() {
         const src = showSneaking ? "/sneaking.gif" : GIF_SRC[character];
         const size = showSneaking ? 87 : 109;
         return (
-          <div className="routing-character" style={{ position: "relative", marginBottom: -2 }}>
+          <div className="routing-character" style={{ position: "relative", marginBottom: -2, display: "flex", alignItems: "flex-start" }}>
+            <SpeechBubble />
             <img
               key={showSneaking ? "sneaking" : character}
               src={src}
