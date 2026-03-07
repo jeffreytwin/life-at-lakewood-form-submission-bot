@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { formatStatus } from "@/lib/shared/status-display";
 import { suppressNextSoundForLead } from "@/components/StatusSoundMonitor";
+import { emitLeadEvent } from "@/lib/lead-events";
 
 interface Lead {
   id: string;
@@ -165,6 +166,12 @@ export default function LeadsPage() {
         const audio = new Audio("/sounds/mgs - manual.mp3");
         audio.volume = 0.6;
         audio.play().catch(() => {});
+        // Speech bubble
+        const stopped = leads.find((l) => l.id === leadId);
+        emitLeadEvent({
+          type: "manual",
+          leadName: [stopped?.first_name, stopped?.last_name].filter(Boolean).join(" ") || "Unknown",
+        });
         // Optimistic update — swap status locally, then background-refresh
         setLeads((prev) =>
           prev.map((l) =>

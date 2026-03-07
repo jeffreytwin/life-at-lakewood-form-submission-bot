@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { emitLeadEvent, incrementFailed } from "@/lib/lead-events";
 
 interface LeadSnapshot {
   id: string;
   routing_status: string;
+  first_name: string | null;
+  last_name: string | null;
+  final_agent?: { id: string; name: string } | null;
 }
 
 const STATUS_SOUNDS: Record<string, string> = {
@@ -53,21 +57,47 @@ export default function StatusSoundMonitor() {
 
       const soundsToPlay = new Set<string>();
 
+      // Track the highest-priority event to emit (we only show one speech bubble)
+      let bestEvent: { priority: number; type: "accepted" | "failed" | "manual" | "new"; lead: LeadSnapshot } | null = null;
+
       for (const [id, status] of currentMap) {
         const prev = prevMap.current.get(id);
+        const lead = leads.find((l) => l.id === id)!;
 
         if (prev === undefined) {
           // New lead appeared
           soundsToPlay.add(NEW_LEAD_SOUND);
+          if (!bestEvent || 4 < (bestEvent?.priority ?? 99)) {
+            bestEvent = { priority: 4, type: "new", lead };
+          }
         } else if (prev !== status) {
           // If this lead was suppressed (sound already played inline), skip it
           if (suppressedLeadIds.has(id)) {
             suppressedLeadIds.delete(id);
+            // Still emit the event for the speech bubble (the stop handler
+            // already played the sound, but the bubble should still show)
+            if (status === "manual") {
+              if (!bestEvent || 2 < (bestEvent?.priority ?? 99)) {
+                bestEvent = { priority: 2, type: "manual", lead };
+              }
+            }
             continue;
           }
           // Status changed — check if we have a sound for the new status
           const sound = STATUS_SOUNDS[status];
           if (sound) soundsToPlay.add(sound);
+
+          // Map status to event
+          const priorityMap: Record<string, number> = { accepted: 0, failed: 1, manual: 2 };
+          if (status in priorityMap) {
+            const p = priorityMap[status];
+            if (!bestEvent || p < bestEvent.priority) {
+              bestEvent = { priority: p, type: status as "accepted" | "failed" | "manual", lead };
+            }
+            if (status === "failed") {
+              incrementFailed();
+            }
+          }
         }
       }
 
@@ -85,6 +115,18 @@ export default function StatusSoundMonitor() {
           playSound(sound);
           break;
         }
+      }
+
+      // Emit the lead event for the speech bubble
+      if (bestEvent) {
+        const name = [bestEvent.lead.first_name, bestEvent.lead.last_name]
+          .filter(Boolean)
+          .join(" ") || "Unknown";
+        emitLeadEvent({
+          type: bestEvent.type,
+          leadName: name,
+          agentName: bestEvent.lead.final_agent?.name ?? undefined,
+        });
       }
 
       prevMap.current = currentMap;
