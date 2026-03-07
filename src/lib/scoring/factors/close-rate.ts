@@ -7,9 +7,9 @@ import {
 export function scoreCloseRate(agent: Agent): number {
   const trailing = agent.close_rate_trailing_12m;
 
-  // New agents with no data get a default middle score
+  // Agents with no sales data score 0 — no data should not help
   if (trailing === 0) {
-    return DEFAULT_CLOSE_RATE;
+    return 0;
   }
 
   // Normalize against max expected rate, cap at 1.0

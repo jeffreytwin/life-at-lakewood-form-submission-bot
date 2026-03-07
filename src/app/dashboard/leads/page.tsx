@@ -222,7 +222,7 @@ export default function LeadsPage() {
                   <SortHeader label="Name" sortKeyName="name" />
                   <SortHeader label="Form" sortKeyName="form" />
                   <SortHeader label="Location" sortKeyName="location" />
-                  <SortHeader label="Value" sortKeyName="value" />
+                  <SortHeader label="Price" sortKeyName="value" />
                   <SortHeader label="Status" sortKeyName="status" />
                   <SortHeader label="Assigned To" sortKeyName="assigned" />
                   <SortHeader label="Attempts" sortKeyName="attempts" />
@@ -291,6 +291,24 @@ export default function LeadsPage() {
                                 <span className="text-muted text-sm">Phone: </span>
                                 {formatPhone(lead.phone)}
                               </div>
+                              {lead.village && (
+                                <div>
+                                  <span className="text-muted text-sm">Neighborhood: </span>
+                                  {lead.village}
+                                </div>
+                              )}
+                              {lead.price && (
+                                <div>
+                                  <span className="text-muted text-sm">Price: </span>
+                                  {lead.price}
+                                </div>
+                              )}
+                              {lead.property_address && (
+                                <div>
+                                  <span className="text-muted text-sm">Property Address: </span>
+                                  {lead.property_address}
+                                </div>
+                              )}
                               {lead.home_type && (
                                 <div>
                                   <span className="text-muted text-sm">Home Type: </span>
@@ -300,13 +318,13 @@ export default function LeadsPage() {
                               {lead.floor_plan && (
                                 <div>
                                   <span className="text-muted text-sm">Floor Plan: </span>
-                                  {lead.floor_plan}
-                                </div>
-                              )}
-                              {lead.property_address && (
-                                <div>
-                                  <span className="text-muted text-sm">Address: </span>
-                                  {lead.property_address}
+                                  {lead.url ? (
+                                    <a href={lead.url} target="_blank" rel="noopener noreferrer" className="text-sm">
+                                      {lead.floor_plan}
+                                    </a>
+                                  ) : (
+                                    lead.floor_plan
+                                  )}
                                 </div>
                               )}
                               {lead.builder && (
@@ -321,7 +339,7 @@ export default function LeadsPage() {
                                   {lead.timeline}
                                 </div>
                               )}
-                              {lead.url && (
+                              {lead.url && !lead.floor_plan && (
                                 <div>
                                   <span className="text-muted text-sm">URL: </span>
                                   <a href={lead.url} target="_blank" rel="noopener noreferrer" className="text-sm">
