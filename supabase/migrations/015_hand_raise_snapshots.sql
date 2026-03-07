@@ -9,9 +9,10 @@ CREATE TABLE hand_raise_snapshots (
   agent_name TEXT,                             -- populated for monthly_by_agent
   salesforce_user_id TEXT,                     -- populated for monthly_by_agent
   count INTEGER NOT NULL DEFAULT 0,
-  synced_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (type, year_month, COALESCE(agent_name, ''), COALESCE(salesforce_user_id, ''))
+  synced_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE UNIQUE INDEX idx_hand_raise_unique
+  ON hand_raise_snapshots (type, year_month, COALESCE(agent_name, ''), COALESCE(salesforce_user_id, ''));
 CREATE INDEX idx_hand_raise_type ON hand_raise_snapshots (type);
 CREATE INDEX idx_hand_raise_month ON hand_raise_snapshots (year_month);
