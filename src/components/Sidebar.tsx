@@ -40,7 +40,7 @@ export default function Sidebar({
             alt="Life at Lakewood"
             style={{ width: 48, height: 48, marginBottom: 8 }}
           />
-          <h1>Life at Lakewood</h1>
+          <h1>Life At Lakewood</h1>
           <span>Form Submission Hub</span>
         </div>
         <ul className="sidebar-nav">

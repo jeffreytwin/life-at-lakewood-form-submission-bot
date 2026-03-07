@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { Location } from "@/lib/supabase/types";
 
 export default function LocationsPage() {
@@ -11,6 +11,9 @@ export default function LocationsPage() {
   const [editing, setEditing] = useState<Location | null>(null);
   const [form, setForm] = useState({ name: "", slug: "", is_active: true });
   const [saving, setSaving] = useState(false);
+  const [uploadingPhotoId, setUploadingPhotoId] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const photoTargetId = useRef<string | null>(null);
 
   const fetchLocations = useCallback(() => {
     fetch("/api/internal/locations")
@@ -69,6 +72,38 @@ export default function LocationsPage() {
     }
   }
 
+  function triggerPhotoUpload(locationId: string) {
+    photoTargetId.current = locationId;
+    photoInputRef.current?.click();
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const locId = photoTargetId.current;
+    if (!file || !locId) return;
+    setUploadingPhotoId(locId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "location");
+      formData.append("id", locId);
+      const res = await fetch("/api/internal/upload-photo", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setLocations((prev) =>
+        prev.map((l) => (l.id === locId ? { ...l, photo_url: data.photo_url } : l))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingPhotoId(null);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -86,6 +121,15 @@ export default function LocationsPage() {
         <h2>Locations</h2>
         <p>Manage communities and neighborhoods for lead routing</p>
       </div>
+
+      {/* Hidden file input for photo uploads */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handlePhotoUpload}
+        style={{ display: "none" }}
+      />
 
       {error ? (
         <div className="card">
@@ -113,6 +157,7 @@ export default function LocationsPage() {
               <table>
                 <thead>
                   <tr>
+                    <th style={{ width: 80 }}>Photo</th>
                     <th>Status</th>
                     <th>Name</th>
                     <th>Created</th>
@@ -122,6 +167,36 @@ export default function LocationsPage() {
                 <tbody>
                   {locations.map((loc) => (
                     <tr key={loc.id}>
+                      <td>
+                        <div
+                          style={{
+                            width: 48,
+                            height: 36,
+                            borderRadius: 4,
+                            overflow: "hidden",
+                            background: "var(--bg-input)",
+                            border: "1px solid var(--border)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => triggerPhotoUpload(loc.id)}
+                          title="Click to upload photo"
+                        >
+                          {uploadingPhotoId === loc.id ? (
+                            <span className="text-muted" style={{ fontSize: 10 }}>...</span>
+                          ) : loc.photo_url ? (
+                            <img
+                              src={loc.photo_url}
+                              alt={loc.name}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          ) : (
+                            <span className="text-muted" style={{ fontSize: 10 }}>+ Photo</span>
+                          )}
+                        </div>
+                      </td>
                       <td>
                         <span
                           className={`status-dot ${loc.is_active ? "active" : "inactive"}`}

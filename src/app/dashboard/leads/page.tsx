@@ -12,8 +12,17 @@ interface Lead {
   form_name: string | null;
   village: string | null;
   price: string | null;
+  floor_plan: string | null;
+  home_type: string | null;
+  property_address: string | null;
+  builder: string | null;
+  timeline: string | null;
+  message: string | null;
+  url: string | null;
   routing_status: string;
   created_at: string;
+  final_agent: { id: string; name: string } | null;
+  location: { id: string; name: string } | null;
   routing_attempts: Array<{
     id: string;
     agent_id: string;
@@ -23,6 +32,11 @@ interface Lead {
     score_snapshot: Record<string, unknown> | null;
     created_at: string;
   }>;
+}
+
+interface LocationOption {
+  id: string;
+  name: string;
 }
 
 const statusBadge: Record<string, string> = {
@@ -43,23 +57,67 @@ const attemptStatusBadge: Record<string, string> = {
   error: "badge-danger",
 };
 
+function formatPhone(raw: string | null): string {
+  if (!raw) return "-";
+  const digits = raw.replace(/\D/g, "");
+  const national = digits.length === 11 && digits.startsWith("1")
+    ? digits.slice(1)
+    : digits;
+  if (national.length === 10) {
+    return `(${national.slice(0, 3)}) ${national.slice(3, 6)}-${national.slice(6)}`;
+  }
+  return raw;
+}
+
+type SortKey = "name" | "form" | "location" | "value" | "status" | "attempts" | "received" | "assigned";
+type SortDir = "asc" | "desc";
+
+function getLeadSortValue(lead: Lead, key: SortKey): string | number {
+  switch (key) {
+    case "name": return `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.toLowerCase().trim();
+    case "form": return (lead.form_name ?? "").toLowerCase();
+    case "location": return (lead.location?.name ?? lead.village ?? "").toLowerCase();
+    case "value": return lead.price ?? "";
+    case "status": return lead.routing_status;
+    case "attempts": return lead.routing_attempts?.length ?? 0;
+    case "received": return new Date(lead.created_at).getTime();
+    case "assigned": return (lead.final_agent?.name ?? "").toLowerCase();
+    default: return "";
+  }
+}
+
+function sortLeads(leads: Lead[], key: SortKey, dir: SortDir): Lead[] {
+  return [...leads].sort((a, b) => {
+    const aVal = getLeadSortValue(a, key);
+    const bVal = getLeadSortValue(b, key);
+    if (aVal < bVal) return dir === "asc" ? -1 : 1;
+    if (aVal > bVal) return dir === "asc" ? 1 : -1;
+    return 0;
+  });
+}
+
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [total, setTotal] = useState(0);
+  const [locations, setLocations] = useState<LocationOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("received");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/internal/leads?status=${statusFilter}&limit=50`)
+    fetch(`/api/internal/leads?status=${statusFilter}&location=${locationFilter}&limit=50`)
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);
         else {
           setLeads(data.leads);
           setTotal(data.total);
+          if (data.locations) setLocations(data.locations);
         }
         setLoading(false);
       })
@@ -67,7 +125,33 @@ export default function LeadsPage() {
         setError(e.message);
         setLoading(false);
       });
-  }, [statusFilter]);
+  }, [statusFilter, locationFilter]);
+
+  const sortedLeads = sortLeads(leads, sortKey, sortDir);
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir(key === "received" ? "desc" : "asc");
+    }
+  }
+
+  function SortHeader({ label, sortKeyName }: { label: string; sortKeyName: SortKey }) {
+    const active = sortKey === sortKeyName;
+    return (
+      <th
+        onClick={() => handleSort(sortKeyName)}
+        style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
+      >
+        {label}{" "}
+        <span style={{ opacity: active ? 1 : 0.3, fontSize: 10 }}>
+          {active && sortDir === "desc" ? "\u25BC" : "\u25B2"}
+        </span>
+      </th>
+    );
+  }
 
   return (
     <>
@@ -79,20 +163,35 @@ export default function LeadsPage() {
       <div className="card">
         <div className="card-header">
           <h3>{total} form submissions</h3>
-          <select
-            className="form-input"
-            style={{ width: "auto" }}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="routing">Routing</option>
-            <option value="accepted">Accepted</option>
-            <option value="owned_by_other">Owned by Other</option>
-            <option value="manual">Manual</option>
-            <option value="failed">Failed</option>
-          </select>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <select
+              className="form-input"
+              style={{ width: "auto" }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="routing">Routing</option>
+              <option value="accepted">Accepted</option>
+              <option value="owned_by_other">Owned by Other</option>
+              <option value="manual">Manual</option>
+              <option value="failed">Failed</option>
+            </select>
+            <select
+              className="form-input"
+              style={{ width: "auto" }}
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+            >
+              <option value="all">All locations</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {error ? (
@@ -109,9 +208,9 @@ export default function LeadsPage() {
             <div className="empty-icon">&#9993;</div>
             <h3>No form submissions found</h3>
             <p>
-              {statusFilter === "all"
+              {statusFilter === "all" && locationFilter === "all"
                 ? "Form submissions will appear here when they come in via Zapier webhook."
-                : `No form submissions with status "${statusFilter}".`}
+                : "No form submissions matching the selected filters."}
             </p>
           </div>
         ) : (
@@ -120,17 +219,18 @@ export default function LeadsPage() {
               <thead>
                 <tr>
                   <th></th>
-                  <th>Name</th>
-                  <th>Form</th>
-                  <th>Location</th>
-                  <th>Value</th>
-                  <th>Status</th>
-                  <th>Attempts</th>
-                  <th>Received</th>
+                  <SortHeader label="Name" sortKeyName="name" />
+                  <SortHeader label="Form" sortKeyName="form" />
+                  <SortHeader label="Location" sortKeyName="location" />
+                  <SortHeader label="Value" sortKeyName="value" />
+                  <SortHeader label="Status" sortKeyName="status" />
+                  <SortHeader label="Assigned To" sortKeyName="assigned" />
+                  <SortHeader label="Attempts" sortKeyName="attempts" />
+                  <SortHeader label="Received" sortKeyName="received" />
                 </tr>
               </thead>
               <tbody>
-                {leads.map((lead) => (
+                {sortedLeads.map((lead) => (
                   <Fragment key={lead.id}>
                     <tr
                       onClick={() =>
@@ -149,7 +249,9 @@ export default function LeadsPage() {
                       <td className="text-sm text-muted">
                         {lead.form_name ?? "-"}
                       </td>
-                      <td className="text-sm">{lead.village ?? "-"}</td>
+                      <td className="text-sm">
+                        {lead.location?.name ?? lead.village ?? "-"}
+                      </td>
                       <td className="text-sm font-mono">
                         {lead.price ?? "-"}
                       </td>
@@ -160,6 +262,9 @@ export default function LeadsPage() {
                           {lead.routing_status}
                         </span>
                       </td>
+                      <td className="text-sm">
+                        {lead.final_agent?.name ?? "-"}
+                      </td>
                       <td className="font-mono">
                         {lead.routing_attempts?.length ?? 0}
                       </td>
@@ -169,7 +274,7 @@ export default function LeadsPage() {
                     </tr>
                     {expandedLead === lead.id && (
                       <tr key={`${lead.id}-detail`}>
-                        <td colSpan={8} style={{ padding: "0 12px 16px 42px" }}>
+                        <td colSpan={9} style={{ padding: "0 12px 16px 42px" }}>
                           <div
                             style={{
                               background: "var(--bg-input)",
@@ -177,35 +282,59 @@ export default function LeadsPage() {
                               padding: 16,
                             }}
                           >
-                            <div className="grid-2" style={{ marginBottom: 12 }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px", marginBottom: 12 }}>
                               <div>
-                                <span className="text-muted text-sm">
-                                  Email:{" "}
-                                </span>
+                                <span className="text-muted text-sm">Email: </span>
                                 {lead.email ?? "-"}
                               </div>
                               <div>
-                                <span className="text-muted text-sm">
-                                  Phone:{" "}
-                                </span>
-                                {lead.phone ?? "-"}
+                                <span className="text-muted text-sm">Phone: </span>
+                                {formatPhone(lead.phone)}
                               </div>
-                              <div>
-                                <span className="text-muted text-sm">
-                                  SF ID:{" "}
-                                </span>
-                                <span className="font-mono text-sm">
-                                  {lead.salesforce_record_id ?? "-"}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-muted text-sm">
-                                  Lead ID:{" "}
-                                </span>
-                                <span className="font-mono text-sm">
-                                  {lead.id.slice(0, 8)}...
-                                </span>
-                              </div>
+                              {lead.home_type && (
+                                <div>
+                                  <span className="text-muted text-sm">Home Type: </span>
+                                  {lead.home_type}
+                                </div>
+                              )}
+                              {lead.floor_plan && (
+                                <div>
+                                  <span className="text-muted text-sm">Floor Plan: </span>
+                                  {lead.floor_plan}
+                                </div>
+                              )}
+                              {lead.property_address && (
+                                <div>
+                                  <span className="text-muted text-sm">Address: </span>
+                                  {lead.property_address}
+                                </div>
+                              )}
+                              {lead.builder && (
+                                <div>
+                                  <span className="text-muted text-sm">Builder: </span>
+                                  {lead.builder}
+                                </div>
+                              )}
+                              {lead.timeline && (
+                                <div>
+                                  <span className="text-muted text-sm">Timeline: </span>
+                                  {lead.timeline}
+                                </div>
+                              )}
+                              {lead.url && (
+                                <div>
+                                  <span className="text-muted text-sm">URL: </span>
+                                  <a href={lead.url} target="_blank" rel="noopener noreferrer" className="text-sm">
+                                    {lead.url}
+                                  </a>
+                                </div>
+                              )}
+                              {lead.message && (
+                                <div style={{ gridColumn: "1 / -1" }}>
+                                  <span className="text-muted text-sm">Message: </span>
+                                  {lead.message}
+                                </div>
+                              )}
                             </div>
 
                             {lead.routing_attempts?.length > 0 && (
