@@ -20,6 +20,24 @@ function getMessage(event: LeadEvent): string {
   }
 }
 
+const WELCOME_MESSAGES = [
+  "Colonel! I thought you'd gone dark for a minute...",
+  "Back already Colonel?",
+  "The mission isn't over yet. Welcome back.",
+  "Kept you waiting, huh? Welcome back.",
+  "Let's use our CQC on these hand raises.",
+  "Snake here… you're back online.",
+  "Snake here… took you long enough.",
+  "Can love really bloom...in a marketing tool?",
+  "Snake here… welcome back.",
+  "You're back. Let's move.",
+  "Codec link established.",
+  "Snake here. Ready for the next op.",
+  "This is Snake. Systems ready.",
+];
+
+const WELCOME_SOUND = "/sounds/metal-gear-item-drop.mp3";
+
 const CHAR_DELAY = 35; // ms per character — SNES typewriter speed
 const DISPLAY_DURATION = 6000; // ms to show after fully typed
 
@@ -30,6 +48,7 @@ export default function SpeechBubble() {
   const charIndex = useRef(0);
   const typeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const welcomeShown = useRef(false);
 
   const clearTimers = useCallback(() => {
     if (typeTimer.current) clearTimeout(typeTimer.current);
@@ -47,22 +66,40 @@ export default function SpeechBubble() {
     }
   }, []);
 
+  const showMessage = useCallback((msg: string) => {
+    clearTimers();
+    fullText.current = msg;
+    charIndex.current = 0;
+    setDisplayText("");
+    setVisible(true);
+    typeTimer.current = setTimeout(typeNext, 200);
+  }, [clearTimers, typeNext]);
+
+  // Welcome message on mount
+  useEffect(() => {
+    if (welcomeShown.current) return;
+    welcomeShown.current = true;
+
+    const msg = WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)];
+    // Small delay so the component is fully rendered before the typewriter starts
+    const t = setTimeout(() => {
+      showMessage(msg);
+      const audio = new Audio(WELCOME_SOUND);
+      audio.volume = 0.6;
+      audio.play().catch(() => {});
+    }, 500);
+    return () => clearTimeout(t);
+  }, [showMessage]);
+
   useEffect(() => {
     const unsub = onLeadEvent((event) => {
-      clearTimers();
-      const msg = getMessage(event);
-      fullText.current = msg;
-      charIndex.current = 0;
-      setDisplayText("");
-      setVisible(true);
-      // Start typewriter after a brief pause
-      typeTimer.current = setTimeout(typeNext, 200);
+      showMessage(getMessage(event));
     });
     return () => {
       unsub();
       clearTimers();
     };
-  }, [clearTimers, typeNext]);
+  }, [clearTimers, showMessage]);
 
   if (!visible) return null;
 
