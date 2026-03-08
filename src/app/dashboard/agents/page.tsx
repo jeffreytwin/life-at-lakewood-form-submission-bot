@@ -384,6 +384,47 @@ export default function AgentsPage() {
     );
   }
 
+  function renderBotOnDutyRow(agent: Agent) {
+    return (
+      <tr key={agent.id} onClick={() => openEdit(agent)} style={{ cursor: "pointer" }}>
+        <td>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              overflow: "hidden",
+              background: "var(--bg-input)",
+              border: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 14,
+              color: "var(--text-muted)",
+            }}
+          >
+            {agent.photo_url ? (
+              <img
+                src={agent.photo_url}
+                alt={agent.name}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              agent.name.charAt(0).toUpperCase()
+            )}
+          </div>
+        </td>
+        <td>
+          <span
+            className={`status-dot ${agent.is_active ? "active" : "inactive"}`}
+          />
+          {agent.is_active ? "Active" : "Inactive"}
+        </td>
+        <td style={{ fontWeight: 600 }}>{agent.name}</td>
+      </tr>
+    );
+  }
+
   function renderTableHead() {
     return (
       <thead>
@@ -396,6 +437,18 @@ export default function AgentsPage() {
           <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" />
           <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" />
           <SortHeader label="Handraises This Month" sortKeyName="handraises" />
+        </tr>
+      </thead>
+    );
+  }
+
+  function renderBotOnDutyTableHead() {
+    return (
+      <thead>
+        <tr>
+          <th style={{ width: 50 }}>Photo</th>
+          <SortHeader label="Status" sortKeyName="is_active" />
+          <SortHeader label="Name" sortKeyName="name" />
         </tr>
       </thead>
     );
@@ -462,9 +515,9 @@ export default function AgentsPage() {
               </div>
               <div className="table-wrapper">
                 <table>
-                  {renderTableHead()}
+                  {renderBotOnDutyTableHead()}
                   <tbody>
-                    {frontlinesAgents.map((agent) => renderAgentRow(agent))}
+                    {frontlinesAgents.map((agent) => renderBotOnDutyRow(agent))}
                   </tbody>
                 </table>
               </div>

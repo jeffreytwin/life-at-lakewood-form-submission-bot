@@ -104,16 +104,9 @@ export default function StatusSoundMonitor() {
             bestEvent = { priority: 4, type: "new", lead };
           }
         } else if (prev !== status) {
-          // If this lead was suppressed (sound already played inline), skip it
+          // If this lead was suppressed (sound + bubble already played inline), skip entirely
           if (suppressedLeadIds.has(id)) {
             suppressedLeadIds.delete(id);
-            // Still emit the event for the speech bubble (the stop handler
-            // already played the sound, but the bubble should still show)
-            if (status === "manual") {
-              if (!bestEvent || 2 < (bestEvent?.priority ?? 99)) {
-                bestEvent = { priority: 2, type: "manual", lead };
-              }
-            }
             continue;
           }
           // Status changed — check if we have a sound for the new status
