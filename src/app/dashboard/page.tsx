@@ -19,6 +19,7 @@ interface Stats {
   totalAgents: number;
   activeAgents: number;
   totalLocations: number;
+  avgAcceptanceMinutes: number | null;
   statusCounts: Record<string, number>;
   recentLeads: Array<{
     id: string;
@@ -223,8 +224,12 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           <div className="stat-sub">{stats.totalAgents} total</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Active Locations</div>
-          <div className="stat-value">{stats.totalLocations}</div>
+          <div className="stat-label">Average Time to Acceptance</div>
+          <div className="stat-value">
+            {stats.avgAcceptanceMinutes !== null
+              ? formatTimeExact(stats.avgAcceptanceMinutes)
+              : "-"}
+          </div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Accepted Form Submissions</div>
