@@ -56,18 +56,22 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Average time to acceptance
-    const { data: acceptedAttempts } = await supabase
-      .from("routing_attempts")
-      .select("created_at, updated_at")
-      .eq("status", "accepted");
+    // Average time to acceptance (lead created → agent accepted)
+    const { data: acceptedLeads } = await supabase
+      .from("leads")
+      .select("created_at, routing_attempts!inner(updated_at, status)")
+      .eq("routing_status", "accepted")
+      .eq("routing_attempts.status", "accepted");
 
     let avgAcceptanceMinutes: number | null = null;
-    if (acceptedAttempts && acceptedAttempts.length > 0) {
-      const totalMs = acceptedAttempts.reduce((sum, a) => {
-        return sum + Math.max(0, new Date(a.updated_at).getTime() - new Date(a.created_at).getTime());
+    if (acceptedLeads && acceptedLeads.length > 0) {
+      const totalMs = acceptedLeads.reduce((sum, lead) => {
+        const attempts = lead.routing_attempts as Array<{ updated_at: string; status: string }>;
+        const acceptedAt = attempts[0]?.updated_at;
+        if (!acceptedAt) return sum;
+        return sum + Math.max(0, new Date(acceptedAt).getTime() - new Date(lead.created_at).getTime());
       }, 0);
-      avgAcceptanceMinutes = totalMs / acceptedAttempts.length / 60000;
+      avgAcceptanceMinutes = totalMs / acceptedLeads.length / 60000;
     }
 
     return NextResponse.json({
