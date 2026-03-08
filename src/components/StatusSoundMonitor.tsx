@@ -8,7 +8,12 @@ interface LeadSnapshot {
   routing_status: string;
   first_name: string | null;
   last_name: string | null;
+  owner_name: string | null;
   final_agent?: { id: string; name: string } | null;
+  routing_attempts: Array<{
+    attempt_number: number;
+    agent?: { id: string; name: string } | null;
+  }>;
 }
 
 const STATUS_SOUNDS: Record<string, string> = {
@@ -58,7 +63,8 @@ export default function StatusSoundMonitor() {
       const soundsToPlay = new Set<string>();
 
       // Track the highest-priority event to emit (we only show one speech bubble)
-      let bestEvent: { priority: number; type: "accepted" | "failed" | "manual" | "new"; lead: LeadSnapshot } | null = null;
+      type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other";
+      let bestEvent: { priority: number; type: EventType; lead: LeadSnapshot } | null = null;
 
       for (const [id, status] of currentMap) {
         const prev = prevMap.current.get(id);
@@ -87,12 +93,12 @@ export default function StatusSoundMonitor() {
           const sound = STATUS_SOUNDS[status];
           if (sound) soundsToPlay.add(sound);
 
-          // Map status to event
-          const priorityMap: Record<string, number> = { accepted: 0, failed: 1, manual: 2 };
+          // Map status to event (lower number = higher priority)
+          const priorityMap: Record<string, number> = { accepted: 0, failed: 1, manual: 2, owned_by_other: 3, routing: 5 };
           if (status in priorityMap) {
             const p = priorityMap[status];
             if (!bestEvent || p < bestEvent.priority) {
-              bestEvent = { priority: p, type: status as "accepted" | "failed" | "manual", lead };
+              bestEvent = { priority: p, type: status as EventType, lead };
             }
             if (status === "failed") {
               incrementFailed();
@@ -122,11 +128,22 @@ export default function StatusSoundMonitor() {
         const name = [bestEvent.lead.first_name, bestEvent.lead.last_name]
           .filter(Boolean)
           .join(" ") || "Unknown";
-        emitLeadEvent({
-          type: bestEvent.type,
-          leadName: name,
-          agentName: bestEvent.lead.final_agent?.name ?? undefined,
-        });
+
+        // Resolve the agent name based on event type
+        let agentName: string | undefined;
+        if (bestEvent.type === "owned_by_other") {
+          agentName = bestEvent.lead.owner_name ?? undefined;
+        } else if (bestEvent.type === "routing") {
+          // Get the latest routing attempt's agent name
+          const sorted = [...(bestEvent.lead.routing_attempts ?? [])].sort(
+            (a, b) => b.attempt_number - a.attempt_number
+          );
+          agentName = sorted[0]?.agent?.name ?? undefined;
+        } else {
+          agentName = bestEvent.lead.final_agent?.name ?? undefined;
+        }
+
+        emitLeadEvent({ type: bestEvent.type, leadName: name, agentName });
       }
 
       prevMap.current = currentMap;

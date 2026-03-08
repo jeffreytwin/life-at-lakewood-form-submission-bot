@@ -234,7 +234,7 @@ export default function LeadsPage() {
               <option value="pending">Pending</option>
               <option value="routing">Routing</option>
               <option value="accepted">Accepted</option>
-              <option value="owned_by_other">Owned by Other</option>
+              <option value="owned_by_other">Already Owned</option>
               <option value="manual">Manual</option>
               <option value="failed">Failed</option>
             </select>

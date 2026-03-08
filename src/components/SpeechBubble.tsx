@@ -13,6 +13,10 @@ function getMessage(event: LeadEvent): string {
       return "Colonel! Just spotted a new form submission. On it!";
     case "manual":
       return "Looks like you're on it. ....You're pretty good.";
+    case "routing":
+      return `Colonel, I'm pinging ${event.agentName ?? "an agent"} now. Let's see if they bite.`;
+    case "owned_by_other":
+      return `Colonel! This one's already assigned to ${event.agentName ?? "an agent"}. I'll ping the operative now.`;
   }
 }
 
