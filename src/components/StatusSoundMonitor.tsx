@@ -21,6 +21,7 @@ const STATUS_SOUNDS: Record<string, string> = {
   routing: "/sounds/mgs-codec.mp3",
   failed: "/sounds/metal-gear-alert.mp3",
   manual: "/sounds/mgs - manual.mp3",
+  owned_by_other: "/sounds/metal-gear-victory.mp3",
 };
 
 const NEW_LEAD_SOUND = "/sounds/mgs-new-form.mp3";
@@ -107,9 +108,10 @@ export default function StatusSoundMonitor() {
         }
       }
 
-      // Play one sound at a time (most important first: accepted > failed > manual > routing > new)
+      // Play one sound at a time (most important first: accepted > owned > failed > manual > routing > new)
       const priority = [
         STATUS_SOUNDS.accepted,
+        STATUS_SOUNDS.owned_by_other,
         STATUS_SOUNDS.failed,
         STATUS_SOUNDS.manual,
         STATUS_SOUNDS.routing,
