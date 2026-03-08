@@ -35,11 +35,37 @@ export function suppressNextSoundForLead(leadId: string) {
   suppressedLeadIds.add(leadId);
 }
 
+// Track whether audio playback has been unlocked by a user gesture
+let audioUnlocked = false;
+let pendingSound: string | null = null;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  // Play any sound that was blocked before the user interacted
+  if (pendingSound) {
+    const src = pendingSound;
+    pendingSound = null;
+    playSound(src);
+  }
+  document.removeEventListener("click", unlockAudio, true);
+  document.removeEventListener("keydown", unlockAudio, true);
+}
+
+// Listen for first user gesture to unlock audio
+if (typeof document !== "undefined") {
+  document.addEventListener("click", unlockAudio, true);
+  document.addEventListener("keydown", unlockAudio, true);
+}
+
 function playSound(src: string) {
   const audio = new Audio(src);
   audio.volume = 0.6;
   audio.play().catch(() => {
-    // Browser may block autoplay until user interaction — ignore silently
+    // Browser blocked autoplay — queue for after first user interaction
+    if (!audioUnlocked) {
+      pendingSound = src;
+    }
   });
 }
 
