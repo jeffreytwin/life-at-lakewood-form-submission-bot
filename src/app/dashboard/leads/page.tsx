@@ -29,6 +29,7 @@ interface Lead {
   routing_attempts: Array<{
     id: string;
     agent_id: string;
+    agent: { id: string; name: string } | null;
     attempt_number: number;
     status: string;
     agent_response: string | null;
@@ -459,6 +460,7 @@ export default function LeadsPage() {
                                   <thead>
                                     <tr>
                                       <th>#</th>
+                                      <th>Agent</th>
                                       <th>Status</th>
                                       <th>Response</th>
                                       <th>Score</th>
@@ -475,6 +477,9 @@ export default function LeadsPage() {
                                         <tr key={attempt.id}>
                                           <td className="font-mono">
                                             {attempt.attempt_number}
+                                          </td>
+                                          <td className="text-sm">
+                                            {attempt.agent?.name ?? "-"}
                                           </td>
                                           <td>
                                             <span
