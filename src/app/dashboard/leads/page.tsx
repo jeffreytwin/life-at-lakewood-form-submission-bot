@@ -325,7 +325,7 @@ export default function LeadsPage() {
                           {(lead.routing_status === "pending" ||
                             lead.routing_status === "routing") && (
                             <button
-                              className="btn btn-danger btn-sm"
+                              className="btn btn-primary btn-sm"
                               disabled={stoppingId === lead.id}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -337,7 +337,7 @@ export default function LeadsPage() {
                           )}
                           {lead.routing_status === "failed" && (
                             <button
-                              className="btn btn-danger btn-sm"
+                              className="btn btn-primary btn-sm"
                               disabled={stoppingId === lead.id}
                               onClick={(e) => {
                                 e.stopPropagation();
