@@ -363,7 +363,7 @@ export default function AgentsPage() {
             <span className="badge badge-muted">All</span>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-              {agent.price_ranges.map((r) => (
+              {[...agent.price_ranges].sort((a, b) => ALL_PRICE_RANGES.indexOf(a) - ALL_PRICE_RANGES.indexOf(b)).map((r) => (
                 <span key={r} className="badge badge-info">{PRICE_RANGE_LABELS[r]}</span>
               ))}
             </div>
