@@ -235,7 +235,7 @@ export default function LeadsPage() {
               <option value="routing">Routing</option>
               <option value="accepted">Accepted</option>
               <option value="owned_by_other">Already Owned</option>
-              <option value="manual">Manual</option>
+              <option value="manual">Take Over</option>
               <option value="failed">Failed</option>
             </select>
             <select
@@ -344,7 +344,7 @@ export default function LeadsPage() {
                                 handleStop(lead.id);
                               }}
                             >
-                              {stoppingId === lead.id ? "..." : "Manual"}
+                              {stoppingId === lead.id ? "..." : "Take Over"}
                             </button>
                           )}
                         </span>
