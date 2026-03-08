@@ -56,6 +56,20 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(10);
 
+    // Average time to acceptance
+    const { data: acceptedAttempts } = await supabase
+      .from("routing_attempts")
+      .select("created_at, updated_at")
+      .eq("status", "accepted");
+
+    let avgAcceptanceMinutes: number | null = null;
+    if (acceptedAttempts && acceptedAttempts.length > 0) {
+      const totalMs = acceptedAttempts.reduce((sum, a) => {
+        return sum + Math.max(0, new Date(a.updated_at).getTime() - new Date(a.created_at).getTime());
+      }, 0);
+      avgAcceptanceMinutes = totalMs / acceptedAttempts.length / 60000;
+    }
+
     return NextResponse.json({
       totalLeads: totalLeads ?? 0,
       totalAgents: totalAgents ?? 0,
@@ -64,6 +78,7 @@ export async function GET() {
       statusCounts,
       recentLeads: recentLeads ?? [],
       recentEvents: recentEvents ?? [],
+      avgAcceptanceMinutes,
     });
   } catch (error) {
     return NextResponse.json(
