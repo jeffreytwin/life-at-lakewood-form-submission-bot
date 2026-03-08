@@ -13,6 +13,7 @@ import {
   sendFollowUp,
   sendMovedOn,
   sendDeclineAck,
+  sendAcceptAck,
   sendAcceptedNotification,
   sendManualFallbackNotification,
   sendUnclearResponseNotification,
@@ -144,6 +145,9 @@ export async function handleAcceptance(
 
   // Update lead status
   await updateLeadStatus(lead.id, "accepted", agent.id);
+
+  // Confirm acceptance to the agent
+  await sendAcceptAck(agent.phone, lead.first_name ?? "", lead.last_name ?? "");
 
   // Increment monthly lead count via upsert
   const yearMonth = new Date().toISOString().slice(0, 7);
