@@ -36,7 +36,7 @@ const WELCOME_MESSAGES = [
   "This is Snake. Systems ready.",
 ];
 
-const WELCOME_SOUND = "/sounds/metal-gear-item-drop.mp3";
+const WELCOME_SOUND = "/sounds/codec-opening.mp3";
 
 const CHAR_DELAY = 35; // ms per character — SNES typewriter speed
 const DISPLAY_DURATION = 6000; // ms to show after fully typed
