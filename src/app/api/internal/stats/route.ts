@@ -56,22 +56,38 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Average time to acceptance (lead created → agent accepted)
-    const { data: acceptedLeads } = await supabase
-      .from("leads")
-      .select("created_at, routing_attempts!inner(updated_at, status)")
-      .eq("routing_status", "accepted")
-      .eq("routing_attempts.status", "accepted");
+    // Average time to acceptance (lead created → audit "accepted" event)
+    // Uses the immutable audit log timestamp rather than updated_at which
+    // could shift if a row is ever touched after acceptance.
+    const { data: acceptedEvents } = await supabase
+      .from("audit_log")
+      .select("lead_id, created_at")
+      .eq("event_type", "accepted")
+      .not("lead_id", "is", null);
 
     let avgAcceptanceMinutes: number | null = null;
-    if (acceptedLeads && acceptedLeads.length > 0) {
-      const totalMs = acceptedLeads.reduce((sum, lead) => {
-        const attempts = lead.routing_attempts as Array<{ updated_at: string; status: string }>;
-        const acceptedAt = attempts[0]?.updated_at;
-        if (!acceptedAt) return sum;
-        return sum + Math.max(0, new Date(acceptedAt).getTime() - new Date(lead.created_at).getTime());
-      }, 0);
-      avgAcceptanceMinutes = totalMs / acceptedLeads.length / 60000;
+    if (acceptedEvents && acceptedEvents.length > 0) {
+      // Fetch the corresponding lead created_at times
+      const leadIds = [...new Set(acceptedEvents.map((e) => e.lead_id!))];
+      const { data: acceptedLeads } = await supabase
+        .from("leads")
+        .select("id, created_at")
+        .in("id", leadIds);
+
+      if (acceptedLeads && acceptedLeads.length > 0) {
+        const leadCreatedMap = new Map(acceptedLeads.map((l) => [l.id, l.created_at]));
+        let totalMs = 0;
+        let count = 0;
+        for (const event of acceptedEvents) {
+          const leadCreated = leadCreatedMap.get(event.lead_id!);
+          if (!leadCreated) continue;
+          totalMs += Math.max(0, new Date(event.created_at).getTime() - new Date(leadCreated).getTime());
+          count++;
+        }
+        if (count > 0) {
+          avgAcceptanceMinutes = totalMs / count / 60000;
+        }
+      }
     }
 
     return NextResponse.json({
