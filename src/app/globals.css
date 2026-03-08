@@ -607,7 +607,7 @@ select.form-input {
   right: 100%;
   margin-right: 8px;
   background: #181820;
-  border: 2px solid #e0e0d0;
+  border: 2px solid #34d399;
   border-radius: 4px;
   padding: 10px 14px;
   width: 240px;
@@ -629,7 +629,7 @@ select.form-input {
   height: 0;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-left: 8px solid #e0e0d0;
+  border-left: 8px solid #34d399;
 }
 
 .speech-bubble::before {
