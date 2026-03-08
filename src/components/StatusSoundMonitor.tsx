@@ -12,6 +12,7 @@ interface LeadSnapshot {
   final_agent?: { id: string; name: string } | null;
   routing_attempts: Array<{
     attempt_number: number;
+    status: string;
     agent?: { id: string; name: string } | null;
   }>;
 }
@@ -69,8 +70,45 @@ function playSound(src: string) {
   });
 }
 
+type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute";
+
+interface ScheduledEvent {
+  sound: string;
+  event: { type: EventType; leadName: string; agentName?: string };
+}
+
+/** Info we track per lead between poll cycles */
+interface LeadState {
+  status: string;
+  attemptCount: number;
+  /** The latest routing attempt status (e.g. sms_sent, followup_sent) */
+  latestAttemptStatus: string | null;
+}
+
+function getLeadState(lead: LeadSnapshot): LeadState {
+  const sorted = [...(lead.routing_attempts ?? [])].sort(
+    (a, b) => b.attempt_number - a.attempt_number
+  );
+  return {
+    status: lead.routing_status,
+    attemptCount: lead.routing_attempts?.length ?? 0,
+    latestAttemptStatus: sorted[0]?.status ?? null,
+  };
+}
+
+function getLeadName(lead: LeadSnapshot): string {
+  return [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
+}
+
+function getLatestAgentName(lead: LeadSnapshot): string | undefined {
+  const sorted = [...(lead.routing_attempts ?? [])].sort(
+    (a, b) => b.attempt_number - a.attempt_number
+  );
+  return sorted[0]?.agent?.name ?? undefined;
+}
+
 export default function StatusSoundMonitor() {
-  const prevMap = useRef<Map<string, string> | null>(null);
+  const prevStates = useRef<Map<string, LeadState> | null>(null);
 
   const poll = useCallback(async () => {
     try {
@@ -79,95 +117,121 @@ export default function StatusSoundMonitor() {
       if (data.error || !data.leads) return;
 
       const leads: LeadSnapshot[] = data.leads;
-      const currentMap = new Map(leads.map((l) => [l.id, l.routing_status]));
 
       // On first load, seed the map without playing sounds
-      if (prevMap.current === null) {
-        prevMap.current = currentMap;
+      if (prevStates.current === null) {
+        prevStates.current = new Map(leads.map((l) => [l.id, getLeadState(l)]));
         return;
       }
 
-      const soundsToPlay = new Set<string>();
+      // Collect events, potentially multiple per cycle (queued with delays)
+      const immediateEvents: ScheduledEvent[] = [];
+      const delayedEvents: ScheduledEvent[] = [];
 
-      // Track the highest-priority event to emit (we only show one speech bubble)
-      type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other";
-      let bestEvent: { priority: number; type: EventType; lead: LeadSnapshot } | null = null;
+      for (const lead of leads) {
+        const curr = getLeadState(lead);
+        const prev = prevStates.current.get(lead.id);
+        const name = getLeadName(lead);
 
-      for (const [id, status] of currentMap) {
-        const prev = prevMap.current.get(id);
-        const lead = leads.find((l) => l.id === id)!;
-
-        if (prev === undefined) {
+        if (!prev) {
           // New lead appeared
-          soundsToPlay.add(NEW_LEAD_SOUND);
-          if (!bestEvent || 4 < (bestEvent?.priority ?? 99)) {
-            bestEvent = { priority: 4, type: "new", lead };
+          immediateEvents.push({
+            sound: NEW_LEAD_SOUND,
+            event: { type: "new", leadName: name },
+          });
+
+          // If it already jumped to routing, queue a delayed routing event
+          if (curr.status === "routing" && curr.attemptCount > 0) {
+            delayedEvents.push({
+              sound: STATUS_SOUNDS.routing,
+              event: {
+                type: "routing",
+                leadName: name,
+                agentName: getLatestAgentName(lead),
+              },
+            });
           }
-        } else if (prev !== status) {
-          // If this lead was suppressed (sound + bubble already played inline), skip entirely
-          if (suppressedLeadIds.has(id)) {
-            suppressedLeadIds.delete(id);
+        } else if (prev.status !== curr.status) {
+          // Status changed
+          if (suppressedLeadIds.has(lead.id)) {
+            suppressedLeadIds.delete(lead.id);
             continue;
           }
-          // Status changed — check if we have a sound for the new status
-          const sound = STATUS_SOUNDS[status];
-          if (sound) soundsToPlay.add(sound);
 
-          // Map status to event (lower number = higher priority)
-          const priorityMap: Record<string, number> = { accepted: 0, failed: 1, manual: 2, owned_by_other: 3, routing: 5 };
-          if (status in priorityMap) {
-            const p = priorityMap[status];
-            if (!bestEvent || p < bestEvent.priority) {
-              bestEvent = { priority: p, type: status as EventType, lead };
+          const sound = STATUS_SOUNDS[curr.status];
+          if (sound) {
+            let agentName: string | undefined;
+            if (curr.status === "owned_by_other") {
+              agentName = lead.owner_name ?? undefined;
+            } else if (curr.status === "routing") {
+              agentName = getLatestAgentName(lead);
+            } else {
+              agentName = lead.final_agent?.name ?? undefined;
             }
-            if (status === "failed") {
-              incrementFailed();
-            }
+
+            immediateEvents.push({
+              sound,
+              event: { type: curr.status as EventType, leadName: name, agentName },
+            });
+          }
+
+          if (curr.status === "failed") {
+            incrementFailed();
+          }
+        } else if (curr.status === "routing") {
+          // Status is still "routing" — check for follow-up or re-route
+          if (curr.attemptCount > prev.attemptCount) {
+            // New routing attempt = re-routed to another agent
+            immediateEvents.push({
+              sound: STATUS_SOUNDS.routing,
+              event: {
+                type: "reroute",
+                leadName: name,
+                agentName: getLatestAgentName(lead),
+              },
+            });
+          } else if (
+            curr.latestAttemptStatus === "followup_sent" &&
+            prev.latestAttemptStatus !== "followup_sent"
+          ) {
+            // Follow-up was just sent to the current agent
+            immediateEvents.push({
+              sound: STATUS_SOUNDS.routing,
+              event: {
+                type: "followup",
+                leadName: name,
+                agentName: getLatestAgentName(lead),
+              },
+            });
           }
         }
       }
 
-      // Play one sound at a time (most important first: accepted > owned > failed > manual > routing > new)
-      const priority = [
-        STATUS_SOUNDS.accepted,
-        STATUS_SOUNDS.owned_by_other,
-        STATUS_SOUNDS.failed,
-        STATUS_SOUNDS.manual,
-        STATUS_SOUNDS.routing,
-        NEW_LEAD_SOUND,
-      ];
+      // Play the highest priority immediate event
+      if (immediateEvents.length > 0) {
+        // Priority: accepted > owned_by_other > failed > manual > routing > new
+        const priorityOrder: EventType[] = ["accepted", "owned_by_other", "failed", "manual", "reroute", "followup", "routing", "new"];
+        const best = immediateEvents.sort((a, b) => {
+          const ai = priorityOrder.indexOf(a.event.type);
+          const bi = priorityOrder.indexOf(b.event.type);
+          return ai - bi;
+        })[0];
 
-      for (const sound of priority) {
-        if (soundsToPlay.has(sound)) {
-          playSound(sound);
-          break;
-        }
+        playSound(best.sound);
+        emitLeadEvent(best.event);
       }
 
-      // Emit the lead event for the speech bubble
-      if (bestEvent) {
-        const name = [bestEvent.lead.first_name, bestEvent.lead.last_name]
-          .filter(Boolean)
-          .join(" ") || "Unknown";
-
-        // Resolve the agent name based on event type
-        let agentName: string | undefined;
-        if (bestEvent.type === "owned_by_other") {
-          agentName = bestEvent.lead.owner_name ?? undefined;
-        } else if (bestEvent.type === "routing") {
-          // Get the latest routing attempt's agent name
-          const sorted = [...(bestEvent.lead.routing_attempts ?? [])].sort(
-            (a, b) => b.attempt_number - a.attempt_number
-          );
-          agentName = sorted[0]?.agent?.name ?? undefined;
-        } else {
-          agentName = bestEvent.lead.final_agent?.name ?? undefined;
-        }
-
-        emitLeadEvent({ type: bestEvent.type, leadName: name, agentName });
+      // Play delayed events (e.g. routing after new lead) after a gap
+      if (delayedEvents.length > 0) {
+        setTimeout(() => {
+          const best = delayedEvents[0];
+          playSound(best.sound);
+          emitLeadEvent(best.event);
+        }, 8000); // Wait for new-lead bubble to finish
       }
 
-      prevMap.current = currentMap;
+      // Update tracked states
+      prevStates.current = new Map(leads.map((l) => [l.id, getLeadState(l)]));
     } catch {
       // Network error — skip this cycle
     }
@@ -178,7 +242,19 @@ export default function StatusSoundMonitor() {
     poll();
 
     const interval = setInterval(poll, 15000);
-    return () => clearInterval(interval);
+
+    // Poll immediately when tab becomes visible again
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        poll();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [poll]);
 
   // This component renders nothing

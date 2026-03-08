@@ -35,6 +35,7 @@ interface Lead {
     agent_response: string | null;
     score_snapshot: Record<string, unknown> | null;
     created_at: string;
+    updated_at: string;
   }>;
 }
 
@@ -60,6 +61,28 @@ const attemptStatusBadge: Record<string, string> = {
   timed_out: "badge-muted",
   error: "badge-danger",
 };
+
+const attemptStatusLabel: Record<string, string> = {
+  sms_sent: "sms_sent",
+  followup_sent: "followup_sent",
+  accepted: "accepted",
+  declined: "declined",
+  timed_out: "Did Not Respond",
+  error: "error",
+};
+
+function formatResponseTime(createdAt: string, updatedAt: string, status: string): string {
+  // Only show response time for statuses that represent an agent response
+  if (status !== "accepted" && status !== "declined") return "-";
+  const diffMs = new Date(updatedAt).getTime() - new Date(createdAt).getTime();
+  if (diffMs < 0) return "-";
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 1) return "<1m";
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem === 0 ? `${hrs}h` : `${hrs}h ${rem}m`;
+}
 
 function formatPhone(raw: string | null): string {
   if (!raw) return "-";
@@ -362,7 +385,7 @@ export default function LeadsPage() {
                     </tr>
                     {expandedLead === lead.id && (
                       <tr key={`${lead.id}-detail`}>
-                        <td colSpan={9} style={{ padding: "0 12px 16px 42px" }}>
+                        <td colSpan={10} style={{ padding: "0 12px 16px 42px" }}>
                           <div
                             style={{
                               background: "var(--bg-input)",
@@ -462,9 +485,10 @@ export default function LeadsPage() {
                                       <th>#</th>
                                       <th>Agent</th>
                                       <th>Status</th>
-                                      <th>Response</th>
+                                      <th>Response Message</th>
                                       <th>Score</th>
-                                      <th>Time</th>
+                                      <th>Initial Outreach</th>
+                                      <th>Response Time</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -485,7 +509,7 @@ export default function LeadsPage() {
                                             <span
                                               className={`badge ${attemptStatusBadge[attempt.status] ?? "badge-muted"}`}
                                             >
-                                              {attempt.status}
+                                              {attemptStatusLabel[attempt.status] ?? attempt.status}
                                             </span>
                                           </td>
                                           <td className="text-sm">
@@ -504,6 +528,9 @@ export default function LeadsPage() {
                                             {new Date(
                                               attempt.created_at
                                             ).toLocaleTimeString()}
+                                          </td>
+                                          <td className="text-muted text-sm font-mono">
+                                            {formatResponseTime(attempt.created_at, attempt.updated_at, attempt.status)}
                                           </td>
                                         </tr>
                                       ))}

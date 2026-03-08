@@ -132,6 +132,21 @@ export async function sendFollowUp(agentPhone: string): Promise<string> {
   return message.sid;
 }
 
+export async function sendAcceptAck(
+  agentPhone: string,
+  leadFirstName: string,
+  leadLastName: string
+): Promise<string> {
+  const message = await getTwilioClient().messages.create({
+    to: agentPhone,
+    from: getTwilioPhoneNumber(),
+    body: `You've accepted the lead for ${leadFirstName} ${leadLastName}. It's all yours!`,
+  });
+
+  logger.info("Accept ack SMS sent", { to: agentPhone, messageSid: message.sid });
+  return message.sid;
+}
+
 export async function sendDeclineAck(agentPhone: string): Promise<string> {
   const message = await getTwilioClient().messages.create({
     to: agentPhone,
