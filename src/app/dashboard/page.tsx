@@ -538,10 +538,18 @@ function LeadDistributionChart({ data }: { data: LeadDistEntry[] }) {
 
 /* ── Response Time Chart Component ──────────────────────────── */
 
+interface AgentStat {
+  agentName: string;
+  avgMinutes: number;
+  responseCount: number;
+  nonResponseCount: number;
+}
+
 interface ResponseTimeData {
-  dailyAverages: Array<{ date: string; avgMinutes: number; count: number }>;
+  agentStats: AgentStat[];
   overallAvgMinutes: number;
   totalResponses: number;
+  totalNonResponses: number;
 }
 
 const RANGE_OPTIONS = [
@@ -553,13 +561,20 @@ const RANGE_OPTIONS = [
   { value: "all", label: "All Time" },
 ];
 
-function formatAvgLabel(minutes: number): string {
-  if (minutes < 1) return "<1m";
-  if (minutes < 60) return `${Math.round(minutes)}m`;
-  const hrs = Math.floor(minutes / 60);
-  const rem = Math.round(minutes % 60);
-  return rem === 0 ? `${hrs}h` : `${hrs}h ${rem}m`;
+function formatTimeExact(minutes: number): string {
+  if (minutes === 0) return "0s";
+  const totalSeconds = Math.round(minutes * 60);
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  if (m < 60) return s === 0 ? `${m}m` : `${m}m ${s}s`;
+  const h = Math.floor(m / 60);
+  const rm = m % 60;
+  if (rm === 0) return `${h}h`;
+  return `${h}h ${rm}m`;
 }
+
+const SLOW_THRESHOLD = 3; // minutes
 
 function ResponseTimeChart() {
   const [data, setData] = useState<ResponseTimeData | null>(null);
@@ -577,13 +592,12 @@ function ResponseTimeChart() {
       .finally(() => setLoading(false));
   }, [range]);
 
-  const chartHeight = 180;
-  const barColor = "#60a5fa";
+  const chartHeight = 220;
 
   return (
     <div className="card">
       <div className="card-header">
-        <h3>Avg Response Time</h3>
+        <h3>Average Response Time</h3>
         <select
           className="form-input"
           style={{ width: "auto", fontSize: 12, padding: "4px 8px" }}
@@ -600,63 +614,62 @@ function ResponseTimeChart() {
         <div className="empty-state" style={{ padding: "32px 20px" }}>
           <p>Loading...</p>
         </div>
-      ) : !data || data.totalResponses === 0 ? (
+      ) : !data || (data.totalResponses === 0 && data.totalNonResponses === 0) ? (
         <div className="empty-state" style={{ padding: "32px 20px" }}>
-          <p>No agent responses in this period</p>
+          <p>No routing attempts in this period</p>
         </div>
       ) : (
         <div style={{ padding: "12px 20px 20px" }}>
           {/* Overall stat */}
-          <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16 }}>
-            <span style={{ fontSize: 28, fontWeight: 700, color: "var(--text-heading)" }}>
-              {formatAvgLabel(data.overallAvgMinutes)}
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: data.overallAvgMinutes >= SLOW_THRESHOLD ? "#eab308" : "var(--text-heading)" }}>
+              {formatTimeExact(data.overallAvgMinutes)}
             </span>
             <span className="text-muted text-sm">
               avg across {data.totalResponses} response{data.totalResponses !== 1 ? "s" : ""}
             </span>
+            {data.totalNonResponses > 0 && (
+              <span style={{ fontSize: 12, color: "#f87171" }}>
+                {data.totalNonResponses} missed
+              </span>
+            )}
           </div>
 
-          {/* Bar chart */}
-          {data.dailyAverages.length > 1 ? (
-            <ResponseTimeBarChart
-              dailyAverages={data.dailyAverages}
+          {/* Per-agent bar chart */}
+          {data.agentStats.length > 0 && (
+            <ResponseTimeAgentChart
+              agentStats={data.agentStats}
               chartHeight={chartHeight}
-              barColor={barColor}
             />
-          ) : data.dailyAverages.length === 1 ? (
-            <div className="text-muted text-sm" style={{ textAlign: "center", padding: "20px 0" }}>
-              {formatAvgLabel(data.dailyAverages[0].avgMinutes)} avg on{" "}
-              {new Date(data.dailyAverages[0].date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              {" "}({data.dailyAverages[0].count} response{data.dailyAverages[0].count !== 1 ? "s" : ""})
-            </div>
-          ) : null}
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function ResponseTimeBarChart({
-  dailyAverages,
+function ResponseTimeAgentChart({
+  agentStats,
   chartHeight,
-  barColor,
 }: {
-  dailyAverages: ResponseTimeData["dailyAverages"];
+  agentStats: AgentStat[];
   chartHeight: number;
-  barColor: string;
 }) {
-  const maxMinutes = Math.max(...dailyAverages.map((d) => d.avgMinutes), 1);
+  // Filter to agents that have at least one response for the bar heights
+  const maxMinutes = Math.max(...agentStats.map((a) => a.avgMinutes), 1);
   // Round ceiling to a nice number
-  const yCeil = maxMinutes <= 10
-    ? Math.ceil(maxMinutes / 2) * 2
-    : maxMinutes <= 60
-      ? Math.ceil(maxMinutes / 10) * 10
-      : Math.ceil(maxMinutes / 30) * 30;
+  const yCeil = maxMinutes <= 5
+    ? Math.ceil(maxMinutes)
+    : maxMinutes <= 10
+      ? Math.ceil(maxMinutes / 2) * 2
+      : maxMinutes <= 60
+        ? Math.ceil(maxMinutes / 10) * 10
+        : Math.ceil(maxMinutes / 30) * 30;
 
-  const tickCount = Math.min(5, yCeil);
+  const tickCount = Math.min(5, Math.max(2, yCeil));
   const tickStep = yCeil / tickCount;
   const ticks: number[] = [];
-  for (let i = 0; i <= tickCount; i++) ticks.push(Math.round(i * tickStep));
+  for (let i = 0; i <= tickCount; i++) ticks.push(Math.round(i * tickStep * 10) / 10);
 
   return (
     <div style={{ position: "relative" }}>
@@ -684,7 +697,7 @@ function ResponseTimeBarChart({
                   textAlign: "right",
                 }}
               >
-                {formatAvgLabel(tick)}
+                {formatTimeExact(tick)}
               </span>
               <div
                 style={{
@@ -709,39 +722,44 @@ function ResponseTimeBarChart({
             zIndex: 1,
           }}
         >
-          {dailyAverages.map((d) => {
-            const pct = (d.avgMinutes / yCeil) * 100;
+          {agentStats.map((a) => {
+            const pct = a.responseCount > 0 ? (a.avgMinutes / yCeil) * 100 : 0;
+            const isSlow = a.avgMinutes >= SLOW_THRESHOLD;
+            const barColor = isSlow ? "#eab308" : "#60a5fa";
+
             return (
               <div
-                key={d.date}
-                title={`${d.date}: ${formatAvgLabel(d.avgMinutes)} avg (${d.count} responses)`}
+                key={a.agentName}
+                title={`${a.agentName}: ${formatTimeExact(a.avgMinutes)} avg (${a.responseCount} responses, ${a.nonResponseCount} missed)`}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "flex-end",
                   flex: 1,
-                  maxWidth: 48,
+                  maxWidth: 64,
                   height: "100%",
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    color: "var(--text-heading)",
-                    marginBottom: 2,
-                  }}
-                >
-                  {formatAvgLabel(d.avgMinutes)}
-                </span>
+                {a.responseCount > 0 && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: isSlow ? "#eab308" : "var(--text-heading)",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {formatTimeExact(a.avgMinutes)}
+                  </span>
+                )}
                 <div
                   style={{
-                    width: "55%",
-                    minWidth: 18,
-                    height: `${Math.max(pct, 2)}%`,
+                    width: "60%",
+                    minWidth: 28,
+                    height: `${Math.max(pct, a.responseCount > 0 ? 2 : 0)}%`,
                     background: barColor,
-                    borderRadius: "3px 3px 0 0",
+                    borderRadius: "4px 4px 0 0",
                     transition: "height 0.3s ease",
                   }}
                 />
@@ -751,34 +769,39 @@ function ResponseTimeBarChart({
         </div>
       </div>
 
-      {/* X-axis labels */}
+      {/* X-axis: agent names + non-response count */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-around",
           marginLeft: 84,
           marginRight: 12,
-          marginTop: 6,
+          marginTop: 8,
         }}
       >
-        {dailyAverages.map((d) => {
-          const dt = new Date(d.date + "T12:00:00");
-          return (
-            <div
-              key={d.date}
-              style={{
-                flex: 1,
-                maxWidth: 48,
-                textAlign: "center",
-                fontSize: 10,
-                color: "var(--text-muted)",
-                lineHeight: 1.3,
-              }}
-            >
-              {dt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-            </div>
-          );
-        })}
+        {agentStats.map((a) => (
+          <div
+            key={a.agentName}
+            style={{
+              flex: 1,
+              maxWidth: 64,
+              textAlign: "center",
+              fontSize: 11,
+              color: "var(--text-muted)",
+              lineHeight: 1.3,
+              overflow: "hidden",
+            }}
+          >
+            {a.agentName.split(" ").map((part, i) => (
+              <div key={i}>{part}</div>
+            ))}
+            {a.nonResponseCount > 0 && (
+              <div style={{ fontSize: 10, color: "#f87171", marginTop: 2 }}>
+                {a.nonResponseCount} missed
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
