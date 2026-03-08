@@ -4,6 +4,7 @@ import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import RoutingToggle from "@/components/RoutingToggle";
 import StatusSoundMonitor from "@/components/StatusSoundMonitor";
+import PixelFireworks from "@/components/PixelFireworks";
 
 export default function DashboardLayout({
   children,
@@ -33,6 +34,7 @@ export default function DashboardLayout({
       <main className="main-content">{children}</main>
       <RoutingToggle />
       <StatusSoundMonitor />
+      <PixelFireworks />
     </div>
   );
 }
