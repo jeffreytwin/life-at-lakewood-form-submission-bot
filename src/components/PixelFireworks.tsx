@@ -5,9 +5,10 @@ import { onLeadEvent } from "@/lib/lead-events";
 
 /** Pixel size for the retro blocky look */
 const PX = 4;
-const PARTICLE_COUNT = 60;
-const ROCKET_COUNT = 5;
-const DURATION = 3000; // ms
+const PARTICLE_COUNT = 120;
+const ROCKET_COUNT = 10;
+const ROUND_1_DURATION = 3000; // ms before second round
+const DURATION = 6500; // total ms
 
 interface Particle {
   x: number;
@@ -113,10 +114,21 @@ export default function PixelFireworks() {
     }
 
     const start = performance.now();
+    let round2Launched = false;
 
     function draw(now: number) {
       const elapsed = now - start;
       if (!ctx || !canvas) return;
+
+      // Launch second round of rockets
+      if (!round2Launched && elapsed >= ROUND_1_DURATION) {
+        round2Launched = true;
+        for (let i = 0; i < ROCKET_COUNT; i++) {
+          const r = createRocket(w, h);
+          r.y = h + i * 40;
+          rockets.push(r);
+        }
+      }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
