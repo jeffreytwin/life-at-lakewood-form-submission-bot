@@ -18,14 +18,19 @@ export function validateTwilioRequest(
     return false;
   }
 
-  const baseUrl = (process.env.APP_BASE_URL ?? "").replace(/\/$/, "");
-  const url = `${baseUrl}${new URL(request.url).pathname}`;
+  // Build the URL from the request's host header so it matches the URL
+  // Twilio actually sent to, regardless of APP_BASE_URL configuration.
+  const host = request.headers.get("host") ?? request.headers.get("x-forwarded-host") ?? "";
+  const proto = request.headers.get("x-forwarded-proto") ?? "https";
+  const pathname = new URL(request.url).pathname;
+  const url = `${proto}://${host}${pathname}`;
 
   const isValid = twilio.validateRequest(authToken, signature, url, body);
   if (!isValid) {
     logger.warn("Twilio signature validation failed", {
       constructedUrl: url,
-      appBaseUrl: baseUrl,
+      host,
+      proto,
     });
   }
   return isValid;
