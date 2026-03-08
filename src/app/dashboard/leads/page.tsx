@@ -335,6 +335,18 @@ export default function LeadsPage() {
                               {stoppingId === lead.id ? "Stopping..." : "Stop"}
                             </button>
                           )}
+                          {lead.routing_status === "failed" && (
+                            <button
+                              className="btn btn-danger btn-sm"
+                              disabled={stoppingId === lead.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStop(lead.id);
+                              }}
+                            >
+                              {stoppingId === lead.id ? "..." : "Manual"}
+                            </button>
+                          )}
                         </span>
                       </td>
                       <td className="text-sm">

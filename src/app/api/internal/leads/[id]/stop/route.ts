@@ -19,7 +19,7 @@ export async function POST(
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
-    if (lead.routing_status !== "pending" && lead.routing_status !== "routing") {
+    if (lead.routing_status !== "pending" && lead.routing_status !== "routing" && lead.routing_status !== "failed") {
       return NextResponse.json(
         { error: `Cannot stop a lead with status "${lead.routing_status}"` },
         { status: 400 }
