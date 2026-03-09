@@ -7,7 +7,7 @@ export const zapierPayloadSchema = z.object({
   salesforce_record_id: z.string().optional().nullable(),
   salesforce_owner_id: z.string().optional().nullable(),
   is_master_agent_owned: z.preprocess(
-    (val) => val === "true" || val === true,
+    (val) => String(val).toLowerCase() === "true" || val === true,
     z.boolean()
   ).optional().default(false),
   first_name: z.string(),
