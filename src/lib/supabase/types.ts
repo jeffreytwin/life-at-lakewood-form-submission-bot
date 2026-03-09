@@ -208,7 +208,9 @@ export type AuditEventType =
   | "sf_updated"
   | "error"
   | "manual_fallback"
-  | "routing_stopped";
+  | "routing_stopped"
+  | "text_me_sent"
+  | "lead_done_manually";
 
 export interface AuditLogEntry {
   id: string;
