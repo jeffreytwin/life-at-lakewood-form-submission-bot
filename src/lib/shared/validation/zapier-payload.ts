@@ -6,6 +6,7 @@ export const zapierPayloadSchema = z.object({
   form_name: z.string(),
   salesforce_record_id: z.string().optional().nullable(),
   owner_name: z.string().optional().nullable(),
+  salesforce_owner_id: z.string().optional().nullable(),
   first_name: z.string(),
   last_name: z.string(),
   email: z.string().email().optional().nullable(),

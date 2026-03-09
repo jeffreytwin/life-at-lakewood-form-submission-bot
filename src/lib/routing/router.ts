@@ -52,6 +52,7 @@ export async function routeLead(payload: ZapierPayload): Promise<{
     timeline: payload.timeline ?? null,
     message: payload.message ?? null,
     owner_name: payload.owner_name ?? null,
+    salesforce_owner_id: payload.salesforce_owner_id ?? null,
     raw_payload: payload as unknown as Record<string, unknown>,
     routing_status: "pending",
     final_agent_id: null,

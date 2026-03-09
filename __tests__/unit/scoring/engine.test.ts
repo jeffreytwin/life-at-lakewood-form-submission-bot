@@ -48,6 +48,7 @@ const defaultContext: ScoringContext = {
     timeline: null,
     message: null,
     owner_name: null,
+    salesforce_owner_id: null,
     raw_payload: null,
     routing_status: "pending",
     final_agent_id: null,

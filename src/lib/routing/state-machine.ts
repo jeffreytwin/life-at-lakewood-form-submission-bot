@@ -187,6 +187,7 @@ export async function handleAcceptance(
       salesforce_record_id: lead.salesforce_record_id,
       agent_name: agent.name,
       agent_salesforce_user_id: agent.salesforce_user_id,
+      previous_salesforce_owner_id: lead.salesforce_owner_id,
       lead_name: `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim(),
       accepted_at: new Date().toISOString(),
     });
