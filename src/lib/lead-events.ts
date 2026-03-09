@@ -25,23 +25,23 @@ export function emitLeadEvent(event: LeadEvent) {
   listeners.forEach((fn) => fn(event));
 }
 
-// --- Failed-count badge ---
+// --- Attention-count badge (failed + manual) ---
 type BadgeListener = (count: number) => void;
 const badgeListeners = new Set<BadgeListener>();
-let failedCount = 0;
+let attentionCount = 0;
 
 export function onFailedCount(fn: BadgeListener): () => void {
   badgeListeners.add(fn);
-  fn(failedCount); // send current value immediately
+  fn(attentionCount); // send current value immediately
   return () => badgeListeners.delete(fn);
 }
 
 export function incrementFailed() {
-  failedCount++;
-  badgeListeners.forEach((fn) => fn(failedCount));
+  attentionCount++;
+  badgeListeners.forEach((fn) => fn(attentionCount));
 }
 
 export function clearFailed() {
-  failedCount = 0;
-  badgeListeners.forEach((fn) => fn(failedCount));
+  attentionCount = 0;
+  badgeListeners.forEach((fn) => fn(attentionCount));
 }

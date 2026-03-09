@@ -200,7 +200,7 @@ export default function StatusSoundMonitor() {
             });
           }
 
-          if (curr.status === "failed") {
+          if (curr.status === "failed" || curr.status === "manual") {
             incrementFailed();
           }
         } else if (curr.status === "routing") {

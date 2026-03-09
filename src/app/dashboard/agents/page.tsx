@@ -605,17 +605,37 @@ export default function AgentsPage() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="John Smith"
-                  readOnly={isFrontlines}
                 />
               </div>
               <div className="form-group">
-                <label>Phone *</label>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  {isFrontlines ? "Fallback Phone *" : "Phone *"}
+                  {isFrontlines && (
+                    <span
+                      title="This should be your cell number in case you need to take on any form submissions manually"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        border: "1px solid var(--text-muted)",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                        cursor: "help",
+                        flexShrink: 0,
+                      }}
+                    >
+                      i
+                    </span>
+                  )}
+                </label>
                 <input
                   className="form-input"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="+19415551234"
-                  readOnly={isFrontlines}
                 />
               </div>
             </div>
@@ -628,22 +648,22 @@ export default function AgentsPage() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="agent@example.com"
-                  readOnly={isFrontlines}
                 />
               </div>
-              <div className="form-group">
-                <label>Gender</label>
-                <select
-                  className="form-input"
-                  value={form.gender}
-                  onChange={(e) => setForm({ ...form, gender: e.target.value as AgentGender | "" })}
-                  disabled={isFrontlines}
-                >
-                  <option value="">Not set</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
+              {!isFrontlines && (
+                <div className="form-group">
+                  <label>Gender</label>
+                  <select
+                    className="form-input"
+                    value={form.gender}
+                    onChange={(e) => setForm({ ...form, gender: e.target.value as AgentGender | "" })}
+                  >
+                    <option value="">Not set</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Everything below is hidden for frontlines agents */}
@@ -915,17 +935,15 @@ export default function AgentsPage() {
                 className="btn btn-secondary"
                 onClick={() => setShowModal(false)}
               >
-                {isFrontlines ? "Close" : "Cancel"}
+                Cancel
               </button>
-              {!isFrontlines && (
-                <button
-                  className="btn btn-primary"
-                  onClick={handleSave}
-                  disabled={saving || !form.name}
-                >
-                  {saving ? "Saving..." : editing ? "Update" : "Create"}
-                </button>
-              )}
+              <button
+                className="btn btn-primary"
+                onClick={handleSave}
+                disabled={saving || !form.name}
+              >
+                {saving ? "Saving..." : editing ? "Update" : "Create"}
+              </button>
             </div>
           </div>
         </div>

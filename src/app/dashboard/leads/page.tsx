@@ -135,6 +135,9 @@ export default function LeadsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("received");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [stoppingId, setStoppingId] = useState<string | null>(null);
+  const [textingId, setTextingId] = useState<string | null>(null);
+  const [textedIds, setTextedIds] = useState<Set<string>>(new Set());
+  const [doningId, setDoningId] = useState<string | null>(null);
 
   const fetchLeads = useCallback(
     async (showLoading = false) => {
@@ -208,6 +211,50 @@ export default function LeadsPage() {
       alert("Network error stopping lead routing");
     } finally {
       setStoppingId(null);
+    }
+  }
+
+  async function handleTextMe(leadId: string) {
+    setTextingId(leadId);
+    try {
+      const r = await fetch(`/api/internal/leads/${leadId}/text-me`, {
+        method: "POST",
+      });
+      const data = await r.json();
+      if (data.error) {
+        alert(`Failed to send: ${data.error}`);
+      } else {
+        setTextedIds((prev) => new Set(prev).add(leadId));
+      }
+    } catch {
+      alert("Network error sending text");
+    } finally {
+      setTextingId(null);
+    }
+  }
+
+  async function handleDone(leadId: string) {
+    setDoningId(leadId);
+    try {
+      const r = await fetch(`/api/internal/leads/${leadId}/done`, {
+        method: "POST",
+      });
+      const data = await r.json();
+      if (data.error) {
+        alert(`Failed: ${data.error}`);
+      } else {
+        suppressNextSoundForLead(leadId);
+        setLeads((prev) =>
+          prev.map((l) =>
+            l.id === leadId ? { ...l, routing_status: "accepted" } : l
+          )
+        );
+        fetchLeads(false);
+      }
+    } catch {
+      alert("Network error marking done");
+    } finally {
+      setDoningId(null);
     }
   }
 
@@ -359,17 +406,33 @@ export default function LeadsPage() {
                               {stoppingId === lead.id ? "Stopping..." : "Stop"}
                             </button>
                           )}
-                          {lead.routing_status === "failed" && (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              disabled={stoppingId === lead.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStop(lead.id);
-                              }}
-                            >
-                              {stoppingId === lead.id ? "..." : "Take Over"}
-                            </button>
+                          {(lead.routing_status === "failed" || lead.routing_status === "manual") && (
+                            <>
+                              <button
+                                className="btn btn-primary btn-sm"
+                                disabled={textingId === lead.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTextMe(lead.id);
+                                }}
+                              >
+                                {textingId === lead.id
+                                  ? "..."
+                                  : textedIds.has(lead.id)
+                                    ? "Text Again"
+                                    : "Text Me"}
+                              </button>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                disabled={doningId === lead.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDone(lead.id);
+                                }}
+                              >
+                                {doningId === lead.id ? "..." : "Done"}
+                              </button>
+                            </>
                           )}
                         </span>
                       </td>

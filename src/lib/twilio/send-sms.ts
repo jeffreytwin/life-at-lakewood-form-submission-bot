@@ -234,6 +234,34 @@ export async function sendManualFallbackNotification(
   return message.sid;
 }
 
+export async function sendFrontlinesLeadDetails(
+  frontlinesPhone: string,
+  lead: Lead,
+  locationName: string
+): Promise<string> {
+  const details = buildLeadDetailsBlock(lead, locationName);
+
+  const body = [
+    `Here are the details for a form submission that needs manual routing (${locationName}):`,
+    "",
+    details,
+  ].join("\n");
+
+  const message = await getTwilioClient().messages.create({
+    to: frontlinesPhone,
+    from: getTwilioPhoneNumber(),
+    body,
+  });
+
+  logger.info("Frontlines lead details SMS sent", {
+    to: frontlinesPhone,
+    messageSid: message.sid,
+    leadId: lead.id,
+  });
+
+  return message.sid;
+}
+
 export async function sendUnclearResponseNotification(
   frontlinesPhone: string,
   agentName: string,
