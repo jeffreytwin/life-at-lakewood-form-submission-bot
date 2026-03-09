@@ -9,6 +9,7 @@ export interface LeadEvent {
   type: LeadEventType;
   leadName: string;
   agentName?: string;
+  agentGender?: "male" | "female" | null;
 }
 
 type LeadEventListener = (event: LeadEvent) => void;

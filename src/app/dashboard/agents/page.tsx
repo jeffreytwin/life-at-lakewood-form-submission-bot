@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import type { Agent, Location, PriceRange, UnavailabilityWindow } from "@/lib/supabase/types";
+import type { Agent, AgentGender, Location, PriceRange, UnavailabilityWindow } from "@/lib/supabase/types";
 import {
   PRICE_RANGE_LABELS,
   ALL_PRICE_RANGES,
@@ -13,6 +13,7 @@ type AgentForm = {
   phone: string;
   email: string;
   salesforce_user_id: string;
+  gender: AgentGender | "";
   is_frontlines: boolean;
   is_active: boolean;
   location_specialties: string[];
@@ -28,6 +29,7 @@ const emptyAgent: AgentForm = {
   phone: "",
   email: "",
   salesforce_user_id: "",
+  gender: "",
   is_frontlines: false,
   is_active: true,
   location_specialties: [],
@@ -174,6 +176,7 @@ export default function AgentsPage() {
       phone: agent.phone,
       email: agent.email ?? "",
       salesforce_user_id: agent.salesforce_user_id ?? "",
+      gender: agent.gender ?? "",
       is_frontlines: agent.is_frontlines,
       is_active: agent.is_active,
       location_specialties: agent.location_specialties,
@@ -229,6 +232,7 @@ export default function AgentsPage() {
       location_specialties: allLocationsSelected ? [] : form.location_specialties,
       email: form.email || null,
       salesforce_user_id: form.salesforce_user_id || null,
+      gender: form.gender || null,
       unavailability_windows:
         form.unavailability_windows.length > 0
           ? form.unavailability_windows
@@ -626,6 +630,19 @@ export default function AgentsPage() {
                   placeholder="agent@example.com"
                   readOnly={isFrontlines}
                 />
+              </div>
+              <div className="form-group">
+                <label>Gender</label>
+                <select
+                  className="form-input"
+                  value={form.gender}
+                  onChange={(e) => setForm({ ...form, gender: e.target.value as AgentGender | "" })}
+                  disabled={isFrontlines}
+                >
+                  <option value="">Not set</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
               </div>
             </div>
 

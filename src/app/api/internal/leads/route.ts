@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("leads")
-      .select("*, routing_attempts(*, agent:agents!routing_attempts_agent_id_fkey(id, name)), final_agent:agents!leads_final_agent_id_fkey(id, name), location:locations!leads_location_id_fkey(id, name)", { count: "exact" })
+      .select("*, routing_attempts(*, agent:agents!routing_attempts_agent_id_fkey(id, name, gender)), final_agent:agents!leads_final_agent_id_fkey(id, name, gender), location:locations!leads_location_id_fkey(id, name)", { count: "exact" })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
