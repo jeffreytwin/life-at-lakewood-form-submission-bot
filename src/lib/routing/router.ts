@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabase/client";
 import { createLead, checkDuplicateLead, updateLeadStatus } from "@/lib/supabase/queries/leads";
-import { getFrontlinesAgent } from "@/lib/supabase/queries/agents";
+import { getFrontlinesAgent, getAgentBySalesforceUserId } from "@/lib/supabase/queries/agents";
 import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
-import { sendOwnedByNotification } from "@/lib/twilio/send-sms";
+import { sendOwnedByNotification, sendExistingOwnerNotification } from "@/lib/twilio/send-sms";
 import { startRouting } from "./state-machine";
 import { logger } from "@/lib/shared/logger";
 import type { ZapierPayload } from "@/lib/shared/validation/zapier-payload";
@@ -102,6 +102,21 @@ async function handleOwnedByOther(
   lead: Lead,
   locationName: string
 ): Promise<{ status: string; leadId: string }> {
+  // Look up the existing owner agent by their Salesforce user ID
+  let ownerAgent = lead.salesforce_owner_id
+    ? await getAgentBySalesforceUserId(lead.salesforce_owner_id)
+    : null;
+
+  // Send SMS to the existing owner agent
+  if (ownerAgent?.phone) {
+    await sendExistingOwnerNotification(ownerAgent.phone, lead, locationName);
+    logger.info("Notified existing owner agent", {
+      leadId: lead.id,
+      agentId: ownerAgent.id,
+      agentName: ownerAgent.name,
+    });
+  }
+
   // Send notification to frontlines
   const frontlinesAgent = await getFrontlinesAgent();
   const frontlinesPhone = frontlinesAgent?.phone ?? process.env.FRONTLINES_AGENT_PHONE;
@@ -110,19 +125,23 @@ async function handleOwnedByOther(
     await sendOwnedByNotification(frontlinesPhone, lead, locationName);
   }
 
-  await updateLeadStatus(lead.id, "owned_by_other");
+  // Assign the existing owner as the final agent
+  await updateLeadStatus(lead.id, "owned_by_other", ownerAgent?.id);
 
   await logAuditEvent("lead_received", {
     leadId: lead.id,
     details: {
       routing_decision: "owned_by_other",
       salesforce_owner_id: lead.salesforce_owner_id,
+      owner_agent_id: ownerAgent?.id ?? null,
+      owner_agent_name: ownerAgent?.name ?? null,
     },
   });
 
   logger.info("Lead owned by non-frontlines agent", {
     leadId: lead.id,
     salesforce_owner_id: lead.salesforce_owner_id,
+    ownerAgentId: ownerAgent?.id,
   });
 
   return { status: "owned_by_other", leadId: lead.id };

@@ -84,7 +84,7 @@ export default function PixelFireworks() {
 
   useEffect(() => {
     return onLeadEvent((event) => {
-      if (event.type !== "accepted") return;
+      if (event.type !== "accepted" && event.type !== "owned_by_other") return;
       startFireworks();
     });
   }, []);

@@ -118,6 +118,34 @@ export async function sendOwnedByNotification(
   return message.sid;
 }
 
+export async function sendExistingOwnerNotification(
+  agentPhone: string,
+  lead: Lead,
+  locationName: string
+): Promise<string> {
+  const details = buildLeadDetailsBlock(lead, locationName);
+
+  const body = [
+    `Heads up! One of your existing clients just filled out a form submission for ${locationName}. See below:`,
+    "",
+    details,
+  ].join("\n");
+
+  const message = await getTwilioClient().messages.create({
+    to: agentPhone,
+    from: getTwilioPhoneNumber(),
+    body,
+  });
+
+  logger.info("Existing owner notification SMS sent", {
+    to: agentPhone,
+    messageSid: message.sid,
+    leadId: lead.id,
+  });
+
+  return message.sid;
+}
+
 export async function sendFollowUp(agentPhone: string): Promise<string> {
   const message = await getTwilioClient().messages.create({
     to: agentPhone,
