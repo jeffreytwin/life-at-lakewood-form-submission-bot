@@ -8,7 +8,6 @@ interface LeadSnapshot {
   routing_status: string;
   first_name: string | null;
   last_name: string | null;
-  owner_name: string | null;
   final_agent?: { id: string; name: string } | null;
   routing_attempts: Array<{
     attempt_number: number;
@@ -162,7 +161,7 @@ export default function StatusSoundMonitor() {
           if (sound) {
             let agentName: string | undefined;
             if (curr.status === "owned_by_other") {
-              agentName = lead.owner_name ?? undefined;
+              agentName = undefined;
             } else if (curr.status === "routing") {
               agentName = getLatestAgentName(lead);
             } else {
