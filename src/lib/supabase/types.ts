@@ -141,7 +141,8 @@ export interface Lead {
   builder: string | null;
   timeline: string | null;
   message: string | null;
-  owner_name: string | null;
+  salesforce_owner_id: string | null;
+  is_master_agent_owned: boolean;
   raw_payload: Record<string, unknown> | null;
   routing_status: RoutingStatus;
   final_agent_id: string | null;

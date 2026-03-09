@@ -4,6 +4,7 @@ interface AcceptancePayload {
   salesforce_record_id: string;
   agent_name: string;
   agent_salesforce_user_id: string | null;
+  previous_salesforce_owner_id: string | null;
   lead_name: string;
   accepted_at: string;
 }

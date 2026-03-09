@@ -51,7 +51,8 @@ export async function routeLead(payload: ZapierPayload): Promise<{
     builder: payload.builder ?? null,
     timeline: payload.timeline ?? null,
     message: payload.message ?? null,
-    owner_name: payload.owner_name ?? null,
+    salesforce_owner_id: payload.salesforce_owner_id ?? null,
+    is_master_agent_owned: payload.is_master_agent_owned ?? false,
     raw_payload: payload as unknown as Record<string, unknown>,
     routing_status: "pending",
     final_agent_id: null,
@@ -68,9 +69,9 @@ export async function routeLead(payload: ZapierPayload): Promise<{
 
   const locationName = location?.name ?? payload.location;
 
-  // Check if lead is owned by a non-frontlines agent
-  if (payload.owner_name) {
-    return await handleOwnedByOther(lead, locationName, payload.owner_name);
+  // If the checkbox is unchecked, the lead is owned by a non-frontlines agent
+  if (!payload.is_master_agent_owned) {
+    return await handleOwnedByOther(lead, locationName);
   }
 
   // Check if routing is paused system-wide
@@ -99,15 +100,14 @@ export async function routeLead(payload: ZapierPayload): Promise<{
 
 async function handleOwnedByOther(
   lead: Lead,
-  locationName: string,
-  ownerName: string
+  locationName: string
 ): Promise<{ status: string; leadId: string }> {
   // Send notification to frontlines
   const frontlinesAgent = await getFrontlinesAgent();
   const frontlinesPhone = frontlinesAgent?.phone ?? process.env.FRONTLINES_AGENT_PHONE;
 
   if (frontlinesPhone) {
-    await sendOwnedByNotification(frontlinesPhone, lead, locationName, ownerName);
+    await sendOwnedByNotification(frontlinesPhone, lead, locationName);
   }
 
   await updateLeadStatus(lead.id, "owned_by_other");
@@ -116,13 +116,13 @@ async function handleOwnedByOther(
     leadId: lead.id,
     details: {
       routing_decision: "owned_by_other",
-      owner_name: ownerName,
+      salesforce_owner_id: lead.salesforce_owner_id,
     },
   });
 
   logger.info("Lead owned by non-frontlines agent", {
     leadId: lead.id,
-    ownerName,
+    salesforce_owner_id: lead.salesforce_owner_id,
   });
 
   return { status: "owned_by_other", leadId: lead.id };
