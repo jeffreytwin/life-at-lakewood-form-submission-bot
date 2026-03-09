@@ -161,7 +161,7 @@ export default function StatusSoundMonitor() {
           if (sound) {
             let agentName: string | undefined;
             if (curr.status === "owned_by_other") {
-              agentName = undefined;
+              agentName = lead.final_agent?.name ?? undefined;
             } else if (curr.status === "routing") {
               agentName = getLatestAgentName(lead);
             } else {

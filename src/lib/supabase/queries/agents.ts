@@ -43,6 +43,20 @@ export async function getAgentByPhone(phone: string): Promise<Agent | null> {
   );
 }
 
+export async function getAgentBySalesforceUserId(
+  salesforceUserId: string
+): Promise<Agent | null> {
+  const { data, error } = await supabase
+    .from("agents")
+    .select("*")
+    .eq("salesforce_user_id", salesforceUserId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function getAgentById(id: string): Promise<Agent | null> {
   const { data, error } = await supabase
     .from("agents")
