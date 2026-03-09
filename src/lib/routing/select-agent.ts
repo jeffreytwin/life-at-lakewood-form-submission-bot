@@ -22,22 +22,42 @@ async function getCurrentMonthLeadCounts(): Promise<Map<string, number>> {
   return counts;
 }
 
-async function getDailyLeadCounts(): Promise<Map<string, number>> {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+/**
+ * Get today's lead counts per agent from Salesforce-sourced daily snapshots.
+ * Maps salesforce_user_id → agent.id using the provided agents list.
+ * Uses Date_of_Positive_Response__c (stored as year_month in hand_raise_snapshots)
+ * to determine which day each lead belongs to.
+ */
+async function getDailyLeadCounts(
+  agents: { id: string; salesforce_user_id: string | null }[]
+): Promise<Map<string, number>> {
+  // Today in Eastern time (matches Salesforce report date context)
+  const etDate = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/New_York",
+  }); // "2026-03-09"
 
   const { data, error } = await supabase
-    .from("leads")
-    .select("final_agent_id")
-    .gte("created_at", todayStart.toISOString())
-    .not("final_agent_id", "is", null);
+    .from("hand_raise_snapshots")
+    .select("salesforce_user_id, count")
+    .eq("type", "daily_by_agent")
+    .eq("year_month", etDate);
 
   if (error) throw error;
 
+  // Build salesforce_user_id → agent.id lookup
+  const sfIdToAgentId = new Map<string, string>();
+  for (const agent of agents) {
+    if (agent.salesforce_user_id) {
+      sfIdToAgentId.set(agent.salesforce_user_id, agent.id);
+    }
+  }
+
   const counts = new Map<string, number>();
   for (const row of data ?? []) {
-    const id = row.final_agent_id as string;
-    counts.set(id, (counts.get(id) ?? 0) + 1);
+    const agentId = sfIdToAgentId.get(row.salesforce_user_id ?? "");
+    if (agentId) {
+      counts.set(agentId, row.count);
+    }
   }
   return counts;
 }
@@ -63,14 +83,15 @@ export async function selectNextAgent(
   lead: Lead,
   locationName: string
 ): Promise<AgentScore | null> {
-  const [agents, excludedIds, leadCounts, dailyCounts, weights] =
-    await Promise.all([
-      getActiveAgents(),
-      getDeclinedAgentIdsForLead(lead.id),
-      getCurrentMonthLeadCounts(),
-      getDailyLeadCounts(),
-      getWeights(),
-    ]);
+  const [agents, excludedIds, leadCounts, weights] = await Promise.all([
+    getActiveAgents(),
+    getDeclinedAgentIdsForLead(lead.id),
+    getCurrentMonthLeadCounts(),
+    getWeights(),
+  ]);
+
+  // Daily counts need the agents list to map salesforce_user_id → agent.id
+  const dailyCounts = await getDailyLeadCounts(agents);
 
   return selectBestAgent(
     agents,

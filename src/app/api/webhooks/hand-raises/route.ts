@@ -9,6 +9,12 @@ const agentEntrySchema = z.object({
   count: z.number().int().min(0),
 });
 
+const dailyAgentEntrySchema = z.object({
+  salesforce_user_id: z.string(),
+  date: z.string(), // "2026-03-09"
+  count: z.number().int().min(0),
+});
+
 const monthEntrySchema = z.object({
   month: z.string(), // "2026-03" or "March 2026"
   count: z.number().int().min(0),
@@ -22,6 +28,10 @@ const payloadSchema = z.object({
     z.array(monthEntrySchema),
     z.string(), // JSON-stringified array from Zapier
   ]),
+  daily_data: z.union([
+    z.array(dailyAgentEntrySchema),
+    z.string(), // JSON-stringified array from Zapier
+  ]).optional(),
 });
 
 /** Normalize month labels like "March 2026" → "2026-03" */
@@ -125,8 +135,66 @@ export async function POST(request: NextRequest) {
         total: agents.reduce((sum, a) => sum + a.count, 0),
       });
 
+      // Process daily data if provided (per-agent per-date counts from report detail rows)
+      let dailySynced = 0;
+      if (parsed.data.daily_data) {
+        let rawDaily: unknown[];
+        if (typeof parsed.data.daily_data === "string") {
+          try {
+            rawDaily = JSON.parse(parsed.data.daily_data);
+          } catch {
+            logger.error("Invalid JSON in daily_data field");
+            rawDaily = [];
+          }
+        } else {
+          rawDaily = parsed.data.daily_data;
+        }
+
+        if (rawDaily.length > 0) {
+          const dailyEntries = z.array(dailyAgentEntrySchema).parse(rawDaily);
+
+          // Get unique dates in this batch
+          const dates = [...new Set(dailyEntries.map((d) => d.date))];
+
+          // Delete existing daily snapshots for these dates
+          for (const date of dates) {
+            await supabase
+              .from("hand_raise_snapshots")
+              .delete()
+              .eq("type", "daily_by_agent")
+              .eq("year_month", date);
+          }
+
+          const { error: dailyError } = await supabase
+            .from("hand_raise_snapshots")
+            .insert(
+              dailyEntries.map((d) => ({
+                type: "daily_by_agent",
+                year_month: d.date,
+                agent_name: null,
+                salesforce_user_id: d.salesforce_user_id,
+                count: d.count,
+                synced_at: syncedAt,
+              }))
+            );
+
+          if (dailyError) {
+            logger.error("Failed to insert daily agent data", {
+              error: dailyError.message,
+            });
+          } else {
+            dailySynced = dailyEntries.length;
+            logger.info("Daily lead counts synced from Salesforce", {
+              dates,
+              entries: dailySynced,
+            });
+          }
+        }
+      }
+
       return NextResponse.json({
         synced: agents.length,
+        dailySynced,
         yearMonth,
         type,
       });
