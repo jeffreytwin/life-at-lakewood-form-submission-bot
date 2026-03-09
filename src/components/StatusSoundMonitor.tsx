@@ -150,6 +150,19 @@ export default function StatusSoundMonitor() {
               },
             });
           }
+
+          // If it already resolved (e.g. owned_by_other is instant), queue a
+          // delayed celebration so the "new" bubble plays first.
+          if (curr.status === "owned_by_other" || curr.status === "accepted") {
+            delayedEvents.push({
+              sound: STATUS_SOUNDS[curr.status],
+              event: {
+                type: curr.status as EventType,
+                leadName: name,
+                agentName: lead.final_agent?.name ?? undefined,
+              },
+            });
+          }
         } else if (prev.status !== curr.status) {
           // Status changed
           if (suppressedLeadIds.has(lead.id)) {
