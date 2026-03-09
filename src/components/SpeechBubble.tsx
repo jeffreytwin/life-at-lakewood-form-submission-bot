@@ -3,7 +3,14 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { onLeadEvent, LeadEvent } from "@/lib/lead-events";
 
+function pronoun(gender: "male" | "female" | null | undefined, form: "subject" | "object" | "possessive"): string {
+  if (gender === "female") return form === "subject" ? "she" : form === "object" ? "her" : "her";
+  if (gender === "male") return form === "subject" ? "he" : form === "object" ? "him" : "his";
+  return form === "subject" ? "they" : form === "object" ? "them" : "their";
+}
+
 function getMessage(event: LeadEvent): string {
+  const g = event.agentGender;
   switch (event.type) {
     case "accepted":
       return `Colonel! I was able to transfer ${event.leadName} to ${event.agentName ?? "an agent"}.`;
@@ -14,13 +21,13 @@ function getMessage(event: LeadEvent): string {
     case "manual":
       return "Looks like you're on it. ....You're pretty good.";
     case "routing":
-      return `Colonel, I'm pinging ${event.agentName ?? "an agent"} now. Let's see if they bite.`;
+      return `Colonel, I'm pinging ${event.agentName ?? "an agent"} now. Let's see if ${pronoun(g, "subject")} bites.`;
     case "followup":
-      return `No response yet. Following up with ${event.agentName ?? "the agent"}. Let's see if they're awake.`;
+      return `No response yet. Following up with ${event.agentName ?? "the agent"}. Let's see if ${pronoun(g, "subject")}'s awake.`;
     case "reroute":
       return `Didn't work out. Re-routing ${event.leadName} to ${event.agentName ?? "another agent"} now.`;
     case "owned_by_other":
-      return `Colonel! This one's already assigned to ${event.agentName ?? "an agent"}. I'll ping the operative now.`;
+      return `Colonel! This one's already assigned to ${event.agentName ?? "an agent"}. I'll ping ${pronoun(g, "object")} now.`;
   }
 }
 

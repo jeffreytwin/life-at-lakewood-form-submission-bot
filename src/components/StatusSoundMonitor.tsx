@@ -8,11 +8,11 @@ interface LeadSnapshot {
   routing_status: string;
   first_name: string | null;
   last_name: string | null;
-  final_agent?: { id: string; name: string } | null;
+  final_agent?: { id: string; name: string; gender?: "male" | "female" | null } | null;
   routing_attempts: Array<{
     attempt_number: number;
     status: string;
-    agent?: { id: string; name: string } | null;
+    agent?: { id: string; name: string; gender?: "male" | "female" | null } | null;
   }>;
 }
 
@@ -73,7 +73,7 @@ type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_b
 
 interface ScheduledEvent {
   sound: string;
-  event: { type: EventType; leadName: string; agentName?: string };
+  event: { type: EventType; leadName: string; agentName?: string; agentGender?: "male" | "female" | null };
 }
 
 /** Info we track per lead between poll cycles */
@@ -104,6 +104,13 @@ function getLatestAgentName(lead: LeadSnapshot): string | undefined {
     (a, b) => b.attempt_number - a.attempt_number
   );
   return sorted[0]?.agent?.name ?? undefined;
+}
+
+function getLatestAgentGender(lead: LeadSnapshot): "male" | "female" | null | undefined {
+  const sorted = [...(lead.routing_attempts ?? [])].sort(
+    (a, b) => b.attempt_number - a.attempt_number
+  );
+  return sorted[0]?.agent?.gender ?? undefined;
 }
 
 export default function StatusSoundMonitor() {
@@ -147,6 +154,7 @@ export default function StatusSoundMonitor() {
                 type: "routing",
                 leadName: name,
                 agentName: getLatestAgentName(lead),
+                agentGender: getLatestAgentGender(lead),
               },
             });
           }
@@ -160,6 +168,7 @@ export default function StatusSoundMonitor() {
                 type: curr.status as EventType,
                 leadName: name,
                 agentName: lead.final_agent?.name ?? undefined,
+                agentGender: lead.final_agent?.gender ?? undefined,
               },
             });
           }
@@ -173,17 +182,21 @@ export default function StatusSoundMonitor() {
           const sound = STATUS_SOUNDS[curr.status];
           if (sound) {
             let agentName: string | undefined;
+            let agentGender: "male" | "female" | null | undefined;
             if (curr.status === "owned_by_other") {
               agentName = lead.final_agent?.name ?? undefined;
+              agentGender = lead.final_agent?.gender ?? undefined;
             } else if (curr.status === "routing") {
               agentName = getLatestAgentName(lead);
+              agentGender = getLatestAgentGender(lead);
             } else {
               agentName = lead.final_agent?.name ?? undefined;
+              agentGender = lead.final_agent?.gender ?? undefined;
             }
 
             immediateEvents.push({
               sound,
-              event: { type: curr.status as EventType, leadName: name, agentName },
+              event: { type: curr.status as EventType, leadName: name, agentName, agentGender },
             });
           }
 
@@ -200,6 +213,7 @@ export default function StatusSoundMonitor() {
                 type: "reroute",
                 leadName: name,
                 agentName: getLatestAgentName(lead),
+                agentGender: getLatestAgentGender(lead),
               },
             });
           } else if (
@@ -213,6 +227,7 @@ export default function StatusSoundMonitor() {
                 type: "followup",
                 leadName: name,
                 agentName: getLatestAgentName(lead),
+                agentGender: getLatestAgentGender(lead),
               },
             });
           }

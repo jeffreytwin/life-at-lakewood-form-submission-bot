@@ -10,6 +10,7 @@ function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
     name: `Agent ${id}`,
     phone: "+19415551234",
     email: "test@example.com",
+    gender: null,
     is_frontlines: false,
     is_active: true,
     close_rate_trailing_12m: 0.2,

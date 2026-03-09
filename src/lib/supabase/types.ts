@@ -92,12 +92,15 @@ export const DAY_LABELS = [
   "Saturday",
 ] as const;
 
+export type AgentGender = "male" | "female";
+
 export interface Agent {
   id: string;
   salesforce_user_id: string | null;
   name: string;
   phone: string;
   email: string | null;
+  gender: AgentGender | null;
   is_frontlines: boolean;
   is_active: boolean;
   close_rate_trailing_12m: number;
