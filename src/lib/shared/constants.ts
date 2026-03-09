@@ -1,5 +1,5 @@
 // Routing timeouts
-export const ROUTING_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+export const ROUTING_TIMEOUT_MS = 90 * 1000; // 90 seconds (cron adds ~30s avg lag)
 export const MAX_ESCALATION_ATTEMPTS = 5;
 
 // Scoring defaults
