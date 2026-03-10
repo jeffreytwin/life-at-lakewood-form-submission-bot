@@ -28,6 +28,10 @@ function getMessage(event: LeadEvent): string {
       return `Didn't work out. Re-routing ${event.leadName} to ${event.agentName ?? "another agent"} now.`;
     case "owned_by_other":
       return `Colonel! This one's already assigned to ${event.agentName ?? "an agent"}. I'll ping ${pronoun(g, "object")} now.`;
+    case "done":
+      return "I never doubted you for a second Colonel!";
+    case "text_me":
+      return "Texting you the details now Colonel. This file's pretty thick...";
   }
 }
 

@@ -224,6 +224,15 @@ export default function LeadsPage() {
       if (data.error) {
         alert(`Failed to send: ${data.error}`);
       } else {
+        // Play routing/codec sound + speech bubble
+        const audio = new Audio("/sounds/mgs-codec.mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+        const texted = leads.find((l) => l.id === leadId);
+        emitLeadEvent({
+          type: "text_me",
+          leadName: [texted?.first_name, texted?.last_name].filter(Boolean).join(" ") || "Unknown",
+        });
         setTextedIds((prev) => new Set(prev).add(leadId));
       }
     } catch {
@@ -244,6 +253,15 @@ export default function LeadsPage() {
         alert(`Failed: ${data.error}`);
       } else {
         suppressNextSoundForLead(leadId);
+        // Play accepted sound + fireworks + speech bubble
+        const audio = new Audio("/sounds/metal-gear-victory.mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+        const done = leads.find((l) => l.id === leadId);
+        emitLeadEvent({
+          type: "done",
+          leadName: [done?.first_name, done?.last_name].filter(Boolean).join(" ") || "Unknown",
+        });
         setLeads((prev) =>
           prev.map((l) =>
             l.id === leadId ? { ...l, routing_status: "accepted" } : l
