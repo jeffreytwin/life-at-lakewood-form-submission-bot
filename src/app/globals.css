@@ -850,10 +850,6 @@ select.form-input {
     right: 16px;
   }
 
-  /* Hide routing toggle on mobile */
-  .routing-toggle-wrapper {
-    display: none !important;
-  }
 }
 
 /* Small phone adjustments */
