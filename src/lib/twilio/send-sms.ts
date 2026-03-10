@@ -35,7 +35,7 @@ function buildLeadDetailsBlock(lead: Lead, locationName: string): string {
   if (lead.builder) lines.push(`Interested in builder: ${lead.builder}`);
   if (lead.timeline) lines.push(`Timeline: ${lead.timeline}`);
   if (lead.message) {
-    if (lead.form_name === "Realtor Connect") {
+    if (lead.form_name?.includes("Realtor")) {
       lines.push(`Message (if any): Interested in connecting with a Realtor.`);
       lines.push(lead.message);
     } else {
