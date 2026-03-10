@@ -21,7 +21,7 @@ function buildLeadDetailsBlock(lead: Lead, locationName: string): string {
   if (lead.phone) lines.push(`Phone: ${lead.phone}`);
   if (lead.floor_plan) {
     // Match existing SMS format based on form type
-    if (lead.form_name === "Lot Availability") {
+    if (lead.form_name?.startsWith("Lot Availability")) {
       lines.push(`Floor Plan: Interested in lot availability for the ${lead.floor_plan}`);
     } else {
       lines.push(`Floor Plan: Interested in the ${lead.floor_plan}`);
