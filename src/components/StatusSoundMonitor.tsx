@@ -69,7 +69,7 @@ function playSound(src: string) {
   });
 }
 
-type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute";
+type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute" | "done" | "text_me";
 
 interface ScheduledEvent {
   sound: string;
