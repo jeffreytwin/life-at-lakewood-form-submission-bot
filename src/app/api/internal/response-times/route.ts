@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Fetch all routing attempts (responded + timed out) for per-agent stats
     let query = supabase
       .from("routing_attempts")
-      .select("id, created_at, updated_at, status, agent:agents!routing_attempts_agent_id_fkey(id, name)")
+      .select("id, lead_id, created_at, updated_at, status, agent:agents!routing_attempts_agent_id_fkey(id, name)")
       .in("status", ["accepted", "declined", "timed_out"]);
 
     if (cutoff) {
@@ -45,6 +45,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, error } = await query.order("created_at", { ascending: true });
+
+    // Exclude routing attempts for leads later marked as bad_data
+    const attemptLeadIds = [...new Set((data ?? []).map((a) => a.lead_id))];
+    const { data: badDataLeads } = attemptLeadIds.length > 0
+      ? await supabase.from("leads").select("id").eq("routing_status", "bad_data").in("id", attemptLeadIds)
+      : { data: [] };
+    const badDataIds = new Set((badDataLeads ?? []).map((l) => l.id));
+    const filteredData = (data ?? []).filter((a) => !badDataIds.has(a.lead_id));
     if (error) throw error;
 
     // Group by agent
@@ -55,7 +63,7 @@ export async function GET(request: NextRequest) {
       nonResponseCount: number;
     }>();
 
-    for (const a of (data ?? [])) {
+    for (const a of filteredData) {
       const agentName = (a.agent as unknown as { name: string } | null)?.name ?? "Unknown";
       const entry = byAgent.get(agentName) ?? {
         agentName,
