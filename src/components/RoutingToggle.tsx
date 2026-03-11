@@ -1,20 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import SpeechBubble from "./SpeechBubble";
+import { onLeadEvent } from "@/lib/lead-events";
 
 type CharacterState =
   | "standing-there"
   | "get-in-box"
   | "in-box"
-  | "getting-out-of-box";
+  | "getting-out-of-box"
+  | "celebrating";
 
 const GIF_SRC: Record<CharacterState, string> = {
   "standing-there": "/standing-there.gif",
   "get-in-box": "/get-in-box.gif",
   "in-box": "/in-box.gif",
   "getting-out-of-box": "/getting-out-of-box.gif",
+  "celebrating": "/celebration.gif",
 };
+
+const CELEBRATION_DURATION = 3000; // ms to show celebration before returning to idle
 
 /**
  * Check if the current Eastern time falls within a start→end range.
@@ -41,6 +46,8 @@ export default function RoutingToggle() {
   const [character, setCharacter] = useState<CharacterState>("standing-there");
   const [nightActive, setNightActive] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const celebrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preCharacter = useRef<CharacterState>("standing-there");
 
   useEffect(() => {
     fetch("/api/internal/settings")
@@ -63,6 +70,33 @@ export default function RoutingToggle() {
         }
       })
       .catch(() => {});
+  }, []);
+
+  // Play celebration animation when a lead is accepted
+  useEffect(() => {
+    const unsub = onLeadEvent((event) => {
+      if (event.type !== "accepted") return;
+
+      // Clear any existing celebration timer
+      if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
+
+      // Remember the current state so we can return to it
+      setCharacter((prev) => {
+        if (prev !== "celebrating") preCharacter.current = prev;
+        return "celebrating";
+      });
+
+      // Return to previous state after the animation plays
+      celebrationTimer.current = setTimeout(() => {
+        setCharacter(preCharacter.current);
+        celebrationTimer.current = null;
+      }, CELEBRATION_DURATION);
+    });
+
+    return () => {
+      unsub();
+      if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
+    };
   }, []);
 
   if (enabled === null) return null;
