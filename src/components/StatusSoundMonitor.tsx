@@ -22,6 +22,7 @@ const STATUS_SOUNDS: Record<string, string> = {
   failed: "/sounds/metal-gear-alert.mp3",
   manual: "/sounds/mgs - manual.mp3",
   owned_by_other: "/sounds/metal-gear-victory.mp3",
+  bad_data: "/sounds/metal-gear-alert.mp3",
 };
 
 const NEW_LEAD_SOUND = "/sounds/mgs-new-form.mp3";
@@ -69,7 +70,7 @@ function playSound(src: string) {
   });
 }
 
-type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute" | "done" | "text_me";
+type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute" | "done" | "text_me" | "bad_data";
 
 interface ScheduledEvent {
   sound: string;
@@ -237,7 +238,7 @@ export default function StatusSoundMonitor() {
       // Play the highest priority immediate event
       if (immediateEvents.length > 0) {
         // Priority: accepted > owned_by_other > failed > manual > routing > new
-        const priorityOrder: EventType[] = ["accepted", "owned_by_other", "failed", "manual", "reroute", "followup", "routing", "new"];
+        const priorityOrder: EventType[] = ["accepted", "owned_by_other", "failed", "bad_data", "manual", "reroute", "followup", "routing", "new"];
         const best = immediateEvents.sort((a, b) => {
           const ai = priorityOrder.indexOf(a.event.type);
           const bi = priorityOrder.indexOf(b.event.type);
