@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const results = await Promise.all([
-      supabase.from("leads").select("*", { count: "exact", head: true }).neq("routing_status", "rejected"),
+      supabase.from("leads").select("*", { count: "exact", head: true }),
       supabase.from("agents").select("*", { count: "exact", head: true }),
       supabase
         .from("agents")
@@ -29,11 +29,10 @@ export async function GET() {
       { count: totalLocations },
     ] = results;
 
-    // Count leads by status (exclude rejected from main metrics)
+    // Count leads by status
     const { data: leads } = await supabase
       .from("leads")
       .select("routing_status")
-      .neq("routing_status", "rejected")
       .order("created_at", { ascending: false })
       .limit(500);
 

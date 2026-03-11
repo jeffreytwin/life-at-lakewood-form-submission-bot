@@ -148,7 +148,6 @@ export interface Lead {
   is_master_agent_owned: boolean;
   raw_payload: Record<string, unknown> | null;
   routing_status: RoutingStatus;
-  rejection_reason: string[] | null;
   final_agent_id: string | null;
   created_at: string;
   updated_at: string;
@@ -161,8 +160,7 @@ export type RoutingStatus =
   | "owned_by_other"
   | "failed"
   | "manual"
-  | "bad_data"
-  | "rejected";
+  | "bad_data";
 
 export interface RoutingAttempt {
   id: string;
@@ -214,8 +212,7 @@ export type AuditEventType =
   | "routing_stopped"
   | "text_me_sent"
   | "lead_done_manually"
-  | "lead_marked_bad_data"
-  | "lead_rejected";
+  | "lead_marked_bad_data";
 
 export interface AuditLogEntry {
   id: string;

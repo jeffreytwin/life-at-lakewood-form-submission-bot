@@ -52,7 +52,6 @@ const defaultContext: ScoringContext = {
     is_master_agent_owned: true,
     raw_payload: null,
     routing_status: "pending",
-    rejection_reason: null,
     final_agent_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
