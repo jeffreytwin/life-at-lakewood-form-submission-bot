@@ -75,10 +75,19 @@ export async function GET() {
         .in("id", leadIds);
 
       if (acceptedLeads && acceptedLeads.length > 0) {
+        // Exclude bad_data leads from acceptance time calculations
+        const { data: badDataLeads } = await supabase
+          .from("leads")
+          .select("id")
+          .eq("routing_status", "bad_data")
+          .in("id", leadIds);
+        const badDataIds = new Set((badDataLeads ?? []).map((l) => l.id));
+
         const leadCreatedMap = new Map(acceptedLeads.map((l) => [l.id, l.created_at]));
         let totalMs = 0;
         let count = 0;
         for (const event of acceptedEvents) {
+          if (badDataIds.has(event.lead_id!)) continue;
           const leadCreated = leadCreatedMap.get(event.lead_id!);
           if (!leadCreated) continue;
           totalMs += Math.max(0, new Date(event.created_at).getTime() - new Date(leadCreated).getTime());
