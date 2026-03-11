@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { webhook_secret, salesforce_lead_id, status } = parsed.data;
+    const { webhook_secret, status } = parsed.data;
+    // Salesforce IDs are 15 or 18 alphanumeric chars; strip any trailing junk
+    // (e.g. Zapier sometimes appends "-Bad Data" or similar suffixes)
+    const salesforce_lead_id = parsed.data.salesforce_lead_id
+      .match(/^[a-zA-Z0-9]{15,18}/)?.[0] ?? parsed.data.salesforce_lead_id.trim();
 
     const envSecret = String(
       process.env.ZAPIER_SALESFORCE_STATUS_SECRET || ""
