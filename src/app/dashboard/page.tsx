@@ -44,6 +44,7 @@ const statusBadge: Record<string, string> = {
   owned_by_other: "badge-muted",
   failed: "badge-danger",
   manual: "badge-danger",
+  bad_data: "badge-purple",
 };
 
 const eventColors: Record<string, string> = {
