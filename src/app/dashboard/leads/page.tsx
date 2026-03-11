@@ -51,7 +51,7 @@ const statusBadge: Record<string, string> = {
   owned_by_other: "badge-muted",
   failed: "badge-danger",
   manual: "badge-danger",
-  bad_data: "badge-muted",
+  bad_data: "badge-purple",
 };
 
 const attemptStatusBadge: Record<string, string> = {
@@ -327,6 +327,7 @@ export default function LeadsPage() {
               <option value="owned_by_other">Already Owned</option>
               <option value="manual">Take Over</option>
               <option value="failed">Failed</option>
+              <option value="bad_data">Bad Data</option>
             </select>
             <select
               className="form-input"
