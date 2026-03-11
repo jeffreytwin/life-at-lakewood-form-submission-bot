@@ -159,7 +159,8 @@ export type RoutingStatus =
   | "accepted"
   | "owned_by_other"
   | "failed"
-  | "manual";
+  | "manual"
+  | "bad_data";
 
 export interface RoutingAttempt {
   id: string;
@@ -210,7 +211,8 @@ export type AuditEventType =
   | "manual_fallback"
   | "routing_stopped"
   | "text_me_sent"
-  | "lead_done_manually";
+  | "lead_done_manually"
+  | "lead_marked_bad_data";
 
 export interface AuditLogEntry {
   id: string;
