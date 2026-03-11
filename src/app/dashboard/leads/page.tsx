@@ -139,7 +139,6 @@ export default function LeadsPage() {
   const [textingId, setTextingId] = useState<string | null>(null);
   const [textedIds, setTextedIds] = useState<Set<string>>(new Set());
   const [doningId, setDoningId] = useState<string | null>(null);
-  const [badDataId, setBadDataId] = useState<string | null>(null);
 
   const fetchLeads = useCallback(
     async (showLoading = false) => {
@@ -278,31 +277,6 @@ export default function LeadsPage() {
     }
   }
 
-  async function handleBadData(leadId: string) {
-    setBadDataId(leadId);
-    try {
-      const r = await fetch(`/api/internal/leads/${leadId}/bad-data`, {
-        method: "POST",
-      });
-      const data = await r.json();
-      if (data.error) {
-        alert(`Failed: ${data.error}`);
-      } else {
-        suppressNextSoundForLead(leadId);
-        setLeads((prev) =>
-          prev.map((l) =>
-            l.id === leadId ? { ...l, routing_status: "bad_data" } : l
-          )
-        );
-        fetchLeads(false);
-      }
-    } catch {
-      alert("Network error marking bad data");
-    } finally {
-      setBadDataId(null);
-    }
-  }
-
   const sortedLeads = sortLeads(leads, sortKey, sortDir);
 
   function handleSort(key: SortKey) {
@@ -353,7 +327,6 @@ export default function LeadsPage() {
               <option value="owned_by_other">Already Owned</option>
               <option value="manual">Take Over</option>
               <option value="failed">Failed</option>
-              <option value="bad_data">Bad Data</option>
             </select>
             <select
               className="form-input"
@@ -479,18 +452,6 @@ export default function LeadsPage() {
                                 {doningId === lead.id ? "..." : "Done"}
                               </button>
                             </>
-                          )}
-                          {lead.routing_status !== "bad_data" && (
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              disabled={badDataId === lead.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleBadData(lead.id);
-                              }}
-                            >
-                              {badDataId === lead.id ? "..." : "Bad Data"}
-                            </button>
                           )}
                         </span>
                       </td>
