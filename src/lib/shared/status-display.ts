@@ -5,6 +5,7 @@ const STATUS_LABELS: Record<string, string> = {
   owned_by_other: "Already Owned",
   failed: "Failed",
   manual: "Manual",
+  bad_data: "Bad Data",
 };
 
 export function formatStatus(status: string): string {
