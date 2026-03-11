@@ -32,6 +32,8 @@ function getMessage(event: LeadEvent): string {
       return "I never doubted you for a second Colonel!";
     case "text_me":
       return "Texting you the details now Colonel. This file's pretty thick...";
+    case "bad_data":
+      return `Looks like a false flag operation Colonel. I marked ${event.leadName} as 'Bad Data'.`;
   }
 }
 

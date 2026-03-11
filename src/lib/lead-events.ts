@@ -3,7 +3,7 @@
  * StatusSoundMonitor emits; RoutingToggle (speech bubble) and Sidebar (badge) subscribe.
  */
 
-export type LeadEventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute" | "done" | "text_me";
+export type LeadEventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute" | "done" | "text_me" | "bad_data";
 
 export interface LeadEvent {
   type: LeadEventType;
