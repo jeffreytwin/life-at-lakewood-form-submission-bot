@@ -9,6 +9,62 @@ import type { ZapierPayload } from "@/lib/shared/validation/zapier-payload";
 import type { Lead } from "@/lib/supabase/types";
 
 /**
+ * Store a rejected lead (failed quality gate) — saved for audit trail but never routed.
+ */
+export async function rejectLead(
+  payload: ZapierPayload,
+  reasons: string[]
+): Promise<{ status: string; leadId: string }> {
+  const { data: location } = await supabase
+    .from("locations")
+    .select("*")
+    .eq("name", payload.location)
+    .single();
+
+  const lead = await createLead({
+    salesforce_record_id: payload.salesforce_record_id ?? null,
+    location_id: location?.id ?? null,
+    form_name: payload.form_name,
+    first_name: payload.first_name,
+    last_name: payload.last_name,
+    email: payload.email ?? null,
+    phone: payload.phone ?? null,
+    floor_plan: payload.floor_plan ?? null,
+    village: payload.village ?? null,
+    price: payload.price ?? null,
+    home_type: payload.home_type ?? null,
+    property_address: payload.property_address ?? null,
+    url: payload.url ?? null,
+    builder: payload.builder ?? null,
+    timeline: payload.timeline ?? null,
+    message: payload.message ?? null,
+    salesforce_owner_id: payload.salesforce_owner_id ?? null,
+    is_master_agent_owned: payload.is_master_agent_owned ?? false,
+    raw_payload: payload as unknown as Record<string, unknown>,
+    routing_status: "rejected",
+    rejection_reason: reasons,
+    final_agent_id: null,
+  });
+
+  await logAuditEvent("lead_rejected", {
+    leadId: lead.id,
+    details: {
+      reasons,
+      contact_name: `${payload.first_name} ${payload.last_name}`,
+      location: payload.location,
+      form_name: payload.form_name,
+    },
+  });
+
+  logger.info("Lead rejected by quality gate", {
+    leadId: lead.id,
+    reasons,
+  });
+
+  return { status: "rejected", leadId: lead.id };
+}
+
+/**
  * Main entry point: route a lead from a Zapier webhook payload.
  */
 export async function routeLead(payload: ZapierPayload): Promise<{
@@ -55,6 +111,7 @@ export async function routeLead(payload: ZapierPayload): Promise<{
     is_master_agent_owned: payload.is_master_agent_owned ?? false,
     raw_payload: payload as unknown as Record<string, unknown>,
     routing_status: "pending",
+    rejection_reason: null,
     final_agent_id: null,
   });
 

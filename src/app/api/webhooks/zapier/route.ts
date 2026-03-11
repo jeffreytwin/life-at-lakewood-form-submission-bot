@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { zapierPayloadSchema } from "@/lib/shared/validation/zapier-payload";
-import { routeLead } from "@/lib/routing/router";
+import { validateLeadQuality } from "@/lib/shared/validation/lead-quality";
+import { routeLead, rejectLead } from "@/lib/routing/router";
 import { logger } from "@/lib/shared/logger";
 
 export async function POST(request: NextRequest) {
@@ -23,6 +24,20 @@ export async function POST(request: NextRequest) {
     if (parsed.data.webhook_secret !== process.env.ZAPIER_WEBHOOK_SECRET) {
       logger.warn("Invalid webhook secret");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Lead quality gate — check before routing
+    const quality = validateLeadQuality(parsed.data);
+    if (!quality.passed) {
+      logger.info("Lead rejected by quality gate", {
+        reasons: quality.reasons,
+        contactName: `${parsed.data.first_name} ${parsed.data.last_name}`,
+        location: parsed.data.location,
+        formName: parsed.data.form_name,
+      });
+
+      const result = await rejectLead(parsed.data, quality.reasons);
+      return NextResponse.json(result);
     }
 
     // Route the lead

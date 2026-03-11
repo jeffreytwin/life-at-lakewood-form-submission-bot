@@ -52,6 +52,7 @@ const statusBadge: Record<string, string> = {
   failed: "badge-danger",
   manual: "badge-danger",
   bad_data: "badge-purple",
+  rejected: "badge-muted",
 };
 
 const attemptStatusBadge: Record<string, string> = {
@@ -328,6 +329,7 @@ export default function LeadsPage() {
               <option value="manual">Take Over</option>
               <option value="failed">Failed</option>
               <option value="bad_data">Bad Data</option>
+              <option value="rejected">Rejected (Quality)</option>
             </select>
             <select
               className="form-input"
