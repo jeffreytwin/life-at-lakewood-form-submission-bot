@@ -116,6 +116,16 @@ a:hover {
   text-align: center;
 }
 
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  padding: 8px 12px 4px;
+  list-style: none;
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding: 16px 8px;
