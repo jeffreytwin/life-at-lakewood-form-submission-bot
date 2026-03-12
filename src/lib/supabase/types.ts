@@ -36,6 +36,41 @@ export interface Database {
         Insert: Omit<AuditLogEntry, "id" | "created_at">;
         Update: never;
       };
+      email_accounts: {
+        Row: EmailAccount;
+        Insert: Omit<EmailAccount, "id" | "created_at">;
+        Update: Partial<Omit<EmailAccount, "id" | "created_at">>;
+      };
+      email_threads: {
+        Row: EmailThread;
+        Insert: Omit<EmailThread, "id" | "created_at">;
+        Update: Partial<Omit<EmailThread, "id" | "created_at">>;
+      };
+      email_messages: {
+        Row: EmailMessage;
+        Insert: Omit<EmailMessage, "id" | "created_at">;
+        Update: Partial<Omit<EmailMessage, "id" | "created_at">>;
+      };
+      email_drafts: {
+        Row: EmailDraft;
+        Insert: Omit<EmailDraft, "id" | "created_at">;
+        Update: Partial<Omit<EmailDraft, "id" | "created_at">>;
+      };
+      training_examples: {
+        Row: TrainingExample;
+        Insert: Omit<TrainingExample, "id" | "created_at">;
+        Update: Partial<Omit<TrainingExample, "id" | "created_at">>;
+      };
+      draft_feedback: {
+        Row: DraftFeedback;
+        Insert: Omit<DraftFeedback, "id" | "created_at">;
+        Update: Partial<Omit<DraftFeedback, "id" | "created_at">>;
+      };
+      email_hub_settings: {
+        Row: EmailHubSettings;
+        Insert: Omit<EmailHubSettings, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<EmailHubSettings, "id" | "created_at" | "updated_at">>;
+      };
     };
   };
 }
@@ -221,4 +256,136 @@ export interface AuditLogEntry {
   event_type: AuditEventType;
   details: Record<string, unknown> | null;
   created_at: string;
+}
+
+// ============================================================
+// EMAIL HUB TYPES
+// ============================================================
+
+export type EmailProvider = "gmail" | "outlook";
+
+export interface EmailAccount {
+  id: string;
+  location_id: string | null;
+  email_address: string;
+  provider: EmailProvider;
+  display_name: string | null;
+  credentials: Record<string, unknown> | null;
+  is_active: boolean;
+  last_synced_at: string | null;
+  created_at: string;
+}
+
+export interface EmailThread {
+  id: string;
+  email_account_id: string;
+  provider_thread_id: string | null;
+  subject: string | null;
+  sender_email: string | null;
+  sender_name: string | null;
+  salesforce_lead_id: string | null;
+  lead_status: string | null;
+  location_id: string | null;
+  last_message_at: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export type EmailDirection = "inbound" | "outbound";
+
+export interface EmailMessage {
+  id: string;
+  thread_id: string;
+  provider_message_id: string | null;
+  direction: EmailDirection;
+  from_email: string | null;
+  to_email: string | null;
+  subject: string | null;
+  body_text: string | null;
+  body_html: string | null;
+  received_at: string | null;
+  created_at: string;
+}
+
+export type EmailDraftStatus = "drafted" | "edited" | "sent" | "discarded";
+
+export interface EmailDraft {
+  id: string;
+  thread_id: string | null;
+  email_account_id: string | null;
+  provider_draft_id: string | null;
+  status: EmailDraftStatus;
+  subject: string | null;
+  body_text: string | null;
+  body_html: string | null;
+  cc_emails: string[];
+  agent_handoff_id: string | null;
+  model_used: string | null;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  is_simulation: boolean;
+  simulation_input: Record<string, unknown> | null;
+  created_at: string;
+  edited_at: string | null;
+  sent_at: string | null;
+}
+
+export type TrainingCategory =
+  | "initial_inquiry"
+  | "follow_up"
+  | "scheduling"
+  | "agent_handoff"
+  | "pricing"
+  | "objection"
+  | "general";
+
+export const TRAINING_CATEGORY_LABELS: Record<TrainingCategory, string> = {
+  initial_inquiry: "Initial Inquiry",
+  follow_up: "Follow Up",
+  scheduling: "Scheduling",
+  agent_handoff: "Agent Handoff",
+  pricing: "Pricing",
+  objection: "Objection Handling",
+  general: "General",
+};
+
+export const ALL_TRAINING_CATEGORIES: TrainingCategory[] = [
+  "initial_inquiry",
+  "follow_up",
+  "scheduling",
+  "agent_handoff",
+  "pricing",
+  "objection",
+  "general",
+];
+
+export interface TrainingExample {
+  id: string;
+  location_id: string | null;
+  category: TrainingCategory;
+  inbound_email: string;
+  ideal_response: string;
+  context_notes: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface DraftFeedback {
+  id: string;
+  draft_id: string;
+  rating: number;
+  feedback_notes: string | null;
+  edited_version: string | null;
+  added_as_training: boolean;
+  created_at: string;
+}
+
+export interface EmailHubSettings {
+  id: string;
+  location_id: string;
+  auto_notify_lynn: boolean;
+  inherit_training_from: string | null;
+  polling_interval_seconds: number;
+  created_at: string;
+  updated_at: string;
 }
