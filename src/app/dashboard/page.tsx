@@ -73,6 +73,16 @@ export default function DashboardOverview() {
   const [leadDistLoading, setLeadDistLoading] = useState(true);
   const [quietHours, setQuietHours] = useState<QuietHoursState | null>(null);
   const [qhBusy, setQhBusy] = useState(false);
+  const refreshStats = useCallback(() => {
+    fetch("/api/internal/stats")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) setError(data.error);
+        else setStats(data);
+      })
+      .catch((e) => setError(e.message));
+  }, []);
+
   const refreshLeadDist = useCallback(() => {
     setLeadDistLoading(true);
     fetch("/api/internal/lead-distribution")
@@ -85,14 +95,7 @@ export default function DashboardOverview() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/internal/stats")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error);
-        else setStats(data);
-      })
-      .catch((e) => setError(e.message));
-
+    refreshStats();
     refreshLeadDist();
     fetch("/api/internal/settings")
       .then((r) => r.json())
@@ -106,13 +109,19 @@ export default function DashboardOverview() {
         }
       })
       .catch(() => {});
-  }, [refreshLeadDist]);
+  }, [refreshStats, refreshLeadDist]);
 
   // Auto-refresh the hand raise distribution every 5 minutes
   useEffect(() => {
     const interval = setInterval(refreshLeadDist, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [refreshLeadDist]);
+
+  // Auto-refresh stats (including recent form submissions) every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(refreshStats, 30 * 1000);
+    return () => clearInterval(interval);
+  }, [refreshStats]);
 
   async function toggleQuietHours() {
     if (!quietHours) return;
