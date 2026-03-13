@@ -84,8 +84,27 @@ export async function PUT(
 
     if (error) throw error;
 
-    // TODO: When Gmail integration is added, sync edits to Gmail draft here
-    // via gmail.users.drafts.update()
+    // Sync edits to Gmail draft if connected
+    if (data.provider_draft_id && data.email_account_id) {
+      try {
+        const { pushDraftToGmail } = await import("@/lib/gmail/push-draft");
+        const { data: account } = await supabase
+          .from("email_accounts")
+          .select("*")
+          .eq("id", data.email_account_id)
+          .single();
+
+        if (account?.credentials) {
+          await pushDraftToGmail(
+            account as import("@/lib/supabase/types").EmailAccount,
+            data as import("@/lib/supabase/types").EmailDraft
+          );
+        }
+      } catch (syncError) {
+        // Non-blocking: draft is saved locally even if Gmail sync fails
+        console.warn("Gmail draft sync failed:", syncError);
+      }
+    }
 
     return NextResponse.json(data);
   } catch (error) {

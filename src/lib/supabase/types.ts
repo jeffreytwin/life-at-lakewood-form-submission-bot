@@ -266,15 +266,25 @@ export interface AuditLogEntry {
 
 export type EmailProvider = "gmail" | "outlook";
 
+export interface GmailCredentials {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expiry_date: number;
+  scope: string;
+}
+
 export interface EmailAccount {
   id: string;
   location_id: string | null;
   email_address: string;
   provider: EmailProvider;
   display_name: string | null;
-  credentials: Record<string, unknown> | null;
+  credentials: GmailCredentials | null;
   is_active: boolean;
   last_synced_at: string | null;
+  sync_history_id: string | null;
+  sent_sync_history_id: string | null;
   created_at: string;
 }
 
@@ -330,6 +340,8 @@ export interface EmailDraft {
   created_at: string;
   edited_at: string | null;
   sent_at: string | null;
+  sent_body_text: string | null;
+  was_changed: boolean;
 }
 
 export type TrainingCategory =
