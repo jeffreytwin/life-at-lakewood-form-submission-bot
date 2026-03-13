@@ -2,13 +2,36 @@ import { supabase } from "@/lib/supabase/client";
 import type { TrainingExample, TrainingCategory } from "@/lib/supabase/types";
 
 /**
- * Load active training examples for a location, optionally filtered by category.
+ * Load active training examples, optionally filtered by category.
+ * Supports lookup by email_address or location_id (backward compat).
  * Falls back to inherited location if configured in email_hub_settings.
  */
 export async function loadTrainingExamples(
   locationId: string | null,
-  category?: TrainingCategory
+  category?: TrainingCategory,
+  emailAddress?: string | null
 ): Promise<TrainingExample[]> {
+  // If email_address provided, load by email + global examples
+  if (emailAddress) {
+    let query = supabase
+      .from("training_examples")
+      .select("*")
+      .eq("is_active", true)
+      .or(`email_address.eq.${emailAddress},email_address.is.null`)
+      .order("created_at", { ascending: false });
+
+    if (category) {
+      query = query.eq("category", category);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(`Failed to load training examples: ${error.message}`);
+    }
+    return data ?? [];
+  }
+
+  // Fallback: load by location_id (backward compat)
   if (!locationId) return [];
 
   // Check if this location inherits training data from another
@@ -23,8 +46,8 @@ export async function loadTrainingExamples(
   let query = supabase
     .from("training_examples")
     .select("*")
-    .eq("location_id", targetLocationId)
     .eq("is_active", true)
+    .or(`location_id.eq.${targetLocationId},location_id.is.null`)
     .order("created_at", { ascending: false });
 
   if (category) {

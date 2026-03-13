@@ -65,7 +65,7 @@ export default function EmailDraftsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<EmailDraftStatus | "all">("all");
-  const [showSimulations, setShowSimulations] = useState(true);
+  const [showSimulations] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Editing state
@@ -222,23 +222,6 @@ export default function EmailDraftsPage() {
               </button>
             ))}
           </div>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              cursor: "pointer",
-              fontSize: 13,
-              color: "#e4e6ed",
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={showSimulations}
-              onChange={(e) => setShowSimulations(e.target.checked)}
-            />
-            Show Simulations
-          </label>
         </div>
       </div>
 

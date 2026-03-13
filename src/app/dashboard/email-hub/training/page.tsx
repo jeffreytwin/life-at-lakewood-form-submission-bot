@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Location } from "@/lib/supabase/types";
 import {
   ALL_TRAINING_CATEGORIES,
   TRAINING_CATEGORY_LABELS,
@@ -18,8 +17,14 @@ const CATEGORY_COLORS: Record<TrainingCategory, string> = {
   general: "#8b8fa3",
 };
 
+interface EmailAccount {
+  id: string;
+  email_address: string;
+  display_name: string | null;
+}
+
 interface FormState {
-  location_id: string;
+  email_address: string;
   category: TrainingCategory;
   inbound_email: string;
   ideal_response: string;
@@ -27,7 +32,7 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  location_id: "",
+  email_address: "",
   category: "general",
   inbound_email: "",
   ideal_response: "",
@@ -35,12 +40,12 @@ const EMPTY_FORM: FormState = {
 };
 
 export default function TrainingDataPage() {
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [emailAccounts, setEmailAccounts] = useState<EmailAccount[]>([]);
   const [examples, setExamples] = useState<TrainingExample[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [filterLocation, setFilterLocation] = useState<string>("");
+  const [filterEmail, setFilterEmail] = useState<string>("");
   const [filterCategories, setFilterCategories] = useState<TrainingCategory[]>(
     []
   );
@@ -51,6 +56,12 @@ export default function TrainingDataPage() {
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
 
+  // Add email modal
+  const [showAddEmail, setShowAddEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newEmailName, setNewEmailName] = useState("");
+  const [addingEmail, setAddingEmail] = useState(false);
+
   // Expanded cards
   const [expandedInbound, setExpandedInbound] = useState<Set<string>>(
     new Set()
@@ -59,12 +70,12 @@ export default function TrainingDataPage() {
     new Set()
   );
 
-  const fetchLocations = useCallback(() => {
-    fetch("/api/internal/locations")
+  const fetchEmailAccounts = useCallback(() => {
+    fetch("/api/internal/email-hub/accounts")
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          setLocations(data.filter((l: Location) => l.is_active));
+          setEmailAccounts(data);
         }
       });
   }, []);
@@ -72,7 +83,7 @@ export default function TrainingDataPage() {
   const fetchExamples = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (filterLocation) params.set("location_id", filterLocation);
+    if (filterEmail) params.set("email_address", filterEmail);
     if (filterCategories.length === 1)
       params.set("category", filterCategories[0]);
     const qs = params.toString();
@@ -93,11 +104,11 @@ export default function TrainingDataPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [filterLocation, filterCategories]);
+  }, [filterEmail, filterCategories]);
 
   useEffect(() => {
-    fetchLocations();
-  }, [fetchLocations]);
+    fetchEmailAccounts();
+  }, [fetchEmailAccounts]);
 
   useEffect(() => {
     fetchExamples();
@@ -118,7 +129,7 @@ export default function TrainingDataPage() {
   function openEditForm(example: TrainingExample) {
     setEditingId(example.id);
     setForm({
-      location_id: example.location_id ?? "",
+      email_address: example.email_address ?? "",
       category: example.category,
       inbound_email: example.inbound_email,
       ideal_response: example.ideal_response,
@@ -141,7 +152,7 @@ export default function TrainingDataPage() {
     setSaving(true);
     try {
       const body = {
-        location_id: form.location_id || null,
+        email_address: form.email_address || null,
         category: form.category,
         inbound_email: form.inbound_email,
         ideal_response: form.ideal_response,
@@ -198,6 +209,34 @@ export default function TrainingDataPage() {
     }
   }
 
+  async function handleAddEmail() {
+    if (!newEmail.includes("@")) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    setAddingEmail(true);
+    try {
+      const res = await fetch("/api/internal/email-hub/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email_address: newEmail.trim().toLowerCase(),
+          display_name: newEmailName.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add email");
+      setShowAddEmail(false);
+      setNewEmail("");
+      setNewEmailName("");
+      fetchEmailAccounts();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to add email");
+    } finally {
+      setAddingEmail(false);
+    }
+  }
+
   function toggleExpand(
     set: Set<string>,
     setter: React.Dispatch<React.SetStateAction<Set<string>>>,
@@ -214,10 +253,9 @@ export default function TrainingDataPage() {
     return text.slice(0, max) + "...";
   }
 
-  function locationName(locationId: string | null): string {
-    if (!locationId) return "All Locations";
-    const loc = locations.find((l) => l.id === locationId);
-    return loc ? loc.name : "Unknown";
+  function emailLabel(emailAddress: string | null): string {
+    if (!emailAddress) return "All Emails";
+    return emailAddress;
   }
 
   return (
@@ -243,24 +281,24 @@ export default function TrainingDataPage() {
             gap: 16,
           }}
         >
-          {/* Location filter */}
+          {/* Email filter */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <label
               className="text-sm"
               style={{ color: "#8b8fa3", whiteSpace: "nowrap" }}
             >
-              Location:
+              Email:
             </label>
             <select
               className="form-input"
-              value={filterLocation}
-              onChange={(e) => setFilterLocation(e.target.value)}
-              style={{ minWidth: 180 }}
+              value={filterEmail}
+              onChange={(e) => setFilterEmail(e.target.value)}
+              style={{ minWidth: 220 }}
             >
-              <option value="">All Locations</option>
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name}
+              <option value="">All Emails</option>
+              {emailAccounts.map((acct) => (
+                <option key={acct.id} value={acct.email_address}>
+                  {acct.email_address}
                 </option>
               ))}
             </select>
@@ -269,7 +307,16 @@ export default function TrainingDataPage() {
           {/* Spacer */}
           <div style={{ flex: 1 }} />
 
-          {/* Add button */}
+          {/* Add email button */}
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowAddEmail(true)}
+            style={{ fontSize: 12 }}
+          >
+            + Add Email
+          </button>
+
+          {/* Add example button */}
           <button className="btn btn-primary" onClick={openAddForm}>
             + Add Example
           </button>
@@ -287,6 +334,86 @@ export default function TrainingDataPage() {
           />
         </div>
       </div>
+
+      {/* Add Email modal */}
+      {showAddEmail && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddEmail(false);
+              setNewEmail("");
+              setNewEmailName("");
+            }
+          }}
+        >
+          <div
+            className="card"
+            style={{ width: "100%", maxWidth: 450 }}
+          >
+            <div className="card-header">
+              <h3>Add Email Address</h3>
+            </div>
+            <div className="form-group">
+              <label>Email Address</label>
+              <input
+                className="form-input"
+                type="email"
+                placeholder="lynn@example.com"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label>
+                Display Name{" "}
+                <span className="text-muted text-sm">(optional)</span>
+              </label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Lynn Brown - Community Name"
+                value={newEmailName}
+                onChange={(e) => setNewEmailName(e.target.value)}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                justifyContent: "flex-end",
+                marginTop: 12,
+              }}
+            >
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShowAddEmail(false);
+                  setNewEmail("");
+                  setNewEmailName("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={handleAddEmail}
+                disabled={addingEmail || !newEmail.includes("@")}
+              >
+                {addingEmail ? "Adding..." : "Add Email"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form modal overlay */}
       {showForm && (
@@ -318,18 +445,18 @@ export default function TrainingDataPage() {
             </div>
 
             <div className="form-group">
-              <label>Location</label>
+              <label>Email</label>
               <select
                 className="form-input"
-                value={form.location_id}
+                value={form.email_address}
                 onChange={(e) =>
-                  setForm({ ...form, location_id: e.target.value })
+                  setForm({ ...form, email_address: e.target.value })
                 }
               >
-                <option value="">All Locations (global)</option>
-                {locations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.name}
+                <option value="">All Emails (global)</option>
+                {emailAccounts.map((acct) => (
+                  <option key={acct.id} value={acct.email_address}>
+                    {acct.email_address}
                   </option>
                 ))}
               </select>
@@ -464,7 +591,7 @@ export default function TrainingDataPage() {
 
             return (
               <div className="card" key={ex.id} style={{ padding: "16px 20px" }}>
-                {/* Card top row: badge, location, actions */}
+                {/* Card top row: badge, email, actions */}
                 <div
                   style={{
                     display: "flex",
@@ -489,9 +616,9 @@ export default function TrainingDataPage() {
                     {TRAINING_CATEGORY_LABELS[ex.category]}
                   </span>
 
-                  {/* Location name */}
+                  {/* Email address */}
                   <span className="text-muted text-sm">
-                    {locationName(ex.location_id)}
+                    {emailLabel(ex.email_address)}
                   </span>
 
                   {/* Spacer */}
