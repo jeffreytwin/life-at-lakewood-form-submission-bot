@@ -30,41 +30,6 @@ export default function EmailHubSettingsPage() {
         </div>
       </div>
 
-      {/* Notification Preferences */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="card-header">
-          <h3>Notification Preferences</h3>
-        </div>
-        <div style={{ padding: "16px" }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: "not-allowed",
-                opacity: 0.5,
-                fontSize: 14,
-                color: "#e4e6ed",
-              }}
-            >
-              <input type="checkbox" disabled checked={false} />
-              Auto-notify Lynn Brown when drafts are ready
-            </label>
-            <span
-              className="text-muted text-sm"
-              style={{
-                display: "inline-block",
-                marginTop: 6,
-                marginLeft: 28,
-              }}
-            >
-              Coming soon
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* AI Configuration */}
       <div className="card">
         <div className="card-header">

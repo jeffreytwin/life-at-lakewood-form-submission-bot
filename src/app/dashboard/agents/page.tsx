@@ -22,6 +22,8 @@ type AgentForm = {
   daily_lead_max: number;
   unavailability_windows: UnavailabilityWindow[];
   price_ranges: PriceRange[];
+  send_draft_success_texts: boolean;
+  draft_success_phone: string;
 };
 
 const emptyAgent: AgentForm = {
@@ -38,6 +40,8 @@ const emptyAgent: AgentForm = {
   daily_lead_max: 5,
   unavailability_windows: [],
   price_ranges: [...ALL_PRICE_RANGES],
+  send_draft_success_texts: false,
+  draft_success_phone: "",
 };
 
 function formatPhone(raw: string | null): string {
@@ -185,6 +189,8 @@ export default function AgentsPage() {
       daily_lead_max: agent.daily_lead_max,
       unavailability_windows: agent.unavailability_windows ?? [],
       price_ranges: agent.price_ranges ?? [...ALL_PRICE_RANGES],
+      send_draft_success_texts: agent.send_draft_success_texts ?? false,
+      draft_success_phone: agent.draft_success_phone ?? "",
     });
     setShowModal(true);
   }
@@ -237,6 +243,7 @@ export default function AgentsPage() {
         form.unavailability_windows.length > 0
           ? form.unavailability_windows
           : null,
+      draft_success_phone: form.draft_success_phone || null,
     };
 
     try {
@@ -665,6 +672,54 @@ export default function AgentsPage() {
                 </div>
               )}
             </div>
+
+            {/* Draft success text notifications (frontlines only) */}
+            {isFrontlines && (
+              <>
+                <div className="form-group">
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={form.send_draft_success_texts}
+                      onChange={(e) =>
+                        setForm({ ...form, send_draft_success_texts: e.target.checked })
+                      }
+                    />
+                    Send Draft Success Texts
+                  </label>
+                </div>
+
+                <div className="form-group">
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    Email Draft Success Texts Phone
+                    <span
+                      title="This is the phone number that will receive draft completion texts."
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        border: "1px solid var(--text-muted)",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                        cursor: "help",
+                        flexShrink: 0,
+                      }}
+                    >
+                      i
+                    </span>
+                  </label>
+                  <input
+                    className="form-input"
+                    value={form.draft_success_phone}
+                    onChange={(e) => setForm({ ...form, draft_success_phone: e.target.value })}
+                    placeholder="+19415551234"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Everything below is hidden for frontlines agents */}
             {!isFrontlines && (
