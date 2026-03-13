@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
-import { getQuietHoursSettings, wasInQuietHours } from "@/lib/routing/quiet-hours";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +71,7 @@ export async function GET() {
       const leadIds = [...new Set(acceptedEvents.map((e) => e.lead_id!))];
       const { data: acceptedLeads } = await supabase
         .from("leads")
-        .select("id, created_at")
+        .select("id, created_at, arrived_during_quiet_hours")
         .in("id", leadIds);
 
       if (acceptedLeads && acceptedLeads.length > 0) {
@@ -84,18 +83,20 @@ export async function GET() {
           .in("id", leadIds);
         const badDataIds = new Set((badDataLeads ?? []).map((l) => l.id));
 
-        // Exclude leads that arrived during quiet hours from acceptance time
-        const quietHours = await getQuietHoursSettings();
-
+        // Build lookup maps
         const leadCreatedMap = new Map(acceptedLeads.map((l) => [l.id, l.created_at]));
+        const quietHoursIds = new Set(
+          acceptedLeads.filter((l) => l.arrived_during_quiet_hours).map((l) => l.id)
+        );
+
         let totalMs = 0;
         let count = 0;
         for (const event of acceptedEvents) {
           if (badDataIds.has(event.lead_id!)) continue;
+          // Skip leads that were tagged as arriving during quiet hours
+          if (quietHoursIds.has(event.lead_id!)) continue;
           const leadCreated = leadCreatedMap.get(event.lead_id!);
           if (!leadCreated) continue;
-          // Skip leads that were submitted during quiet hours
-          if (quietHours.quiet_hours_enabled && wasInQuietHours(leadCreated, quietHours.quiet_hours_start, quietHours.quiet_hours_end)) continue;
           totalMs += Math.max(0, new Date(event.created_at).getTime() - new Date(leadCreated).getTime());
           count++;
         }

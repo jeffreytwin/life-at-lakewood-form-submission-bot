@@ -55,6 +55,7 @@ function makeLead(overrides: Partial<Lead> = {}): Lead {
     salesforce_owner_id: null,
     is_master_agent_owned: true,
     raw_payload: null,
+    arrived_during_quiet_hours: false,
     routing_status: "pending",
     final_agent_id: null,
     created_at: new Date().toISOString(),
