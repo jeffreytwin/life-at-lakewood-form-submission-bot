@@ -37,13 +37,25 @@ export default function EmailHubSettingsPage() {
     const params = new URLSearchParams(window.location.search);
     const oauth = params.get("oauth");
     if (oauth === "success") {
-      setOauthStatus("Gmail connected successfully!");
+      const account = params.get("account");
+      setOauthStatus(
+        account
+          ? `Gmail connected successfully for ${account}.`
+          : "Gmail connected successfully!"
+      );
+      // Re-fetch accounts so the Connected badge appears immediately
+      loadAccounts();
       window.history.replaceState({}, "", window.location.pathname);
     } else if (oauth === "denied") {
       setOauthStatus("Gmail connection was cancelled.");
       window.history.replaceState({}, "", window.location.pathname);
     } else if (oauth === "error") {
-      setOauthStatus("Gmail connection failed. Please try again.");
+      const reason = params.get("reason");
+      setOauthStatus(
+        reason === "storage_failed"
+          ? "Gmail authenticated but failed to save credentials. Please try again."
+          : "Gmail connection failed. Please try again."
+      );
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [loadAccounts]);
