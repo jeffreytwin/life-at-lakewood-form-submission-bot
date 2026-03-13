@@ -3,6 +3,7 @@ import { createLead, checkDuplicateLead, updateLeadStatus } from "@/lib/supabase
 import { getFrontlinesAgent, getAgentBySalesforceUserId } from "@/lib/supabase/queries/agents";
 import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
 import { sendOwnedByNotification, sendExistingOwnerNotification } from "@/lib/twilio/send-sms";
+import { getQuietHoursSettings, isInQuietHours } from "./quiet-hours";
 import { startRouting } from "./state-machine";
 import { logger } from "@/lib/shared/logger";
 import type { ZapierPayload } from "@/lib/shared/validation/zapier-payload";
@@ -33,6 +34,12 @@ export async function routeLead(payload: ZapierPayload): Promise<{
     .eq("name", payload.location)
     .single();
 
+  // Stamp whether this lead arrived during quiet hours (immutable snapshot)
+  const quietHours = await getQuietHoursSettings();
+  const arrivedDuringQuietHours =
+    quietHours.quiet_hours_enabled &&
+    isInQuietHours(quietHours.quiet_hours_start, quietHours.quiet_hours_end);
+
   // Create lead record
   const lead = await createLead({
     salesforce_record_id: payload.salesforce_record_id ?? null,
@@ -54,6 +61,7 @@ export async function routeLead(payload: ZapierPayload): Promise<{
     salesforce_owner_id: payload.salesforce_owner_id ?? null,
     is_master_agent_owned: payload.is_master_agent_owned ?? false,
     raw_payload: payload as unknown as Record<string, unknown>,
+    arrived_during_quiet_hours: arrivedDuringQuietHours,
     routing_status: "pending",
     final_agent_id: null,
   });
