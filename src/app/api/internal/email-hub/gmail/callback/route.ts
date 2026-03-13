@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const credentials = await exchangeAuthCode(code, redirectUri);
     const profile = await getProfile(state, credentials);
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("email_accounts")
       .update({
         credentials: credentials as unknown as Record<string, unknown>,
@@ -41,13 +41,23 @@ export async function GET(request: NextRequest) {
       })
       .eq("id", state);
 
+    if (updateError) {
+      logger.error("Failed to store Gmail credentials", {
+        accountId: state,
+        error: updateError.message,
+      });
+      return NextResponse.redirect(
+        new URL("/dashboard/email-hub/settings?oauth=error&reason=storage_failed", request.url)
+      );
+    }
+
     logger.info("Gmail OAuth connected via callback", {
       accountId: state,
       email: profile.emailAddress,
     });
 
     return NextResponse.redirect(
-      new URL("/dashboard/email-hub/settings?oauth=success", request.url)
+      new URL(`/dashboard/email-hub/settings?oauth=success&account=${encodeURIComponent(profile.emailAddress)}`, request.url)
     );
   } catch (err) {
     logger.error("OAuth callback failed", {
