@@ -8,9 +8,10 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { category, inbound_email, ideal_response, context_notes, is_active } = body;
+    const { email_address, category, inbound_email, ideal_response, context_notes, is_active } = body;
 
     const updates: Record<string, unknown> = {};
+    if (email_address !== undefined) updates.email_address = email_address;
     if (category !== undefined) updates.category = category;
     if (inbound_email !== undefined) updates.inbound_email = inbound_email;
     if (ideal_response !== undefined) updates.ideal_response = ideal_response;

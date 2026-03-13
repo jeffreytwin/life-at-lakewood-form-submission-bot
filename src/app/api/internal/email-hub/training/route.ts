@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const locationId = searchParams.get("location_id");
+    const emailAddress = searchParams.get("email_address");
     const category = searchParams.get("category");
 
     let query = supabase
@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
-    if (locationId) {
-      query = query.eq("location_id", locationId);
+    if (emailAddress) {
+      query = query.eq("email_address", emailAddress);
     }
     if (category) {
       query = query.eq("category", category);
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { location_id, category, inbound_email, ideal_response, context_notes } = body;
+    const { email_address, category, inbound_email, ideal_response, context_notes } = body;
 
     if (!category || !inbound_email || !ideal_response) {
       return NextResponse.json(
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from("training_examples")
       .insert({
-        location_id: location_id || null,
+        email_address: email_address || null,
         category,
         inbound_email,
         ideal_response,

@@ -86,6 +86,8 @@ a:hover {
 .sidebar-nav {
   list-style: none;
   padding: 0 8px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .sidebar-nav li a {

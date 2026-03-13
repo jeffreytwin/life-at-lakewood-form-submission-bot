@@ -362,6 +362,7 @@ export const ALL_TRAINING_CATEGORIES: TrainingCategory[] = [
 export interface TrainingExample {
   id: string;
   location_id: string | null;
+  email_address: string | null;
   category: TrainingCategory;
   inbound_email: string;
   ideal_response: string;
