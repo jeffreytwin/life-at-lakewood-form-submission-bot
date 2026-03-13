@@ -75,6 +75,26 @@ export function isInQuietHours(startTime: string, endTime: string): boolean {
 }
 
 /**
+ * Check if an arbitrary timestamp falls within quiet hours.
+ * Converts the timestamp to Eastern Time before comparing.
+ */
+export function wasInQuietHours(timestamp: string | Date, startTime: string, endTime: string): boolean {
+  const date = new Date(timestamp);
+  const eastern = new Date(date.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const tsMin = toMinutes(eastern.getHours(), eastern.getMinutes());
+  const start = parseTime(startTime);
+  const end = parseTime(endTime);
+  const startMin = toMinutes(start.hours, start.minutes);
+  const endMin = toMinutes(end.hours, end.minutes);
+
+  if (startMin <= endMin) {
+    return tsMin >= startMin && tsMin < endMin;
+  } else {
+    return tsMin >= startMin || tsMin < endMin;
+  }
+}
+
+/**
  * Calculate the deferred expiration time — the next occurrence of quiet_hours_end
  * in Eastern Time, returned as an ISO string.
  *
