@@ -7,12 +7,19 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("email_accounts")
-      .select("id, email_address, display_name, provider, is_active")
+      .select("id, email_address, display_name, provider, is_active, credentials, last_synced_at")
       .eq("is_active", true)
       .order("email_address");
 
     if (error) throw error;
-    return NextResponse.json(data ?? []);
+
+    // Don't leak tokens to the browser — just indicate whether credentials exist
+    const safe = (data ?? []).map((account) => ({
+      ...account,
+      credentials: account.credentials ? { connected: true } : null,
+    }));
+
+    return NextResponse.json(safe);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) },
