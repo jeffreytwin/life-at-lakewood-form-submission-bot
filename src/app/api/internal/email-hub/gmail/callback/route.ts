@@ -45,9 +45,12 @@ export async function GET(request: NextRequest) {
       logger.error("Failed to store Gmail credentials", {
         accountId: state,
         error: updateError.message,
+        code: updateError.code,
+        details: updateError.details,
       });
+      const detail = encodeURIComponent(updateError.message || "unknown");
       return NextResponse.redirect(
-        new URL("/dashboard/email-hub/settings?oauth=error&reason=storage_failed", request.url)
+        new URL(`/dashboard/email-hub/settings?oauth=error&reason=storage_failed&detail=${detail}`, request.url)
       );
     }
 

@@ -51,9 +51,10 @@ export default function EmailHubSettingsPage() {
       window.history.replaceState({}, "", window.location.pathname);
     } else if (oauth === "error") {
       const reason = params.get("reason");
+      const detail = params.get("detail");
       setOauthStatus(
         reason === "storage_failed"
-          ? "Gmail authenticated but failed to save credentials. Please try again."
+          ? `Gmail authenticated but failed to save credentials.${detail ? ` Error: ${detail}` : ""}`
           : "Gmail connection failed. Please try again."
       );
       window.history.replaceState({}, "", window.location.pathname);
