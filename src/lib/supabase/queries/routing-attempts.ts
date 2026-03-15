@@ -103,6 +103,44 @@ export async function getDeclinedAgentIdsForLead(
   return data.map((row) => row.agent_id);
 }
 
+/**
+ * Count today's accepted routing attempts per agent (bot-local source of truth).
+ * Uses Eastern time to match the Salesforce daily boundary.
+ */
+export async function getTodayAcceptedCountsByAgent(): Promise<
+  Map<string, number>
+> {
+  // Get today's date in Eastern time
+  const now = new Date();
+  const etDate = now.toLocaleDateString("en-CA", {
+    timeZone: "America/New_York",
+  }); // "2026-03-15"
+
+  // Query a wide UTC window (last 30 hours) then filter by ET date in code.
+  // This avoids fragile UTC↔ET offset calculations while staying correct.
+  const windowStart = new Date(now.getTime() - 30 * 60 * 60 * 1000);
+
+  const { data, error } = await supabase
+    .from("routing_attempts")
+    .select("agent_id, created_at")
+    .eq("status", "accepted")
+    .gte("created_at", windowStart.toISOString());
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    // Filter to only rows whose created_at falls on today in Eastern time
+    const rowETDate = new Date(row.created_at).toLocaleDateString("en-CA", {
+      timeZone: "America/New_York",
+    });
+    if (rowETDate === etDate) {
+      counts.set(row.agent_id, (counts.get(row.agent_id) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
 export async function getMaxAttemptNumber(leadId: string): Promise<number> {
   const { data, error } = await supabase
     .from("routing_attempts")

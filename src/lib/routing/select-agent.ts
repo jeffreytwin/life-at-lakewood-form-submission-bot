@@ -1,5 +1,8 @@
 import { getActiveAgents } from "@/lib/supabase/queries/agents";
-import { getDeclinedAgentIdsForLead } from "@/lib/supabase/queries/routing-attempts";
+import {
+  getDeclinedAgentIdsForLead,
+  getTodayAcceptedCountsByAgent,
+} from "@/lib/supabase/queries/routing-attempts";
 import { supabase } from "@/lib/supabase/client";
 import { selectBestAgent } from "@/lib/scoring/engine";
 import type { Lead, ScoringFactorKey } from "@/lib/supabase/types";
@@ -83,15 +86,31 @@ export async function selectNextAgent(
   lead: Lead,
   locationName: string
 ): Promise<AgentScore | null> {
-  const [agents, excludedIds, leadCounts, weights] = await Promise.all([
-    getActiveAgents(),
-    getDeclinedAgentIdsForLead(lead.id),
-    getCurrentMonthLeadCounts(),
-    getWeights(),
-  ]);
+  const [agents, excludedIds, leadCounts, weights, botDailyCounts] =
+    await Promise.all([
+      getActiveAgents(),
+      getDeclinedAgentIdsForLead(lead.id),
+      getCurrentMonthLeadCounts(),
+      getWeights(),
+      getTodayAcceptedCountsByAgent(),
+    ]);
 
   // Daily counts need the agents list to map salesforce_user_id → agent.id
-  const dailyCounts = await getDailyLeadCounts(agents);
+  const sfDailyCounts = await getDailyLeadCounts(agents);
+
+  // Merge: take the max of bot-local accepted count vs Salesforce snapshot
+  // so that both real-time bot activity AND external Salesforce leads are respected.
+  const dailyCounts = new Map<string, number>();
+  const allAgentIds = new Set([
+    ...sfDailyCounts.keys(),
+    ...botDailyCounts.keys(),
+  ]);
+  for (const id of allAgentIds) {
+    dailyCounts.set(
+      id,
+      Math.max(sfDailyCounts.get(id) ?? 0, botDailyCounts.get(id) ?? 0)
+    );
+  }
 
   return selectBestAgent(
     agents,
