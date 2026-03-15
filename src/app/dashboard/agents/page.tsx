@@ -53,7 +53,7 @@ function formatPhone(raw: string | null): string {
   return raw; // fallback to raw if not 10 digits
 }
 
-type SortKey = "is_active" | "name" | "locations" | "price_ranges" | "close_rate" | "goal" | "handraises";
+type SortKey = "is_active" | "name" | "locations" | "price_ranges" | "close_rate" | "goal" | "handraises" | "is_preferred";
 type SortDir = "asc" | "desc";
 
 function getAgentSortValue(agent: Agent, key: SortKey, handRaiseCounts?: Record<string, number>): string | number | boolean {
@@ -65,6 +65,7 @@ function getAgentSortValue(agent: Agent, key: SortKey, handRaiseCounts?: Record<
     case "close_rate": return agent.is_frontlines ? -1 : agent.close_rate_trailing_12m;
     case "goal": return agent.is_frontlines ? -1 : agent.monthly_lead_goal_min;
     case "handraises": return handRaiseCounts?.[agent.name] ?? 0;
+    case "is_preferred": return agent.is_preferred ? 1 : 0;
     default: return "";
   }
 }
@@ -319,6 +320,28 @@ export default function AgentsPage() {
     }));
   }
 
+  async function togglePreferred(e: React.MouseEvent, agent: Agent) {
+    e.stopPropagation(); // Don't open edit modal
+    const newValue = !agent.is_preferred;
+    // Optimistic update
+    setAgents((prev) =>
+      prev.map((a) => (a.id === agent.id ? { ...a, is_preferred: newValue } : a))
+    );
+    try {
+      const res = await fetch("/api/internal/agents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: agent.id, is_preferred: newValue }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+    } catch {
+      // Revert on failure
+      setAgents((prev) =>
+        prev.map((a) => (a.id === agent.id ? { ...a, is_preferred: !newValue } : a))
+      );
+    }
+  }
+
   function renderAgentRow(agent: Agent) {
     const hrCount = handRaiseCounts[agent.name] ?? 0;
     return (
@@ -384,6 +407,26 @@ export default function AgentsPage() {
             : `${agent.monthly_lead_goal_min}-${agent.monthly_lead_goal_max}`}
         </td>
         <td className="font-mono">{hrCount}</td>
+        <td style={{ textAlign: "center" }}>
+          <button
+            type="button"
+            onClick={(e) => togglePreferred(e, agent)}
+            title={agent.is_preferred ? "Remove preference" : "Set as preferred for next form"}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 20,
+              lineHeight: 1,
+              padding: "2px 6px",
+              borderRadius: 4,
+              color: agent.is_preferred ? "#f59e0b" : "#3a3e4a",
+              transition: "color 0.15s",
+            }}
+          >
+            {agent.is_preferred ? "\u2605" : "\u2606"}
+          </button>
+        </td>
       </tr>
     );
   }
@@ -441,6 +484,7 @@ export default function AgentsPage() {
           <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" />
           <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" />
           <SortHeader label="Handraises This Month" sortKeyName="handraises" />
+          <SortHeader label="Preferred" sortKeyName="is_preferred" />
         </tr>
       </thead>
     );

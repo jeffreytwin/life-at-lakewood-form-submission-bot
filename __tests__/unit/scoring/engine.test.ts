@@ -22,6 +22,7 @@ function makeAgent(id: string, overrides: Partial<Agent> = {}): Agent {
     daily_lead_max: 5,
     unavailability_windows: null,
     price_ranges: null,
+    is_preferred: false,
     photo_url: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

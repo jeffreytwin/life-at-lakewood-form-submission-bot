@@ -112,6 +112,7 @@ export interface Agent {
   daily_lead_max: number;
   unavailability_windows: UnavailabilityWindow[] | null;
   price_ranges: PriceRange[] | null;
+  is_preferred: boolean;
   photo_url: string | null;
   created_at: string;
   updated_at: string;
