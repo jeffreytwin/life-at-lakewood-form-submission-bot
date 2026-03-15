@@ -53,10 +53,10 @@ function formatPhone(raw: string | null): string {
   return raw; // fallback to raw if not 10 digits
 }
 
-type SortKey = "is_active" | "name" | "locations" | "price_ranges" | "close_rate" | "goal" | "handraises" | "is_preferred";
+type SortKey = "is_active" | "name" | "locations" | "price_ranges" | "close_rate" | "goal" | "today" | "handraises" | "is_preferred";
 type SortDir = "asc" | "desc";
 
-function getAgentSortValue(agent: Agent, key: SortKey, handRaiseCounts?: Record<string, number>): string | number | boolean {
+function getAgentSortValue(agent: Agent, key: SortKey, handRaiseCounts?: Record<string, number>, dailyCounts?: Record<string, number>): string | number | boolean {
   switch (key) {
     case "is_active": return agent.is_active ? 1 : 0;
     case "name": return agent.name.toLowerCase();
@@ -64,16 +64,17 @@ function getAgentSortValue(agent: Agent, key: SortKey, handRaiseCounts?: Record<
     case "price_ranges": return !agent.price_ranges || agent.price_ranges.length === 0 ? "zzz all" : agent.price_ranges.map((r) => PRICE_RANGE_LABELS[r]).join(", ").toLowerCase();
     case "close_rate": return agent.is_frontlines ? -1 : agent.close_rate_trailing_12m;
     case "goal": return agent.is_frontlines ? -1 : agent.monthly_lead_goal_min;
+    case "today": return agent.is_frontlines ? -1 : (dailyCounts?.[agent.id] ?? 0);
     case "handraises": return handRaiseCounts?.[agent.name] ?? 0;
     case "is_preferred": return agent.is_preferred ? 1 : 0;
     default: return "";
   }
 }
 
-function sortAgents(agents: Agent[], key: SortKey, dir: SortDir, handRaiseCounts?: Record<string, number>): Agent[] {
+function sortAgents(agents: Agent[], key: SortKey, dir: SortDir, handRaiseCounts?: Record<string, number>, dailyCounts?: Record<string, number>): Agent[] {
   return [...agents].sort((a, b) => {
-    const aVal = getAgentSortValue(a, key, handRaiseCounts);
-    const bVal = getAgentSortValue(b, key, handRaiseCounts);
+    const aVal = getAgentSortValue(a, key, handRaiseCounts, dailyCounts);
+    const bVal = getAgentSortValue(b, key, handRaiseCounts, dailyCounts);
     if (aVal < bVal) return dir === "asc" ? -1 : 1;
     if (aVal > bVal) return dir === "asc" ? 1 : -1;
     return 0;
@@ -93,6 +94,7 @@ export default function AgentsPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [handRaiseCounts, setHandRaiseCounts] = useState<Record<string, number>>({});
+  const [dailyCounts, setDailyCounts] = useState<Record<string, number>>({});
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(() => {
@@ -100,8 +102,9 @@ export default function AgentsPage() {
       fetch("/api/internal/agents").then((r) => r.json()),
       fetch("/api/internal/locations").then((r) => r.json()),
       fetch("/api/internal/lead-distribution").then((r) => r.json()),
+      fetch("/api/internal/daily-counts").then((r) => r.json()),
     ])
-      .then(([agentsData, locationsData, distData]) => {
+      .then(([agentsData, locationsData, distData, dailyData]) => {
         if (Array.isArray(agentsData)) setAgents(agentsData);
         else setError(agentsData.error ?? "Failed to load agents");
         if (Array.isArray(locationsData)) setLocations(locationsData);
@@ -111,6 +114,9 @@ export default function AgentsPage() {
             counts[entry.agentName] = entry.leadCount;
           }
           setHandRaiseCounts(counts);
+        }
+        if (dailyData?.dailyCounts) {
+          setDailyCounts(dailyData.dailyCounts);
         }
         setLoading(false);
       })
@@ -131,13 +137,15 @@ export default function AgentsPage() {
     agents.filter((a) => !a.is_frontlines),
     sortKey,
     sortDir,
-    handRaiseCounts
+    handRaiseCounts,
+    dailyCounts
   );
   const frontlinesAgents = sortAgents(
     agents.filter((a) => a.is_frontlines),
     sortKey,
     sortDir,
-    handRaiseCounts
+    handRaiseCounts,
+    dailyCounts
   );
 
   function handleSort(key: SortKey) {
@@ -406,6 +414,20 @@ export default function AgentsPage() {
             ? "-"
             : `${agent.monthly_lead_goal_min}-${agent.monthly_lead_goal_max}`}
         </td>
+        <td className="font-mono">
+          {agent.is_frontlines
+            ? "-"
+            : (() => {
+                const todayCount = dailyCounts[agent.id] ?? 0;
+                const max = agent.daily_lead_max;
+                const atCap = max > 0 && todayCount >= max;
+                return (
+                  <span style={{ color: atCap ? "#f87171" : undefined }}>
+                    {todayCount}{max > 0 ? ` / ${max}` : ""}
+                  </span>
+                );
+              })()}
+        </td>
         <td className="font-mono">{hrCount}</td>
         <td style={{ textAlign: "center" }}>
           <button
@@ -483,6 +505,7 @@ export default function AgentsPage() {
           <SortHeader label="Price Ranges" sortKeyName="price_ranges" />
           <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" />
           <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" />
+          <SortHeader label="Today" sortKeyName="today" />
           <SortHeader label="Handraises This Month" sortKeyName="handraises" />
           <SortHeader label="Preferred" sortKeyName="is_preferred" />
         </tr>
