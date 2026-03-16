@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { getTodayAcceptedCountsByAgent } from "@/lib/supabase/queries/routing-attempts";
 import { getTodayEmailHandoffCountsByAgent } from "@/lib/supabase/queries/email-drafts";
-import { getLastDailySyncTimestamp } from "@/lib/supabase/queries/hand-raise-snapshots";
 
 export const dynamic = "force-dynamic";
 
@@ -13,25 +12,29 @@ export async function GET() {
       timeZone: "America/New_York",
     });
 
-    // Fetch Salesforce daily snapshots and the last sync timestamp in parallel
-    const [sfResult, agentsResult, lastSfSync] = await Promise.all([
+    // Fetch Salesforce daily snapshots, bot-local counts, and email handoffs in parallel
+    const [sfResult, botDailyCounts, emailHandoffCounts] = await Promise.all([
       supabase
         .from("hand_raise_snapshots")
         .select("salesforce_user_id, count")
         .eq("type", "daily_by_agent")
         .eq("year_month", etDate),
-      supabase
-        .from("agents")
-        .select("id, salesforce_user_id")
-        .not("salesforce_user_id", "is", null),
-      getLastDailySyncTimestamp(),
+      getTodayAcceptedCountsByAgent(),
+      getTodayEmailHandoffCountsByAgent(),
     ]);
 
     if (sfResult.error) throw sfResult.error;
-    if (agentsResult.error) throw agentsResult.error;
+
+    // Build salesforce_user_id → agent.id lookup from agents table
+    const { data: agents, error: agentsError } = await supabase
+      .from("agents")
+      .select("id, salesforce_user_id")
+      .not("salesforce_user_id", "is", null);
+
+    if (agentsError) throw agentsError;
 
     const sfIdToAgentId = new Map<string, string>();
-    for (const agent of agentsResult.data ?? []) {
+    for (const agent of agents ?? []) {
       if (agent.salesforce_user_id) {
         sfIdToAgentId.set(agent.salesforce_user_id, agent.id);
       }
@@ -46,25 +49,17 @@ export async function GET() {
       }
     }
 
-    // Get bot/email counts created AFTER the last SF sync so we can add them
-    // on top of the SF snapshot without double-counting.
-    const [postSyncBotCounts, postSyncEmailCounts] = await Promise.all([
-      getTodayAcceptedCountsByAgent(lastSfSync),
-      getTodayEmailHandoffCountsByAgent(lastSfSync),
-    ]);
-
-    // Merge: SF snapshot + bot/email activity that occurred after the snapshot
+    // Merge: sum bot-local routing attempts + email handoffs, then take max vs Salesforce
     const merged: Record<string, number> = {};
     const allAgentIds = new Set([
       ...sfDailyCounts.keys(),
-      ...postSyncBotCounts.keys(),
-      ...postSyncEmailCounts.keys(),
+      ...botDailyCounts.keys(),
+      ...emailHandoffCounts.keys(),
     ]);
     for (const id of allAgentIds) {
-      const sfCount = sfDailyCounts.get(id) ?? 0;
-      const postSyncBot =
-        (postSyncBotCounts.get(id) ?? 0) + (postSyncEmailCounts.get(id) ?? 0);
-      merged[id] = sfCount + postSyncBot;
+      const botTotal =
+        (botDailyCounts.get(id) ?? 0) + (emailHandoffCounts.get(id) ?? 0);
+      merged[id] = Math.max(sfDailyCounts.get(id) ?? 0, botTotal);
     }
 
     return NextResponse.json({ dailyCounts: merged, date: etDate });

@@ -106,15 +106,10 @@ export async function getDeclinedAgentIdsForLead(
 /**
  * Count today's accepted routing attempts per agent (bot-local source of truth).
  * Uses Eastern time to match the Salesforce daily boundary.
- *
- * When `afterTimestamp` is provided, only counts attempts created strictly after
- * that time. This is used to count bot-routed leads that occurred after the last
- * Salesforce snapshot sync, so they can be added on top of the SF count without
- * double-counting.
  */
-export async function getTodayAcceptedCountsByAgent(
-  afterTimestamp?: string | null
-): Promise<Map<string, number>> {
+export async function getTodayAcceptedCountsByAgent(): Promise<
+  Map<string, number>
+> {
   // Get today's date in Eastern time
   const now = new Date();
   const etDate = now.toLocaleDateString("en-CA", {
@@ -139,12 +134,9 @@ export async function getTodayAcceptedCountsByAgent(
     const rowETDate = new Date(row.created_at).toLocaleDateString("en-CA", {
       timeZone: "America/New_York",
     });
-    if (rowETDate !== etDate) continue;
-
-    // When afterTimestamp is provided, only count rows created after it
-    if (afterTimestamp && row.created_at <= afterTimestamp) continue;
-
-    counts.set(row.agent_id, (counts.get(row.agent_id) ?? 0) + 1);
+    if (rowETDate === etDate) {
+      counts.set(row.agent_id, (counts.get(row.agent_id) ?? 0) + 1);
+    }
   }
   return counts;
 }
