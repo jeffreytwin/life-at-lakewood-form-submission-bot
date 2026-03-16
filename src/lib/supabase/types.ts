@@ -147,6 +147,7 @@ export interface Agent {
   daily_lead_max: number;
   unavailability_windows: UnavailabilityWindow[] | null;
   price_ranges: PriceRange[] | null;
+  is_preferred: boolean;
   send_draft_success_texts: boolean;
   draft_success_phone: string | null;
   photo_url: string | null;
