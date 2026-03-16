@@ -5,13 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { onFailedCount, clearFailed } from "@/lib/lead-events";
 
-const navItems = [
+const formHubItems = [
   { href: "/dashboard", label: "Overview", icon: "\u2302" },
   { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2709" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
   { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
   { href: "/dashboard/weights", label: "Weights", icon: "\u2696" },
   { href: "/dashboard/simulate", label: "Simulation", icon: "\u26A1" },
+];
+
+const emailHubItems = [
+  { href: "/dashboard/email-hub/drafts", label: "Drafts", icon: "\u270E" },
+  { href: "/dashboard/email-hub/training", label: "Training Data", icon: "\u2261" },
+  { href: "/dashboard/email-hub/simulate", label: "Simulation", icon: "\u26A1" },
+  { href: "/dashboard/email-hub/settings", label: "Settings", icon: "\u2699" },
 ];
 
 export default function Sidebar({
@@ -58,7 +65,8 @@ export default function Sidebar({
           <span>Form Submission Hub</span>
         </div>
         <ul className="sidebar-nav">
-          {navItems.map((item) => (
+          <li className="sidebar-section-label">Form Submission Hub</li>
+          {formHubItems.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
@@ -71,6 +79,19 @@ export default function Sidebar({
                 {item.href === "/dashboard/leads" && failedBadge > 0 && (
                   <span className="nav-badge">{failedBadge}</span>
                 )}
+              </Link>
+            </li>
+          ))}
+          <li className="sidebar-section-label" style={{ marginTop: 16 }}>Email Hub</li>
+          {emailHubItems.map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={pathname?.startsWith(item.href) ? "active" : ""}
+                onClick={onClose}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
               </Link>
             </li>
           ))}
