@@ -348,12 +348,21 @@ export default function AgentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: agent.id, is_preferred: newValue }),
       });
-      if (!res.ok) throw new Error((await res.json()).error);
-    } catch {
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Server returned ${res.status}`);
+      }
+      // Sync with server response to avoid stale state
+      const updated = await res.json();
+      setAgents((prev) =>
+        prev.map((a) => (a.id === agent.id ? { ...a, ...updated } : a))
+      );
+    } catch (err) {
       // Revert on failure
       setAgents((prev) =>
         prev.map((a) => (a.id === agent.id ? { ...a, is_preferred: !newValue } : a))
       );
+      console.error("Failed to toggle preferred:", err);
     }
   }
 
