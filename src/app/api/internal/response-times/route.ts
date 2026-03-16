@@ -46,13 +46,17 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query.order("created_at", { ascending: true });
 
-    // Exclude routing attempts for leads later marked as bad_data
+    // Exclude routing attempts for leads marked as bad_data or that arrived during quiet hours
     const attemptLeadIds = [...new Set((data ?? []).map((a) => a.lead_id))];
-    const { data: badDataLeads } = attemptLeadIds.length > 0
-      ? await supabase.from("leads").select("id").eq("routing_status", "bad_data").in("id", attemptLeadIds)
+    const { data: excludedLeads } = attemptLeadIds.length > 0
+      ? await supabase
+          .from("leads")
+          .select("id, routing_status, arrived_during_quiet_hours")
+          .in("id", attemptLeadIds)
       : { data: [] };
-    const badDataIds = new Set((badDataLeads ?? []).map((l) => l.id));
-    const filteredData = (data ?? []).filter((a) => !badDataIds.has(a.lead_id));
+    const badDataIds = new Set((excludedLeads ?? []).filter((l) => l.routing_status === "bad_data").map((l) => l.id));
+    const quietHoursIds = new Set((excludedLeads ?? []).filter((l) => l.arrived_during_quiet_hours).map((l) => l.id));
+    const filteredData = (data ?? []).filter((a) => !badDataIds.has(a.lead_id) && !quietHoursIds.has(a.lead_id));
     if (error) throw error;
 
     // Group by agent
