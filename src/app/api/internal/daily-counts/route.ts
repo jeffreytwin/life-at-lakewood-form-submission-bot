@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { getTodayAcceptedCountsByAgent } from "@/lib/supabase/queries/routing-attempts";
+import { getTodayEmailHandoffCountsByAgent } from "@/lib/supabase/queries/email-drafts";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +12,15 @@ export async function GET() {
       timeZone: "America/New_York",
     });
 
-    // Fetch Salesforce daily snapshots and bot-local counts in parallel
-    const [sfResult, botDailyCounts] = await Promise.all([
+    // Fetch Salesforce daily snapshots, bot-local counts, and email handoffs in parallel
+    const [sfResult, botDailyCounts, emailHandoffCounts] = await Promise.all([
       supabase
         .from("hand_raise_snapshots")
         .select("salesforce_user_id, count")
         .eq("type", "daily_by_agent")
         .eq("year_month", etDate),
       getTodayAcceptedCountsByAgent(),
+      getTodayEmailHandoffCountsByAgent(),
     ]);
 
     if (sfResult.error) throw sfResult.error;
@@ -47,17 +49,17 @@ export async function GET() {
       }
     }
 
-    // Merge: take max of bot-local vs Salesforce (same logic as select-agent.ts)
+    // Merge: sum bot-local routing attempts + email handoffs, then take max vs Salesforce
     const merged: Record<string, number> = {};
     const allAgentIds = new Set([
       ...sfDailyCounts.keys(),
       ...botDailyCounts.keys(),
+      ...emailHandoffCounts.keys(),
     ]);
     for (const id of allAgentIds) {
-      merged[id] = Math.max(
-        sfDailyCounts.get(id) ?? 0,
-        botDailyCounts.get(id) ?? 0
-      );
+      const botTotal =
+        (botDailyCounts.get(id) ?? 0) + (emailHandoffCounts.get(id) ?? 0);
+      merged[id] = Math.max(sfDailyCounts.get(id) ?? 0, botTotal);
     }
 
     return NextResponse.json({ dailyCounts: merged, date: etDate });

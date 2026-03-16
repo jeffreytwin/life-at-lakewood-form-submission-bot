@@ -3,6 +3,7 @@ import {
   getDeclinedAgentIdsForLead,
   getTodayAcceptedCountsByAgent,
 } from "@/lib/supabase/queries/routing-attempts";
+import { getTodayEmailHandoffCountsByAgent } from "@/lib/supabase/queries/email-drafts";
 import { supabase } from "@/lib/supabase/client";
 import { selectBestAgent } from "@/lib/scoring/engine";
 import type { Lead, ScoringFactorKey } from "@/lib/supabase/types";
@@ -86,30 +87,36 @@ export async function selectNextAgent(
   lead: Lead,
   locationName: string
 ): Promise<AgentScore | null> {
-  const [agents, excludedIds, leadCounts, weights, botDailyCounts] =
-    await Promise.all([
-      getActiveAgents(),
-      getDeclinedAgentIdsForLead(lead.id),
-      getCurrentMonthLeadCounts(),
-      getWeights(),
-      getTodayAcceptedCountsByAgent(),
-    ]);
+  const [
+    agents,
+    excludedIds,
+    leadCounts,
+    weights,
+    botDailyCounts,
+    emailHandoffCounts,
+  ] = await Promise.all([
+    getActiveAgents(),
+    getDeclinedAgentIdsForLead(lead.id),
+    getCurrentMonthLeadCounts(),
+    getWeights(),
+    getTodayAcceptedCountsByAgent(),
+    getTodayEmailHandoffCountsByAgent(),
+  ]);
 
   // Daily counts need the agents list to map salesforce_user_id → agent.id
   const sfDailyCounts = await getDailyLeadCounts(agents);
 
-  // Merge: take the max of bot-local accepted count vs Salesforce snapshot
-  // so that both real-time bot activity AND external Salesforce leads are respected.
+  // Merge: sum bot-local routing attempts + email handoffs, then take max vs Salesforce
   const dailyCounts = new Map<string, number>();
   const allAgentIds = new Set([
     ...sfDailyCounts.keys(),
     ...botDailyCounts.keys(),
+    ...emailHandoffCounts.keys(),
   ]);
   for (const id of allAgentIds) {
-    dailyCounts.set(
-      id,
-      Math.max(sfDailyCounts.get(id) ?? 0, botDailyCounts.get(id) ?? 0)
-    );
+    const botTotal =
+      (botDailyCounts.get(id) ?? 0) + (emailHandoffCounts.get(id) ?? 0);
+    dailyCounts.set(id, Math.max(sfDailyCounts.get(id) ?? 0, botTotal));
   }
 
   return selectBestAgent(
