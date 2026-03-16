@@ -9,6 +9,7 @@ import { selectBestAgent } from "@/lib/scoring/engine";
 import type { Lead, ScoringFactorKey } from "@/lib/supabase/types";
 import { DEFAULT_GLOBAL_WEIGHTS } from "@/lib/supabase/types";
 import type { AgentScore } from "@/lib/scoring/types";
+import { getLastDailySyncTimestamp } from "@/lib/supabase/queries/hand-raise-snapshots";
 
 async function getCurrentMonthLeadCounts(): Promise<Map<string, number>> {
   const yearMonth = new Date().toISOString().slice(0, 7); // '2026-03'
@@ -87,36 +88,39 @@ export async function selectNextAgent(
   lead: Lead,
   locationName: string
 ): Promise<AgentScore | null> {
-  const [
-    agents,
-    excludedIds,
-    leadCounts,
-    weights,
-    botDailyCounts,
-    emailHandoffCounts,
-  ] = await Promise.all([
+  const [agents, excludedIds, leadCounts, weights] = await Promise.all([
     getActiveAgents(),
     getDeclinedAgentIdsForLead(lead.id),
     getCurrentMonthLeadCounts(),
     getWeights(),
-    getTodayAcceptedCountsByAgent(),
-    getTodayEmailHandoffCountsByAgent(),
   ]);
 
   // Daily counts need the agents list to map salesforce_user_id → agent.id
-  const sfDailyCounts = await getDailyLeadCounts(agents);
+  const [sfDailyCounts, lastSfSync] = await Promise.all([
+    getDailyLeadCounts(agents),
+    getLastDailySyncTimestamp(),
+  ]);
 
-  // Merge: sum bot-local routing attempts + email handoffs, then take max vs Salesforce
+  // Get bot/email counts created AFTER the last SF sync so we can add them
+  // on top of the SF snapshot without double-counting.
+  // When there's no SF sync, pass null to count all bot/email leads today.
+  const [postSyncBotCounts, postSyncEmailCounts] = await Promise.all([
+    getTodayAcceptedCountsByAgent(lastSfSync),
+    getTodayEmailHandoffCountsByAgent(lastSfSync),
+  ]);
+
+  // Merge: SF snapshot + bot/email activity that occurred after the snapshot
   const dailyCounts = new Map<string, number>();
   const allAgentIds = new Set([
     ...sfDailyCounts.keys(),
-    ...botDailyCounts.keys(),
-    ...emailHandoffCounts.keys(),
+    ...postSyncBotCounts.keys(),
+    ...postSyncEmailCounts.keys(),
   ]);
   for (const id of allAgentIds) {
-    const botTotal =
-      (botDailyCounts.get(id) ?? 0) + (emailHandoffCounts.get(id) ?? 0);
-    dailyCounts.set(id, Math.max(sfDailyCounts.get(id) ?? 0, botTotal));
+    const sfCount = sfDailyCounts.get(id) ?? 0;
+    const postSyncBot =
+      (postSyncBotCounts.get(id) ?? 0) + (postSyncEmailCounts.get(id) ?? 0);
+    dailyCounts.set(id, sfCount + postSyncBot);
   }
 
   return selectBestAgent(

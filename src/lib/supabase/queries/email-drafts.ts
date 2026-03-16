@@ -3,10 +3,15 @@ import { supabase } from "../client";
 /**
  * Count today's sent email drafts with agent handoffs, per agent.
  * Uses Eastern time to match the Salesforce daily boundary.
+ *
+ * When `afterTimestamp` is provided, only counts drafts sent strictly after
+ * that time. This is used to count email handoffs that occurred after the last
+ * Salesforce snapshot sync, so they can be added on top of the SF count without
+ * double-counting.
  */
-export async function getTodayEmailHandoffCountsByAgent(): Promise<
-  Map<string, number>
-> {
+export async function getTodayEmailHandoffCountsByAgent(
+  afterTimestamp?: string | null
+): Promise<Map<string, number>> {
   const now = new Date();
   const etDate = now.toLocaleDateString("en-CA", {
     timeZone: "America/New_York",
@@ -30,12 +35,15 @@ export async function getTodayEmailHandoffCountsByAgent(): Promise<
     const rowETDate = new Date(row.sent_at).toLocaleDateString("en-CA", {
       timeZone: "America/New_York",
     });
-    if (rowETDate === etDate) {
-      counts.set(
-        row.agent_handoff_id,
-        (counts.get(row.agent_handoff_id) ?? 0) + 1
-      );
-    }
+    if (rowETDate !== etDate) continue;
+
+    // When afterTimestamp is provided, only count rows sent after it
+    if (afterTimestamp && row.sent_at <= afterTimestamp) continue;
+
+    counts.set(
+      row.agent_handoff_id,
+      (counts.get(row.agent_handoff_id) ?? 0) + 1
+    );
   }
   return counts;
 }
