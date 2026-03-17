@@ -3,6 +3,14 @@
 import { useEffect, useState, useCallback } from "react";
 
 type EmailDraftStatus = "drafted" | "edited" | "sent" | "discarded";
+type TrainingCategory =
+  | "initial_inquiry"
+  | "follow_up"
+  | "scheduling"
+  | "agent_handoff"
+  | "pricing"
+  | "objection"
+  | "general";
 
 interface EmailDraft {
   id: string;
@@ -20,9 +28,22 @@ interface EmailDraft {
   completion_tokens: number | null;
   is_simulation: boolean;
   simulation_input: Record<string, unknown> | null;
+  sent_body_text: string | null;
+  was_changed: boolean;
   created_at: string;
   edited_at: string | null;
   sent_at: string | null;
+}
+
+interface ThreadMessage {
+  id: string;
+  direction: "inbound" | "outbound";
+  from_email: string | null;
+  to_email: string | null;
+  subject: string | null;
+  body_text: string | null;
+  received_at: string | null;
+  created_at: string;
 }
 
 const STATUS_OPTIONS: { key: EmailDraftStatus | "all"; label: string }[] = [
@@ -39,6 +60,16 @@ const STATUS_COLORS: Record<EmailDraftStatus, string> = {
   sent: "#34d399",
   discarded: "#f87171",
 };
+
+const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
+  { key: "initial_inquiry", label: "Initial Inquiry" },
+  { key: "follow_up", label: "Follow Up" },
+  { key: "scheduling", label: "Scheduling" },
+  { key: "agent_handoff", label: "Agent Handoff" },
+  { key: "pricing", label: "Pricing" },
+  { key: "objection", label: "Objection Handling" },
+  { key: "general", label: "General" },
+];
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -68,6 +99,10 @@ export default function EmailDraftsPage() {
   const [showSimulations] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Thread messages for the expanded draft
+  const [threadMessages, setThreadMessages] = useState<ThreadMessage[]>([]);
+  const [loadingThread, setLoadingThread] = useState(false);
+
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -78,6 +113,15 @@ export default function EmailDraftsPage() {
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackNotes, setFeedbackNotes] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
+  // Approve state
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [approveResult, setApproveResult] = useState<string | null>(null);
+
+  // Add to training state
+  const [trainingDraftId, setTrainingDraftId] = useState<string | null>(null);
+  const [trainingCategory, setTrainingCategory] = useState<TrainingCategory>("general");
+  const [addingToTraining, setAddingToTraining] = useState(false);
 
   const fetchDrafts = useCallback(() => {
     setLoading(true);
@@ -106,15 +150,33 @@ export default function EmailDraftsPage() {
     fetchDrafts();
   }, [fetchDrafts]);
 
+  async function loadThreadMessages(draftId: string) {
+    setLoadingThread(true);
+    setThreadMessages([]);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}`);
+      const data = await res.json();
+      setThreadMessages(data.thread_messages ?? []);
+    } catch {
+      // Thread loading is non-critical
+    } finally {
+      setLoadingThread(false);
+    }
+  }
+
   function toggleExpand(id: string) {
     if (expandedId === id) {
       setExpandedId(null);
       setEditingId(null);
       setFeedbackDraftId(null);
+      setThreadMessages([]);
+      setTrainingDraftId(null);
     } else {
       setExpandedId(id);
       setEditingId(null);
       setFeedbackDraftId(null);
+      setTrainingDraftId(null);
+      loadThreadMessages(id);
     }
   }
 
@@ -186,6 +248,60 @@ export default function EmailDraftsPage() {
       alert(e instanceof Error ? e.message : "Feedback submission failed");
     } finally {
       setSubmittingFeedback(false);
+    }
+  }
+
+  async function approveDraft(draftId: string) {
+    setApprovingId(draftId);
+    setApproveResult(null);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Approval failed");
+      }
+      if (data.sms_sent) {
+        const successCount = data.results.filter(
+          (r: { success: boolean }) => r.success
+        ).length;
+        setApproveResult(
+          `Approved! SMS sent to ${successCount} agent${successCount !== 1 ? "s" : ""}.`
+        );
+      } else {
+        setApproveResult(data.message ?? "Approved (no SMS recipients configured).");
+      }
+      fetchDrafts();
+    } catch (e) {
+      setApproveResult(e instanceof Error ? e.message : "Approval failed");
+    } finally {
+      setApprovingId(null);
+    }
+  }
+
+  async function addToTraining(draftId: string) {
+    setAddingToTraining(true);
+    try {
+      const res = await fetch(
+        `/api/internal/email-hub/drafts/${draftId}/add-to-training`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ category: trainingCategory }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to add to training");
+      }
+      setTrainingDraftId(null);
+      alert("Added to training data successfully!");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to add to training");
+    } finally {
+      setAddingToTraining(false);
     }
   }
 
@@ -366,6 +482,92 @@ export default function EmailDraftsPage() {
                       padding: "16px",
                     }}
                   >
+                    {/* Thread messages */}
+                    {loadingThread ? (
+                      <div style={{ marginBottom: 16 }}>
+                        <p className="text-muted text-sm">Loading conversation...</p>
+                      </div>
+                    ) : threadMessages.length > 0 ? (
+                      <div style={{ marginBottom: 20 }}>
+                        <label
+                          className="text-sm"
+                          style={{
+                            display: "block",
+                            fontWeight: 600,
+                            marginBottom: 10,
+                            color: "#8b8fa3",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          Conversation Thread
+                        </label>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 8,
+                            maxHeight: 400,
+                            overflowY: "auto",
+                            padding: "8px 0",
+                          }}
+                        >
+                          {threadMessages.map((msg) => {
+                            const isInbound = msg.direction === "inbound";
+                            return (
+                              <div
+                                key={msg.id}
+                                style={{
+                                  background: isInbound ? "#1a1d27" : "#1a2633",
+                                  border: `1px solid ${isInbound ? "#2a2e3a" : "#1e3a5f"}`,
+                                  borderRadius: 8,
+                                  padding: "10px 14px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: 6,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                      color: isInbound ? "#f87171" : "#34d399",
+                                    }}
+                                  >
+                                    {isInbound ? "Inbound" : "Outbound"}{" "}
+                                    <span style={{ color: "#8b8fa3", fontWeight: 400 }}>
+                                      {msg.from_email ?? ""}
+                                    </span>
+                                  </span>
+                                  {msg.received_at && (
+                                    <span className="text-muted text-sm">
+                                      {formatRelativeDate(msg.received_at)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: 13,
+                                    lineHeight: 1.6,
+                                    color: "#e4e6ed",
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  {msg.body_text ?? "(empty)"}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+
                     {/* Simulation input */}
                     {draft.is_simulation && draft.simulation_input && (
                       <div style={{ marginBottom: 16 }}>
@@ -413,7 +615,7 @@ export default function EmailDraftsPage() {
                           color: "#e4e6ed",
                         }}
                       >
-                        Draft Body
+                        {draft.status === "sent" ? "Sent Response" : "Draft Body"}
                       </label>
 
                       {isEditing ? (
@@ -471,10 +673,29 @@ export default function EmailDraftsPage() {
                             overflowY: "auto",
                           }}
                         >
-                          {draft.body_text ?? "(empty)"}
+                          {draft.status === "sent"
+                            ? (draft.sent_body_text ?? draft.body_text ?? "(empty)")
+                            : (draft.body_text ?? "(empty)")}
                         </div>
                       )}
                     </div>
+
+                    {/* Was changed indicator for sent drafts */}
+                    {draft.status === "sent" && draft.was_changed && (
+                      <div
+                        style={{
+                          marginBottom: 12,
+                          padding: "8px 12px",
+                          background: "#fbbf2411",
+                          border: "1px solid #fbbf2433",
+                          borderRadius: 6,
+                          fontSize: 12,
+                          color: "#fbbf24",
+                        }}
+                      >
+                        The sent version was modified from the original AI draft.
+                      </div>
+                    )}
 
                     {/* Action buttons */}
                     <div
@@ -496,6 +717,37 @@ export default function EmailDraftsPage() {
                           Edit Draft
                         </button>
                       )}
+                      {(draft.status === "drafted" || draft.status === "edited") && (
+                        <button
+                          className="btn btn-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            approveDraft(draft.id);
+                          }}
+                          disabled={approvingId === draft.id}
+                          style={{
+                            background: "#34d399",
+                            borderColor: "#34d399",
+                            color: "#111318",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {approvingId === draft.id ? "Approving..." : "Approve"}
+                        </button>
+                      )}
+                      {draft.status === "sent" && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTrainingDraftId(
+                              trainingDraftId === draft.id ? null : draft.id
+                            );
+                          }}
+                        >
+                          Add to Training
+                        </button>
+                      )}
                       {!isFeedback && (
                         <button
                           className="btn btn-secondary"
@@ -508,6 +760,97 @@ export default function EmailDraftsPage() {
                         </button>
                       )}
                     </div>
+
+                    {/* Approve result banner */}
+                    {approveResult && expandedId === draft.id && (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          padding: "10px 14px",
+                          background: approveResult.startsWith("Approved")
+                            ? "#34d39922"
+                            : "#f8717122",
+                          border: `1px solid ${approveResult.startsWith("Approved") ? "#34d39944" : "#f8717144"}`,
+                          borderRadius: 6,
+                          fontSize: 13,
+                          color: approveResult.startsWith("Approved")
+                            ? "#34d399"
+                            : "#f87171",
+                        }}
+                      >
+                        {approveResult}
+                      </div>
+                    )}
+
+                    {/* Add to training form */}
+                    {trainingDraftId === draft.id && (
+                      <div
+                        style={{
+                          marginTop: 16,
+                          padding: "14px 16px",
+                          background: "#111318",
+                          border: "1px solid #2a2e3a",
+                          borderRadius: 6,
+                        }}
+                      >
+                        <label
+                          className="text-sm"
+                          style={{
+                            display: "block",
+                            fontWeight: 600,
+                            marginBottom: 10,
+                            color: "#e4e6ed",
+                          }}
+                        >
+                          Add to Training Data
+                        </label>
+                        <p
+                          className="text-muted text-sm"
+                          style={{ marginBottom: 12 }}
+                        >
+                          This will save the inbound email and the sent response as a training example.
+                        </p>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="text-sm text-muted">Category</label>
+                          <select
+                            className="form-input"
+                            value={trainingCategory}
+                            onChange={(e) =>
+                              setTrainingCategory(e.target.value as TrainingCategory)
+                            }
+                            style={{ width: "100%", fontSize: 13 }}
+                          >
+                            {CATEGORY_OPTIONS.map((opt) => (
+                              <option key={opt.key} value={opt.key}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => setTrainingDraftId(null)}
+                            disabled={addingToTraining}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => addToTraining(draft.id)}
+                            disabled={addingToTraining}
+                          >
+                            {addingToTraining ? "Adding..." : "Add to Training"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Inline feedback form */}
                     {isFeedback && (

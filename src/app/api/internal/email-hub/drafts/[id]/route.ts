@@ -26,7 +26,18 @@ export async function GET(
       .eq("draft_id", id)
       .order("created_at", { ascending: false });
 
-    return NextResponse.json({ ...draft, feedback: feedback ?? [] });
+    // Load thread messages if draft has a thread
+    let thread_messages: unknown[] = [];
+    if (draft.thread_id) {
+      const { data: messages } = await supabase
+        .from("email_messages")
+        .select("*")
+        .eq("thread_id", draft.thread_id)
+        .order("received_at", { ascending: true });
+      thread_messages = messages ?? [];
+    }
+
+    return NextResponse.json({ ...draft, feedback: feedback ?? [], thread_messages });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) },
