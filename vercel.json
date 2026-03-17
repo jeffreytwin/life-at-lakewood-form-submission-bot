@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/check-timeouts",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/sync-email",
+      "schedule": "*/3 * * * *"
     }
   ]
 }
