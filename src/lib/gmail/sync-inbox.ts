@@ -22,7 +22,7 @@ import {
 import { generateDraft } from "@/lib/ai/draft-generator";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
-interface MatchedContact {
+export interface MatchedContact {
   id: string;
   salesforce_id: string;
   email: string;
@@ -286,7 +286,7 @@ async function upsertThread(
  * Generate an AI draft and store it in the database.
  * Includes Salesforce contact info in the prompt for personalized responses.
  */
-async function generateAndStoreDraft(
+export async function generateAndStoreDraft(
   account: EmailAccount,
   threadId: string,
   subject: string,
