@@ -212,6 +212,12 @@ async function processInboundMessage(
       threadId,
       accountId: account.id,
     });
+
+    // Fire webhook to Zapier so it can check Salesforce for this email.
+    // If Zapier finds a match, it will call back to /api/webhooks/salesforce-contacts
+    // which will backfill the draft.
+    await requestSalesforceCheck(fromEmail, threadId, account.id);
+
     return { draftGenerated: false, skippedNonLead: true };
   }
 
@@ -368,6 +374,56 @@ export async function generateAndStoreDraft(
       error: err instanceof Error ? err.message : String(err),
     });
     return false;
+  }
+}
+
+/**
+ * Track emails we've already sent to Zapier for SF lookup to avoid
+ * duplicate requests (e.g., if a lead sends multiple emails before
+ * Zapier responds). Resets on server restart, which is fine.
+ */
+export const pendingSfChecks = new Set<string>();
+
+/**
+ * Fire an outbound webhook to Zapier requesting a Salesforce lookup for an
+ * unknown sender. Zapier will check SF and, if a match is found, POST back
+ * to /api/webhooks/salesforce-contacts with the contact data.
+ *
+ * This is fire-and-forget — failures are logged but don't block sync.
+ */
+async function requestSalesforceCheck(
+  senderEmail: string,
+  threadId: string,
+  accountId: string
+): Promise<void> {
+  const zapierUrl = process.env.ZAPIER_SF_CHECK_HOOK;
+  if (!zapierUrl) return; // Not configured, skip silently
+
+  const emailLower = senderEmail.toLowerCase();
+  if (pendingSfChecks.has(emailLower)) return; // Already requested
+  pendingSfChecks.add(emailLower);
+
+  try {
+    await fetch(zapierUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender_email: senderEmail,
+        thread_id: threadId,
+        account_id: accountId,
+        requested_at: new Date().toISOString(),
+      }),
+    });
+    logger.info("Salesforce check requested via Zapier", {
+      senderEmail,
+      threadId,
+    });
+  } catch (err) {
+    // Non-blocking: draft will be backfilled if Zapier responds later
+    logger.warn("Failed to request Salesforce check", {
+      senderEmail,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
