@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { generateAndStoreDraft, type MatchedContact } from "@/lib/gmail/sync-inbox";
+import { generateAndStoreDraft, pendingSfChecks, type MatchedContact } from "@/lib/gmail/sync-inbox";
 import type { EmailAccount } from "@/lib/supabase/types";
 
 /**
@@ -91,6 +91,9 @@ export async function POST(request: NextRequest) {
       }
 
       upserted++;
+
+      // Clear from pending SF check set so future emails get re-checked if needed
+      pendingSfChecks.delete(email);
 
       // Backfill: find threads from this email that don't have drafts yet
       const generated = await backfillDraftsForContact(email, {
