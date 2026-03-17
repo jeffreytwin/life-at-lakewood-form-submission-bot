@@ -155,7 +155,7 @@ async function processSentMessage(
     .select("*")
     .eq("thread_id", threadId)
     .eq("email_account_id", account.id)
-    .in("status", ["drafted", "edited"])
+    .in("status", ["drafted", "approved"])
     .order("created_at", { ascending: false })
     .limit(1);
 

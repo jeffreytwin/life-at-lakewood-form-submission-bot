@@ -6,8 +6,9 @@ import { logger } from "@/lib/shared/logger";
 /**
  * POST /api/internal/email-hub/drafts/:id/approve
  *
- * Approves a draft and sends an SMS to all frontlines agents who have
- * send_draft_success_texts enabled, notifying them a draft is ready in Gmail.
+ * Approves a draft (status → 'approved') and sends an SMS to all frontlines
+ * agents who have send_draft_success_texts enabled, notifying them a draft
+ * is ready in Gmail.
  */
 export async function POST(
   _request: NextRequest,
@@ -16,10 +17,10 @@ export async function POST(
   try {
     const { id } = await params;
 
-    // Load the draft
+    // Load the draft with account + location info
     const { data: draft, error: draftError } = await supabase
       .from("email_drafts")
-      .select("*, email_accounts(email_address, display_name, location_id)")
+      .select("*, email_accounts(email_address, display_name, location_id, locations(name))")
       .eq("id", id)
       .single();
 
@@ -34,11 +35,13 @@ export async function POST(
       );
     }
 
-    // Update draft status to "approved" — we keep "edited" since it hasn't been sent yet,
-    // but mark it with approved_at so we know it was approved
+    // Update draft status to "approved"
     const { error: updateError } = await supabase
       .from("email_drafts")
-      .update({ status: "edited" as string })
+      .update({
+        status: "approved" as string,
+        approved_at: new Date().toISOString(),
+      })
       .eq("id", id);
 
     if (updateError) throw updateError;
@@ -66,21 +69,17 @@ export async function POST(
       });
     }
 
-    // Build the SMS body
+    // Determine location name for SMS
     const account = draft.email_accounts as {
       email_address: string;
       display_name: string | null;
+      location_id: string | null;
+      locations: { name: string } | null;
     } | null;
-    const accountLabel =
-      account?.display_name ?? account?.email_address ?? "an inbox";
-    const subjectLine = draft.subject ?? "(no subject)";
+    const locationName = account?.locations?.name ?? account?.display_name ?? "Unknown";
 
-    const smsBody = [
-      `Email draft ready to send for ${accountLabel}.`,
-      `Subject: ${subjectLine}`,
-      "",
-      "Please check Gmail drafts to review and send.",
-    ].join("\n");
+    // SMS body: "[LOCATION] Draft Ready"
+    const smsBody = `${locationName} Draft Ready`;
 
     // Send SMS to each eligible agent
     const results: { agentName: string; success: boolean; error?: string }[] =

@@ -128,7 +128,7 @@ export async function pushAllPendingDrafts(): Promise<{
     .from("email_drafts")
     .select("*")
     .is("provider_draft_id", null)
-    .in("status", ["drafted", "edited"])
+    .in("status", ["drafted", "approved"])
     .eq("is_simulation", false)
     .not("thread_id", "is", null)
     .not("email_account_id", "is", null)

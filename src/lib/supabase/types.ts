@@ -321,7 +321,7 @@ export interface EmailMessage {
   created_at: string;
 }
 
-export type EmailDraftStatus = "drafted" | "edited" | "sent" | "discarded";
+export type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
 
 export interface EmailDraft {
   id: string;
@@ -341,9 +341,12 @@ export interface EmailDraft {
   simulation_input: Record<string, unknown> | null;
   created_at: string;
   edited_at: string | null;
+  approved_at: string | null;
   sent_at: string | null;
   sent_body_text: string | null;
   was_changed: boolean;
+  agent_handoff_transferred: boolean;
+  agent_handoff_transferred_at: string | null;
 }
 
 export type TrainingCategory =

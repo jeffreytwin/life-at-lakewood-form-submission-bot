@@ -224,6 +224,23 @@ export async function updateDraft(
 }
 
 /**
+ * Delete a draft from Gmail permanently.
+ */
+export async function deleteDraft(
+  accountId: string,
+  credentials: GmailCredentials,
+  draftId: string
+): Promise<void> {
+  const res = await gmailFetch(accountId, credentials, `/drafts/${draftId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok && res.status !== 404) {
+    const text = await res.text();
+    throw new Error(`deleteDraft failed: ${res.status} ${text}`);
+  }
+}
+
+/**
  * List messages added since a given historyId.
  */
 export async function listHistory(

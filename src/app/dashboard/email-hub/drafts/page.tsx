@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 
-type EmailDraftStatus = "drafted" | "edited" | "sent" | "discarded";
+type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
 type TrainingCategory =
   | "initial_inquiry"
   | "follow_up"
@@ -23,15 +23,14 @@ interface EmailDraft {
   body_html: string | null;
   cc_emails: string[];
   agent_handoff_id: string | null;
-  model_used: string | null;
-  prompt_tokens: number | null;
-  completion_tokens: number | null;
   is_simulation: boolean;
   simulation_input: Record<string, unknown> | null;
   sent_body_text: string | null;
   was_changed: boolean;
+  agent_handoff_transferred: boolean;
   created_at: string;
   edited_at: string | null;
+  approved_at: string | null;
   sent_at: string | null;
 }
 
@@ -48,14 +47,12 @@ interface ThreadMessage {
 
 const STATUS_OPTIONS: { key: EmailDraftStatus; label: string }[] = [
   { key: "drafted", label: "Drafts" },
-  { key: "edited", label: "Edited" },
   { key: "sent", label: "Sent" },
-  { key: "discarded", label: "Discarded" },
 ];
 
 const STATUS_COLORS: Record<EmailDraftStatus, string> = {
   drafted: "#4f8ff7",
-  edited: "#fbbf24",
+  approved: "#34d399",
   sent: "#34d399",
   discarded: "#f87171",
 };
@@ -70,7 +67,7 @@ const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 15_000;
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -128,6 +125,7 @@ export default function EmailDraftsPage() {
 
   // Approve state
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [approveResult, setApproveResult] = useState<string | null>(null);
 
   // Discard state
@@ -137,6 +135,10 @@ export default function EmailDraftsPage() {
   const [trainingDraftId, setTrainingDraftId] = useState<string | null>(null);
   const [trainingCategory, setTrainingCategory] = useState<TrainingCategory>("general");
   const [addingToTraining, setAddingToTraining] = useState(false);
+
+  // Agent handoff state
+  const [handoffId, setHandoffId] = useState<string | null>(null);
+  const [handoffResult, setHandoffResult] = useState<string | null>(null);
 
   const fetchDrafts = useCallback(
     (isPolling = false) => {
@@ -151,6 +153,12 @@ export default function EmailDraftsPage() {
         .then((data) => {
           if (Array.isArray(data)) {
             setDrafts(data);
+            // Update approved set from fetched data
+            const newApproved = new Set(approvedIds);
+            data.forEach((d: EmailDraft) => {
+              if (d.status === "approved") newApproved.add(d.id);
+            });
+            setApprovedIds(newApproved);
           } else if (!isPolling) {
             setError(data.error ?? "Failed to load drafts");
           }
@@ -163,6 +171,7 @@ export default function EmailDraftsPage() {
           }
         });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [statusFilter, showSimulations]
   );
 
@@ -171,7 +180,7 @@ export default function EmailDraftsPage() {
     fetchDrafts();
   }, [fetchDrafts]);
 
-  // Polling for new drafts
+  // Polling (15s interval)
   const fetchDraftsRef = useRef(fetchDrafts);
   fetchDraftsRef.current = fetchDrafts;
   useEffect(() => {
@@ -225,10 +234,7 @@ export default function EmailDraftsPage() {
       const res = await fetch(`/api/internal/email-hub/drafts/${draft.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          body_text: editText,
-          status: "edited" as EmailDraftStatus,
-        }),
+        body: JSON.stringify({ body_text: editText }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -256,16 +262,11 @@ export default function EmailDraftsPage() {
       if (!res.ok) {
         throw new Error(data.error ?? "Approval failed");
       }
-      if (data.sms_sent) {
-        const successCount = data.results.filter(
-          (r: { success: boolean }) => r.success
-        ).length;
-        setApproveResult(
-          `Approved! SMS sent to ${successCount} agent${successCount !== 1 ? "s" : ""}.`
-        );
-      } else {
-        setApproveResult(data.message ?? "Approved (no SMS recipients configured).");
-      }
+      // Mark as approved in local state
+      setApprovedIds((prev) => new Set(prev).add(draftId));
+      setApproveResult(
+        "Approved! An SMS has been sent to frontlines to review and send."
+      );
       fetchDrafts();
     } catch (e) {
       setApproveResult(e instanceof Error ? e.message : "Approval failed");
@@ -275,7 +276,7 @@ export default function EmailDraftsPage() {
   }
 
   async function discardDraft(draftId: string) {
-    if (!confirm("Are you sure you want to discard this draft?")) return;
+    if (!confirm("Are you sure you want to discard this draft? This will also delete it from Gmail.")) return;
     setDiscardingId(draftId);
     try {
       const res = await fetch(`/api/internal/email-hub/drafts/${draftId}`, {
@@ -319,9 +320,31 @@ export default function EmailDraftsPage() {
     }
   }
 
+  async function triggerAgentHandoff(draftId: string) {
+    if (!confirm("Transfer this email as an agent handoff? This will update Salesforce via Zapier.")) return;
+    setHandoffId(draftId);
+    setHandoffResult(null);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/handoff`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Handoff failed");
+      }
+      setHandoffResult("Agent handoff transferred successfully!");
+      fetchDrafts();
+    } catch (e) {
+      setHandoffResult(e instanceof Error ? e.message : "Handoff failed");
+    } finally {
+      setHandoffId(null);
+    }
+  }
+
   const filteredDrafts = drafts;
 
-  // Reusable thread messages renderer
+  // Reusable thread messages renderer (newest on top)
   function renderThreadMessages() {
     if (loadingThread) {
       return (
@@ -467,7 +490,9 @@ export default function EmailDraftsPage() {
             <div className="empty-icon">&#9993;</div>
             <h3>No drafts found</h3>
             <p>
-              {`No drafts with status "${statusFilter}". Try changing the filter.`}
+              {statusFilter === "drafted"
+                ? "No pending drafts. New drafts will appear here when emails are received."
+                : "No sent emails found."}
             </p>
           </div>
         </div>
@@ -476,10 +501,10 @@ export default function EmailDraftsPage() {
           {filteredDrafts.map((draft) => {
             const isExpanded = expandedId === draft.id;
             const isEditing = editingId === draft.id;
-            const statusColor = STATUS_COLORS[draft.status];
-            const tokenCount =
-              (draft.prompt_tokens ?? 0) + (draft.completion_tokens ?? 0);
+            const isApproved = draft.status === "approved" || approvedIds.has(draft.id);
+            const statusColor = isApproved ? "#34d399" : STATUS_COLORS[draft.status];
             const isSent = draft.status === "sent";
+            const displayStatus = isApproved ? "approved" : draft.status;
 
             return (
               <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
@@ -515,7 +540,7 @@ export default function EmailDraftsPage() {
                       flexShrink: 0,
                     }}
                   >
-                    {draft.status}
+                    {displayStatus}
                   </span>
 
                   {/* Subject */}
@@ -548,34 +573,29 @@ export default function EmailDraftsPage() {
                     </span>
                   )}
 
-                  {/* Meta info */}
+                  {/* Handoff badge for sent drafts */}
+                  {isSent && draft.agent_handoff_transferred && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "2px 8px",
+                        borderRadius: 10,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        background: "#a78bfa22",
+                        color: "#a78bfa",
+                        border: "1px solid #a78bfa44",
+                        flexShrink: 0,
+                      }}
+                    >
+                      Handed Off
+                    </span>
+                  )}
+
+                  {/* Time */}
                   <span className="text-muted text-sm" style={{ flexShrink: 0 }}>
                     {formatRelativeDate(draft.created_at)}
                   </span>
-
-                  {draft.model_used && (
-                    <span
-                      className="text-sm font-mono"
-                      style={{
-                        color: "#8b8fa3",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {draft.model_used}
-                    </span>
-                  )}
-
-                  {tokenCount > 0 && (
-                    <span
-                      className="text-sm font-mono"
-                      style={{
-                        color: "#8b8fa3",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {tokenCount.toLocaleString()} tok
-                    </span>
-                  )}
                 </div>
 
                 {/* Expanded view */}
@@ -622,7 +642,7 @@ export default function EmailDraftsPage() {
                       </div>
                     )}
 
-                    {/* Draft/Sent body - always on top */}
+                    {/* Draft/Sent body */}
                     <div style={{ marginBottom: 16 }}>
                       <label
                         className="text-sm"
@@ -725,6 +745,7 @@ export default function EmailDraftsPage() {
                         marginBottom: 16,
                       }}
                     >
+                      {/* Edit button - only for non-sent, non-discarded drafts */}
                       {!isSent && draft.status !== "discarded" && !isEditing && (
                         <button
                           className="btn btn-secondary"
@@ -736,7 +757,9 @@ export default function EmailDraftsPage() {
                           Edit Draft
                         </button>
                       )}
-                      {(draft.status === "drafted" || draft.status === "edited") && (
+
+                      {/* Approve button - changes to green "Approved" state */}
+                      {draft.status === "drafted" && !isApproved && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
@@ -748,7 +771,30 @@ export default function EmailDraftsPage() {
                           {approvingId === draft.id ? "Approving..." : "Approve"}
                         </button>
                       )}
-                      {(draft.status === "drafted" || draft.status === "edited") && (
+
+                      {/* Green Approved indicator */}
+                      {isApproved && !isSent && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#34d39922",
+                            color: "#34d399",
+                            border: "1px solid #34d39944",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Approved
+                        </span>
+                      )}
+
+                      {/* Discard button */}
+                      {!isSent && draft.status !== "discarded" && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
@@ -764,6 +810,8 @@ export default function EmailDraftsPage() {
                           {discardingId === draft.id ? "Discarding..." : "Discard"}
                         </button>
                       )}
+
+                      {/* Add to Training (sent only) */}
                       {isSent && (
                         <button
                           className="btn btn-secondary"
@@ -776,6 +824,45 @@ export default function EmailDraftsPage() {
                         >
                           Add to Training
                         </button>
+                      )}
+
+                      {/* Agent Handoff Transfer (sent only, not already transferred) */}
+                      {isSent && !draft.agent_handoff_transferred && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            triggerAgentHandoff(draft.id);
+                          }}
+                          disabled={handoffId === draft.id}
+                          style={{
+                            color: "#a78bfa",
+                            borderColor: "#a78bfa44",
+                          }}
+                        >
+                          {handoffId === draft.id ? "Transferring..." : "Agent Handoff"}
+                        </button>
+                      )}
+
+                      {/* Already transferred indicator */}
+                      {isSent && draft.agent_handoff_transferred && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#a78bfa22",
+                            color: "#a78bfa",
+                            border: "1px solid #a78bfa44",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Handed Off
+                        </span>
                       )}
                     </div>
 
@@ -797,6 +884,27 @@ export default function EmailDraftsPage() {
                         }}
                       >
                         {approveResult}
+                      </div>
+                    )}
+
+                    {/* Agent handoff result banner */}
+                    {handoffResult && expandedId === draft.id && (
+                      <div
+                        style={{
+                          marginBottom: 12,
+                          padding: "10px 14px",
+                          background: handoffResult.includes("successfully")
+                            ? "#a78bfa22"
+                            : "#f8717122",
+                          border: `1px solid ${handoffResult.includes("successfully") ? "#a78bfa44" : "#f8717144"}`,
+                          borderRadius: 6,
+                          fontSize: 13,
+                          color: handoffResult.includes("successfully")
+                            ? "#a78bfa"
+                            : "#f87171",
+                        }}
+                      >
+                        {handoffResult}
                       </div>
                     )}
 
@@ -870,10 +978,10 @@ export default function EmailDraftsPage() {
                       </div>
                     )}
 
-                    {/* Conversation thread - below draft body and buttons */}
+                    {/* Conversation thread (newest on top from API) */}
                     {renderThreadMessages()}
 
-                    {/* Meta details row */}
+                    {/* Minimal meta row - just created & sent times */}
                     <div
                       className="text-sm text-muted"
                       style={{
@@ -884,23 +992,11 @@ export default function EmailDraftsPage() {
                       }}
                     >
                       <span>
-                        ID:{" "}
-                        <span className="font-mono">{draft.id.slice(0, 8)}...</span>
-                      </span>
-                      {draft.thread_id && (
-                        <span>
-                          Thread:{" "}
-                          <span className="font-mono">
-                            {draft.thread_id.slice(0, 8)}...
-                          </span>
-                        </span>
-                      )}
-                      <span>
                         Created: {new Date(draft.created_at).toLocaleString()}
                       </span>
-                      {draft.edited_at && (
+                      {draft.approved_at && (
                         <span>
-                          Edited: {new Date(draft.edited_at).toLocaleString()}
+                          Approved: {new Date(draft.approved_at).toLocaleString()}
                         </span>
                       )}
                       {draft.sent_at && (

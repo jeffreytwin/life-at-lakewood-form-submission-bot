@@ -15,6 +15,7 @@ const formHubItems = [
 ];
 
 const emailHubItems = [
+  { href: "/dashboard/email-hub/overview", label: "Overview", icon: "\u2302" },
   { href: "/dashboard/email-hub/drafts", label: "Drafts", icon: "\u270E" },
   { href: "/dashboard/email-hub/training", label: "Training Data", icon: "\u2261" },
   { href: "/dashboard/email-hub/simulate", label: "Simulation", icon: "\u26A1" },
