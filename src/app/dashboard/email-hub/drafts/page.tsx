@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 type EmailDraftStatus = "drafted" | "edited" | "sent" | "discarded";
 type TrainingCategory =
@@ -46,9 +46,8 @@ interface ThreadMessage {
   created_at: string;
 }
 
-const STATUS_OPTIONS: { key: EmailDraftStatus | "all"; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "drafted", label: "Drafted" },
+const STATUS_OPTIONS: { key: EmailDraftStatus; label: string }[] = [
+  { key: "drafted", label: "Drafts" },
   { key: "edited", label: "Edited" },
   { key: "sent", label: "Sent" },
   { key: "discarded", label: "Discarded" },
@@ -71,6 +70,8 @@ const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
+const POLL_INTERVAL_MS = 30_000;
+
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
@@ -91,11 +92,28 @@ function truncate(text: string, maxLen: number): string {
   return text.slice(0, maxLen) + "...";
 }
 
+/**
+ * Strip quoted reply text from a sent email body for display.
+ */
+function stripQuotedText(text: string): string {
+  const lines = text.split("\n");
+  const result: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^On .+ wrote:\s*$/.test(line.trim())) break;
+    if (/^-{3,}\s*(Original Message|Forwarded message)/i.test(line.trim())) break;
+    if (/^_{3,}/.test(line.trim())) break;
+    if (line.trim().startsWith(">")) continue;
+    result.push(line);
+  }
+  return result.join("\n").trim();
+}
+
 export default function EmailDraftsPage() {
   const [drafts, setDrafts] = useState<EmailDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<EmailDraftStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<EmailDraftStatus>("drafted");
   const [showSimulations] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -108,47 +126,60 @@ export default function EmailDraftsPage() {
   const [editText, setEditText] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Feedback state
-  const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
-  const [feedbackRating, setFeedbackRating] = useState(0);
-  const [feedbackNotes, setFeedbackNotes] = useState("");
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
-
   // Approve state
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [approveResult, setApproveResult] = useState<string | null>(null);
+
+  // Discard state
+  const [discardingId, setDiscardingId] = useState<string | null>(null);
 
   // Add to training state
   const [trainingDraftId, setTrainingDraftId] = useState<string | null>(null);
   const [trainingCategory, setTrainingCategory] = useState<TrainingCategory>("general");
   const [addingToTraining, setAddingToTraining] = useState(false);
 
-  const fetchDrafts = useCallback(() => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (statusFilter !== "all") params.set("status", statusFilter);
-    params.set("is_simulation", String(showSimulations));
-    params.set("limit", "50");
+  const fetchDrafts = useCallback(
+    (isPolling = false) => {
+      if (!isPolling) setLoading(true);
+      const params = new URLSearchParams();
+      params.set("status", statusFilter);
+      params.set("is_simulation", String(showSimulations));
+      params.set("limit", "50");
 
-    fetch(`/api/internal/email-hub/drafts?${params.toString()}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setDrafts(data);
-        } else {
-          setError(data.error ?? "Failed to load drafts");
-        }
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError(e.message);
-        setLoading(false);
-      });
-  }, [statusFilter, showSimulations]);
+      fetch(`/api/internal/email-hub/drafts?${params.toString()}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setDrafts(data);
+          } else if (!isPolling) {
+            setError(data.error ?? "Failed to load drafts");
+          }
+          if (!isPolling) setLoading(false);
+        })
+        .catch((e) => {
+          if (!isPolling) {
+            setError(e.message);
+            setLoading(false);
+          }
+        });
+    },
+    [statusFilter, showSimulations]
+  );
 
+  // Initial fetch on filter change
   useEffect(() => {
     fetchDrafts();
   }, [fetchDrafts]);
+
+  // Polling for new drafts
+  const fetchDraftsRef = useRef(fetchDrafts);
+  fetchDraftsRef.current = fetchDrafts;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDraftsRef.current(true);
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
 
   async function loadThreadMessages(draftId: string) {
     setLoadingThread(true);
@@ -168,13 +199,11 @@ export default function EmailDraftsPage() {
     if (expandedId === id) {
       setExpandedId(null);
       setEditingId(null);
-      setFeedbackDraftId(null);
       setThreadMessages([]);
       setTrainingDraftId(null);
     } else {
       setExpandedId(id);
       setEditingId(null);
-      setFeedbackDraftId(null);
       setTrainingDraftId(null);
       loadThreadMessages(id);
     }
@@ -215,42 +244,6 @@ export default function EmailDraftsPage() {
     }
   }
 
-  function startFeedback(draftId: string) {
-    setFeedbackDraftId(draftId);
-    setFeedbackRating(0);
-    setFeedbackNotes("");
-  }
-
-  async function submitFeedback(draftId: string) {
-    if (feedbackRating < 1 || feedbackRating > 5) {
-      alert("Please select a rating from 1 to 5.");
-      return;
-    }
-    setSubmittingFeedback(true);
-    try {
-      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/feedback`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rating: feedbackRating,
-          feedback_notes: feedbackNotes || null,
-          edited_version: editingId === draftId ? editText : null,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Failed to submit feedback");
-      }
-      setFeedbackDraftId(null);
-      setFeedbackRating(0);
-      setFeedbackNotes("");
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Feedback submission failed");
-    } finally {
-      setSubmittingFeedback(false);
-    }
-  }
-
   async function approveDraft(draftId: string) {
     setApprovingId(draftId);
     setApproveResult(null);
@@ -281,6 +274,27 @@ export default function EmailDraftsPage() {
     }
   }
 
+  async function discardDraft(draftId: string) {
+    if (!confirm("Are you sure you want to discard this draft?")) return;
+    setDiscardingId(draftId);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "discarded" }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to discard");
+      }
+      fetchDrafts();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Discard failed");
+    } finally {
+      setDiscardingId(null);
+    }
+  }
+
   async function addToTraining(draftId: string) {
     setAddingToTraining(true);
     try {
@@ -307,11 +321,103 @@ export default function EmailDraftsPage() {
 
   const filteredDrafts = drafts;
 
+  // Reusable thread messages renderer
+  function renderThreadMessages() {
+    if (loadingThread) {
+      return (
+        <div style={{ marginBottom: 16 }}>
+          <p className="text-muted text-sm">Loading conversation...</p>
+        </div>
+      );
+    }
+    if (threadMessages.length === 0) return null;
+    return (
+      <div style={{ marginBottom: 20 }}>
+        <label
+          className="text-sm"
+          style={{
+            display: "block",
+            fontWeight: 600,
+            marginBottom: 10,
+            color: "#8b8fa3",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
+          Conversation Thread
+        </label>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            maxHeight: 400,
+            overflowY: "auto",
+            padding: "8px 0",
+          }}
+        >
+          {threadMessages.map((msg) => {
+            const isInbound = msg.direction === "inbound";
+            return (
+              <div
+                key={msg.id}
+                style={{
+                  background: isInbound ? "#1a1d27" : "#1a2633",
+                  border: `1px solid ${isInbound ? "#2a2e3a" : "#1e3a5f"}`,
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 6,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: isInbound ? "#f87171" : "#34d399",
+                    }}
+                  >
+                    {isInbound ? "Inbound" : "Outbound"}{" "}
+                    <span style={{ color: "#8b8fa3", fontWeight: 400 }}>
+                      {msg.from_email ?? ""}
+                    </span>
+                  </span>
+                  {msg.received_at && (
+                    <span className="text-muted text-sm">
+                      {formatRelativeDate(msg.received_at)}
+                    </span>
+                  )}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    color: "#e4e6ed",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {msg.body_text ?? "(empty)"}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="page-header">
         <h2>Email Drafts</h2>
-        <p>Review, edit, and provide feedback on AI-generated email drafts.</p>
+        <p>Review, edit, and approve AI-generated email drafts.</p>
       </div>
 
       {/* Filter bar */}
@@ -361,9 +467,7 @@ export default function EmailDraftsPage() {
             <div className="empty-icon">&#9993;</div>
             <h3>No drafts found</h3>
             <p>
-              {statusFilter !== "all"
-                ? `No drafts with status "${statusFilter}". Try changing the filter.`
-                : "AI-generated email drafts will appear here once the system processes inbound emails."}
+              {`No drafts with status "${statusFilter}". Try changing the filter.`}
             </p>
           </div>
         </div>
@@ -372,10 +476,10 @@ export default function EmailDraftsPage() {
           {filteredDrafts.map((draft) => {
             const isExpanded = expandedId === draft.id;
             const isEditing = editingId === draft.id;
-            const isFeedback = feedbackDraftId === draft.id;
             const statusColor = STATUS_COLORS[draft.status];
             const tokenCount =
               (draft.prompt_tokens ?? 0) + (draft.completion_tokens ?? 0);
+            const isSent = draft.status === "sent";
 
             return (
               <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
@@ -482,92 +586,6 @@ export default function EmailDraftsPage() {
                       padding: "16px",
                     }}
                   >
-                    {/* Thread messages */}
-                    {loadingThread ? (
-                      <div style={{ marginBottom: 16 }}>
-                        <p className="text-muted text-sm">Loading conversation...</p>
-                      </div>
-                    ) : threadMessages.length > 0 ? (
-                      <div style={{ marginBottom: 20 }}>
-                        <label
-                          className="text-sm"
-                          style={{
-                            display: "block",
-                            fontWeight: 600,
-                            marginBottom: 10,
-                            color: "#8b8fa3",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.05em",
-                          }}
-                        >
-                          Conversation Thread
-                        </label>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 8,
-                            maxHeight: 400,
-                            overflowY: "auto",
-                            padding: "8px 0",
-                          }}
-                        >
-                          {threadMessages.map((msg) => {
-                            const isInbound = msg.direction === "inbound";
-                            return (
-                              <div
-                                key={msg.id}
-                                style={{
-                                  background: isInbound ? "#1a1d27" : "#1a2633",
-                                  border: `1px solid ${isInbound ? "#2a2e3a" : "#1e3a5f"}`,
-                                  borderRadius: 8,
-                                  padding: "10px 14px",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    marginBottom: 6,
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      color: isInbound ? "#f87171" : "#34d399",
-                                    }}
-                                  >
-                                    {isInbound ? "Inbound" : "Outbound"}{" "}
-                                    <span style={{ color: "#8b8fa3", fontWeight: 400 }}>
-                                      {msg.from_email ?? ""}
-                                    </span>
-                                  </span>
-                                  {msg.received_at && (
-                                    <span className="text-muted text-sm">
-                                      {formatRelativeDate(msg.received_at)}
-                                    </span>
-                                  )}
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: 13,
-                                    lineHeight: 1.6,
-                                    color: "#e4e6ed",
-                                    whiteSpace: "pre-wrap",
-                                    wordBreak: "break-word",
-                                  }}
-                                >
-                                  {msg.body_text ?? "(empty)"}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
-
                     {/* Simulation input */}
                     {draft.is_simulation && draft.simulation_input && (
                       <div style={{ marginBottom: 16 }}>
@@ -604,7 +622,7 @@ export default function EmailDraftsPage() {
                       </div>
                     )}
 
-                    {/* Draft body */}
+                    {/* Draft/Sent body - always on top */}
                     <div style={{ marginBottom: 16 }}>
                       <label
                         className="text-sm"
@@ -615,7 +633,7 @@ export default function EmailDraftsPage() {
                           color: "#e4e6ed",
                         }}
                       >
-                        {draft.status === "sent" ? "Sent Response" : "Draft Body"}
+                        {isSent ? "Sent Response" : "Draft Body"}
                       </label>
 
                       {isEditing ? (
@@ -673,15 +691,15 @@ export default function EmailDraftsPage() {
                             overflowY: "auto",
                           }}
                         >
-                          {draft.status === "sent"
-                            ? (draft.sent_body_text ?? draft.body_text ?? "(empty)")
+                          {isSent
+                            ? stripQuotedText(draft.sent_body_text ?? draft.body_text ?? "(empty)")
                             : (draft.body_text ?? "(empty)")}
                         </div>
                       )}
                     </div>
 
                     {/* Was changed indicator for sent drafts */}
-                    {draft.status === "sent" && draft.was_changed && (
+                    {isSent && draft.was_changed && (
                       <div
                         style={{
                           marginBottom: 12,
@@ -704,9 +722,10 @@ export default function EmailDraftsPage() {
                         gap: 8,
                         flexWrap: "wrap",
                         alignItems: "center",
+                        marginBottom: 16,
                       }}
                     >
-                      {draft.status !== "sent" && !isEditing && (
+                      {!isSent && draft.status !== "discarded" && !isEditing && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
@@ -719,23 +738,33 @@ export default function EmailDraftsPage() {
                       )}
                       {(draft.status === "drafted" || draft.status === "edited") && (
                         <button
-                          className="btn btn-primary"
+                          className="btn btn-secondary"
                           onClick={(e) => {
                             e.stopPropagation();
                             approveDraft(draft.id);
                           }}
                           disabled={approvingId === draft.id}
-                          style={{
-                            background: "#34d399",
-                            borderColor: "#34d399",
-                            color: "#111318",
-                            fontWeight: 600,
-                          }}
                         >
                           {approvingId === draft.id ? "Approving..." : "Approve"}
                         </button>
                       )}
-                      {draft.status === "sent" && (
+                      {(draft.status === "drafted" || draft.status === "edited") && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            discardDraft(draft.id);
+                          }}
+                          disabled={discardingId === draft.id}
+                          style={{
+                            color: "#f87171",
+                            borderColor: "#f8717144",
+                          }}
+                        >
+                          {discardingId === draft.id ? "Discarding..." : "Discard"}
+                        </button>
+                      )}
+                      {isSent && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
@@ -748,24 +777,13 @@ export default function EmailDraftsPage() {
                           Add to Training
                         </button>
                       )}
-                      {!isFeedback && (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startFeedback(draft.id);
-                          }}
-                        >
-                          Give Feedback
-                        </button>
-                      )}
                     </div>
 
                     {/* Approve result banner */}
                     {approveResult && expandedId === draft.id && (
                       <div
                         style={{
-                          marginTop: 12,
+                          marginBottom: 12,
                           padding: "10px 14px",
                           background: approveResult.startsWith("Approved")
                             ? "#34d39922"
@@ -786,7 +804,7 @@ export default function EmailDraftsPage() {
                     {trainingDraftId === draft.id && (
                       <div
                         style={{
-                          marginTop: 16,
+                          marginBottom: 16,
                           padding: "14px 16px",
                           background: "#111318",
                           border: "1px solid #2a2e3a",
@@ -852,103 +870,8 @@ export default function EmailDraftsPage() {
                       </div>
                     )}
 
-                    {/* Inline feedback form */}
-                    {isFeedback && (
-                      <div
-                        style={{
-                          marginTop: 16,
-                          padding: "14px 16px",
-                          background: "#111318",
-                          border: "1px solid #2a2e3a",
-                          borderRadius: 6,
-                        }}
-                      >
-                        <label
-                          className="text-sm"
-                          style={{
-                            display: "block",
-                            fontWeight: 600,
-                            marginBottom: 10,
-                            color: "#e4e6ed",
-                          }}
-                        >
-                          Rate this draft
-                        </label>
-
-                        {/* Star rating */}
-                        <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() => setFeedbackRating(star)}
-                              style={{
-                                background: "transparent",
-                                border: "none",
-                                cursor: "pointer",
-                                fontSize: 24,
-                                color:
-                                  star <= feedbackRating ? "#fbbf24" : "#2a2e3a",
-                                padding: "0 2px",
-                                transition: "color 0.15s",
-                              }}
-                            >
-                              &#9733;
-                            </button>
-                          ))}
-                          {feedbackRating > 0 && (
-                            <span
-                              className="text-muted text-sm"
-                              style={{ marginLeft: 8, alignSelf: "center" }}
-                            >
-                              {feedbackRating}/5
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Notes */}
-                        <div className="form-group" style={{ marginBottom: 12 }}>
-                          <label className="text-sm text-muted">
-                            Notes (optional)
-                          </label>
-                          <textarea
-                            className="form-input"
-                            value={feedbackNotes}
-                            onChange={(e) => setFeedbackNotes(e.target.value)}
-                            placeholder="What could be improved?"
-                            rows={3}
-                            style={{
-                              width: "100%",
-                              fontSize: 13,
-                              resize: "vertical",
-                            }}
-                          />
-                        </div>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => setFeedbackDraftId(null)}
-                            disabled={submittingFeedback}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className="btn btn-primary"
-                            onClick={() => submitFeedback(draft.id)}
-                            disabled={submittingFeedback || feedbackRating < 1}
-                          >
-                            {submittingFeedback ? "Submitting..." : "Submit Feedback"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    {/* Conversation thread - below draft body and buttons */}
+                    {renderThreadMessages()}
 
                     {/* Meta details row */}
                     <div

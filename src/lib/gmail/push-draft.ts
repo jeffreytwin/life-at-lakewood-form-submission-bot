@@ -10,6 +10,7 @@ import {
   updateDraft,
   getHeader,
   getMessage,
+  getSignature,
   buildRawMessage,
 } from "./client";
 import type { EmailAccount, EmailDraft, GmailCredentials } from "@/lib/supabase/types";
@@ -25,12 +26,24 @@ export async function pushDraftToGmail(
   const creds = account.credentials as GmailCredentials | null;
   if (!creds) throw new Error("Account has no Gmail credentials");
 
-  // Load the thread to get reply context
+  // Load the thread to get reply context and provider_thread_id
   let inReplyTo: string | null = null;
   let references: string | null = null;
   let replyToEmail: string | null = null;
+  let providerThreadId: string | null = null;
 
   if (draft.thread_id) {
+    // Get provider_thread_id for Gmail threading
+    const { data: thread } = await supabase
+      .from("email_threads")
+      .select("provider_thread_id")
+      .eq("id", draft.thread_id)
+      .single();
+
+    if (thread) {
+      providerThreadId = thread.provider_thread_id;
+    }
+
     // Get the last inbound message in the thread for reply headers
     const { data: messages } = await supabase
       .from("email_messages")
@@ -60,6 +73,15 @@ export async function pushDraftToGmail(
     }
   }
 
+  // Fetch Gmail signature to include in the draft
+  let signatureHtml: string | undefined;
+  try {
+    const sig = await getSignature(account.id, creds, account.email_address);
+    if (sig) signatureHtml = sig;
+  } catch {
+    // Non-critical: draft will work without signature
+  }
+
   const raw = buildRawMessage({
     from: account.email_address,
     to: replyToEmail ?? "",
@@ -68,18 +90,19 @@ export async function pushDraftToGmail(
     cc: draft.cc_emails?.length ? draft.cc_emails : undefined,
     inReplyTo: inReplyTo ?? undefined,
     references: references ?? undefined,
+    signatureHtml,
   });
 
   let gmailDraftId: string;
 
   if (draft.provider_draft_id) {
     // Update existing Gmail draft
-    const result = await updateDraft(account.id, creds, draft.provider_draft_id, raw);
+    const result = await updateDraft(account.id, creds, draft.provider_draft_id, raw, providerThreadId ?? undefined);
     gmailDraftId = result.id;
     logger.info("Updated Gmail draft", { draftId: draft.id, gmailDraftId });
   } else {
     // Create new Gmail draft
-    const result = await createDraft(account.id, creds, raw);
+    const result = await createDraft(account.id, creds, raw, providerThreadId ?? undefined);
     gmailDraftId = result.id;
     logger.info("Created Gmail draft", { draftId: draft.id, gmailDraftId });
   }
