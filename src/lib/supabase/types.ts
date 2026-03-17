@@ -71,6 +71,11 @@ export interface Database {
         Insert: Omit<EmailHubSettings, "id" | "created_at" | "updated_at">;
         Update: Partial<Omit<EmailHubSettings, "id" | "created_at" | "updated_at">>;
       };
+      salesforce_contacts: {
+        Row: SalesforceContact;
+        Insert: Omit<SalesforceContact, "id" | "created_at">;
+        Update: Partial<Omit<SalesforceContact, "id" | "created_at">>;
+      };
     };
   };
 }
@@ -408,4 +413,23 @@ export interface EmailHubSettings {
   polling_interval_seconds: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface SalesforceContact {
+  id: string;
+  salesforce_id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  company: string | null;
+  lead_status: string | null;
+  lead_source: string | null;
+  property_interest: string | null;
+  budget: string | null;
+  timeline: string | null;
+  location_name: string | null;
+  is_active: boolean;
+  synced_at: string;
+  created_at: string;
 }
