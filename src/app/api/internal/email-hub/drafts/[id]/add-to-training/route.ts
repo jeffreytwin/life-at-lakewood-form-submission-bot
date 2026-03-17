@@ -3,6 +3,29 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 
 /**
+ * Strip quoted reply text from a sent email body.
+ * Removes "On ... wrote:" blocks, lines starting with ">", and common separators.
+ */
+function stripQuotedText(text: string): string {
+  const lines = text.split("\n");
+  const result: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Stop at "On <date> <person> wrote:" pattern
+    if (/^On .+ wrote:\s*$/.test(line.trim())) break;
+    // Stop at common separators
+    if (/^-{3,}\s*(Original Message|Forwarded message)/i.test(line.trim())) break;
+    if (/^_{3,}/.test(line.trim())) break;
+    // Skip lines starting with ">"
+    if (line.trim().startsWith(">")) continue;
+    result.push(line);
+  }
+
+  return result.join("\n").trim();
+}
+
+/**
  * POST /api/internal/email-hub/drafts/:id/add-to-training
  *
  * Takes a sent draft and its inbound message and creates a training example.
@@ -43,7 +66,9 @@ export async function POST(
     }
 
     // The response text is sent_body_text (what was actually sent) or body_text
-    const responseText = draft.sent_body_text ?? draft.body_text;
+    // Strip quoted reply text so only the actual response is used for training
+    const rawResponse = draft.sent_body_text ?? draft.body_text;
+    const responseText = rawResponse ? stripQuotedText(rawResponse) : null;
     if (!responseText) {
       return NextResponse.json(
         { error: "Draft has no body text to use as training" },

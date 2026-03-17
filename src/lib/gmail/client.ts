@@ -184,11 +184,14 @@ export async function getThread(
 export async function createDraft(
   accountId: string,
   credentials: GmailCredentials,
-  raw: string // base64url-encoded RFC 2822 message
+  raw: string, // base64url-encoded RFC 2822 message
+  threadId?: string
 ): Promise<{ id: string; message: { id: string; threadId: string } }> {
+  const message: Record<string, string> = { raw };
+  if (threadId) message.threadId = threadId;
   const res = await gmailFetch(accountId, credentials, "/drafts", {
     method: "POST",
-    body: JSON.stringify({ message: { raw } }),
+    body: JSON.stringify({ message }),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -204,11 +207,14 @@ export async function updateDraft(
   accountId: string,
   credentials: GmailCredentials,
   draftId: string,
-  raw: string
+  raw: string,
+  threadId?: string
 ): Promise<{ id: string; message: { id: string; threadId: string } }> {
+  const message: Record<string, string> = { raw };
+  if (threadId) message.threadId = threadId;
   const res = await gmailFetch(accountId, credentials, `/drafts/${draftId}`, {
     method: "PUT",
-    body: JSON.stringify({ message: { raw } }),
+    body: JSON.stringify({ message }),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -337,7 +343,30 @@ export function extractBodyHtml(msg: GmailMessage): string | null {
 }
 
 /**
+ * Fetch the Gmail signature for a sendAs address.
+ */
+export async function getSignature(
+  accountId: string,
+  credentials: GmailCredentials,
+  emailAddress: string
+): Promise<string | null> {
+  try {
+    const res = await gmailFetch(
+      accountId,
+      credentials,
+      `/settings/sendAs/${encodeURIComponent(emailAddress)}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.signature || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Build a base64url-encoded RFC 2822 message for Gmail API.
+ * When signatureHtml is provided, sends as multipart/alternative (text + HTML).
  */
 export function buildRawMessage(opts: {
   from: string;
@@ -348,20 +377,44 @@ export function buildRawMessage(opts: {
   inReplyTo?: string;
   references?: string;
   threadId?: string;
+  signatureHtml?: string;
 }): string {
-  const lines: string[] = [];
-  lines.push(`From: ${opts.from}`);
-  lines.push(`To: ${opts.to}`);
-  if (opts.cc?.length) lines.push(`Cc: ${opts.cc.join(", ")}`);
-  lines.push(`Subject: ${opts.subject}`);
-  lines.push("MIME-Version: 1.0");
-  lines.push("Content-Type: text/plain; charset=utf-8");
-  if (opts.inReplyTo) lines.push(`In-Reply-To: ${opts.inReplyTo}`);
-  if (opts.references) lines.push(`References: ${opts.references}`);
-  lines.push("");
-  lines.push(opts.bodyText);
+  const headers: string[] = [];
+  headers.push(`From: ${opts.from}`);
+  headers.push(`To: ${opts.to}`);
+  if (opts.cc?.length) headers.push(`Cc: ${opts.cc.join(", ")}`);
+  headers.push(`Subject: ${opts.subject}`);
+  headers.push("MIME-Version: 1.0");
+  if (opts.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`);
+  if (opts.references) headers.push(`References: ${opts.references}`);
 
-  const raw = lines.join("\r\n");
+  let body: string;
+
+  if (opts.signatureHtml) {
+    // Build multipart/alternative with text and HTML
+    const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
+
+    const htmlBody = `<div dir="ltr">${opts.bodyText.replace(/\n/g, "<br>")}</div><br><div class="gmail_signature">${opts.signatureHtml}</div>`;
+    const textWithSig = opts.bodyText;
+
+    body = [
+      `--${boundary}`,
+      "Content-Type: text/plain; charset=utf-8",
+      "",
+      textWithSig,
+      `--${boundary}`,
+      "Content-Type: text/html; charset=utf-8",
+      "",
+      htmlBody,
+      `--${boundary}--`,
+    ].join("\r\n");
+  } else {
+    headers.push("Content-Type: text/plain; charset=utf-8");
+    body = opts.bodyText;
+  }
+
+  const raw = headers.join("\r\n") + "\r\n\r\n" + body;
   return Buffer.from(raw)
     .toString("base64")
     .replace(/\+/g, "-")
