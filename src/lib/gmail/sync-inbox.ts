@@ -22,19 +22,18 @@ import {
 import { generateDraft } from "@/lib/ai/draft-generator";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
-interface MatchedLead {
+interface MatchedContact {
   id: string;
-  salesforce_record_id: string | null;
+  salesforce_id: string;
+  email: string;
   first_name: string | null;
   last_name: string | null;
-  email: string | null;
   phone: string | null;
-  price: string | null;
+  budget: string | null;
   timeline: string | null;
-  message: string | null;
-  floor_plan: string | null;
-  village: string | null;
-  home_type: string | null;
+  property_interest: string | null;
+  lead_status: string | null;
+  location_name: string | null;
 }
 
 /**
@@ -134,19 +133,21 @@ export async function syncInbox(account: EmailAccount): Promise<{
 }
 
 /**
- * Match a sender email address to an existing lead in Salesforce.
- * Looks up by email (case-insensitive). Returns the most recent matching lead.
+ * Match a sender email address to a known Salesforce contact.
+ * Looks up by email (case-insensitive) in the salesforce_contacts table.
+ * Only returns active contacts.
  */
-async function matchSenderToLead(senderEmail: string): Promise<MatchedLead | null> {
-  const { data: leads } = await supabase
-    .from("leads")
-    .select("id, salesforce_record_id, first_name, last_name, email, phone, price, timeline, message, floor_plan, village, home_type")
+async function matchSenderToContact(senderEmail: string): Promise<MatchedContact | null> {
+  const { data: contacts } = await supabase
+    .from("salesforce_contacts")
+    .select("id, salesforce_id, email, first_name, last_name, phone, budget, timeline, property_interest, lead_status, location_name")
     .ilike("email", senderEmail)
-    .order("created_at", { ascending: false })
+    .eq("is_active", true)
+    .order("synced_at", { ascending: false })
     .limit(1);
 
-  if (!leads || leads.length === 0) return null;
-  return leads[0] as MatchedLead;
+  if (!contacts || contacts.length === 0) return null;
+  return contacts[0] as MatchedContact;
 }
 
 /**
@@ -170,16 +171,16 @@ async function processInboundMessage(
     return { draftGenerated: false, skippedNonLead: false };
   }
 
-  // Match sender to a known lead in the system
-  const lead = await matchSenderToLead(fromEmail);
+  // Match sender to a known Salesforce contact
+  const contact = await matchSenderToContact(fromEmail);
 
-  // Upsert thread (with lead link if matched)
+  // Upsert thread (with Salesforce ID link if matched)
   const threadId = await upsertThread(
     account,
     msg.threadId,
     subject,
     fromEmail,
-    lead?.salesforce_record_id ?? null
+    contact?.salesforce_id ?? null
   );
 
   // Store message (always, even for non-leads — useful for auditing)
@@ -204,9 +205,9 @@ async function processInboundMessage(
     .update({ last_message_at: receivedAt })
     .eq("id", threadId);
 
-  // Only generate drafts for known leads
-  if (!lead) {
-    logger.info("Skipping draft — sender is not a known lead", {
+  // Only generate drafts for known Salesforce contacts
+  if (!contact) {
+    logger.info("Skipping draft — sender is not a known Salesforce contact", {
       senderEmail: fromEmail,
       threadId,
       accountId: account.id,
@@ -214,13 +215,13 @@ async function processInboundMessage(
     return { draftGenerated: false, skippedNonLead: true };
   }
 
-  // Generate AI draft reply with lead context
+  // Generate AI draft reply with contact context
   const draftGenerated = await generateAndStoreDraft(
     account,
     threadId,
     subject,
     messageId,
-    lead
+    contact
   );
 
   return { draftGenerated, skippedNonLead: false };
@@ -283,14 +284,14 @@ async function upsertThread(
 
 /**
  * Generate an AI draft and store it in the database.
- * Includes lead info in the prompt for personalized responses.
+ * Includes Salesforce contact info in the prompt for personalized responses.
  */
 async function generateAndStoreDraft(
   account: EmailAccount,
   threadId: string,
   subject: string,
   _inReplyToMessageId: string | null,
-  lead: MatchedLead
+  contact: MatchedContact
 ): Promise<boolean> {
   try {
     // Load full conversation thread for context
@@ -321,22 +322,18 @@ async function generateAndStoreDraft(
       locationName = loc?.name ?? "General";
     }
 
-    // Build lead info for the prompt
-    const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || undefined;
-    const interests = [lead.floor_plan, lead.village, lead.home_type]
-      .filter(Boolean)
-      .join(", ") || undefined;
+    // Build contact info for the prompt
+    const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ") || undefined;
 
     const draft = await generateDraft({
       locationName,
       locationId: account.location_id,
       conversationThread,
       leadInfo: {
-        name: leadName,
-        budget: lead.price ?? undefined,
-        timeline: lead.timeline ?? undefined,
-        interests,
-        message: lead.message ?? undefined,
+        name: contactName,
+        budget: contact.budget ?? undefined,
+        timeline: contact.timeline ?? undefined,
+        interests: contact.property_interest ?? undefined,
       },
     });
 
@@ -358,11 +355,11 @@ async function generateAndStoreDraft(
       was_changed: false,
     });
 
-    logger.info("AI draft generated for lead", {
+    logger.info("AI draft generated for Salesforce contact", {
       threadId,
       accountId: account.id,
-      leadId: lead.id,
-      leadName,
+      salesforceId: contact.salesforce_id,
+      contactName,
     });
     return true;
   } catch (err) {
