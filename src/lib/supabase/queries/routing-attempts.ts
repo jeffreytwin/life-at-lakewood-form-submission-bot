@@ -106,25 +106,32 @@ export async function getDeclinedAgentIdsForLead(
 /**
  * Count today's accepted routing attempts per agent (bot-local source of truth).
  * Uses Eastern time to match the Salesforce daily boundary.
+ *
+ * @param since - If provided, only count acceptances created after this ISO timestamp.
+ *                Used to count only bot-local acceptances that occurred after the last
+ *                Salesforce sync, so the SF snapshot is treated as the baseline.
  */
-export async function getTodayAcceptedCountsByAgent(): Promise<
-  Map<string, number>
-> {
+export async function getTodayAcceptedCountsByAgent(
+  since?: string | null
+): Promise<Map<string, number>> {
   // Get today's date in Eastern time
   const now = new Date();
   const etDate = now.toLocaleDateString("en-CA", {
     timeZone: "America/New_York",
   }); // "2026-03-15"
 
-  // Query a wide UTC window (last 30 hours) then filter by ET date in code.
-  // This avoids fragile UTC↔ET offset calculations while staying correct.
-  const windowStart = new Date(now.getTime() - 30 * 60 * 60 * 1000);
+  // If we have a "since" cutoff, use it as the window start (only count
+  // acceptances after the last SF sync). Otherwise fall back to the wide
+  // 30-hour UTC window for a full day's count.
+  const windowStart = since
+    ? since
+    : new Date(now.getTime() - 30 * 60 * 60 * 1000).toISOString();
 
   const { data, error } = await supabase
     .from("routing_attempts")
     .select("agent_id, created_at")
     .eq("status", "accepted")
-    .gte("created_at", windowStart.toISOString());
+    .gt("created_at", windowStart);
 
   if (error) throw error;
 
