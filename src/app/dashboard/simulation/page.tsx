@@ -22,24 +22,19 @@ export default function SimulationPage() {
           style={{
             cursor: "pointer",
             textAlign: "left",
-            transition: "border-color 0.15s",
+            transition: "border-color 0.15s, background 0.15s",
             border: "1px solid var(--border)",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.borderColor = "var(--accent)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.borderColor = "var(--border)")
-          }
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--accent)";
+            e.currentTarget.style.background = "var(--bg-card-hover)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.background = "var(--bg-card)";
+          }}
         >
-          <div
-            style={{
-              fontSize: 36,
-              marginBottom: 12,
-            }}
-          >
-            {"\u2630"}
-          </div>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>{"\u2630"}</div>
           <h3
             style={{
               fontSize: 16,
@@ -62,24 +57,19 @@ export default function SimulationPage() {
           style={{
             cursor: "pointer",
             textAlign: "left",
-            transition: "border-color 0.15s",
+            transition: "border-color 0.15s, background 0.15s",
             border: "1px solid var(--border)",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.borderColor = "var(--accent)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.borderColor = "var(--border)")
-          }
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--accent)";
+            e.currentTarget.style.background = "var(--bg-card-hover)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+            e.currentTarget.style.background = "var(--bg-card)";
+          }}
         >
-          <div
-            style={{
-              fontSize: 36,
-              marginBottom: 12,
-            }}
-          >
-            {"\u2709"}
-          </div>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>{"\u2709"}</div>
           <h3
             style={{
               fontSize: 16,

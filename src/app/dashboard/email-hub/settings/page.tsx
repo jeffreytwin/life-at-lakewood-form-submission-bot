@@ -86,7 +86,7 @@ export default function EmailHubSettingsPage() {
   };
 
   const disconnectInbox = async (accountId: string) => {
-    if (!confirm("Are you sure you want to disconnect this inbox?")) return;
+    if (!confirm("Are you sure you want to disconnect this inbox? You can reconnect it later.")) return;
     setDisconnecting(accountId);
     try {
       const res = await fetch(
@@ -97,15 +97,15 @@ export default function EmailHubSettingsPage() {
       if (!res.ok) throw new Error(data.error || "Failed to disconnect");
       setOauthStatus("Inbox disconnected successfully.");
       loadAccounts();
-    } catch {
-      setOauthStatus("Failed to disconnect inbox.");
+    } catch (e) {
+      setOauthStatus(e instanceof Error ? e.message : "Failed to disconnect inbox.");
     } finally {
       setDisconnecting(null);
     }
   };
 
   const addInbox = async () => {
-    if (!newEmail.includes("@")) return;
+    if (!newEmail || !newEmail.includes("@")) return;
     setAddingInbox(true);
     try {
       const res = await fetch("/api/internal/email-hub/accounts", {
@@ -118,7 +118,7 @@ export default function EmailHubSettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to add inbox");
-      setOauthStatus(`Inbox ${newEmail} added successfully.`);
+      setOauthStatus(`Inbox ${newEmail} added. Connect Gmail to start syncing.`);
       setNewEmail("");
       setNewDisplayName("");
       setShowAddInbox(false);
@@ -277,9 +277,7 @@ export default function EmailHubSettingsPage() {
                         onClick={() => disconnectInbox(account.id)}
                         disabled={disconnecting === account.id}
                       >
-                        {disconnecting === account.id
-                          ? "..."
-                          : "Disconnect"}
+                        {disconnecting === account.id ? "..." : "Disconnect"}
                       </button>
                     </>
                   ) : (
