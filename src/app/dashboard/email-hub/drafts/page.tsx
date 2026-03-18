@@ -43,6 +43,7 @@ interface EmailDraft {
   was_changed: boolean;
   agent_handoff_transferred: boolean;
   added_to_training: boolean;
+  lead_status_update: string | null;
   created_at: string;
   edited_at: string | null;
   approved_at: string | null;
@@ -158,6 +159,9 @@ export default function EmailDraftsPage() {
   // Agent handoff state
   const [handoffId, setHandoffId] = useState<string | null>(null);
   const [handoffResult, setHandoffResult] = useState<string | null>(null);
+
+  // Lead status update state
+  const [leadStatusUpdatingId, setLeadStatusUpdatingId] = useState<string | null>(null);
 
   // Regenerate state
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
@@ -415,6 +419,28 @@ export default function EmailDraftsPage() {
       setHandoffResult(e instanceof Error ? e.message : "Handoff failed");
     } finally {
       setHandoffId(null);
+    }
+  }
+
+  async function updateLeadStatus(draftId: string, status: "nurture_active" | "disqualified") {
+    const label = status === "nurture_active" ? "Nurture Active" : "Disqualified";
+    if (!confirm(`Update this lead to ${label} in Salesforce?`)) return;
+    setLeadStatusUpdatingId(draftId);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/lead-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Update failed");
+      }
+      fetchDrafts();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Lead status update failed");
+    } finally {
+      setLeadStatusUpdatingId(null);
     }
   }
 
@@ -1120,6 +1146,78 @@ export default function EmailDraftsPage() {
                           <span style={{ fontSize: 16 }}>&#10003;</span>
                           Handed Off
                         </span>
+                      )}
+
+                      {/* Lead status update buttons */}
+                      {draft.lead_status_update === "nurture_active" && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#34d39922",
+                            color: "#34d399",
+                            border: "1px solid #34d39944",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Updated to Nurture Active
+                        </span>
+                      )}
+                      {draft.lead_status_update === "disqualified" && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#f8717122",
+                            color: "#f87171",
+                            border: "1px solid #f8717144",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Updated to Disqualified
+                        </span>
+                      )}
+                      {!draft.lead_status_update && !isEditing && (
+                        <>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateLeadStatus(draft.id, "nurture_active");
+                            }}
+                            disabled={leadStatusUpdatingId === draft.id}
+                            style={{
+                              color: "#34d399",
+                              borderColor: "#34d39944",
+                            }}
+                          >
+                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Nurture Active"}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateLeadStatus(draft.id, "disqualified");
+                            }}
+                            disabled={leadStatusUpdatingId === draft.id}
+                            style={{
+                              color: "#f87171",
+                              borderColor: "#f8717144",
+                            }}
+                          >
+                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
+                          </button>
+                        </>
                       )}
                     </div>
 
