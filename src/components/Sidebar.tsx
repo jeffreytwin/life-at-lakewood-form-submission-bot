@@ -104,7 +104,11 @@ export default function Sidebar({
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={pathname?.startsWith(item.href) ? "active" : ""}
+                className={
+                  item.href === "/dashboard/email-hub/overview"
+                    ? pathname === item.href ? "active" : ""
+                    : pathname?.startsWith(item.href) ? "active" : ""
+                }
                 onClick={onClose}
                 style={{ position: "relative" }}
               >

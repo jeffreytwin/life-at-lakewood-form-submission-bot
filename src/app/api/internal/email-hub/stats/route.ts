@@ -19,6 +19,38 @@ function easternMonthBoundary(year: number, month: number, day: number): string 
   return new Date(new Date(str).getTime() - offset).toISOString();
 }
 
+/**
+ * Check if a timestamp falls during quiet hours (Eastern Time).
+ * Quiet hours typically span overnight, e.g. 21:00 -> 08:30.
+ */
+function isDuringQuietHours(
+  isoTimestamp: string,
+  qhStart: string,
+  qhEnd: string,
+): boolean {
+  const dt = new Date(isoTimestamp);
+  const etTime = dt.toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const [hStr, mStr] = etTime.split(":");
+  const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr);
+
+  const [sh, sm] = qhStart.split(":").map(Number);
+  const startMinutes = sh * 60 + sm;
+  const [eh, em] = qhEnd.split(":").map(Number);
+  const endMinutes = eh * 60 + em;
+
+  if (startMinutes > endMinutes) {
+    // Overnight span (e.g. 21:00 -> 08:30)
+    return timeMinutes >= startMinutes || timeMinutes < endMinutes;
+  } else {
+    return timeMinutes >= startMinutes && timeMinutes < endMinutes;
+  }
+}
+
 export async function GET() {
   try {
     // Get current month boundaries in Eastern time
@@ -28,7 +60,26 @@ export async function GET() {
     const monthStart = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth(), 1);
     const monthEnd = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth() + 1, 1);
 
-    // Average email response time this month
+    // Fetch quiet hours settings
+    const { data: settings } = await supabase
+      .from("system_settings")
+      .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end")
+      .eq("id", 1)
+      .single();
+
+    const qhEnabled = settings?.quiet_hours_enabled ?? true;
+    const qhStart = settings?.quiet_hours_start ?? "21:00";
+    const qhEnd = settings?.quiet_hours_end ?? "08:30";
+
+    // Incoming emails this month
+    const { count: inboundThisMonth } = await supabase
+      .from("email_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("direction", "inbound")
+      .gte("received_at", monthStart)
+      .lt("received_at", monthEnd);
+
+    // Average email response time this month (excluding quiet hours)
     // Measures time from first inbound message in thread to sent_at
     const { data: sentDraftsForAvg } = await supabase
       .from("email_drafts")
@@ -64,6 +115,10 @@ export async function GET() {
         for (const draft of sentDraftsForAvg) {
           const inboundAt = draft.thread_id ? earliestInbound[draft.thread_id] : null;
           if (inboundAt && draft.sent_at) {
+            // Exclude emails received during quiet hours
+            if (qhEnabled && isDuringQuietHours(inboundAt, qhStart, qhEnd)) {
+              continue;
+            }
             const diffMs = new Date(draft.sent_at).getTime() - new Date(inboundAt).getTime();
             if (diffMs > 0) diffs.push(diffMs);
           }
@@ -75,15 +130,6 @@ export async function GET() {
         }
       }
     }
-
-    // Approved drafts this month
-    const { count: approvedDrafts } = await supabase
-      .from("email_drafts")
-      .select("*", { count: "exact", head: true })
-      .eq("is_simulation", false)
-      .not("approved_at", "is", null)
-      .gte("created_at", monthStart)
-      .lt("created_at", monthEnd);
 
     // Sent emails this month
     const { count: sentEmails } = await supabase
@@ -174,8 +220,8 @@ export async function GET() {
     }
 
     return NextResponse.json({
+      inboundThisMonth: inboundThisMonth ?? 0,
       avgResponseTimeMinutes,
-      approvedDrafts: approvedDrafts ?? 0,
       sentEmails: sentEmails ?? 0,
       agentHandoffs: agentHandoffs ?? 0,
       dailyGraph,

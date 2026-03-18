@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface EmailHubStats {
+  inboundThisMonth: number;
   avgResponseTimeMinutes: number | null;
-  approvedDrafts: number;
   sentEmails: number;
   agentHandoffs: number;
   dailyGraph: { date: string; drafted: number; sent: number }[];
@@ -114,6 +114,10 @@ export default function EmailHubOverview() {
       {/* Stat cards */}
       <div className="stats-grid">
         <div className="stat-card">
+          <div className="stat-label">Incoming Emails This Month</div>
+          <div className="stat-value">{stats.inboundThisMonth}</div>
+        </div>
+        <div className="stat-card">
           <div className="stat-label">Avg Email Response Time</div>
           <div className="stat-value">
             {stats.avgResponseTimeMinutes != null
@@ -124,13 +128,7 @@ export default function EmailHubOverview() {
                   : `${Math.round(stats.avgResponseTimeMinutes / 1440)}d`
               : "—"}
           </div>
-          <div className="stat-sub">this month</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Approved Drafts</div>
-          <div className="stat-value" style={{ color: "#34d399" }}>
-            {stats.approvedDrafts}
-          </div>
+          <div className="stat-sub">excl. quiet hours</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Sent Emails</div>
@@ -149,7 +147,7 @@ export default function EmailHubOverview() {
       {/* Daily drafts/sent graph */}
       <div className="card mb-4">
         <div className="card-header">
-          <h3>Email Activity This Month (ET)</h3>
+          <h3>Incoming Emails This Month</h3>
         </div>
         {stats.dailyGraph.length === 0 ? (
           <div className="empty-state" style={{ padding: "32px 20px" }}>
