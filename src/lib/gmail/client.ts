@@ -308,7 +308,35 @@ function decodeBase64Url(data: string): string {
 }
 
 /**
+ * Rough HTML-to-text: strip tags, decode common entities, collapse whitespace.
+ */
+function htmlToPlainText(html: string): string {
+  return html
+    // Remove style/script blocks entirely
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    // Convert <br> and block-level tags to newlines
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, "\n")
+    .replace(/<(p|div|h[1-6]|li|tr)[^>]*>/gi, "")
+    // Strip remaining tags
+    .replace(/<[^>]+>/g, "")
+    // Decode common HTML entities
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#\d+;/g, "")
+    // Collapse multiple blank lines
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
  * Extract plain text body from a message, recursing through MIME parts.
+ * Falls back to converting HTML to plain text if no text/plain part exists.
  */
 export function extractBodyText(msg: GmailMessage): string {
   function findText(parts?: GmailMessagePart[]): string | null {
@@ -330,8 +358,15 @@ export function extractBodyText(msg: GmailMessage): string {
     return decodeBase64Url(msg.payload.body.data);
   }
 
-  // Multipart message
-  return findText(msg.payload?.parts) ?? "";
+  // Multipart message — try text/plain first
+  const plainText = findText(msg.payload?.parts);
+  if (plainText) return plainText;
+
+  // Fallback: extract text from HTML part
+  const html = extractBodyHtml(msg);
+  if (html) return htmlToPlainText(html);
+
+  return "";
 }
 
 /**
