@@ -42,6 +42,7 @@ interface EmailDraft {
   sent_body_text: string | null;
   was_changed: boolean;
   agent_handoff_transferred: boolean;
+  added_to_training: boolean;
   created_at: string;
   edited_at: string | null;
   approved_at: string | null;
@@ -1047,7 +1048,26 @@ export default function EmailDraftsPage() {
                       )}
 
                       {/* Add to Training (sent only) */}
-                      {isSent && (
+                      {isSent && draft.added_to_training && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#34d39922",
+                            color: "#34d399",
+                            border: "1px solid #34d39944",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Added to Training
+                        </span>
+                      )}
+                      {isSent && !draft.added_to_training && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {

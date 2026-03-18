@@ -71,13 +71,26 @@ export async function GET() {
     const qhStart = settings?.quiet_hours_start ?? "21:00";
     const qhEnd = settings?.quiet_hours_end ?? "08:30";
 
-    // Incoming emails this month
-    const { count: inboundThisMonth } = await supabase
-      .from("email_messages")
-      .select("id", { count: "exact", head: true })
-      .eq("direction", "inbound")
-      .gte("received_at", monthStart)
-      .lt("received_at", monthEnd);
+    // Incoming emails this month (only from Salesforce-verified senders)
+    // First get thread IDs that have a Salesforce lead linked
+    const { data: verifiedThreads } = await supabase
+      .from("email_threads")
+      .select("id")
+      .not("salesforce_lead_id", "is", null);
+
+    const verifiedThreadIds = (verifiedThreads ?? []).map((t) => t.id);
+
+    let inboundThisMonth = 0;
+    if (verifiedThreadIds.length > 0) {
+      const { count } = await supabase
+        .from("email_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("direction", "inbound")
+        .in("thread_id", verifiedThreadIds)
+        .gte("received_at", monthStart)
+        .lt("received_at", monthEnd);
+      inboundThisMonth = count ?? 0;
+    }
 
     // Average email response time this month (excluding quiet hours)
     // Measures time from first inbound message in thread to sent_at
@@ -220,7 +233,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      inboundThisMonth: inboundThisMonth ?? 0,
+      inboundThisMonth,
       avgResponseTimeMinutes,
       sentEmails: sentEmails ?? 0,
       agentHandoffs: agentHandoffs ?? 0,

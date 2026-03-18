@@ -26,6 +26,26 @@ function stripQuotedText(text: string): string {
 }
 
 /**
+ * Strip email signature block from the end of the body.
+ * Matches patterns like:
+ *   Lynn Brown, Realtor
+ *   *Life in Longboat Key* (Coldwell Banker)
+ *   920.410.8778
+ */
+function stripSignature(text: string): string {
+  // Match signature starting with a name line followed by a
+  // "*Life ..." location line (with or without markdown bold)
+  const sigPattern = /\n\s*\n\s*[A-Z][a-z]+ [A-Z][a-z]+,?\s*(?:Realtor|REALTOR|Agent)?\s*\n\s*\*?Life (?:in |at |At |in the )[^*\n]+\*?\s*\(Coldwell Banker\)\s*\n\s*[\d.()-]+\s*$/i;
+  const stripped = text.replace(sigPattern, "");
+
+  // Also handle when the signature is just name + location line without phone,
+  // or when there's extra whitespace variations
+  const sigPattern2 = /\n\s*\n\s*[A-Z][a-z]+ [A-Z][a-z]+,?\s*(?:Realtor|REALTOR|Agent)?\s*\n\s*\*?Life (?:in |at |At |in the )[^*\n]+\*?\s*\(Coldwell Banker\)[\s\S]*$/i;
+
+  return stripped !== text ? stripped.trim() : text.replace(sigPattern2, "").trim();
+}
+
+/**
  * POST /api/internal/email-hub/drafts/:id/add-to-training
  *
  * Takes a sent draft and its inbound message and creates a training example.
@@ -68,7 +88,9 @@ export async function POST(
     // The response text is sent_body_text (what was actually sent) or body_text
     // Strip quoted reply text so only the actual response is used for training
     const rawResponse = draft.sent_body_text ?? draft.body_text;
-    const responseText = rawResponse ? stripQuotedText(rawResponse) : null;
+    const responseText = rawResponse
+      ? stripSignature(stripQuotedText(rawResponse))
+      : null;
     if (!responseText) {
       return NextResponse.json(
         { error: "Draft has no body text to use as training" },
@@ -88,7 +110,7 @@ export async function POST(
         .limit(1);
 
       if (messages && messages.length > 0) {
-        inboundText = messages[0].body_text ?? "";
+        inboundText = (messages[0].body_text ?? "").trim();
       }
     }
 
