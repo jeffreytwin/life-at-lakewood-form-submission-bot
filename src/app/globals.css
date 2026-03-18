@@ -714,15 +714,15 @@ select.form-input {
 /* ── Otocon bubble position override (tail near mouth) ── */
 .otocon-wrapper .speech-bubble {
   bottom: auto;
-  top: 10px;
+  top: 25px;
 }
 .otocon-wrapper .speech-bubble::after {
   bottom: auto;
-  top: 12px;
+  top: 27px;
 }
 .otocon-wrapper .speech-bubble::before {
   bottom: auto;
-  top: 13px;
+  top: 28px;
 }
 
 /* ── Back button ── */
