@@ -7,6 +7,7 @@ const OTOCON_MESSAGE =
   "Otocon here!  The simulations are ready.  Feel free to try them out!";
 const CHAR_DELAY = 35;
 const DISPLAY_DURATION = 8000;
+const TALKING_GIF_DURATION = 4900; // full gif loop length in ms
 
 export default function SimulationPage() {
   const router = useRouter();
@@ -17,10 +18,12 @@ export default function SimulationPage() {
   const charIndex = useRef(0);
   const typeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const talkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearTimers = useCallback(() => {
     if (typeTimer.current) clearTimeout(typeTimer.current);
     if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (talkTimer.current) clearTimeout(talkTimer.current);
   }, []);
 
   const typeNext = useCallback(() => {
@@ -29,21 +32,28 @@ export default function SimulationPage() {
       setDisplayText(fullText.current.slice(0, charIndex.current));
       typeTimer.current = setTimeout(typeNext, CHAR_DELAY);
     } else {
-      setIsTalking(false);
+      // Text is done — hide bubble after a while
       hideTimer.current = setTimeout(() => setBubbleVisible(false), DISPLAY_DURATION);
     }
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => {
+    // Delay start so layout is settled and bubble doesn't jump
+    const startDelay = setTimeout(() => {
       charIndex.current = 0;
       setDisplayText("");
-      setBubbleVisible(true);
       setIsTalking(true);
+      setBubbleVisible(true);
       typeTimer.current = setTimeout(typeNext, 200);
-    }, 400);
+
+      // Keep talking gif playing for its full duration regardless of text
+      talkTimer.current = setTimeout(() => {
+        setIsTalking(false);
+      }, TALKING_GIF_DURATION);
+    }, 1500);
+
     return () => {
-      clearTimeout(t);
+      clearTimeout(startDelay);
       clearTimers();
     };
   }, [typeNext, clearTimers]);
@@ -67,9 +77,9 @@ export default function SimulationPage() {
           marginBottom: 24,
         }}
       >
-        <div style={{ position: "relative", display: "inline-flex", alignItems: "flex-start" }}>
+        <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
           {bubbleVisible && (
-            <div className="otocon-speech-bubble">
+            <div className="speech-bubble" style={{ whiteSpace: "normal" }}>
               <span className="speech-bubble-text">{displayText}</span>
               <span className="speech-bubble-cursor">_</span>
             </div>
