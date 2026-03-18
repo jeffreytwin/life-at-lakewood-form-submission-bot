@@ -581,7 +581,12 @@ export default function EmailDraftsPage() {
               <button
                 key={opt.key}
                 className={`btn ${statusFilter === opt.key ? "btn-primary" : "btn-secondary"}`}
-                onClick={() => setStatusFilter(opt.key)}
+                onClick={() => {
+                  setStatusFilter(opt.key);
+                  setExpandedId(null);
+                  setApproveResult(null);
+                  setHandoffResult(null);
+                }}
                 style={{ padding: "6px 14px", fontSize: 13 }}
               >
                 {opt.label}
@@ -911,8 +916,8 @@ export default function EmailDraftsPage() {
                       )}
                     </div>
 
-                    {/* Was changed indicator for sent drafts */}
-                    {isSent && draft.was_changed && (
+                    {/* Was changed indicator - only shown on Drafts tab (not Sent) */}
+                    {!isSent && draft.was_changed && (
                       <div
                         style={{
                           marginBottom: 12,
@@ -1098,8 +1103,8 @@ export default function EmailDraftsPage() {
                       )}
                     </div>
 
-                    {/* Approve result banner */}
-                    {approveResult && expandedId === draft.id && (
+                    {/* Approve result banner - only on Drafts tab */}
+                    {!isSent && approveResult && expandedId === draft.id && (
                       <div
                         style={{
                           marginBottom: 12,
