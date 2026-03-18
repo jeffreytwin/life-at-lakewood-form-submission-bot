@@ -1,9 +1,52 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef, useCallback } from "react";
+
+const OTOCON_MESSAGE =
+  "Otocon here!  The simulations are ready.  Feel free to try them out!";
+const CHAR_DELAY = 35;
+const DISPLAY_DURATION = 8000;
 
 export default function SimulationPage() {
   const router = useRouter();
+  const [bubbleVisible, setBubbleVisible] = useState(false);
+  const [displayText, setDisplayText] = useState("");
+  const [isTalking, setIsTalking] = useState(false);
+  const fullText = useRef(OTOCON_MESSAGE);
+  const charIndex = useRef(0);
+  const typeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (typeTimer.current) clearTimeout(typeTimer.current);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+  }, []);
+
+  const typeNext = useCallback(() => {
+    if (charIndex.current < fullText.current.length) {
+      charIndex.current++;
+      setDisplayText(fullText.current.slice(0, charIndex.current));
+      typeTimer.current = setTimeout(typeNext, CHAR_DELAY);
+    } else {
+      setIsTalking(false);
+      hideTimer.current = setTimeout(() => setBubbleVisible(false), DISPLAY_DURATION);
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      charIndex.current = 0;
+      setDisplayText("");
+      setBubbleVisible(true);
+      setIsTalking(true);
+      typeTimer.current = setTimeout(typeNext, 200);
+    }, 400);
+    return () => {
+      clearTimeout(t);
+      clearTimers();
+    };
+  }, [typeNext, clearTimers]);
 
   return (
     <>
@@ -13,6 +56,36 @@ export default function SimulationPage() {
           Test routing and email configurations without sending SMS, emails, or
           writing to the database.
         </p>
+      </div>
+
+      {/* Otocon character */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ position: "relative", display: "inline-flex", alignItems: "flex-start" }}>
+          {bubbleVisible && (
+            <div className="otocon-speech-bubble">
+              <span className="speech-bubble-text">{displayText}</span>
+              <span className="speech-bubble-cursor">_</span>
+            </div>
+          )}
+          <img
+            key={isTalking ? "talking" : "standing"}
+            src={isTalking ? "/otocon-talking.gif" : "/otocon-standing.gif"}
+            alt="Otocon"
+            style={{
+              width: 164,
+              height: 164,
+              imageRendering: "pixelated",
+              objectFit: "contain",
+            }}
+          />
+        </div>
       </div>
 
       <div className="grid-2">
@@ -34,7 +107,7 @@ export default function SimulationPage() {
             e.currentTarget.style.background = "var(--bg-card)";
           }}
         >
-          <div style={{ fontSize: 36, marginBottom: 12 }}>{"\u2630"}</div>
+          <div className="sim-icon-glow" style={{ fontSize: 36, marginBottom: 12 }}>{"\u2630"}</div>
           <h3
             style={{
               fontSize: 16,
@@ -69,7 +142,7 @@ export default function SimulationPage() {
             e.currentTarget.style.background = "var(--bg-card)";
           }}
         >
-          <div style={{ fontSize: 36, marginBottom: 12 }}>{"\u2709"}</div>
+          <div className="sim-icon-glow" style={{ fontSize: 36, marginBottom: 12 }}>{"\u2709"}</div>
           <h3
             style={{
               fontSize: 16,

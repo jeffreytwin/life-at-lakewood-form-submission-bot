@@ -686,6 +686,80 @@ select.form-input {
   to { transform: scale(1); opacity: 1; }
 }
 
+/* ── Simulation page: green glowing icons ── */
+.sim-icon-glow {
+  color: #34d399;
+  text-shadow:
+    0 0 6px rgba(52, 211, 153, 0.6),
+    0 0 14px rgba(52, 211, 153, 0.35),
+    0 0 28px rgba(52, 211, 153, 0.15);
+  animation: iconGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes iconGlow {
+  from {
+    text-shadow:
+      0 0 6px rgba(52, 211, 153, 0.6),
+      0 0 14px rgba(52, 211, 153, 0.35),
+      0 0 28px rgba(52, 211, 153, 0.15);
+  }
+  to {
+    text-shadow:
+      0 0 8px rgba(52, 211, 153, 0.8),
+      0 0 20px rgba(52, 211, 153, 0.5),
+      0 0 40px rgba(52, 211, 153, 0.25);
+  }
+}
+
+/* ── Otocon speech bubble (above character) ── */
+.otocon-speech-bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: #181820;
+  border: 2px solid #34d399;
+  border-radius: 4px;
+  padding: 10px 14px;
+  width: 260px;
+  box-shadow:
+    inset 1px 1px 0 #2a2a3a,
+    inset -1px -1px 0 #2a2a3a,
+    3px 3px 0 rgba(0, 0, 0, 0.5);
+  animation: bubblePop 0.15s ease-out;
+  z-index: 1001;
+  white-space: normal;
+}
+
+/* Tail pointing down toward Otocon */
+.otocon-speech-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #34d399;
+}
+
+.otocon-speech-bubble::before {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #181820;
+  z-index: 1;
+}
+
 /* ── Sidebar notification badge ── */
 .nav-badge {
   position: absolute;
