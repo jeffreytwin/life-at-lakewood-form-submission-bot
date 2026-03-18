@@ -1,5 +1,4 @@
--- Gmail Push Notifications: track watch expiration for Pub/Sub push
+-- Add watch_expiration column to track when the Gmail Pub/Sub watch expires.
+-- The watch must be renewed every 7 days per Google's API.
 ALTER TABLE email_accounts
-  ADD COLUMN watch_expiration TIMESTAMPTZ;
-
-COMMENT ON COLUMN email_accounts.watch_expiration IS 'When the Gmail push notification watch expires (must be renewed before expiry, max 7 days)';
+  ADD COLUMN IF NOT EXISTS watch_expiration TIMESTAMPTZ;

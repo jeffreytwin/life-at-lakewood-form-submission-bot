@@ -1,89 +1,98 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { syncInbox } from "@/lib/gmail/sync-inbox";
+import { syncSentFolder } from "@/lib/gmail/sync-sent";
+import { pushAllPendingDrafts } from "@/lib/gmail/push-draft";
 import { logger } from "@/lib/shared/logger";
 import type { EmailAccount } from "@/lib/supabase/types";
 
+export const dynamic = "force-dynamic";
+
 /**
- * Gmail Push Notification Webhook
+ * POST /api/webhooks/gmail-push
  *
- * Receives Pub/Sub push messages from Google Cloud when a Gmail mailbox changes.
- * The Pub/Sub subscription pushes a JSON envelope containing a base64-encoded
- * notification with the emailAddress and historyId.
+ * Receives Google Cloud Pub/Sub push notifications when a Gmail mailbox changes.
+ * The Pub/Sub message contains a base64-encoded JSON payload with:
+ *   { emailAddress: string, historyId: number }
  *
- * Flow:
- * 1. Gmail detects mailbox change → publishes to Pub/Sub topic
- * 2. Pub/Sub pushes to this endpoint
- * 3. We decode the notification, find the matching email account, and sync it
+ * On receipt, we immediately sync the inbox and sent folder for the matching
+ * email account, then push any pending drafts.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Pub/Sub push messages have this shape:
-    // { message: { data: "<base64>", messageId: "...", publishTime: "..." }, subscription: "..." }
-    const pubsubMessage = body?.message;
-    if (!pubsubMessage?.data) {
-      logger.warn("Gmail push webhook: missing message data");
-      // Return 200 to avoid Pub/Sub retries for malformed messages
-      return NextResponse.json({ status: "ignored", reason: "no data" });
+    // Pub/Sub wraps the payload in: { message: { data: "<base64>", ... }, subscription: "..." }
+    const messageData = body?.message?.data;
+    if (!messageData) {
+      logger.warn("Gmail push: no message.data in payload");
+      // Return 200 to acknowledge so Pub/Sub doesn't retry
+      return NextResponse.json({ ok: true });
     }
 
-    // Decode the base64 notification
-    const decoded = Buffer.from(pubsubMessage.data, "base64").toString("utf-8");
+    // Decode the base64 payload
+    const decoded = Buffer.from(messageData, "base64").toString("utf-8");
     let notification: { emailAddress?: string; historyId?: number };
     try {
       notification = JSON.parse(decoded);
     } catch {
-      logger.warn("Gmail push webhook: invalid JSON in message data", { decoded });
-      return NextResponse.json({ status: "ignored", reason: "invalid json" });
+      logger.warn("Gmail push: failed to parse decoded payload", { decoded });
+      return NextResponse.json({ ok: true });
     }
 
     const { emailAddress, historyId } = notification;
     if (!emailAddress) {
-      logger.warn("Gmail push webhook: no emailAddress in notification");
-      return NextResponse.json({ status: "ignored", reason: "no email" });
+      logger.warn("Gmail push: missing emailAddress in notification");
+      return NextResponse.json({ ok: true });
     }
 
     logger.info("Gmail push notification received", { emailAddress, historyId });
 
     // Find the matching email account
-    const { data: account, error } = await supabase
+    const { data: account, error: accountError } = await supabase
       .from("email_accounts")
       .select("*")
-      .eq("email_address", emailAddress.toLowerCase())
+      .ilike("email_address", emailAddress)
       .eq("provider", "gmail")
       .eq("is_active", true)
+      .not("credentials", "is", null)
+      .limit(1)
       .single();
 
-    if (error || !account) {
-      logger.warn("Gmail push webhook: no matching account", { emailAddress });
-      // Return 200 so Pub/Sub doesn't retry
-      return NextResponse.json({ status: "ignored", reason: "unknown account" });
+    if (accountError || !account) {
+      logger.warn("Gmail push: no matching active account found", { emailAddress });
+      return NextResponse.json({ ok: true });
     }
 
-    // Sync the inbox for this account
-    const result = await syncInbox(account as EmailAccount);
+    const typedAccount = account as EmailAccount;
+
+    // Sync inbox (will use History API for incremental sync)
+    const inboxResult = await syncInbox(typedAccount);
+
+    // Push any new AI drafts to Gmail
+    await pushAllPendingDrafts();
+
+    // Sync sent folder (detects if drafts were sent)
+    const sentResult = await syncSentFolder(typedAccount);
 
     logger.info("Gmail push sync complete", {
       emailAddress,
-      newMessages: result.newMessages,
-      draftsGenerated: result.draftsGenerated,
+      newMessages: inboxResult.newMessages,
+      draftsGenerated: inboxResult.draftsGenerated,
+      sentMatched: sentResult.sentMatched,
     });
 
+    // Must return 200 to acknowledge the Pub/Sub message
     return NextResponse.json({
-      status: "ok",
-      newMessages: result.newMessages,
-      draftsGenerated: result.draftsGenerated,
+      ok: true,
+      inbox: inboxResult,
+      sent: sentResult,
     });
   } catch (error) {
-    logger.error("Gmail push webhook error", {
+    logger.error("Gmail push webhook failed", {
       error: error instanceof Error ? error.message : String(error),
     });
-    // Return 200 to prevent infinite Pub/Sub retries on app errors
-    return NextResponse.json(
-      { status: "error", message: error instanceof Error ? error.message : String(error) },
-      { status: 200 }
-    );
+    // Still return 200 to prevent infinite Pub/Sub retries on permanent errors
+    return NextResponse.json({ ok: true, error: "internal" });
   }
 }

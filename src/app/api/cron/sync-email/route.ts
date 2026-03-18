@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncAllInboxes } from "@/lib/gmail/sync-inbox";
 import { syncAllSentFolders } from "@/lib/gmail/sync-sent";
 import { pushAllPendingDrafts } from "@/lib/gmail/push-draft";
-import { renewExpiringWatches } from "@/lib/gmail/watch";
+import { renewAllWatches } from "@/lib/gmail/watch";
 import { logger } from "@/lib/shared/logger";
 
 /**
@@ -32,14 +32,15 @@ export async function GET(request: NextRequest) {
     // Step 3: Sync sent folders
     const sent = await syncAllSentFolders();
 
-    // Step 4: Renew Gmail push notification watches expiring within 1 day
-    const watches = await renewExpiringWatches();
+    // Step 4: Renew Pub/Sub watches (if configured)
+    const watches = await renewAllWatches();
 
     const result = {
       inbox: {
         accounts: inbox.accounts,
         newMessages: inbox.totalNewMessages,
         draftsGenerated: inbox.totalDraftsGenerated,
+        skippedNonLead: inbox.totalSkippedNonLead,
       },
       draftsPushed: {
         pushed: drafts.pushed,
@@ -50,10 +51,7 @@ export async function GET(request: NextRequest) {
         matched: sent.totalMatched,
         changedFromDraft: sent.totalChanged,
       },
-      watches: {
-        renewed: watches.renewed,
-        failed: watches.failed,
-      },
+      watches: watches.renewed > 0 || watches.failed > 0 ? watches : undefined,
     };
 
     logger.info("Email sync cron complete", result);
