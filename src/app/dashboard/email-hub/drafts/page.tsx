@@ -18,6 +18,12 @@ interface AgentInfo {
   email: string | null;
 }
 
+interface AgentOption {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
 interface EmailDraft {
   id: string;
   thread_id: string | null;
@@ -128,8 +134,11 @@ export default function EmailDraftsPage() {
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  const [editCc, setEditCc] = useState("");
+  const [editCcAgent, setEditCcAgent] = useState<AgentOption | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Agents list for CC dropdown
+  const [agents, setAgents] = useState<AgentOption[]>([]);
 
   // Approve state
   const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -197,6 +206,22 @@ export default function EmailDraftsPage() {
     fetchDrafts();
   }, [fetchDrafts]);
 
+  // Load agents for CC dropdown
+  useEffect(() => {
+    fetch("/api/internal/agents")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAgents(
+            data
+              .filter((a: AgentOption & { is_active: boolean }) => a.is_active && a.email)
+              .map((a: AgentOption) => ({ id: a.id, name: a.name, email: a.email }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Polling (15s interval)
   const fetchDraftsRef = useRef(fetchDrafts);
   fetchDraftsRef.current = fetchDrafts;
@@ -240,22 +265,27 @@ export default function EmailDraftsPage() {
   function startEditing(draft: EmailDraft) {
     setEditingId(draft.id);
     setEditText(draft.body_text ?? "");
-    setEditCc(draft.cc_emails.join(", "));
+    // Restore existing CC agent if one was set
+    if (draft.cc_emails.length > 0) {
+      const existing = agents.find(
+        (a) => a.email && draft.cc_emails.some((cc) => cc.toLowerCase() === a.email!.toLowerCase())
+      );
+      setEditCcAgent(existing ?? null);
+    } else {
+      setEditCcAgent(null);
+    }
   }
 
   function cancelEditing() {
     setEditingId(null);
     setEditText("");
-    setEditCc("");
+    setEditCcAgent(null);
   }
 
   async function saveEdit(draft: EmailDraft) {
     setSaving(true);
     try {
-      const ccEmails = editCc
-        .split(",")
-        .map((e) => e.trim())
-        .filter((e) => e.length > 0);
+      const ccEmails = editCcAgent?.email ? [editCcAgent.email] : [];
       const res = await fetch(`/api/internal/email-hub/drafts/${draft.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -267,7 +297,7 @@ export default function EmailDraftsPage() {
       }
       setEditingId(null);
       setEditText("");
-      setEditCc("");
+      setEditCcAgent(null);
       fetchDrafts();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Save failed");
@@ -753,7 +783,7 @@ export default function EmailDraftsPage() {
                               resize: "vertical",
                             }}
                           />
-                          {/* CC field during editing */}
+                          {/* CC an Agent */}
                           <div style={{ marginTop: 10 }}>
                             <label
                               className="text-sm"
@@ -764,19 +794,58 @@ export default function EmailDraftsPage() {
                                 color: "#8b8fa3",
                               }}
                             >
-                              CC (comma-separated)
+                              CC an Agent
                             </label>
-                            <input
-                              className="form-input"
-                              type="text"
-                              value={editCc}
-                              onChange={(e) => setEditCc(e.target.value)}
-                              placeholder="email@example.com, another@example.com"
-                              style={{
-                                width: "100%",
-                                fontSize: 13,
-                              }}
-                            />
+                            {editCcAgent ? (
+                              <div
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                  padding: "6px 12px",
+                                  borderRadius: 16,
+                                  background: "#a78bfa22",
+                                  border: "1px solid #a78bfa44",
+                                  color: "#a78bfa",
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {editCcAgent.name}
+                                <button
+                                  onClick={() => setEditCcAgent(null)}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "#a78bfa",
+                                    cursor: "pointer",
+                                    padding: 0,
+                                    fontSize: 16,
+                                    lineHeight: 1,
+                                  }}
+                                  title="Remove"
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            ) : (
+                              <select
+                                className="form-input"
+                                value=""
+                                onChange={(e) => {
+                                  const agent = agents.find((a) => a.id === e.target.value);
+                                  if (agent) setEditCcAgent(agent);
+                                }}
+                                style={{ width: "100%", fontSize: 13 }}
+                              >
+                                <option value="">Select an agent...</option>
+                                {agents.map((a) => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.name} ({a.email})
+                                  </option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                           <div
                             style={{
@@ -865,8 +934,8 @@ export default function EmailDraftsPage() {
                         </button>
                       )}
 
-                      {/* Generate New Draft button - only for non-sent, non-discarded drafts, hidden when editing */}
-                      {!isSent && draft.status !== "discarded" && !isEditing && (
+                      {/* Generate New Draft button - only for non-sent, non-discarded, non-approved drafts, hidden when editing */}
+                      {!isSent && draft.status !== "discarded" && !isApproved && !isEditing && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {

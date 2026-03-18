@@ -4,10 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface EmailHubStats {
-  totalDrafts: number;
+  avgResponseTimeMinutes: number | null;
   approvedDrafts: number;
   sentEmails: number;
-  pendingDrafts: number;
   agentHandoffs: number;
   dailyGraph: { date: string; drafted: number; sent: number }[];
   recentEmails: {
@@ -41,7 +40,7 @@ function formatRelativeDate(dateStr: string): string {
   if (diffMin < 60) return `${diffMin}m ago`;
   if (diffHr < 24) return `${diffHr}h ago`;
   if (diffDay < 7) return `${diffDay}d ago`;
-  return date.toLocaleDateString();
+  return date.toLocaleDateString("en-US", { timeZone: "America/New_York" });
 }
 
 export default function EmailHubOverview() {
@@ -115,9 +114,17 @@ export default function EmailHubOverview() {
       {/* Stat cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Drafts Generated</div>
-          <div className="stat-value">{stats.totalDrafts}</div>
-          <div className="stat-sub">{stats.pendingDrafts} pending</div>
+          <div className="stat-label">Avg Email Response Time</div>
+          <div className="stat-value">
+            {stats.avgResponseTimeMinutes != null
+              ? stats.avgResponseTimeMinutes < 60
+                ? `${stats.avgResponseTimeMinutes}m`
+                : stats.avgResponseTimeMinutes < 1440
+                  ? `${Math.round(stats.avgResponseTimeMinutes / 60)}h`
+                  : `${Math.round(stats.avgResponseTimeMinutes / 1440)}d`
+              : "—"}
+          </div>
+          <div className="stat-sub">this month</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Approved Drafts</div>
@@ -142,7 +149,7 @@ export default function EmailHubOverview() {
       {/* Daily drafts/sent graph */}
       <div className="card mb-4">
         <div className="card-header">
-          <h3>Email Activity This Month</h3>
+          <h3>Email Activity This Month (ET)</h3>
         </div>
         {stats.dailyGraph.length === 0 ? (
           <div className="empty-state" style={{ padding: "32px 20px" }}>

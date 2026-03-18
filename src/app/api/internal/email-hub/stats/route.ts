@@ -3,20 +3,78 @@ import { supabase } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
+/** Convert a Date to YYYY-MM-DD in US Eastern time */
+function toEasternDate(d: Date): string {
+  return d.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+}
+
+/** Get start-of-day in Eastern time as a UTC ISO string */
+function easternMonthBoundary(year: number, month: number, day: number): string {
+  const str = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00`;
+  const eastern = new Date(
+    new Date(str).toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+  // Reconstruct as if the wall-clock time is midnight ET
+  const offset = eastern.getTime() - new Date(str).getTime();
+  return new Date(new Date(str).getTime() - offset).toISOString();
+}
+
 export async function GET() {
   try {
-    // Get current month boundaries
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+    // Get current month boundaries in Eastern time
+    const nowET = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+    );
+    const monthStart = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth(), 1);
+    const monthEnd = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth() + 1, 1);
 
-    // Total drafts generated this month
-    const { count: totalDrafts } = await supabase
+    // Average email response time this month
+    // Measures time from first inbound message in thread to sent_at
+    const { data: sentDraftsForAvg } = await supabase
       .from("email_drafts")
-      .select("*", { count: "exact", head: true })
+      .select("thread_id, sent_at")
+      .eq("status", "sent")
       .eq("is_simulation", false)
-      .gte("created_at", monthStart)
-      .lt("created_at", monthEnd);
+      .not("sent_at", "is", null)
+      .not("thread_id", "is", null)
+      .gte("sent_at", monthStart)
+      .lt("sent_at", monthEnd);
+
+    let avgResponseTimeMinutes: number | null = null;
+    if (sentDraftsForAvg && sentDraftsForAvg.length > 0) {
+      const threadIds = [...new Set(sentDraftsForAvg.map((d) => d.thread_id!))];
+      // Get the earliest inbound message per thread
+      const { data: inboundMessages } = await supabase
+        .from("email_messages")
+        .select("thread_id, received_at")
+        .in("thread_id", threadIds)
+        .eq("direction", "inbound")
+        .order("received_at", { ascending: true });
+
+      if (inboundMessages && inboundMessages.length > 0) {
+        // Map thread_id -> earliest inbound received_at
+        const earliestInbound: Record<string, string> = {};
+        for (const msg of inboundMessages) {
+          if (msg.thread_id && msg.received_at && !earliestInbound[msg.thread_id]) {
+            earliestInbound[msg.thread_id] = msg.received_at;
+          }
+        }
+
+        const diffs: number[] = [];
+        for (const draft of sentDraftsForAvg) {
+          const inboundAt = draft.thread_id ? earliestInbound[draft.thread_id] : null;
+          if (inboundAt && draft.sent_at) {
+            const diffMs = new Date(draft.sent_at).getTime() - new Date(inboundAt).getTime();
+            if (diffMs > 0) diffs.push(diffMs);
+          }
+        }
+
+        if (diffs.length > 0) {
+          const avgMs = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+          avgResponseTimeMinutes = Math.round(avgMs / 60_000);
+        }
+      }
+    }
 
     // Approved drafts this month
     const { count: approvedDrafts } = await supabase
@@ -36,13 +94,6 @@ export async function GET() {
       .gte("created_at", monthStart)
       .lt("created_at", monthEnd);
 
-    // Pending drafts (all time, current queue)
-    const { count: pendingDrafts } = await supabase
-      .from("email_drafts")
-      .select("*", { count: "exact", head: true })
-      .in("status", ["drafted", "approved"])
-      .eq("is_simulation", false);
-
     // Agent handoffs this month
     const { count: agentHandoffs } = await supabase
       .from("email_drafts")
@@ -61,10 +112,10 @@ export async function GET() {
       .lt("created_at", monthEnd)
       .order("created_at", { ascending: true });
 
-    // Aggregate by day
+    // Aggregate by day (Eastern time)
     const dailyStats: Record<string, { drafted: number; sent: number }> = {};
     for (const d of monthDrafts ?? []) {
-      const day = new Date(d.created_at).toISOString().split("T")[0];
+      const day = toEasternDate(new Date(d.created_at));
       if (!dailyStats[day]) dailyStats[day] = { drafted: 0, sent: 0 };
       dailyStats[day].drafted++;
       if (d.status === "sent") dailyStats[day].sent++;
@@ -123,10 +174,9 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      totalDrafts: totalDrafts ?? 0,
+      avgResponseTimeMinutes,
       approvedDrafts: approvedDrafts ?? 0,
       sentEmails: sentEmails ?? 0,
-      pendingDrafts: pendingDrafts ?? 0,
       agentHandoffs: agentHandoffs ?? 0,
       dailyGraph,
       recentEmails: recentEmails ?? [],
