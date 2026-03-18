@@ -32,6 +32,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [failedBadge, setFailedBadge] = useState(0);
+  const [draftCount, setDraftCount] = useState(0);
 
   useEffect(() => {
     return onFailedCount(setFailedBadge);
@@ -43,6 +44,21 @@ export default function Sidebar({
       clearFailed();
     }
   }, [pathname]);
+
+  // Poll for pending draft count
+  useEffect(() => {
+    function fetchDraftCount() {
+      fetch("/api/internal/email-hub/drafts?status=drafted&is_simulation=false&limit=50")
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data)) setDraftCount(data.length);
+        })
+        .catch(() => {});
+    }
+    fetchDraftCount();
+    const interval = setInterval(fetchDraftCount, 15_000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function handleLogout() {
     await fetch("/api/internal/logout", { method: "POST" });
@@ -90,9 +106,13 @@ export default function Sidebar({
                 href={item.href}
                 className={pathname?.startsWith(item.href) ? "active" : ""}
                 onClick={onClose}
+                style={{ position: "relative" }}
               >
                 <span className="nav-icon">{item.icon}</span>
                 {item.label}
+                {item.href === "/dashboard/email-hub/drafts" && draftCount > 0 && (
+                  <span className="nav-badge">{draftCount}</span>
+                )}
               </Link>
             </li>
           ))}
