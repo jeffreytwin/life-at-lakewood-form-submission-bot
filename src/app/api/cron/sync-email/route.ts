@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncAllInboxes } from "@/lib/gmail/sync-inbox";
 import { syncAllSentFolders } from "@/lib/gmail/sync-sent";
 import { pushAllPendingDrafts } from "@/lib/gmail/push-draft";
+import { renewExpiringWatches } from "@/lib/gmail/watch";
 import { logger } from "@/lib/shared/logger";
 
 /**
@@ -31,6 +32,9 @@ export async function GET(request: NextRequest) {
     // Step 3: Sync sent folders
     const sent = await syncAllSentFolders();
 
+    // Step 4: Renew Gmail push notification watches expiring within 1 day
+    const watches = await renewExpiringWatches();
+
     const result = {
       inbox: {
         accounts: inbox.accounts,
@@ -45,6 +49,10 @@ export async function GET(request: NextRequest) {
         accounts: sent.accounts,
         matched: sent.totalMatched,
         changedFromDraft: sent.totalChanged,
+      },
+      watches: {
+        renewed: watches.renewed,
+        failed: watches.failed,
       },
     };
 

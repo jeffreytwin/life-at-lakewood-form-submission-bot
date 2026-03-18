@@ -285,6 +285,7 @@ export interface EmailAccount {
   last_synced_at: string | null;
   sync_history_id: string | null;
   sent_sync_history_id: string | null;
+  watch_expiration: string | null;
   created_at: string;
 }
 
