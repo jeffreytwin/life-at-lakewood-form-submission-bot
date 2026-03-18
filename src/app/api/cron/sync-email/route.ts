@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
         accounts: inbox.accounts,
         newMessages: inbox.totalNewMessages,
         draftsGenerated: inbox.totalDraftsGenerated,
-        skippedNonLead: inbox.totalSkippedNonLead,
       },
       draftsPushed: {
         pushed: drafts.pushed,
