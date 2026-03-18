@@ -30,7 +30,33 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json(data ?? []);
+
+    // For sent drafts, check which ones have been added to training
+    const sentDrafts = (data ?? []).filter((d: { status: string }) => d.status === "sent");
+    let trainingDraftIds = new Set<string>();
+    if (sentDrafts.length > 0) {
+      const contextPatterns = sentDrafts.map(
+        (d: { id: string }) => `Added from sent draft ${d.id}`
+      );
+      const { data: trainingMatches } = await supabase
+        .from("training_examples")
+        .select("context_notes")
+        .in("context_notes", contextPatterns);
+
+      if (trainingMatches) {
+        for (const t of trainingMatches) {
+          const match = t.context_notes?.match(/Added from sent draft (.+)/);
+          if (match) trainingDraftIds.add(match[1]);
+        }
+      }
+    }
+
+    const enriched = (data ?? []).map((d: { id: string; status: string }) => ({
+      ...d,
+      added_to_training: trainingDraftIds.has(d.id),
+    }));
+
+    return NextResponse.json(enriched);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) },
