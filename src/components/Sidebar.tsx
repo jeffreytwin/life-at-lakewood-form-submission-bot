@@ -15,6 +15,7 @@ const formHubItems = [
 ];
 
 const emailHubItems = [
+  { href: "/dashboard/email-hub", label: "Overview", icon: "\u2302" },
   { href: "/dashboard/email-hub/drafts", label: "Drafts", icon: "\u270E" },
   { href: "/dashboard/email-hub/training", label: "Training Data", icon: "\u2261" },
   { href: "/dashboard/email-hub/simulate", label: "Simulation", icon: "\u26A1" },
@@ -87,7 +88,11 @@ export default function Sidebar({
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={pathname?.startsWith(item.href) ? "active" : ""}
+                className={
+                  item.href === "/dashboard/email-hub"
+                    ? pathname === item.href ? "active" : ""
+                    : pathname?.startsWith(item.href) ? "active" : ""
+                }
                 onClick={onClose}
               >
                 <span className="nav-icon">{item.icon}</span>
