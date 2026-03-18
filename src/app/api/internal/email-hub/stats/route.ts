@@ -74,11 +74,12 @@ export async function GET() {
       .map(([date, counts]) => ({ date, ...counts }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // Recent emails (mix of drafts and sent, last 20)
+    // Recent emails (mix of drafts and sent, last 20 — exclude discarded)
     const { data: recentEmails } = await supabase
       .from("email_drafts")
       .select("id, status, subject, created_at, sent_at, approved_at, agent_handoff_transferred")
       .eq("is_simulation", false)
+      .neq("status", "discarded")
       .order("created_at", { ascending: false })
       .limit(20);
 

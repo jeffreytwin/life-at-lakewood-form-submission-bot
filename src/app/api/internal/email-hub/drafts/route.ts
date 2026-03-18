@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("email_drafts")
-      .select("*")
+      .select("*, agents:agent_handoff_id(id, name, email)")
       .order("created_at", { ascending: false })
       .limit(limit);
 

@@ -53,7 +53,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { body_text, status } = body;
+    const { body_text, status, cc_emails } = body;
 
     // Check current draft status - can't edit sent drafts
     const { data: existing, error: fetchError } = await supabase
@@ -77,6 +77,9 @@ export async function PUT(
     if (body_text !== undefined) {
       updates.body_text = body_text;
       updates.edited_at = new Date().toISOString();
+    }
+    if (cc_emails !== undefined) {
+      updates.cc_emails = cc_emails;
     }
     if (status !== undefined) {
       updates.status = status;
