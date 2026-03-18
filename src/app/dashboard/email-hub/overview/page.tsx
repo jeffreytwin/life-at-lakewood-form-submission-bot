@@ -41,7 +41,7 @@ function formatRelativeDate(dateStr: string): string {
   if (diffMin < 60) return `${diffMin}m ago`;
   if (diffHr < 24) return `${diffHr}h ago`;
   if (diffDay < 7) return `${diffDay}d ago`;
-  return date.toLocaleDateString();
+  return date.toLocaleDateString("en-US", { timeZone: "America/New_York" });
 }
 
 export default function EmailHubOverview() {
@@ -142,7 +142,7 @@ export default function EmailHubOverview() {
       {/* Daily drafts/sent graph */}
       <div className="card mb-4">
         <div className="card-header">
-          <h3>Email Activity This Month</h3>
+          <h3>Email Activity This Month (ET)</h3>
         </div>
         {stats.dailyGraph.length === 0 ? (
           <div className="empty-state" style={{ padding: "32px 20px" }}>

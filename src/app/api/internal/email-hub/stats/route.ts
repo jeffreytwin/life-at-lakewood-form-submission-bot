@@ -3,12 +3,30 @@ import { supabase } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
+/** Convert a Date to YYYY-MM-DD in US Eastern time */
+function toEasternDate(d: Date): string {
+  return d.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+}
+
+/** Get start-of-day in Eastern time as a UTC ISO string */
+function easternMonthBoundary(year: number, month: number, day: number): string {
+  const str = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00`;
+  const eastern = new Date(
+    new Date(str).toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+  // Reconstruct as if the wall-clock time is midnight ET
+  const offset = eastern.getTime() - new Date(str).getTime();
+  return new Date(new Date(str).getTime() - offset).toISOString();
+}
+
 export async function GET() {
   try {
-    // Get current month boundaries
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+    // Get current month boundaries in Eastern time
+    const nowET = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+    );
+    const monthStart = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth(), 1);
+    const monthEnd = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth() + 1, 1);
 
     // Total drafts generated this month
     const { count: totalDrafts } = await supabase
@@ -61,10 +79,10 @@ export async function GET() {
       .lt("created_at", monthEnd)
       .order("created_at", { ascending: true });
 
-    // Aggregate by day
+    // Aggregate by day (Eastern time)
     const dailyStats: Record<string, { drafted: number; sent: number }> = {};
     for (const d of monthDrafts ?? []) {
-      const day = new Date(d.created_at).toISOString().split("T")[0];
+      const day = toEasternDate(new Date(d.created_at));
       if (!dailyStats[day]) dailyStats[day] = { drafted: 0, sent: 0 };
       dailyStats[day].drafted++;
       if (d.status === "sent") dailyStats[day].sent++;

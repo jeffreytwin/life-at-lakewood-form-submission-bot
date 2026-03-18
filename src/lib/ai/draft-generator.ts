@@ -20,6 +20,8 @@ function getClient(): Anthropic {
 export interface DraftInput {
   locationName: string;
   locationId: string | null;
+  /** Email address of the sending account (for training example lookup) */
+  emailAddress?: string | null;
   conversationThread: string;
   leadInfo?: {
     name?: string;
@@ -53,7 +55,8 @@ export async function generateDraft(input: DraftInput): Promise<DraftOutput> {
 
   // Load training examples unless overridden
   const trainingExamples =
-    input.trainingExamples ?? (await loadTrainingExamples(input.locationId));
+    input.trainingExamples ??
+    (await loadTrainingExamples(input.locationId, undefined, input.emailAddress));
 
   const systemPrompt = buildSystemPrompt({
     locationName: input.locationName,

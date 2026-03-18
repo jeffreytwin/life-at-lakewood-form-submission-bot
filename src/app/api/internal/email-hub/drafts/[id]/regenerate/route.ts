@@ -72,6 +72,7 @@ export async function POST(
     const newDraft = await generateDraft({
       locationName,
       locationId,
+      emailAddress: account?.email_address ?? null,
       conversationThread,
     });
 
