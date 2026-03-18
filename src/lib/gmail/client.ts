@@ -422,6 +422,58 @@ export function buildRawMessage(opts: {
     .replace(/=+$/, "");
 }
 
+// ============================================================
+// Gmail Push Notifications (Pub/Sub)
+// ============================================================
+
+/**
+ * Register a Gmail mailbox for push notifications via Google Cloud Pub/Sub.
+ * Must be renewed every 7 days (Google enforces max expiration).
+ * Returns the new historyId and expiration timestamp.
+ */
+export async function watchInbox(
+  accountId: string,
+  credentials: GmailCredentials,
+  topicName: string
+): Promise<{ historyId: string; expiration: string }> {
+  const res = await gmailFetch(accountId, credentials, "/watch", {
+    method: "POST",
+    body: JSON.stringify({
+      topicName,
+      labelIds: ["INBOX", "SENT"],
+      labelFilterBehavior: "include",
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`watch failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  return {
+    historyId: data.historyId,
+    expiration: data.expiration,
+  };
+}
+
+/**
+ * Stop push notifications for a mailbox.
+ */
+export async function stopWatch(
+  accountId: string,
+  credentials: GmailCredentials
+): Promise<void> {
+  const res = await gmailFetch(accountId, credentials, "/stop", {
+    method: "POST",
+  });
+  // 204 = success, ignore errors (watch may not be active)
+  if (!res.ok && res.status !== 204 && res.status !== 404) {
+    const text = await res.text();
+    logger.warn("stopWatch returned error", { accountId, status: res.status, body: text });
+  }
+}
+
 /**
  * Exchange an OAuth authorization code for tokens.
  */
