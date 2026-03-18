@@ -34,6 +34,12 @@ function getMessage(event: LeadEvent): string {
       return "Texting you the details now Colonel. This file's pretty thick...";
     case "bad_data":
       return `Looks like a false flag operation Colonel. I marked ${event.leadName} as 'Bad Data'.`;
+    case "email_draft_new":
+      return "Colonel! Someone's reaching out via email. Our AI operative put together a draft. Better check it out...";
+    case "email_draft_approved":
+      return "Pinging the frontlines to get this message out ASAP. I'll let you know when that happens...";
+    case "email_sent":
+      return "Colonel! Just got word the email was sent! You're pretty good...";
   }
 }
 

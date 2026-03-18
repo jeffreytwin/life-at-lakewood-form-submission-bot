@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { emitLeadEvent } from "@/lib/lead-events";
 
 type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
 type TrainingCategory =
@@ -323,6 +324,22 @@ export default function EmailDraftsPage() {
       setApproveResult(
         "Approved! An SMS has been sent to frontlines to review and send."
       );
+
+      // Play draft-approved sound
+      const approvedAudio = new Audio("/sounds/draft-approved.wav");
+      approvedAudio.volume = 0.6;
+      approvedAudio.play().catch(() => {});
+
+      // If SMS was sent to frontlines, play codec sound and have Snake speak
+      if (data.sms_sent) {
+        setTimeout(() => {
+          const codecAudio = new Audio("/sounds/mgs-codec.mp3");
+          codecAudio.volume = 0.6;
+          codecAudio.play().catch(() => {});
+          emitLeadEvent({ type: "email_draft_approved", leadName: "" });
+        }, 1500);
+      }
+
       fetchDrafts();
     } catch (e) {
       setApproveResult(e instanceof Error ? e.message : "Approval failed");
