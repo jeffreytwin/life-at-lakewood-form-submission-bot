@@ -77,7 +77,7 @@ export default function SimulationPage() {
           marginBottom: 24,
         }}
       >
-        <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+        <div className="otocon-wrapper" style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
           {bubbleVisible && (
             <div className="speech-bubble" style={{ whiteSpace: "normal" }}>
               <span className="speech-bubble-text">{displayText}</span>
