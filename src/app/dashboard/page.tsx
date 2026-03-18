@@ -268,9 +268,6 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           <div className="stat-value" style={{ color: "var(--success)" }}>
             {stats.statusCounts.accepted ?? 0}
           </div>
-          <div className="stat-sub">
-            {stats.statusCounts.manual ?? 0} manual fallbacks
-          </div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Avg Time to Form Acceptance</div>

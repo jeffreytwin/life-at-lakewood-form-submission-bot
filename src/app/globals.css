@@ -152,7 +152,7 @@ a:hover {
 
 .sidebar-logout:hover {
   background: var(--bg-card-hover);
-  color: var(--danger);
+  color: var(--accent);
 }
 
 a.sidebar-footer-active {

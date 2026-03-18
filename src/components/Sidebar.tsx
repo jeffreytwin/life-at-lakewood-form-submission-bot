@@ -7,12 +7,10 @@ import { onFailedCount, clearFailed } from "@/lib/lead-events";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: "\u2302" },
-  { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2709" },
-  { href: "/dashboard/email-hub/drafts", label: "Drafts", icon: "\u270E" },
+  { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2630" },
+  { href: "/dashboard/email-hub/drafts", label: "Email", icon: "\u2709" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
   { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
-  { href: "/dashboard/simulate", label: "Simulate Forms", icon: "\u26A1" },
-  { href: "/dashboard/email-hub/simulate", label: "Simulate Emails", icon: "\u26A1" },
 ];
 
 export default function Sidebar({
@@ -98,6 +96,22 @@ export default function Sidebar({
               </Link>
             </li>
           ))}
+          <li>
+            <Link
+              href="/dashboard/simulation"
+              className={isActive("/dashboard/simulation") || pathname === "/dashboard/simulate" || pathname === "/dashboard/email-hub/simulate" ? "active" : ""}
+              onClick={onClose}
+            >
+              <span className="nav-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img
+                  src="/Otocon Simulation Logo.png"
+                  alt="Simulation"
+                  style={{ width: 18, height: 18, objectFit: "contain" }}
+                />
+              </span>
+              Simulation
+            </Link>
+          </li>
         </ul>
         <div className="sidebar-footer">
           <Link
