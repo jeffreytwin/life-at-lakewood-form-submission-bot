@@ -16,7 +16,12 @@ export default function EmailHubSettingsPage() {
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [oauthStatus, setOauthStatus] = useState<string | null>(null);
+  const [showAddInbox, setShowAddInbox] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newDisplayName, setNewDisplayName] = useState("");
+  const [addingInbox, setAddingInbox] = useState(false);
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -80,6 +85,51 @@ export default function EmailHubSettingsPage() {
     }
   };
 
+  const disconnectInbox = async (accountId: string) => {
+    if (!confirm("Are you sure you want to disconnect this inbox?")) return;
+    setDisconnecting(accountId);
+    try {
+      const res = await fetch(
+        `/api/internal/email-hub/accounts/${accountId}/disconnect`,
+        { method: "POST" }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to disconnect");
+      setOauthStatus("Inbox disconnected successfully.");
+      loadAccounts();
+    } catch {
+      setOauthStatus("Failed to disconnect inbox.");
+    } finally {
+      setDisconnecting(null);
+    }
+  };
+
+  const addInbox = async () => {
+    if (!newEmail.includes("@")) return;
+    setAddingInbox(true);
+    try {
+      const res = await fetch("/api/internal/email-hub/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email_address: newEmail,
+          display_name: newDisplayName || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add inbox");
+      setOauthStatus(`Inbox ${newEmail} added successfully.`);
+      setNewEmail("");
+      setNewDisplayName("");
+      setShowAddInbox(false);
+      loadAccounts();
+    } catch (e) {
+      setOauthStatus(e instanceof Error ? e.message : "Failed to add inbox.");
+    } finally {
+      setAddingInbox(false);
+    }
+  };
+
   const isConnected = (account: EmailAccount) => !!account.credentials;
 
   return (
@@ -107,14 +157,62 @@ export default function EmailHubSettingsPage() {
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header">
           <h3>Connected Inboxes</h3>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => setShowAddInbox(!showAddInbox)}
+          >
+            {showAddInbox ? "Cancel" : "+ Add Inbox"}
+          </button>
         </div>
+
+        {showAddInbox && (
+          <div
+            style={{
+              padding: "12px 16px",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--bg-input)",
+            }}
+          >
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+              <div className="form-group" style={{ margin: 0, flex: 1, minWidth: 200 }}>
+                <label>Email Address</label>
+                <input
+                  className="form-input"
+                  type="email"
+                  placeholder="user@gmail.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                />
+              </div>
+              <div className="form-group" style={{ margin: 0, flex: 1, minWidth: 160 }}>
+                <label>Display Name (optional)</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="e.g. Sales Team"
+                  value={newDisplayName}
+                  onChange={(e) => setNewDisplayName(e.target.value)}
+                />
+              </div>
+              <button
+                className="btn btn-primary"
+                onClick={addInbox}
+                disabled={addingInbox || !newEmail.includes("@")}
+                style={{ height: 36 }}
+              >
+                {addingInbox ? "Adding..." : "Add"}
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div style={{ padding: 16, color: "#9ca3af" }}>Loading accounts...</div>
         ) : accounts.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">&#9993;</div>
             <h3>No inboxes configured</h3>
-            <p>Add an email account from the Accounts tab first, then connect Gmail here.</p>
+            <p>Click &quot;+ Add Inbox&quot; above to add an email account, then connect Gmail.</p>
           </div>
         ) : (
           <div style={{ padding: 0 }}>
@@ -149,30 +247,41 @@ export default function EmailHubSettingsPage() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {isConnected(account) ? (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "4px 12px",
-                        borderRadius: 6,
-                        background: "#0a2e1a",
-                        color: "#4ade80",
-                        fontSize: 13,
-                        fontWeight: 500,
-                      }}
-                    >
+                    <>
                       <span
                         style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          background: "#4ade80",
-                          display: "inline-block",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "4px 12px",
+                          borderRadius: 6,
+                          background: "#0a2e1a",
+                          color: "#4ade80",
+                          fontSize: 13,
+                          fontWeight: 500,
                         }}
-                      />
-                      Connected
-                    </span>
+                      >
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            background: "#4ade80",
+                            display: "inline-block",
+                          }}
+                        />
+                        Connected
+                      </span>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => disconnectInbox(account.id)}
+                        disabled={disconnecting === account.id}
+                      >
+                        {disconnecting === account.id
+                          ? "..."
+                          : "Disconnect"}
+                      </button>
+                    </>
                   ) : (
                     <button
                       className="btn btn-primary"

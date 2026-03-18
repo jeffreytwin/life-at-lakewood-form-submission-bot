@@ -7,17 +7,15 @@ import { onFailedCount, clearFailed } from "@/lib/lead-events";
 
 const formHubItems = [
   { href: "/dashboard", label: "Overview", icon: "\u2302" },
-  { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2709" },
+  { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2630" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
   { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
   { href: "/dashboard/weights", label: "Weights", icon: "\u2696" },
-  { href: "/dashboard/simulate", label: "Simulation", icon: "\u26A1" },
 ];
 
 const emailHubItems = [
-  { href: "/dashboard/email-hub/drafts", label: "Drafts", icon: "\u270E" },
+  { href: "/dashboard/email-hub/drafts", label: "Email", icon: "\u2709" },
   { href: "/dashboard/email-hub/training", label: "Training Data", icon: "\u2261" },
-  { href: "/dashboard/email-hub/simulate", label: "Simulation", icon: "\u26A1" },
   { href: "/dashboard/email-hub/settings", label: "Settings", icon: "\u2699" },
 ];
 
@@ -95,6 +93,23 @@ export default function Sidebar({
               </Link>
             </li>
           ))}
+          <li className="sidebar-section-label" style={{ marginTop: 16 }}>&nbsp;</li>
+          <li>
+            <Link
+              href="/dashboard/simulation"
+              className={pathname === "/dashboard/simulation" ? "active" : ""}
+              onClick={onClose}
+            >
+              <span className="nav-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img
+                  src="/Otocon Simulation Logo.png"
+                  alt=""
+                  style={{ width: 18, height: 18, objectFit: "contain" }}
+                />
+              </span>
+              Simulation
+            </Link>
+          </li>
         </ul>
         <div className="sidebar-footer">
           <Link
