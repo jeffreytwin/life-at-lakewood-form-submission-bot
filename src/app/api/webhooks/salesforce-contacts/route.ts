@@ -22,7 +22,10 @@ import type { EmailAccount } from "@/lib/supabase/types";
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Parse JSON body, stripping trailing commas that Zapier may include
+    const rawText = await request.text();
+    const sanitized = rawText.replace(/,\s*([\]}])/g, "$1");
+    const body = JSON.parse(sanitized);
 
     // Authenticate
     const secret = String(body?.webhook_secret || "").trim();
