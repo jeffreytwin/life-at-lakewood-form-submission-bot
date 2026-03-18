@@ -152,6 +152,7 @@ export interface Agent {
   daily_lead_max: number;
   unavailability_windows: UnavailabilityWindow[] | null;
   price_ranges: PriceRange[] | null;
+  is_preferred: boolean;
   send_draft_success_texts: boolean;
   draft_success_phone: string | null;
   photo_url: string | null;
@@ -189,6 +190,7 @@ export interface Lead {
   salesforce_owner_id: string | null;
   is_master_agent_owned: boolean;
   raw_payload: Record<string, unknown> | null;
+  arrived_during_quiet_hours: boolean;
   routing_status: RoutingStatus;
   final_agent_id: string | null;
   created_at: string;
@@ -325,7 +327,7 @@ export interface EmailMessage {
   created_at: string;
 }
 
-export type EmailDraftStatus = "drafted" | "edited" | "sent" | "discarded";
+export type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
 
 export interface EmailDraft {
   id: string;
@@ -345,9 +347,12 @@ export interface EmailDraft {
   simulation_input: Record<string, unknown> | null;
   created_at: string;
   edited_at: string | null;
+  approved_at: string | null;
   sent_at: string | null;
   sent_body_text: string | null;
   was_changed: boolean;
+  agent_handoff_transferred: boolean;
+  agent_handoff_transferred_at: string | null;
 }
 
 export type TrainingCategory =

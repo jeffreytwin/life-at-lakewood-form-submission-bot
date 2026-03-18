@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { emitLeadEvent } from "@/lib/lead-events";
 
-type EmailDraftStatus = "drafted" | "edited" | "sent" | "discarded";
+type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
 type TrainingCategory =
   | "initial_inquiry"
   | "follow_up"
@@ -11,6 +12,18 @@ type TrainingCategory =
   | "pricing"
   | "objection"
   | "general";
+
+interface AgentInfo {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
+interface AgentOption {
+  id: string;
+  name: string;
+  email: string | null;
+}
 
 interface EmailDraft {
   id: string;
@@ -23,15 +36,15 @@ interface EmailDraft {
   body_html: string | null;
   cc_emails: string[];
   agent_handoff_id: string | null;
-  model_used: string | null;
-  prompt_tokens: number | null;
-  completion_tokens: number | null;
+  agents: AgentInfo | null;
   is_simulation: boolean;
   simulation_input: Record<string, unknown> | null;
   sent_body_text: string | null;
   was_changed: boolean;
+  agent_handoff_transferred: boolean;
   created_at: string;
   edited_at: string | null;
+  approved_at: string | null;
   sent_at: string | null;
 }
 
@@ -48,14 +61,12 @@ interface ThreadMessage {
 
 const STATUS_OPTIONS: { key: EmailDraftStatus; label: string }[] = [
   { key: "drafted", label: "Drafts" },
-  { key: "edited", label: "Edited" },
   { key: "sent", label: "Sent" },
-  { key: "discarded", label: "Discarded" },
 ];
 
 const STATUS_COLORS: Record<EmailDraftStatus, string> = {
   drafted: "#4f8ff7",
-  edited: "#fbbf24",
+  approved: "#34d399",
   sent: "#34d399",
   discarded: "#f87171",
 };
@@ -70,7 +81,7 @@ const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 15_000;
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -124,10 +135,15 @@ export default function EmailDraftsPage() {
   // Editing state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  const [editCcAgent, setEditCcAgent] = useState<AgentOption | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Agents list for CC dropdown
+  const [agents, setAgents] = useState<AgentOption[]>([]);
 
   // Approve state
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [approveResult, setApproveResult] = useState<string | null>(null);
 
   // Discard state
@@ -137,6 +153,19 @@ export default function EmailDraftsPage() {
   const [trainingDraftId, setTrainingDraftId] = useState<string | null>(null);
   const [trainingCategory, setTrainingCategory] = useState<TrainingCategory>("general");
   const [addingToTraining, setAddingToTraining] = useState(false);
+
+  // Agent handoff state
+  const [handoffId, setHandoffId] = useState<string | null>(null);
+  const [handoffResult, setHandoffResult] = useState<string | null>(null);
+
+  // Regenerate state
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+
+  // Feedback state
+  const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
+  const [feedbackRating, setFeedbackRating] = useState(3);
+  const [feedbackNotes, setFeedbackNotes] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const fetchDrafts = useCallback(
     (isPolling = false) => {
@@ -151,6 +180,12 @@ export default function EmailDraftsPage() {
         .then((data) => {
           if (Array.isArray(data)) {
             setDrafts(data);
+            // Update approved set from fetched data
+            const newApproved = new Set(approvedIds);
+            data.forEach((d: EmailDraft) => {
+              if (d.status === "approved") newApproved.add(d.id);
+            });
+            setApprovedIds(newApproved);
           } else if (!isPolling) {
             setError(data.error ?? "Failed to load drafts");
           }
@@ -163,6 +198,7 @@ export default function EmailDraftsPage() {
           }
         });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [statusFilter, showSimulations]
   );
 
@@ -171,7 +207,23 @@ export default function EmailDraftsPage() {
     fetchDrafts();
   }, [fetchDrafts]);
 
-  // Polling for new drafts
+  // Load agents for CC dropdown
+  useEffect(() => {
+    fetch("/api/internal/agents")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAgents(
+            data
+              .filter((a: AgentOption & { is_active: boolean }) => a.is_active && a.email)
+              .map((a: AgentOption) => ({ id: a.id, name: a.name, email: a.email }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Polling (15s interval)
   const fetchDraftsRef = useRef(fetchDrafts);
   fetchDraftsRef.current = fetchDrafts;
   useEffect(() => {
@@ -201,10 +253,12 @@ export default function EmailDraftsPage() {
       setEditingId(null);
       setThreadMessages([]);
       setTrainingDraftId(null);
+      setFeedbackDraftId(null);
     } else {
       setExpandedId(id);
       setEditingId(null);
       setTrainingDraftId(null);
+      setFeedbackDraftId(null);
       loadThreadMessages(id);
     }
   }
@@ -212,23 +266,31 @@ export default function EmailDraftsPage() {
   function startEditing(draft: EmailDraft) {
     setEditingId(draft.id);
     setEditText(draft.body_text ?? "");
+    // Restore existing CC agent if one was set
+    if (draft.cc_emails.length > 0) {
+      const existing = agents.find(
+        (a) => a.email && draft.cc_emails.some((cc) => cc.toLowerCase() === a.email!.toLowerCase())
+      );
+      setEditCcAgent(existing ?? null);
+    } else {
+      setEditCcAgent(null);
+    }
   }
 
   function cancelEditing() {
     setEditingId(null);
     setEditText("");
+    setEditCcAgent(null);
   }
 
   async function saveEdit(draft: EmailDraft) {
     setSaving(true);
     try {
+      const ccEmails = editCcAgent?.email ? [editCcAgent.email] : [];
       const res = await fetch(`/api/internal/email-hub/drafts/${draft.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          body_text: editText,
-          status: "edited" as EmailDraftStatus,
-        }),
+        body: JSON.stringify({ body_text: editText, cc_emails: ccEmails }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -236,6 +298,7 @@ export default function EmailDraftsPage() {
       }
       setEditingId(null);
       setEditText("");
+      setEditCcAgent(null);
       fetchDrafts();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Save failed");
@@ -256,16 +319,27 @@ export default function EmailDraftsPage() {
       if (!res.ok) {
         throw new Error(data.error ?? "Approval failed");
       }
+      // Mark as approved in local state
+      setApprovedIds((prev) => new Set(prev).add(draftId));
+      setApproveResult(
+        "Approved! An SMS has been sent to frontlines to review and send."
+      );
+
+      // Play draft-approved sound
+      const approvedAudio = new Audio("/sounds/draft-approved.wav");
+      approvedAudio.volume = 0.6;
+      approvedAudio.play().catch(() => {});
+
+      // If SMS was sent to frontlines, play codec sound and have Snake speak
       if (data.sms_sent) {
-        const successCount = data.results.filter(
-          (r: { success: boolean }) => r.success
-        ).length;
-        setApproveResult(
-          `Approved! SMS sent to ${successCount} agent${successCount !== 1 ? "s" : ""}.`
-        );
-      } else {
-        setApproveResult(data.message ?? "Approved (no SMS recipients configured).");
+        setTimeout(() => {
+          const codecAudio = new Audio("/sounds/mgs-codec.mp3");
+          codecAudio.volume = 0.6;
+          codecAudio.play().catch(() => {});
+          emitLeadEvent({ type: "email_draft_approved", leadName: "" });
+        }, 1500);
       }
+
       fetchDrafts();
     } catch (e) {
       setApproveResult(e instanceof Error ? e.message : "Approval failed");
@@ -275,7 +349,7 @@ export default function EmailDraftsPage() {
   }
 
   async function discardDraft(draftId: string) {
-    if (!confirm("Are you sure you want to discard this draft?")) return;
+    if (!confirm("Are you sure you want to discard this draft? This will also delete it from Gmail.")) return;
     setDiscardingId(draftId);
     try {
       const res = await fetch(`/api/internal/email-hub/drafts/${draftId}`, {
@@ -319,9 +393,79 @@ export default function EmailDraftsPage() {
     }
   }
 
+  async function triggerAgentHandoff(draftId: string) {
+    const draft = drafts.find((d) => d.id === draftId);
+    const agentName = draft?.agents?.name ?? "Agent";
+    if (!confirm(`Transfer this lead to ${agentName} in Salesforce? This will update Salesforce via Zapier.`)) return;
+    setHandoffId(draftId);
+    setHandoffResult(null);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/handoff`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Handoff failed");
+      }
+      setHandoffResult("Agent handoff transferred successfully!");
+      fetchDrafts();
+    } catch (e) {
+      setHandoffResult(e instanceof Error ? e.message : "Handoff failed");
+    } finally {
+      setHandoffId(null);
+    }
+  }
+
+  async function regenerateDraft(draftId: string) {
+    if (!confirm("Generate a new AI draft? This will replace the current draft text.")) return;
+    setRegeneratingId(draftId);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/regenerate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Regeneration failed");
+      }
+      fetchDrafts();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Regeneration failed");
+    } finally {
+      setRegeneratingId(null);
+    }
+  }
+
+  async function submitFeedback(draftId: string) {
+    setSubmittingFeedback(true);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rating: feedbackRating,
+          feedback_notes: feedbackNotes || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Failed to submit feedback");
+      }
+      setFeedbackDraftId(null);
+      setFeedbackRating(3);
+      setFeedbackNotes("");
+      alert("Feedback submitted! This helps improve future draft quality.");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to submit feedback");
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  }
+
   const filteredDrafts = drafts;
 
-  // Reusable thread messages renderer
+  // Reusable thread messages renderer (newest on top)
   function renderThreadMessages() {
     if (loadingThread) {
       return (
@@ -467,7 +611,9 @@ export default function EmailDraftsPage() {
             <div className="empty-icon">&#9993;</div>
             <h3>No drafts found</h3>
             <p>
-              {`No drafts with status "${statusFilter}". Try changing the filter.`}
+              {statusFilter === "drafted"
+                ? "No pending drafts. New drafts will appear here when emails are received."
+                : "No sent emails found."}
             </p>
           </div>
         </div>
@@ -476,10 +622,18 @@ export default function EmailDraftsPage() {
           {filteredDrafts.map((draft) => {
             const isExpanded = expandedId === draft.id;
             const isEditing = editingId === draft.id;
-            const statusColor = STATUS_COLORS[draft.status];
-            const tokenCount =
-              (draft.prompt_tokens ?? 0) + (draft.completion_tokens ?? 0);
+            const isApproved = draft.status === "approved" || approvedIds.has(draft.id);
+            const statusColor = isApproved ? "#34d399" : STATUS_COLORS[draft.status];
             const isSent = draft.status === "sent";
+            const displayStatus = isApproved ? "approved" : draft.status;
+
+            // Agent handoff button: only show when there's an agent with CC
+            const handoffAgent = draft.agents;
+            const hasHandoffCc =
+              handoffAgent?.email &&
+              draft.cc_emails.some(
+                (cc) => cc.toLowerCase() === handoffAgent.email!.toLowerCase()
+              );
 
             return (
               <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
@@ -515,7 +669,7 @@ export default function EmailDraftsPage() {
                       flexShrink: 0,
                     }}
                   >
-                    {draft.status}
+                    {displayStatus}
                   </span>
 
                   {/* Subject */}
@@ -548,34 +702,29 @@ export default function EmailDraftsPage() {
                     </span>
                   )}
 
-                  {/* Meta info */}
+                  {/* Handoff badge for sent drafts */}
+                  {isSent && draft.agent_handoff_transferred && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "2px 8px",
+                        borderRadius: 10,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        background: "#a78bfa22",
+                        color: "#a78bfa",
+                        border: "1px solid #a78bfa44",
+                        flexShrink: 0,
+                      }}
+                    >
+                      Handed Off
+                    </span>
+                  )}
+
+                  {/* Time */}
                   <span className="text-muted text-sm" style={{ flexShrink: 0 }}>
                     {formatRelativeDate(draft.created_at)}
                   </span>
-
-                  {draft.model_used && (
-                    <span
-                      className="text-sm font-mono"
-                      style={{
-                        color: "#8b8fa3",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {draft.model_used}
-                    </span>
-                  )}
-
-                  {tokenCount > 0 && (
-                    <span
-                      className="text-sm font-mono"
-                      style={{
-                        color: "#8b8fa3",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {tokenCount.toLocaleString()} tok
-                    </span>
-                  )}
                 </div>
 
                 {/* Expanded view */}
@@ -622,7 +771,7 @@ export default function EmailDraftsPage() {
                       </div>
                     )}
 
-                    {/* Draft/Sent body - always on top */}
+                    {/* Draft/Sent body */}
                     <div style={{ marginBottom: 16 }}>
                       <label
                         className="text-sm"
@@ -651,6 +800,70 @@ export default function EmailDraftsPage() {
                               resize: "vertical",
                             }}
                           />
+                          {/* CC an Agent */}
+                          <div style={{ marginTop: 10 }}>
+                            <label
+                              className="text-sm"
+                              style={{
+                                display: "block",
+                                fontWeight: 600,
+                                marginBottom: 4,
+                                color: "#8b8fa3",
+                              }}
+                            >
+                              CC an Agent
+                            </label>
+                            {editCcAgent ? (
+                              <div
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                  padding: "6px 12px",
+                                  borderRadius: 16,
+                                  background: "#a78bfa22",
+                                  border: "1px solid #a78bfa44",
+                                  color: "#a78bfa",
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {editCcAgent.name}
+                                <button
+                                  onClick={() => setEditCcAgent(null)}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "#a78bfa",
+                                    cursor: "pointer",
+                                    padding: 0,
+                                    fontSize: 16,
+                                    lineHeight: 1,
+                                  }}
+                                  title="Remove"
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            ) : (
+                              <select
+                                className="form-input"
+                                value=""
+                                onChange={(e) => {
+                                  const agent = agents.find((a) => a.id === e.target.value);
+                                  if (agent) setEditCcAgent(agent);
+                                }}
+                                style={{ width: "100%", fontSize: 13 }}
+                              >
+                                <option value="">Select an agent...</option>
+                                {agents.map((a) => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.name} ({a.email})
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
                           <div
                             style={{
                               display: "flex",
@@ -725,7 +938,8 @@ export default function EmailDraftsPage() {
                         marginBottom: 16,
                       }}
                     >
-                      {!isSent && draft.status !== "discarded" && !isEditing && (
+                      {/* Edit button - only for non-sent, non-discarded, non-approved drafts, hidden when editing */}
+                      {!isSent && draft.status !== "discarded" && !isApproved && !isEditing && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
@@ -736,7 +950,46 @@ export default function EmailDraftsPage() {
                           Edit Draft
                         </button>
                       )}
-                      {(draft.status === "drafted" || draft.status === "edited") && (
+
+                      {/* Generate New Draft button - only for non-sent, non-discarded, non-approved drafts, hidden when editing */}
+                      {!isSent && draft.status !== "discarded" && !isApproved && !isEditing && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            regenerateDraft(draft.id);
+                          }}
+                          disabled={regeneratingId === draft.id}
+                          style={{
+                            color: "#4f8ff7",
+                            borderColor: "#4f8ff744",
+                          }}
+                        >
+                          {regeneratingId === draft.id ? "Generating..." : "Generate New Draft"}
+                        </button>
+                      )}
+
+                      {/* Give Feedback button - only for non-sent, non-discarded drafts, hidden when editing */}
+                      {!isSent && draft.status !== "discarded" && !isEditing && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFeedbackDraftId(
+                              feedbackDraftId === draft.id ? null : draft.id
+                            );
+                          }}
+                          style={{
+                            color: "#fbbf24",
+                            borderColor: "#fbbf2444",
+                          }}
+                        >
+                          Give Feedback
+                        </button>
+                      )}
+
+                      {/* Approve button - hidden when editing or already approved */}
+                      {draft.status === "drafted" && !isApproved && !isEditing && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
@@ -748,7 +1001,30 @@ export default function EmailDraftsPage() {
                           {approvingId === draft.id ? "Approving..." : "Approve"}
                         </button>
                       )}
-                      {(draft.status === "drafted" || draft.status === "edited") && (
+
+                      {/* Green Approved indicator */}
+                      {isApproved && !isSent && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#34d39922",
+                            color: "#34d399",
+                            border: "1px solid #34d39944",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Approved
+                        </span>
+                      )}
+
+                      {/* Discard button - hidden when editing or approved */}
+                      {!isSent && draft.status !== "discarded" && !isApproved && !isEditing && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
@@ -764,6 +1040,8 @@ export default function EmailDraftsPage() {
                           {discardingId === draft.id ? "Discarding..." : "Discard"}
                         </button>
                       )}
+
+                      {/* Add to Training (sent only) */}
                       {isSent && (
                         <button
                           className="btn btn-secondary"
@@ -776,6 +1054,47 @@ export default function EmailDraftsPage() {
                         >
                           Add to Training
                         </button>
+                      )}
+
+                      {/* Agent Handoff Transfer (sent only, not already transferred, only when CC includes agent) */}
+                      {isSent && !draft.agent_handoff_transferred && hasHandoffCc && handoffAgent && (
+                        <button
+                          className="btn btn-secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            triggerAgentHandoff(draft.id);
+                          }}
+                          disabled={handoffId === draft.id}
+                          style={{
+                            color: "#a78bfa",
+                            borderColor: "#a78bfa44",
+                          }}
+                        >
+                          {handoffId === draft.id
+                            ? "Transferring..."
+                            : `Transfer to ${handoffAgent.name} in Salesforce`}
+                        </button>
+                      )}
+
+                      {/* Already transferred indicator */}
+                      {isSent && draft.agent_handoff_transferred && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#a78bfa22",
+                            color: "#a78bfa",
+                            border: "1px solid #a78bfa44",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Handed Off
+                        </span>
                       )}
                     </div>
 
@@ -797,6 +1116,132 @@ export default function EmailDraftsPage() {
                         }}
                       >
                         {approveResult}
+                      </div>
+                    )}
+
+                    {/* Agent handoff result banner */}
+                    {handoffResult && expandedId === draft.id && (
+                      <div
+                        style={{
+                          marginBottom: 12,
+                          padding: "10px 14px",
+                          background: handoffResult.includes("successfully")
+                            ? "#a78bfa22"
+                            : "#f8717122",
+                          border: `1px solid ${handoffResult.includes("successfully") ? "#a78bfa44" : "#f8717144"}`,
+                          borderRadius: 6,
+                          fontSize: 13,
+                          color: handoffResult.includes("successfully")
+                            ? "#a78bfa"
+                            : "#f87171",
+                        }}
+                      >
+                        {handoffResult}
+                      </div>
+                    )}
+
+                    {/* Give Feedback form */}
+                    {feedbackDraftId === draft.id && (
+                      <div
+                        style={{
+                          marginBottom: 16,
+                          padding: "14px 16px",
+                          background: "#111318",
+                          border: "1px solid #2a2e3a",
+                          borderRadius: 6,
+                        }}
+                      >
+                        <label
+                          className="text-sm"
+                          style={{
+                            display: "block",
+                            fontWeight: 600,
+                            marginBottom: 10,
+                            color: "#e4e6ed",
+                          }}
+                        >
+                          Give Feedback on Draft Quality
+                        </label>
+                        <p
+                          className="text-muted text-sm"
+                          style={{ marginBottom: 12 }}
+                        >
+                          Rate this draft and leave comments to help the AI improve future drafts.
+                        </p>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="text-sm text-muted">Rating (1-5)</label>
+                          <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <button
+                                key={n}
+                                className="btn btn-secondary"
+                                onClick={() => setFeedbackRating(n)}
+                                style={{
+                                  padding: "4px 12px",
+                                  fontSize: 14,
+                                  fontWeight: 600,
+                                  background:
+                                    feedbackRating === n ? "#fbbf2433" : undefined,
+                                  color:
+                                    feedbackRating === n ? "#fbbf24" : undefined,
+                                  borderColor:
+                                    feedbackRating === n ? "#fbbf2466" : undefined,
+                                }}
+                              >
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <label className="text-sm text-muted">
+                            Notes (what should be different?)
+                          </label>
+                          <textarea
+                            className="form-input"
+                            value={feedbackNotes}
+                            onChange={(e) => setFeedbackNotes(e.target.value)}
+                            placeholder="e.g., Too formal, should mention pricing earlier, needs warmer tone..."
+                            style={{
+                              width: "100%",
+                              minHeight: 80,
+                              fontFamily: "inherit",
+                              fontSize: 13,
+                              resize: "vertical",
+                            }}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => {
+                              setFeedbackDraftId(null);
+                              setFeedbackNotes("");
+                              setFeedbackRating(3);
+                            }}
+                            disabled={submittingFeedback}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => submitFeedback(draft.id)}
+                            disabled={submittingFeedback}
+                            style={{
+                              background: "#fbbf24",
+                              borderColor: "#fbbf24",
+                              color: "#111318",
+                            }}
+                          >
+                            {submittingFeedback ? "Submitting..." : "Submit Feedback"}
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -870,10 +1315,10 @@ export default function EmailDraftsPage() {
                       </div>
                     )}
 
-                    {/* Conversation thread - below draft body and buttons */}
+                    {/* Conversation thread (newest on top from API) */}
                     {renderThreadMessages()}
 
-                    {/* Meta details row */}
+                    {/* Minimal meta row - just created & sent times */}
                     <div
                       className="text-sm text-muted"
                       style={{
@@ -884,23 +1329,11 @@ export default function EmailDraftsPage() {
                       }}
                     >
                       <span>
-                        ID:{" "}
-                        <span className="font-mono">{draft.id.slice(0, 8)}...</span>
-                      </span>
-                      {draft.thread_id && (
-                        <span>
-                          Thread:{" "}
-                          <span className="font-mono">
-                            {draft.thread_id.slice(0, 8)}...
-                          </span>
-                        </span>
-                      )}
-                      <span>
                         Created: {new Date(draft.created_at).toLocaleString()}
                       </span>
-                      {draft.edited_at && (
+                      {draft.approved_at && (
                         <span>
-                          Edited: {new Date(draft.edited_at).toLocaleString()}
+                          Approved: {new Date(draft.approved_at).toLocaleString()}
                         </span>
                       )}
                       {draft.sent_at && (

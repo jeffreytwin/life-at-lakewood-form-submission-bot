@@ -4,7 +4,7 @@ import {
   getMaxAttemptNumber,
 } from "@/lib/supabase/queries/routing-attempts";
 import { updateLeadStatus } from "@/lib/supabase/queries/leads";
-import { getAgentById, getFrontlinesAgent } from "@/lib/supabase/queries/agents";
+import { getAgentById, getFrontlinesAgent, updateAgent } from "@/lib/supabase/queries/agents";
 import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
 import { supabase } from "@/lib/supabase/client";
 import { notifyAcceptance } from "@/lib/zapier/notify-acceptance";
@@ -104,6 +104,11 @@ async function sendToAgent(
   });
 
   await updateLeadStatus(lead.id, "routing");
+
+  // Clear preference flag now that this agent has received a form
+  if (agent.is_preferred) {
+    await updateAgent(agent.id, { is_preferred: false });
+  }
 
   await logAuditEvent("sms_sent", {
     leadId: lead.id,

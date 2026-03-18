@@ -141,12 +141,17 @@ export function selectBestAgent(
 
   if (eligible.length === 0) return null;
 
+  // If any eligible agents are flagged as preferred, restrict to just them.
+  // This lets admins manually steer the next form to specific agents.
+  const preferred = eligible.filter((a) => a.is_preferred);
+  const candidatePool = preferred.length > 0 ? preferred : eligible;
+
   // Prefer agents under their daily cap
-  const underCap = eligible.filter((a) => agentUnderDailyCap(a, context));
+  const underCap = candidatePool.filter((a) => agentUnderDailyCap(a, context));
 
   // If at least one agent is under cap, only score those.
   // If ALL are at/over cap, allow overflow to any eligible agent.
-  const pool = underCap.length > 0 ? underCap : eligible;
+  const pool = underCap.length > 0 ? underCap : candidatePool;
 
   const scored = scoreAgents(pool, context, weights);
   return scored[0] ?? null;

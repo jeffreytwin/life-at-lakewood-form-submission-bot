@@ -12,12 +12,17 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("email_drafts")
-      .select("*")
+      .select("*, agents:agent_handoff_id(id, name, email)")
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (status) {
-      query = query.eq("status", status);
+      // "drafts" filter shows both drafted and approved statuses
+      if (status === "drafted") {
+        query = query.in("status", ["drafted", "approved"]);
+      } else {
+        query = query.eq("status", status);
+      }
     }
     if (isSimulation !== null) {
       query = query.eq("is_simulation", isSimulation === "true");

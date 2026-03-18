@@ -334,6 +334,7 @@ export async function generateAndStoreDraft(
     const draft = await generateDraft({
       locationName,
       locationId: account.location_id,
+      emailAddress: account.email_address,
       conversationThread,
       leadInfo: {
         name: contactName,

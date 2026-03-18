@@ -1,5 +1,8 @@
 import { getActiveAgents } from "@/lib/supabase/queries/agents";
-import { getDeclinedAgentIdsForLead } from "@/lib/supabase/queries/routing-attempts";
+import {
+  getDeclinedAgentIdsForLead,
+  getTodayAcceptedCountsByAgent,
+} from "@/lib/supabase/queries/routing-attempts";
 import { supabase } from "@/lib/supabase/client";
 import { selectBestAgent } from "@/lib/scoring/engine";
 import type { Lead, ScoringFactorKey } from "@/lib/supabase/types";
@@ -27,10 +30,13 @@ async function getCurrentMonthLeadCounts(): Promise<Map<string, number>> {
  * Maps salesforce_user_id → agent.id using the provided agents list.
  * Uses Date_of_Positive_Response__c (stored as year_month in hand_raise_snapshots)
  * to determine which day each lead belongs to.
+ *
+ * Returns both the per-agent counts and the synced_at timestamp so callers
+ * can determine which bot-local acceptances occurred after the last sync.
  */
 async function getDailyLeadCounts(
   agents: { id: string; salesforce_user_id: string | null }[]
-): Promise<Map<string, number>> {
+): Promise<{ counts: Map<string, number>; syncedAt: string | null }> {
   // Today in Eastern time (matches Salesforce report date context)
   const etDate = new Date().toLocaleDateString("en-CA", {
     timeZone: "America/New_York",
@@ -38,7 +44,7 @@ async function getDailyLeadCounts(
 
   const { data, error } = await supabase
     .from("hand_raise_snapshots")
-    .select("salesforce_user_id, count")
+    .select("salesforce_user_id, count, synced_at")
     .eq("type", "daily_by_agent")
     .eq("year_month", etDate);
 
@@ -53,13 +59,19 @@ async function getDailyLeadCounts(
   }
 
   const counts = new Map<string, number>();
+  let latestSyncedAt: string | null = null;
+
   for (const row of data ?? []) {
     const agentId = sfIdToAgentId.get(row.salesforce_user_id ?? "");
     if (agentId) {
       counts.set(agentId, row.count);
     }
+    // Track the most recent synced_at across all rows
+    if (row.synced_at && (!latestSyncedAt || row.synced_at > latestSyncedAt)) {
+      latestSyncedAt = row.synced_at;
+    }
   }
-  return counts;
+  return { counts, syncedAt: latestSyncedAt };
 }
 
 async function getWeights(): Promise<Record<ScoringFactorKey, number>> {
@@ -91,7 +103,27 @@ export async function selectNextAgent(
   ]);
 
   // Daily counts need the agents list to map salesforce_user_id → agent.id
-  const dailyCounts = await getDailyLeadCounts(agents);
+  const sfDaily = await getDailyLeadCounts(agents);
+
+  // Merge strategy: Salesforce is the source of truth.
+  // Use SF snapshot as the baseline, then add only bot-local acceptances
+  // that occurred *after* the last SF sync. This ensures that if SF removes
+  // a lead (e.g. marked 'Bad Data'), the count drops correctly, while new
+  // acceptances between syncs are still counted in real-time.
+  const botCountsSinceSync = await getTodayAcceptedCountsByAgent(
+    sfDaily.syncedAt
+  );
+
+  const dailyCounts = new Map<string, number>();
+  const allAgentIds = new Set([
+    ...sfDaily.counts.keys(),
+    ...botCountsSinceSync.keys(),
+  ]);
+  for (const id of allAgentIds) {
+    const sfCount = sfDaily.counts.get(id) ?? 0;
+    const botSinceSync = botCountsSinceSync.get(id) ?? 0;
+    dailyCounts.set(id, sfCount + botSinceSync);
+  }
 
   return selectBestAgent(
     agents,

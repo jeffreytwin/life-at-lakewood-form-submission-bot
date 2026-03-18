@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import RoutingToggle from "@/components/RoutingToggle";
 import StatusSoundMonitor from "@/components/StatusSoundMonitor";
 import PixelFireworks from "@/components/PixelFireworks";
+import EmailDraftSoundMonitor from "@/components/EmailDraftSoundMonitor";
 
 export default function DashboardLayout({
   children,
@@ -35,6 +36,7 @@ export default function DashboardLayout({
       <RoutingToggle />
       <StatusSoundMonitor />
       <PixelFireworks />
+      <EmailDraftSoundMonitor />
     </div>
   );
 }
