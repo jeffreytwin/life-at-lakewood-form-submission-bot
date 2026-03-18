@@ -37,6 +37,20 @@ interface Stats {
   }>;
 }
 
+interface EmailHubStats {
+  avgResponseTimeMinutes: number | null;
+  sentEmails: number;
+  recentEmails: {
+    id: string;
+    status: string;
+    subject: string | null;
+    created_at: string;
+    sent_at: string | null;
+    approved_at: string | null;
+    agent_handoff_transferred: boolean;
+  }[];
+}
+
 const statusBadge: Record<string, string> = {
   pending: "badge-warning",
   routing: "badge-info",
@@ -47,17 +61,27 @@ const statusBadge: Record<string, string> = {
   bad_data: "badge-purple",
 };
 
-const eventColors: Record<string, string> = {
-  lead_received: "#60a5fa",
-  sms_sent: "#4f8ff7",
-  sms_received: "#a78bfa",
-  followup_sent: "#fbbf24",
-  escalated: "#f97316",
-  accepted: "#34d399",
-  declined: "#f87171",
-  manual_fallback: "#ef4444",
-  error: "#ef4444",
+const EMAIL_STATUS_COLORS: Record<string, string> = {
+  drafted: "#4f8ff7",
+  approved: "#34d399",
+  sent: "#34d399",
+  discarded: "#f87171",
 };
+
+function formatEmailRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return date.toLocaleDateString("en-US", { timeZone: "America/New_York" });
+}
 
 interface QuietHoursState {
   quiet_hours_enabled: boolean;
@@ -71,8 +95,19 @@ export default function DashboardOverview() {
   const [error, setError] = useState<string | null>(null);
   const [leadDist, setLeadDist] = useState<LeadDistribution | null>(null);
   const [leadDistLoading, setLeadDistLoading] = useState(true);
+  const [emailStats, setEmailStats] = useState<EmailHubStats | null>(null);
   const [quietHours, setQuietHours] = useState<QuietHoursState | null>(null);
   const [qhBusy, setQhBusy] = useState(false);
+
+  const refreshEmailStats = useCallback(() => {
+    fetch("/api/internal/email-hub/stats")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setEmailStats(data);
+      })
+      .catch(() => {});
+  }, []);
+
   const refreshStats = useCallback(() => {
     fetch("/api/internal/stats")
       .then((r) => r.json())
@@ -97,6 +132,7 @@ export default function DashboardOverview() {
   useEffect(() => {
     refreshStats();
     refreshLeadDist();
+    refreshEmailStats();
     fetch("/api/internal/settings")
       .then((r) => r.json())
       .then((data) => {
@@ -109,7 +145,7 @@ export default function DashboardOverview() {
         }
       })
       .catch(() => {});
-  }, [refreshStats, refreshLeadDist]);
+  }, [refreshStats, refreshLeadDist, refreshEmailStats]);
 
   // Auto-refresh the hand raise distribution every 5 minutes
   useEffect(() => {
@@ -119,9 +155,12 @@ export default function DashboardOverview() {
 
   // Auto-refresh stats (including recent form submissions) every 30 seconds
   useEffect(() => {
-    const interval = setInterval(refreshStats, 30 * 1000);
+    const interval = setInterval(() => {
+      refreshStats();
+      refreshEmailStats();
+    }, 30 * 1000);
     return () => clearInterval(interval);
-  }, [refreshStats]);
+  }, [refreshStats, refreshEmailStats]);
 
   async function toggleQuietHours() {
     if (!quietHours) return;
@@ -225,23 +264,6 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Total Form Submissions</div>
-          <div className="stat-value">{stats.totalLeads}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Active Agents</div>
-          <div className="stat-value">{stats.activeAgents}</div>
-          <div className="stat-sub">{stats.totalAgents} total</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Average Time to Acceptance</div>
-          <div className="stat-value">
-            {stats.avgAcceptanceMinutes !== null
-              ? formatTimeExact(stats.avgAcceptanceMinutes)
-              : "-"}
-          </div>
-        </div>
-        <div className="stat-card">
           <div className="stat-label">Accepted Form Submissions</div>
           <div className="stat-value" style={{ color: "var(--success)" }}>
             {stats.statusCounts.accepted ?? 0}
@@ -249,6 +271,33 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           <div className="stat-sub">
             {stats.statusCounts.manual ?? 0} manual fallbacks
           </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Avg Time to Form Acceptance</div>
+          <div className="stat-value">
+            {stats.avgAcceptanceMinutes !== null
+              ? formatTimeExact(stats.avgAcceptanceMinutes)
+              : "-"}
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Sent Emails</div>
+          <div className="stat-value" style={{ color: "#4f8ff7" }}>
+            {emailStats?.sentEmails ?? 0}
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Avg Email Response Time</div>
+          <div className="stat-value">
+            {emailStats?.avgResponseTimeMinutes != null
+              ? emailStats.avgResponseTimeMinutes < 60
+                ? `${emailStats.avgResponseTimeMinutes}m`
+                : emailStats.avgResponseTimeMinutes < 1440
+                  ? `${Math.round(emailStats.avgResponseTimeMinutes / 60)}h`
+                  : `${Math.round(emailStats.avgResponseTimeMinutes / 1440)}d`
+              : "—"}
+          </div>
+          <div className="stat-sub">excl. quiet hours</div>
         </div>
       </div>
 
@@ -339,6 +388,66 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
 
         <ResponseTimeChart />
       </div>
+
+      {/* Recent Emails */}
+      {emailStats && emailStats.recentEmails.length > 0 && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-header">
+            <h3>Recent Emails</h3>
+          </div>
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {emailStats.recentEmails.map((email) => (
+                  <tr
+                    key={email.id}
+                    onClick={() => router.push("/dashboard/email-hub/drafts")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td
+                      style={{
+                        maxWidth: 300,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {email.subject ?? "Untitled"}
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: 10,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background: `${EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3"}22`,
+                          color: EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3",
+                          border: `1px solid ${EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3"}44`,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {email.status}
+                      </span>
+                    </td>
+                    <td className="text-muted text-sm">
+                      {formatEmailRelativeDate(email.sent_at ?? email.created_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {quietHours && (
         <div className="card" style={{ marginTop: 16 }}>
