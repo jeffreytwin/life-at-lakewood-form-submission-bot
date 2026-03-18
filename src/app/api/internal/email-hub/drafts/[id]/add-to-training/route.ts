@@ -31,18 +31,18 @@ function stripQuotedText(text: string): string {
  *   Lynn Brown, Realtor
  *   *Life in Longboat Key* (Coldwell Banker)
  *   920.410.8778
+ * Or:
+ *   Lynn Brown, Realtor
+ *   Coldwell Banker Realty (Life At Lakewood)
+ *   920.410.8778
  */
 function stripSignature(text: string): string {
-  // Match signature starting with a name line followed by a
-  // "*Life ..." location line (with or without markdown bold)
-  const sigPattern = /\n\s*\n\s*[A-Z][a-z]+ [A-Z][a-z]+,?\s*(?:Realtor|REALTOR|Agent)?\s*\n\s*\*?Life (?:in |at |At |in the )[^*\n]+\*?\s*\(Coldwell Banker\)\s*\n\s*[\d.()-]+\s*$/i;
+  // Pattern 1: "*Life in/at X* (Coldwell Banker)" style
+  // Pattern 2: "Coldwell Banker Realty (Life At/in X)" style
+  // Both preceded by a name line with title, possibly followed by phone
+  const sigPattern = /\n\s*\n\s*[A-Z][a-z]+ [A-Z][a-z]+,?\s*(?:Realtor|REALTOR|Agent)?\s*\n\s*(?:\*?Life (?:in |at |At |in the )[^*\n]+\*?\s*\(Coldwell Banker\)|Coldwell Banker[^\n]*\(Life [^\n)]+\))[\s\S]*$/i;
   const stripped = text.replace(sigPattern, "");
-
-  // Also handle when the signature is just name + location line without phone,
-  // or when there's extra whitespace variations
-  const sigPattern2 = /\n\s*\n\s*[A-Z][a-z]+ [A-Z][a-z]+,?\s*(?:Realtor|REALTOR|Agent)?\s*\n\s*\*?Life (?:in |at |At |in the )[^*\n]+\*?\s*\(Coldwell Banker\)[\s\S]*$/i;
-
-  return stripped !== text ? stripped.trim() : text.replace(sigPattern2, "").trim();
+  return stripped.trim();
 }
 
 /**

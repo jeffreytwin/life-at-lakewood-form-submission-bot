@@ -4,10 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface EmailHubStats {
-  inboundThisMonth: number;
   avgResponseTimeMinutes: number | null;
   sentEmails: number;
-  agentHandoffs: number;
   dailyGraph: { date: string; drafted: number; sent: number }[];
   recentEmails: {
     id: string;
@@ -18,7 +16,6 @@ interface EmailHubStats {
     approved_at: string | null;
     agent_handoff_transferred: boolean;
   }[];
-  agentHandoffGraph: { agentName: string; handoffs: number }[];
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -114,8 +111,10 @@ export default function EmailHubOverview() {
       {/* Stat cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-label">Incoming Emails This Month</div>
-          <div className="stat-value">{stats.inboundThisMonth}</div>
+          <div className="stat-label">Sent Emails</div>
+          <div className="stat-value" style={{ color: "#4f8ff7" }}>
+            {stats.sentEmails}
+          </div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Avg Email Response Time</div>
@@ -130,24 +129,12 @@ export default function EmailHubOverview() {
           </div>
           <div className="stat-sub">excl. quiet hours</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Sent Emails</div>
-          <div className="stat-value" style={{ color: "#4f8ff7" }}>
-            {stats.sentEmails}
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Agent Handoffs</div>
-          <div className="stat-value" style={{ color: "#a78bfa" }}>
-            {stats.agentHandoffs}
-          </div>
-        </div>
       </div>
 
       {/* Daily drafts/sent graph */}
       <div className="card mb-4">
         <div className="card-header">
-          <h3>Incoming Emails This Month</h3>
+          <h3>Lead Responses This Month</h3>
         </div>
         {stats.dailyGraph.length === 0 ? (
           <div className="empty-state" style={{ padding: "32px 20px" }}>
@@ -158,7 +145,7 @@ export default function EmailHubOverview() {
         )}
       </div>
 
-      <div className="grid-2">
+      <div>
         {/* Recent emails */}
         <div className="card">
           <div className="card-header">
@@ -232,20 +219,6 @@ export default function EmailHubOverview() {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-
-        {/* Agent handoffs graph */}
-        <div className="card">
-          <div className="card-header">
-            <h3>Agent Handoffs This Month</h3>
-          </div>
-          {stats.agentHandoffGraph.length === 0 ? (
-            <div className="empty-state" style={{ padding: "32px 20px" }}>
-              <p>No agent handoffs this month</p>
-            </div>
-          ) : (
-            <AgentHandoffChart data={stats.agentHandoffGraph} />
           )}
         </div>
       </div>
@@ -407,142 +380,3 @@ function DailyEmailChart({
   );
 }
 
-/* ── Agent Handoff Chart ────────────────────────────────── */
-
-function AgentHandoffChart({
-  data,
-}: {
-  data: { agentName: string; handoffs: number }[];
-}) {
-  const maxCount = Math.max(...data.map((d) => d.handoffs), 1);
-  const yCeil = Math.ceil(maxCount / 5) * 5 || 5;
-  const ticks: number[] = [];
-  for (let i = 0; i <= yCeil; i += Math.max(1, Math.ceil(yCeil / 5))) ticks.push(i);
-
-  const barColor = "#a78bfa";
-  const chartHeight = 200;
-
-  return (
-    <div style={{ padding: "12px 20px 20px" }}>
-      <div style={{ position: "relative" }}>
-        <div
-          style={{
-            position: "relative",
-            marginLeft: 36,
-            marginRight: 12,
-            height: chartHeight,
-          }}
-        >
-          {ticks.map((tick) => {
-            const bottom = (tick / yCeil) * 100;
-            return (
-              <div key={tick} style={{ position: "absolute", bottom: `${bottom}%`, left: -36, right: 0 }}>
-                <span
-                  className="text-muted"
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: -7,
-                    fontSize: 10,
-                    width: 28,
-                    textAlign: "right",
-                  }}
-                >
-                  {tick}
-                </span>
-                <div
-                  style={{
-                    marginLeft: 32,
-                    borderTop: "1px solid var(--border)",
-                    opacity: tick === 0 ? 0.6 : 0.3,
-                  }}
-                />
-              </div>
-            );
-          })}
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-around",
-              height: "100%",
-              marginLeft: 32,
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            {data.map((d) => {
-              const pct = (d.handoffs / yCeil) * 100;
-              return (
-                <div
-                  key={d.agentName}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                    flex: 1,
-                    maxWidth: 64,
-                    height: "100%",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "var(--text-heading)",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {d.handoffs}
-                  </span>
-                  <div
-                    style={{
-                      width: "60%",
-                      minWidth: 28,
-                      height: `${Math.max(pct, 2)}%`,
-                      background: barColor,
-                      borderRadius: "4px 4px 0 0",
-                      transition: "height 0.3s ease",
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* X-axis labels */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-around",
-            marginLeft: 68,
-            marginRight: 12,
-            marginTop: 8,
-          }}
-        >
-          {data.map((d) => (
-            <div
-              key={d.agentName}
-              style={{
-                flex: 1,
-                maxWidth: 64,
-                textAlign: "center",
-                fontSize: 11,
-                color: "var(--text-muted)",
-                lineHeight: 1.3,
-                overflow: "hidden",
-              }}
-            >
-              {d.agentName.split(" ").map((part, i) => (
-                <div key={i}>{part}</div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
