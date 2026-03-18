@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, Fragment } from "react";
+import { useRouter } from "next/navigation";
 import type { Location } from "@/lib/supabase/types";
 
 type SimMode = "single" | "bulk" | "30day";
@@ -75,6 +76,7 @@ const PRICE_OPTIONS = [
 ];
 
 export default function SimulatePage() {
+  const router = useRouter();
   const [mode, setMode] = useState<SimMode>("single");
   const [locations, setLocations] = useState<Location[]>([]);
 
@@ -250,6 +252,12 @@ export default function SimulatePage() {
   return (
     <>
       <div className="page-header">
+        <button
+          onClick={() => router.push("/dashboard/simulation")}
+          className="back-btn"
+        >
+          ← Back to Simulation
+        </button>
         <h2>Simulation</h2>
         <p>
           Test routing configurations without sending SMS or writing to the
