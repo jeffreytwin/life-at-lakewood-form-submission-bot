@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeAuthCode, getProfile } from "@/lib/gmail/client";
 import { supabase } from "@/lib/supabase/client";
+import { registerWatch } from "@/lib/gmail/watch";
 import { logger } from "@/lib/shared/logger";
+import type { EmailAccount } from "@/lib/supabase/types";
 
 /**
  * OAuth callback handler. Google redirects here with ?code=...&state=account_id
@@ -58,6 +60,24 @@ export async function GET(request: NextRequest) {
       accountId: state,
       email: profile.emailAddress,
     });
+
+    // Register Pub/Sub watch for real-time push notifications (non-blocking)
+    try {
+      const { data: acct } = await supabase
+        .from("email_accounts")
+        .select("*")
+        .eq("id", state)
+        .single();
+      if (acct) {
+        await registerWatch(acct as EmailAccount);
+      }
+    } catch (watchErr) {
+      // Non-blocking — cron will retry watch registration
+      logger.warn("Failed to register watch on OAuth callback", {
+        accountId: state,
+        error: watchErr instanceof Error ? watchErr.message : String(watchErr),
+      });
+    }
 
     return NextResponse.redirect(
       new URL(`/dashboard/email-hub/settings?oauth=success&account=${encodeURIComponent(profile.emailAddress)}`, request.url)
