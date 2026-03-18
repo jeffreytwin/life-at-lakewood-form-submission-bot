@@ -76,10 +76,10 @@ export async function POST(
       location_id: string | null;
       locations: { name: string } | null;
     } | null;
-    const locationName = account?.locations?.name ?? account?.display_name ?? "Unknown";
+    const locationName = account?.locations?.name ?? null;
 
-    // SMS body: "[LOCATION] Draft Ready"
-    const smsBody = `${locationName} Draft Ready`;
+    // SMS body: "[LOCATION] Draft Ready" or just "Draft Ready"
+    const smsBody = locationName ? `${locationName} Draft Ready` : "Draft Ready";
 
     // Send SMS to each eligible agent
     const results: { agentName: string; success: boolean; error?: string }[] =
