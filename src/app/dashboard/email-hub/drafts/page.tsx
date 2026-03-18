@@ -934,8 +934,8 @@ export default function EmailDraftsPage() {
                         </button>
                       )}
 
-                      {/* Generate New Draft button - only for non-sent, non-discarded drafts, hidden when editing */}
-                      {!isSent && draft.status !== "discarded" && !isEditing && (
+                      {/* Generate New Draft button - only for non-sent, non-discarded, non-approved drafts, hidden when editing */}
+                      {!isSent && draft.status !== "discarded" && !isApproved && !isEditing && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
