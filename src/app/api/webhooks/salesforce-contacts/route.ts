@@ -121,11 +121,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ upserted, skipped, draftsGenerated });
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack : undefined;
     logger.error("Salesforce contacts webhook error", {
-      error: error instanceof Error ? error.message : String(error),
+      error: errMsg,
+      stack: errStack,
     });
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", detail: errMsg },
       { status: 500 }
     );
   }
