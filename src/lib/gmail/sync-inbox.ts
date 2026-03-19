@@ -195,12 +195,23 @@ async function processInboundMessage(
 
   // Skip if any recipient (To/Cc) is one of our agents — the agent has
   // already taken over this conversation so we shouldn't auto-draft.
+  // Also skip if the sender IS an agent (e.g. agent emailing the client
+  // and the message appears in the monitored inbox).
   const ccRaw = getHeader(msg, "Cc") ?? "";
   const allRecipients = [toEmail, ccRaw]
     .join(",")
     .split(",")
     .map((r) => parseEmailAddress(r.trim()).toLowerCase())
     .filter(Boolean);
+
+  const senderIsAgent = await hasAgentRecipient([fromEmail.toLowerCase()]);
+  if (senderIsAgent) {
+    logger.info("Skipping draft — sender is an agent", {
+      senderEmail: fromEmail,
+      accountId: account.id,
+    });
+    return { draftGenerated: false, skippedNonLead: false };
+  }
 
   const agentOnThread = await hasAgentRecipient(allRecipients);
   if (agentOnThread) {

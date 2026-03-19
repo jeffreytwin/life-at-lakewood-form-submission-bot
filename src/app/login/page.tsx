@@ -40,12 +40,12 @@ export default function LoginPage() {
       <div style={styles.container}>
         <div style={styles.logoSection}>
           <img src="/logo.png" alt="Logo" style={styles.logo} />
-          <div style={styles.brandText}>FORM SUBMISSION HUB</div>
+          <div style={styles.brandText}>FRONTLINES HUB</div>
         </div>
 
         <div style={styles.card}>
           <p style={styles.subtitle}>
-            Log in to access the Form Submission Hub.
+            Log in to access the Frontlines Hub.
           </p>
 
           <form onSubmit={handleSubmit}>

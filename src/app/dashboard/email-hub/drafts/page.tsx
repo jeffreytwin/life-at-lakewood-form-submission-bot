@@ -390,6 +390,12 @@ export default function EmailDraftsPage() {
         throw new Error(data.error ?? "Failed to add to training");
       }
       setTrainingDraftId(null);
+      // Optimistically update the local draft to reflect training status
+      setDrafts((prev) =>
+        prev.map((d) =>
+          d.id === draftId ? { ...d, added_to_training: true } : d
+        )
+      );
       alert("Added to training data successfully!");
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to add to training");
