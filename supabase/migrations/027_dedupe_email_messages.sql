@@ -8,7 +8,9 @@ WHERE a.provider_message_id = b.provider_message_id
   AND a.provider_message_id IS NOT NULL
   AND a.created_at > b.created_at;
 
--- Now add the unique index (partial — only non-null values)
-CREATE UNIQUE INDEX IF NOT EXISTS email_messages_provider_message_id_unique
-  ON email_messages (provider_message_id)
-  WHERE provider_message_id IS NOT NULL;
+-- Add a proper unique constraint (not a partial index) so that
+-- Supabase upsert's onConflict: "provider_message_id" works correctly.
+-- A partial unique index is incompatible with ON CONFLICT (column) — PostgreSQL
+-- cannot infer it without a matching WHERE clause, causing silent upsert failures.
+ALTER TABLE email_messages
+  ADD CONSTRAINT email_messages_provider_message_id_key UNIQUE (provider_message_id);
