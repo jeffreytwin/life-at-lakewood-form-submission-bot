@@ -133,6 +133,28 @@ export async function syncInbox(account: EmailAccount): Promise<{
 }
 
 /**
+ * Check whether any of the given recipient emails belong to an active agent.
+ * Used to skip auto-drafting when an agent is already on the thread.
+ */
+async function hasAgentRecipient(recipientEmails: string[]): Promise<boolean> {
+  if (recipientEmails.length === 0) return false;
+
+  const { data: agents } = await supabase
+    .from("agents")
+    .select("email")
+    .eq("is_active", true)
+    .not("email", "is", null);
+
+  if (!agents || agents.length === 0) return false;
+
+  const agentEmails = new Set(
+    agents.map((a: { email: string | null }) => (a.email as string).toLowerCase())
+  );
+
+  return recipientEmails.some((r) => agentEmails.has(r));
+}
+
+/**
  * Match a sender email address to a known Salesforce contact.
  * Looks up by email (case-insensitive) in the salesforce_contacts table.
  * Only returns active contacts.
@@ -168,6 +190,25 @@ async function processInboundMessage(
 
   // Skip messages FROM our own account (outbound)
   if (fromEmail.toLowerCase() === account.email_address.toLowerCase()) {
+    return { draftGenerated: false, skippedNonLead: false };
+  }
+
+  // Skip if any recipient (To/Cc) is one of our agents — the agent has
+  // already taken over this conversation so we shouldn't auto-draft.
+  const ccRaw = getHeader(msg, "Cc") ?? "";
+  const allRecipients = [toEmail, ccRaw]
+    .join(",")
+    .split(",")
+    .map((r) => parseEmailAddress(r.trim()).toLowerCase())
+    .filter(Boolean);
+
+  const agentOnThread = await hasAgentRecipient(allRecipients);
+  if (agentOnThread) {
+    logger.info("Skipping draft — agent is a recipient on this email", {
+      senderEmail: fromEmail,
+      recipients: allRecipients,
+      accountId: account.id,
+    });
     return { draftGenerated: false, skippedNonLead: false };
   }
 
