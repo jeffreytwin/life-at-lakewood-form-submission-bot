@@ -9,11 +9,20 @@ import { logger } from "@/lib/shared/logger";
  * Sends draft/thread/agent data to Zapier which updates Salesforce owner.
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+
+    // Accept agent_id from request body (new flow) or fall back to draft.agent_handoff_id (legacy)
+    let bodyAgentId: string | null = null;
+    try {
+      const body = await request.json();
+      bodyAgentId = body.agent_id ?? null;
+    } catch {
+      // No body or invalid JSON — that's fine, will use draft.agent_handoff_id
+    }
 
     const zapierUrl = process.env.ZAPIER_CHANGE_OWNER_EMAIL;
     if (!zapierUrl) {
@@ -52,15 +61,29 @@ export async function POST(
       );
     }
 
-    // Load agent info if assigned
+    // Determine which agent to use: request body takes priority, then draft.agent_handoff_id
+    const agentId = bodyAgentId ?? draft.agent_handoff_id;
+    if (!agentId) {
+      return NextResponse.json(
+        { error: "No agent specified for handoff" },
+        { status: 400 }
+      );
+    }
+
+    // Load agent info
     let agentInfo = null;
-    if (draft.agent_handoff_id) {
-      const { data: agent } = await supabase
-        .from("agents")
-        .select("id, name, email, phone, salesforce_user_id")
-        .eq("id", draft.agent_handoff_id)
-        .single();
-      agentInfo = agent;
+    const { data: agent } = await supabase
+      .from("agents")
+      .select("id, name, email, phone, salesforce_user_id")
+      .eq("id", agentId)
+      .single();
+    agentInfo = agent;
+
+    if (!agentInfo) {
+      return NextResponse.json(
+        { error: "Agent not found" },
+        { status: 404 }
+      );
     }
 
     const thread = draft.email_threads as {
@@ -118,10 +141,11 @@ export async function POST(
       );
     }
 
-    // Mark as transferred
+    // Mark as transferred and store the agent used
     await supabase
       .from("email_drafts")
       .update({
+        agent_handoff_id: agentId,
         agent_handoff_transferred: true,
         agent_handoff_transferred_at: new Date().toISOString(),
       })

@@ -159,6 +159,8 @@ export default function EmailDraftsPage() {
   // Agent handoff state
   const [handoffId, setHandoffId] = useState<string | null>(null);
   const [handoffResult, setHandoffResult] = useState<string | null>(null);
+  const [handoffPickerDraftId, setHandoffPickerDraftId] = useState<string | null>(null);
+  const [handoffSelectedAgentId, setHandoffSelectedAgentId] = useState<string | null>(null);
 
   // Lead status update state
   const [leadStatusUpdatingId, setLeadStatusUpdatingId] = useState<string | null>(null);
@@ -437,22 +439,25 @@ export default function EmailDraftsPage() {
     }
   }
 
-  async function triggerAgentHandoff(draftId: string) {
-    const draft = drafts.find((d) => d.id === draftId);
-    const agentName = draft?.agents?.name ?? "Agent";
+  async function triggerAgentHandoff(draftId: string, agentId: string) {
+    const agent = agents.find((a) => a.id === agentId);
+    const agentName = agent?.name ?? "Agent";
     if (!confirm(`Transfer this lead to ${agentName} in Salesforce? This will update Salesforce via Zapier.`)) return;
     setHandoffId(draftId);
     setHandoffResult(null);
+    setHandoffPickerDraftId(null);
+    setHandoffSelectedAgentId(null);
     try {
       const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/handoff`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agent_id: agentId }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error ?? "Handoff failed");
       }
-      setHandoffResult("Agent handoff transferred successfully!");
+      setHandoffResult(`Transferred to ${agentName} successfully!`);
       fetchDrafts();
     } catch (e) {
       setHandoffResult(e instanceof Error ? e.message : "Handoff failed");
@@ -744,13 +749,13 @@ export default function EmailDraftsPage() {
             const isSent = draft.status === "sent";
             const displayStatus = isApproved ? "approved" : draft.status;
 
-            // Agent handoff button: only show when there's an agent with CC
-            const handoffAgent = draft.agents;
-            const hasHandoffCc =
-              handoffAgent?.email &&
-              draft.cc_emails.some(
-                (cc) => cc.toLowerCase() === handoffAgent.email!.toLowerCase()
+            // Resolve CC'd agent names for display
+            const ccAgentNames = draft.cc_emails.map((cc) => {
+              const match = agents.find(
+                (a) => a.email && a.email.toLowerCase() === cc.toLowerCase()
               );
+              return match ? match.name : null;
+            });
 
             return (
               <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
@@ -797,6 +802,27 @@ export default function EmailDraftsPage() {
                       draft.subject ?? "Untitled Draft"
                     )}
                   </span>
+
+                  {/* CC badge on collapsed row */}
+                  {draft.cc_emails.length > 0 && (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "2px 8px",
+                        borderRadius: 10,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        background: "#8b8fa311",
+                        color: "#8b8fa3",
+                        border: "1px solid #8b8fa333",
+                        flexShrink: 0,
+                      }}
+                    >
+                      CC: {ccAgentNames.map((name, i) => name ?? draft.cc_emails[i]).join(", ")}
+                    </span>
+                  )}
 
                   {/* Simulation input preview */}
                   {draft.is_simulation && draft.simulation_input && (
@@ -1192,13 +1218,16 @@ export default function EmailDraftsPage() {
                         </button>
                       )}
 
-                      {/* Agent Handoff Transfer (sent only, not already transferred, only when CC includes agent) */}
-                      {isSent && !draft.agent_handoff_transferred && hasHandoffCc && handoffAgent && (
+                      {/* Agent Handoff Transfer (sent only) */}
+                      {isSent && !draft.agent_handoff_transferred && (
                         <button
                           className="btn btn-secondary"
                           onClick={(e) => {
                             e.stopPropagation();
-                            triggerAgentHandoff(draft.id);
+                            setHandoffPickerDraftId(
+                              handoffPickerDraftId === draft.id ? null : draft.id
+                            );
+                            setHandoffSelectedAgentId(null);
                           }}
                           disabled={handoffId === draft.id}
                           style={{
@@ -1208,7 +1237,7 @@ export default function EmailDraftsPage() {
                         >
                           {handoffId === draft.id
                             ? "Transferring..."
-                            : `Transfer to ${handoffAgent.name} in Salesforce`}
+                            : "Transfer to Agent"}
                         </button>
                       )}
 
@@ -1229,7 +1258,7 @@ export default function EmailDraftsPage() {
                           }}
                         >
                           <span style={{ fontSize: 16 }}>&#10003;</span>
-                          Handed Off
+                          Handed Off{draft.agents ? ` to ${draft.agents.name}` : ""}
                         </span>
                       )}
 
@@ -1345,6 +1374,86 @@ export default function EmailDraftsPage() {
                         }}
                       >
                         {handoffResult}
+                      </div>
+                    )}
+
+                    {/* Agent handoff picker */}
+                    {handoffPickerDraftId === draft.id && (
+                      <div
+                        style={{
+                          marginBottom: 16,
+                          padding: "14px 16px",
+                          background: "#111318",
+                          border: "1px solid #a78bfa44",
+                          borderRadius: 6,
+                        }}
+                      >
+                        <label
+                          className="text-sm"
+                          style={{
+                            display: "block",
+                            fontWeight: 600,
+                            marginBottom: 10,
+                            color: "#a78bfa",
+                          }}
+                        >
+                          Transfer Lead to Agent in Salesforce
+                        </label>
+                        <p
+                          className="text-muted text-sm"
+                          style={{ marginBottom: 12 }}
+                        >
+                          Select an agent to transfer ownership to. This will update Salesforce via Zapier.
+                        </p>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                          <select
+                            className="form-input"
+                            value={handoffSelectedAgentId ?? ""}
+                            onChange={(e) => setHandoffSelectedAgentId(e.target.value || null)}
+                            style={{ width: "100%", fontSize: 13 }}
+                          >
+                            <option value="">Select an agent...</option>
+                            {agents.map((a) => (
+                              <option key={a.id} value={a.id}>
+                                {a.name} ({a.email})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          <button
+                            className="btn btn-secondary"
+                            onClick={() => {
+                              setHandoffPickerDraftId(null);
+                              setHandoffSelectedAgentId(null);
+                            }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => {
+                              if (handoffSelectedAgentId) {
+                                triggerAgentHandoff(draft.id, handoffSelectedAgentId);
+                              }
+                            }}
+                            disabled={!handoffSelectedAgentId || handoffId === draft.id}
+                            style={{
+                              background: "#a78bfa",
+                              borderColor: "#a78bfa",
+                              color: "#111318",
+                              opacity: !handoffSelectedAgentId ? 0.5 : 1,
+                            }}
+                          >
+                            {handoffId === draft.id ? "Transferring..." : "Transfer"}
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -1550,7 +1659,13 @@ export default function EmailDraftsPage() {
                         </span>
                       )}
                       {draft.cc_emails.length > 0 && (
-                        <span>CC: {draft.cc_emails.join(", ")}</span>
+                        <span>
+                          CC:{" "}
+                          {draft.cc_emails.map((cc, i) => {
+                            const agentName = ccAgentNames[i];
+                            return agentName ? `${agentName} (${cc})` : cc;
+                          }).join(", ")}
+                        </span>
                       )}
                     </div>
                   </div>
