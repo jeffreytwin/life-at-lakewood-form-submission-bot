@@ -101,7 +101,23 @@ export async function routeLead(payload: ZapierPayload): Promise<{
   }
 
   // Route to best available agent
-  await startRouting(lead, locationName);
+  try {
+    await startRouting(lead, locationName);
+  } catch (error) {
+    logger.error("startRouting failed — falling back to manual", {
+      leadId: lead.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    await updateLeadStatus(lead.id, "failed");
+    await logAuditEvent("routing_error", {
+      leadId: lead.id,
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+        note: "startRouting threw an exception; lead moved to failed",
+      },
+    });
+    return { status: "failed", leadId: lead.id };
+  }
 
   return { status: "routing", leadId: lead.id };
 }
