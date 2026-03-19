@@ -239,20 +239,37 @@ async function processInboundMessage(
   );
 
   // Store message (always, even for non-leads — useful for auditing)
+  // Uses upsert with ignoreDuplicates to prevent race conditions between
+  // push notifications and cron sync processing the same message.
   const bodyText = extractBodyText(msg);
   const bodyHtml = extractBodyHtml(msg);
 
-  await supabase.from("email_messages").insert({
-    thread_id: threadId,
-    provider_message_id: msg.id,
-    direction: "inbound" as const,
-    from_email: fromEmail,
-    to_email: toEmail,
-    subject,
-    body_text: bodyText,
-    body_html: bodyHtml,
-    received_at: receivedAt,
-  });
+  const { data: inserted } = await supabase
+    .from("email_messages")
+    .upsert(
+      {
+        thread_id: threadId,
+        provider_message_id: msg.id,
+        direction: "inbound" as const,
+        from_email: fromEmail,
+        to_email: toEmail,
+        subject,
+        body_text: bodyText,
+        body_html: bodyHtml,
+        received_at: receivedAt,
+      },
+      { onConflict: "provider_message_id", ignoreDuplicates: true }
+    )
+    .select("id");
+
+  // If no row was returned, another sync already inserted this message — skip
+  if (!inserted || inserted.length === 0) {
+    logger.info("Skipping duplicate message (already processed by another sync)", {
+      providerMessageId: msg.id,
+      accountId: account.id,
+    });
+    return { draftGenerated: false, skippedNonLead: false };
+  }
 
   // Update thread last_message_at
   await supabase
