@@ -224,6 +224,22 @@ export async function updateDraft(
 }
 
 /**
+ * Check if a draft still exists in Gmail.
+ * Returns true if it exists, false if deleted (404).
+ */
+export async function draftExists(
+  accountId: string,
+  credentials: GmailCredentials,
+  draftId: string
+): Promise<boolean> {
+  const res = await gmailFetch(accountId, credentials, `/drafts/${draftId}?format=minimal`);
+  if (res.ok) return true;
+  if (res.status === 404) return false;
+  // Other errors — assume it still exists to avoid false positives
+  return true;
+}
+
+/**
  * Delete a draft from Gmail permanently.
  */
 export async function deleteDraft(

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAllInboxes } from "@/lib/gmail/sync-inbox";
 import { syncAllSentFolders } from "@/lib/gmail/sync-sent";
-import { pushAllPendingDrafts } from "@/lib/gmail/push-draft";
+import { pushAllPendingDrafts, reconcileDeletedDrafts } from "@/lib/gmail/push-draft";
 import { renewAllWatches } from "@/lib/gmail/watch";
 import { logger } from "@/lib/shared/logger";
 
@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
     // Step 3: Sync sent folders
     const sent = await syncAllSentFolders();
 
-    // Step 4: Renew Pub/Sub watches (if configured)
+    // Step 4: Reconcile deleted Gmail drafts (mark as discarded)
+    const reconciled = await reconcileDeletedDrafts();
+
+    // Step 5: Renew Pub/Sub watches (if configured)
     const watches = await renewAllWatches();
 
     const result = {
@@ -51,6 +54,7 @@ export async function GET(request: NextRequest) {
         matched: sent.totalMatched,
         changedFromDraft: sent.totalChanged,
       },
+      draftsReconciled: reconciled.discarded > 0 ? reconciled : undefined,
       watches: watches.renewed > 0 || watches.failed > 0 ? watches : undefined,
     };
 

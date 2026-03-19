@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { syncInbox } from "@/lib/gmail/sync-inbox";
 import { syncSentFolder } from "@/lib/gmail/sync-sent";
-import { pushAllPendingDrafts } from "@/lib/gmail/push-draft";
+import { pushAllPendingDrafts, reconcileDeletedDrafts } from "@/lib/gmail/push-draft";
 import { logger } from "@/lib/shared/logger";
 import type { EmailAccount } from "@/lib/supabase/types";
 
@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
 
     // Sync sent folder (detects if drafts were sent)
     const sentResult = await syncSentFolder(typedAccount);
+
+    // Reconcile deleted Gmail drafts (mark as discarded)
+    await reconcileDeletedDrafts();
 
     logger.info("Gmail push sync complete", {
       emailAddress,

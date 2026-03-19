@@ -8,6 +8,7 @@ import { logger } from "@/lib/shared/logger";
 import {
   createDraft,
   updateDraft,
+  draftExists,
   getHeader,
   getMessage,
   getSignature,
@@ -168,4 +169,70 @@ export async function pushAllPendingDrafts(): Promise<{
 
   logger.info("Push drafts complete", { pushed, failed });
   return { pushed, failed };
+}
+
+/**
+ * Check approved drafts that were pushed to Gmail — if the Gmail draft
+ * was deleted (user decided not to send), mark it as "discarded" in our app.
+ */
+export async function reconcileDeletedDrafts(): Promise<{ discarded: number }> {
+  // Find approved drafts that have been pushed to Gmail
+  const { data: drafts, error } = await supabase
+    .from("email_drafts")
+    .select("id, provider_draft_id, email_account_id")
+    .eq("status", "approved")
+    .eq("is_simulation", false)
+    .not("provider_draft_id", "is", null)
+    .not("email_account_id", "is", null);
+
+  if (error || !drafts || drafts.length === 0) return { discarded: 0 };
+
+  let discarded = 0;
+
+  // Group by account to reuse credentials
+  const byAccount: Record<string, typeof drafts> = {};
+  for (const d of drafts) {
+    const key = d.email_account_id!;
+    if (!byAccount[key]) byAccount[key] = [];
+    byAccount[key].push(d);
+  }
+
+  for (const [accountId, accountDrafts] of Object.entries(byAccount)) {
+    const { data: account } = await supabase
+      .from("email_accounts")
+      .select("*")
+      .eq("id", accountId)
+      .single();
+
+    if (!account?.credentials) continue;
+    const creds = account.credentials as GmailCredentials;
+
+    for (const draft of accountDrafts) {
+      try {
+        const exists = await draftExists(accountId, creds, draft.provider_draft_id!);
+        if (!exists) {
+          await supabase
+            .from("email_drafts")
+            .update({ status: "discarded" })
+            .eq("id", draft.id);
+          discarded++;
+          logger.info("Draft discarded — deleted from Gmail", {
+            draftId: draft.id,
+            gmailDraftId: draft.provider_draft_id,
+          });
+        }
+      } catch (err) {
+        logger.warn("Failed to check Gmail draft status", {
+          draftId: draft.id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
+
+  if (discarded > 0) {
+    logger.info("Draft reconciliation complete", { discarded });
+  }
+
+  return { discarded };
 }
