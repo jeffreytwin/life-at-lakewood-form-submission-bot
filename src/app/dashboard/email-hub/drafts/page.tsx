@@ -166,6 +166,10 @@ export default function EmailDraftsPage() {
   // Regenerate state
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
+  // Auto-approve state
+  const [autoApprove, setAutoApprove] = useState(false);
+  const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
+
   // Feedback state
   const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
   const [feedbackRating, setFeedbackRating] = useState(3);
@@ -227,6 +231,35 @@ export default function EmailDraftsPage() {
       })
       .catch(() => {});
   }, []);
+
+  // Load auto-approve setting
+  useEffect(() => {
+    fetch("/api/internal/email-hub/auto-approve")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data.enabled === "boolean") setAutoApprove(data.enabled);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function toggleAutoApprove() {
+    setTogglingAutoApprove(true);
+    try {
+      const res = await fetch("/api/internal/email-hub/auto-approve", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !autoApprove }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAutoApprove(data.enabled);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setTogglingAutoApprove(false);
+    }
+  }
 
   // Polling (15s interval)
   const fetchDraftsRef = useRef(fetchDrafts);
@@ -626,6 +659,52 @@ export default function EmailDraftsPage() {
               </button>
             ))}
           </div>
+
+          {/* Auto-Approve toggle */}
+          <button
+            onClick={toggleAutoApprove}
+            disabled={togglingAutoApprove}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: autoApprove ? "#34d399" : "#8b8fa3",
+              background: autoApprove ? "rgba(52, 211, 153, 0.1)" : "transparent",
+              border: `1px solid ${autoApprove ? "#34d399" : "#2a2e3a"}`,
+              borderRadius: 6,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: 32,
+                height: 18,
+                borderRadius: 9,
+                background: autoApprove ? "#34d399" : "#2a2e3a",
+                position: "relative",
+                transition: "background 0.2s",
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  left: autoApprove ? 16 : 2,
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  background: "#fff",
+                  transition: "left 0.2s",
+                }}
+              />
+            </span>
+            Auto-Approve
+          </button>
         </div>
       </div>
 

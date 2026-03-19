@@ -20,6 +20,7 @@ import {
   type GmailMessage,
 } from "./client";
 import { generateDraft } from "@/lib/ai/draft-generator";
+import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
 export interface MatchedContact {
@@ -397,7 +398,7 @@ export async function generateAndStoreDraft(
     });
 
     // Store draft in DB
-    await supabase.from("email_drafts").insert({
+    const { data: insertedDraft } = await supabase.from("email_drafts").insert({
       thread_id: threadId,
       email_account_id: account.id,
       status: "drafted",
@@ -412,7 +413,7 @@ export async function generateAndStoreDraft(
       sent_at: null,
       sent_body_text: null,
       was_changed: false,
-    });
+    }).select("id").single();
 
     logger.info("AI draft generated for Salesforce contact", {
       threadId,
@@ -420,6 +421,12 @@ export async function generateAndStoreDraft(
       salesforceId: contact.salesforce_id,
       contactName,
     });
+
+    // Auto-approve if the global setting is enabled
+    if (insertedDraft?.id) {
+      await maybeAutoApproveDraft(insertedDraft.id, locationName);
+    }
+
     return true;
   } catch (err) {
     logger.error("Draft generation failed", {
@@ -427,6 +434,79 @@ export async function generateAndStoreDraft(
       error: err instanceof Error ? err.message : String(err),
     });
     return false;
+  }
+}
+
+/**
+ * If the global auto_approve_drafts setting is enabled, immediately approve
+ * the draft and send SMS to eligible agents with a warning message.
+ */
+async function maybeAutoApproveDraft(
+  draftId: string,
+  locationName: string
+): Promise<void> {
+  try {
+    // Check the global setting
+    const { data: settings } = await supabase
+      .from("system_settings")
+      .select("auto_approve_drafts")
+      .eq("id", 1)
+      .single();
+
+    if (!settings?.auto_approve_drafts) return;
+
+    // Auto-approve the draft
+    await supabase
+      .from("email_drafts")
+      .update({
+        status: "approved" as string,
+        approved_at: new Date().toISOString(),
+      })
+      .eq("id", draftId);
+
+    logger.info("Draft auto-approved", { draftId });
+
+    // Send SMS to eligible frontlines agents with the warning message
+    const { data: agents } = await supabase
+      .from("agents")
+      .select("id, name, draft_success_phone, send_draft_success_texts")
+      .eq("is_active", true)
+      .eq("is_frontlines", true)
+      .eq("send_draft_success_texts", true);
+
+    const eligible = (agents ?? []).filter(
+      (a: { draft_success_phone: string | null }) => a.draft_success_phone?.trim()
+    );
+
+    const prefix = locationName && locationName !== "General" ? `${locationName} ` : "";
+    const smsBody =
+      `${prefix}Draft Ready\n\nJeff is likely sleeping - please review the draft carefully before sending`;
+
+    for (const agent of eligible) {
+      try {
+        await getTwilioClient().messages.create({
+          to: agent.draft_success_phone!,
+          from: getTwilioPhoneNumber(),
+          body: smsBody,
+        });
+        logger.info("Auto-approve SMS sent", {
+          draftId,
+          agentName: agent.name,
+        });
+      } catch (smsErr) {
+        logger.error("Auto-approve SMS failed", {
+          draftId,
+          agentName: agent.name,
+          error: smsErr instanceof Error ? smsErr.message : String(smsErr),
+        });
+      }
+    }
+  } catch (err) {
+    // Non-blocking: draft was still created, just not auto-approved
+    logger.error("Auto-approve check failed", {
+      draftId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
