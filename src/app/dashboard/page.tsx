@@ -294,7 +294,6 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                   : `${Math.round(emailStats.avgResponseTimeMinutes / 1440)}d`
               : "—"}
           </div>
-          <div className="stat-sub">excl. quiet hours</div>
         </div>
       </div>
 
