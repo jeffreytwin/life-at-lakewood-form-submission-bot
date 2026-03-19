@@ -5,6 +5,27 @@ import { generateAndStoreDraft, pendingSfChecks, type MatchedContact } from "@/l
 import type { EmailAccount } from "@/lib/supabase/types";
 
 /**
+ * Check whether any email in the given list belongs to an active agent.
+ */
+async function hasAgentRecipient(emails: string[]): Promise<boolean> {
+  if (emails.length === 0) return false;
+
+  const { data: agents } = await supabase
+    .from("agents")
+    .select("email")
+    .eq("is_active", true)
+    .not("email", "is", null);
+
+  if (!agents || agents.length === 0) return false;
+
+  const agentEmails = new Set(
+    agents.map((a: { email: string | null }) => (a.email as string).toLowerCase())
+  );
+
+  return emails.some((e) => agentEmails.has(e));
+}
+
+/**
  * POST /api/webhooks/salesforce-contacts
  *
  * Receives Salesforce lead/contact data from Zapier and upserts into the
@@ -173,6 +194,25 @@ async function backfillDraftsForContact(
       .limit(1);
 
     if (existingDrafts && existingDrafts.length > 0) continue;
+
+    // Skip if an agent is already a recipient on any message in this thread
+    const { data: threadMessages } = await supabase
+      .from("email_messages")
+      .select("to_email")
+      .eq("thread_id", thread.id);
+
+    const recipientEmails = (threadMessages ?? [])
+      .map((m: { to_email: string | null }) => (m.to_email ?? "").toLowerCase())
+      .flatMap((e: string) => e.split(",").map((s: string) => s.trim()))
+      .filter(Boolean);
+
+    if (await hasAgentRecipient(recipientEmails)) {
+      logger.info("Skipping backfill draft — agent is a recipient on thread", {
+        threadId: thread.id,
+        email,
+      });
+      continue;
+    }
 
     // Load the email account
     if (!thread.email_account_id) continue;
