@@ -467,8 +467,8 @@ export default function SimulatePage() {
                   src="/otocon-form-simulation.gif"
                   alt="Otocon"
                   style={{
-                    width: 230,
-                    height: 230,
+                    width: 299,
+                    height: 299,
                     imageRendering: "pixelated",
                   }}
                 />
