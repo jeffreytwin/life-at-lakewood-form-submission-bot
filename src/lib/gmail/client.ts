@@ -431,11 +431,19 @@ export function buildRawMessage(opts: {
   threadId?: string;
   signatureHtml?: string;
 }): string {
+  // Clean non-breaking spaces and other Unicode whitespace from subject
+  const cleanSubject = opts.subject.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, " ");
+
+  // RFC 2047 encode the subject for non-ASCII safety
+  const encodedSubject = /[^\x20-\x7E]/.test(cleanSubject)
+    ? `=?UTF-8?B?${Buffer.from(cleanSubject).toString("base64")}?=`
+    : cleanSubject;
+
   const headers: string[] = [];
   headers.push(`From: ${opts.from}`);
   headers.push(`To: ${opts.to}`);
   if (opts.cc?.length) headers.push(`Cc: ${opts.cc.join(", ")}`);
-  headers.push(`Subject: ${opts.subject}`);
+  headers.push(`Subject: ${encodedSubject}`);
   headers.push("MIME-Version: 1.0");
   if (opts.inReplyTo) headers.push(`In-Reply-To: ${opts.inReplyTo}`);
   if (opts.references) headers.push(`References: ${opts.references}`);
