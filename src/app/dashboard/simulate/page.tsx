@@ -463,7 +463,15 @@ export default function SimulatePage() {
           {!result && !thirtyDayResult ? (
             <div className="card">
               <div className="empty-state">
-                <div className="empty-icon">&#9889;</div>
+                <img
+                  src="/otocon-form-simulation.gif"
+                  alt="Otocon"
+                  style={{
+                    width: 164,
+                    height: 164,
+                    imageRendering: "pixelated",
+                  }}
+                />
                 <h3>Ready to simulate</h3>
                 <p>
                   Configure your parameters and run the simulation. This is a
