@@ -183,7 +183,9 @@ async function processInboundMessage(
 ): Promise<{ draftGenerated: boolean; skippedNonLead: boolean }> {
   const fromEmail = parseEmailAddress(getHeader(msg, "From") ?? "");
   const toEmail = parseEmailAddress(getHeader(msg, "To") ?? "");
-  const subject = getHeader(msg, "Subject") ?? "(no subject)";
+  const rawSubject = getHeader(msg, "Subject") ?? "(no subject)";
+  // Clean non-breaking spaces that cause Â artifacts in email headers
+  const subject = rawSubject.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, " ");
   const messageId = getHeader(msg, "Message-ID");
   const receivedAt = msg.internalDate
     ? new Date(parseInt(msg.internalDate)).toISOString()
