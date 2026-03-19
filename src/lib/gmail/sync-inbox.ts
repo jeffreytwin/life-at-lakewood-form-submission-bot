@@ -244,7 +244,7 @@ async function processInboundMessage(
   const bodyText = extractBodyText(msg);
   const bodyHtml = extractBodyHtml(msg);
 
-  const { data: inserted } = await supabase
+  const { data: inserted, error: upsertError } = await supabase
     .from("email_messages")
     .upsert(
       {
@@ -261,6 +261,17 @@ async function processInboundMessage(
       { onConflict: "provider_message_id", ignoreDuplicates: true }
     )
     .select("id");
+
+  // Log and surface upsert errors instead of silently skipping
+  if (upsertError) {
+    logger.error("Failed to upsert email message", {
+      providerMessageId: msg.id,
+      accountId: account.id,
+      error: upsertError.message,
+      code: upsertError.code,
+    });
+    return { draftGenerated: false, skippedNonLead: false };
+  }
 
   // If no row was returned, another sync already inserted this message — skip
   if (!inserted || inserted.length === 0) {
