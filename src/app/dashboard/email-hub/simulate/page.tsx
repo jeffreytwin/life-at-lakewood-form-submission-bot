@@ -292,7 +292,7 @@ export default function EmailSimulatePage() {
                   alt="Otocon"
                   style={{
                     width: 230,
-                    height: 230,
+                    height: "auto",
                     imageRendering: "pixelated",
                   }}
                 />
