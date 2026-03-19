@@ -92,7 +92,7 @@ export async function POST(
       .update({ lead_status_update: status })
       .eq("id", id);
 
-    if (updateError) throw updateError;
+    if (updateError) throw new Error(updateError.message);
 
     logger.info("Lead status updated via Zapier", {
       draftId: id,
