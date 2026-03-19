@@ -468,7 +468,7 @@ export default function SimulatePage() {
                   alt="Otocon"
                   style={{
                     width: 299,
-                    height: 299,
+                    height: "auto",
                     imageRendering: "pixelated",
                   }}
                 />
