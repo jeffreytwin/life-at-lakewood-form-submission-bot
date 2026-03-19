@@ -11,6 +11,6 @@ INSERT INTO email_accounts (email_address, provider, display_name, is_active)
 VALUES
   ('lynn@lifeatlakewood.com', 'gmail', 'Lynn Brown - Lakewood', true),
   ('lynn@lifeinwellenpark.com', 'gmail', 'Lynn Brown - Wellenpark', true),
-  ('lynn@lifeatoarrish.com', 'gmail', 'Lynn Brown - Oarrish', true),
+  ('lynn@lifeatparrish.com', 'gmail', 'Lynn Brown - Parrish', true),
   ('lynn@lifeinlongboatkey.com', 'gmail', 'Lynn Brown - Longboat Key', true)
 ON CONFLICT (email_address) DO NOTHING;
