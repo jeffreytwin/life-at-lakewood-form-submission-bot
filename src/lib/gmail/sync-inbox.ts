@@ -1,10 +1,11 @@
 /**
  * Gmail inbox sync: polls for new inbound emails, upserts threads/messages,
- * and triggers AI draft generation ONLY for known leads in Salesforce.
+ * and fires a Zapier webhook to get fresh Salesforce data for every sender.
  *
- * Emails from unknown senders (not in the leads table) are stored but no
- * draft is generated — this prevents drafting replies to marketing emails,
- * internal messages, etc.
+ * Draft generation is NOT done here — it happens in the Zapier callback
+ * (/api/webhooks/salesforce-contacts) after Salesforce confirms the contact
+ * and returns current ownership info. This ensures drafts always use
+ * authoritative data instead of potentially stale local records.
  */
 
 import { supabase } from "@/lib/supabase/client";
@@ -294,32 +295,22 @@ async function processInboundMessage(
     .update({ last_message_at: receivedAt })
     .eq("id", threadId);
 
-  // Always request a fresh Salesforce check so ownership info stays current.
-  // For unknown contacts, Zapier will backfill the draft via the callback.
-  // For known contacts, the callback updates owner info on the contact and thread.
+  // Always delegate to Zapier for a fresh Salesforce lookup.
+  // The callback at /api/webhooks/salesforce-contacts will:
+  //   1. Upsert the contact with current owner info
+  //   2. Update thread owner fields
+  //   3. Generate the AI draft with authoritative data
+  // This single path ensures drafts always use fresh Salesforce data.
   await requestSalesforceCheck(fromEmail, threadId, account.id);
 
-  // Only generate drafts for known Salesforce contacts
-  if (!contact) {
-    logger.info("Skipping draft — sender is not a known Salesforce contact", {
-      senderEmail: fromEmail,
-      threadId,
-      accountId: account.id,
-    });
-
-    return { draftGenerated: false, skippedNonLead: true };
-  }
-
-  // Generate AI draft reply with contact context
-  const draftGenerated = await generateAndStoreDraft(
-    account,
+  logger.info("Salesforce check requested — draft will be generated on callback", {
+    senderEmail: fromEmail,
     threadId,
-    subject,
-    messageId,
-    contact
-  );
+    accountId: account.id,
+    contactKnown: !!contact,
+  });
 
-  return { draftGenerated, skippedNonLead: false };
+  return { draftGenerated: false, skippedNonLead: !contact };
 }
 
 /**
