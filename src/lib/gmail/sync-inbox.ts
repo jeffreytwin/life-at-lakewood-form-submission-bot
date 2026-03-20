@@ -184,7 +184,8 @@ async function processInboundMessage(
   account: EmailAccount,
   msg: GmailMessage
 ): Promise<{ draftGenerated: boolean; skippedNonLead: boolean }> {
-  const fromEmail = parseEmailAddress(getHeader(msg, "From") ?? "");
+  const rawFrom = getHeader(msg, "From") ?? "";
+  const fromEmail = parseEmailAddress(rawFrom);
   const toEmail = parseEmailAddress(getHeader(msg, "To") ?? "");
   const rawSubject = getHeader(msg, "Subject") ?? "(no subject)";
   // Clean non-breaking spaces that cause Â artifacts in email headers
@@ -238,6 +239,7 @@ async function processInboundMessage(
     msg.threadId,
     subject,
     fromEmail,
+    rawFrom,
     contact?.salesforce_id ?? null,
     contact
   );
@@ -329,13 +331,14 @@ async function upsertThread(
   gmailThreadId: string,
   subject: string,
   senderEmail: string,
+  rawFromHeader: string,
   salesforceLeadId: string | null,
   contact: MatchedContact | null
 ): Promise<string> {
   // Check for existing thread
   const { data: existing } = await supabase
     .from("email_threads")
-    .select("id, salesforce_lead_id")
+    .select("id, salesforce_lead_id, sender_name")
     .eq("email_account_id", account.id)
     .eq("provider_thread_id", gmailThreadId)
     .limit(1);
@@ -345,6 +348,15 @@ async function upsertThread(
     const updates: Record<string, unknown> = {};
     if (!existing[0].salesforce_lead_id && salesforceLeadId) {
       updates.salesforce_lead_id = salesforceLeadId;
+    }
+    // Backfill sender_name if it was missing and we now have it
+    if (!existing[0].sender_name) {
+      const parsed = rawFromHeader.includes("<")
+        ? rawFromHeader.split("<")[0].trim().replace(/"/g, "") || null
+        : null;
+      if (parsed) {
+        updates.sender_name = parsed;
+      }
     }
     // Always update owner info if we have contact data
     if (contact) {
@@ -361,9 +373,9 @@ async function upsertThread(
     return existing[0].id;
   }
 
-  // Parse sender name from email
-  const senderName = senderEmail.includes("<")
-    ? senderEmail.split("<")[0].trim().replace(/"/g, "")
+  // Parse sender name from the raw From header (e.g. "Lisa S" <lisa@gmail.com>)
+  const senderName = rawFromHeader.includes("<")
+    ? rawFromHeader.split("<")[0].trim().replace(/"/g, "") || null
     : null;
 
   const { data, error } = await supabase
