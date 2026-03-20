@@ -1414,27 +1414,6 @@ export default function EmailDraftsPage() {
                       </div>
                     )}
 
-                    {/* Agent handoff result banner */}
-                    {handoffResult && expandedId === draft.id && (
-                      <div
-                        style={{
-                          marginBottom: 12,
-                          padding: "10px 14px",
-                          background: handoffResult.includes("successfully")
-                            ? "#a78bfa22"
-                            : "#f8717122",
-                          border: `1px solid ${handoffResult.includes("successfully") ? "#a78bfa44" : "#f8717144"}`,
-                          borderRadius: 6,
-                          fontSize: 13,
-                          color: handoffResult.includes("successfully")
-                            ? "#a78bfa"
-                            : "#f87171",
-                        }}
-                      >
-                        {handoffResult}
-                      </div>
-                    )}
-
                     {/* Agent handoff picker */}
                     {handoffPickerDraftId === draft.id && (
                       <div
