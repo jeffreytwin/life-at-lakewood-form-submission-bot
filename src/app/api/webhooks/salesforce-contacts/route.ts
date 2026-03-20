@@ -7,6 +7,20 @@ import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
 /**
+ * Parse a boolean value that may arrive as a string from Zapier.
+ * Handles true/false, "true"/"false", "True"/"False", etc.
+ */
+function parseBool(value: unknown): boolean | null {
+  if (value === true || value === false) return value;
+  if (typeof value === "string") {
+    const lower = value.trim().toLowerCase();
+    if (lower === "true") return true;
+    if (lower === "false") return false;
+  }
+  return null;
+}
+
+/**
  * Check whether any email in the given list belongs to an active agent.
  */
 async function hasAgentRecipient(emails: string[]): Promise<boolean> {
@@ -97,8 +111,8 @@ export async function POST(request: NextRequest) {
         location_name: contact.location_name ? String(contact.location_name) : null,
         salesforce_owner_id: contact.salesforce_owner_id ? String(contact.salesforce_owner_id) : null,
         salesforce_owner_name: contact.salesforce_owner_name ? String(contact.salesforce_owner_name) : null,
-        is_master_agent_owned: contact.is_master_agent_owned === true ? true : contact.is_master_agent_owned === false ? false : null,
-        is_active: contact.is_active !== false,
+        is_master_agent_owned: parseBool(contact.is_master_agent_owned),
+        is_active: parseBool(contact.is_active) !== false,
         synced_at: new Date().toISOString(),
       };
 
