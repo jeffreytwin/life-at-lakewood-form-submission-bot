@@ -294,6 +294,11 @@ async function processInboundMessage(
     .update({ last_message_at: receivedAt })
     .eq("id", threadId);
 
+  // Always request a fresh Salesforce check so ownership info stays current.
+  // For unknown contacts, Zapier will backfill the draft via the callback.
+  // For known contacts, the callback updates owner info on the contact and thread.
+  await requestSalesforceCheck(fromEmail, threadId, account.id);
+
   // Only generate drafts for known Salesforce contacts
   if (!contact) {
     logger.info("Skipping draft — sender is not a known Salesforce contact", {
@@ -301,11 +306,6 @@ async function processInboundMessage(
       threadId,
       accountId: account.id,
     });
-
-    // Fire webhook to Zapier so it can check Salesforce for this email.
-    // If Zapier finds a match, it will call back to /api/webhooks/salesforce-contacts
-    // which will backfill the draft.
-    await requestSalesforceCheck(fromEmail, threadId, account.id);
 
     return { draftGenerated: false, skippedNonLead: true };
   }
@@ -571,16 +571,12 @@ async function maybeAutoApproveDraft(
 }
 
 /**
- * Track emails we've already sent to Zapier for SF lookup to avoid
- * duplicate requests (e.g., if a lead sends multiple emails before
- * Zapier responds). Resets on server restart, which is fine.
- */
-export const pendingSfChecks = new Set<string>();
-
-/**
  * Fire an outbound webhook to Zapier requesting a Salesforce lookup for an
- * unknown sender. Zapier will check SF and, if a match is found, POST back
- * to /api/webhooks/salesforce-contacts with the contact data.
+ * email sender. Zapier will check SF and POST back to
+ * /api/webhooks/salesforce-contacts with the current contact data.
+ *
+ * Called for EVERY inbound email (not just unknown senders) so that
+ * ownership changes in Salesforce are picked up promptly.
  *
  * This is fire-and-forget — failures are logged but don't block sync.
  */
@@ -591,10 +587,6 @@ async function requestSalesforceCheck(
 ): Promise<void> {
   const zapierUrl = process.env.ZAPIER_SF_CHECK_HOOK;
   if (!zapierUrl) return; // Not configured, skip silently
-
-  const emailLower = senderEmail.toLowerCase();
-  if (pendingSfChecks.has(emailLower)) return; // Already requested
-  pendingSfChecks.add(emailLower);
 
   try {
     await fetch(zapierUrl, {
