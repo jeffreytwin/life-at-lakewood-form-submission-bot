@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { sendHandoffNotification } from "@/lib/twilio/send-sms";
 
 /**
  * POST /api/internal/email-hub/drafts/:id/handoff
@@ -139,6 +140,26 @@ export async function POST(
         { error: `Zapier webhook failed: ${zapRes.status}` },
         { status: 502 }
       );
+    }
+
+    // Send SMS notification to the agent
+    if (agentInfo.phone) {
+      const agentFirstName = agentInfo.name?.split(" ")[0] ?? "there";
+
+      try {
+        await sendHandoffNotification(
+          agentInfo.phone,
+          agentFirstName,
+          thread?.sender_name || "New lead",
+          account?.locations?.name ?? null
+        );
+      } catch (smsError) {
+        logger.error("Handoff SMS notification failed (non-blocking)", {
+          draftId: id,
+          agentPhone: agentInfo.phone,
+          error: smsError instanceof Error ? smsError.message : String(smsError),
+        });
+      }
     }
 
     // Mark as transferred and store the agent used
