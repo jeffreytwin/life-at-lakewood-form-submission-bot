@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { generateAndStoreDraft, type MatchedContact } from "@/lib/gmail/sync-inbox";
-import type { EmailAccount } from "@/lib/supabase/types";
+import { deleteDraft } from "@/lib/gmail/client";
+import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
+import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
 /**
  * Check whether any email in the given list belongs to an active agent.
@@ -203,16 +205,59 @@ async function backfillDraftsForContact(
         .eq("id", thread.id);
     }
 
-    // Check if this thread already has a pending draft (not yet sent).
-    // If there's a "drafted" or "approved" draft, skip — don't pile up unreviewed drafts.
+    // If there's an existing "drafted" or "approved" draft, discard it —
+    // a new inbound message means the old draft is stale and should be
+    // replaced with a fresh one that includes the latest conversation context.
     const { data: pendingDrafts } = await supabase
       .from("email_drafts")
-      .select("id")
+      .select("id, provider_draft_id, email_account_id, status")
       .eq("thread_id", thread.id)
       .in("status", ["drafted", "approved"])
-      .limit(1);
+      .limit(10);
 
-    if (pendingDrafts && pendingDrafts.length > 0) continue;
+    if (pendingDrafts && pendingDrafts.length > 0) {
+      for (const staleDraft of pendingDrafts) {
+        // Delete from Gmail if it was already pushed
+        if (staleDraft.provider_draft_id && staleDraft.email_account_id) {
+          try {
+            const { data: draftAccount } = await supabase
+              .from("email_accounts")
+              .select("*")
+              .eq("id", staleDraft.email_account_id)
+              .single();
+
+            if (draftAccount?.credentials) {
+              await deleteDraft(
+                draftAccount.id,
+                draftAccount.credentials as GmailCredentials,
+                staleDraft.provider_draft_id
+              );
+            }
+          } catch (err) {
+            logger.warn("Failed to delete stale Gmail draft", {
+              draftId: staleDraft.id,
+              gmailDraftId: staleDraft.provider_draft_id,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+
+        // Mark as discarded in DB
+        await supabase
+          .from("email_drafts")
+          .update({ status: "discarded" })
+          .eq("id", staleDraft.id);
+
+        logger.info("Discarded stale draft — new inbound message received", {
+          draftId: staleDraft.id,
+          previousStatus: staleDraft.status,
+          threadId: thread.id,
+        });
+      }
+
+      // Send SMS notification to frontlines agents
+      await notifyDraftOutdated(email, thread.id);
+    }
 
     // If all previous drafts are "sent", check if there's a new inbound
     // message after the last sent draft. If not, no need for a new draft.
@@ -291,4 +336,67 @@ async function backfillDraftsForContact(
   }
 
   return generated;
+}
+
+/**
+ * Send SMS to frontlines agents warning that a previous draft was discarded
+ * because a new inbound message arrived. Tells them a new draft is in progress.
+ */
+async function notifyDraftOutdated(
+  senderEmail: string,
+  threadId: string
+): Promise<void> {
+  try {
+    // Get sender name from thread for a more useful notification
+    const { data: thread } = await supabase
+      .from("email_threads")
+      .select("sender_name, sender_email")
+      .eq("id", threadId)
+      .single();
+
+    const clientLabel = thread?.sender_name || senderEmail;
+
+    const { data: agents } = await supabase
+      .from("agents")
+      .select("id, name, draft_success_phone, send_draft_success_texts")
+      .eq("is_active", true)
+      .eq("is_frontlines", true)
+      .eq("send_draft_success_texts", true);
+
+    const eligible = (agents ?? []).filter(
+      (a: { draft_success_phone: string | null }) => a.draft_success_phone?.trim()
+    );
+
+    if (eligible.length === 0) return;
+
+    const smsBody =
+      `New message received from ${clientLabel} — existing draft is now outdated. New draft is now in progress. Please do not send until prompted.`;
+
+    for (const agent of eligible) {
+      try {
+        await getTwilioClient().messages.create({
+          to: agent.draft_success_phone!,
+          from: getTwilioPhoneNumber(),
+          body: smsBody,
+        });
+        logger.info("Draft outdated SMS sent", {
+          threadId,
+          agentName: agent.name,
+          senderEmail,
+        });
+      } catch (smsErr) {
+        logger.error("Draft outdated SMS failed", {
+          threadId,
+          agentName: agent.name,
+          error: smsErr instanceof Error ? smsErr.message : String(smsErr),
+        });
+      }
+    }
+  } catch (err) {
+    // Non-blocking: draft regeneration will still proceed
+    logger.error("Failed to send draft outdated notification", {
+      threadId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
