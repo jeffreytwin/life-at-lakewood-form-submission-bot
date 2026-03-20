@@ -262,6 +262,30 @@ export async function sendFrontlinesLeadDetails(
   return message.sid;
 }
 
+export async function sendHandoffNotification(
+  agentPhone: string,
+  agentFirstName: string,
+  leadName: string,
+  locationName: string | null
+): Promise<string> {
+  const locationSuffix = locationName ? ` (${leadName} — ${locationName})` : ` (${leadName})`;
+
+  const message = await getTwilioClient().messages.create({
+    to: agentPhone,
+    from: getTwilioPhoneNumber(),
+    body: `Hey ${agentFirstName}, hot lead in your inbox!${locationSuffix}`,
+  });
+
+  logger.info("Handoff notification SMS sent", {
+    to: agentPhone,
+    messageSid: message.sid,
+    agentFirstName,
+    leadName,
+  });
+
+  return message.sid;
+}
+
 export async function sendUnclearResponseNotification(
   frontlinesPhone: string,
   agentName: string,
