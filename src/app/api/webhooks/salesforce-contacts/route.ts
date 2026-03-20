@@ -203,15 +203,38 @@ async function backfillDraftsForContact(
         .eq("id", thread.id);
     }
 
-    // Check if this thread already has a draft
-    const { data: existingDrafts } = await supabase
+    // Check if this thread already has a pending draft (not yet sent).
+    // If there's a "drafted" or "approved" draft, skip — don't pile up unreviewed drafts.
+    const { data: pendingDrafts } = await supabase
       .from("email_drafts")
       .select("id")
       .eq("thread_id", thread.id)
-      .in("status", ["drafted", "approved", "sent"])
+      .in("status", ["drafted", "approved"])
       .limit(1);
 
-    if (existingDrafts && existingDrafts.length > 0) continue;
+    if (pendingDrafts && pendingDrafts.length > 0) continue;
+
+    // If all previous drafts are "sent", check if there's a new inbound
+    // message after the last sent draft. If not, no need for a new draft.
+    const { data: lastSentDraft } = await supabase
+      .from("email_drafts")
+      .select("sent_at")
+      .eq("thread_id", thread.id)
+      .eq("status", "sent")
+      .order("sent_at", { ascending: false })
+      .limit(1);
+
+    if (lastSentDraft && lastSentDraft.length > 0 && lastSentDraft[0].sent_at) {
+      const { data: newInbound } = await supabase
+        .from("email_messages")
+        .select("id")
+        .eq("thread_id", thread.id)
+        .eq("direction", "inbound")
+        .gt("received_at", lastSentDraft[0].sent_at)
+        .limit(1);
+
+      if (!newInbound || newInbound.length === 0) continue;
+    }
 
     // Skip if an agent is already a recipient on any message in this thread
     const { data: threadMessages } = await supabase
