@@ -93,6 +93,9 @@ export async function POST(request: NextRequest) {
         budget: contact.budget ? String(contact.budget) : null,
         timeline: contact.timeline ? String(contact.timeline) : null,
         location_name: contact.location_name ? String(contact.location_name) : null,
+        salesforce_owner_id: contact.salesforce_owner_id ? String(contact.salesforce_owner_id) : null,
+        salesforce_owner_name: contact.salesforce_owner_name ? String(contact.salesforce_owner_name) : null,
+        is_master_agent_owned: contact.is_master_agent_owned === true ? true : contact.is_master_agent_owned === false ? false : null,
         is_active: contact.is_active !== false,
         synced_at: new Date().toISOString(),
       };
@@ -129,6 +132,9 @@ export async function POST(request: NextRequest) {
         property_interest: row.property_interest,
         lead_status: row.lead_status,
         location_name: row.location_name,
+        salesforce_owner_id: row.salesforce_owner_id,
+        salesforce_owner_name: row.salesforce_owner_name,
+        is_master_agent_owned: row.is_master_agent_owned,
       });
       draftsGenerated += generated;
     }
@@ -177,11 +183,26 @@ async function backfillDraftsForContact(
   let generated = 0;
 
   for (const thread of threads) {
-    // Link Salesforce ID to thread if not already linked
+    // Link Salesforce ID and owner info to thread if not already linked
     if (!thread.salesforce_lead_id) {
       await supabase
         .from("email_threads")
-        .update({ salesforce_lead_id: contact.salesforce_id })
+        .update({
+          salesforce_lead_id: contact.salesforce_id,
+          salesforce_owner_id: contact.salesforce_owner_id ?? null,
+          salesforce_owner_name: contact.salesforce_owner_name ?? null,
+          is_master_agent_owned: contact.is_master_agent_owned ?? null,
+        })
+        .eq("id", thread.id);
+    } else {
+      // Thread already has SF link, but update owner info if we have it now
+      await supabase
+        .from("email_threads")
+        .update({
+          salesforce_owner_id: contact.salesforce_owner_id ?? null,
+          salesforce_owner_name: contact.salesforce_owner_name ?? null,
+          is_master_agent_owned: contact.is_master_agent_owned ?? null,
+        })
         .eq("id", thread.id);
     }
 
