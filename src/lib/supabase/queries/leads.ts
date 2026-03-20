@@ -50,15 +50,16 @@ export async function checkDuplicateLead(
 ): Promise<boolean> {
   const cutoff = new Date(Date.now() - recentMinutes * 60 * 1000).toISOString();
 
-  // Treat as duplicate if a recent lead with the same SF record ID is still
-  // active OR was already accepted. This prevents rapid resubmissions from
-  // being routed twice when Salesforce hasn't updated ownership yet.
+  // Only treat as duplicate if a recent lead with the same SF record ID is
+  // still in an active (unresolved) state. Leads that have already reached a
+  // terminal state (accepted, owned_by_other, failed, manual) should not block
+  // new submissions — those are legitimate re-submissions, not Zapier double-fires.
   const { data, error } = await supabase
     .from("leads")
     .select("id")
     .eq("salesforce_record_id", salesforceRecordId)
     .gte("created_at", cutoff)
-    .in("routing_status", ["pending", "routing", "accepted"])
+    .in("routing_status", ["pending", "routing"])
     .limit(1);
 
   if (error) throw error;
