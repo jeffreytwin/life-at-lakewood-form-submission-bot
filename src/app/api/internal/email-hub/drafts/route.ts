@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("email_drafts")
-      .select("*, agents:agent_handoff_id(id, name, email)")
+      .select("*, agents:agent_handoff_id(id, name, email), email_threads:thread_id(salesforce_owner_id, salesforce_owner_name, is_master_agent_owned)")
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -51,10 +51,52 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const enriched = (data ?? []).map((d: { id: string; status: string }) => ({
-      ...d,
-      added_to_training: trainingDraftIds.has(d.id),
-    }));
+    // Resolve Salesforce owner IDs to agent names from our agents table
+    const ownerIds = [
+      ...new Set(
+        (data ?? [])
+          .map((d: { email_threads: { salesforce_owner_id: string | null } | null }) =>
+            d.email_threads?.salesforce_owner_id
+          )
+          .filter(Boolean) as string[]
+      ),
+    ];
+    let ownerAgentMap = new Map<string, string>();
+    if (ownerIds.length > 0) {
+      const { data: ownerAgents } = await supabase
+        .from("agents")
+        .select("salesforce_user_id, name")
+        .in("salesforce_user_id", ownerIds);
+      if (ownerAgents) {
+        for (const a of ownerAgents) {
+          if (a.salesforce_user_id) ownerAgentMap.set(a.salesforce_user_id, a.name);
+        }
+      }
+    }
+
+    const enriched = (data ?? []).map((d: {
+      id: string;
+      status: string;
+      email_threads: {
+        salesforce_owner_id: string | null;
+        salesforce_owner_name: string | null;
+        is_master_agent_owned: boolean | null;
+      } | null;
+    }) => {
+      const thread = d.email_threads;
+      const ownerId = thread?.salesforce_owner_id ?? null;
+      // Prefer agent name from our DB, fall back to Salesforce owner name
+      const resolvedOwnerName = ownerId && ownerAgentMap.has(ownerId)
+        ? ownerAgentMap.get(ownerId)!
+        : thread?.salesforce_owner_name ?? null;
+
+      return {
+        ...d,
+        added_to_training: trainingDraftIds.has(d.id),
+        salesforce_owner_name: resolvedOwnerName,
+        is_master_agent_owned: thread?.is_master_agent_owned ?? null,
+      };
+    });
 
     return NextResponse.json(enriched);
   } catch (error) {

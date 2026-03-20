@@ -35,6 +35,9 @@ export interface MatchedContact {
   property_interest: string | null;
   lead_status: string | null;
   location_name: string | null;
+  salesforce_owner_id: string | null;
+  salesforce_owner_name: string | null;
+  is_master_agent_owned: boolean | null;
 }
 
 /**
@@ -163,7 +166,7 @@ async function hasAgentRecipient(recipientEmails: string[]): Promise<boolean> {
 async function matchSenderToContact(senderEmail: string): Promise<MatchedContact | null> {
   const { data: contacts } = await supabase
     .from("salesforce_contacts")
-    .select("id, salesforce_id, email, first_name, last_name, phone, budget, timeline, property_interest, lead_status, location_name")
+    .select("id, salesforce_id, email, first_name, last_name, phone, budget, timeline, property_interest, lead_status, location_name, salesforce_owner_id, salesforce_owner_name, is_master_agent_owned")
     .ilike("email", senderEmail)
     .eq("is_active", true)
     .order("synced_at", { ascending: false })
@@ -229,13 +232,14 @@ async function processInboundMessage(
   // Match sender to a known Salesforce contact
   const contact = await matchSenderToContact(fromEmail);
 
-  // Upsert thread (with Salesforce ID link if matched)
+  // Upsert thread (with Salesforce ID link and owner info if matched)
   const threadId = await upsertThread(
     account,
     msg.threadId,
     subject,
     fromEmail,
-    contact?.salesforce_id ?? null
+    contact?.salesforce_id ?? null,
+    contact
   );
 
   // Store message (always, even for non-leads — useful for auditing)
@@ -325,7 +329,8 @@ async function upsertThread(
   gmailThreadId: string,
   subject: string,
   senderEmail: string,
-  salesforceLeadId: string | null
+  salesforceLeadId: string | null,
+  contact: MatchedContact | null
 ): Promise<string> {
   // Check for existing thread
   const { data: existing } = await supabase
@@ -337,10 +342,20 @@ async function upsertThread(
 
   if (existing && existing.length > 0) {
     // If thread exists but didn't have a lead link, update it
+    const updates: Record<string, unknown> = {};
     if (!existing[0].salesforce_lead_id && salesforceLeadId) {
+      updates.salesforce_lead_id = salesforceLeadId;
+    }
+    // Always update owner info if we have contact data
+    if (contact) {
+      updates.salesforce_owner_id = contact.salesforce_owner_id ?? null;
+      updates.salesforce_owner_name = contact.salesforce_owner_name ?? null;
+      updates.is_master_agent_owned = contact.is_master_agent_owned ?? null;
+    }
+    if (Object.keys(updates).length > 0) {
       await supabase
         .from("email_threads")
-        .update({ salesforce_lead_id: salesforceLeadId })
+        .update(updates)
         .eq("id", existing[0].id);
     }
     return existing[0].id;
@@ -360,6 +375,9 @@ async function upsertThread(
       sender_email: parseEmailAddress(senderEmail),
       sender_name: senderName,
       salesforce_lead_id: salesforceLeadId,
+      salesforce_owner_id: contact?.salesforce_owner_id ?? null,
+      salesforce_owner_name: contact?.salesforce_owner_name ?? null,
+      is_master_agent_owned: contact?.is_master_agent_owned ?? null,
       location_id: account.location_id,
       last_message_at: new Date().toISOString(),
       is_active: true,

@@ -44,6 +44,8 @@ interface EmailDraft {
   agent_handoff_transferred: boolean;
   added_to_training: boolean;
   lead_status_update: string | null;
+  salesforce_owner_name: string | null;
+  is_master_agent_owned: boolean | null;
   created_at: string;
   edited_at: string | null;
   approved_at: string | null;
@@ -845,6 +847,27 @@ export default function EmailDraftsPage() {
                     </span>
                   )}
 
+                  {/* Ownership badge — non-frontlines owner (not yet handed off) */}
+                  {!draft.agent_handoff_transferred &&
+                    draft.salesforce_owner_name &&
+                    draft.is_master_agent_owned === false && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "2px 8px",
+                        borderRadius: 10,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        background: "#fbbf2422",
+                        color: "#fbbf24",
+                        border: "1px solid #fbbf2444",
+                        flexShrink: 0,
+                      }}
+                    >
+                      Owned by {draft.salesforce_owner_name}
+                    </span>
+                  )}
+
                   {/* Handoff badge for sent drafts */}
                   {isSent && draft.agent_handoff_transferred && (
                     <span
@@ -1219,27 +1242,62 @@ export default function EmailDraftsPage() {
                       )}
 
                       {/* Agent Handoff Transfer (sent only) */}
-                      {isSent && !draft.agent_handoff_transferred && (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setHandoffPickerDraftId(
-                              handoffPickerDraftId === draft.id ? null : draft.id
-                            );
-                            setHandoffSelectedAgentId(null);
-                          }}
-                          disabled={handoffId === draft.id}
-                          style={{
-                            color: "#a78bfa",
-                            borderColor: "#a78bfa44",
-                          }}
-                        >
-                          {handoffId === draft.id
-                            ? "Transferring..."
-                            : "Transfer to Agent"}
-                        </button>
-                      )}
+                      {isSent && !draft.agent_handoff_transferred && (() => {
+                        // Non-frontlines owned: show disabled "Already Owned" button
+                        const isNonFrontlinesOwned =
+                          draft.salesforce_owner_name &&
+                          draft.is_master_agent_owned === false;
+
+                        if (isNonFrontlinesOwned) {
+                          return (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                padding: "6px 14px",
+                                borderRadius: 6,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                background: "#fbbf2422",
+                                color: "#fbbf24",
+                                border: "1px solid #fbbf2444",
+                                cursor: "default",
+                              }}
+                              title="This lead is already owned by an agent in Salesforce"
+                            >
+                              Already Owned by {draft.salesforce_owner_name}
+                            </span>
+                          );
+                        }
+
+                        // Must be marked Nurture Active before handoff is available
+                        if (draft.lead_status_update !== "nurture_active") {
+                          return null;
+                        }
+
+                        return (
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHandoffPickerDraftId(
+                                handoffPickerDraftId === draft.id ? null : draft.id
+                              );
+                              setHandoffSelectedAgentId(null);
+                            }}
+                            disabled={handoffId === draft.id}
+                            style={{
+                              color: "#a78bfa",
+                              borderColor: "#a78bfa44",
+                            }}
+                          >
+                            {handoffId === draft.id
+                              ? "Transferring..."
+                              : "Transfer to Agent"}
+                          </button>
+                        );
+                      })()}
 
                       {/* Already transferred indicator */}
                       {isSent && draft.agent_handoff_transferred && (
