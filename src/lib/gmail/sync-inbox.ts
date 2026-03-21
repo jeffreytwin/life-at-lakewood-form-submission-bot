@@ -77,18 +77,26 @@ export async function syncInbox(account: EmailAccount): Promise<{
       }
     }
 
-    // Safety net: when History API returns no new INBOX messages, do a
-    // direct inbox query for recent emails. This catches messages missed
-    // due to a Gmail race condition where the Pub/Sub push notification
-    // arrives before the History API has indexed the new message.
-    if (messageIds.length === 0) {
-      const fallback = await listMessages(account.id, creds, "in:inbox newer_than:5m", 10);
-      if (fallback.length > 0) {
-        logger.info("History API returned 0 messages — fallback query found candidates", {
+    // Safety net: always cross-check with a direct inbox query for recent
+    // emails. The History API can miss messages during rapid bursts when a
+    // push notification arrives before Gmail has indexed the new message.
+    // Downstream dedup on provider_message_id prevents double-processing.
+    const fallback = await listMessages(account.id, creds, "in:inbox newer_than:5m", 10);
+    if (fallback.length > 0) {
+      const seen = new Set(messageIds.map(m => m.id));
+      let merged = 0;
+      for (const msg of fallback) {
+        if (!seen.has(msg.id)) {
+          messageIds.push(msg);
+          merged++;
+        }
+      }
+      if (merged > 0) {
+        logger.info("Fallback query found messages missed by History API", {
           accountId: account.id,
-          fallbackCount: fallback.length,
+          historyCount: messageIds.length - merged,
+          mergedCount: merged,
         });
-        messageIds = fallback;
       }
     }
 
