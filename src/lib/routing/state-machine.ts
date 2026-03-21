@@ -22,6 +22,7 @@ import { selectNextAgent } from "./select-agent";
 import {
   getQuietHoursSettings,
   isInQuietHours,
+  getEffectiveQuietHoursEnd,
   getDeferredExpiresAt,
 } from "./quiet-hours";
 import { logger } from "@/lib/shared/logger";
@@ -74,19 +75,20 @@ async function sendToAgent(
 
   // Check if we're in quiet hours — if so, defer the follow-up timeout
   const qhSettings = await getQuietHoursSettings();
+  const effectiveEnd = getEffectiveQuietHoursEnd(qhSettings);
   const duringQuietHours =
     qhSettings.quiet_hours_enabled &&
-    isInQuietHours(qhSettings.quiet_hours_start, qhSettings.quiet_hours_end);
+    isInQuietHours(qhSettings.quiet_hours_start, effectiveEnd);
 
   const messageSid = await sendLeadNotification(
     agent.phone,
     lead,
     locationName,
-    duringQuietHours ? qhSettings.quiet_hours_end : undefined
+    duringQuietHours ? effectiveEnd : undefined
   );
 
   const expiresAt = duringQuietHours
-    ? getDeferredExpiresAt(qhSettings.quiet_hours_end)
+    ? getDeferredExpiresAt(effectiveEnd)
     : getExpiresAt();
 
   await createRoutingAttempt({

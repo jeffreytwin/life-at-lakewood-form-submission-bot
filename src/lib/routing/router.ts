@@ -3,7 +3,7 @@ import { createLead, checkDuplicateLead, updateLeadStatus } from "@/lib/supabase
 import { getFrontlinesAgent, getAgentBySalesforceUserId } from "@/lib/supabase/queries/agents";
 import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
 import { sendOwnedByNotification, sendExistingOwnerNotification } from "@/lib/twilio/send-sms";
-import { getQuietHoursSettings, isInQuietHours } from "./quiet-hours";
+import { getQuietHoursSettings, isInQuietHours, getEffectiveQuietHoursEnd } from "./quiet-hours";
 import { startRouting } from "./state-machine";
 import { logger } from "@/lib/shared/logger";
 import type { ZapierPayload } from "@/lib/shared/validation/zapier-payload";
@@ -36,9 +36,10 @@ export async function routeLead(payload: ZapierPayload): Promise<{
 
   // Stamp whether this lead arrived during quiet hours (immutable snapshot)
   const quietHours = await getQuietHoursSettings();
+  const effectiveEnd = getEffectiveQuietHoursEnd(quietHours);
   const arrivedDuringQuietHours =
     quietHours.quiet_hours_enabled &&
-    isInQuietHours(quietHours.quiet_hours_start, quietHours.quiet_hours_end);
+    isInQuietHours(quietHours.quiet_hours_start, effectiveEnd);
 
   // Create lead record
   const lead = await createLead({

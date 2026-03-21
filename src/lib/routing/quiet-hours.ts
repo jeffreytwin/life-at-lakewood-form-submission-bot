@@ -2,8 +2,10 @@ import { supabase } from "@/lib/supabase/client";
 
 interface QuietHoursSettings {
   quiet_hours_enabled: boolean;
-  quiet_hours_start: string; // "HH:MM"
-  quiet_hours_end: string;   // "HH:MM"
+  quiet_hours_start: string;          // "HH:MM"
+  quiet_hours_end: string;            // "HH:MM" — legacy single value
+  quiet_hours_end_weekday: string;    // "HH:MM" — Mon-Fri end time
+  quiet_hours_end_weekend: string;    // "HH:MM" — Sat-Sun end time
 }
 
 /**
@@ -12,14 +14,18 @@ interface QuietHoursSettings {
 export async function getQuietHoursSettings(): Promise<QuietHoursSettings> {
   const { data } = await supabase
     .from("system_settings")
-    .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end")
+    .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end, quiet_hours_end_weekday, quiet_hours_end_weekend")
     .eq("id", 1)
     .single();
+
+  const legacyEnd = data?.quiet_hours_end ?? "08:30";
 
   return {
     quiet_hours_enabled: data?.quiet_hours_enabled ?? true,
     quiet_hours_start: data?.quiet_hours_start ?? "21:00",
-    quiet_hours_end: data?.quiet_hours_end ?? "08:30",
+    quiet_hours_end: legacyEnd,
+    quiet_hours_end_weekday: data?.quiet_hours_end_weekday ?? "06:30",
+    quiet_hours_end_weekend: data?.quiet_hours_end_weekend ?? legacyEnd,
   };
 }
 
@@ -72,6 +78,48 @@ export function isInQuietHours(startTime: string, endTime: string): boolean {
     // Overnight range (e.g., 21:00 → 08:30)
     return nowMin >= startMin || nowMin < endMin;
   }
+}
+
+/**
+ * Get the correct quiet_hours_end for today, accounting for weekday vs weekend.
+ *
+ * The key insight: if quiet hours start at 9pm Friday and it's currently
+ * 11pm Friday, the "end" that matters is Saturday morning — so we look at
+ * the *next morning's* day, not "today". For overnight quiet hours where
+ * we're in the before-midnight portion (now >= start), the end applies to
+ * *tomorrow*. If we're in the after-midnight portion (now < end), the end
+ * applies to *today*.
+ */
+export function getEffectiveQuietHoursEnd(
+  settings: QuietHoursSettings
+): string {
+  const now = getEasternNow();
+  const nowMin = toMinutes(now.hours, now.minutes);
+  const start = parseTime(settings.quiet_hours_start);
+  const startMin = toMinutes(start.hours, start.minutes);
+
+  // Determine which day the "morning end" falls on
+  const easternDay = now.date.getDay(); // 0=Sun, 6=Sat
+
+  let endDay: number;
+  if (startMin > toMinutes(parseTime(settings.quiet_hours_end_weekday).hours, parseTime(settings.quiet_hours_end_weekday).minutes)) {
+    // Overnight range — figure out which half we're in
+    if (nowMin >= startMin) {
+      // Before midnight: end is tomorrow morning
+      endDay = (easternDay + 1) % 7;
+    } else {
+      // After midnight: end is this morning
+      endDay = easternDay;
+    }
+  } else {
+    // Same-day range (unlikely for quiet hours but handle it)
+    endDay = easternDay;
+  }
+
+  const isWeekend = endDay === 0 || endDay === 6; // Sun or Sat
+  return isWeekend
+    ? settings.quiet_hours_end_weekend
+    : settings.quiet_hours_end_weekday;
 }
 
 

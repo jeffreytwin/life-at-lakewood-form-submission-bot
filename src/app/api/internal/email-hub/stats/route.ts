@@ -51,6 +51,35 @@ function isDuringQuietHours(
   }
 }
 
+/**
+ * Pick the correct quiet hours end time for a given timestamp,
+ * based on whether the "morning" that ends quiet hours falls on a weekday or weekend.
+ */
+function getEndForTimestamp(
+  isoTimestamp: string,
+  qhStart: string,
+  endWeekday: string,
+  endWeekend: string,
+): string {
+  const dt = new Date(isoTimestamp);
+  const et = new Date(dt.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const nowMin = et.getHours() * 60 + et.getMinutes();
+  const [sh, sm] = qhStart.split(":").map(Number);
+  const startMin = sh * 60 + sm;
+  const [ewh, ewm] = endWeekday.split(":").map(Number);
+  const endWeekdayMin = ewh * 60 + ewm;
+
+  const day = et.getDay();
+  let endDay: number;
+  if (startMin > endWeekdayMin) {
+    endDay = nowMin >= startMin ? (day + 1) % 7 : day;
+  } else {
+    endDay = day;
+  }
+  const isWeekend = endDay === 0 || endDay === 6;
+  return isWeekend ? endWeekend : endWeekday;
+}
+
 export async function GET() {
   try {
     // Get current month boundaries in Eastern time
@@ -63,13 +92,14 @@ export async function GET() {
     // Fetch quiet hours settings
     const { data: settings } = await supabase
       .from("system_settings")
-      .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end")
+      .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end, quiet_hours_end_weekday, quiet_hours_end_weekend")
       .eq("id", 1)
       .single();
 
     const qhEnabled = settings?.quiet_hours_enabled ?? true;
     const qhStart = settings?.quiet_hours_start ?? "21:00";
-    const qhEnd = settings?.quiet_hours_end ?? "08:30";
+    const qhEndWeekday = settings?.quiet_hours_end_weekday ?? "06:30";
+    const qhEndWeekend = settings?.quiet_hours_end_weekend ?? settings?.quiet_hours_end ?? "08:30";
 
     // Incoming emails this month (only from Salesforce-verified senders)
     // First get thread IDs that have a Salesforce lead linked
@@ -129,6 +159,7 @@ export async function GET() {
           const inboundAt = draft.thread_id ? earliestInbound[draft.thread_id] : null;
           if (inboundAt && draft.sent_at) {
             // Exclude emails received during quiet hours
+            const qhEnd = getEndForTimestamp(inboundAt, qhStart, qhEndWeekday, qhEndWeekend);
             if (qhEnabled && isDuringQuietHours(inboundAt, qhStart, qhEnd)) {
               continue;
             }
