@@ -471,8 +471,10 @@ export async function generateAndStoreDraft(
       },
     });
 
-    // Store draft in DB
-    const { data: insertedDraft } = await supabase.from("email_drafts").insert({
+    // Store draft in DB.
+    // A partial unique index (thread_id WHERE status IN ('drafted','approved'))
+    // prevents duplicate active drafts from concurrent Zapier callbacks.
+    const { data: insertedDraft, error: draftInsertError } = await supabase.from("email_drafts").insert({
       thread_id: threadId,
       email_account_id: account.id,
       status: "drafted",
@@ -488,6 +490,19 @@ export async function generateAndStoreDraft(
       sent_body_text: null,
       was_changed: false,
     }).select("id").single();
+
+    // If another callback already created an active draft for this thread,
+    // the unique index will reject this insert — that's expected, not an error.
+    if (draftInsertError) {
+      if (draftInsertError.code === "23505") {
+        logger.info("Draft already exists for thread (concurrent callback won the race)", {
+          threadId,
+          accountId: account.id,
+        });
+        return false;
+      }
+      throw new Error(`Failed to insert draft: ${draftInsertError.message}`);
+    }
 
     logger.info("AI draft generated for Salesforce contact", {
       threadId,
