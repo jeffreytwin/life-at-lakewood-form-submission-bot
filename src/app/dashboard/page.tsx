@@ -87,6 +87,8 @@ interface QuietHoursState {
   quiet_hours_enabled: boolean;
   quiet_hours_start: string;
   quiet_hours_end: string;
+  quiet_hours_end_weekday: string;
+  quiet_hours_end_weekend: string;
 }
 
 export default function DashboardOverview() {
@@ -141,6 +143,8 @@ export default function DashboardOverview() {
             quiet_hours_enabled: data.quiet_hours_enabled,
             quiet_hours_start: data.quiet_hours_start ?? "21:00",
             quiet_hours_end: data.quiet_hours_end ?? "08:30",
+            quiet_hours_end_weekday: data.quiet_hours_end_weekday ?? "06:30",
+            quiet_hours_end_weekend: data.quiet_hours_end_weekend ?? "08:30",
           });
         }
       })
@@ -184,7 +188,7 @@ export default function DashboardOverview() {
     }
   }
 
-  async function updateQuietHoursTime(field: "quiet_hours_start" | "quiet_hours_end", value: string) {
+  async function updateQuietHoursTime(field: "quiet_hours_start" | "quiet_hours_end" | "quiet_hours_end_weekday" | "quiet_hours_end_weekend", value: string) {
     if (!quietHours) return;
     setQhBusy(true);
     try {
@@ -194,11 +198,13 @@ export default function DashboardOverview() {
         body: JSON.stringify({ [field]: value }),
       });
       const data = await res.json();
-      if (data.quiet_hours_start && data.quiet_hours_end) {
+      if (data.quiet_hours_start) {
         setQuietHours((prev) => prev && {
           ...prev,
           quiet_hours_start: data.quiet_hours_start,
           quiet_hours_end: data.quiet_hours_end,
+          quiet_hours_end_weekday: data.quiet_hours_end_weekday ?? prev.quiet_hours_end_weekday,
+          quiet_hours_end_weekend: data.quiet_hours_end_weekend ?? prev.quiet_hours_end_weekend,
         });
       }
     } catch {
@@ -491,14 +497,26 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <label className="text-sm text-muted" htmlFor="qh-end">End:</label>
+                <label className="text-sm text-muted" htmlFor="qh-end-weekday">End (Mon-Fri):</label>
                 <input
-                  id="qh-end"
+                  id="qh-end-weekday"
                   type="time"
                   className="form-input"
                   style={{ width: "auto", fontSize: 13, padding: "4px 8px" }}
-                  value={quietHours.quiet_hours_end}
-                  onChange={(e) => updateQuietHoursTime("quiet_hours_end", e.target.value)}
+                  value={quietHours.quiet_hours_end_weekday}
+                  onChange={(e) => updateQuietHoursTime("quiet_hours_end_weekday", e.target.value)}
+                  disabled={qhBusy}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <label className="text-sm text-muted" htmlFor="qh-end-weekend">End (Sat-Sun):</label>
+                <input
+                  id="qh-end-weekend"
+                  type="time"
+                  className="form-input"
+                  style={{ width: "auto", fontSize: 13, padding: "4px 8px" }}
+                  value={quietHours.quiet_hours_end_weekend}
+                  onChange={(e) => updateQuietHoursTime("quiet_hours_end_weekend", e.target.value)}
                   disabled={qhBusy}
                 />
               </div>

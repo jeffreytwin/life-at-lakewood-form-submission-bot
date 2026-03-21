@@ -40,6 +40,32 @@ function isCurrentlyInQuietHours(start: string, end: string): boolean {
     : nowMin >= startMin || nowMin < endMin;
 }
 
+/**
+ * Pick the correct end time based on whether the quiet-hours "morning"
+ * falls on a weekday or weekend.
+ */
+function getEffectiveEnd(start: string, endWeekday: string, endWeekend: string): string {
+  const now = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const [sh, sm] = start.split(":").map(Number);
+  const startMin = sh * 60 + sm;
+  const [ewh, ewm] = endWeekday.split(":").map(Number);
+  const endWeekdayMin = ewh * 60 + ewm;
+
+  const day = now.getDay(); // 0=Sun, 6=Sat
+  let endDay: number;
+  if (startMin > endWeekdayMin) {
+    // Overnight range
+    endDay = nowMin >= startMin ? (day + 1) % 7 : day;
+  } else {
+    endDay = day;
+  }
+  const isWeekend = endDay === 0 || endDay === 6;
+  return isWeekend ? endWeekend : endWeekday;
+}
+
 export default function RoutingToggle() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -61,11 +87,15 @@ export default function RoutingToggle() {
         // Check if night mode is currently active
         if (
           data.quiet_hours_enabled &&
-          data.quiet_hours_start &&
-          data.quiet_hours_end
+          data.quiet_hours_start
         ) {
+          const effectiveEnd = getEffectiveEnd(
+            data.quiet_hours_start,
+            data.quiet_hours_end_weekday ?? data.quiet_hours_end ?? "06:30",
+            data.quiet_hours_end_weekend ?? data.quiet_hours_end ?? "08:30"
+          );
           setNightActive(
-            isCurrentlyInQuietHours(data.quiet_hours_start, data.quiet_hours_end)
+            isCurrentlyInQuietHours(data.quiet_hours_start, effectiveEnd)
           );
         }
       })
