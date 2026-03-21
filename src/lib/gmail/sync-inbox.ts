@@ -77,6 +77,21 @@ export async function syncInbox(account: EmailAccount): Promise<{
       }
     }
 
+    // Safety net: when History API returns no new INBOX messages, do a
+    // direct inbox query for recent emails. This catches messages missed
+    // due to a Gmail race condition where the Pub/Sub push notification
+    // arrives before the History API has indexed the new message.
+    if (messageIds.length === 0) {
+      const fallback = await listMessages(account.id, creds, "in:inbox newer_than:5m", 10);
+      if (fallback.length > 0) {
+        logger.info("History API returned 0 messages — fallback query found candidates", {
+          accountId: account.id,
+          fallbackCount: fallback.length,
+        });
+        messageIds = fallback;
+      }
+    }
+
     // Update history cursor
     await supabase
       .from("email_accounts")
