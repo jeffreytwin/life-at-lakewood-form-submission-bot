@@ -176,11 +176,11 @@ export async function pushAllPendingDrafts(): Promise<{
  * was deleted (user decided not to send), mark it as "discarded" in our app.
  */
 export async function reconcileDeletedDrafts(): Promise<{ discarded: number }> {
-  // Find approved drafts that have been pushed to Gmail
+  // Find drafted/approved drafts that have been pushed to Gmail
   const { data: drafts, error } = await supabase
     .from("email_drafts")
     .select("id, provider_draft_id, email_account_id")
-    .eq("status", "approved")
+    .in("status", ["drafted", "approved"])
     .eq("is_simulation", false)
     .not("provider_draft_id", "is", null)
     .not("email_account_id", "is", null);

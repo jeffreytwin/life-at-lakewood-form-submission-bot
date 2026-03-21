@@ -132,6 +132,11 @@ export async function POST(request: NextRequest) {
 
       upserted++;
 
+      // If Zapier passed through the thread_id from our original request,
+      // scope the backfill to just that thread to avoid racing with other
+      // callbacks for the same sender.
+      const scopedThreadId = contact.thread_id ? String(contact.thread_id) : undefined;
+
       // Backfill: find threads from this email that don't have drafts yet
       const generated = await backfillDraftsForContact(email, {
         id: "",
@@ -148,7 +153,7 @@ export async function POST(request: NextRequest) {
         salesforce_owner_id: row.salesforce_owner_id,
         salesforce_owner_name: row.salesforce_owner_name,
         is_master_agent_owned: row.is_master_agent_owned,
-      });
+      }, scopedThreadId);
       draftsGenerated += generated;
     }
 
@@ -182,14 +187,23 @@ export async function POST(request: NextRequest) {
  */
 async function backfillDraftsForContact(
   email: string,
-  contact: MatchedContact
+  contact: MatchedContact,
+  scopedThreadId?: string
 ): Promise<number> {
-  // Find threads where sender matches this email
-  const { data: threads } = await supabase
+  // Find threads where sender matches this email.
+  // When scopedThreadId is provided (from Zapier round-trip), only process
+  // that specific thread to avoid racing with other callbacks for the same sender.
+  let query = supabase
     .from("email_threads")
     .select("id, subject, email_account_id, salesforce_lead_id")
     .ilike("sender_email", email)
     .eq("is_active", true);
+
+  if (scopedThreadId) {
+    query = query.eq("id", scopedThreadId);
+  }
+
+  const { data: threads } = await query;
 
   if (!threads || threads.length === 0) return 0;
 
