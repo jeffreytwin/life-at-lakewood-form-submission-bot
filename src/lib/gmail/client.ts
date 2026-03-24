@@ -275,9 +275,15 @@ export async function listHistory(
   if (labelId) params.set("labelId", labelId);
   const res = await gmailFetch(accountId, credentials, `/history?${params}`);
   if (!res.ok) {
-    // 404 means historyId is too old, need full sync
+    // 404 means historyId is too old — fetch a fresh cursor so the
+    // caller advances past the stale one instead of looping forever.
     if (res.status === 404) {
-      return { history: [], historyId: startHistoryId };
+      logger.warn("History ID too old (404), fetching fresh cursor", {
+        accountId,
+        staleHistoryId: startHistoryId,
+      });
+      const profile = await getProfile(accountId, credentials);
+      return { history: [], historyId: profile.historyId };
     }
     const text = await res.text();
     throw new Error(`listHistory failed: ${res.status} ${text}`);
