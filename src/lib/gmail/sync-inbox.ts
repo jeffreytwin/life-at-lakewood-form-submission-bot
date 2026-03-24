@@ -229,6 +229,7 @@ async function processInboundMessage(
   // Also skip if the sender IS an agent (e.g. agent emailing the client
   // and the message appears in the monitored inbox).
   const ccRaw = getHeader(msg, "Cc") ?? "";
+  const ownEmail = account.email_address.toLowerCase();
   const allRecipients = [toEmail, ccRaw]
     .join(",")
     .split(",")
@@ -244,11 +245,15 @@ async function processInboundMessage(
     return { draftGenerated: false, skippedNonLead: false };
   }
 
-  const agentOnThread = await hasAgentRecipient(allRecipients);
+  // Exclude the monitored account's own email from the recipient check —
+  // every inbound email is addressed TO this account, so including it
+  // would cause every message to be incorrectly skipped.
+  const otherRecipients = allRecipients.filter((r) => r !== ownEmail);
+  const agentOnThread = await hasAgentRecipient(otherRecipients);
   if (agentOnThread) {
-    logger.info("Skipping draft — agent is a recipient on this email", {
+    logger.info("Skipping draft — another agent is a recipient on this email", {
       senderEmail: fromEmail,
-      recipients: allRecipients,
+      recipients: otherRecipients,
       accountId: account.id,
     });
     return { draftGenerated: false, skippedNonLead: false };
