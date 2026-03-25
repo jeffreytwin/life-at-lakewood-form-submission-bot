@@ -306,6 +306,10 @@ export default function EmailDraftsPage() {
   const [autoApprove, setAutoApprove] = useState(false);
   const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
 
+  // Rescan state
+  const [rescanning, setRescanning] = useState(false);
+  const [rescanResult, setRescanResult] = useState<string | null>(null);
+
   // Feedback state
   const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
   const [feedbackRating, setFeedbackRating] = useState(3);
@@ -395,6 +399,27 @@ export default function EmailDraftsPage() {
       // Silently fail
     } finally {
       setTogglingAutoApprove(false);
+    }
+  }
+
+  async function handleRescan() {
+    setRescanning(true);
+    setRescanResult(null);
+    try {
+      const res = await fetch("/api/internal/email-hub/rescan", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail ?? data.error ?? "Rescan failed");
+      setRescanResult(
+        data.draftsGenerated > 0
+          ? `Found ${data.draftsGenerated} missed draft${data.draftsGenerated > 1 ? "s" : ""} — generating now.`
+          : `Scanned ${data.threadsScanned} threads — no missed drafts found.`
+      );
+      if (data.draftsGenerated > 0) fetchDrafts(true);
+    } catch (e) {
+      setRescanResult(e instanceof Error ? e.message : "Rescan failed");
+    } finally {
+      setRescanning(false);
+      setTimeout(() => setRescanResult(null), 8000);
     }
   }
 
@@ -866,7 +891,51 @@ export default function EmailDraftsPage() {
             </span>
             Auto-Approve
           </button>
+
+          {/* Re-scan Inboxes button */}
+          <button
+            onClick={handleRescan}
+            disabled={rescanning}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: rescanning ? "#8b8fa3" : "#4f8ff7",
+              background: rescanning ? "transparent" : "rgba(79, 143, 247, 0.08)",
+              border: `1px solid ${rescanning ? "#2a2e3a" : "rgba(79, 143, 247, 0.3)"}`,
+              borderRadius: 6,
+              cursor: rescanning ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{
+              display: "inline-block",
+              animation: rescanning ? "spin 1s linear infinite" : "none",
+            }}>
+              &#8635;
+            </span>
+            {rescanning ? "Scanning..." : "Re-scan Inboxes"}
+          </button>
         </div>
+
+        {/* Rescan result notification */}
+        {rescanResult && (
+          <div
+            style={{
+              fontSize: 13,
+              color: rescanResult.includes("missed") ? "#34d399" : "#8b8fa3",
+              padding: "6px 12px",
+              background: rescanResult.includes("missed") ? "rgba(52, 211, 153, 0.08)" : "rgba(139, 143, 163, 0.08)",
+              borderRadius: 6,
+              marginTop: -4,
+            }}
+          >
+            {rescanResult}
+          </div>
+        )}
       </div>
 
       {/* Error state */}
