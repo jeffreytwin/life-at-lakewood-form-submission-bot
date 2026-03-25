@@ -109,9 +109,15 @@ export default function DashboardOverview() {
     fetch(`/api/internal/email-hub/stats?days=${metricsDays}`)
       .then((r) => r.json())
       .then((data) => {
-        if (!data.error) setEmailStats(data);
+        if (!data.error) {
+          setEmailStats(data);
+        } else {
+          console.error("Email stats API error:", data.error);
+        }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Email stats fetch failed:", err);
+      });
   }, [metricsDays]);
 
   const refreshStats = useCallback(() => {
