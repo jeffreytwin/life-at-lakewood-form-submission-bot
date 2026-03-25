@@ -711,6 +711,11 @@ select.form-input {
   }
 }
 
+/* ── Simulation page: static blue icons (no glow) ── */
+.sim-icon-static {
+  color: var(--accent);
+}
+
 /* ── Simulation page: blue glowing icons ── */
 .sim-icon-blue {
   color: var(--accent);
@@ -904,6 +909,11 @@ select.form-input {
 
   .grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  /* Put Otocon/results column on top on mobile */
+  .sim-results-col {
+    order: -1;
   }
 
   /* Cards */
