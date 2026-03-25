@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
   try {
     const daysParam = request.nextUrl.searchParams.get("days");
     const days = daysParam ? parseInt(daysParam, 10) : 7;
-    const periodCutoff = easternDayStart(days);
+    const periodCutoff = days > 0 ? easternDayStart(days) : null;
 
     // Get current month boundaries in Eastern time
     const nowET = new Date(
@@ -141,14 +141,15 @@ export async function GET(request: NextRequest) {
 
     // Average email response time (filtered by requested period, excluding quiet hours)
     // Measures time from first inbound message in thread to sent_at
-    const { data: sentDraftsForAvg } = await supabase
+    let avgQuery = supabase
       .from("email_drafts")
       .select("thread_id, sent_at")
       .eq("status", "sent")
       .eq("is_simulation", false)
       .not("sent_at", "is", null)
-      .not("thread_id", "is", null)
-      .gte("sent_at", periodCutoff);
+      .not("thread_id", "is", null);
+    if (periodCutoff) avgQuery = avgQuery.gte("sent_at", periodCutoff);
+    const { data: sentDraftsForAvg } = await avgQuery;
 
     let avgResponseTimeMinutes: number | null = null;
     if (sentDraftsForAvg && sentDraftsForAvg.length > 0) {
@@ -192,12 +193,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Sent emails in selected period
-    const { count: sentEmails } = await supabase
+    let sentQuery = supabase
       .from("email_drafts")
       .select("*", { count: "exact", head: true })
       .eq("status", "sent")
-      .eq("is_simulation", false)
-      .gte("sent_at", periodCutoff);
+      .eq("is_simulation", false);
+    if (periodCutoff) sentQuery = sentQuery.gte("sent_at", periodCutoff);
+    const { count: sentEmails } = await sentQuery;
 
     // Agent handoffs this month
     const { count: agentHandoffs } = await supabase

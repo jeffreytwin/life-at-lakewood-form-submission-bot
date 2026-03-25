@@ -290,6 +290,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           <option value={7}>Last 7 Days</option>
           <option value={14}>Last 14 Days</option>
           <option value={30}>Last 30 Days</option>
+          <option value={0}>All Time</option>
         </select>
       </div>
       <div className="stats-grid">
