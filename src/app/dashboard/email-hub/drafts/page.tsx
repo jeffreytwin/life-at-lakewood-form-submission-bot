@@ -91,6 +91,22 @@ const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
+/** Per-inbox background tint colors (very subtle) */
+const INBOX_TINT: Record<string, string> = {
+  "lynn@lifeatlakewood.com": "rgba(168, 130, 255, 0.06)",   // purple
+  "lynn@lifeinwellenpark.com": "rgba(52, 211, 153, 0.06)",  // green
+  "lynn@lifeatparrish.com": "rgba(34, 211, 238, 0.06)",     // cyan
+  "lynn@lifeinlongboatkey.com": "rgba(250, 204, 21, 0.06)", // yellow
+};
+
+/** Accent color for inbox left-border highlight */
+const INBOX_ACCENT: Record<string, string> = {
+  "lynn@lifeatlakewood.com": "rgba(168, 130, 255, 0.35)",
+  "lynn@lifeinwellenpark.com": "rgba(52, 211, 153, 0.35)",
+  "lynn@lifeatparrish.com": "rgba(34, 211, 238, 0.35)",
+  "lynn@lifeinlongboatkey.com": "rgba(250, 204, 21, 0.35)",
+};
+
 const POLL_INTERVAL_MS = 15_000;
 
 /**
@@ -290,6 +306,10 @@ export default function EmailDraftsPage() {
   const [autoApprove, setAutoApprove] = useState(false);
   const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
 
+  // Rescan state
+  const [rescanning, setRescanning] = useState(false);
+  const [rescanResult, setRescanResult] = useState<string | null>(null);
+
   // Feedback state
   const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
   const [feedbackRating, setFeedbackRating] = useState(3);
@@ -379,6 +399,27 @@ export default function EmailDraftsPage() {
       // Silently fail
     } finally {
       setTogglingAutoApprove(false);
+    }
+  }
+
+  async function handleRescan() {
+    setRescanning(true);
+    setRescanResult(null);
+    try {
+      const res = await fetch("/api/internal/email-hub/rescan", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail ?? data.error ?? "Rescan failed");
+      setRescanResult(
+        data.draftsGenerated > 0
+          ? `Found ${data.draftsGenerated} missed draft${data.draftsGenerated > 1 ? "s" : ""} — generating now.`
+          : `Scanned ${data.threadsScanned} threads — no missed drafts found.`
+      );
+      if (data.draftsGenerated > 0) fetchDrafts(true);
+    } catch (e) {
+      setRescanResult(e instanceof Error ? e.message : "Rescan failed");
+    } finally {
+      setRescanning(false);
+      setTimeout(() => setRescanResult(null), 8000);
     }
   }
 
@@ -850,7 +891,51 @@ export default function EmailDraftsPage() {
             </span>
             Auto-Approve
           </button>
+
+          {/* Re-scan Inboxes button */}
+          <button
+            onClick={handleRescan}
+            disabled={rescanning}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: rescanning ? "#8b8fa3" : "#4f8ff7",
+              background: rescanning ? "transparent" : "rgba(79, 143, 247, 0.08)",
+              border: `1px solid ${rescanning ? "#2a2e3a" : "rgba(79, 143, 247, 0.3)"}`,
+              borderRadius: 6,
+              cursor: rescanning ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{
+              display: "inline-block",
+              animation: rescanning ? "spin 1s linear infinite" : "none",
+            }}>
+              &#8635;
+            </span>
+            {rescanning ? "Scanning..." : "Re-scan Inboxes"}
+          </button>
         </div>
+
+        {/* Rescan result notification */}
+        {rescanResult && (
+          <div
+            style={{
+              fontSize: 13,
+              color: rescanResult.includes("missed") ? "#34d399" : "#8b8fa3",
+              padding: "6px 12px",
+              background: rescanResult.includes("missed") ? "rgba(52, 211, 153, 0.08)" : "rgba(139, 143, 163, 0.08)",
+              borderRadius: 6,
+              marginTop: -4,
+            }}
+          >
+            {rescanResult}
+          </div>
+        )}
       </div>
 
       {/* Error state */}
@@ -892,9 +977,12 @@ export default function EmailDraftsPage() {
                     gap: 10,
                     marginBottom: 12,
                     padding: "8px 12px",
-                    background: "#1a1d27",
+                    background: INBOX_TINT[inboxKey] ?? "#1a1d27",
                     borderRadius: 8,
                     border: "1px solid var(--border)",
+                    borderLeft: INBOX_ACCENT[inboxKey]
+                      ? `3px solid ${INBOX_ACCENT[inboxKey]}`
+                      : "1px solid var(--border)",
                   }}
                 >
                   <span style={{ fontSize: 20, color: "#e4e6ed" }}>&#9993;</span>
@@ -949,7 +1037,13 @@ export default function EmailDraftsPage() {
                     : formatEmailDate(draft.created_at);
 
                   return (
-                    <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
+                    <div className="card" key={draft.id} style={{
+                      overflow: "hidden",
+                      background: INBOX_TINT[draft.account_email ?? ""] ?? undefined,
+                      borderLeft: INBOX_ACCENT[draft.account_email ?? ""]
+                        ? `3px solid ${INBOX_ACCENT[draft.account_email ?? ""]}`
+                        : undefined,
+                    }}>
                       {/* Collapsed row — Gmail-style */}
                       <div
                         onClick={() => toggleExpand(draft.id)}
