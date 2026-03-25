@@ -80,8 +80,11 @@ function getEndForTimestamp(
   return isWeekend ? endWeekend : endWeekday;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url);
+    const daysParam = url.searchParams.get("days");
+    const days = daysParam ? parseInt(daysParam, 10) : 7;
     // Get current month boundaries in Eastern time
     const nowET = new Date(
       new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
@@ -122,9 +125,9 @@ export async function GET() {
       inboundThisMonth = count ?? 0;
     }
 
-    // Average email response time (last 7 days, excluding quiet hours)
+    // Average email response time (filtered by requested period, excluding quiet hours)
     // Measures time from first inbound message in thread to sent_at
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const periodCutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
     const { data: sentDraftsForAvg } = await supabase
       .from("email_drafts")
       .select("thread_id, sent_at")
@@ -132,7 +135,7 @@ export async function GET() {
       .eq("is_simulation", false)
       .not("sent_at", "is", null)
       .not("thread_id", "is", null)
-      .gte("sent_at", sevenDaysAgo);
+      .gte("sent_at", periodCutoff);
 
     let avgResponseTimeMinutes: number | null = null;
     if (sentDraftsForAvg && sentDraftsForAvg.length > 0) {

@@ -168,7 +168,7 @@ export default function AgentsPage() {
     }
   }
 
-  function SortHeader({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) {
+  function SortHeader({ label, sortKeyName, className, mobileLabel }: { label: string; sortKeyName: SortKey; className?: string; mobileLabel?: string }) {
     const active = sortKey === sortKeyName;
     return (
       <th
@@ -176,7 +176,14 @@ export default function AgentsPage() {
         onClick={() => handleSort(sortKeyName)}
         style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
       >
-        {label}{" "}
+        {mobileLabel ? (
+          <>
+            <span className="hide-mobile">{label}</span>
+            <span className="show-mobile-only">{mobileLabel}</span>
+          </>
+        ) : (
+          label
+        )}{" "}
         <span style={{ opacity: active ? 1 : 0.3, fontSize: 10 }}>
           {active && sortDir === "desc" ? "\u25BC" : "\u25B2"}
         </span>
@@ -530,7 +537,7 @@ export default function AgentsPage() {
           <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" className="hide-mobile" />
           <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" className="hide-mobile" />
           <SortHeader label="Today" sortKeyName="today" className="hide-mobile" />
-          <SortHeader label="Handraises This Month" sortKeyName="handraises" />
+          <SortHeader label="Handraises This Month" sortKeyName="handraises" mobileLabel="Handraises" />
           <SortHeader label="Preferred" sortKeyName="is_preferred" />
         </tr>
       </thead>

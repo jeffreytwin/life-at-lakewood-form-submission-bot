@@ -219,15 +219,18 @@ export default function EmailHubSettingsPage() {
             {accounts.map((account) => (
               <div
                 key={account.id}
+                className="inbox-row"
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "12px 16px",
                   borderBottom: "1px solid #1e2028",
+                  flexWrap: "wrap",
+                  gap: 8,
                 }}
               >
-                <div>
+                <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 600, color: "#e4e6ed" }}>
                     {account.email_address}
                   </div>
@@ -245,7 +248,7 @@ export default function EmailHubSettingsPage() {
                     )}
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="inbox-actions" style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
                   {isConnected(account) ? (
                     <>
                       <span

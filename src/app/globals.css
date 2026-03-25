@@ -813,6 +813,10 @@ select.form-input {
   margin-bottom: 12px;
 }
 
+.show-mobile-only {
+  display: none;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   /* Mobile top bar */
@@ -949,6 +953,10 @@ select.form-input {
   /* Hide columns on mobile */
   .hide-mobile {
     display: none;
+  }
+
+  .show-mobile-only {
+    display: inline;
   }
 
   /* Lead detail: single column, less padding on mobile */

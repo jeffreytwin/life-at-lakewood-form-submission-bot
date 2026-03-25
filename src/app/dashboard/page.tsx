@@ -102,25 +102,26 @@ export default function DashboardOverview() {
   const [emailStats, setEmailStats] = useState<EmailHubStats | null>(null);
   const [quietHours, setQuietHours] = useState<QuietHoursState | null>(null);
   const [qhBusy, setQhBusy] = useState(false);
+  const [metricsDays, setMetricsDays] = useState(7);
 
   const refreshEmailStats = useCallback(() => {
-    fetch("/api/internal/email-hub/stats")
+    fetch(`/api/internal/email-hub/stats?days=${metricsDays}`)
       .then((r) => r.json())
       .then((data) => {
         if (!data.error) setEmailStats(data);
       })
       .catch(() => {});
-  }, []);
+  }, [metricsDays]);
 
   const refreshStats = useCallback(() => {
-    fetch("/api/internal/stats")
+    fetch(`/api/internal/stats?days=${metricsDays}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);
         else setStats(data);
       })
       .catch((e) => setError(e.message));
-  }, []);
+  }, [metricsDays]);
 
   const refreshLeadDist = useCallback(() => {
     setLeadDistLoading(true);
@@ -270,6 +271,20 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
         <p>System overview and recent activity</p>
       </div>
 
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginBottom: 8 }}>
+        <select
+          className="form-input"
+          style={{ width: "auto", fontSize: 12, padding: "4px 8px" }}
+          value={metricsDays}
+          onChange={(e) => setMetricsDays(Number(e.target.value))}
+        >
+          <option value={1}>Today</option>
+          <option value={3}>Last 3 Days</option>
+          <option value={7}>Last 7 Days</option>
+          <option value={14}>Last 14 Days</option>
+          <option value={30}>Last 30 Days</option>
+        </select>
+      </div>
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-label">Accepted Form Submissions</div>
@@ -278,7 +293,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg Time to Form Acceptance (last 7 days)</div>
+          <div className="stat-label">Avg Time to Form Acceptance</div>
           <div className="stat-value">
             {stats.avgAcceptanceMinutes !== null
               ? formatTimeExact(stats.avgAcceptanceMinutes)
@@ -292,7 +307,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg Email Response Time (last 7 days)</div>
+          <div className="stat-label">Avg Email Response Time</div>
           <div className="stat-value">
             {emailStats?.avgResponseTimeMinutes != null
               ? emailStats.avgResponseTimeMinutes < 60
@@ -394,66 +409,72 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
       </div>
 
       {/* Recent Emails */}
-      {emailStats && emailStats.recentEmails.length > 0 && (
+      {emailStats && (
         <div className="card" style={{ marginTop: 16 }}>
           <div className="card-header">
             <h3>Recent Emails</h3>
           </div>
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Subject</th>
-                  <th>Status</th>
-                  <th>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {emailStats.recentEmails.map((email) => (
-                  <tr
-                    key={email.id}
-                    onClick={() => router.push("/dashboard/email-hub/drafts")}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td style={{ whiteSpace: "nowrap" }}>
-                      {email.sender_name ?? "-"}
-                    </td>
-                    <td
-                      style={{
-                        maxWidth: 300,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
+          {emailStats.recentEmails.length === 0 ? (
+            <div className="empty-state">
+              <p>No recent emails</p>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {emailStats.recentEmails.map((email) => (
+                    <tr
+                      key={email.id}
+                      onClick={() => router.push("/dashboard/email-hub/drafts")}
+                      style={{ cursor: "pointer" }}
                     >
-                      {email.subject ?? "Untitled"}
-                    </td>
-                    <td>
-                      <span
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {email.sender_name ?? "-"}
+                      </td>
+                      <td
                         style={{
-                          display: "inline-block",
-                          padding: "2px 8px",
-                          borderRadius: 10,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          background: `${EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3"}22`,
-                          color: EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3",
-                          border: `1px solid ${EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3"}44`,
-                          textTransform: "capitalize",
+                          maxWidth: 300,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {email.status}
-                      </span>
-                    </td>
-                    <td className="text-muted text-sm">
-                      {formatEmailRelativeDate(email.sent_at ?? email.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        {email.subject ?? "Untitled"}
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "2px 8px",
+                            borderRadius: 10,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            background: `${EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3"}22`,
+                            color: EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3",
+                            border: `1px solid ${EMAIL_STATUS_COLORS[email.status] ?? "#8b8fa3"}44`,
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {email.status}
+                        </span>
+                      </td>
+                      <td className="text-muted text-sm">
+                        {formatEmailRelativeDate(email.sent_at ?? email.created_at)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
