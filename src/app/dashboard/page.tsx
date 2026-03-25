@@ -49,6 +49,7 @@ interface EmailHubStats {
     sent_at: string | null;
     approved_at: string | null;
     agent_handoff_transferred: boolean;
+    sender_name: string | null;
   }[];
 }
 
@@ -277,7 +278,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg Time to Form Acceptance</div>
+          <div className="stat-label">Avg Time to Form Acceptance (last 7 days)</div>
           <div className="stat-value">
             {stats.avgAcceptanceMinutes !== null
               ? formatTimeExact(stats.avgAcceptanceMinutes)
@@ -291,7 +292,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg Email Response Time</div>
+          <div className="stat-label">Avg Email Response Time (last 7 days)</div>
           <div className="stat-value">
             {emailStats?.avgResponseTimeMinutes != null
               ? emailStats.avgResponseTimeMinutes < 60
@@ -402,6 +403,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
             <table>
               <thead>
                 <tr>
+                  <th>Name</th>
                   <th>Subject</th>
                   <th>Status</th>
                   <th>Time</th>
@@ -414,6 +416,9 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                     onClick={() => router.push("/dashboard/email-hub/drafts")}
                     style={{ cursor: "pointer" }}
                   >
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {email.sender_name ?? "-"}
+                    </td>
                     <td
                       style={{
                         maxWidth: 300,

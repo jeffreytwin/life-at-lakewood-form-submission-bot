@@ -122,8 +122,9 @@ export async function GET() {
       inboundThisMonth = count ?? 0;
     }
 
-    // Average email response time this month (excluding quiet hours)
+    // Average email response time (last 7 days, excluding quiet hours)
     // Measures time from first inbound message in thread to sent_at
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: sentDraftsForAvg } = await supabase
       .from("email_drafts")
       .select("thread_id, sent_at")
@@ -131,8 +132,7 @@ export async function GET() {
       .eq("is_simulation", false)
       .not("sent_at", "is", null)
       .not("thread_id", "is", null)
-      .gte("sent_at", monthStart)
-      .lt("sent_at", monthEnd);
+      .gte("sent_at", sevenDaysAgo);
 
     let avgResponseTimeMinutes: number | null = null;
     if (sentDraftsForAvg && sentDraftsForAvg.length > 0) {
@@ -218,7 +218,7 @@ export async function GET() {
     // Recent emails (mix of drafts and sent, last 10 — exclude discarded)
     const { data: recentEmails } = await supabase
       .from("email_drafts")
-      .select("id, status, subject, created_at, sent_at, approved_at, agent_handoff_transferred")
+      .select("id, status, subject, created_at, sent_at, approved_at, agent_handoff_transferred, sender_name")
       .eq("is_simulation", false)
       .neq("status", "discarded")
       .order("created_at", { ascending: false })
