@@ -80,11 +80,26 @@ function getEndForTimestamp(
   return isWeekend ? endWeekend : endWeekday;
 }
 
+/** Compute start-of-day N days ago in Eastern time, returned as UTC ISO string */
+function easternDayStart(daysAgo: number): string {
+  const now = new Date();
+  const etNow = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  etNow.setHours(0, 0, 0, 0);
+  etNow.setDate(etNow.getDate() - (daysAgo - 1)); // days=1 means start of today ET
+  const etMidnightStr = `${etNow.getFullYear()}-${String(etNow.getMonth() + 1).padStart(2, "0")}-${String(etNow.getDate()).padStart(2, "0")}T00:00:00`;
+  const naive = new Date(etMidnightStr);
+  const sample = new Date(naive.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const offsetMs = sample.getTime() - naive.getTime();
+  return new Date(naive.getTime() - offsetMs).toISOString();
+}
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const daysParam = url.searchParams.get("days");
     const days = daysParam ? parseInt(daysParam, 10) : 7;
+    const periodCutoff = easternDayStart(days);
+
     // Get current month boundaries in Eastern time
     const nowET = new Date(
       new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
@@ -127,7 +142,6 @@ export async function GET(request: Request) {
 
     // Average email response time (filtered by requested period, excluding quiet hours)
     // Measures time from first inbound message in thread to sent_at
-    const periodCutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
     const { data: sentDraftsForAvg } = await supabase
       .from("email_drafts")
       .select("thread_id, sent_at")
@@ -178,14 +192,13 @@ export async function GET(request: Request) {
       }
     }
 
-    // Sent emails this month
+    // Sent emails in selected period
     const { count: sentEmails } = await supabase
       .from("email_drafts")
       .select("*", { count: "exact", head: true })
       .eq("status", "sent")
       .eq("is_simulation", false)
-      .gte("created_at", monthStart)
-      .lt("created_at", monthEnd);
+      .gte("sent_at", periodCutoff);
 
     // Agent handoffs this month
     const { count: agentHandoffs } = await supabase

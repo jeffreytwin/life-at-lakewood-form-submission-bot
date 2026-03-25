@@ -3,10 +3,26 @@ import { supabase } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
+/** Compute start-of-day N days ago in Eastern time, returned as UTC ISO string */
+function easternDayStart(daysAgo: number): string {
+  const now = new Date();
+  const etNow = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  etNow.setHours(0, 0, 0, 0);
+  etNow.setDate(etNow.getDate() - (daysAgo - 1)); // e.g. days=1 means start of today
+  // Convert back to UTC: find the offset between the ET wall-clock midnight and UTC
+  const etMidnightStr = `${etNow.getFullYear()}-${String(etNow.getMonth() + 1).padStart(2, "0")}-${String(etNow.getDate()).padStart(2, "0")}T00:00:00`;
+  const naive = new Date(etMidnightStr);
+  const sample = new Date(naive.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const offsetMs = sample.getTime() - naive.getTime();
+  return new Date(naive.getTime() - offsetMs).toISOString();
+}
+
 export async function GET(request: NextRequest) {
   try {
     const daysParam = request.nextUrl.searchParams.get("days");
     const days = daysParam ? parseInt(daysParam, 10) : 7;
+    const cutoff = easternDayStart(days);
+
     const results = await Promise.all([
       supabase.from("leads").select("*", { count: "exact", head: true }),
       supabase.from("agents").select("*", { count: "exact", head: true }),
@@ -31,7 +47,7 @@ export async function GET(request: NextRequest) {
       { count: totalLocations },
     ] = results;
 
-    // Count leads by status
+    // Count leads by status (all time, for other dashboard uses)
     const { data: leads } = await supabase
       .from("leads")
       .select("routing_status")
@@ -43,6 +59,13 @@ export async function GET(request: NextRequest) {
       statusCounts[lead.routing_status] =
         (statusCounts[lead.routing_status] ?? 0) + 1;
     }
+
+    // Count accepted leads within the selected period
+    const { count: acceptedInPeriod } = await supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .eq("routing_status", "accepted")
+      .gte("created_at", cutoff);
 
     // Recent leads
     const { data: recentLeads } = await supabase
@@ -61,7 +84,6 @@ export async function GET(request: NextRequest) {
     // Average time to acceptance (filtered by requested period)
     // Uses the immutable audit log timestamp rather than updated_at which
     // could shift if a row is ever touched after acceptance.
-    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
     const { data: acceptedEvents } = await supabase
       .from("audit_log")
       .select("lead_id, created_at")
@@ -116,6 +138,7 @@ export async function GET(request: NextRequest) {
       activeAgents: activeAgents ?? 0,
       totalLocations: totalLocations ?? 0,
       statusCounts,
+      acceptedInPeriod: acceptedInPeriod ?? 0,
       recentLeads: recentLeads ?? [],
       recentEvents: recentEvents ?? [],
       avgAcceptanceMinutes,

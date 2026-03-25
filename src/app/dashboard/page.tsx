@@ -20,6 +20,7 @@ interface Stats {
   activeAgents: number;
   totalLocations: number;
   avgAcceptanceMinutes: number | null;
+  acceptedInPeriod: number;
   statusCounts: Record<string, number>;
   recentLeads: Array<{
     id: string;
@@ -289,7 +290,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
         <div className="stat-card">
           <div className="stat-label">Accepted Form Submissions</div>
           <div className="stat-value" style={{ color: "var(--success)" }}>
-            {stats.statusCounts.accepted ?? 0}
+            {stats.acceptedInPeriod}
           </div>
         </div>
         <div className="stat-card">
