@@ -660,9 +660,7 @@ export default function EmailDraftsPage() {
     const key = draft.account_email ?? "unknown";
     if (!acc[key]) {
       acc[key] = {
-        label: draft.account_display_name
-          ? `${draft.account_display_name} (${draft.account_email})`
-          : draft.account_email ?? "Unknown Inbox",
+        label: draft.account_display_name ?? draft.account_email ?? "Unknown Inbox",
         drafts: [],
       };
     }
