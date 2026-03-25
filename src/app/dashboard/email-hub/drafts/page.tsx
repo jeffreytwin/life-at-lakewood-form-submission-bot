@@ -917,7 +917,7 @@ export default function EmailDraftsPage() {
             }}>
               &#8635;
             </span>
-            {rescanning ? "Scanning..." : "Re-scan Inboxes"}
+            {rescanning ? "Scanning..." : "Re-Scan Inboxes"}
           </button>
         </div>
 

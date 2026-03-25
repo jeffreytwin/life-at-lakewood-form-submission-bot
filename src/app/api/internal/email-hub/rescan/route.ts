@@ -7,12 +7,34 @@ import type { EmailAccount } from "@/lib/supabase/types";
 export const dynamic = "force-dynamic";
 
 /**
+ * Check whether any email in the given list belongs to an active agent.
+ */
+async function hasAgentRecipient(emails: string[]): Promise<boolean> {
+  if (emails.length === 0) return false;
+
+  const { data: agents } = await supabase
+    .from("agents")
+    .select("email")
+    .eq("is_active", true)
+    .not("email", "is", null);
+
+  if (!agents || agents.length === 0) return false;
+
+  const agentEmails = new Set(
+    agents.map((a: { email: string | null }) => (a.email as string).toLowerCase())
+  );
+
+  return emails.some((e) => agentEmails.has(e));
+}
+
+/**
  * POST /api/internal/email-hub/rescan
  *
- * Scans all active inboxes for threads that have inbound messages but no
- * draft (drafted/approved). Matches senders against the local
- * salesforce_contacts table and generates drafts directly — bypassing
- * the Zapier callback flow so missed messages are recovered immediately.
+ * Re-scans today's inbound emails across all active inboxes for threads
+ * that should have drafts but don't (e.g. due to missed Zapier callbacks).
+ * Matches senders against the local salesforce_contacts table and generates
+ * drafts directly. Follows the same filtering rules as the normal flow:
+ * skips threads where an agent is already a recipient or the sender is an agent.
  */
 export async function POST() {
   try {
@@ -27,22 +49,37 @@ export async function POST() {
       return NextResponse.json({ draftsGenerated: 0, threadsScanned: 0, message: "No active accounts" });
     }
 
+    // Only scan threads with activity today (Eastern time)
+    const nowET = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+    nowET.setHours(0, 0, 0, 0);
+    const todayStr = `${nowET.getFullYear()}-${String(nowET.getMonth() + 1).padStart(2, "0")}-${String(nowET.getDate()).padStart(2, "0")}T00:00:00`;
+    const naive = new Date(todayStr);
+    const sample = new Date(naive.toLocaleString("en-US", { timeZone: "America/New_York" }));
+    const offsetMs = sample.getTime() - naive.getTime();
+    const todayCutoff = new Date(naive.getTime() - offsetMs).toISOString();
+
     let totalDraftsGenerated = 0;
     let totalThreadsScanned = 0;
 
     for (const account of accounts) {
-      // Find active threads for this account that have NO pending or active drafts
+      const ownEmail = account.email_address.toLowerCase();
+
+      // Find active threads for this account with activity today
       const { data: threads } = await supabase
         .from("email_threads")
         .select("id, subject, sender_email, salesforce_lead_id")
         .eq("email_account_id", account.id)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .gte("last_message_at", todayCutoff);
 
       if (!threads || threads.length === 0) continue;
 
       for (const thread of threads) {
         totalThreadsScanned++;
         if (!thread.sender_email) continue;
+
+        // Skip if sender is an agent
+        if (await hasAgentRecipient([thread.sender_email.toLowerCase()])) continue;
 
         // Check if there's already a drafted/approved draft for this thread
         const { data: existingDrafts } = await supabase
@@ -54,8 +91,9 @@ export async function POST() {
 
         if (existingDrafts && existingDrafts.length > 0) continue;
 
-        // Check if there's a sent draft — if so, only proceed if there's
-        // a newer inbound message after the last sent draft
+        // If there's an existing "drafted" or "approved" draft, it was already
+        // caught above. Now check sent drafts — only proceed if there's a new
+        // inbound message after the last sent draft.
         const { data: lastSentDraft } = await supabase
           .from("email_drafts")
           .select("sent_at")
@@ -85,6 +123,20 @@ export async function POST() {
 
           if (!anyInbound || anyInbound.length === 0) continue;
         }
+
+        // Skip if an agent is already a recipient on any message in this thread
+        // (but exclude the monitored account's own email — every inbound is TO it)
+        const { data: threadMessages } = await supabase
+          .from("email_messages")
+          .select("to_email")
+          .eq("thread_id", thread.id);
+
+        const recipientEmails = (threadMessages ?? [])
+          .map((m: { to_email: string | null }) => (m.to_email ?? "").toLowerCase())
+          .flatMap((e: string) => e.split(",").map((s: string) => s.trim()))
+          .filter((e: string) => e && e !== ownEmail);
+
+        if (await hasAgentRecipient(recipientEmails)) continue;
 
         // Match sender to a known Salesforce contact in local DB
         const { data: contacts } = await supabase
