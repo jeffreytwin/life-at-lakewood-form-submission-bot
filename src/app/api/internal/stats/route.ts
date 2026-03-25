@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     const daysParam = request.nextUrl.searchParams.get("days");
     const days = daysParam ? parseInt(daysParam, 10) : 7;
-    const cutoff = easternDayStart(days);
+    const cutoff = days > 0 ? easternDayStart(days) : null;
 
     const results = await Promise.all([
       supabase.from("leads").select("*", { count: "exact", head: true }),
@@ -61,11 +61,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Count accepted leads within the selected period
-    const { count: acceptedInPeriod } = await supabase
+    let acceptedQuery = supabase
       .from("leads")
       .select("*", { count: "exact", head: true })
-      .eq("routing_status", "accepted")
-      .gte("created_at", cutoff);
+      .eq("routing_status", "accepted");
+    if (cutoff) acceptedQuery = acceptedQuery.gte("created_at", cutoff);
+    const { count: acceptedInPeriod } = await acceptedQuery;
 
     // Recent leads
     const { data: recentLeads } = await supabase
@@ -84,12 +85,13 @@ export async function GET(request: NextRequest) {
     // Average time to acceptance (filtered by requested period)
     // Uses the immutable audit log timestamp rather than updated_at which
     // could shift if a row is ever touched after acceptance.
-    const { data: acceptedEvents } = await supabase
+    let acceptedEventsQuery = supabase
       .from("audit_log")
       .select("lead_id, created_at")
       .eq("event_type", "accepted")
-      .not("lead_id", "is", null)
-      .gte("created_at", cutoff);
+      .not("lead_id", "is", null);
+    if (cutoff) acceptedEventsQuery = acceptedEventsQuery.gte("created_at", cutoff);
+    const { data: acceptedEvents } = await acceptedEventsQuery;
 
     let avgAcceptanceMinutes: number | null = null;
     if (acceptedEvents && acceptedEvents.length > 0) {
