@@ -74,34 +74,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // For sent drafts, fetch all inbound messages per thread for response time
-    // We need the most recent inbound message *before* each draft was created
-    const sentDraftsWithThreads = (data ?? []).filter(
-      (d: { status: string; thread_id: string | null }) => d.status === "sent" && d.thread_id
-    );
-    const sentThreadIds = [...new Set(sentDraftsWithThreads.map((d: { thread_id: string }) => d.thread_id))];
-    let inboundMessagesByThread = new Map<string, string[]>();
-    if (sentThreadIds.length > 0) {
-      const { data: inboundMessages } = await supabase
-        .from("email_messages")
-        .select("thread_id, received_at")
-        .in("thread_id", sentThreadIds)
-        .eq("direction", "inbound")
-        .order("received_at", { ascending: true });
-      if (inboundMessages) {
-        for (const msg of inboundMessages) {
-          if (msg.received_at) {
-            const list = inboundMessagesByThread.get(msg.thread_id) ?? [];
-            list.push(msg.received_at);
-            inboundMessagesByThread.set(msg.thread_id, list);
-          }
-        }
-      }
-    }
-
     const enriched = (data ?? []).map((d: {
       id: string;
       status: string;
+      created_at: string;
       thread_id: string | null;
       sent_at: string | null;
       body_text: string | null;
@@ -127,24 +103,11 @@ export async function GET(request: NextRequest) {
         ? ownerAgentMap.get(ownerId)!
         : thread?.salesforce_owner_name ?? null;
 
-      // Calculate response time for sent drafts
-      // Use the most recent inbound message received before this draft was created
+      // Calculate response time for sent drafts: sent_at - created_at
       let response_time_ms: number | null = null;
-      if (d.status === "sent" && d.sent_at && d.thread_id) {
-        const inboundTimes = inboundMessagesByThread.get(d.thread_id);
-        if (inboundTimes) {
-          const draftCreatedAt = new Date((d as unknown as { created_at: string }).created_at).getTime();
-          // Find the latest inbound message received before this draft was created
-          let latestBefore: string | null = null;
-          for (const t of inboundTimes) {
-            if (new Date(t).getTime() <= draftCreatedAt) {
-              latestBefore = t;
-            }
-          }
-          if (latestBefore) {
-            response_time_ms = new Date(d.sent_at).getTime() - new Date(latestBefore).getTime();
-          }
-        }
+      if (d.status === "sent" && d.sent_at && d.created_at) {
+        const diffMs = new Date(d.sent_at).getTime() - new Date(d.created_at).getTime();
+        if (diffMs > 0) response_time_ms = diffMs;
       }
 
       return {

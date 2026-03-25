@@ -19,67 +19,6 @@ function easternMonthBoundary(year: number, month: number, day: number): string 
   return new Date(new Date(str).getTime() - offset).toISOString();
 }
 
-/**
- * Check if a timestamp falls during quiet hours (Eastern Time).
- * Quiet hours typically span overnight, e.g. 21:00 -> 08:30.
- */
-function isDuringQuietHours(
-  isoTimestamp: string,
-  qhStart: string,
-  qhEnd: string,
-): boolean {
-  const dt = new Date(isoTimestamp);
-  const etTime = dt.toLocaleString("en-US", {
-    timeZone: "America/New_York",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-  const [hStr, mStr] = etTime.split(":");
-  const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr);
-
-  const [sh, sm] = qhStart.split(":").map(Number);
-  const startMinutes = sh * 60 + sm;
-  const [eh, em] = qhEnd.split(":").map(Number);
-  const endMinutes = eh * 60 + em;
-
-  if (startMinutes > endMinutes) {
-    // Overnight span (e.g. 21:00 -> 08:30)
-    return timeMinutes >= startMinutes || timeMinutes < endMinutes;
-  } else {
-    return timeMinutes >= startMinutes && timeMinutes < endMinutes;
-  }
-}
-
-/**
- * Pick the correct quiet hours end time for a given timestamp,
- * based on whether the "morning" that ends quiet hours falls on a weekday or weekend.
- */
-function getEndForTimestamp(
-  isoTimestamp: string,
-  qhStart: string,
-  endWeekday: string,
-  endWeekend: string,
-): string {
-  const dt = new Date(isoTimestamp);
-  const et = new Date(dt.toLocaleString("en-US", { timeZone: "America/New_York" }));
-  const nowMin = et.getHours() * 60 + et.getMinutes();
-  const [sh, sm] = qhStart.split(":").map(Number);
-  const startMin = sh * 60 + sm;
-  const [ewh, ewm] = endWeekday.split(":").map(Number);
-  const endWeekdayMin = ewh * 60 + ewm;
-
-  const day = et.getDay();
-  let endDay: number;
-  if (startMin > endWeekdayMin) {
-    endDay = nowMin >= startMin ? (day + 1) % 7 : day;
-  } else {
-    endDay = day;
-  }
-  const isWeekend = endDay === 0 || endDay === 6;
-  return isWeekend ? endWeekend : endWeekday;
-}
-
 /** Compute start-of-day N days ago in Eastern time, returned as UTC ISO string */
 function easternDayStart(daysAgo: number): string {
   const now = new Date();
@@ -106,18 +45,6 @@ export async function GET(request: NextRequest) {
     const monthStart = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth(), 1);
     const monthEnd = easternMonthBoundary(nowET.getFullYear(), nowET.getMonth() + 1, 1);
 
-    // Fetch quiet hours settings
-    const { data: settings } = await supabase
-      .from("system_settings")
-      .select("quiet_hours_enabled, quiet_hours_start, quiet_hours_end, quiet_hours_end_weekday, quiet_hours_end_weekend")
-      .eq("id", 1)
-      .single();
-
-    const qhEnabled = settings?.quiet_hours_enabled ?? true;
-    const qhStart = settings?.quiet_hours_start ?? "21:00";
-    const qhEndWeekday = settings?.quiet_hours_end_weekday ?? "06:30";
-    const qhEndWeekend = settings?.quiet_hours_end_weekend ?? settings?.quiet_hours_end ?? "08:30";
-
     // Incoming emails this month (only from Salesforce-verified senders)
     // First get thread IDs that have a Salesforce lead linked
     const { data: verifiedThreads } = await supabase
@@ -139,67 +66,29 @@ export async function GET(request: NextRequest) {
       inboundThisMonth = count ?? 0;
     }
 
-    // Average email response time (filtered by requested period, excluding quiet hours)
-    // Measures time from most recent inbound message (before draft creation) to sent_at
+    // Average email response time (filtered by requested period)
+    // Measures time from draft creation to sent_at
     let avgQuery = supabase
       .from("email_drafts")
-      .select("thread_id, sent_at, created_at")
+      .select("sent_at, created_at")
       .eq("status", "sent")
       .eq("is_simulation", false)
-      .not("sent_at", "is", null)
-      .not("thread_id", "is", null);
+      .not("sent_at", "is", null);
     if (periodCutoff) avgQuery = avgQuery.gte("sent_at", periodCutoff);
     const { data: sentDraftsForAvg } = await avgQuery;
 
     let avgResponseTimeMinutes: number | null = null;
     if (sentDraftsForAvg && sentDraftsForAvg.length > 0) {
-      const threadIds = [...new Set(sentDraftsForAvg.map((d) => d.thread_id!))];
-      // Get all inbound messages for these threads, ordered ascending
-      const { data: inboundMessages } = await supabase
-        .from("email_messages")
-        .select("thread_id, received_at")
-        .in("thread_id", threadIds)
-        .eq("direction", "inbound")
-        .order("received_at", { ascending: true });
+      const diffs: number[] = [];
+      for (const draft of sentDraftsForAvg) {
+        if (!draft.sent_at || !draft.created_at) continue;
+        const diffMs = new Date(draft.sent_at).getTime() - new Date(draft.created_at).getTime();
+        if (diffMs > 0) diffs.push(diffMs);
+      }
 
-      if (inboundMessages && inboundMessages.length > 0) {
-        // Map thread_id -> list of inbound received_at timestamps (ascending)
-        const inboundByThread: Record<string, string[]> = {};
-        for (const msg of inboundMessages) {
-          if (msg.thread_id && msg.received_at) {
-            (inboundByThread[msg.thread_id] ??= []).push(msg.received_at);
-          }
-        }
-
-        const diffs: number[] = [];
-        for (const draft of sentDraftsForAvg) {
-          if (!draft.thread_id || !draft.sent_at) continue;
-          const inboundTimes = inboundByThread[draft.thread_id];
-          if (!inboundTimes) continue;
-
-          // Find the latest inbound message received before this draft was created
-          const draftCreatedAt = new Date(draft.created_at).getTime();
-          let latestBefore: string | null = null;
-          for (const t of inboundTimes) {
-            if (new Date(t).getTime() <= draftCreatedAt) {
-              latestBefore = t;
-            }
-          }
-          if (!latestBefore) continue;
-
-          // Exclude emails received during quiet hours
-          const qhEnd = getEndForTimestamp(latestBefore, qhStart, qhEndWeekday, qhEndWeekend);
-          if (qhEnabled && isDuringQuietHours(latestBefore, qhStart, qhEnd)) {
-            continue;
-          }
-          const diffMs = new Date(draft.sent_at).getTime() - new Date(latestBefore).getTime();
-          if (diffMs > 0) diffs.push(diffMs);
-        }
-
-        if (diffs.length > 0) {
-          const avgMs = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-          avgResponseTimeMinutes = Math.round(avgMs / 60_000);
-        }
+      if (diffs.length > 0) {
+        const avgMs = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+        avgResponseTimeMinutes = Math.round(avgMs / 60_000);
       }
     }
 
