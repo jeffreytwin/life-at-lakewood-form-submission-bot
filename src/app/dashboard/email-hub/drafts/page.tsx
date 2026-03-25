@@ -889,17 +889,21 @@ export default function EmailDraftsPage() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
-                    marginBottom: 10,
-                    padding: "0 4px",
+                    gap: 10,
+                    marginBottom: 12,
+                    padding: "8px 12px",
+                    background: "#1a1d27",
+                    borderRadius: 8,
+                    border: "1px solid var(--border)",
                   }}
                 >
-                  <span style={{ fontSize: 15, color: "#8b8fa3" }}>&#9993;</span>
+                  <span style={{ fontSize: 20, color: "#e4e6ed" }}>&#9993;</span>
                   <span
                     style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: "var(--text-heading)",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "#e4e6ed",
+                      letterSpacing: "0.01em",
                     }}
                   >
                     {group.label}
@@ -908,9 +912,10 @@ export default function EmailDraftsPage() {
                     style={{
                       fontSize: 11,
                       color: "#8b8fa3",
-                      background: "#1a1d27",
+                      background: "#252830",
                       padding: "2px 8px",
                       borderRadius: 10,
+                      fontWeight: 600,
                     }}
                   >
                     {group.drafts.length}
@@ -1044,24 +1049,6 @@ export default function EmailDraftsPage() {
                               </span>
                             )}
 
-                            {/* Handoff badge */}
-                            {isSent && draft.agent_handoff_transferred && (
-                              <span
-                                style={{
-                                  padding: "1px 7px",
-                                  borderRadius: 10,
-                                  fontSize: 10,
-                                  fontWeight: 600,
-                                  background: "#a78bfa22",
-                                  color: "#a78bfa",
-                                  border: "1px solid #a78bfa44",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                Handed Off
-                              </span>
-                            )}
-
                             {/* CC badge */}
                             {draft.cc_emails.length > 0 && (
                               <span
@@ -1129,6 +1116,25 @@ export default function EmailDraftsPage() {
                                 }}
                               >
                                 Disqualified
+                              </span>
+                            )}
+
+                            {/* Handoff badge (right-most) */}
+                            {isSent && draft.agent_handoff_transferred && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#a78bfa22",
+                                  color: "#a78bfa",
+                                  border: "1px solid #a78bfa44",
+                                  flexShrink: 0,
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                Handed Off
                               </span>
                             )}
                           </div>

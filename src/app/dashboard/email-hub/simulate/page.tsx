@@ -283,7 +283,7 @@ export default function EmailSimulatePage() {
                   src="/otocon-email-simulation.gif"
                   alt="Otocon"
                   style={{
-                    width: 196,
+                    width: 147,
                     height: "auto",
                     imageRendering: "pixelated",
                   }}

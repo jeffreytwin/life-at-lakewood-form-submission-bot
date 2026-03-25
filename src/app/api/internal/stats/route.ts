@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const daysParam = request.nextUrl.searchParams.get("days");
+    const days = daysParam ? parseInt(daysParam, 10) : 7;
     const results = await Promise.all([
       supabase.from("leads").select("*", { count: "exact", head: true }),
       supabase.from("agents").select("*", { count: "exact", head: true }),
@@ -56,16 +58,16 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Average time to acceptance (last 7 days only)
+    // Average time to acceptance (filtered by requested period)
     // Uses the immutable audit log timestamp rather than updated_at which
     // could shift if a row is ever touched after acceptance.
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
     const { data: acceptedEvents } = await supabase
       .from("audit_log")
       .select("lead_id, created_at")
       .eq("event_type", "accepted")
       .not("lead_id", "is", null)
-      .gte("created_at", sevenDaysAgo);
+      .gte("created_at", cutoff);
 
     let avgAcceptanceMinutes: number | null = null;
     if (acceptedEvents && acceptedEvents.length > 0) {
