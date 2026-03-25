@@ -28,6 +28,7 @@ interface Stats {
     routing_status: string;
     created_at: string;
     form_name: string | null;
+    agents: { name: string } | null;
   }>;
   recentEvents: Array<{
     id: string;
@@ -352,7 +353,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Form</th>
+                    <th>Assigned To</th>
                     <th>Status</th>
                     <th>Time</th>
                   </tr>
@@ -368,7 +369,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                         {lead.first_name} {lead.last_name}
                       </td>
                       <td className="text-muted text-sm">
-                        {lead.form_name ?? "-"}
+                        {lead.agents?.name ?? "-"}
                       </td>
                       <td>
                         <span

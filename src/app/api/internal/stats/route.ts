@@ -45,7 +45,7 @@ export async function GET() {
     // Recent leads
     const { data: recentLeads } = await supabase
       .from("leads")
-      .select("id, first_name, last_name, routing_status, created_at, form_name")
+      .select("id, first_name, last_name, routing_status, created_at, form_name, agents:final_agent_id(name)")
       .order("created_at", { ascending: false })
       .limit(10);
 
