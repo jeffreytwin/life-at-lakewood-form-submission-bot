@@ -45,7 +45,7 @@ export async function GET() {
     // Recent leads
     const { data: recentLeads } = await supabase
       .from("leads")
-      .select("id, first_name, last_name, routing_status, created_at, form_name")
+      .select("id, first_name, last_name, routing_status, created_at, form_name, agents:final_agent_id(name)")
       .order("created_at", { ascending: false })
       .limit(10);
 
@@ -56,14 +56,16 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Average time to acceptance (lead created → audit "accepted" event)
+    // Average time to acceptance (last 7 days only)
     // Uses the immutable audit log timestamp rather than updated_at which
     // could shift if a row is ever touched after acceptance.
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: acceptedEvents } = await supabase
       .from("audit_log")
       .select("lead_id, created_at")
       .eq("event_type", "accepted")
-      .not("lead_id", "is", null);
+      .not("lead_id", "is", null)
+      .gte("created_at", sevenDaysAgo);
 
     let avgAcceptanceMinutes: number | null = null;
     if (acceptedEvents && acceptedEvents.length > 0) {

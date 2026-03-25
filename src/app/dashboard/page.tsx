@@ -28,6 +28,7 @@ interface Stats {
     routing_status: string;
     created_at: string;
     form_name: string | null;
+    agents: { name: string } | null;
   }>;
   recentEvents: Array<{
     id: string;
@@ -48,6 +49,7 @@ interface EmailHubStats {
     sent_at: string | null;
     approved_at: string | null;
     agent_handoff_transferred: boolean;
+    sender_name: string | null;
   }[];
 }
 
@@ -276,7 +278,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg Time to Form Acceptance</div>
+          <div className="stat-label">Avg Time to Form Acceptance (last 7 days)</div>
           <div className="stat-value">
             {stats.avgAcceptanceMinutes !== null
               ? formatTimeExact(stats.avgAcceptanceMinutes)
@@ -290,7 +292,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg Email Response Time</div>
+          <div className="stat-label">Avg Email Response Time (last 7 days)</div>
           <div className="stat-value">
             {emailStats?.avgResponseTimeMinutes != null
               ? emailStats.avgResponseTimeMinutes < 60
@@ -352,9 +354,9 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Form</th>
+                    <th>Assigned To</th>
                     <th>Status</th>
-                    <th>Time</th>
+                    <th className="hide-mobile">Time</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -368,7 +370,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                         {lead.first_name} {lead.last_name}
                       </td>
                       <td className="text-muted text-sm">
-                        {lead.form_name ?? "-"}
+                        {lead.agents?.name ?? "-"}
                       </td>
                       <td>
                         <span
@@ -377,7 +379,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                           {formatStatus(lead.routing_status)}
                         </span>
                       </td>
-                      <td className="text-muted text-sm font-mono">
+                      <td className="text-muted text-sm font-mono hide-mobile">
                         {new Date(lead.created_at).toLocaleString()}
                       </td>
                     </tr>
@@ -401,6 +403,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
             <table>
               <thead>
                 <tr>
+                  <th>Name</th>
                   <th>Subject</th>
                   <th>Status</th>
                   <th>Time</th>
@@ -413,6 +416,9 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                     onClick={() => router.push("/dashboard/email-hub/drafts")}
                     style={{ cursor: "pointer" }}
                   >
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {email.sender_name ?? "-"}
+                    </td>
                     <td
                       style={{
                         maxWidth: 300,

@@ -796,6 +796,18 @@ select.form-input {
   50% { box-shadow: 0 0 0 4px rgba(248, 113, 113, 0); }
 }
 
+/* Lead detail expanded row */
+.lead-detail-cell {
+  padding: 0 12px 16px 42px;
+}
+
+.lead-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  margin-bottom: 12px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   /* Mobile top bar */
@@ -922,6 +934,21 @@ select.form-input {
   table td {
     padding: 8px;
     font-size: 12px;
+  }
+
+  /* Hide columns on mobile */
+  .hide-mobile {
+    display: none;
+  }
+
+  /* Lead detail: single column, less padding on mobile */
+  .lead-detail-cell {
+    padding: 0 4px 12px 4px !important;
+  }
+
+  .lead-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   /* Buttons — full width in card headers on mobile */
