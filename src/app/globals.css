@@ -922,6 +922,38 @@ select.form-input {
     right: 16px;
   }
 
+  /* Buttons — larger touch targets on mobile */
+  .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: 40px;
+  }
+
+  .btn-sm {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+
+  /* Sidebar section labels */
+  .sidebar-section-label {
+    padding: 12px 12px 4px;
+  }
+
+  /* Page header description — smaller on mobile */
+  .page-header p {
+    font-size: 12px;
+  }
+
+  /* Email hub: tighter card padding for list items */
+  .card {
+    overflow: hidden;
+  }
+
+  /* Tables: horizontal scroll hint */
+  .table-wrapper {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Small phone adjustments */
@@ -935,8 +967,21 @@ select.form-input {
   }
 
   .main-content {
+    padding: 10px;
+    padding-top: 64px;
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+  }
+
+  .page-header h2 {
+    font-size: 16px;
+  }
+
+  .card {
     padding: 12px;
-    padding-top: 68px;
+    border-radius: 6px;
   }
 
   .modal-actions {
@@ -946,5 +991,11 @@ select.form-input {
   .modal-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Email list: reduce gravatar size on small phones */
+  .email-gravatar-mobile {
+    width: 30px !important;
+    height: 30px !important;
   }
 }

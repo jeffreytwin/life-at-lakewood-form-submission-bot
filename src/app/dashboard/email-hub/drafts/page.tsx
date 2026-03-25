@@ -46,6 +46,12 @@ interface EmailDraft {
   lead_status_update: string | null;
   salesforce_owner_name: string | null;
   is_master_agent_owned: boolean | null;
+  sender_name: string | null;
+  sender_email: string | null;
+  account_email: string | null;
+  account_display_name: string | null;
+  preview_text: string | null;
+  response_time_ms: number | null;
   created_at: string;
   edited_at: string | null;
   approved_at: string | null;
@@ -86,6 +92,116 @@ const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
 ];
 
 const POLL_INTERVAL_MS = 15_000;
+
+/**
+ * Format a date for the email list: show time (Eastern) for today, date for older.
+ */
+function formatEmailDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const eastern = new Date(date.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const nowEastern = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+
+  const isToday =
+    eastern.getFullYear() === nowEastern.getFullYear() &&
+    eastern.getMonth() === nowEastern.getMonth() &&
+    eastern.getDate() === nowEastern.getDate();
+
+  if (isToday) {
+    return date.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  return date.toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+/**
+ * Format response time from milliseconds to a human-readable string.
+ */
+function formatResponseTime(ms: number): string {
+  if (ms < 0) return "—";
+  const totalMin = Math.floor(ms / 60000);
+  const totalHr = Math.floor(totalMin / 60);
+  const totalDay = Math.floor(totalHr / 24);
+
+  if (totalMin < 1) return "<1m";
+  if (totalMin < 60) return `${totalMin}m`;
+  if (totalHr < 24) {
+    const remainMin = totalMin % 60;
+    return remainMin > 0 ? `${totalHr}h ${remainMin}m` : `${totalHr}h`;
+  }
+  const remainHr = totalHr % 24;
+  return remainHr > 0 ? `${totalDay}d ${remainHr}h` : `${totalDay}d`;
+}
+
+/**
+ * Minimal MD5 implementation for Gravatar URLs.
+ */
+function md5(input: string): string {
+  function rotl(v: number, s: number) { return (v << s) | (v >>> (32 - s)); }
+  const K = [
+    0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
+    0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
+    0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
+    0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,
+    0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,
+    0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,
+    0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,
+    0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391
+  ];
+  const S = [
+    7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+    5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+    4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+    6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21
+  ];
+  const bytes: number[] = [];
+  for (let i = 0; i < input.length; i++) {
+    const c = input.charCodeAt(i);
+    if (c < 128) bytes.push(c);
+    else if (c < 2048) { bytes.push(192 | (c >> 6)); bytes.push(128 | (c & 63)); }
+    else { bytes.push(224 | (c >> 12)); bytes.push(128 | ((c >> 6) & 63)); bytes.push(128 | (c & 63)); }
+  }
+  const origLen = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  for (let i = 0; i < 8; i++) bytes.push((origLen >>> (i * 8)) & 0xff);
+
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  for (let i = 0; i < bytes.length; i += 64) {
+    const M: number[] = [];
+    for (let j = 0; j < 16; j++) {
+      M[j] = bytes[i+j*4] | (bytes[i+j*4+1]<<8) | (bytes[i+j*4+2]<<16) | (bytes[i+j*4+3]<<24);
+    }
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let j = 0; j < 64; j++) {
+      let F: number, g: number;
+      if (j < 16) { F = (B & C) | (~B & D); g = j; }
+      else if (j < 32) { F = (D & B) | (~D & C); g = (5*j+1) % 16; }
+      else if (j < 48) { F = B ^ C ^ D; g = (3*j+5) % 16; }
+      else { F = C ^ (B | ~D); g = (7*j) % 16; }
+      F = (F + A + K[j] + M[g]) | 0;
+      A = D; D = C; C = B; B = (B + rotl(F, S[j])) | 0;
+    }
+    a0 = (a0 + A) | 0; b0 = (b0 + B) | 0; c0 = (c0 + C) | 0; d0 = (d0 + D) | 0;
+  }
+  let hex = '';
+  for (const v of [a0, b0, c0, d0]) {
+    for (let i = 0; i < 4; i++) hex += ((v >>> (i * 8)) & 0xff).toString(16).padStart(2, '0');
+  }
+  return hex;
+}
+
+function gravatarUrl(email: string, size = 40): string {
+  return `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}?s=${size}&d=404`;
+}
 
 function formatRelativeDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -538,6 +654,25 @@ export default function EmailDraftsPage() {
 
   const filteredDrafts = drafts;
 
+  // Group drafts by inbox (email_account_id)
+  const groupedByInbox = filteredDrafts.reduce<Record<string, { label: string; drafts: EmailDraft[] }>>((acc, draft) => {
+    const key = draft.account_email ?? "unknown";
+    if (!acc[key]) {
+      acc[key] = {
+        label: draft.account_display_name
+          ? `${draft.account_display_name} (${draft.account_email})`
+          : draft.account_email ?? "Unknown Inbox",
+        drafts: [],
+      };
+    }
+    acc[key].drafts.push(draft);
+    return acc;
+  }, {});
+  const inboxGroups = Object.entries(groupedByInbox);
+
+  // Track gravatar load failures
+  const [failedGravatars, setFailedGravatars] = useState<Set<string>>(new Set());
+
   // Reusable thread messages renderer (newest on top)
   function renderThreadMessages() {
     if (loadingThread) {
@@ -742,156 +877,336 @@ export default function EmailDraftsPage() {
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filteredDrafts.map((draft) => {
-            const isExpanded = expandedId === draft.id;
-            const isEditing = editingId === draft.id;
-            const isApproved = draft.status === "approved" || approvedIds.has(draft.id);
-            const statusColor = isApproved ? "#34d399" : STATUS_COLORS[draft.status];
-            const isSent = draft.status === "sent";
-            const displayStatus = isApproved ? "approved" : draft.status;
-
-            // Resolve CC'd agent names for display
-            const ccAgentNames = draft.cc_emails.map((cc) => {
-              const match = agents.find(
-                (a) => a.email && a.email.toLowerCase() === cc.toLowerCase()
-              );
-              return match ? match.name : null;
-            });
-
-            return (
-              <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
-                {/* Collapsed row */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {inboxGroups.map(([inboxKey, group]) => (
+            <div key={inboxKey}>
+              {/* Inbox section header */}
+              {inboxGroups.length > 1 && (
                 <div
-                  onClick={() => toggleExpand(draft.id)}
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                    padding: "14px 16px",
-                    cursor: "pointer",
-                    flexWrap: "wrap",
+                    gap: 8,
+                    marginBottom: 10,
+                    padding: "0 4px",
                   }}
                 >
-                  {/* Expand indicator */}
-                  <span style={{ fontSize: 10, color: "#8b8fa3", flexShrink: 0 }}>
-                    {isExpanded ? "\u25BC" : "\u25B6"}
-                  </span>
-
-                  {/* Status badge */}
+                  <span style={{ fontSize: 15, color: "#8b8fa3" }}>&#9993;</span>
                   <span
                     style={{
-                      display: "inline-block",
-                      padding: "3px 10px",
-                      borderRadius: 12,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      background: `${statusColor}22`,
-                      color: statusColor,
-                      border: `1px solid ${statusColor}44`,
-                      textTransform: "capitalize",
-                      flexShrink: 0,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "#e4e6ed",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
                     }}
                   >
-                    {displayStatus}
+                    {group.label}
                   </span>
-
-                  {/* Subject */}
-                  <span style={{ fontWeight: 600, fontSize: 14, flex: 1, minWidth: 0 }}>
-                    {draft.is_simulation ? (
-                      <span style={{ color: "#a78bfa" }}>Simulation Draft</span>
-                    ) : (
-                      draft.subject ?? "Untitled Draft"
-                    )}
-                  </span>
-
-                  {/* CC badge on collapsed row */}
-                  {draft.cc_emails.length > 0 && (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                        padding: "2px 8px",
-                        borderRadius: 10,
-                        fontSize: 10,
-                        fontWeight: 600,
-                        background: "#8b8fa311",
-                        color: "#8b8fa3",
-                        border: "1px solid #8b8fa333",
-                        flexShrink: 0,
-                      }}
-                    >
-                      CC: {ccAgentNames.map((name, i) => name ?? draft.cc_emails[i]).join(", ")}
-                    </span>
-                  )}
-
-                  {/* Simulation input preview */}
-                  {draft.is_simulation && draft.simulation_input && (
-                    <span
-                      className="text-muted text-sm"
-                      style={{
-                        maxWidth: 250,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        flexShrink: 1,
-                      }}
-                    >
-                      {truncate(
-                        typeof draft.simulation_input.inbound_email === "string"
-                          ? draft.simulation_input.inbound_email
-                          : JSON.stringify(draft.simulation_input),
-                        80
-                      )}
-                    </span>
-                  )}
-
-                  {/* Ownership badge — non-frontlines owner (not yet handed off) */}
-                  {!draft.agent_handoff_transferred &&
-                    draft.salesforce_owner_name &&
-                    draft.is_master_agent_owned === false && (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "2px 8px",
-                        borderRadius: 10,
-                        fontSize: 10,
-                        fontWeight: 600,
-                        background: "#fbbf2422",
-                        color: "#fbbf24",
-                        border: "1px solid #fbbf2444",
-                        flexShrink: 0,
-                      }}
-                    >
-                      Owned by {draft.salesforce_owner_name}
-                    </span>
-                  )}
-
-                  {/* Handoff badge for sent drafts */}
-                  {isSent && draft.agent_handoff_transferred && (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "2px 8px",
-                        borderRadius: 10,
-                        fontSize: 10,
-                        fontWeight: 600,
-                        background: "#a78bfa22",
-                        color: "#a78bfa",
-                        border: "1px solid #a78bfa44",
-                        flexShrink: 0,
-                      }}
-                    >
-                      Handed Off
-                    </span>
-                  )}
-
-                  {/* Time */}
-                  <span className="text-muted text-sm" style={{ flexShrink: 0 }}>
-                    {formatRelativeDate(draft.created_at)}
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "#8b8fa3",
+                      background: "#1a1d27",
+                      padding: "2px 8px",
+                      borderRadius: 10,
+                    }}
+                  >
+                    {group.drafts.length}
                   </span>
                 </div>
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {group.drafts.map((draft) => {
+                  const isExpanded = expandedId === draft.id;
+                  const isEditing = editingId === draft.id;
+                  const isApproved = draft.status === "approved" || approvedIds.has(draft.id);
+                  const statusColor = isApproved ? "#34d399" : STATUS_COLORS[draft.status];
+                  const isSent = draft.status === "sent";
+                  const displayStatus = isApproved ? "approved" : draft.status;
+                  const senderEmail = draft.sender_email ?? "";
+                  const senderName = draft.sender_name ?? senderEmail.split("@")[0] ?? "Unknown";
+                  const hasGravatar = senderEmail && !failedGravatars.has(senderEmail);
+
+                  // Resolve CC'd agent names for display
+                  const ccAgentNames = draft.cc_emails.map((cc) => {
+                    const match = agents.find(
+                      (a) => a.email && a.email.toLowerCase() === cc.toLowerCase()
+                    );
+                    return match ? match.name : null;
+                  });
+
+                  // Determine the time to display
+                  const displayTime = isSent && draft.sent_at
+                    ? formatEmailDate(draft.sent_at)
+                    : formatEmailDate(draft.created_at);
+
+                  return (
+                    <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
+                      {/* Collapsed row — Gmail-style */}
+                      <div
+                        onClick={() => toggleExpand(draft.id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          padding: "10px 16px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {/* Gravatar circle */}
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            background: "#2a2e3a",
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: "#8b8fa3",
+                          }}
+                        >
+                          {hasGravatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={gravatarUrl(senderEmail, 72)}
+                              alt=""
+                              width={36}
+                              height={36}
+                              style={{ borderRadius: "50%", display: "block" }}
+                              onError={() => {
+                                setFailedGravatars((prev) => new Set(prev).add(senderEmail));
+                              }}
+                            />
+                          ) : (
+                            senderName.charAt(0).toUpperCase()
+                          )}
+                        </div>
+
+                        {/* Name + Subject + Preview */}
+                        <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            {/* Sender name */}
+                            <span
+                              style={{
+                                fontWeight: 700,
+                                fontSize: 13,
+                                color: "#e4e6ed",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {senderName}
+                            </span>
+
+                            {/* Status badge */}
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "1px 7px",
+                                borderRadius: 10,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                background: `${statusColor}22`,
+                                color: statusColor,
+                                border: `1px solid ${statusColor}44`,
+                                textTransform: "capitalize",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {displayStatus}
+                            </span>
+
+                            {/* Ownership badge */}
+                            {!draft.agent_handoff_transferred &&
+                              draft.salesforce_owner_name &&
+                              draft.is_master_agent_owned === false && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#fbbf2422",
+                                  color: "#fbbf24",
+                                  border: "1px solid #fbbf2444",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Owned by {draft.salesforce_owner_name}
+                              </span>
+                            )}
+
+                            {/* Handoff badge */}
+                            {isSent && draft.agent_handoff_transferred && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#a78bfa22",
+                                  color: "#a78bfa",
+                                  border: "1px solid #a78bfa44",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Handed Off
+                              </span>
+                            )}
+
+                            {/* CC badge */}
+                            {draft.cc_emails.length > 0 && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#8b8fa311",
+                                  color: "#8b8fa3",
+                                  border: "1px solid #8b8fa333",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                CC: {ccAgentNames.map((name, i) => name ?? draft.cc_emails[i]).join(", ")}
+                              </span>
+                            )}
+
+                            {/* Added to Training label */}
+                            {isSent && draft.added_to_training && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#34d39922",
+                                  color: "#34d399",
+                                  border: "1px solid #34d39944",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Trained
+                              </span>
+                            )}
+
+                            {/* Lead status labels */}
+                            {draft.lead_status_update === "nurture_active" && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#34d39922",
+                                  color: "#34d399",
+                                  border: "1px solid #34d39944",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Nurture Active
+                              </span>
+                            )}
+                            {draft.lead_status_update === "disqualified" && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#f8717122",
+                                  color: "#f87171",
+                                  border: "1px solid #f8717144",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Disqualified
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Subject + preview on second line */}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "baseline",
+                              gap: 6,
+                              marginTop: 2,
+                              overflow: "hidden",
+                              whiteSpace: "nowrap",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: "#c8cad3",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {draft.is_simulation ? (
+                                <span style={{ color: "#a78bfa" }}>Simulation Draft</span>
+                              ) : (
+                                draft.subject ?? "Untitled Draft"
+                              )}
+                            </span>
+                            {draft.preview_text && (
+                              <>
+                                <span style={{ color: "#4a4e5a", flexShrink: 0 }}>—</span>
+                                <span
+                                  style={{
+                                    fontSize: 12,
+                                    color: "#6b7084",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {draft.preview_text}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right side: response time + date */}
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-end",
+                            flexShrink: 0,
+                            gap: 2,
+                          }}
+                        >
+                          <span style={{ fontSize: 12, color: "#8b8fa3", whiteSpace: "nowrap" }}>
+                            {displayTime}
+                          </span>
+                          {isSent && draft.response_time_ms != null && (
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 600,
+                                color: draft.response_time_ms <= 300000 ? "#34d399" : draft.response_time_ms <= 600000 ? "#fbbf24" : "#f87171",
+                                background: draft.response_time_ms <= 300000 ? "#34d39911" : draft.response_time_ms <= 600000 ? "#fbbf2411" : "#f8717111",
+                                padding: "1px 6px",
+                                borderRadius: 8,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              replied in {formatResponseTime(draft.response_time_ms)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
                 {/* Expanded view */}
                 {isExpanded && (
@@ -1683,16 +1998,21 @@ export default function EmailDraftsPage() {
                       }}
                     >
                       <span>
-                        Created: {new Date(draft.created_at).toLocaleString()}
+                        Created: {new Date(draft.created_at).toLocaleString("en-US", { timeZone: "America/New_York" })}
                       </span>
                       {draft.approved_at && (
                         <span>
-                          Approved: {new Date(draft.approved_at).toLocaleString()}
+                          Approved: {new Date(draft.approved_at).toLocaleString("en-US", { timeZone: "America/New_York" })}
                         </span>
                       )}
                       {draft.sent_at && (
                         <span>
-                          Sent: {new Date(draft.sent_at).toLocaleString()}
+                          Sent: {new Date(draft.sent_at).toLocaleString("en-US", { timeZone: "America/New_York" })}
+                        </span>
+                      )}
+                      {isSent && draft.response_time_ms != null && (
+                        <span>
+                          Response Time: {formatResponseTime(draft.response_time_ms)}
                         </span>
                       )}
                       {draft.cc_emails.length > 0 && (
@@ -1708,8 +2028,11 @@ export default function EmailDraftsPage() {
                   </div>
                 )}
               </div>
-            );
-          })}
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </>
