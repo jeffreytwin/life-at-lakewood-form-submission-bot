@@ -310,11 +310,6 @@ export default function EmailDraftsPage() {
   const [rescanning, setRescanning] = useState(false);
   const [rescanResult, setRescanResult] = useState<string | null>(null);
 
-  // Feedback state
-  const [feedbackDraftId, setFeedbackDraftId] = useState<string | null>(null);
-  const [feedbackRating, setFeedbackRating] = useState(3);
-  const [feedbackNotes, setFeedbackNotes] = useState("");
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const fetchDrafts = useCallback(
     (isPolling = false) => {
@@ -453,12 +448,10 @@ export default function EmailDraftsPage() {
       setEditingId(null);
       setThreadMessages([]);
       setTrainingDraftId(null);
-      setFeedbackDraftId(null);
     } else {
       setExpandedId(id);
       setEditingId(null);
       setTrainingDraftId(null);
-      setFeedbackDraftId(null);
       loadThreadMessages(id);
     }
   }
@@ -665,32 +658,6 @@ export default function EmailDraftsPage() {
       alert(e instanceof Error ? e.message : "Regeneration failed");
     } finally {
       setRegeneratingId(null);
-    }
-  }
-
-  async function submitFeedback(draftId: string) {
-    setSubmittingFeedback(true);
-    try {
-      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/feedback`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rating: feedbackRating,
-          feedback_notes: feedbackNotes || null,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error ?? "Failed to submit feedback");
-      }
-      setFeedbackDraftId(null);
-      setFeedbackRating(3);
-      setFeedbackNotes("");
-      alert("Feedback submitted! This helps improve future draft quality.");
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to submit feedback");
-    } finally {
-      setSubmittingFeedback(false);
     }
   }
 
@@ -1550,25 +1517,6 @@ export default function EmailDraftsPage() {
                         </button>
                       )}
 
-                      {/* Give Feedback button - only for non-sent, non-discarded drafts, hidden when editing */}
-                      {!isSent && draft.status !== "discarded" && !isEditing && (
-                        <button
-                          className="btn btn-secondary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFeedbackDraftId(
-                              feedbackDraftId === draft.id ? null : draft.id
-                            );
-                          }}
-                          style={{
-                            color: "#fbbf24",
-                            borderColor: "#fbbf2444",
-                          }}
-                        >
-                          Give Feedback
-                        </button>
-                      )}
-
                       {/* Approve button - hidden when editing or already approved */}
                       {draft.status === "drafted" && !isApproved && !isEditing && (
                         <button
@@ -1904,111 +1852,6 @@ export default function EmailDraftsPage() {
                             }}
                           >
                             {handoffId === draft.id ? "Transferring..." : "Transfer"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Give Feedback form */}
-                    {feedbackDraftId === draft.id && (
-                      <div
-                        style={{
-                          marginBottom: 16,
-                          padding: "14px 16px",
-                          background: "#111318",
-                          border: "1px solid #2a2e3a",
-                          borderRadius: 6,
-                        }}
-                      >
-                        <label
-                          className="text-sm"
-                          style={{
-                            display: "block",
-                            fontWeight: 600,
-                            marginBottom: 10,
-                            color: "#e4e6ed",
-                          }}
-                        >
-                          Give Feedback on Draft Quality
-                        </label>
-                        <p
-                          className="text-muted text-sm"
-                          style={{ marginBottom: 12 }}
-                        >
-                          Rate this draft and leave comments to help the AI improve future drafts.
-                        </p>
-                        <div className="form-group" style={{ marginBottom: 12 }}>
-                          <label className="text-sm text-muted">Rating (1-5)</label>
-                          <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-                            {[1, 2, 3, 4, 5].map((n) => (
-                              <button
-                                key={n}
-                                className="btn btn-secondary"
-                                onClick={() => setFeedbackRating(n)}
-                                style={{
-                                  padding: "4px 12px",
-                                  fontSize: 14,
-                                  fontWeight: 600,
-                                  background:
-                                    feedbackRating === n ? "#fbbf2433" : undefined,
-                                  color:
-                                    feedbackRating === n ? "#fbbf24" : undefined,
-                                  borderColor:
-                                    feedbackRating === n ? "#fbbf2466" : undefined,
-                                }}
-                              >
-                                {n}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="form-group" style={{ marginBottom: 12 }}>
-                          <label className="text-sm text-muted">
-                            Notes (what should be different?)
-                          </label>
-                          <textarea
-                            className="form-input"
-                            value={feedbackNotes}
-                            onChange={(e) => setFeedbackNotes(e.target.value)}
-                            placeholder="e.g., Too formal, should mention pricing earlier, needs warmer tone..."
-                            style={{
-                              width: "100%",
-                              minHeight: 80,
-                              fontFamily: "inherit",
-                              fontSize: 13,
-                              resize: "vertical",
-                            }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          <button
-                            className="btn btn-secondary"
-                            onClick={() => {
-                              setFeedbackDraftId(null);
-                              setFeedbackNotes("");
-                              setFeedbackRating(3);
-                            }}
-                            disabled={submittingFeedback}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className="btn btn-primary"
-                            onClick={() => submitFeedback(draft.id)}
-                            disabled={submittingFeedback}
-                            style={{
-                              background: "#fbbf24",
-                              borderColor: "#fbbf24",
-                              color: "#111318",
-                            }}
-                          >
-                            {submittingFeedback ? "Submitting..." : "Submit Feedback"}
                           </button>
                         </div>
                       </div>

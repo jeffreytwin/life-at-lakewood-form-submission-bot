@@ -1,9 +1,10 @@
 import type { TrainingExample } from "@/lib/supabase/types";
-import { formatTrainingExamples } from "./training-loader";
+import { formatTrainingExamples, formatDraftFeedback, type DraftFeedbackExample } from "./training-loader";
 
 interface PromptContext {
   locationName: string;
   trainingExamples: TrainingExample[];
+  draftFeedback?: DraftFeedbackExample[];
   conversationThread: string;
   leadInfo?: {
     name?: string;
@@ -50,6 +51,16 @@ export function buildSystemPrompt(ctx: PromptContext): string {
 These are real examples of how Lynn responds to various types of inquiries for ${ctx.locationName}. Use these as a guide for tone, style, and content:
 
 ${trainingSection}`;
+  }
+
+  const feedbackSection = ctx.draftFeedback ? formatDraftFeedback(ctx.draftFeedback) : "";
+  if (feedbackSection) {
+    systemPrompt += `
+
+## Previous Corrections
+These are drafts that were flagged as needing improvement. Learn from this feedback to avoid similar issues:
+
+${feedbackSection}`;
   }
 
   if (ctx.agentHandoff) {

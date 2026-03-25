@@ -1,6 +1,12 @@
 import { supabase } from "@/lib/supabase/client";
 import type { TrainingExample, TrainingCategory } from "@/lib/supabase/types";
 
+export interface DraftFeedbackExample {
+  originalDraft: string;
+  feedbackNotes: string;
+  editedVersion: string | null;
+}
+
 /**
  * Load active training examples, optionally filtered by category.
  * Supports lookup by email_address or location_id (backward compat).
@@ -87,6 +93,58 @@ export function formatTrainingExamples(examples: TrainingExample[]): string {
       }
       sections.push("---");
     }
+  }
+
+  return sections.join("\n");
+}
+
+/**
+ * Load low-rated draft feedback (rating <= 2) that has notes.
+ * Skips feedback already added as training examples.
+ */
+export async function loadDraftFeedback(): Promise<DraftFeedbackExample[]> {
+  const { data: feedback, error } = await supabase
+    .from("draft_feedback")
+    .select("rating, feedback_notes, edited_version, added_as_training, draft_id")
+    .lte("rating", 2)
+    .not("feedback_notes", "is", null)
+    .eq("added_as_training", false)
+    .order("created_at", { ascending: false });
+
+  if (error || !feedback || feedback.length === 0) return [];
+
+  // Fetch the original draft body for each feedback entry
+  const draftIds = feedback.map((f) => f.draft_id);
+  const { data: drafts } = await supabase
+    .from("email_drafts")
+    .select("id, body_text")
+    .in("id", draftIds);
+
+  const draftMap = new Map((drafts ?? []).map((d) => [d.id, d.body_text]));
+
+  return feedback
+    .filter((f) => draftMap.has(f.draft_id) && draftMap.get(f.draft_id))
+    .map((f) => ({
+      originalDraft: draftMap.get(f.draft_id)!,
+      feedbackNotes: f.feedback_notes!,
+      editedVersion: f.edited_version ?? null,
+    }));
+}
+
+/**
+ * Format draft feedback into prompt text for the "what to avoid" section.
+ */
+export function formatDraftFeedback(feedback: DraftFeedbackExample[]): string {
+  if (feedback.length === 0) return "";
+
+  const sections: string[] = [];
+  for (const fb of feedback) {
+    sections.push(`**Draft that needed improvement:**\n${fb.originalDraft}\n`);
+    sections.push(`**Feedback:** ${fb.feedbackNotes}\n`);
+    if (fb.editedVersion) {
+      sections.push(`**Corrected version:**\n${fb.editedVersion}\n`);
+    }
+    sections.push("---");
   }
 
   return sections.join("\n");

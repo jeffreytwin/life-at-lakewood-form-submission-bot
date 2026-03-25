@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildSystemPrompt, buildUserMessage } from "./prompts";
-import { loadTrainingExamples } from "./training-loader";
+import { loadTrainingExamples, loadDraftFeedback } from "./training-loader";
 import type { TrainingExample } from "@/lib/supabase/types";
 import { logger } from "@/lib/shared/logger";
 
@@ -58,9 +58,13 @@ export async function generateDraft(input: DraftInput): Promise<DraftOutput> {
     input.trainingExamples ??
     (await loadTrainingExamples(input.locationId, undefined, input.emailAddress));
 
+  // Load low-rated draft feedback for learning
+  const draftFeedback = await loadDraftFeedback();
+
   const systemPrompt = buildSystemPrompt({
     locationName: input.locationName,
     trainingExamples,
+    draftFeedback,
     conversationThread: input.conversationThread,
     leadInfo: input.leadInfo,
     agentHandoff: input.agentHandoff,
