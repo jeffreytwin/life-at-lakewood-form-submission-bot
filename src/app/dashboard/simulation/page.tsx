@@ -34,7 +34,7 @@ export default function SimulationPage() {
             e.currentTarget.style.background = "var(--bg-card)";
           }}
         >
-          <div className="sim-icon-blue" style={{ fontSize: 36, marginBottom: 12 }}>{"\u2630"}</div>
+          <div className="sim-icon-static" style={{ fontSize: 36, marginBottom: 12 }}>{"\u2630"}</div>
           <h3
             style={{
               fontSize: 16,
@@ -69,7 +69,7 @@ export default function SimulationPage() {
             e.currentTarget.style.background = "var(--bg-card)";
           }}
         >
-          <div className="sim-icon-blue" style={{ fontSize: 36, marginBottom: 12 }}>{"\u2709"}</div>
+          <div className="sim-icon-static" style={{ fontSize: 36, marginBottom: 12 }}>{"\u2709"}</div>
           <h3
             style={{
               fontSize: 16,

@@ -451,7 +451,7 @@ export default function SimulatePage() {
         </div>
 
         {/* Right: Results */}
-        <div>
+        <div className="sim-results-col">
           {!result && !thirtyDayResult ? (
             <div className="card">
               <div className="empty-state">

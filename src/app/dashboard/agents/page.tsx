@@ -136,9 +136,16 @@ export default function AgentsPage() {
 
   const isFrontlines = editing?.is_frontlines ?? form.is_frontlines;
 
-  // Split agents into regular and frontlines, then sort each group
-  const regularAgents = sortAgents(
-    agents.filter((a) => !a.is_frontlines),
+  // Split agents into active regular, inactive regular, and frontlines, then sort each group
+  const activeRegularAgents = sortAgents(
+    agents.filter((a) => !a.is_frontlines && a.is_active),
+    sortKey,
+    sortDir,
+    handRaiseCounts,
+    dailyCounts
+  );
+  const inactiveRegularAgents = sortAgents(
+    agents.filter((a) => !a.is_frontlines && !a.is_active),
     sortKey,
     sortDir,
     handRaiseCounts,
@@ -161,10 +168,11 @@ export default function AgentsPage() {
     }
   }
 
-  function SortHeader({ label, sortKeyName }: { label: string; sortKeyName: SortKey }) {
+  function SortHeader({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) {
     const active = sortKey === sortKeyName;
     return (
       <th
+        className={className}
         onClick={() => handleSort(sortKeyName)}
         style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
       >
@@ -397,19 +405,19 @@ export default function AgentsPage() {
             )}
           </div>
         </td>
-        <td>
+        <td className="hide-mobile">
           <span
             className={`status-dot ${agent.is_active ? "active" : "inactive"}`}
           />
           {agent.is_active ? "Active" : "Inactive"}
         </td>
         <td style={{ fontWeight: 600 }}>{agent.name}</td>
-        <td className="text-sm">
+        <td className="text-sm hide-mobile">
           {agent.location_specialties.length > 0
             ? agent.location_specialties.join(", ")
             : "All"}
         </td>
-        <td className="text-sm">
+        <td className="text-sm hide-mobile">
           {!agent.price_ranges || agent.price_ranges.length === 0 ? (
             <span className="badge badge-muted">All</span>
           ) : (
@@ -420,17 +428,17 @@ export default function AgentsPage() {
             </div>
           )}
         </td>
-        <td className="font-mono">
+        <td className="font-mono hide-mobile">
           {agent.is_frontlines
             ? "-"
             : `${(agent.close_rate_trailing_12m * 100).toFixed(1)}%`}
         </td>
-        <td className="font-mono">
+        <td className="font-mono hide-mobile">
           {agent.is_frontlines
             ? "-"
             : `${agent.monthly_lead_goal_min}-${agent.monthly_lead_goal_max}`}
         </td>
-        <td className="font-mono">
+        <td className="font-mono hide-mobile">
           {agent.is_frontlines
             ? "-"
             : (() => {
@@ -515,13 +523,13 @@ export default function AgentsPage() {
       <thead>
         <tr>
           <th style={{ width: 50 }}>Photo</th>
-          <SortHeader label="Status" sortKeyName="is_active" />
+          <SortHeader label="Status" sortKeyName="is_active" className="hide-mobile" />
           <SortHeader label="Name" sortKeyName="name" />
-          <SortHeader label="Locations" sortKeyName="locations" />
-          <SortHeader label="Price Ranges" sortKeyName="price_ranges" />
-          <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" />
-          <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" />
-          <SortHeader label="Today" sortKeyName="today" />
+          <SortHeader label="Locations" sortKeyName="locations" className="hide-mobile" />
+          <SortHeader label="Price Ranges" sortKeyName="price_ranges" className="hide-mobile" />
+          <SortHeader label="Close Rate (12m)" sortKeyName="close_rate" className="hide-mobile" />
+          <SortHeader label="Monthly Hand Raise Goal" sortKeyName="goal" className="hide-mobile" />
+          <SortHeader label="Today" sortKeyName="today" className="hide-mobile" />
           <SortHeader label="Handraises This Month" sortKeyName="handraises" />
           <SortHeader label="Preferred" sortKeyName="is_preferred" />
         </tr>
@@ -568,18 +576,18 @@ export default function AgentsPage() {
         </div>
       ) : (
         <>
-          {/* Regular Agents */}
+          {/* Active Agents */}
           <div className="card">
             <div className="card-header">
-              <h3>{regularAgents.length} agents</h3>
+              <h3>{activeRegularAgents.length} active agents</h3>
               <button className="btn btn-primary" onClick={openAdd}>
                 + Add Agent
               </button>
             </div>
-            {regularAgents.length === 0 ? (
+            {activeRegularAgents.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">&#9786;</div>
-                <h3>No agents yet</h3>
+                <h3>No active agents</h3>
                 <p>Add your first sales agent to get started.</p>
               </div>
             ) : (
@@ -587,7 +595,7 @@ export default function AgentsPage() {
                 <table>
                   {renderTableHead()}
                   <tbody>
-                    {regularAgents.map((agent) => renderAgentRow(agent))}
+                    {activeRegularAgents.map((agent) => renderAgentRow(agent))}
                   </tbody>
                 </table>
               </div>
@@ -605,6 +613,23 @@ export default function AgentsPage() {
                   {renderBotOnDutyTableHead()}
                   <tbody>
                     {frontlinesAgents.map((agent) => renderBotOnDutyRow(agent))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Inactive Agents */}
+          {inactiveRegularAgents.length > 0 && (
+            <div className="card" style={{ marginTop: 20 }}>
+              <div className="card-header">
+                <h3>{inactiveRegularAgents.length} inactive agents</h3>
+              </div>
+              <div className="table-wrapper">
+                <table>
+                  {renderTableHead()}
+                  <tbody>
+                    {inactiveRegularAgents.map((agent) => renderAgentRow(agent))}
                   </tbody>
                 </table>
               </div>

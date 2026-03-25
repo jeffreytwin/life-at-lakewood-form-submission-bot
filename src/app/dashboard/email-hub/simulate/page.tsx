@@ -275,7 +275,7 @@ export default function EmailSimulatePage() {
         </div>
 
         {/* Right: Result */}
-        <div>
+        <div className="sim-results-col">
           {!draft ? (
             <div className="card">
               <div className="empty-state">
@@ -283,7 +283,7 @@ export default function EmailSimulatePage() {
                   src="/otocon-email-simulation.gif"
                   alt="Otocon"
                   style={{
-                    width: 230,
+                    width: 196,
                     height: "auto",
                     imageRendering: "pixelated",
                   }}
