@@ -96,20 +96,25 @@ export default function Sidebar({
               </Link>
             </li>
           ))}
+          <li className="sidebar-section-label">Simulate</li>
           <li>
             <Link
-              href="/dashboard/simulation"
-              className={isActive("/dashboard/simulation") || pathname === "/dashboard/simulate" || pathname === "/dashboard/email-hub/simulate" ? "active" : ""}
+              href="/dashboard/simulate"
+              className={pathname === "/dashboard/simulate" ? "active" : ""}
               onClick={onClose}
             >
-              <span className="nav-icon" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <img
-                  src="/Otocon Simulation Logo.png"
-                  alt="Simulation"
-                  style={{ width: 18, height: 18, objectFit: "contain" }}
-                />
-              </span>
-              Simulation
+              <span className="nav-icon">{"\u2630"}</span>
+              Form Submission
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/dashboard/email-hub/simulate"
+              className={pathname === "/dashboard/email-hub/simulate" ? "active" : ""}
+              onClick={onClose}
+            >
+              <span className="nav-icon">{"\u2709"}</span>
+              Email
             </Link>
           </li>
         </ul>

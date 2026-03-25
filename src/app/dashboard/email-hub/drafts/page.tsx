@@ -991,7 +991,7 @@ export default function EmailDraftsPage() {
 
                         {/* Name + Subject + Preview */}
                         <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                             {/* Sender name */}
                             <span
                               style={{
@@ -1076,6 +1076,58 @@ export default function EmailDraftsPage() {
                                 }}
                               >
                                 CC: {ccAgentNames.map((name, i) => name ?? draft.cc_emails[i]).join(", ")}
+                              </span>
+                            )}
+
+                            {/* Added to Training label */}
+                            {isSent && draft.added_to_training && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#34d39922",
+                                  color: "#34d399",
+                                  border: "1px solid #34d39944",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Trained
+                              </span>
+                            )}
+
+                            {/* Lead status labels */}
+                            {draft.lead_status_update === "nurture_active" && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#34d39922",
+                                  color: "#34d399",
+                                  border: "1px solid #34d39944",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Nurture Active
+                              </span>
+                            )}
+                            {draft.lead_status_update === "disqualified" && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#f8717122",
+                                  color: "#f87171",
+                                  border: "1px solid #f8717144",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Disqualified
                               </span>
                             )}
                           </div>

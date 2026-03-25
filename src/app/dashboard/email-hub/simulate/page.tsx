@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import type { Location } from "@/lib/supabase/types";
 
 interface DraftResponse {
@@ -13,7 +12,6 @@ interface DraftResponse {
 }
 
 export default function EmailSimulatePage() {
-  const router = useRouter();
   const [locations, setLocations] = useState<Location[]>([]);
   const [locationId, setLocationId] = useState("");
   const [senderName, setSenderName] = useState("");
@@ -129,13 +127,7 @@ export default function EmailSimulatePage() {
   return (
     <>
       <div className="page-header">
-        <button
-          onClick={() => router.push("/dashboard/simulation")}
-          className="back-btn"
-        >
-          ← Back to Simulation
-        </button>
-        <h2>Email Simulation</h2>
+        <h2>Simulate Email</h2>
         <p>
           Test AI-generated email responses without connecting to real inboxes.
           Compose a mock inbound email and see how the AI responds.
