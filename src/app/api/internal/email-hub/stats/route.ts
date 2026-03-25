@@ -140,10 +140,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Average email response time (filtered by requested period, excluding quiet hours)
-    // Measures time from first inbound message in thread to sent_at
+    // Measures time from most recent inbound message (before draft creation) to sent_at
     let avgQuery = supabase
       .from("email_drafts")
-      .select("thread_id, sent_at")
+      .select("thread_id, sent_at, created_at")
       .eq("status", "sent")
       .eq("is_simulation", false)
       .not("sent_at", "is", null)
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
     let avgResponseTimeMinutes: number | null = null;
     if (sentDraftsForAvg && sentDraftsForAvg.length > 0) {
       const threadIds = [...new Set(sentDraftsForAvg.map((d) => d.thread_id!))];
-      // Get the earliest inbound message per thread
+      // Get all inbound messages for these threads, ordered ascending
       const { data: inboundMessages } = await supabase
         .from("email_messages")
         .select("thread_id, received_at")
@@ -163,26 +163,37 @@ export async function GET(request: NextRequest) {
         .order("received_at", { ascending: true });
 
       if (inboundMessages && inboundMessages.length > 0) {
-        // Map thread_id -> earliest inbound received_at
-        const earliestInbound: Record<string, string> = {};
+        // Map thread_id -> list of inbound received_at timestamps (ascending)
+        const inboundByThread: Record<string, string[]> = {};
         for (const msg of inboundMessages) {
-          if (msg.thread_id && msg.received_at && !earliestInbound[msg.thread_id]) {
-            earliestInbound[msg.thread_id] = msg.received_at;
+          if (msg.thread_id && msg.received_at) {
+            (inboundByThread[msg.thread_id] ??= []).push(msg.received_at);
           }
         }
 
         const diffs: number[] = [];
         for (const draft of sentDraftsForAvg) {
-          const inboundAt = draft.thread_id ? earliestInbound[draft.thread_id] : null;
-          if (inboundAt && draft.sent_at) {
-            // Exclude emails received during quiet hours
-            const qhEnd = getEndForTimestamp(inboundAt, qhStart, qhEndWeekday, qhEndWeekend);
-            if (qhEnabled && isDuringQuietHours(inboundAt, qhStart, qhEnd)) {
-              continue;
+          if (!draft.thread_id || !draft.sent_at) continue;
+          const inboundTimes = inboundByThread[draft.thread_id];
+          if (!inboundTimes) continue;
+
+          // Find the latest inbound message received before this draft was created
+          const draftCreatedAt = new Date(draft.created_at).getTime();
+          let latestBefore: string | null = null;
+          for (const t of inboundTimes) {
+            if (new Date(t).getTime() <= draftCreatedAt) {
+              latestBefore = t;
             }
-            const diffMs = new Date(draft.sent_at).getTime() - new Date(inboundAt).getTime();
-            if (diffMs > 0) diffs.push(diffMs);
           }
+          if (!latestBefore) continue;
+
+          // Exclude emails received during quiet hours
+          const qhEnd = getEndForTimestamp(latestBefore, qhStart, qhEndWeekday, qhEndWeekend);
+          if (qhEnabled && isDuringQuietHours(latestBefore, qhStart, qhEnd)) {
+            continue;
+          }
+          const diffMs = new Date(draft.sent_at).getTime() - new Date(latestBefore).getTime();
+          if (diffMs > 0) diffs.push(diffMs);
         }
 
         if (diffs.length > 0) {

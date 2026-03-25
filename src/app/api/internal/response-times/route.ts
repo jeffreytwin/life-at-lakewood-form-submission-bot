@@ -99,11 +99,11 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => a.agentName.localeCompare(b.agentName));
 
-    // Overall average (only from responded attempts)
+    // Overall average (only from responded attempts) — use raw totals, not rounded per-agent averages
     const totalResponses = agentStats.reduce((s, a) => s + a.responseCount, 0);
-    const totalMinutes = agentStats.reduce((s, a) => s + a.avgMinutes * a.responseCount, 0);
+    const grandTotalMinutes = Array.from(byAgent.values()).reduce((s, a) => s + a.totalMinutes, 0);
     const overallAvg = totalResponses > 0
-      ? Math.round((totalMinutes / totalResponses) * 10) / 10
+      ? Math.round((grandTotalMinutes / totalResponses) * 10) / 10
       : 0;
     const totalNonResponses = agentStats.reduce((s, a) => s + a.nonResponseCount, 0);
 
