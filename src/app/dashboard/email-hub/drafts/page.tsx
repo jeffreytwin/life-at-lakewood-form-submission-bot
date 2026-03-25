@@ -897,11 +897,9 @@ export default function EmailDraftsPage() {
                   <span style={{ fontSize: 15, color: "#8b8fa3" }}>&#9993;</span>
                   <span
                     style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#e4e6ed",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "var(--text-heading)",
                     }}
                   >
                     {group.label}
