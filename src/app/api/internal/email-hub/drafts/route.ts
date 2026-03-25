@@ -76,10 +76,10 @@ export async function GET(request: NextRequest) {
 
     // For sent drafts, fetch all inbound messages per thread for response time
     // We need the most recent inbound message *before* each draft was created
-    const sentDrafts = (data ?? []).filter(
+    const sentDraftsWithThreads = (data ?? []).filter(
       (d: { status: string; thread_id: string | null }) => d.status === "sent" && d.thread_id
     );
-    const sentThreadIds = [...new Set(sentDrafts.map((d: { thread_id: string }) => d.thread_id))];
+    const sentThreadIds = [...new Set(sentDraftsWithThreads.map((d: { thread_id: string }) => d.thread_id))];
     let inboundMessagesByThread = new Map<string, string[]>();
     if (sentThreadIds.length > 0) {
       const { data: inboundMessages } = await supabase
