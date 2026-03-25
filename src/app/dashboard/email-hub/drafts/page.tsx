@@ -1143,8 +1143,8 @@ export default function EmailDraftsPage() {
                               style={{
                                 fontSize: 10,
                                 fontWeight: 600,
-                                color: draft.response_time_ms < 3600000 ? "#34d399" : draft.response_time_ms < 86400000 ? "#fbbf24" : "#f87171",
-                                background: draft.response_time_ms < 3600000 ? "#34d39911" : draft.response_time_ms < 86400000 ? "#fbbf2411" : "#f8717111",
+                                color: draft.response_time_ms <= 300000 ? "#34d399" : draft.response_time_ms <= 600000 ? "#fbbf24" : "#f87171",
+                                background: draft.response_time_ms <= 300000 ? "#34d39911" : draft.response_time_ms <= 600000 ? "#fbbf2411" : "#f8717111",
                                 padding: "1px 6px",
                                 borderRadius: 8,
                                 whiteSpace: "nowrap",
