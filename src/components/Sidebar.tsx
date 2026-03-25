@@ -96,25 +96,14 @@ export default function Sidebar({
               </Link>
             </li>
           ))}
-          <li className="sidebar-section-label">Simulate</li>
           <li>
             <Link
-              href="/dashboard/simulate"
-              className={pathname === "/dashboard/simulate" ? "active" : ""}
+              href="/dashboard/simulation"
+              className={isActive("/dashboard/simulation") || pathname === "/dashboard/simulate" || pathname === "/dashboard/email-hub/simulate" ? "active" : ""}
               onClick={onClose}
             >
-              <span className="nav-icon">{"\u2630"}</span>
-              Form Submission
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/dashboard/email-hub/simulate"
-              className={pathname === "/dashboard/email-hub/simulate" ? "active" : ""}
-              onClick={onClose}
-            >
-              <span className="nav-icon">{"\u2709"}</span>
-              Email
+              <span className="nav-icon">{"\u2699"}</span>
+              Simulation
             </Link>
           </li>
         </ul>

@@ -897,11 +897,9 @@ export default function EmailDraftsPage() {
                   <span style={{ fontSize: 15, color: "#8b8fa3" }}>&#9993;</span>
                   <span
                     style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#e4e6ed",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "var(--text-heading)",
                     }}
                   >
                     {group.label}
@@ -1559,7 +1557,79 @@ export default function EmailDraftsPage() {
                         </button>
                       )}
 
-                      {/* Agent Handoff Transfer (sent only) */}
+                      {/* Lead status update buttons */}
+                      {draft.lead_status_update === "nurture_active" && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#34d39922",
+                            color: "#34d399",
+                            border: "1px solid #34d39944",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Updated to Nurture Active
+                        </span>
+                      )}
+                      {draft.lead_status_update === "disqualified" && (
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "#f8717122",
+                            color: "#f87171",
+                            border: "1px solid #f8717144",
+                          }}
+                        >
+                          <span style={{ fontSize: 16 }}>&#10003;</span>
+                          Updated to Disqualified
+                        </span>
+                      )}
+                      {!draft.lead_status_update && !isEditing && (
+                        <>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateLeadStatus(draft.id, "nurture_active");
+                            }}
+                            disabled={leadStatusUpdatingId === draft.id}
+                            style={{
+                              color: "#34d399",
+                              borderColor: "#34d39944",
+                            }}
+                          >
+                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Nurture Active"}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateLeadStatus(draft.id, "disqualified");
+                            }}
+                            disabled={leadStatusUpdatingId === draft.id}
+                            style={{
+                              color: "#f87171",
+                              borderColor: "#f8717144",
+                            }}
+                          >
+                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
+                          </button>
+                        </>
+                      )}
+
+                      {/* Agent Handoff Transfer (sent only — right-most) */}
                       {isSent && !draft.agent_handoff_transferred && (() => {
                         // Non-frontlines owned: show disabled "Already Owned" button
                         const isNonFrontlinesOwned =
@@ -1636,78 +1706,6 @@ export default function EmailDraftsPage() {
                           <span style={{ fontSize: 16 }}>&#10003;</span>
                           Handed Off{draft.agents ? ` to ${draft.agents.name}` : ""}
                         </span>
-                      )}
-
-                      {/* Lead status update buttons */}
-                      {draft.lead_status_update === "nurture_active" && (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 14px",
-                            borderRadius: 6,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            background: "#34d39922",
-                            color: "#34d399",
-                            border: "1px solid #34d39944",
-                          }}
-                        >
-                          <span style={{ fontSize: 16 }}>&#10003;</span>
-                          Updated to Nurture Active
-                        </span>
-                      )}
-                      {draft.lead_status_update === "disqualified" && (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 14px",
-                            borderRadius: 6,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            background: "#f8717122",
-                            color: "#f87171",
-                            border: "1px solid #f8717144",
-                          }}
-                        >
-                          <span style={{ fontSize: 16 }}>&#10003;</span>
-                          Updated to Disqualified
-                        </span>
-                      )}
-                      {!draft.lead_status_update && !isEditing && (
-                        <>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateLeadStatus(draft.id, "nurture_active");
-                            }}
-                            disabled={leadStatusUpdatingId === draft.id}
-                            style={{
-                              color: "#34d399",
-                              borderColor: "#34d39944",
-                            }}
-                          >
-                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Nurture Active"}
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateLeadStatus(draft.id, "disqualified");
-                            }}
-                            disabled={leadStatusUpdatingId === draft.id}
-                            style={{
-                              color: "#f87171",
-                              borderColor: "#f8717144",
-                            }}
-                          >
-                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
-                          </button>
-                        </>
                       )}
                     </div>
 
