@@ -356,7 +356,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                     <th>Name</th>
                     <th>Assigned To</th>
                     <th>Status</th>
-                    <th>Time</th>
+                    <th className="hide-mobile">Time</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -379,7 +379,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                           {formatStatus(lead.routing_status)}
                         </span>
                       </td>
-                      <td className="text-muted text-sm font-mono">
+                      <td className="text-muted text-sm font-mono hide-mobile">
                         {new Date(lead.created_at).toLocaleString()}
                       </td>
                     </tr>

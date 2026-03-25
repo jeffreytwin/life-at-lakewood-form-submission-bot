@@ -924,6 +924,11 @@ select.form-input {
     font-size: 12px;
   }
 
+  /* Hide columns on mobile */
+  .hide-mobile {
+    display: none;
+  }
+
   /* Buttons — full width in card headers on mobile */
   .card-header .btn {
     width: 100%;
