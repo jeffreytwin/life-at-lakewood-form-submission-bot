@@ -231,13 +231,25 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     // Recent emails (mix of drafts and sent, last 10 — exclude discarded)
-    const { data: recentEmails } = await supabase
+    // sender_name lives on email_threads, so join via thread_id
+    const { data: recentDraftsRaw } = await supabase
       .from("email_drafts")
-      .select("id, status, subject, created_at, sent_at, approved_at, agent_handoff_transferred, sender_name")
+      .select("id, status, subject, created_at, sent_at, approved_at, agent_handoff_transferred, thread:thread_id(sender_name)")
       .eq("is_simulation", false)
       .neq("status", "discarded")
       .order("created_at", { ascending: false })
       .limit(10);
+
+    const recentEmails = (recentDraftsRaw ?? []).map((d) => ({
+      id: d.id,
+      status: d.status,
+      subject: d.subject,
+      created_at: d.created_at,
+      sent_at: d.sent_at,
+      approved_at: d.approved_at,
+      agent_handoff_transferred: d.agent_handoff_transferred,
+      sender_name: (d.thread as unknown as { sender_name: string | null } | null)?.sender_name ?? null,
+    }));
 
     // Agent handoffs per agent this month (for handoffs graph)
     const { data: handoffDrafts } = await supabase
