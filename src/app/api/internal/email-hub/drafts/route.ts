@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("email_drafts")
-      .select("*, agents:agent_handoff_id(id, name, email), email_threads:thread_id(salesforce_owner_id, salesforce_owner_name, is_master_agent_owned)")
+      .select("*, agents:agent_handoff_id(id, name, email), email_threads:thread_id(salesforce_owner_id, salesforce_owner_name, is_master_agent_owned, sender_name, sender_email, email_account_id), email_accounts:email_account_id(id, email_address, display_name)")
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -74,13 +74,51 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // For sent drafts, fetch the earliest inbound message per thread for response time
+    const sentThreadIds = [
+      ...new Set(
+        (data ?? [])
+          .filter((d: { status: string; thread_id: string | null }) => d.status === "sent" && d.thread_id)
+          .map((d: { thread_id: string }) => d.thread_id)
+      ),
+    ];
+    let inboundReceivedMap = new Map<string, string>();
+    if (sentThreadIds.length > 0) {
+      const { data: inboundMessages } = await supabase
+        .from("email_messages")
+        .select("thread_id, received_at")
+        .in("thread_id", sentThreadIds)
+        .eq("direction", "inbound")
+        .order("received_at", { ascending: true });
+      if (inboundMessages) {
+        for (const msg of inboundMessages) {
+          // Keep the earliest inbound message per thread
+          if (msg.received_at && !inboundReceivedMap.has(msg.thread_id)) {
+            inboundReceivedMap.set(msg.thread_id, msg.received_at);
+          }
+        }
+      }
+    }
+
     const enriched = (data ?? []).map((d: {
       id: string;
       status: string;
+      thread_id: string | null;
+      sent_at: string | null;
+      body_text: string | null;
+      sent_body_text: string | null;
       email_threads: {
         salesforce_owner_id: string | null;
         salesforce_owner_name: string | null;
         is_master_agent_owned: boolean | null;
+        sender_name: string | null;
+        sender_email: string | null;
+        email_account_id: string | null;
+      } | null;
+      email_accounts: {
+        id: string;
+        email_address: string;
+        display_name: string | null;
       } | null;
     }) => {
       const thread = d.email_threads;
@@ -90,11 +128,28 @@ export async function GET(request: NextRequest) {
         ? ownerAgentMap.get(ownerId)!
         : thread?.salesforce_owner_name ?? null;
 
+      // Calculate response time for sent drafts
+      let response_time_ms: number | null = null;
+      if (d.status === "sent" && d.sent_at && d.thread_id) {
+        const inboundAt = inboundReceivedMap.get(d.thread_id);
+        if (inboundAt) {
+          response_time_ms = new Date(d.sent_at).getTime() - new Date(inboundAt).getTime();
+        }
+      }
+
       return {
         ...d,
         added_to_training: trainingDraftIds.has(d.id),
         salesforce_owner_name: resolvedOwnerName,
         is_master_agent_owned: thread?.is_master_agent_owned ?? null,
+        sender_name: thread?.sender_name ?? null,
+        sender_email: thread?.sender_email ?? null,
+        account_email: d.email_accounts?.email_address ?? null,
+        account_display_name: d.email_accounts?.display_name ?? null,
+        preview_text: d.status === "sent"
+          ? (d.sent_body_text ?? d.body_text ?? "")?.slice(0, 120)
+          : (d.body_text ?? "")?.slice(0, 120),
+        response_time_ms,
       };
     });
 
