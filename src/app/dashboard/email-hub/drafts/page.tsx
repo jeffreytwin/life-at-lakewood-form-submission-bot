@@ -91,6 +91,22 @@ const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
+/** Per-inbox background tint colors (very subtle) */
+const INBOX_TINT: Record<string, string> = {
+  "lynn@lifeatlakewood.com": "rgba(168, 130, 255, 0.06)",   // purple
+  "lynn@lifeinwellenpark.com": "rgba(52, 211, 153, 0.06)",  // green
+  "lynn@lifeatparrish.com": "rgba(34, 211, 238, 0.06)",     // cyan
+  "lynn@lifeinlongboatkey.com": "rgba(250, 204, 21, 0.06)", // yellow
+};
+
+/** Accent color for inbox left-border highlight */
+const INBOX_ACCENT: Record<string, string> = {
+  "lynn@lifeatlakewood.com": "rgba(168, 130, 255, 0.35)",
+  "lynn@lifeinwellenpark.com": "rgba(52, 211, 153, 0.35)",
+  "lynn@lifeatparrish.com": "rgba(34, 211, 238, 0.35)",
+  "lynn@lifeinlongboatkey.com": "rgba(250, 204, 21, 0.35)",
+};
+
 const POLL_INTERVAL_MS = 15_000;
 
 /**
@@ -892,9 +908,12 @@ export default function EmailDraftsPage() {
                     gap: 10,
                     marginBottom: 12,
                     padding: "8px 12px",
-                    background: "#1a1d27",
+                    background: INBOX_TINT[inboxKey] ?? "#1a1d27",
                     borderRadius: 8,
                     border: "1px solid var(--border)",
+                    borderLeft: INBOX_ACCENT[inboxKey]
+                      ? `3px solid ${INBOX_ACCENT[inboxKey]}`
+                      : "1px solid var(--border)",
                   }}
                 >
                   <span style={{ fontSize: 20, color: "#e4e6ed" }}>&#9993;</span>
@@ -949,7 +968,13 @@ export default function EmailDraftsPage() {
                     : formatEmailDate(draft.created_at);
 
                   return (
-                    <div className="card" key={draft.id} style={{ overflow: "hidden" }}>
+                    <div className="card" key={draft.id} style={{
+                      overflow: "hidden",
+                      background: INBOX_TINT[draft.account_email ?? ""] ?? undefined,
+                      borderLeft: INBOX_ACCENT[draft.account_email ?? ""]
+                        ? `3px solid ${INBOX_ACCENT[draft.account_email ?? ""]}`
+                        : undefined,
+                    }}>
                       {/* Collapsed row — Gmail-style */}
                       <div
                         onClick={() => toggleExpand(draft.id)}
