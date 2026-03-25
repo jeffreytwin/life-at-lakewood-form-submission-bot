@@ -74,15 +74,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // For sent drafts, fetch the earliest inbound message per thread for response time
-    const sentThreadIds = [
-      ...new Set(
-        (data ?? [])
-          .filter((d: { status: string; thread_id: string | null }) => d.status === "sent" && d.thread_id)
-          .map((d: { thread_id: string }) => d.thread_id)
-      ),
-    ];
-    let inboundReceivedMap = new Map<string, string>();
+    // For sent drafts, fetch all inbound messages per thread for response time
+    // We need the most recent inbound message *before* each draft was created
+    const sentDraftsWithThreads = (data ?? []).filter(
+      (d: { status: string; thread_id: string | null }) => d.status === "sent" && d.thread_id
+    );
+    const sentThreadIds = [...new Set(sentDraftsWithThreads.map((d: { thread_id: string }) => d.thread_id))];
+    let inboundMessagesByThread = new Map<string, string[]>();
     if (sentThreadIds.length > 0) {
       const { data: inboundMessages } = await supabase
         .from("email_messages")
@@ -92,9 +90,10 @@ export async function GET(request: NextRequest) {
         .order("received_at", { ascending: true });
       if (inboundMessages) {
         for (const msg of inboundMessages) {
-          // Keep the earliest inbound message per thread
-          if (msg.received_at && !inboundReceivedMap.has(msg.thread_id)) {
-            inboundReceivedMap.set(msg.thread_id, msg.received_at);
+          if (msg.received_at) {
+            const list = inboundMessagesByThread.get(msg.thread_id) ?? [];
+            list.push(msg.received_at);
+            inboundMessagesByThread.set(msg.thread_id, list);
           }
         }
       }
@@ -129,11 +128,22 @@ export async function GET(request: NextRequest) {
         : thread?.salesforce_owner_name ?? null;
 
       // Calculate response time for sent drafts
+      // Use the most recent inbound message received before this draft was created
       let response_time_ms: number | null = null;
       if (d.status === "sent" && d.sent_at && d.thread_id) {
-        const inboundAt = inboundReceivedMap.get(d.thread_id);
-        if (inboundAt) {
-          response_time_ms = new Date(d.sent_at).getTime() - new Date(inboundAt).getTime();
+        const inboundTimes = inboundMessagesByThread.get(d.thread_id);
+        if (inboundTimes) {
+          const draftCreatedAt = new Date((d as unknown as { created_at: string }).created_at).getTime();
+          // Find the latest inbound message received before this draft was created
+          let latestBefore: string | null = null;
+          for (const t of inboundTimes) {
+            if (new Date(t).getTime() <= draftCreatedAt) {
+              latestBefore = t;
+            }
+          }
+          if (latestBefore) {
+            response_time_ms = new Date(d.sent_at).getTime() - new Date(latestBefore).getTime();
+          }
         }
       }
 
