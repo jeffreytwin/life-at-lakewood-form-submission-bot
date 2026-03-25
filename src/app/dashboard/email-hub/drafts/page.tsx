@@ -331,8 +331,9 @@ export default function EmailDraftsPage() {
     [statusFilter, showSimulations]
   );
 
-  // Initial fetch on filter change
+  // Initial fetch on filter change — also reset inbox expansion
   useEffect(() => {
+    setExpandedInboxes(new Set());
     fetchDrafts();
   }, [fetchDrafts]);
 
@@ -659,9 +660,7 @@ export default function EmailDraftsPage() {
     const key = draft.account_email ?? "unknown";
     if (!acc[key]) {
       acc[key] = {
-        label: draft.account_display_name
-          ? `${draft.account_display_name} (${draft.account_email})`
-          : draft.account_email ?? "Unknown Inbox",
+        label: draft.account_display_name ?? draft.account_email ?? "Unknown Inbox",
         drafts: [],
       };
     }
@@ -669,6 +668,10 @@ export default function EmailDraftsPage() {
     return acc;
   }, {});
   const inboxGroups = Object.entries(groupedByInbox);
+
+  // Track which inbox sections are showing all emails (default: collapsed to 5)
+  const INBOX_PAGE_SIZE = 5;
+  const [expandedInboxes, setExpandedInboxes] = useState<Set<string>>(new Set());
 
   // Track gravatar load failures
   const [failedGravatars, setFailedGravatars] = useState<Set<string>>(new Set());
@@ -918,7 +921,7 @@ export default function EmailDraftsPage() {
               )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {group.drafts.map((draft) => {
+                {(expandedInboxes.has(inboxKey) ? group.drafts : group.drafts.slice(0, INBOX_PAGE_SIZE)).map((draft) => {
                   const isExpanded = expandedId === draft.id;
                   const isEditing = editingId === draft.id;
                   const isApproved = draft.status === "approved" || approvedIds.has(draft.id);
@@ -2030,6 +2033,68 @@ export default function EmailDraftsPage() {
               </div>
                   );
                 })}
+                {!expandedInboxes.has(inboxKey) && group.drafts.length > INBOX_PAGE_SIZE && (
+                  <button
+                    onClick={() => setExpandedInboxes((prev) => new Set(prev).add(inboxKey))}
+                    style={{
+                      background: "none",
+                      border: "1px solid var(--border)",
+                      borderRadius: 6,
+                      color: "var(--accent)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "8px 16px",
+                      cursor: "pointer",
+                      marginTop: 6,
+                      width: "100%",
+                      textAlign: "center",
+                      transition: "background 0.15s, border-color 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--bg-card-hover)";
+                      e.currentTarget.style.borderColor = "var(--accent)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "none";
+                      e.currentTarget.style.borderColor = "var(--border)";
+                    }}
+                  >
+                    Show More ({group.drafts.length - INBOX_PAGE_SIZE} remaining)
+                  </button>
+                )}
+                {expandedInboxes.has(inboxKey) && group.drafts.length > INBOX_PAGE_SIZE && (
+                  <button
+                    onClick={() => setExpandedInboxes((prev) => {
+                      const next = new Set(prev);
+                      next.delete(inboxKey);
+                      return next;
+                    })}
+                    style={{
+                      background: "none",
+                      border: "1px solid var(--border)",
+                      borderRadius: 6,
+                      color: "var(--text-muted)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "8px 16px",
+                      cursor: "pointer",
+                      marginTop: 6,
+                      width: "100%",
+                      textAlign: "center",
+                      transition: "background 0.15s, border-color 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--bg-card-hover)";
+                      e.currentTarget.style.borderColor = "var(--accent)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "none";
+                      e.currentTarget.style.borderColor = "var(--border)";
+                    }}
+                  >
+                    Show Less
+                  </button>
+                )}
               </div>
             </div>
           ))}
