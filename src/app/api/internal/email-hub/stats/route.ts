@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 
 export const dynamic = "force-dynamic";
@@ -93,10 +93,9 @@ function easternDayStart(daysAgo: number): string {
   return new Date(naive.getTime() - offsetMs).toISOString();
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url);
-    const daysParam = url.searchParams.get("days");
+    const daysParam = request.nextUrl.searchParams.get("days");
     const days = daysParam ? parseInt(daysParam, 10) : 7;
     const periodCutoff = easternDayStart(days);
 
