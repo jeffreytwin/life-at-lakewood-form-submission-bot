@@ -1119,7 +1119,7 @@ export default function EmailDraftsPage() {
                               </span>
                             )}
 
-                            {/* Handoff badge (right-most) */}
+                            {/* Handoff badge (last in label group) */}
                             {isSent && draft.agent_handoff_transferred && (
                               <span
                                 style={{
@@ -1131,7 +1131,6 @@ export default function EmailDraftsPage() {
                                   color: "#a78bfa",
                                   border: "1px solid #a78bfa44",
                                   flexShrink: 0,
-                                  marginLeft: "auto",
                                 }}
                               >
                                 Handed Off
