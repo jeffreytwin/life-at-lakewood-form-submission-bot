@@ -288,10 +288,11 @@ export default function LeadsPage() {
     }
   }
 
-  function SortHeader({ label, sortKeyName }: { label: string; sortKeyName: SortKey }) {
+  function SortHeader({ label, sortKeyName, className }: { label: string; sortKeyName: SortKey; className?: string }) {
     const active = sortKey === sortKeyName;
     return (
       <th
+        className={className}
         onClick={() => handleSort(sortKeyName)}
         style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
       >
@@ -371,13 +372,13 @@ export default function LeadsPage() {
                 <tr>
                   <th></th>
                   <SortHeader label="Name" sortKeyName="name" />
-                  <SortHeader label="Form" sortKeyName="form" />
-                  <SortHeader label="Location" sortKeyName="location" />
-                  <SortHeader label="Price" sortKeyName="value" />
+                  <SortHeader label="Form" sortKeyName="form" className="hide-mobile" />
+                  <SortHeader label="Location" sortKeyName="location" className="hide-mobile" />
+                  <SortHeader label="Price" sortKeyName="value" className="hide-mobile" />
                   <SortHeader label="Status" sortKeyName="status" />
                   <SortHeader label="Assigned To" sortKeyName="assigned" />
-                  <SortHeader label="Attempts" sortKeyName="attempts" />
-                  <SortHeader label="Received" sortKeyName="received" />
+                  <SortHeader label="Attempts" sortKeyName="attempts" className="hide-mobile" />
+                  <SortHeader label="Received" sortKeyName="received" className="hide-mobile" />
                 </tr>
               </thead>
               <tbody>
@@ -397,13 +398,13 @@ export default function LeadsPage() {
                       <td style={{ fontWeight: 600 }}>
                         {lead.first_name} {lead.last_name}
                       </td>
-                      <td className="text-sm text-muted">
+                      <td className="text-sm text-muted hide-mobile">
                         {lead.form_name ?? "-"}
                       </td>
-                      <td className="text-sm">
+                      <td className="text-sm hide-mobile">
                         {lead.location?.name ?? lead.village ?? "-"}
                       </td>
-                      <td className="text-sm font-mono">
+                      <td className="text-sm font-mono hide-mobile">
                         {lead.price ?? "-"}
                       </td>
                       <td>
@@ -459,16 +460,16 @@ export default function LeadsPage() {
                       <td className="text-sm">
                         {lead.final_agent?.name ?? "-"}
                       </td>
-                      <td className="font-mono">
+                      <td className="font-mono hide-mobile">
                         {lead.routing_attempts?.length ?? 0}
                       </td>
-                      <td className="text-muted text-sm font-mono">
+                      <td className="text-muted text-sm font-mono hide-mobile">
                         {new Date(lead.created_at).toLocaleString()}
                       </td>
                     </tr>
                     {expandedLead === lead.id && (
                       <tr key={`${lead.id}-detail`}>
-                        <td colSpan={10} style={{ padding: "0 12px 16px 42px" }}>
+                        <td colSpan={10} className="lead-detail-cell">
                           <div
                             style={{
                               background: "var(--bg-input)",
@@ -476,7 +477,7 @@ export default function LeadsPage() {
                               padding: 16,
                             }}
                           >
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px", marginBottom: 12 }}>
+                            <div className="lead-detail-grid">
                               <div>
                                 <span className="text-muted text-sm">Email: </span>
                                 {lead.email ?? "-"}
@@ -568,10 +569,10 @@ export default function LeadsPage() {
                                       <th>#</th>
                                       <th>Agent</th>
                                       <th>Status</th>
-                                      <th>Response Message</th>
-                                      <th>Score</th>
-                                      <th>Initial Outreach</th>
-                                      <th>Response Time</th>
+                                      <th className="hide-mobile">Response Message</th>
+                                      <th className="hide-mobile">Score</th>
+                                      <th className="hide-mobile">Initial Outreach</th>
+                                      <th className="hide-mobile">Response Time</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -595,10 +596,10 @@ export default function LeadsPage() {
                                               {attemptStatusLabel[attempt.status] ?? attempt.status}
                                             </span>
                                           </td>
-                                          <td className="text-sm">
+                                          <td className="text-sm hide-mobile">
                                             {attempt.agent_response ?? "-"}
                                           </td>
-                                          <td className="font-mono text-sm">
+                                          <td className="font-mono text-sm hide-mobile">
                                             {attempt.score_snapshot
                                               ? (
                                                   attempt.score_snapshot as {
@@ -607,12 +608,12 @@ export default function LeadsPage() {
                                                 ).total?.toFixed(3) ?? "-"
                                               : "-"}
                                           </td>
-                                          <td className="text-muted text-sm font-mono">
+                                          <td className="text-muted text-sm font-mono hide-mobile">
                                             {new Date(
                                               attempt.created_at
                                             ).toLocaleTimeString()}
                                           </td>
-                                          <td className="text-muted text-sm font-mono">
+                                          <td className="text-muted text-sm font-mono hide-mobile">
                                             {formatResponseTime(attempt.created_at, attempt.updated_at, attempt.status)}
                                           </td>
                                         </tr>
