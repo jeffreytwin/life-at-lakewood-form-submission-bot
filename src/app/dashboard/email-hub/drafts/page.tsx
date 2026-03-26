@@ -876,7 +876,7 @@ export default function EmailDraftsPage() {
 
       {/* Re-scan Inboxes button */}
       {statusFilter === "drafted" && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 12, paddingRight: 4 }}>
           {rescanResult && (
             <span
               style={{
@@ -896,7 +896,7 @@ export default function EmailDraftsPage() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 6,
               padding: "6px 14px",
               fontSize: 13,
               fontWeight: 600,
@@ -909,16 +909,20 @@ export default function EmailDraftsPage() {
               opacity: rescanning ? 0.6 : 1,
             }}
           >
-            {rescanning && (
+            {rescanning ? (
               <span style={{
                 display: "inline-block",
-                width: 14,
-                height: 14,
+                width: 12,
+                height: 12,
                 border: "2px solid #2a2e3a",
                 borderTop: "2px solid #8b8fa3",
                 borderRadius: "50%",
                 animation: "spin 0.8s linear infinite",
               }} />
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
             )}
             {rescanning ? "Scanning..." : "Re-Scan Inboxes"}
           </button>
