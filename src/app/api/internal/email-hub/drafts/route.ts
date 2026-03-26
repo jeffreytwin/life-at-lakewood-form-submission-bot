@@ -74,6 +74,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Look up Salesforce lead status for each sender
+    const senderEmails = [
+      ...new Set(
+        (data ?? [])
+          .map((d: { email_threads: { sender_email: string | null } | null }) =>
+            d.email_threads?.sender_email?.toLowerCase()
+          )
+          .filter(Boolean) as string[]
+      ),
+    ];
+    let senderLeadStatusMap = new Map<string, string>();
+    if (senderEmails.length > 0) {
+      const { data: contacts } = await supabase
+        .from("salesforce_contacts")
+        .select("email, lead_status")
+        .in("email", senderEmails)
+        .eq("is_active", true)
+        .not("lead_status", "is", null);
+      if (contacts) {
+        for (const c of contacts) {
+          if (c.email && c.lead_status) {
+            senderLeadStatusMap.set(c.email.toLowerCase(), c.lead_status);
+          }
+        }
+      }
+    }
+
     const enriched = (data ?? []).map((d: {
       id: string;
       status: string;
@@ -117,6 +144,9 @@ export async function GET(request: NextRequest) {
         is_master_agent_owned: thread?.is_master_agent_owned ?? null,
         sender_name: thread?.sender_name ?? null,
         sender_email: thread?.sender_email ?? null,
+        salesforce_lead_status: thread?.sender_email
+          ? senderLeadStatusMap.get(thread.sender_email.toLowerCase()) ?? null
+          : null,
         account_email: d.email_accounts?.email_address ?? null,
         account_display_name: d.email_accounts?.display_name ?? null,
         preview_text: d.status === "sent"

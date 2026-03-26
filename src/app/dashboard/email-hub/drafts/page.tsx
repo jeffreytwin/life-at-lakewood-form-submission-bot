@@ -48,6 +48,7 @@ interface EmailDraft {
   is_master_agent_owned: boolean | null;
   sender_name: string | null;
   sender_email: string | null;
+  salesforce_lead_status: string | null;
   account_email: string | null;
   account_display_name: string | null;
   preview_text: string | null;
@@ -1629,79 +1630,94 @@ export default function EmailDraftsPage() {
                       )}
 
                       {/* Lead status update buttons */}
-                      {draft.lead_status_update === "nurture_active" && (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 14px",
-                            borderRadius: 6,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            background: "#34d39922",
-                            color: "#34d399",
-                            border: "1px solid #34d39944",
-                          }}
-                        >
-                          <span style={{ fontSize: 16 }}>&#10003;</span>
-                          Updated to Nurture Active
-                        </span>
-                      )}
-                      {draft.lead_status_update === "disqualified" && (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 14px",
-                            borderRadius: 6,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            background: "#f8717122",
-                            color: "#f87171",
-                            border: "1px solid #f8717144",
-                          }}
-                        >
-                          <span style={{ fontSize: 16 }}>&#10003;</span>
-                          Updated to Disqualified
-                        </span>
-                      )}
-                      {!draft.lead_status_update && !isEditing && (
-                        <>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateLeadStatus(draft.id, "nurture_active");
-                            }}
-                            disabled={leadStatusUpdatingId === draft.id}
-                            style={{
-                              color: "#34d399",
-                              borderColor: "#34d39944",
-                            }}
-                          >
-                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Nurture Active"}
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateLeadStatus(draft.id, "disqualified");
-                            }}
-                            disabled={leadStatusUpdatingId === draft.id}
-                            style={{
-                              color: "#f87171",
-                              borderColor: "#f8717144",
-                            }}
-                          >
-                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
-                          </button>
-                        </>
-                      )}
+                      {(() => {
+                        // Determine effective lead status: per-draft update takes priority, then Salesforce
+                        const effectiveStatus = draft.lead_status_update
+                          ?? (draft.salesforce_lead_status?.toLowerCase() === "nurture_active" ? "nurture_active" : null)
+                          ?? (draft.salesforce_lead_status?.toLowerCase() === "disqualified" ? "disqualified" : null);
+
+                        if (effectiveStatus === "nurture_active") {
+                          return (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                padding: "6px 14px",
+                                borderRadius: 6,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                background: "#34d39922",
+                                color: "#34d399",
+                                border: "1px solid #34d39944",
+                              }}
+                            >
+                              <span style={{ fontSize: 16 }}>&#10003;</span>
+                              {draft.lead_status_update === "nurture_active" ? "Updated to Nurture Active" : "Nurture Active"}
+                            </span>
+                          );
+                        }
+
+                        if (effectiveStatus === "disqualified") {
+                          return (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                padding: "6px 14px",
+                                borderRadius: 6,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                background: "#f8717122",
+                                color: "#f87171",
+                                border: "1px solid #f8717144",
+                              }}
+                            >
+                              <span style={{ fontSize: 16 }}>&#10003;</span>
+                              {draft.lead_status_update === "disqualified" ? "Updated to Disqualified" : "Disqualified"}
+                            </span>
+                          );
+                        }
+
+                        if (isEditing) return null;
+
+                        return (
+                          <>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateLeadStatus(draft.id, "nurture_active");
+                              }}
+                              disabled={leadStatusUpdatingId === draft.id}
+                              style={{
+                                color: "#34d399",
+                                borderColor: "#34d39944",
+                              }}
+                            >
+                              {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Nurture Active"}
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateLeadStatus(draft.id, "disqualified");
+                              }}
+                              disabled={leadStatusUpdatingId === draft.id}
+                              style={{
+                                color: "#f87171",
+                                borderColor: "#f8717144",
+                              }}
+                            >
+                              {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
+                            </button>
+                          </>
+                        );
+                      })()}
 
                       {/* Agent Handoff Transfer — visible in sent area, or in drafts after nurture active */}
-                      {(isSent || draft.lead_status_update === "nurture_active") && !draft.agent_handoff_transferred && (() => {
+                      {(isSent || draft.lead_status_update === "nurture_active" || draft.salesforce_lead_status?.toLowerCase() === "nurture_active") && !draft.agent_handoff_transferred && (() => {
                         // Non-frontlines owned: show disabled "Already Owned" button
                         const isNonFrontlinesOwned =
                           draft.salesforce_owner_name &&
@@ -1731,7 +1747,9 @@ export default function EmailDraftsPage() {
                         }
 
                         // Must be marked Nurture Active before handoff is available
-                        if (draft.lead_status_update !== "nurture_active") {
+                        const isNurtureActive = draft.lead_status_update === "nurture_active"
+                          || draft.salesforce_lead_status?.toLowerCase() === "nurture_active";
+                        if (!isNurtureActive) {
                           return null;
                         }
 
