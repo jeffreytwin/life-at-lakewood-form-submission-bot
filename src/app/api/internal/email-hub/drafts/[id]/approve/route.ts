@@ -69,7 +69,7 @@ export async function POST(
       });
     }
 
-    // Determine location name for SMS
+    // Determine location name and lead name for SMS
     const account = draft.email_accounts as {
       email_address: string;
       display_name: string | null;
@@ -78,8 +78,20 @@ export async function POST(
     } | null;
     const locationName = account?.locations?.name ?? null;
 
-    // SMS body: "[LOCATION] Draft Ready" or just "Draft Ready"
-    const smsBody = locationName ? `${locationName} Draft Ready` : "Draft Ready";
+    // Get the lead name from the email thread
+    let leadName: string | null = null;
+    if (draft.thread_id) {
+      const { data: thread } = await supabase
+        .from("email_threads")
+        .select("sender_name, sender_email")
+        .eq("id", draft.thread_id)
+        .single();
+      leadName = thread?.sender_name || thread?.sender_email || null;
+    }
+
+    // SMS body: "[LOCATION] Draft Ready (LEAD NAME)" or just "Draft Ready"
+    let smsBody = locationName ? `${locationName} Draft Ready` : "Draft Ready";
+    if (leadName) smsBody += ` (${leadName})`;
 
     // Send SMS to each eligible agent
     const results: { agentName: string; success: boolean; error?: string }[] =

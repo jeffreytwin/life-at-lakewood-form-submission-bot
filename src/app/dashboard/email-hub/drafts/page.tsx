@@ -91,6 +91,13 @@ const CATEGORY_OPTIONS: { key: TrainingCategory; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
+/** Play a sound effect */
+function playSound(src: string) {
+  const audio = new Audio(src);
+  audio.volume = 0.6;
+  audio.play().catch(() => {});
+}
+
 /** Per-inbox background tint colors (very subtle) */
 const INBOX_TINT: Record<string, string> = {
   "lynn@lifeatlakewood.com": "rgba(168, 130, 255, 0.06)",   // purple
@@ -554,6 +561,7 @@ export default function EmailDraftsPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Failed to discard");
       }
+      playSound("/sounds/discard-draft-sound.mp3");
       fetchDrafts();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Discard failed");
@@ -610,6 +618,7 @@ export default function EmailDraftsPage() {
       if (!res.ok) {
         throw new Error(data.error ?? "Handoff failed");
       }
+      playSound("/sounds/transfer-to-agent-sound.mp3");
       setHandoffResult(`Transferred to ${agentName} successfully!`);
       fetchDrafts();
     } catch (e) {
@@ -633,6 +642,9 @@ export default function EmailDraftsPage() {
       if (!res.ok) {
         throw new Error(data.error ?? "Update failed");
       }
+      playSound(status === "nurture_active"
+        ? "/sounds/nurture-active-sound.mp3"
+        : "/sounds/update-to-disqualified.mp3");
       fetchDrafts();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Lead status update failed");
@@ -1676,8 +1688,8 @@ export default function EmailDraftsPage() {
                         </>
                       )}
 
-                      {/* Agent Handoff Transfer (sent only — right-most) */}
-                      {isSent && !draft.agent_handoff_transferred && (() => {
+                      {/* Agent Handoff Transfer — visible in sent area, or in drafts after nurture active */}
+                      {(isSent || draft.lead_status_update === "nurture_active") && !draft.agent_handoff_transferred && (() => {
                         // Non-frontlines owned: show disabled "Already Owned" button
                         const isNonFrontlinesOwned =
                           draft.salesforce_owner_name &&

@@ -518,7 +518,7 @@ export async function generateAndStoreDraft(
 
     // Auto-approve if the global setting is enabled
     if (insertedDraft?.id) {
-      await maybeAutoApproveDraft(insertedDraft.id, locationName);
+      await maybeAutoApproveDraft(insertedDraft.id, locationName, contactName);
     }
 
     return true;
@@ -537,7 +537,8 @@ export async function generateAndStoreDraft(
  */
 async function maybeAutoApproveDraft(
   draftId: string,
-  locationName: string
+  locationName: string,
+  leadName?: string
 ): Promise<void> {
   try {
     // Check the global setting
@@ -573,8 +574,9 @@ async function maybeAutoApproveDraft(
     );
 
     const prefix = locationName && locationName !== "General" ? `${locationName} ` : "";
+    const leadSuffix = leadName ? ` (${leadName})` : "";
     const smsBody =
-      `${prefix}Draft Ready\n\nJeff is likely sleeping - please review the draft carefully before sending`;
+      `${prefix}Draft Ready${leadSuffix}\n\nJeff is likely sleeping - please review the draft carefully before sending`;
 
     for (const agent of eligible) {
       try {
