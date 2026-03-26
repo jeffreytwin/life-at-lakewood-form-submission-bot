@@ -48,9 +48,9 @@ export async function POST(
       return NextResponse.json({ error: "Draft not found" }, { status: 404 });
     }
 
-    if (draft.status !== "sent") {
+    if (!["drafted", "approved", "sent"].includes(draft.status)) {
       return NextResponse.json(
-        { error: "Only sent emails can be handed off" },
+        { error: "Discarded drafts cannot be handed off" },
         { status: 400 }
       );
     }
