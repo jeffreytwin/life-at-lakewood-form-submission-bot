@@ -876,33 +876,7 @@ export default function EmailDraftsPage() {
 
       {/* Re-scan Inboxes button */}
       {statusFilter === "drafted" && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <button
-            onClick={handleRescan}
-            disabled={rescanning}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 14px",
-              fontSize: 13,
-              fontWeight: 600,
-              color: rescanning ? "#8b8fa3" : "#4f8ff7",
-              background: rescanning ? "transparent" : "rgba(79, 143, 247, 0.08)",
-              border: `1px solid ${rescanning ? "#2a2e3a" : "rgba(79, 143, 247, 0.3)"}`,
-              borderRadius: 6,
-              cursor: rescanning ? "not-allowed" : "pointer",
-              transition: "all 0.2s",
-            }}
-          >
-            <span style={{
-              display: "inline-block",
-              animation: rescanning ? "spin 1s linear infinite" : "none",
-            }}>
-              &#8635;
-            </span>
-            {rescanning ? "Scanning..." : "Re-Scan Inboxes"}
-          </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
           {rescanResult && (
             <span
               style={{
@@ -916,6 +890,38 @@ export default function EmailDraftsPage() {
               {rescanResult}
             </span>
           )}
+          <button
+            onClick={handleRescan}
+            disabled={rescanning}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "6px 14px",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#8b8fa3",
+              background: "transparent",
+              border: "1px solid #2a2e3a",
+              borderRadius: 6,
+              cursor: rescanning ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+              opacity: rescanning ? 0.6 : 1,
+            }}
+          >
+            {rescanning && (
+              <span style={{
+                display: "inline-block",
+                width: 14,
+                height: 14,
+                border: "2px solid #2a2e3a",
+                borderTop: "2px solid #8b8fa3",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+              }} />
+            )}
+            {rescanning ? "Scanning..." : "Re-Scan Inboxes"}
+          </button>
         </div>
       )}
 
