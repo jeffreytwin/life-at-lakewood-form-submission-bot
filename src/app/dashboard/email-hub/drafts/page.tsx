@@ -694,6 +694,17 @@ export default function EmailDraftsPage() {
   const INBOX_PAGE_SIZE = 5;
   const [expandedInboxes, setExpandedInboxes] = useState<Set<string>>(new Set());
 
+  // Track which inbox sections are fully collapsed (header only)
+  const [collapsedInboxes, setCollapsedInboxes] = useState<Set<string>>(new Set());
+  function toggleInboxCollapse(key: string) {
+    setCollapsedInboxes((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   // Track gravatar load failures
   const [failedGravatars, setFailedGravatars] = useState<Set<string>>(new Set());
 
@@ -960,14 +971,15 @@ export default function EmailDraftsPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {inboxGroups.map(([inboxKey, group]) => (
             <div key={inboxKey}>
-              {/* Inbox section header */}
+              {/* Inbox section header — click to collapse/expand */}
               {inboxGroups.length > 1 && (
                 <div
+                  onClick={() => toggleInboxCollapse(inboxKey)}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    marginBottom: 12,
+                    marginBottom: collapsedInboxes.has(inboxKey) ? 0 : 12,
                     padding: "8px 12px",
                     background: INBOX_TINT[inboxKey] ?? "#1a1d27",
                     borderRadius: 8,
@@ -975,8 +987,18 @@ export default function EmailDraftsPage() {
                     borderLeft: INBOX_ACCENT[inboxKey]
                       ? `3px solid ${INBOX_ACCENT[inboxKey]}`
                       : "1px solid var(--border)",
+                    cursor: "pointer",
+                    userSelect: "none",
                   }}
                 >
+                  <span style={{
+                    fontSize: 12,
+                    color: "#8b8fa3",
+                    transition: "transform 0.2s",
+                    transform: collapsedInboxes.has(inboxKey) ? "rotate(-90deg)" : "rotate(0deg)",
+                  }}>
+                    &#9660;
+                  </span>
                   <span style={{ fontSize: 20, color: "#e4e6ed" }}>&#9993;</span>
                   <span
                     style={{
@@ -1003,6 +1025,7 @@ export default function EmailDraftsPage() {
                 </div>
               )}
 
+              {!collapsedInboxes.has(inboxKey) && (
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {(expandedInboxes.has(inboxKey) ? group.drafts : group.drafts.slice(0, INBOX_PAGE_SIZE)).map((draft) => {
                   const isExpanded = expandedId === draft.id;
@@ -2078,6 +2101,7 @@ export default function EmailDraftsPage() {
                   </button>
                 )}
               </div>
+              )}
             </div>
           ))}
         </div>
