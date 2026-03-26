@@ -876,7 +876,7 @@ export default function EmailDraftsPage() {
 
       {/* Re-scan Inboxes button */}
       {statusFilter === "drafted" && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 12, paddingRight: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
           {rescanResult && (
             <span
               style={{
