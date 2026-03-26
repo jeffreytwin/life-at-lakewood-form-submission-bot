@@ -825,7 +825,7 @@ export default function EmailDraftsPage() {
             ))}
           </div>
 
-          {/* Auto-Approve toggle */}
+          {/* Auto-Approve toggle — pushed to right */}
           <button
             onClick={toggleAutoApprove}
             disabled={togglingAutoApprove}
@@ -836,6 +836,7 @@ export default function EmailDraftsPage() {
               padding: "6px 14px",
               fontSize: 13,
               fontWeight: 600,
+              marginLeft: "auto",
               color: autoApprove ? "#34d399" : "#8b8fa3",
               background: autoApprove ? "rgba(52, 211, 153, 0.1)" : "transparent",
               border: `1px solid ${autoApprove ? "#34d399" : "#2a2e3a"}`,
@@ -870,8 +871,12 @@ export default function EmailDraftsPage() {
             </span>
             Auto-Approve
           </button>
+        </div>
+      </div>
 
-          {/* Re-scan Inboxes button */}
+      {/* Re-scan Inboxes button */}
+      {statusFilter === "drafted" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <button
             onClick={handleRescan}
             disabled={rescanning}
@@ -898,24 +903,21 @@ export default function EmailDraftsPage() {
             </span>
             {rescanning ? "Scanning..." : "Re-Scan Inboxes"}
           </button>
+          {rescanResult && (
+            <span
+              style={{
+                fontSize: 13,
+                color: rescanResult.includes("missed") ? "#34d399" : "#8b8fa3",
+                padding: "6px 12px",
+                background: rescanResult.includes("missed") ? "rgba(52, 211, 153, 0.08)" : "rgba(139, 143, 163, 0.08)",
+                borderRadius: 6,
+              }}
+            >
+              {rescanResult}
+            </span>
+          )}
         </div>
-
-        {/* Rescan result notification */}
-        {rescanResult && (
-          <div
-            style={{
-              fontSize: 13,
-              color: rescanResult.includes("missed") ? "#34d399" : "#8b8fa3",
-              padding: "6px 12px",
-              background: rescanResult.includes("missed") ? "rgba(52, 211, 153, 0.08)" : "rgba(139, 143, 163, 0.08)",
-              borderRadius: 6,
-              marginTop: -4,
-            }}
-          >
-            {rescanResult}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Error state */}
       {error ? (
