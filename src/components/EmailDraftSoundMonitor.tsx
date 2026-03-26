@@ -11,7 +11,7 @@ interface DraftSnapshot {
   sent_at: string | null;
 }
 
-const NEW_DRAFT_SOUND = "/sounds/mgs-new-form.mp3";
+const NEW_DRAFT_SOUND = "/sounds/new-email-notification-sound.mp3";
 const SENT_EMAIL_SOUND = "/sounds/metal-gear-victory.mp3";
 
 function playSound(src: string) {
