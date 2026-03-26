@@ -593,6 +593,10 @@ select.form-input {
   color: var(--danger);
 }
 
+.rescan-row {
+  padding-right: 34px;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -824,6 +828,10 @@ select.form-input {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .rescan-row {
+    padding-right: 28px;
+  }
+
   /* Mobile top bar */
   .mobile-header {
     display: flex;
