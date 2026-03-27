@@ -937,7 +937,7 @@ function EmailDraftsPageInner() {
                 whiteSpace: "nowrap",
               }}
             >
-              Daily on at:
+              Turn on daily at
             </label>
             <input
               type="time"
