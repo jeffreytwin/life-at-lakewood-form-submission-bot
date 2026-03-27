@@ -370,7 +370,7 @@ export default function EmailDraftsPage() {
 
   // Initial fetch on filter change — also reset inbox expansion
   useEffect(() => {
-    setExpandedInboxes(new Set());
+    setInboxShowCount(new Map());
     fetchDrafts();
   }, [fetchDrafts]);
 
