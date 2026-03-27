@@ -22,6 +22,12 @@ const settingsItems = [
     icon: "\u2709",
   },
   {
+    href: "/dashboard/locations",
+    label: "Locations",
+    description: "Manage locations and their configuration",
+    icon: "\u2691",
+  },
+  {
     href: "/dashboard/audit",
     label: "Audit Log",
     description: "View system events and routing history",

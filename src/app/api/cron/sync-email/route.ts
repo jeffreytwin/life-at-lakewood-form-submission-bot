@@ -3,6 +3,7 @@ import { syncAllInboxes } from "@/lib/gmail/sync-inbox";
 import { syncAllSentFolders } from "@/lib/gmail/sync-sent";
 import { pushAllPendingDrafts, reconcileDeletedDrafts } from "@/lib/gmail/push-draft";
 import { renewAllWatches } from "@/lib/gmail/watch";
+import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 
 /**
@@ -22,6 +23,44 @@ export async function GET(request: NextRequest) {
 
   try {
     logger.info("Email sync cron started");
+
+    // Step 0: Check if auto-approve should be enabled by schedule
+    try {
+      const { data: settings } = await supabase
+        .from("system_settings")
+        .select("auto_approve_drafts, auto_approve_schedule_time")
+        .eq("id", 1)
+        .single();
+
+      if (settings?.auto_approve_schedule_time && !settings.auto_approve_drafts) {
+        const now = new Date();
+        const etTime = now.toLocaleString("en-US", {
+          timeZone: "America/New_York",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+        const [nowH, nowM] = etTime.split(":").map(Number);
+        const [schedH, schedM] = settings.auto_approve_schedule_time.split(":").map(Number);
+        const nowMinutes = nowH * 60 + nowM;
+        const schedMinutes = schedH * 60 + schedM;
+
+        if (nowMinutes >= schedMinutes) {
+          await supabase
+            .from("system_settings")
+            .update({ auto_approve_drafts: true, updated_at: now.toISOString() })
+            .eq("id", 1);
+          logger.info("Auto-approve enabled by schedule", {
+            scheduleTime: settings.auto_approve_schedule_time,
+            currentET: etTime,
+          });
+        }
+      }
+    } catch (schedErr) {
+      logger.warn("Auto-approve schedule check failed", {
+        error: schedErr instanceof Error ? schedErr.message : String(schedErr),
+      });
+    }
 
     // Step 1: Sync inboxes
     const inbox = await syncAllInboxes();
