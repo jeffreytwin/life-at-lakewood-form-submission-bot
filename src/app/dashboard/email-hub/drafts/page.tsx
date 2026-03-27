@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { emitLeadEvent } from "@/lib/lead-events";
 
@@ -265,7 +265,7 @@ function stripQuotedText(text: string): string {
   return result.join("\n").trim();
 }
 
-export default function EmailDraftsPage() {
+function EmailDraftsPageInner() {
   const searchParams = useSearchParams();
   const [drafts, setDrafts] = useState<EmailDraft[]>([]);
   const [loading, setLoading] = useState(true);
@@ -2222,5 +2222,13 @@ export default function EmailDraftsPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function EmailDraftsPage() {
+  return (
+    <Suspense>
+      <EmailDraftsPageInner />
+    </Suspense>
   );
 }
