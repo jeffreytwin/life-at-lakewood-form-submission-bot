@@ -10,7 +10,6 @@ const navItems = [
   { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2630" },
   { href: "/dashboard/email-hub/drafts", label: "Email", icon: "\u2709" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
-  { href: "/dashboard/locations", label: "Locations", icon: "\u2691" },
 ];
 
 export default function Sidebar({
@@ -110,7 +109,7 @@ export default function Sidebar({
         <div className="sidebar-footer">
           <Link
             href="/dashboard/settings"
-            className={`sidebar-logout${pathname?.startsWith("/dashboard/settings") ? " sidebar-footer-active" : ""}`}
+            className={`sidebar-logout${pathname?.startsWith("/dashboard/settings") || pathname?.startsWith("/dashboard/locations") ? " sidebar-footer-active" : ""}`}
             onClick={onClose}
           >
             <span className="nav-icon">{"\u2699"}</span>

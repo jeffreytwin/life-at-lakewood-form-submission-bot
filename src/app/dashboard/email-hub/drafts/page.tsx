@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { emitLeadEvent } from "@/lib/lead-events";
 
 type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
@@ -264,11 +265,20 @@ function stripQuotedText(text: string): string {
   return result.join("\n").trim();
 }
 
-export default function EmailDraftsPage() {
+function EmailDraftsPageInner() {
+  const searchParams = useSearchParams();
   const [drafts, setDrafts] = useState<EmailDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<EmailDraftStatus>("drafted");
+
+  // Reset to Drafts tab when navigating here via sidebar (no tab param or tab=drafted)
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (!tab || tab === "drafted") {
+      setStatusFilter("drafted");
+    }
+  }, [searchParams]);
   const [showSimulations] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -289,6 +299,9 @@ export default function EmailDraftsPage() {
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [approveResult, setApproveResult] = useState<string | null>(null);
+
+  // Reminder state
+  const [remindingId, setRemindingId] = useState<string | null>(null);
 
   // Discard state
   const [discardingId, setDiscardingId] = useState<string | null>(null);
@@ -313,6 +326,7 @@ export default function EmailDraftsPage() {
   // Auto-approve state
   const [autoApprove, setAutoApprove] = useState(false);
   const [togglingAutoApprove, setTogglingAutoApprove] = useState(false);
+  const [autoApproveSchedule, setAutoApproveSchedule] = useState<string | null>(null);
 
   // Rescan state
   const [rescanning, setRescanning] = useState(false);
@@ -356,7 +370,7 @@ export default function EmailDraftsPage() {
 
   // Initial fetch on filter change — also reset inbox expansion
   useEffect(() => {
-    setExpandedInboxes(new Set());
+    setInboxShowCount(new Map());
     fetchDrafts();
   }, [fetchDrafts]);
 
@@ -382,6 +396,7 @@ export default function EmailDraftsPage() {
       .then((r) => r.json())
       .then((data) => {
         if (typeof data.enabled === "boolean") setAutoApprove(data.enabled);
+        if (data.scheduleTime !== undefined) setAutoApproveSchedule(data.scheduleTime);
       })
       .catch(() => {});
   }, []);
@@ -402,6 +417,19 @@ export default function EmailDraftsPage() {
       // Silently fail
     } finally {
       setTogglingAutoApprove(false);
+    }
+  }
+
+  async function updateAutoApproveSchedule(time: string | null) {
+    setAutoApproveSchedule(time);
+    try {
+      await fetch("/api/internal/email-hub/auto-approve", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduleTime: time }),
+      });
+    } catch {
+      // Silently fail
     }
   }
 
@@ -549,6 +577,22 @@ export default function EmailDraftsPage() {
     }
   }
 
+  async function sendReminder(draftId: string) {
+    setRemindingId(draftId);
+    try {
+      const res = await fetch(`/api/internal/email-hub/drafts/${draftId}/remind`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Reminder failed");
+      setApproveResult("Reminder sent!");
+    } catch (e) {
+      setApproveResult(e instanceof Error ? e.message : "Reminder failed");
+    } finally {
+      setRemindingId(null);
+    }
+  }
+
   async function discardDraft(draftId: string) {
     if (!confirm("Are you sure you want to discard this draft? This will also delete it from Gmail.")) return;
     setDiscardingId(draftId);
@@ -690,9 +734,9 @@ export default function EmailDraftsPage() {
   }, {});
   const inboxGroups = Object.entries(groupedByInbox);
 
-  // Track which inbox sections are showing all emails (default: collapsed to 5)
+  // Track how many emails to show per inbox (default: 5, load more adds another 5)
   const INBOX_PAGE_SIZE = 5;
-  const [expandedInboxes, setExpandedInboxes] = useState<Set<string>>(new Set());
+  const [inboxShowCount, setInboxShowCount] = useState<Map<string, number>>(new Map());
 
   // Track which inbox sections are fully collapsed (header only)
   const [collapsedInboxes, setCollapsedInboxes] = useState<Set<string>>(new Set());
@@ -883,6 +927,48 @@ export default function EmailDraftsPage() {
             </span>
             Auto-Approve
           </button>
+
+          {/* Auto-approve daily schedule */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <label
+              style={{
+                fontSize: 12,
+                color: "#8b8fa3",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Daily on at:
+            </label>
+            <input
+              type="time"
+              value={autoApproveSchedule ?? ""}
+              onChange={(e) => updateAutoApproveSchedule(e.target.value || null)}
+              style={{
+                padding: "4px 8px",
+                fontSize: 12,
+                background: "#1a1d27",
+                border: "1px solid #2a2e3a",
+                borderRadius: 4,
+                color: "#e4e6ed",
+              }}
+            />
+            {autoApproveSchedule && (
+              <button
+                onClick={() => updateAutoApproveSchedule(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#8b8fa3",
+                  fontSize: 14,
+                  cursor: "pointer",
+                  padding: "2px 4px",
+                }}
+                title="Clear schedule"
+              >
+                &#10005;
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1027,7 +1113,7 @@ export default function EmailDraftsPage() {
 
               {!collapsedInboxes.has(inboxKey) && (
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {(expandedInboxes.has(inboxKey) ? group.drafts : group.drafts.slice(0, INBOX_PAGE_SIZE)).map((draft) => {
+                {group.drafts.slice(0, inboxShowCount.get(inboxKey) ?? INBOX_PAGE_SIZE).map((draft) => {
                   const isExpanded = expandedId === draft.id;
                   const isEditing = editingId === draft.id;
                   const isApproved = draft.status === "approved" || approvedIds.has(draft.id);
@@ -1579,25 +1665,42 @@ export default function EmailDraftsPage() {
                         </button>
                       )}
 
-                      {/* Green Approved indicator */}
+                      {/* Green Approved indicator + Send Reminder */}
                       {isApproved && !isSent && (
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 14px",
-                            borderRadius: 6,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            background: "#34d39922",
-                            color: "#34d399",
-                            border: "1px solid #34d39944",
-                          }}
-                        >
-                          <span style={{ fontSize: 16 }}>&#10003;</span>
-                          Approved
-                        </span>
+                        <>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "6px 14px",
+                              borderRadius: 6,
+                              fontSize: 13,
+                              fontWeight: 600,
+                              background: "#34d39922",
+                              color: "#34d399",
+                              border: "1px solid #34d39944",
+                            }}
+                          >
+                            <span style={{ fontSize: 16 }}>&#10003;</span>
+                            Approved
+                          </span>
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              sendReminder(draft.id);
+                            }}
+                            disabled={remindingId === draft.id}
+                            style={{
+                              color: "#fbbf24",
+                              borderColor: "#fbbf2444",
+                              fontSize: 13,
+                            }}
+                          >
+                            {remindingId === draft.id ? "Sending..." : "Send Reminder"}
+                          </button>
+                        </>
                       )}
 
                       {/* Discard button - hidden when editing or approved */}
@@ -2038,68 +2141,80 @@ export default function EmailDraftsPage() {
               </div>
                   );
                 })}
-                {!expandedInboxes.has(inboxKey) && group.drafts.length > INBOX_PAGE_SIZE && (
-                  <button
-                    onClick={() => setExpandedInboxes((prev) => new Set(prev).add(inboxKey))}
-                    style={{
-                      background: "none",
-                      border: "1px solid var(--border)",
-                      borderRadius: 6,
-                      color: "var(--accent)",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      padding: "8px 16px",
-                      cursor: "pointer",
-                      marginTop: 6,
-                      width: "100%",
-                      textAlign: "center",
-                      transition: "background 0.15s, border-color 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--bg-card-hover)";
-                      e.currentTarget.style.borderColor = "var(--accent)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "none";
-                      e.currentTarget.style.borderColor = "var(--border)";
-                    }}
-                  >
-                    Show More ({group.drafts.length - INBOX_PAGE_SIZE} remaining)
-                  </button>
-                )}
-                {expandedInboxes.has(inboxKey) && group.drafts.length > INBOX_PAGE_SIZE && (
-                  <button
-                    onClick={() => setExpandedInboxes((prev) => {
-                      const next = new Set(prev);
-                      next.delete(inboxKey);
-                      return next;
-                    })}
-                    style={{
-                      background: "none",
-                      border: "1px solid var(--border)",
-                      borderRadius: 6,
-                      color: "var(--text-muted)",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      padding: "8px 16px",
-                      cursor: "pointer",
-                      marginTop: 6,
-                      width: "100%",
-                      textAlign: "center",
-                      transition: "background 0.15s, border-color 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--bg-card-hover)";
-                      e.currentTarget.style.borderColor = "var(--accent)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "none";
-                      e.currentTarget.style.borderColor = "var(--border)";
-                    }}
-                  >
-                    Show Less
-                  </button>
-                )}
+                {(() => {
+                  const showing = inboxShowCount.get(inboxKey) ?? INBOX_PAGE_SIZE;
+                  const total = group.drafts.length;
+                  const remaining = total - showing;
+                  if (remaining <= 0 && showing <= INBOX_PAGE_SIZE) return null;
+                  return (
+                    <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                      {remaining > 0 && (
+                        <button
+                          onClick={() => setInboxShowCount((prev) => {
+                            const next = new Map(prev);
+                            next.set(inboxKey, showing + INBOX_PAGE_SIZE);
+                            return next;
+                          })}
+                          style={{
+                            flex: 1,
+                            background: "none",
+                            border: "1px solid var(--border)",
+                            borderRadius: 6,
+                            color: "var(--accent)",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            padding: "8px 16px",
+                            cursor: "pointer",
+                            textAlign: "center",
+                            transition: "background 0.15s, border-color 0.15s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "var(--bg-card-hover)";
+                            e.currentTarget.style.borderColor = "var(--accent)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "none";
+                            e.currentTarget.style.borderColor = "var(--border)";
+                          }}
+                        >
+                          Show More ({remaining} remaining)
+                        </button>
+                      )}
+                      {showing > INBOX_PAGE_SIZE && (
+                        <button
+                          onClick={() => setInboxShowCount((prev) => {
+                            const next = new Map(prev);
+                            next.delete(inboxKey);
+                            return next;
+                          })}
+                          style={{
+                            flex: remaining > 0 ? undefined : 1,
+                            background: "none",
+                            border: "1px solid var(--border)",
+                            borderRadius: 6,
+                            color: "var(--text-muted)",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            padding: "8px 16px",
+                            cursor: "pointer",
+                            textAlign: "center",
+                            transition: "background 0.15s, border-color 0.15s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "var(--bg-card-hover)";
+                            e.currentTarget.style.borderColor = "var(--accent)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "none";
+                            e.currentTarget.style.borderColor = "var(--border)";
+                          }}
+                        >
+                          Show Less
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
               )}
             </div>
@@ -2107,5 +2222,13 @@ export default function EmailDraftsPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function EmailDraftsPage() {
+  return (
+    <Suspense>
+      <EmailDraftsPageInner />
+    </Suspense>
   );
 }
