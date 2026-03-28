@@ -881,22 +881,22 @@ function EmailDraftsPageInner() {
             ))}
           </div>
 
-          {/* Auto-Approve toggle — pushed to right */}
-          <button
-            onClick={toggleAutoApprove}
-            disabled={togglingAutoApprove}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "6px 14px",
-              fontSize: 13,
-              fontWeight: 600,
-              marginLeft: "auto",
-              color: autoApprove ? "#34d399" : "#8b8fa3",
-              background: autoApprove ? "rgba(52, 211, 153, 0.1)" : "transparent",
-              border: `1px solid ${autoApprove ? "#34d399" : "#2a2e3a"}`,
-              borderRadius: 6,
+          {/* Auto-Approve toggle + schedule — pushed to right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: "auto", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <button
+              onClick={toggleAutoApprove}
+              disabled={togglingAutoApprove}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 14px",
+                fontSize: 13,
+                fontWeight: 600,
+                color: autoApprove ? "#34d399" : "#8b8fa3",
+                background: autoApprove ? "rgba(52, 211, 153, 0.1)" : "transparent",
+                border: `1px solid ${autoApprove ? "#34d399" : "#2a2e3a"}`,
+                borderRadius: 6,
               cursor: "pointer",
               transition: "all 0.2s",
             }}
@@ -937,7 +937,7 @@ function EmailDraftsPageInner() {
                 whiteSpace: "nowrap",
               }}
             >
-              Daily on at:
+              Turn on daily at
             </label>
             <input
               type="time"
@@ -968,6 +968,7 @@ function EmailDraftsPageInner() {
                 &#10005;
               </button>
             )}
+          </div>
           </div>
         </div>
       </div>
