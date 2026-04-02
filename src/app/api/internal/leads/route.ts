@@ -33,6 +33,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const agentFilter = searchParams.get("agent");
+    if (agentFilter && agentFilter !== "all") {
+      query = query.eq("final_agent_id", agentFilter);
+    }
+
     const { data, error, count } = await query;
     if (error) throw error;
 
@@ -43,7 +48,14 @@ export async function GET(request: NextRequest) {
       .eq("is_active", true)
       .order("name");
 
-    return NextResponse.json({ leads: data ?? [], total: count ?? 0, locations: locationsData ?? [] });
+    // Fetch agents for the "Assigned To" filter dropdown
+    const { data: agentsData } = await supabase
+      .from("agents")
+      .select("id, name")
+      .eq("is_active", true)
+      .order("name");
+
+    return NextResponse.json({ leads: data ?? [], total: count ?? 0, locations: locationsData ?? [], agents: agentsData ?? [] });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : (error as { message?: string })?.message ?? String(error) },

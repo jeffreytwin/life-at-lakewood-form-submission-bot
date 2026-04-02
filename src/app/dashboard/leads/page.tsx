@@ -44,6 +44,11 @@ interface LocationOption {
   name: string;
 }
 
+interface AgentOption {
+  id: string;
+  name: string;
+}
+
 const statusBadge: Record<string, string> = {
   pending: "badge-warning",
   routing: "badge-info",
@@ -128,10 +133,12 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [total, setTotal] = useState(0);
   const [locations, setLocations] = useState<LocationOption[]>([]);
+  const [agents, setAgents] = useState<AgentOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
+  const [agentFilter, setAgentFilter] = useState("all");
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("received");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -156,7 +163,7 @@ export default function LeadsPage() {
   // Reset to first page when filters change
   useEffect(() => {
     setPage(0);
-  }, [statusFilter, locationFilter]);
+  }, [statusFilter, locationFilter, agentFilter]);
 
   const fetchLeads = useCallback(
     async (showLoading = false) => {
@@ -165,6 +172,7 @@ export default function LeadsPage() {
         const params = new URLSearchParams({
           status: statusFilter,
           location: locationFilter,
+          agent: agentFilter,
           limit: String(pageSize),
           offset: String(page * pageSize),
         });
@@ -177,6 +185,7 @@ export default function LeadsPage() {
           setLeads(data.leads);
           setTotal(data.total);
           if (data.locations) setLocations(data.locations);
+          if (data.agents) setAgents(data.agents);
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -184,7 +193,7 @@ export default function LeadsPage() {
         if (showLoading) setLoading(false);
       }
     },
-    [statusFilter, locationFilter, debouncedSearch, page]
+    [statusFilter, locationFilter, agentFilter, debouncedSearch, page]
   );
 
   // Initial fetch on mount / filter change
@@ -371,6 +380,19 @@ export default function LeadsPage() {
               {locations.map((loc) => (
                 <option key={loc.id} value={loc.id}>
                   {loc.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="form-input"
+              style={{ width: "auto" }}
+              value={agentFilter}
+              onChange={(e) => setAgentFilter(e.target.value)}
+            >
+              <option value="all">All agents</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
                 </option>
               ))}
             </select>
