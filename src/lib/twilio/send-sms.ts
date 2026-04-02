@@ -95,13 +95,9 @@ export async function sendOwnedByNotification(
   lead: Lead,
   locationName: string
 ): Promise<string> {
-  const details = buildLeadDetailsBlock(lead, locationName);
+  const leadName = `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "Unknown";
 
-  const body = [
-    `Heads up! A lead already owned by another agent just submitted a new form for ${locationName}. See below:`,
-    "",
-    details,
-  ].join("\n");
+  const body = `FYI — ${leadName} (already owned by another agent) just submitted a new form for ${locationName}. Their agent has been notified.`;
 
   const message = await getTwilioClient().messages.create({
     to: frontlinesPhone,
