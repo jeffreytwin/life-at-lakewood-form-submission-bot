@@ -135,18 +135,41 @@ export default function LeadsPage() {
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("received");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const pageSize = 50;
   const [stoppingId, setStoppingId] = useState<string | null>(null);
   const [textingId, setTextingId] = useState<string | null>(null);
   const [textedIds, setTextedIds] = useState<Set<string>>(new Set());
   const [doningId, setDoningId] = useState<string | null>(null);
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [statusFilter, locationFilter]);
+
   const fetchLeads = useCallback(
     async (showLoading = false) => {
       if (showLoading) setLoading(true);
       try {
-        const r = await fetch(
-          `/api/internal/leads?status=${statusFilter}&location=${locationFilter}&limit=50`
-        );
+        const params = new URLSearchParams({
+          status: statusFilter,
+          location: locationFilter,
+          limit: String(pageSize),
+          offset: String(page * pageSize),
+        });
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        const r = await fetch(`/api/internal/leads?${params}`);
         const data = await r.json();
         if (data.error) {
           setError(data.error);
@@ -161,7 +184,7 @@ export default function LeadsPage() {
         if (showLoading) setLoading(false);
       }
     },
-    [statusFilter, locationFilter]
+    [statusFilter, locationFilter, debouncedSearch, page]
   );
 
   // Initial fetch on mount / filter change
@@ -314,7 +337,15 @@ export default function LeadsPage() {
       <div className="card">
         <div className="card-header">
           <h3>{total} form submissions</h3>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <input
+              className="form-input"
+              style={{ width: 220 }}
+              type="text"
+              placeholder="Search name, email, phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
             <select
               className="form-input"
               style={{ width: "auto" }}
@@ -366,6 +397,7 @@ export default function LeadsPage() {
             </p>
           </div>
         ) : (
+          <>
           <div className="table-wrapper">
             <table>
               <thead>
@@ -631,6 +663,38 @@ export default function LeadsPage() {
               </tbody>
             </table>
           </div>
+          {total > pageSize && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px 16px",
+                borderTop: "1px solid var(--border)",
+              }}
+            >
+              <span className="text-sm text-muted">
+                Showing {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} of {total}
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Previous
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  disabled={(page + 1) * pageSize >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
     </>
