@@ -25,6 +25,14 @@ export async function GET(request: NextRequest) {
       query = query.eq("location_id", locationFilter);
     }
 
+    const search = searchParams.get("search")?.trim();
+    if (search) {
+      // Search across name, email, phone, and form name
+      query = query.or(
+        `first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%,form_name.ilike.%${search}%`
+      );
+    }
+
     const { data, error, count } = await query;
     if (error) throw error;
 
