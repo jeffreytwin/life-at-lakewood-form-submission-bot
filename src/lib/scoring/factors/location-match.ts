@@ -29,13 +29,5 @@ export function agentMatchesLocation(
     return true;
   }
 
-  // LWR agents can also take Parrish leads
-  if (
-    leadLocation.includes("parrish") &&
-    lowerSpecialties.some((s) => s.includes("lakewood"))
-  ) {
-    return true;
-  }
-
   return false;
 }

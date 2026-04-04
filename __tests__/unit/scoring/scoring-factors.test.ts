@@ -98,13 +98,13 @@ describe("agentMatchesLocation (hard filter)", () => {
     expect(agentMatchesLocation(agent, ctx)).toBe(true);
   });
 
-  it("returns true for LWR agent on Parrish lead", () => {
+  it("returns false for LWR agent on Parrish lead", () => {
     const agent = makeAgent({ location_specialties: ["Lakewood Ranch"] });
     const ctx = makeContext({
       locationName: "Life At Parrish",
       lead: makeLead({ village: "Parrish" }),
     });
-    expect(agentMatchesLocation(agent, ctx)).toBe(true);
+    expect(agentMatchesLocation(agent, ctx)).toBe(false);
   });
 
   it("returns true for agents with no specialties", () => {
