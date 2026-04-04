@@ -586,6 +586,10 @@ function EmailDraftsPageInner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Reminder failed");
       setApproveResult("Reminder sent!");
+
+      const approvedAudio = new Audio("/sounds/draft-approved.wav");
+      approvedAudio.volume = 0.6;
+      approvedAudio.play().catch(() => {});
     } catch (e) {
       setApproveResult(e instanceof Error ? e.message : "Reminder failed");
     } finally {
@@ -1931,13 +1935,13 @@ function EmailDraftsPageInner() {
                         style={{
                           marginBottom: 12,
                           padding: "10px 14px",
-                          background: approveResult.startsWith("Approved")
+                          background: approveResult.startsWith("Approved") || approveResult.startsWith("Reminder sent")
                             ? "#34d39922"
                             : "#f8717122",
-                          border: `1px solid ${approveResult.startsWith("Approved") ? "#34d39944" : "#f8717144"}`,
+                          border: `1px solid ${approveResult.startsWith("Approved") || approveResult.startsWith("Reminder sent") ? "#34d39944" : "#f8717144"}`,
                           borderRadius: 6,
                           fontSize: 13,
-                          color: approveResult.startsWith("Approved")
+                          color: approveResult.startsWith("Approved") || approveResult.startsWith("Reminder sent")
                             ? "#34d399"
                             : "#f87171",
                         }}
