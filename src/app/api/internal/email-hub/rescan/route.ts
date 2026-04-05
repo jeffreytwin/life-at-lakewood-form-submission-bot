@@ -81,12 +81,12 @@ export async function POST() {
         // Skip if sender is an agent
         if (await hasAgentRecipient([thread.sender_email.toLowerCase()])) continue;
 
-        // Check if there's already a drafted/approved draft for this thread
+        // Check if there's already a drafted/approved/discarded draft for this thread
         const { data: existingDrafts } = await supabase
           .from("email_drafts")
           .select("id")
           .eq("thread_id", thread.id)
-          .in("status", ["drafted", "approved"])
+          .in("status", ["drafted", "approved", "discarded"])
           .limit(1);
 
         if (existingDrafts && existingDrafts.length > 0) continue;
