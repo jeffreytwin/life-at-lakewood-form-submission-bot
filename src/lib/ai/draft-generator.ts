@@ -47,27 +47,6 @@ export interface DraftOutput {
 
 const MODEL = "claude-sonnet-4-20250514";
 
-const MAX_RETRIES = 2;
-const RETRY_DELAYS = [2000, 4000]; // 2s, 4s
-
-async function callWithRetry<T>(fn: () => Promise<T>): Promise<T> {
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      return await fn();
-    } catch (err: unknown) {
-      const isOverloaded =
-        err instanceof Anthropic.APIError && err.status === 529;
-      if (!isOverloaded || attempt === MAX_RETRIES) throw err;
-      logger.warn("Anthropic API overloaded, retrying", {
-        attempt: attempt + 1,
-        delayMs: RETRY_DELAYS[attempt],
-      });
-      await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
-    }
-  }
-  throw new Error("Unreachable");
-}
-
 /**
  * Generate an email draft using Claude.
  */
@@ -106,14 +85,12 @@ export async function generateDraft(input: DraftInput): Promise<DraftOutput> {
     hasAgentHandoff: !!input.agentHandoff,
   });
 
-  const response = await callWithRetry(() =>
-    client.messages.create({
-      model: MODEL,
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    })
-  );
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: [{ role: "user", content: userMessage }],
+  });
 
   const textBlock = response.content.find((b) => b.type === "text");
   const bodyText = textBlock?.text ?? "";
