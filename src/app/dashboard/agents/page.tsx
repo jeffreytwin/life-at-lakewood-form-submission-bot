@@ -781,6 +781,38 @@ export default function AgentsPage() {
               )}
             </div>
 
+            <div className="form-row">
+              <div className="form-group">
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  Salesforce User ID
+                  <span
+                    title="Required for Salesforce lead ownership to transfer when this agent accepts a lead. To find it: in Salesforce, go to 'People', select the user, and copy the ID from the URL (the string after /lightning/r/User/ or the ?id= parameter — starts with 005)."
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 16,
+                      height: 16,
+                      borderRadius: "50%",
+                      border: "1px solid var(--text-muted)",
+                      fontSize: 11,
+                      color: "var(--text-muted)",
+                      cursor: "help",
+                      flexShrink: 0,
+                    }}
+                  >
+                    i
+                  </span>
+                </label>
+                <input
+                  className="form-input"
+                  value={form.salesforce_user_id}
+                  onChange={(e) => setForm({ ...form, salesforce_user_id: e.target.value })}
+                  placeholder="005..."
+                />
+              </div>
+            </div>
+
             {/* Draft success text notifications (frontlines only) */}
             {isFrontlines && (
               <>
