@@ -40,7 +40,7 @@ interface Stats {
 }
 
 interface EmailHubStats {
-  avgResponseTimeMinutes: number | null;
+  medianResponseTimeMinutes: number | null;
   sentEmails: number;
   recentEmails: {
     id: string;
@@ -315,14 +315,14 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg Email Response Time</div>
+          <div className="stat-label">Median Email Response Time</div>
           <div className="stat-value">
-            {emailStats?.avgResponseTimeMinutes != null
-              ? emailStats.avgResponseTimeMinutes < 60
-                ? `${emailStats.avgResponseTimeMinutes}m`
-                : emailStats.avgResponseTimeMinutes < 1440
-                  ? `${Math.round(emailStats.avgResponseTimeMinutes / 60)}h`
-                  : `${Math.round(emailStats.avgResponseTimeMinutes / 1440)}d`
+            {emailStats?.medianResponseTimeMinutes != null
+              ? emailStats.medianResponseTimeMinutes < 60
+                ? `${emailStats.medianResponseTimeMinutes}m`
+                : emailStats.medianResponseTimeMinutes < 1440
+                  ? `${Math.round(emailStats.medianResponseTimeMinutes / 60)}h`
+                  : `${Math.round(emailStats.medianResponseTimeMinutes / 1440)}d`
               : "—"}
           </div>
         </div>

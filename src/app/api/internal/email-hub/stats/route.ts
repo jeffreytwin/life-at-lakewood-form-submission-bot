@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
+import { isBusinessHours } from "@/lib/shared/business-hours";
 
 export const dynamic = "force-dynamic";
 
@@ -66,29 +67,78 @@ export async function GET(request: NextRequest) {
       inboundThisMonth = count ?? 0;
     }
 
-    // Average email response time (filtered by requested period)
-    // Measures time from draft creation to sent_at
-    let avgQuery = supabase
+    // Median email response time (filtered by requested period).
+    // Measures time from draft creation to sent_at, but only for drafts
+    // where the triggering inbound email was received during business hours
+    // (Mon-Fri 8:30am-5:30pm ET, excluding US federal holidays).
+    let medianQuery = supabase
       .from("email_drafts")
-      .select("sent_at, created_at")
+      .select("id, thread_id, sent_at, created_at")
       .eq("status", "sent")
       .eq("is_simulation", false)
       .not("sent_at", "is", null);
-    if (periodCutoff) avgQuery = avgQuery.gte("sent_at", periodCutoff);
-    const { data: sentDraftsForAvg } = await avgQuery;
+    if (periodCutoff) medianQuery = medianQuery.gte("sent_at", periodCutoff);
+    const { data: sentDraftsForMedian } = await medianQuery;
 
-    let avgResponseTimeMinutes: number | null = null;
-    if (sentDraftsForAvg && sentDraftsForAvg.length > 0) {
+    let medianResponseTimeMinutes: number | null = null;
+    if (sentDraftsForMedian && sentDraftsForMedian.length > 0) {
+      // For each draft, find the most recent inbound email in its thread
+      // that arrived at or before the draft was created. That is the
+      // inbound email the draft is a response to.
+      const threadIds = Array.from(
+        new Set(
+          sentDraftsForMedian
+            .map((d) => d.thread_id)
+            .filter((id): id is string => !!id)
+        )
+      );
+
+      const inboundByThread: Record<string, { received_at: string }[]> = {};
+      if (threadIds.length > 0) {
+        const { data: inbound } = await supabase
+          .from("email_messages")
+          .select("thread_id, received_at")
+          .eq("direction", "inbound")
+          .in("thread_id", threadIds)
+          .not("received_at", "is", null)
+          .order("received_at", { ascending: false });
+
+        for (const m of inbound ?? []) {
+          if (!m.thread_id || !m.received_at) continue;
+          if (!inboundByThread[m.thread_id]) inboundByThread[m.thread_id] = [];
+          inboundByThread[m.thread_id].push({ received_at: m.received_at });
+        }
+      }
+
       const diffs: number[] = [];
-      for (const draft of sentDraftsForAvg) {
-        if (!draft.sent_at || !draft.created_at) continue;
-        const diffMs = new Date(draft.sent_at).getTime() - new Date(draft.created_at).getTime();
+      for (const draft of sentDraftsForMedian) {
+        if (!draft.sent_at || !draft.created_at || !draft.thread_id) continue;
+        const createdMs = new Date(draft.created_at).getTime();
+        const sentMs = new Date(draft.sent_at).getTime();
+
+        // Find the latest inbound message received at or before the draft
+        // was created.
+        const msgs = inboundByThread[draft.thread_id] ?? [];
+        const triggering = msgs.find(
+          (m) => new Date(m.received_at).getTime() <= createdMs
+        );
+        if (!triggering) continue;
+
+        // Filter: only include emails that came in during business hours.
+        if (!isBusinessHours(new Date(triggering.received_at))) continue;
+
+        const diffMs = sentMs - createdMs;
         if (diffMs > 0) diffs.push(diffMs);
       }
 
       if (diffs.length > 0) {
-        const avgMs = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-        avgResponseTimeMinutes = Math.round(avgMs / 60_000);
+        diffs.sort((a, b) => a - b);
+        const mid = Math.floor(diffs.length / 2);
+        const medianMs =
+          diffs.length % 2 === 0
+            ? (diffs[mid - 1] + diffs[mid]) / 2
+            : diffs[mid];
+        medianResponseTimeMinutes = Math.round(medianMs / 60_000);
       }
     }
 
@@ -194,7 +244,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       inboundThisMonth,
-      avgResponseTimeMinutes,
+      medianResponseTimeMinutes,
       sentEmails: sentEmails ?? 0,
       agentHandoffs: agentHandoffs ?? 0,
       dailyGraph,
