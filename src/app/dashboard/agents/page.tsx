@@ -135,6 +135,15 @@ export default function AgentsPage() {
   }, [fetchData]);
 
   const isFrontlines = editing?.is_frontlines ?? form.is_frontlines;
+  // Active non-frontlines agents must have full contact + Salesforce info so
+  // lead routing and Salesforce ownership transfer work correctly.
+  const requiresFullProfile = form.is_active && !isFrontlines;
+  const missingRequiredFields =
+    requiresFullProfile &&
+    (!form.name.trim() ||
+      !form.phone.trim() ||
+      !form.email.trim() ||
+      !form.salesforce_user_id.trim());
 
   // Split agents into active regular, inactive regular, and frontlines, then sort each group
   const activeRegularAgents = sortAgents(
@@ -247,6 +256,21 @@ export default function AgentsPage() {
   }
 
   async function handleSave() {
+    if (requiresFullProfile) {
+      const missing: string[] = [];
+      if (!form.name.trim()) missing.push("Name");
+      if (!form.phone.trim()) missing.push("Phone");
+      if (!form.email.trim()) missing.push("Email");
+      if (!form.salesforce_user_id.trim()) missing.push("Salesforce User ID");
+      if (missing.length > 0) {
+        alert(
+          `Active agents require the following field${
+            missing.length > 1 ? "s" : ""
+          }: ${missing.join(", ")}.`
+        );
+        return;
+      }
+    }
     setSaving(true);
     const activeLocationNames = locations
       .filter((l) => l.is_active)
@@ -757,7 +781,7 @@ export default function AgentsPage() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Email</label>
+                <label>Email{requiresFullProfile ? " *" : ""}</label>
                 <input
                   className="form-input"
                   value={form.email}
@@ -784,9 +808,9 @@ export default function AgentsPage() {
             <div className="form-row">
               <div className="form-group">
                 <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  Salesforce User ID
+                  Salesforce User ID{requiresFullProfile ? " *" : ""}
                   <span
-                    title="Required for Salesforce lead ownership to transfer when this agent accepts a lead. To find it: in Salesforce, go to 'People', select the user, and copy the ID from the URL (the string after /lightning/r/User/ or the ?id= parameter — starts with 005)."
+                    title="Required for Salesforce lead ownership to transfer when this agent accepts a lead. To find it: in Salesforce, go to 'People', select the user, and copy the ID from the URL (the string after /lightning/r/User/ — starts with 005)."
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -1135,7 +1159,7 @@ export default function AgentsPage() {
               <button
                 className="btn btn-primary"
                 onClick={handleSave}
-                disabled={saving || !form.name}
+                disabled={saving || !form.name.trim() || missingRequiredFields}
               >
                 {saving ? "Saving..." : editing ? "Update" : "Create"}
               </button>
