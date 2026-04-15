@@ -786,7 +786,7 @@ export default function AgentsPage() {
                 <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                   Salesforce User ID
                   <span
-                    title="Required for Salesforce lead ownership to transfer when this agent accepts a lead. To find it: in Salesforce, go to 'People', select the user, and copy the ID from the URL (the string after /lightning/r/User/ or the ?id= parameter — starts with 005)."
+                    title="Required for Salesforce lead ownership to transfer when this agent accepts a lead. To find it: in Salesforce, go to 'People', select the user, and copy the ID from the URL (the string after /lightning/r/User/ — starts with 005)."
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
