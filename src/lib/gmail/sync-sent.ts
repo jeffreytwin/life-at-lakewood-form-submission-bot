@@ -13,6 +13,7 @@ import {
   listHistory,
   getProfile,
 } from "./client";
+import { triggerAgentHandoff } from "./trigger-handoff";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
 /**
@@ -181,6 +182,26 @@ async function processSentMessage(
     threadId,
     wasChanged,
   });
+
+  // If this draft was a handoff (has an agent assigned and hasn't been
+  // transferred yet), auto-fire the Salesforce owner-change + agent-SMS
+  // routine now that the email has actually gone out.
+  if (draft.agent_handoff_id && !draft.agent_handoff_transferred) {
+    try {
+      const result = await triggerAgentHandoff(draft.id);
+      if (!result.success) {
+        logger.error("Auto handoff on send failed", {
+          draftId: draft.id,
+          error: result.error,
+        });
+      }
+    } catch (err) {
+      logger.error("Auto handoff on send threw", {
+        draftId: draft.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
 
   return { matched: true, changed: wasChanged };
 }

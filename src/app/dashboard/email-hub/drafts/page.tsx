@@ -1847,8 +1847,8 @@ function EmailDraftsPageInner() {
                         );
                       })()}
 
-                      {/* Agent Handoff Transfer — visible in sent area, or in drafts after nurture active */}
-                      {(isSent || draft.lead_status_update === "nurture_active" || draft.salesforce_lead_status?.toLowerCase() === "nurture_active") && !draft.agent_handoff_transferred && (() => {
+                      {/* Agent Handoff Transfer — only visible on the Sent tab */}
+                      {isSent && !draft.agent_handoff_transferred && (() => {
                         // Non-frontlines owned: show disabled "Already Owned" button
                         const isNonFrontlinesOwned =
                           draft.salesforce_owner_name &&
@@ -1875,13 +1875,6 @@ function EmailDraftsPageInner() {
                               Already Owned by {draft.salesforce_owner_name}
                             </span>
                           );
-                        }
-
-                        // Must be marked Nurture Active before handoff is available
-                        const isNurtureActive = draft.lead_status_update === "nurture_active"
-                          || draft.salesforce_lead_status?.toLowerCase() === "nurture_active";
-                        if (!isNurtureActive) {
-                          return null;
                         }
 
                         return (
