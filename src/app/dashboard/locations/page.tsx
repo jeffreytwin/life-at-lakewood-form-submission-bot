@@ -94,7 +94,15 @@ export default function LocationsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setLocations((prev) =>
-        prev.map((l) => (l.id === locId ? { ...l, photo_url: data.photo_url } : l))
+        prev.map((l) =>
+          l.id === locId
+            ? {
+                ...l,
+                photo_url: data.photo_url,
+                photo_thumb_url: data.photo_thumb_url ?? null,
+              }
+            : l
+        )
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : "Upload failed");
@@ -187,7 +195,7 @@ export default function LocationsPage() {
                             <span className="text-muted" style={{ fontSize: 10 }}>...</span>
                           ) : loc.photo_url ? (
                             <img
-                              src={loc.photo_url}
+                              src={loc.photo_thumb_url ?? loc.photo_url}
                               alt={loc.name}
                               style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />

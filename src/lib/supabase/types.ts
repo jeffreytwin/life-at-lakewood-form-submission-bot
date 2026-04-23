@@ -86,6 +86,7 @@ export interface Location {
   slug: string;
   is_active: boolean;
   photo_url: string | null;
+  photo_thumb_url: string | null;
   created_at: string;
 }
 
@@ -156,6 +157,7 @@ export interface Agent {
   send_draft_success_texts: boolean;
   draft_success_phone: string | null;
   photo_url: string | null;
+  photo_thumb_url: string | null;
   created_at: string;
   updated_at: string;
 }

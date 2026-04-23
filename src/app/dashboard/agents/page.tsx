@@ -243,9 +243,21 @@ export default function AgentsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       // Update local state
-      setEditing({ ...editing, photo_url: data.photo_url });
+      setEditing({
+        ...editing,
+        photo_url: data.photo_url,
+        photo_thumb_url: data.photo_thumb_url ?? null,
+      });
       setAgents((prev) =>
-        prev.map((a) => (a.id === editing.id ? { ...a, photo_url: data.photo_url } : a))
+        prev.map((a) =>
+          a.id === editing.id
+            ? {
+                ...a,
+                photo_url: data.photo_url,
+                photo_thumb_url: data.photo_thumb_url ?? null,
+              }
+            : a
+        )
       );
     } catch (err) {
       alert(err instanceof Error ? err.message : "Upload failed");
@@ -427,7 +439,7 @@ export default function AgentsPage() {
           >
             {agent.photo_url ? (
               <img
-                src={agent.photo_url}
+                src={agent.photo_thumb_url ?? agent.photo_url}
                 alt={agent.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -529,7 +541,7 @@ export default function AgentsPage() {
           >
             {agent.photo_url ? (
               <img
-                src={agent.photo_url}
+                src={agent.photo_thumb_url ?? agent.photo_url}
                 alt={agent.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />

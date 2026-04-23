@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
+import { logger } from "@/lib/shared/logger";
+import { resizeToThumbnail } from "@/lib/shared/resize-photo";
 
 export const dynamic = "force-dynamic";
 
@@ -43,13 +45,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const filePath = `${entityType}s/${entityId}.${ext}`;
+    const originalPath = `${entityType}s/${entityId}.${ext}`;
+    const thumbPath = `${entityType}s/${entityId}_thumb.jpg`;
 
-    // Upload to Supabase Storage (upsert to overwrite existing)
-    const arrayBuffer = await file.arrayBuffer();
+    // Upload original (upsert to overwrite existing)
+    const originalBuffer = Buffer.from(await file.arrayBuffer());
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(filePath, arrayBuffer, {
+      .upload(originalPath, originalBuffer, {
         contentType: file.type,
         upsert: true,
       });
@@ -61,10 +64,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get public URL with cache-busting timestamp
+    // Generate and upload thumbnail. If resize fails we still want the
+    // original upload to succeed — list views fall back to photo_url.
+    let thumbPublicUrl: string | null = null;
+    try {
+      const thumbBuffer = await resizeToThumbnail(originalBuffer);
+      const { error: thumbUploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(thumbPath, thumbBuffer, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+      if (thumbUploadError) {
+        logger.error("Thumbnail upload failed", {
+          entityType,
+          entityId,
+          error: thumbUploadError.message,
+        });
+      } else {
+        const { data: thumbUrlData } = supabase.storage
+          .from(BUCKET)
+          .getPublicUrl(thumbPath);
+        thumbPublicUrl = `${thumbUrlData.publicUrl}?v=${Date.now()}`;
+      }
+    } catch (resizeErr) {
+      logger.error("Thumbnail resize failed", {
+        entityType,
+        entityId,
+        error: resizeErr instanceof Error ? resizeErr.message : String(resizeErr),
+      });
+    }
+
+    // Get public URL for the original with cache-busting timestamp
     const { data: urlData } = supabase.storage
       .from(BUCKET)
-      .getPublicUrl(filePath);
+      .getPublicUrl(originalPath);
 
     const photo_url = `${urlData.publicUrl}?v=${Date.now()}`;
 
@@ -72,7 +106,10 @@ export async function POST(request: NextRequest) {
     const table = entityType === "agent" ? "agents" : "locations";
     const { error: updateError } = await supabase
       .from(table)
-      .update({ photo_url })
+      .update({
+        photo_url,
+        photo_thumb_url: thumbPublicUrl,
+      })
       .eq("id", entityId);
 
     if (updateError) {
@@ -82,7 +119,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ photo_url });
+    return NextResponse.json({
+      photo_url,
+      photo_thumb_url: thumbPublicUrl,
+    });
   } catch (error) {
     return NextResponse.json(
       {
