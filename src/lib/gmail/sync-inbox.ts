@@ -420,16 +420,28 @@ async function upsertThread(
   return data.id;
 }
 
+export interface DraftHandoffAgent {
+  agentId: string;
+  agentName: string;
+  agentEmail: string;
+}
+
 /**
  * Generate an AI draft and store it in the database.
  * Includes Salesforce contact info in the prompt for personalized responses.
+ *
+ * If `handoffAgent` is provided, the draft is generated as a handoff email:
+ * the agent is CC'd, the prompt instructs the model to introduce them, and
+ * `agent_handoff_id` is stored on the draft so the Salesforce owner-change
+ * routine auto-fires when the email is actually sent.
  */
 export async function generateAndStoreDraft(
   account: EmailAccount,
   threadId: string,
   subject: string,
   _inReplyToMessageId: string | null,
-  contact: MatchedContact
+  contact: MatchedContact,
+  handoffAgent?: DraftHandoffAgent | null
 ): Promise<boolean> {
   try {
     // Load full conversation thread for context
@@ -474,6 +486,12 @@ export async function generateAndStoreDraft(
         timeline: contact.timeline ?? undefined,
         interests: contact.property_interest ?? undefined,
       },
+      agentHandoff: handoffAgent
+        ? {
+            agentName: handoffAgent.agentName,
+            agentEmail: handoffAgent.agentEmail,
+          }
+        : undefined,
     });
 
     // Store draft in DB.
@@ -489,7 +507,8 @@ export async function generateAndStoreDraft(
       prompt_tokens: draft.promptTokens,
       completion_tokens: draft.completionTokens,
       is_simulation: false,
-      cc_emails: [],
+      cc_emails: handoffAgent ? [handoffAgent.agentEmail] : [],
+      agent_handoff_id: handoffAgent?.agentId ?? null,
       edited_at: null,
       sent_at: null,
       sent_body_text: null,
