@@ -21,7 +21,6 @@ import {
   type GmailMessage,
 } from "./client";
 import { generateDraft } from "@/lib/ai/draft-generator";
-import { classifyHandoff } from "@/lib/ai/classify-handoff";
 import { selectHandoffAgent } from "@/lib/routing/select-handoff-agent";
 import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
@@ -477,53 +476,31 @@ export async function generateAndStoreDraft(
     // Build contact info for the prompt
     const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ") || undefined;
 
-    // If no explicit handoff agent was provided, classify the thread and
-    // auto-select one when the lead is ready to be handed off. This mirrors
-    // the form-submission scoring but skips routing_attempts bookkeeping,
-    // so today's handraise count for the chosen agent is not affected.
-    let resolvedHandoff: DraftHandoffAgent | null = handoffAgent ?? null;
-    if (!resolvedHandoff) {
-      const classification = await classifyHandoff({
-        conversationThread,
+    // Pre-select a handoff agent (same scoring as form submissions, but
+    // without inserting a routing_attempts row — today's handraise count
+    // is not affected). The model is told this agent is *available*
+    // and only to mention them if the lead is ready for a handoff.
+    // Post-generation we decide whether to actually CC by checking if the
+    // model used the agent's name.
+    let candidateHandoff: DraftHandoffAgent | null = handoffAgent ?? null;
+    if (!candidateHandoff) {
+      const best = await selectHandoffAgent({
+        locationId: account.location_id,
         locationName,
+        priceHint: contact.budget ?? null,
       });
-      if (classification.isHandoff) {
-        const best = await selectHandoffAgent({
-          locationId: account.location_id,
-          locationName,
-          priceHint: contact.budget ?? null,
-        });
-        // Look up the agent's email — scoring returns id+name but the CC
-        // and prompt both need the address.
-        if (best) {
-          const { data: agentRow } = await supabase
-            .from("agents")
-            .select("email")
-            .eq("id", best.agentId)
-            .single();
-          if (agentRow?.email) {
-            resolvedHandoff = {
-              agentId: best.agentId,
-              agentName: best.agentName,
-              agentEmail: agentRow.email,
-            };
-            logger.info("Auto-selected handoff agent for draft", {
-              threadId,
-              agentId: best.agentId,
-              agentName: best.agentName,
-              reason: classification.reason,
-            });
-          } else {
-            logger.warn("Handoff agent missing email; skipping CC/handoff", {
-              threadId,
-              agentId: best.agentId,
-            });
-          }
-        } else {
-          logger.info("Handoff classified but no eligible agent available", {
-            threadId,
-            locationName,
-          });
+      if (best) {
+        const { data: agentRow } = await supabase
+          .from("agents")
+          .select("email")
+          .eq("id", best.agentId)
+          .single();
+        if (agentRow?.email) {
+          candidateHandoff = {
+            agentId: best.agentId,
+            agentName: best.agentName,
+            agentEmail: agentRow.email,
+          };
         }
       }
     }
@@ -539,13 +516,41 @@ export async function generateAndStoreDraft(
         timeline: contact.timeline ?? undefined,
         interests: contact.property_interest ?? undefined,
       },
-      agentHandoff: resolvedHandoff
+      agentHandoff: candidateHandoff
         ? {
-            agentName: resolvedHandoff.agentName,
-            agentEmail: resolvedHandoff.agentEmail,
+            agentName: candidateHandoff.agentName,
+            agentEmail: candidateHandoff.agentEmail,
           }
         : undefined,
     });
+
+    // Post-hoc detection: did the model actually choose to hand off?
+    // If `handoffAgent` was passed explicitly, trust the caller. Otherwise
+    // look for the candidate's first name in the draft body — the prompt
+    // told the model to use exactly that name if handing off, so its
+    // presence is a strong signal. Presence of common handoff phrasing
+    // ("CCing", "connecting you", etc.) backs it up.
+    const resolvedHandoff: DraftHandoffAgent | null = (() => {
+      if (handoffAgent) return handoffAgent;
+      if (!candidateHandoff) return null;
+      const firstName = candidateHandoff.agentName.split(/\s+/)[0] ?? "";
+      if (!firstName) return null;
+      const body = draft.bodyText.toLowerCase();
+      const mentionsAgent = body.includes(firstName.toLowerCase());
+      const hasHandoffPhrase =
+        /\b(cc(?:'?ing|'?d|ed)?|copying|connecting you|introduc(?:ing|e) you|putting you in touch|reach(?:ing)? out to you)\b/i.test(
+          draft.bodyText
+        );
+      return mentionsAgent && hasHandoffPhrase ? candidateHandoff : null;
+    })();
+
+    if (resolvedHandoff) {
+      logger.info("Draft identified as handoff", {
+        threadId,
+        agentId: resolvedHandoff.agentId,
+        agentName: resolvedHandoff.agentName,
+      });
+    }
 
     // Store draft in DB.
     // A partial unique index (thread_id WHERE status IN ('drafted','approved'))
