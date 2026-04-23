@@ -21,6 +21,7 @@ import {
   type GmailMessage,
 } from "./client";
 import { generateDraft } from "@/lib/ai/draft-generator";
+import { selectHandoffAgent } from "@/lib/routing/select-handoff-agent";
 import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
@@ -475,6 +476,35 @@ export async function generateAndStoreDraft(
     // Build contact info for the prompt
     const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ") || undefined;
 
+    // Pre-select a handoff agent (same scoring as form submissions, but
+    // without inserting a routing_attempts row — today's handraise count
+    // is not affected). The model is told this agent is *available*
+    // and only to mention them if the lead is ready for a handoff.
+    // Post-generation we decide whether to actually CC by checking if the
+    // model used the agent's name.
+    let candidateHandoff: DraftHandoffAgent | null = handoffAgent ?? null;
+    if (!candidateHandoff) {
+      const best = await selectHandoffAgent({
+        locationId: account.location_id,
+        locationName,
+        priceHint: contact.budget ?? null,
+      });
+      if (best) {
+        const { data: agentRow } = await supabase
+          .from("agents")
+          .select("email")
+          .eq("id", best.agentId)
+          .single();
+        if (agentRow?.email) {
+          candidateHandoff = {
+            agentId: best.agentId,
+            agentName: best.agentName,
+            agentEmail: agentRow.email,
+          };
+        }
+      }
+    }
+
     const draft = await generateDraft({
       locationName,
       locationId: account.location_id,
@@ -486,13 +516,41 @@ export async function generateAndStoreDraft(
         timeline: contact.timeline ?? undefined,
         interests: contact.property_interest ?? undefined,
       },
-      agentHandoff: handoffAgent
+      agentHandoff: candidateHandoff
         ? {
-            agentName: handoffAgent.agentName,
-            agentEmail: handoffAgent.agentEmail,
+            agentName: candidateHandoff.agentName,
+            agentEmail: candidateHandoff.agentEmail,
           }
         : undefined,
     });
+
+    // Post-hoc detection: did the model actually choose to hand off?
+    // If `handoffAgent` was passed explicitly, trust the caller. Otherwise
+    // look for the candidate's first name in the draft body — the prompt
+    // told the model to use exactly that name if handing off, so its
+    // presence is a strong signal. Presence of common handoff phrasing
+    // ("CCing", "connecting you", etc.) backs it up.
+    const resolvedHandoff: DraftHandoffAgent | null = (() => {
+      if (handoffAgent) return handoffAgent;
+      if (!candidateHandoff) return null;
+      const firstName = candidateHandoff.agentName.split(/\s+/)[0] ?? "";
+      if (!firstName) return null;
+      const body = draft.bodyText.toLowerCase();
+      const mentionsAgent = body.includes(firstName.toLowerCase());
+      const hasHandoffPhrase =
+        /\b(cc(?:'?ing|'?d|ed)?|copying|connecting you|introduc(?:ing|e) you|putting you in touch|reach(?:ing)? out to you)\b/i.test(
+          draft.bodyText
+        );
+      return mentionsAgent && hasHandoffPhrase ? candidateHandoff : null;
+    })();
+
+    if (resolvedHandoff) {
+      logger.info("Draft identified as handoff", {
+        threadId,
+        agentId: resolvedHandoff.agentId,
+        agentName: resolvedHandoff.agentName,
+      });
+    }
 
     // Store draft in DB.
     // A partial unique index (thread_id WHERE status IN ('drafted','approved'))
@@ -507,8 +565,8 @@ export async function generateAndStoreDraft(
       prompt_tokens: draft.promptTokens,
       completion_tokens: draft.completionTokens,
       is_simulation: false,
-      cc_emails: handoffAgent ? [handoffAgent.agentEmail] : [],
-      agent_handoff_id: handoffAgent?.agentId ?? null,
+      cc_emails: resolvedHandoff ? [resolvedHandoff.agentEmail] : [],
+      agent_handoff_id: resolvedHandoff?.agentId ?? null,
       edited_at: null,
       sent_at: null,
       sent_body_text: null,
