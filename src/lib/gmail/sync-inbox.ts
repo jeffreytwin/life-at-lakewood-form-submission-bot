@@ -21,6 +21,8 @@ import {
   type GmailMessage,
 } from "./client";
 import { generateDraft } from "@/lib/ai/draft-generator";
+import { classifyHandoff } from "@/lib/ai/classify-handoff";
+import { selectHandoffAgent } from "@/lib/routing/select-handoff-agent";
 import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
@@ -475,6 +477,57 @@ export async function generateAndStoreDraft(
     // Build contact info for the prompt
     const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ") || undefined;
 
+    // If no explicit handoff agent was provided, classify the thread and
+    // auto-select one when the lead is ready to be handed off. This mirrors
+    // the form-submission scoring but skips routing_attempts bookkeeping,
+    // so today's handraise count for the chosen agent is not affected.
+    let resolvedHandoff: DraftHandoffAgent | null = handoffAgent ?? null;
+    if (!resolvedHandoff) {
+      const classification = await classifyHandoff({
+        conversationThread,
+        locationName,
+      });
+      if (classification.isHandoff) {
+        const best = await selectHandoffAgent({
+          locationId: account.location_id,
+          locationName,
+          priceHint: contact.budget ?? null,
+        });
+        // Look up the agent's email — scoring returns id+name but the CC
+        // and prompt both need the address.
+        if (best) {
+          const { data: agentRow } = await supabase
+            .from("agents")
+            .select("email")
+            .eq("id", best.agentId)
+            .single();
+          if (agentRow?.email) {
+            resolvedHandoff = {
+              agentId: best.agentId,
+              agentName: best.agentName,
+              agentEmail: agentRow.email,
+            };
+            logger.info("Auto-selected handoff agent for draft", {
+              threadId,
+              agentId: best.agentId,
+              agentName: best.agentName,
+              reason: classification.reason,
+            });
+          } else {
+            logger.warn("Handoff agent missing email; skipping CC/handoff", {
+              threadId,
+              agentId: best.agentId,
+            });
+          }
+        } else {
+          logger.info("Handoff classified but no eligible agent available", {
+            threadId,
+            locationName,
+          });
+        }
+      }
+    }
+
     const draft = await generateDraft({
       locationName,
       locationId: account.location_id,
@@ -486,10 +539,10 @@ export async function generateAndStoreDraft(
         timeline: contact.timeline ?? undefined,
         interests: contact.property_interest ?? undefined,
       },
-      agentHandoff: handoffAgent
+      agentHandoff: resolvedHandoff
         ? {
-            agentName: handoffAgent.agentName,
-            agentEmail: handoffAgent.agentEmail,
+            agentName: resolvedHandoff.agentName,
+            agentEmail: resolvedHandoff.agentEmail,
           }
         : undefined,
     });
@@ -507,8 +560,8 @@ export async function generateAndStoreDraft(
       prompt_tokens: draft.promptTokens,
       completion_tokens: draft.completionTokens,
       is_simulation: false,
-      cc_emails: handoffAgent ? [handoffAgent.agentEmail] : [],
-      agent_handoff_id: handoffAgent?.agentId ?? null,
+      cc_emails: resolvedHandoff ? [resolvedHandoff.agentEmail] : [],
+      agent_handoff_id: resolvedHandoff?.agentId ?? null,
       edited_at: null,
       sent_at: null,
       sent_body_text: null,
