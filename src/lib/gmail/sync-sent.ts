@@ -132,6 +132,7 @@ async function processSentMessage(
 
   const sentBodyText = extractBodyText(msg);
   const toEmail = parseEmailAddress(getHeader(msg, "To") ?? "");
+  const ccEmails = parseEmailList(getHeader(msg, "Cc") ?? "");
   const subject = getHeader(msg, "Subject") ?? "(no subject)";
   const sentAt = msg.internalDate
     ? new Date(parseInt(msg.internalDate)).toISOString()
@@ -183,12 +184,23 @@ async function processSentMessage(
     wasChanged,
   });
 
-  // If this draft was a handoff (has an agent assigned and hasn't been
-  // transferred yet), auto-fire the Salesforce owner-change + agent-SMS
-  // routine now that the email has actually gone out.
-  if (draft.agent_handoff_id && !draft.agent_handoff_transferred) {
+  // Reconcile the draft's agent_handoff_id against the actual CC header —
+  // this catches manual CC edits the user made before sending, and also
+  // acts as a backstop for any miss in the draft-time reconciler.
+  const resolvedHandoffId = draft.agent_handoff_transferred
+    ? (draft.agent_handoff_id as string | null)
+    : await reconcileHandoffToSentCc({
+        draftId: draft.id,
+        currentHandoffId: (draft.agent_handoff_id as string | null) ?? null,
+        sentCcEmails: ccEmails,
+      });
+
+  // If a handoff agent is resolved and this draft hasn't been transferred
+  // yet, auto-fire the Salesforce owner-change + agent-SMS routine now
+  // that the email has actually gone out.
+  if (resolvedHandoffId && !draft.agent_handoff_transferred) {
     try {
-      const result = await triggerAgentHandoff(draft.id);
+      const result = await triggerAgentHandoff(draft.id, resolvedHandoffId);
       if (!result.success) {
         logger.error("Auto handoff on send failed", {
           draftId: draft.id,
@@ -218,9 +230,96 @@ function normalizeForComparison(text: string): string {
     .toLowerCase();
 }
 
-function parseEmailAddress(raw: string): string {
+export function parseEmailAddress(raw: string): string {
   const match = raw.match(/<([^>]+)>/);
   return match ? match[1] : raw.trim();
+}
+
+export function parseEmailList(raw: string): string[] {
+  if (!raw.trim()) return [];
+  return raw
+    .split(",")
+    .map((s) => parseEmailAddress(s.trim()))
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * Reconcile the draft's `agent_handoff_id` against the actual CC header of
+ * the sent message. If a user manually changed the CC before sending, the
+ * draft row's stored handoff won't match what actually went out; we update
+ * it here so the downstream transfer fires for the real CC'd agent.
+ *
+ * Returns the resolved handoff agent id (possibly the same as before, or
+ * null if no active agent is CC'd).
+ */
+async function reconcileHandoffToSentCc(params: {
+  draftId: string;
+  currentHandoffId: string | null;
+  sentCcEmails: string[];
+}): Promise<string | null> {
+  const { draftId, currentHandoffId, sentCcEmails } = params;
+
+  if (sentCcEmails.length === 0) {
+    if (currentHandoffId) {
+      await supabase
+        .from("email_drafts")
+        .update({ agent_handoff_id: null, cc_emails: [] })
+        .eq("id", draftId);
+      logger.info("Cleared agent_handoff_id on send (no CC on sent message)", {
+        draftId,
+        previousHandoffId: currentHandoffId,
+      });
+    }
+    return null;
+  }
+
+  const { data: agents } = await supabase
+    .from("agents")
+    .select("id, email")
+    .eq("is_active", true)
+    .not("email", "is", null);
+
+  const lowerCc = sentCcEmails.map((e) => e.toLowerCase());
+  const matched = (agents ?? []).find(
+    (a) => a.email && lowerCc.includes(a.email.toLowerCase())
+  );
+
+  if (!matched) {
+    if (currentHandoffId) {
+      await supabase
+        .from("email_drafts")
+        .update({ agent_handoff_id: null, cc_emails: sentCcEmails })
+        .eq("id", draftId);
+      logger.info("Cleared agent_handoff_id on send (no active agent in CC)", {
+        draftId,
+        previousHandoffId: currentHandoffId,
+        sentCcEmails,
+      });
+    }
+    return null;
+  }
+
+  if (matched.id !== currentHandoffId) {
+    await supabase
+      .from("email_drafts")
+      .update({ agent_handoff_id: matched.id, cc_emails: sentCcEmails })
+      .eq("id", draftId);
+    logger.info("Reconciled agent_handoff_id to match sent CC", {
+      draftId,
+      previousHandoffId: currentHandoffId,
+      newHandoffId: matched.id,
+      sentCcEmails,
+    });
+  } else {
+    // Still sync cc_emails in case the user added/removed other CCs while
+    // keeping the same agent.
+    await supabase
+      .from("email_drafts")
+      .update({ cc_emails: sentCcEmails })
+      .eq("id", draftId);
+  }
+
+  return matched.id;
 }
 
 /**
