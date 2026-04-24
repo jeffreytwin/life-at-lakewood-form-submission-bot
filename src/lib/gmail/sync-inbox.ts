@@ -21,6 +21,12 @@ import {
   type GmailMessage,
 } from "./client";
 import { generateDraft } from "@/lib/ai/draft-generator";
+import {
+  detectHandoffIntent,
+  findNamedAgent,
+  rewriteHandoffBody,
+  type ReconcilerAgent,
+} from "@/lib/ai/handoff-reconciler";
 import { selectHandoffAgent } from "@/lib/routing/select-handoff-agent";
 import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
@@ -524,25 +530,53 @@ export async function generateAndStoreDraft(
         : undefined,
     });
 
-    // Post-hoc detection: did the model actually choose to hand off?
-    // If `handoffAgent` was passed explicitly, trust the caller. Otherwise
-    // look for the candidate's first name in the draft body — the prompt
-    // told the model to use exactly that name if handing off, so its
-    // presence is a strong signal. Presence of common handoff phrasing
-    // ("CCing", "connecting you", etc.) backs it up.
-    const resolvedHandoff: DraftHandoffAgent | null = (() => {
-      if (handoffAgent) return handoffAgent;
-      if (!candidateHandoff) return null;
-      const firstName = candidateHandoff.agentName.split(/\s+/)[0] ?? "";
-      if (!firstName) return null;
-      const body = draft.bodyText.toLowerCase();
-      const mentionsAgent = body.includes(firstName.toLowerCase());
-      const hasHandoffPhrase =
-        /\b(cc(?:'?ing|'?d|ed)?|copying|connecting you|introduc(?:ing|e) you|putting you in touch|reach(?:ing)? out to you)\b/i.test(
-          draft.bodyText
-        );
-      return mentionsAgent && hasHandoffPhrase ? candidateHandoff : null;
-    })();
+    // Reconcile the draft with the pre-selected handoff candidate.
+    // If the draft reads as a handoff but names someone other than the
+    // pre-selected teammate (a known failure mode when training examples
+    // bias the model toward specific teammates), rewrite the body via Haiku
+    // so the pre-selected teammate is the one named and CC'd.
+    let resolvedHandoff: DraftHandoffAgent | null = handoffAgent ?? null;
+    let finalBodyText = draft.bodyText;
+
+    if (!resolvedHandoff && detectHandoffIntent(draft.bodyText)) {
+      if (!candidateHandoff) {
+        logger.warn("Draft shows handoff intent but no eligible candidate was pre-selected", {
+          threadId,
+        });
+      } else {
+        const { data: rosterRows } = await supabase
+          .from("agents")
+          .select("id, name, email, gender")
+          .eq("is_active", true);
+        const roster = (rosterRows ?? []) as ReconcilerAgent[];
+
+        const namedAgent = findNamedAgent(draft.bodyText, roster);
+        const toAgent = roster.find((a) => a.id === candidateHandoff.agentId);
+
+        if (namedAgent && namedAgent.id === candidateHandoff.agentId) {
+          resolvedHandoff = candidateHandoff;
+        } else if (toAgent) {
+          try {
+            finalBodyText = await rewriteHandoffBody({
+              body: draft.bodyText,
+              fromAgent: namedAgent,
+              toAgent,
+            });
+            resolvedHandoff = candidateHandoff;
+            logger.info("Handoff draft reconciled via rewrite", {
+              threadId,
+              namedByModel: namedAgent?.name ?? "unknown",
+              rewrittenTo: toAgent.name,
+            });
+          } catch (err) {
+            logger.error("Handoff rewrite failed, keeping original body without CC", {
+              threadId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+      }
+    }
 
     if (resolvedHandoff) {
       logger.info("Draft identified as handoff", {
@@ -560,7 +594,7 @@ export async function generateAndStoreDraft(
       email_account_id: account.id,
       status: "drafted",
       subject: subject.startsWith("Re:") ? subject : `Re: ${subject}`,
-      body_text: draft.bodyText,
+      body_text: finalBodyText,
       model_used: draft.modelUsed,
       prompt_tokens: draft.promptTokens,
       completion_tokens: draft.completionTokens,
