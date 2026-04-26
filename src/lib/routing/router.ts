@@ -131,7 +131,7 @@ async function handleOwnedByOther(
   const frontlinesPhone = frontlinesAgent?.phone ?? process.env.FRONTLINES_AGENT_PHONE;
 
   if (frontlinesPhone) {
-    await sendOwnedByNotification(frontlinesPhone, lead, locationName);
+    await sendOwnedByNotification(frontlinesPhone, lead, locationName, ownerAgent?.name ?? null);
   }
 
   // Assign the existing owner as the final agent
