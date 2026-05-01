@@ -361,30 +361,23 @@ async function upsertThread(
   salesforceLeadId: string | null,
   contact: MatchedContact | null
 ): Promise<string> {
-  // Check for existing thread
-  const { data: existing } = await supabase
-    .from("email_threads")
-    .select("id, salesforce_lead_id, sender_name")
-    .eq("email_account_id", account.id)
-    .eq("provider_thread_id", gmailThreadId)
-    .limit(1);
+  const parsedSenderName = rawFromHeader.includes("<")
+    ? rawFromHeader.split("<")[0].trim().replace(/"/g, "") || null
+    : null;
 
-  if (existing && existing.length > 0) {
-    // If thread exists but didn't have a lead link, update it
+  // Apply conditional updates to an existing thread row.
+  const applyExistingUpdates = async (existing: {
+    id: string;
+    salesforce_lead_id: string | null;
+    sender_name: string | null;
+  }) => {
     const updates: Record<string, unknown> = {};
-    if (!existing[0].salesforce_lead_id && salesforceLeadId) {
+    if (!existing.salesforce_lead_id && salesforceLeadId) {
       updates.salesforce_lead_id = salesforceLeadId;
     }
-    // Backfill sender_name if it was missing and we now have it
-    if (!existing[0].sender_name) {
-      const parsed = rawFromHeader.includes("<")
-        ? rawFromHeader.split("<")[0].trim().replace(/"/g, "") || null
-        : null;
-      if (parsed) {
-        updates.sender_name = parsed;
-      }
+    if (!existing.sender_name && parsedSenderName) {
+      updates.sender_name = parsedSenderName;
     }
-    // Always update owner info if we have contact data
     if (contact) {
       updates.salesforce_owner_id = contact.salesforce_owner_id ?? null;
       updates.salesforce_owner_name = contact.salesforce_owner_name ?? null;
@@ -394,24 +387,35 @@ async function upsertThread(
       await supabase
         .from("email_threads")
         .update(updates)
-        .eq("id", existing[0].id);
+        .eq("id", existing.id);
     }
-    return existing[0].id;
+    return existing.id;
+  };
+
+  // Fast path: thread already exists.
+  const { data: existingRows } = await supabase
+    .from("email_threads")
+    .select("id, salesforce_lead_id, sender_name")
+    .eq("email_account_id", account.id)
+    .eq("provider_thread_id", gmailThreadId)
+    .limit(1);
+
+  if (existingRows && existingRows.length > 0) {
+    return applyExistingUpdates(existingRows[0]);
   }
 
-  // Parse sender name from the raw From header (e.g. "Lisa S" <lisa@gmail.com>)
-  const senderName = rawFromHeader.includes("<")
-    ? rawFromHeader.split("<")[0].trim().replace(/"/g, "") || null
-    : null;
-
-  const { data, error } = await supabase
+  // No row yet — try to insert. A unique index on
+  // (email_account_id, provider_thread_id) prevents two concurrent
+  // invocations from both succeeding here; if we lose the race we
+  // catch the 23505 and re-select.
+  const { data: inserted, error: insertError } = await supabase
     .from("email_threads")
     .insert({
       email_account_id: account.id,
       provider_thread_id: gmailThreadId,
       subject,
       sender_email: parseEmailAddress(senderEmail),
-      sender_name: senderName,
+      sender_name: parsedSenderName,
       salesforce_lead_id: salesforceLeadId,
       salesforce_owner_id: contact?.salesforce_owner_id ?? null,
       salesforce_owner_name: contact?.salesforce_owner_name ?? null,
@@ -423,8 +427,29 @@ async function upsertThread(
     .select("id")
     .single();
 
-  if (error) throw new Error(`Failed to create thread: ${error.message}`);
-  return data.id;
+  if (insertError) {
+    if (insertError.code === "23505") {
+      // Concurrent inserter beat us. Re-select and merge updates.
+      const { data: rows } = await supabase
+        .from("email_threads")
+        .select("id, salesforce_lead_id, sender_name")
+        .eq("email_account_id", account.id)
+        .eq("provider_thread_id", gmailThreadId)
+        .limit(1);
+      if (!rows || rows.length === 0) {
+        throw new Error("Race-recovery: thread insert hit 23505 but row not found on re-select");
+      }
+      logger.info("Recovered from concurrent thread insert", {
+        accountId: account.id,
+        providerThreadId: gmailThreadId,
+        threadId: rows[0].id,
+      });
+      return applyExistingUpdates(rows[0]);
+    }
+    throw new Error(`Failed to create thread: ${insertError.message}`);
+  }
+
+  return inserted.id;
 }
 
 export interface DraftHandoffAgent {
