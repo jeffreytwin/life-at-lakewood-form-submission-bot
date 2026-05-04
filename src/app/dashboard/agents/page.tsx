@@ -111,6 +111,7 @@ const CHARACTER_LABEL_BY_ID: Record<CharacterId, string> = {
   snake: "Solid Snake",
   ocelot: "Revolver Ocelot",
   liquid: "Liquid Snake",
+  bigboss: "Big Boss",
 };
 
 function DayScheduleRow({
@@ -149,9 +150,10 @@ function DayScheduleRow({
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "cover",
-              objectPosition: character.avatarObjectPosition ?? "center",
-              transform: character.avatarTransform ?? "none",
+              // contain so each sprite is centered in the circle without
+              // cropping — characters are framed differently in their
+              // source GIFs and cover-cropping pulled them off-center.
+              objectFit: "contain",
               imageRendering: "pixelated",
             }}
           />
@@ -610,7 +612,7 @@ export default function AgentsPage() {
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover",
+                  objectFit: display.photoObjectFit,
                   objectPosition: display.photoObjectPosition,
                   transform: display.photoTransform,
                 }}
@@ -719,7 +721,7 @@ export default function AgentsPage() {
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover",
+                  objectFit: display.photoObjectFit,
                   objectPosition: display.photoObjectPosition,
                   transform: display.photoTransform,
                 }}
@@ -909,7 +911,7 @@ export default function AgentsPage() {
                       style={{
                         width: "100%",
                         height: "100%",
-                        objectFit: "cover",
+                        objectFit: displayed.photoObjectFit,
                         objectPosition: displayed.photoObjectPosition,
                         transform: displayed.photoTransform,
                       }}

@@ -10,9 +10,9 @@ export interface BotCharacterGifs {
   sneaking: string;
 }
 
-export type CharacterId = "snake" | "ocelot" | "liquid";
+export type CharacterId = "snake" | "ocelot" | "liquid" | "bigboss";
 
-export const ALL_CHARACTER_IDS: CharacterId[] = ["snake", "ocelot", "liquid"];
+export const ALL_CHARACTER_IDS: CharacterId[] = ["snake", "ocelot", "liquid", "bigboss"];
 
 export type DayKey =
   | "sunday"
