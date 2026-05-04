@@ -17,4 +17,6 @@ export interface BotCharacter {
   welcomeSound: string;
   getMessage: (event: LeadEvent) => string;
   gifs: BotCharacterGifs;
+  /** Multiplier applied to the routing-toggle character size. Defaults to 1.0. */
+  gifSizeScale?: number;
 }
