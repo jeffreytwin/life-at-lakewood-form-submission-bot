@@ -14,6 +14,10 @@ import {
   getProfile,
 } from "./client";
 import { triggerAgentHandoff } from "./trigger-handoff";
+import {
+  updateDraftLeadStatus,
+  senderAlreadyHasLeadStatus,
+} from "@/lib/email/update-lead-status";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
 /**
@@ -198,10 +202,13 @@ async function processSentMessage(
   // If a handoff agent is resolved and this draft hasn't been transferred
   // yet, auto-fire the Salesforce owner-change + agent-SMS routine now
   // that the email has actually gone out.
+  let handoffFired = false;
   if (resolvedHandoffId && !draft.agent_handoff_transferred) {
     try {
       const result = await triggerAgentHandoff(draft.id, resolvedHandoffId);
-      if (!result.success) {
+      if (result.success) {
+        handoffFired = true;
+      } else {
         logger.error("Auto handoff on send failed", {
           draftId: draft.id,
           error: result.error,
@@ -215,7 +222,46 @@ async function processSentMessage(
     }
   }
 
+  // Every handoff implies the lead is in nurture_active territory. If we
+  // haven't already marked it (either via the manual UI button or because
+  // it's already that status in Salesforce), fire the status update too.
+  // Failures here are non-blocking — the handoff itself already succeeded.
+  if (handoffFired && !draft.lead_status_update) {
+    try {
+      const senderEmail = await getThreadSenderEmail(draft.thread_id as string);
+      const alreadyNurture = await senderAlreadyHasLeadStatus(senderEmail, "nurture_active");
+      if (!alreadyNurture) {
+        const res = await updateDraftLeadStatus(draft.id, "nurture_active");
+        if (!res.success && !res.alreadyApplied) {
+          logger.warn("Auto nurture-active update failed", {
+            draftId: draft.id,
+            error: res.error,
+          });
+        }
+      } else {
+        logger.info("Skipped auto nurture-active update — sender already in that status", {
+          draftId: draft.id,
+          senderEmail,
+        });
+      }
+    } catch (err) {
+      logger.warn("Auto nurture-active update threw", {
+        draftId: draft.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
   return { matched: true, changed: wasChanged };
+}
+
+async function getThreadSenderEmail(threadId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("email_threads")
+    .select("sender_email")
+    .eq("id", threadId)
+    .single();
+  return data?.sender_email ?? null;
 }
 
 /**

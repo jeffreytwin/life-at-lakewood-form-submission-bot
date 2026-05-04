@@ -150,6 +150,7 @@ export default function LeadsPage() {
   const [textingId, setTextingId] = useState<string | null>(null);
   const [textedIds, setTextedIds] = useState<Set<string>>(new Set());
   const [doningId, setDoningId] = useState<string | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -272,6 +273,31 @@ export default function LeadsPage() {
       alert("Network error sending text");
     } finally {
       setTextingId(null);
+    }
+  }
+
+  async function handleRetry(leadId: string) {
+    setRetryingId(leadId);
+    try {
+      const r = await fetch(`/api/internal/leads/${leadId}/retry`, {
+        method: "POST",
+      });
+      const data = await r.json();
+      if (data.error) {
+        alert(`Retry failed: ${data.error}`);
+      } else {
+        // Optimistically reflect the new state; refresh shortly to pick up real status.
+        setLeads((prev) =>
+          prev.map((l) =>
+            l.id === leadId ? { ...l, routing_status: "routing" } : l
+          )
+        );
+        fetchLeads(false);
+      }
+    } catch {
+      alert("Network error retrying routing");
+    } finally {
+      setRetryingId(null);
     }
   }
 
@@ -496,6 +522,16 @@ export default function LeadsPage() {
                                   : textedIds.has(lead.id)
                                     ? "Text Again"
                                     : "Text Me"}
+                              </button>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                disabled={retryingId === lead.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRetry(lead.id);
+                                }}
+                              >
+                                {retryingId === lead.id ? "..." : "Retry"}
                               </button>
                               <button
                                 className="btn btn-secondary btn-sm"
