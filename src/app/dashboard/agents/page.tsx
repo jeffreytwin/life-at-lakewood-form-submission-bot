@@ -197,6 +197,7 @@ export default function AgentsPage() {
   const [scheduleLoaded, setScheduleLoaded] = useState(false);
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [scheduleStatus, setScheduleStatus] = useState<string | null>(null);
+  const scheduleStatusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load the current schedule from the settings endpoint once on mount.
   useEffect(() => {
@@ -211,14 +212,20 @@ export default function AgentsPage() {
       .catch(() => setScheduleLoaded(true));
   }, []);
 
-  async function saveSchedule() {
+  // Saves whatever schedule is passed in (not whatever's in state) so we can
+  // call this from the dropdown's onChange before React commits the new state.
+  async function saveSchedule(next: CharacterSchedule) {
+    if (scheduleStatusTimer.current) {
+      clearTimeout(scheduleStatusTimer.current);
+      scheduleStatusTimer.current = null;
+    }
     setScheduleSaving(true);
     setScheduleStatus(null);
     try {
       const res = await fetch("/api/internal/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bot_character_schedule: schedule }),
+        body: JSON.stringify({ bot_character_schedule: next }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
@@ -226,9 +233,12 @@ export default function AgentsPage() {
       } else {
         // Update the in-process cache so RoutingToggle/SpeechBubble pick up the
         // new schedule without a page refresh.
-        setCachedSchedule(schedule);
+        setCachedSchedule(next);
         setScheduleStatus("Saved");
-        setTimeout(() => setScheduleStatus(null), 2500);
+        scheduleStatusTimer.current = setTimeout(() => {
+          setScheduleStatus(null);
+          scheduleStatusTimer.current = null;
+        }, 2000);
       }
     } catch (err) {
       setScheduleStatus(`Failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -237,8 +247,16 @@ export default function AgentsPage() {
     }
   }
 
+  function changeDay(day: DayKey, id: CharacterId) {
+    const next = { ...schedule, [day]: id };
+    setSchedule(next);
+    saveSchedule(next);
+  }
+
   function resetSchedule() {
-    setSchedule({ ...DEFAULT_SCHEDULE });
+    const next: CharacterSchedule = { ...DEFAULT_SCHEDULE };
+    setSchedule(next);
+    saveSchedule(next);
   }
 
   const fetchData = useCallback(() => {
@@ -1334,19 +1352,11 @@ export default function AgentsPage() {
                           key={day}
                           day={day}
                           value={schedule[day]}
-                          onChange={(id) => setSchedule((prev) => ({ ...prev, [day]: id }))}
+                          onChange={(id) => changeDay(day, id)}
                         />
                       ))}
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16 }}>
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-sm"
-                        disabled={scheduleSaving}
-                        onClick={saveSchedule}
-                      >
-                        {scheduleSaving ? "Saving…" : "Save schedule"}
-                      </button>
                       <button
                         type="button"
                         className="btn btn-secondary btn-sm"
