@@ -48,4 +48,11 @@ export interface BotCharacter {
   sneakingSizeScale?: number;
   /** How long to hold the celebration GIF on screen, in ms. Defaults to 3000. */
   celebrationDurationMs?: number;
+  /**
+   * CSS object-position for cover-cropped avatar renders (schedule editor,
+   * agent rows, modal photo). Defaults to "center". Snake's sprites place
+   * the character in the lower portion of the frame, so anchoring his
+   * crop to the bottom keeps him visible.
+   */
+  avatarObjectPosition?: string;
 }

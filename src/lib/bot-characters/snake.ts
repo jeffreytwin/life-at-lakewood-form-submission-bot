@@ -68,5 +68,9 @@ export const snake: BotCharacter = {
     celebrating: "/celebration.gif",
     sneaking: "/sneaking.gif",
   },
+  // Snake's sprites are taller than wide and the character sits in the
+  // lower portion of each frame. Anchor cover-crops to the bottom so the
+  // small avatars (schedule editor, modal photo, etc.) actually show him.
+  avatarObjectPosition: "center bottom",
   getMessage,
 };
