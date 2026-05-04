@@ -69,7 +69,7 @@ export const liquid: BotCharacter = {
     sneaking: "/Liquid Snake - Crawling.gif",
   },
   // Tune size and celebration duration to taste once we see it in motion.
-  gifSizeScale: 1.25,
+  gifSizeScale: 1.31,
   // Quiet-hours GIF reads small at the base scale; bumped further than
   // Ocelot's so it has comparable visual weight.
   sneakingSizeScale: 1.87,

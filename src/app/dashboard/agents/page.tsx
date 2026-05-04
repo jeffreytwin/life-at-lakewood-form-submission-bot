@@ -146,7 +146,13 @@ function DayScheduleRow({
           <img
             src={character.gifs.standing}
             alt={character.displayName}
-            style={{ width: "100%", height: "100%", objectFit: "cover", imageRendering: "pixelated" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: character.avatarObjectPosition ?? "center",
+              imageRendering: "pixelated",
+            }}
           />
         </div>
         <select
@@ -600,7 +606,12 @@ export default function AgentsPage() {
               <img
                 src={display.photo_thumb_url ?? display.photo_url}
                 alt={display.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: display.photoObjectPosition,
+                }}
               />
             ) : (
               display.name.charAt(0).toUpperCase()
@@ -703,7 +714,12 @@ export default function AgentsPage() {
               <img
                 src={display.photo_thumb_url ?? display.photo_url}
                 alt={display.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: display.photoObjectPosition,
+                }}
               />
             ) : (
               display.name.charAt(0).toUpperCase()
@@ -887,7 +903,12 @@ export default function AgentsPage() {
                     <img
                       src={displayed.photo_url}
                       alt={displayed.name}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        objectPosition: displayed.photoObjectPosition,
+                      }}
                     />
                   ) : (
                     displayed.name.charAt(0).toUpperCase()

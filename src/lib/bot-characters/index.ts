@@ -71,6 +71,8 @@ interface AgentDisplay {
   name: string;
   photo_url: string | null;
   photo_thumb_url: string | null;
+  /** Pass through to CSS `object-position` on the rendered <img>. */
+  photoObjectPosition: string;
 }
 
 const BOT_AGENT_NAME = "Solid Snake Bot";
@@ -81,11 +83,14 @@ const BOT_DISPLAY_BY_CHARACTER: Record<CharacterId, { name: string; photo: strin
   liquid: { name: "Liquid Snake Bot", photo: liquid.gifs.standing },
 };
 
+const DEFAULT_OBJECT_POSITION = "center";
+
 /**
  * Map a raw agent record to its on-screen identity. The "Solid Snake Bot"
- * row is rebadged as today's character — Snake leaves it alone, Ocelot and
- * Liquid swap in their name and Standing GIF. The DB row itself is never
- * mutated; only how it's rendered.
+ * row is rebadged as today's character — Snake leaves the photo alone but
+ * still hands back his avatar object-position, Ocelot and Liquid swap in
+ * their name and Standing GIF. The DB row itself is never mutated; only
+ * how it's rendered.
  */
 export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
   if (agent.name !== BOT_AGENT_NAME) {
@@ -93,6 +98,7 @@ export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
       name: agent.name,
       photo_url: agent.photo_url,
       photo_thumb_url: agent.photo_thumb_url ?? null,
+      photoObjectPosition: DEFAULT_OBJECT_POSITION,
     };
   }
   const character = getActiveCharacter();
@@ -101,5 +107,6 @@ export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
     name: swap.name,
     photo_url: swap.photo ?? agent.photo_url,
     photo_thumb_url: swap.photo ?? agent.photo_thumb_url ?? null,
+    photoObjectPosition: character.avatarObjectPosition ?? DEFAULT_OBJECT_POSITION,
   };
 }
