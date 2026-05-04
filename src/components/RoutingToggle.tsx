@@ -22,7 +22,7 @@ function gifFor(state: CharacterState, gifs: BotCharacterGifs): string {
   }
 }
 
-const CELEBRATION_DURATION = 3000; // ms to show celebration before returning to idle
+const DEFAULT_CELEBRATION_DURATION_MS = 3000;
 
 /**
  * Check if the current Eastern time falls within a start→end range.
@@ -82,6 +82,15 @@ export default function RoutingToggle() {
   // crosses the boundary if the day rolls over while open.
   const activeCharacter = useMemo(() => getActiveCharacter(), []);
 
+  // Preload every GIF so the first transition between states (especially
+  // standing → celebrating) doesn't flash blank while the new image loads.
+  useEffect(() => {
+    Object.values(activeCharacter.gifs).forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [activeCharacter]);
+
   useEffect(() => {
     fetch("/api/internal/settings")
       .then((r) => r.json())
@@ -130,10 +139,11 @@ export default function RoutingToggle() {
       });
 
       // Return to previous state after the animation plays
+      const duration = activeCharacter.celebrationDurationMs ?? DEFAULT_CELEBRATION_DURATION_MS;
       celebrationTimer.current = setTimeout(() => {
         setCharacter(preCharacter.current);
         celebrationTimer.current = null;
-      }, CELEBRATION_DURATION);
+      }, duration);
     });
 
     return () => {
@@ -245,7 +255,6 @@ export default function RoutingToggle() {
           <div className="routing-character" style={{ position: "relative", marginBottom: -2, display: "flex", alignItems: "flex-start" }}>
             <SpeechBubble />
             <img
-              key={showSneaking ? "sneaking" : character}
               src={src}
               alt="Character"
               style={{
