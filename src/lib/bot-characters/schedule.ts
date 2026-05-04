@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ALL_DAYS,
   ALL_CHARACTER_IDS,

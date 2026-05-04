@@ -9,6 +9,7 @@ import {
 } from "@/lib/supabase/types";
 import {
   getDisplayAgent,
+  getCharacter,
   ALL_DAYS,
   ALL_CHARACTER_IDS,
   DEFAULT_SCHEDULE,
@@ -121,30 +122,55 @@ function DayScheduleRow({
   value: CharacterId;
   onChange: (id: CharacterId) => void;
 }) {
+  const character = getCharacter(value);
   return (
     <>
       <label htmlFor={`schedule-${day}`} style={{ fontSize: 13, fontWeight: 500 }}>
         {DAY_LABEL_BY_KEY[day]}
       </label>
-      <select
-        id={`schedule-${day}`}
-        value={value}
-        onChange={(e) => onChange(e.target.value as CharacterId)}
-        style={{
-          background: "var(--bg-input)",
-          border: "1px solid var(--border)",
-          borderRadius: "var(--radius)",
-          padding: "4px 8px",
-          fontSize: 13,
-          maxWidth: 220,
-        }}
-      >
-        {ALL_CHARACTER_IDS.map((id) => (
-          <option key={id} value={id}>
-            {CHARACTER_LABEL_BY_ID[id]}
-          </option>
-        ))}
-      </select>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            overflow: "hidden",
+            background: "var(--bg-input)",
+            border: "1px solid var(--border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <img
+            src={character.gifs.standing}
+            alt={character.displayName}
+            style={{ width: "100%", height: "100%", objectFit: "cover", imageRendering: "pixelated" }}
+          />
+        </div>
+        <select
+          id={`schedule-${day}`}
+          value={value}
+          onChange={(e) => onChange(e.target.value as CharacterId)}
+          style={{
+            background: "var(--bg-input)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius)",
+            padding: "4px 8px",
+            fontSize: 13,
+            color: "var(--accent)",
+            fontWeight: 500,
+            maxWidth: 220,
+          }}
+        >
+          {ALL_CHARACTER_IDS.map((id) => (
+            <option key={id} value={id} style={{ color: "var(--accent)" }}>
+              {CHARACTER_LABEL_BY_ID[id]}
+            </option>
+          ))}
+        </select>
+      </div>
     </>
   );
 }
@@ -778,65 +804,6 @@ export default function AgentsPage() {
             </div>
           )}
 
-          {/* Bot Character Schedule */}
-          <div className="card" style={{ marginTop: 20 }}>
-            <div className="card-header">
-              <h3>Bot Character Schedule</h3>
-            </div>
-            <div style={{ padding: 16 }}>
-              <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 0 }}>
-                Pick which character takes the watch each day (Eastern time).
-                Today is showing <strong>{activeCharacter.displayName}</strong>.
-              </p>
-              {!scheduleLoaded ? (
-                <p style={{ color: "var(--text-muted)" }}>Loading…</p>
-              ) : (
-                <>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "max-content 1fr",
-                      gap: "8px 16px",
-                      alignItems: "center",
-                      maxWidth: 380,
-                    }}
-                  >
-                    {ALL_DAYS.map((day) => (
-                      <DayScheduleRow
-                        key={day}
-                        day={day}
-                        value={schedule[day]}
-                        onChange={(id) => setSchedule((prev) => ({ ...prev, [day]: id }))}
-                      />
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16 }}>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      disabled={scheduleSaving}
-                      onClick={saveSchedule}
-                    >
-                      {scheduleSaving ? "Saving…" : "Save schedule"}
-                    </button>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      disabled={scheduleSaving}
-                      onClick={resetSchedule}
-                      title="Reset to the built-in default schedule"
-                    >
-                      Reset to default
-                    </button>
-                    {scheduleStatus && (
-                      <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                        {scheduleStatus}
-                      </span>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
           {/* Inactive Agents */}
           {inactiveRegularAgents.length > 0 && (
             <div className="card" style={{ marginTop: 20 }}>
@@ -875,7 +842,12 @@ export default function AgentsPage() {
             )}
 
             {/* Photo upload (only when editing) */}
-            {editing && (
+            {editing && (() => {
+              // For the frontlines bot agent, swap the displayed photo + name
+              // to whichever character is on duty today so the operator sees
+              // who they're really staring at.
+              const displayed = getDisplayAgent(editing);
+              return (
               <div className="form-group" style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <div
                   style={{
@@ -893,14 +865,14 @@ export default function AgentsPage() {
                     flexShrink: 0,
                   }}
                 >
-                  {editing.photo_url ? (
+                  {displayed.photo_url ? (
                     <img
-                      src={editing.photo_url}
-                      alt={editing.name}
+                      src={displayed.photo_url}
+                      alt={displayed.name}
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (
-                    editing.name.charAt(0).toUpperCase()
+                    displayed.name.charAt(0).toUpperCase()
                   )}
                 </div>
                 <div>
@@ -921,7 +893,8 @@ export default function AgentsPage() {
                   </button>
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             <div className="form-row">
               <div className="form-group">
@@ -1334,6 +1307,64 @@ export default function AgentsPage() {
                   </label>
                 </div>
               </>
+            )}
+
+            {isFrontlines && (
+              <div className="form-group" style={{ marginTop: 24 }}>
+                <h4 style={{ margin: "0 0 8px 0" }}>Bot Character Schedule</h4>
+                <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 0 }}>
+                  Pick which character takes the watch each day (Eastern time).
+                  Today is showing <strong>{activeCharacter.displayName}</strong>.
+                </p>
+                {!scheduleLoaded ? (
+                  <p style={{ color: "var(--text-muted)" }}>Loading…</p>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "max-content 1fr",
+                        gap: "8px 16px",
+                        alignItems: "center",
+                        maxWidth: 380,
+                      }}
+                    >
+                      {ALL_DAYS.map((day) => (
+                        <DayScheduleRow
+                          key={day}
+                          day={day}
+                          value={schedule[day]}
+                          onChange={(id) => setSchedule((prev) => ({ ...prev, [day]: id }))}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16 }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        disabled={scheduleSaving}
+                        onClick={saveSchedule}
+                      >
+                        {scheduleSaving ? "Saving…" : "Save schedule"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        disabled={scheduleSaving}
+                        onClick={resetSchedule}
+                        title="Reset to the built-in default schedule"
+                      >
+                        Reset to default
+                      </button>
+                      {scheduleStatus && (
+                        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                          {scheduleStatus}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             )}
 
             <div className="modal-actions">
