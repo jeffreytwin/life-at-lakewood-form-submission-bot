@@ -109,10 +109,16 @@ export default function RoutingToggle() {
       .catch(() => {});
   }, []);
 
-  // Play celebration animation when a lead is accepted
+  // Play celebration animation when a lead is accepted, marked done, or an email is sent
   useEffect(() => {
     const unsub = onLeadEvent((event) => {
-      if (event.type !== "accepted") return;
+      if (
+        event.type !== "accepted" &&
+        event.type !== "done" &&
+        event.type !== "email_sent"
+      ) {
+        return;
+      }
 
       // Clear any existing celebration timer
       if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
