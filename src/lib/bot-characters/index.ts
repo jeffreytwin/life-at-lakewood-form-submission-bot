@@ -1,38 +1,64 @@
 import { snake } from "./snake";
 import { ocelot } from "./ocelot";
+import { liquid } from "./liquid";
+import {
+  DEFAULT_SCHEDULE,
+  easternDayKey,
+  ensureScheduleLoaded,
+  getCachedSchedule,
+  normalizeSchedule,
+  setCachedSchedule,
+  subscribeToSchedule,
+} from "./schedule";
 import type { BotCharacter } from "./types";
+import type { CharacterId, CharacterSchedule, DayKey } from "./types";
 
-export type { BotCharacter, BotCharacterGifs } from "./types";
+export type {
+  BotCharacter,
+  BotCharacterGifs,
+  CharacterId,
+  CharacterSchedule,
+  DayKey,
+} from "./types";
+export { ALL_CHARACTER_IDS, ALL_DAYS } from "./types";
+export {
+  DEFAULT_SCHEDULE,
+  ensureScheduleLoaded,
+  getCachedSchedule,
+  normalizeSchedule,
+  setCachedSchedule,
+  subscribeToSchedule,
+  easternDayKey,
+} from "./schedule";
 
-/**
- * Day-of-week lookup using America/New_York time. 0 = Sunday, 6 = Saturday.
- */
-function easternDayOfWeek(at: Date = new Date()): number {
-  // Intl gives us the weekday in the target tz without parsing pitfalls.
-  const weekday = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    weekday: "short",
-  }).format(at);
-  switch (weekday) {
-    case "Sun": return 0;
-    case "Mon": return 1;
-    case "Tue": return 2;
-    case "Wed": return 3;
-    case "Thu": return 4;
-    case "Fri": return 5;
-    case "Sat": return 6;
-    default: return 0;
-  }
+const CHARACTERS: Record<CharacterId, BotCharacter> = {
+  snake,
+  ocelot,
+  liquid,
+};
+
+export function getCharacter(id: CharacterId): BotCharacter {
+  return CHARACTERS[id];
 }
 
 /**
- * Revolver Ocelot takes the watch on Monday, Wednesday, and Friday (Eastern).
- * Solid Snake handles every other day.
+ * Pick the character on duty for the given moment, using the cached
+ * schedule (or the hardcoded default if the cache hasn't populated yet).
  */
 export function getActiveCharacter(at: Date = new Date()): BotCharacter {
-  const day = easternDayOfWeek(at);
-  const isOcelotDay = day === 1 || day === 3 || day === 5;
-  return isOcelotDay ? ocelot : snake;
+  const schedule = getCachedSchedule();
+  const day = easternDayKey(at);
+  const id = schedule[day] ?? DEFAULT_SCHEDULE[day];
+  return CHARACTERS[id] ?? snake;
+}
+
+/**
+ * Resolve the character for a specific day from a (possibly partial) schedule.
+ * Used by the schedule editor UI.
+ */
+export function characterForDay(schedule: CharacterSchedule, day: DayKey): BotCharacter {
+  const id = schedule[day] ?? DEFAULT_SCHEDULE[day];
+  return CHARACTERS[id] ?? snake;
 }
 
 interface AgentDisplayInput {
@@ -47,24 +73,33 @@ interface AgentDisplay {
   photo_thumb_url: string | null;
 }
 
+const BOT_AGENT_NAME = "Solid Snake Bot";
+
+const BOT_DISPLAY_BY_CHARACTER: Record<CharacterId, { name: string; photo: string | null }> = {
+  snake: { name: BOT_AGENT_NAME, photo: null }, // null → use the agent row's own photo
+  ocelot: { name: "Revolver Ocelot Bot", photo: ocelot.gifs.standing },
+  liquid: { name: "Liquid Snake Bot", photo: liquid.gifs.standing },
+};
+
 /**
- * Map a raw agent record to its on-screen identity. On Ocelot days, the
- * "Solid Snake Bot" agent is displayed as "Revolver Ocelot Bot" with the
- * Ocelot Standing GIF in place of its photo. The DB row itself is never
- * mutated — only how it's rendered.
+ * Map a raw agent record to its on-screen identity. The "Solid Snake Bot"
+ * row is rebadged as today's character — Snake leaves it alone, Ocelot and
+ * Liquid swap in their name and Standing GIF. The DB row itself is never
+ * mutated; only how it's rendered.
  */
 export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
-  const character = getActiveCharacter();
-  if (character.id === "ocelot" && agent.name === "Solid Snake Bot") {
+  if (agent.name !== BOT_AGENT_NAME) {
     return {
-      name: "Revolver Ocelot Bot",
-      photo_url: ocelot.gifs.standing,
-      photo_thumb_url: ocelot.gifs.standing,
+      name: agent.name,
+      photo_url: agent.photo_url,
+      photo_thumb_url: agent.photo_thumb_url ?? null,
     };
   }
+  const character = getActiveCharacter();
+  const swap = BOT_DISPLAY_BY_CHARACTER[character.id];
   return {
-    name: agent.name,
-    photo_url: agent.photo_url,
-    photo_thumb_url: agent.photo_thumb_url ?? null,
+    name: swap.name,
+    photo_url: swap.photo ?? agent.photo_url,
+    photo_thumb_url: swap.photo ?? agent.photo_thumb_url ?? null,
   };
 }

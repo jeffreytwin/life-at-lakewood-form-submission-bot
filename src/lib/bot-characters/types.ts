@@ -10,8 +10,33 @@ export interface BotCharacterGifs {
   sneaking: string;
 }
 
+export type CharacterId = "snake" | "ocelot" | "liquid";
+
+export const ALL_CHARACTER_IDS: CharacterId[] = ["snake", "ocelot", "liquid"];
+
+export type DayKey =
+  | "sunday"
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday";
+
+export const ALL_DAYS: DayKey[] = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
+
+export type CharacterSchedule = Record<DayKey, CharacterId>;
+
 export interface BotCharacter {
-  id: "snake" | "ocelot";
+  id: CharacterId;
   displayName: string;
   welcomeMessages: string[];
   welcomeSound: string;
