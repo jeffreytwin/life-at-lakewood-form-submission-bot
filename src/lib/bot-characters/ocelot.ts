@@ -75,6 +75,9 @@ export const ocelot: BotCharacter = {
   // Quiet-hours GIF reads small at the base scale; bump 30% above the
   // standing scale so it has the same visual presence.
   sneakingSizeScale: 1.625,
+  // Nudge Ocelot ~4px right and ~3px down so he lands in the same visual
+  // spot Snake renders at in the routing toggle and avatar circles.
+  avatarTransform: "translate(4px, 3px)",
   // Ocelot's celebration animation runs longer than Snake's — give it room.
   celebrationDurationMs: 5000,
   getMessage,
