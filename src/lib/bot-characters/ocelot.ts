@@ -71,6 +71,6 @@ export const ocelot: BotCharacter = {
   },
   // Default 1.0 keeps Ocelot at the same render size as Snake. Bump up
   // here if his GIFs look noticeably smaller than Snake's in practice.
-  gifSizeScale: 1.0,
+  gifSizeScale: 1.25,
   getMessage,
 };
