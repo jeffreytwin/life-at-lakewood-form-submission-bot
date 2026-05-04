@@ -151,6 +151,7 @@ function DayScheduleRow({
               height: "100%",
               objectFit: "cover",
               objectPosition: character.avatarObjectPosition ?? "center",
+              transform: character.avatarTransform ?? "none",
               imageRendering: "pixelated",
             }}
           />
@@ -611,6 +612,7 @@ export default function AgentsPage() {
                   height: "100%",
                   objectFit: "cover",
                   objectPosition: display.photoObjectPosition,
+                  transform: display.photoTransform,
                 }}
               />
             ) : (
@@ -719,6 +721,7 @@ export default function AgentsPage() {
                   height: "100%",
                   objectFit: "cover",
                   objectPosition: display.photoObjectPosition,
+                  transform: display.photoTransform,
                 }}
               />
             ) : (
@@ -908,6 +911,7 @@ export default function AgentsPage() {
                         height: "100%",
                         objectFit: "cover",
                         objectPosition: displayed.photoObjectPosition,
+                        transform: displayed.photoTransform,
                       }}
                     />
                   ) : (

@@ -73,6 +73,8 @@ interface AgentDisplay {
   photo_thumb_url: string | null;
   /** Pass through to CSS `object-position` on the rendered <img>. */
   photoObjectPosition: string;
+  /** Pass through to CSS `transform` on the rendered <img>. Defaults to "none". */
+  photoTransform: string;
 }
 
 const BOT_AGENT_NAME = "Solid Snake Bot";
@@ -99,6 +101,7 @@ export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
       photo_url: agent.photo_url,
       photo_thumb_url: agent.photo_thumb_url ?? null,
       photoObjectPosition: DEFAULT_OBJECT_POSITION,
+      photoTransform: "none",
     };
   }
   const character = getActiveCharacter();
@@ -108,5 +111,6 @@ export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
     photo_url: swap.photo ?? agent.photo_url,
     photo_thumb_url: swap.photo ?? agent.photo_thumb_url ?? null,
     photoObjectPosition: character.avatarObjectPosition ?? DEFAULT_OBJECT_POSITION,
+    photoTransform: character.avatarTransform ?? "none",
   };
 }

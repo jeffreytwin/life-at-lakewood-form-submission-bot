@@ -266,6 +266,7 @@ export default function RoutingToggle() {
                 height: size,
                 imageRendering: "pixelated",
                 objectFit: "contain",
+                transform: activeCharacter.avatarTransform ?? "none",
               }}
             />
             <button

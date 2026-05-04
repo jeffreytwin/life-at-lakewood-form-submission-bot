@@ -73,6 +73,9 @@ export const liquid: BotCharacter = {
   // Quiet-hours GIF reads small at the base scale; bumped further than
   // Ocelot's so it has comparable visual weight.
   sneakingSizeScale: 1.87,
+  // Nudge Liquid ~4px right and ~3px down so he lands in the same visual
+  // spot Snake renders at in the routing toggle and avatar circles.
+  avatarTransform: "translate(4px, 3px)",
   celebrationDurationMs: 5000,
   getMessage,
 };

@@ -55,4 +55,10 @@ export interface BotCharacter {
    * crop to the bottom keeps him visible.
    */
   avatarObjectPosition?: string;
+  /**
+   * CSS transform applied to the avatar <img> on top of object-position.
+   * Useful when a character's sprite is framed differently from Snake's
+   * and needs a small physical offset to land in the same visual spot.
+   */
+  avatarTransform?: string;
 }
