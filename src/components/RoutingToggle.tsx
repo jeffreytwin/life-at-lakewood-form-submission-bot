@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import SpeechBubble from "./SpeechBubble";
 import { onLeadEvent } from "@/lib/lead-events";
+import { getActiveCharacter, type BotCharacterGifs } from "@/lib/bot-characters";
 
 type CharacterState =
   | "standing-there"
@@ -11,13 +12,15 @@ type CharacterState =
   | "getting-out-of-box"
   | "celebrating";
 
-const GIF_SRC: Record<CharacterState, string> = {
-  "standing-there": "/standing-there.gif",
-  "get-in-box": "/get-in-box.gif",
-  "in-box": "/in-box.gif",
-  "getting-out-of-box": "/getting-out-of-box.gif",
-  "celebrating": "/celebration.gif",
-};
+function gifFor(state: CharacterState, gifs: BotCharacterGifs): string {
+  switch (state) {
+    case "standing-there": return gifs.standing;
+    case "get-in-box": return gifs.getInBox;
+    case "in-box": return gifs.inBox;
+    case "getting-out-of-box": return gifs.gettingOutOfBox;
+    case "celebrating": return gifs.celebrating;
+  }
+}
 
 const CELEBRATION_DURATION = 3000; // ms to show celebration before returning to idle
 
@@ -74,6 +77,10 @@ export default function RoutingToggle() {
   const [hidden, setHidden] = useState(false);
   const celebrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preCharacter = useRef<CharacterState>("standing-there");
+  // Resolved at mount; getActiveCharacter() picks Snake or Ocelot based on
+  // day-of-week in Eastern time. Stays stable for the session — a refresh
+  // crosses the boundary if the day rolls over while open.
+  const activeCharacter = useMemo(() => getActiveCharacter(), []);
 
   useEffect(() => {
     fetch("/api/internal/settings")
@@ -223,7 +230,9 @@ export default function RoutingToggle() {
       {/* Character gif — show sneaking only when night mode active and in resting "standing" state */}
       {(() => {
         const showSneaking = nightActive && character === "standing-there";
-        const src = showSneaking ? "/sneaking.gif" : GIF_SRC[character];
+        const src = showSneaking
+          ? activeCharacter.gifs.sneaking
+          : gifFor(character, activeCharacter.gifs);
         const size = showSneaking ? 87 : 109;
         return (
           <div className="routing-character" style={{ position: "relative", marginBottom: -2, display: "flex", alignItems: "flex-start" }}>

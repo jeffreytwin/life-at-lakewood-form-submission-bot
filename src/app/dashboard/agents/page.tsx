@@ -7,6 +7,7 @@ import {
   ALL_PRICE_RANGES,
   DAY_LABELS,
 } from "@/lib/supabase/types";
+import { getDisplayAgent } from "@/lib/bot-characters";
 
 type AgentForm = {
   name: string;
@@ -419,6 +420,7 @@ export default function AgentsPage() {
 
   function renderAgentRow(agent: Agent) {
     const hrCount = handRaiseCounts[agent.name] ?? 0;
+    const display = getDisplayAgent(agent);
     return (
       <tr key={agent.id} onClick={() => openEdit(agent)} style={{ cursor: "pointer" }}>
         <td>
@@ -437,14 +439,14 @@ export default function AgentsPage() {
               color: "var(--text-muted)",
             }}
           >
-            {agent.photo_url ? (
+            {display.photo_url ? (
               <img
-                src={agent.photo_thumb_url ?? agent.photo_url}
-                alt={agent.name}
+                src={display.photo_thumb_url ?? display.photo_url}
+                alt={display.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (
-              agent.name.charAt(0).toUpperCase()
+              display.name.charAt(0).toUpperCase()
             )}
           </div>
         </td>
@@ -454,7 +456,7 @@ export default function AgentsPage() {
           />
           {agent.is_active ? "Active" : "Inactive"}
         </td>
-        <td style={{ fontWeight: 600 }}>{agent.name}</td>
+        <td style={{ fontWeight: 600 }}>{display.name}</td>
         <td className="text-sm hide-mobile">
           {agent.location_specialties.length > 0
             ? agent.location_specialties.join(", ")
@@ -521,6 +523,7 @@ export default function AgentsPage() {
   }
 
   function renderBotOnDutyRow(agent: Agent) {
+    const display = getDisplayAgent(agent);
     return (
       <tr key={agent.id} onClick={() => openEdit(agent)} style={{ cursor: "pointer" }}>
         <td>
@@ -539,14 +542,14 @@ export default function AgentsPage() {
               color: "var(--text-muted)",
             }}
           >
-            {agent.photo_url ? (
+            {display.photo_url ? (
               <img
-                src={agent.photo_thumb_url ?? agent.photo_url}
-                alt={agent.name}
+                src={display.photo_thumb_url ?? display.photo_url}
+                alt={display.name}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
             ) : (
-              agent.name.charAt(0).toUpperCase()
+              display.name.charAt(0).toUpperCase()
             )}
           </div>
         </td>
@@ -556,7 +559,7 @@ export default function AgentsPage() {
           />
           {agent.is_active ? "Active" : "Inactive"}
         </td>
-        <td style={{ fontWeight: 600 }}>{agent.name}</td>
+        <td style={{ fontWeight: 600 }}>{display.name}</td>
       </tr>
     );
   }
