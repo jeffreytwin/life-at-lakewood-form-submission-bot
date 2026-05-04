@@ -62,7 +62,7 @@ export const ocelot: BotCharacter = {
   gifs: {
     // Ocelot uses Snake's box gifs for the routing-on/off transitions
     // — we don't have Ocelot equivalents and the user opted to leave those alone.
-    standing: "/Revolver Ocelot - Standing.gif",
+    standing: "/Revolver Ocelot - Standing V2.gif",
     inBox: "/in-box.gif",
     getInBox: "/get-in-box.gif",
     gettingOutOfBox: "/getting-out-of-box.gif",
