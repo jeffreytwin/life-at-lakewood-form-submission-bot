@@ -44,6 +44,8 @@ export interface BotCharacter {
   gifs: BotCharacterGifs;
   /** Multiplier applied to the routing-toggle character size. Defaults to 1.0. */
   gifSizeScale?: number;
+  /** Optional scale just for the quiet-hours (sneaking) GIF. Falls back to gifSizeScale. */
+  sneakingSizeScale?: number;
   /** How long to hold the celebration GIF on screen, in ms. Defaults to 3000. */
   celebrationDurationMs?: number;
 }
