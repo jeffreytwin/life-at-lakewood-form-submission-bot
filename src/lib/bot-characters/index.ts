@@ -1,6 +1,7 @@
 import { snake } from "./snake";
 import { ocelot } from "./ocelot";
 import { liquid } from "./liquid";
+import { bigboss } from "./bigboss";
 import {
   DEFAULT_SCHEDULE,
   easternDayKey,
@@ -35,6 +36,7 @@ const CHARACTERS: Record<CharacterId, BotCharacter> = {
   snake,
   ocelot,
   liquid,
+  bigboss,
 };
 
 export function getCharacter(id: CharacterId): BotCharacter {
@@ -71,6 +73,8 @@ interface AgentDisplay {
   name: string;
   photo_url: string | null;
   photo_thumb_url: string | null;
+  /** Pass through to CSS `object-fit` on the rendered <img>. */
+  photoObjectFit: "cover" | "contain";
   /** Pass through to CSS `object-position` on the rendered <img>. */
   photoObjectPosition: string;
   /** Pass through to CSS `transform` on the rendered <img>. Defaults to "none". */
@@ -83,6 +87,7 @@ const BOT_DISPLAY_BY_CHARACTER: Record<CharacterId, { name: string; photo: strin
   snake: { name: BOT_AGENT_NAME, photo: null }, // null → use the agent row's own photo
   ocelot: { name: "Revolver Ocelot Bot", photo: ocelot.gifs.standing },
   liquid: { name: "Liquid Snake Bot", photo: liquid.gifs.standing },
+  bigboss: { name: "Big Boss Bot", photo: bigboss.gifs.standing },
 };
 
 const DEFAULT_OBJECT_POSITION = "center";
@@ -96,21 +101,29 @@ const DEFAULT_OBJECT_POSITION = "center";
  */
 export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
   if (agent.name !== BOT_AGENT_NAME) {
+    // Real human agents have proper square headshots — keep cover-crop and
+    // skip any character-specific positioning.
     return {
       name: agent.name,
       photo_url: agent.photo_url,
       photo_thumb_url: agent.photo_thumb_url ?? null,
+      photoObjectFit: "cover",
       photoObjectPosition: DEFAULT_OBJECT_POSITION,
       photoTransform: "none",
     };
   }
+  // The bot's photo is always a character sprite. Use contain so each
+  // character is centered in the circle without cropping — sprites are
+  // framed differently from each other and cover-cropping pulled some
+  // off-center.
   const character = getActiveCharacter();
   const swap = BOT_DISPLAY_BY_CHARACTER[character.id];
   return {
     name: swap.name,
     photo_url: swap.photo ?? agent.photo_url,
     photo_thumb_url: swap.photo ?? agent.photo_thumb_url ?? null,
-    photoObjectPosition: character.avatarObjectPosition ?? DEFAULT_OBJECT_POSITION,
-    photoTransform: character.avatarTransform ?? "none",
+    photoObjectFit: "contain",
+    photoObjectPosition: DEFAULT_OBJECT_POSITION,
+    photoTransform: "none",
   };
 }

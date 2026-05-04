@@ -8,14 +8,14 @@ import {
 
 /**
  * Default schedule used when system_settings.bot_character_schedule is null
- * (e.g. brand-new install) or has missing/invalid keys. Liquid takes
- * Mon/Wed/Sat per the latest spec; Ocelot keeps Friday from his earlier run;
- * Snake fills the rest.
+ * (e.g. brand-new install) or has missing/invalid keys. Big Boss anchors
+ * Monday; Ocelot takes Tuesdays and Fridays; Liquid keeps Wed/Sat; Snake
+ * fills the remaining days.
  */
 export const DEFAULT_SCHEDULE: CharacterSchedule = {
   sunday: "snake",
-  monday: "liquid",
-  tuesday: "snake",
+  monday: "bigboss",
+  tuesday: "ocelot",
   wednesday: "liquid",
   thursday: "snake",
   friday: "ocelot",
