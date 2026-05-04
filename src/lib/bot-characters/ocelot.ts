@@ -72,6 +72,9 @@ export const ocelot: BotCharacter = {
   // Default 1.0 keeps Ocelot at the same render size as Snake. Bump up
   // here if his GIFs look noticeably smaller than Snake's in practice.
   gifSizeScale: 1.25,
+  // Quiet-hours GIF reads small at the base scale; bump 30% above the
+  // standing scale so it has the same visual presence.
+  sneakingSizeScale: 1.625,
   // Ocelot's celebration animation runs longer than Snake's — give it room.
   celebrationDurationMs: 5000,
   getMessage,

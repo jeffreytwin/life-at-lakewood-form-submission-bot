@@ -251,7 +251,10 @@ export default function RoutingToggle() {
           ? activeCharacter.gifs.sneaking
           : gifFor(character, activeCharacter.gifs);
         const baseSize = showSneaking ? 87 : 109;
-        const size = Math.round(baseSize * (activeCharacter.gifSizeScale ?? 1));
+        const scale = showSneaking
+          ? (activeCharacter.sneakingSizeScale ?? activeCharacter.gifSizeScale ?? 1)
+          : (activeCharacter.gifSizeScale ?? 1);
+        const size = Math.round(baseSize * scale);
         return (
           <div className="routing-character" style={{ position: "relative", marginBottom: -2, display: "flex", alignItems: "flex-start" }}>
             <SpeechBubble />
