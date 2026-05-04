@@ -70,9 +70,9 @@ export const liquid: BotCharacter = {
   },
   // Tune size and celebration duration to taste once we see it in motion.
   gifSizeScale: 1.25,
-  // Quiet-hours GIF reads small at the base scale; bump 30% above the
-  // standing scale so it has the same visual presence.
-  sneakingSizeScale: 1.625,
+  // Quiet-hours GIF reads small at the base scale; bumped further than
+  // Ocelot's so it has comparable visual weight.
+  sneakingSizeScale: 1.87,
   celebrationDurationMs: 5000,
   getMessage,
 };
