@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
+import { normalizeSchedule } from "@/lib/bot-characters/schedule";
 
 export const dynamic = "force-dynamic";
 
 const SETTINGS_COLUMNS =
-  "routing_enabled, quiet_hours_enabled, quiet_hours_start, quiet_hours_end, quiet_hours_end_weekday, quiet_hours_end_weekend, updated_at";
+  "routing_enabled, quiet_hours_enabled, quiet_hours_start, quiet_hours_end, quiet_hours_end_weekday, quiet_hours_end_weekend, bot_character_schedule, updated_at";
 
 export async function GET() {
   // Try fetching all columns (including quiet hours).
@@ -32,6 +33,7 @@ export async function GET() {
       quiet_hours_end: "08:30",
       quiet_hours_end_weekday: "06:30",
       quiet_hours_end_weekend: "08:30",
+      bot_character_schedule: null,
     };
   }
 
@@ -63,6 +65,11 @@ export async function PATCH(req: NextRequest) {
   }
   if (typeof body.quiet_hours_end_weekend === "string") {
     update.quiet_hours_end_weekend = body.quiet_hours_end_weekend;
+  }
+  if (body.bot_character_schedule && typeof body.bot_character_schedule === "object") {
+    // Defensive normalization — unknown chars / missing days fall back to
+    // the default so we never persist a schedule with bad keys.
+    update.bot_character_schedule = normalizeSchedule(body.bot_character_schedule);
   }
 
   // Must include at least one real field
@@ -108,6 +115,7 @@ export async function PATCH(req: NextRequest) {
       quiet_hours_end: "08:30",
       quiet_hours_end_weekday: "06:30",
       quiet_hours_end_weekend: "08:30",
+      bot_character_schedule: null,
     };
   }
 

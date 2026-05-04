@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 import SpeechBubble from "./SpeechBubble";
 import { onLeadEvent } from "@/lib/lead-events";
-import { getActiveCharacter, type BotCharacterGifs } from "@/lib/bot-characters";
+import { type BotCharacterGifs } from "@/lib/bot-characters";
+import { useActiveCharacter } from "@/lib/bot-characters/use-active-character";
 
 type CharacterState =
   | "standing-there"
@@ -77,10 +78,10 @@ export default function RoutingToggle() {
   const [hidden, setHidden] = useState(false);
   const celebrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const preCharacter = useRef<CharacterState>("standing-there");
-  // Resolved at mount; getActiveCharacter() picks Snake or Ocelot based on
-  // day-of-week in Eastern time. Stays stable for the session — a refresh
-  // crosses the boundary if the day rolls over while open.
-  const activeCharacter = useMemo(() => getActiveCharacter(), []);
+  // Active character resolves from the schedule (cached + subscribed); the
+  // component re-renders when the schedule loads or when the user saves a
+  // new schedule via the editor on the Agents page.
+  const activeCharacter = useActiveCharacter();
 
   // Preload every GIF so the first transition between states (especially
   // standing → celebrating) doesn't flash blank while the new image loads.

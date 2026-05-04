@@ -7,7 +7,17 @@ import {
   ALL_PRICE_RANGES,
   DAY_LABELS,
 } from "@/lib/supabase/types";
-import { getDisplayAgent } from "@/lib/bot-characters";
+import {
+  getDisplayAgent,
+  ALL_DAYS,
+  ALL_CHARACTER_IDS,
+  DEFAULT_SCHEDULE,
+  setCachedSchedule,
+  type CharacterId,
+  type CharacterSchedule,
+  type DayKey,
+} from "@/lib/bot-characters";
+import { useActiveCharacter } from "@/lib/bot-characters/use-active-character";
 
 type AgentForm = {
   name: string;
@@ -86,6 +96,59 @@ function sortAgents(agents: Agent[], key: SortKey, dir: SortDir, handRaiseCounts
   });
 }
 
+const DAY_LABEL_BY_KEY: Record<DayKey, string> = {
+  sunday: "Sunday",
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+};
+
+const CHARACTER_LABEL_BY_ID: Record<CharacterId, string> = {
+  snake: "Solid Snake",
+  ocelot: "Revolver Ocelot",
+  liquid: "Liquid Snake",
+};
+
+function DayScheduleRow({
+  day,
+  value,
+  onChange,
+}: {
+  day: DayKey;
+  value: CharacterId;
+  onChange: (id: CharacterId) => void;
+}) {
+  return (
+    <>
+      <label htmlFor={`schedule-${day}`} style={{ fontSize: 13, fontWeight: 500 }}>
+        {DAY_LABEL_BY_KEY[day]}
+      </label>
+      <select
+        id={`schedule-${day}`}
+        value={value}
+        onChange={(e) => onChange(e.target.value as CharacterId)}
+        style={{
+          background: "var(--bg-input)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius)",
+          padding: "4px 8px",
+          fontSize: 13,
+          maxWidth: 220,
+        }}
+      >
+        {ALL_CHARACTER_IDS.map((id) => (
+          <option key={id} value={id}>
+            {CHARACTER_LABEL_BY_ID[id]}
+          </option>
+        ))}
+      </select>
+    </>
+  );
+}
+
 export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -101,6 +164,56 @@ export default function AgentsPage() {
   const [handRaiseCounts, setHandRaiseCounts] = useState<Record<string, number>>({});
   const [dailyCounts, setDailyCounts] = useState<Record<string, number>>({});
   const photoInputRef = useRef<HTMLInputElement>(null);
+
+  // Bot character schedule editor
+  const activeCharacter = useActiveCharacter();
+  const [schedule, setSchedule] = useState<CharacterSchedule>(DEFAULT_SCHEDULE);
+  const [scheduleLoaded, setScheduleLoaded] = useState(false);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
+  const [scheduleStatus, setScheduleStatus] = useState<string | null>(null);
+
+  // Load the current schedule from the settings endpoint once on mount.
+  useEffect(() => {
+    fetch("/api/internal/settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.bot_character_schedule && typeof data.bot_character_schedule === "object") {
+          setSchedule({ ...DEFAULT_SCHEDULE, ...data.bot_character_schedule });
+        }
+        setScheduleLoaded(true);
+      })
+      .catch(() => setScheduleLoaded(true));
+  }, []);
+
+  async function saveSchedule() {
+    setScheduleSaving(true);
+    setScheduleStatus(null);
+    try {
+      const res = await fetch("/api/internal/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bot_character_schedule: schedule }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setScheduleStatus(`Failed: ${data.error ?? res.statusText}`);
+      } else {
+        // Update the in-process cache so RoutingToggle/SpeechBubble pick up the
+        // new schedule without a page refresh.
+        setCachedSchedule(schedule);
+        setScheduleStatus("Saved");
+        setTimeout(() => setScheduleStatus(null), 2500);
+      }
+    } catch (err) {
+      setScheduleStatus(`Failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setScheduleSaving(false);
+    }
+  }
+
+  function resetSchedule() {
+    setSchedule({ ...DEFAULT_SCHEDULE });
+  }
 
   const fetchData = useCallback(() => {
     Promise.all([
@@ -664,6 +777,65 @@ export default function AgentsPage() {
               </div>
             </div>
           )}
+
+          {/* Bot Character Schedule */}
+          <div className="card" style={{ marginTop: 20 }}>
+            <div className="card-header">
+              <h3>Bot Character Schedule</h3>
+            </div>
+            <div style={{ padding: 16 }}>
+              <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 0 }}>
+                Pick which character takes the watch each day (Eastern time).
+                Today is showing <strong>{activeCharacter.displayName}</strong>.
+              </p>
+              {!scheduleLoaded ? (
+                <p style={{ color: "var(--text-muted)" }}>Loading…</p>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "max-content 1fr",
+                      gap: "8px 16px",
+                      alignItems: "center",
+                      maxWidth: 380,
+                    }}
+                  >
+                    {ALL_DAYS.map((day) => (
+                      <DayScheduleRow
+                        key={day}
+                        day={day}
+                        value={schedule[day]}
+                        onChange={(id) => setSchedule((prev) => ({ ...prev, [day]: id }))}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16 }}>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      disabled={scheduleSaving}
+                      onClick={saveSchedule}
+                    >
+                      {scheduleSaving ? "Saving…" : "Save schedule"}
+                    </button>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      disabled={scheduleSaving}
+                      onClick={resetSchedule}
+                      title="Reset to the built-in default schedule"
+                    >
+                      Reset to default
+                    </button>
+                    {scheduleStatus && (
+                      <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                        {scheduleStatus}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
 
           {/* Inactive Agents */}
           {inactiveRegularAgents.length > 0 && (
