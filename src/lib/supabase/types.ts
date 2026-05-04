@@ -258,7 +258,8 @@ export type AuditEventType =
   | "routing_stopped"
   | "text_me_sent"
   | "lead_done_manually"
-  | "lead_marked_bad_data";
+  | "lead_marked_bad_data"
+  | "manual_retry";
 
 export interface AuditLogEntry {
   id: string;
