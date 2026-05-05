@@ -79,6 +79,6 @@ export const ocelot: BotCharacter = {
   // spot Snake renders at in the routing toggle and avatar circles.
   avatarTransform: "translate(4px, 3px)",
   // Ocelot's celebration animation runs longer than Snake's — give it room.
-  celebrationDurationMs: 5000,
+  celebrationDurationMs: 5500,
   getMessage,
 };
