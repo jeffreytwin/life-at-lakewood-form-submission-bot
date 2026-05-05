@@ -59,7 +59,7 @@ export const bigboss: BotCharacter = {
   // Sharing the codec opening with the others — same MGS callsign sound works.
   welcomeSound: "/sounds/codec-opening2.mp3",
   gifs: {
-    standing: "/Big Boss - Standing V2.gif",
+    standing: "/Big Boss - Standing V3.gif",
     // Big Boss uses Snake's box gifs for the routing-on/off transitions —
     // we don't have Big Boss equivalents and these stay Snake by design.
     inBox: "/in-box.gif",
