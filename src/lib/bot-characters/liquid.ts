@@ -76,6 +76,6 @@ export const liquid: BotCharacter = {
   // Nudge Liquid ~4px right and ~3px down so he lands in the same visual
   // spot Snake renders at in the routing toggle and avatar circles.
   avatarTransform: "translate(4px, 3px)",
-  celebrationDurationMs: 5500,
+  celebrationDurationMs: 4680,
   getMessage,
 };
