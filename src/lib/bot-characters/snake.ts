@@ -72,6 +72,6 @@ export const snake: BotCharacter = {
   // lower portion of each frame. Anchor cover-crops to the bottom so the
   // small avatars (schedule editor, modal photo, etc.) actually show him.
   avatarObjectPosition: "center bottom",
-  celebrationDurationMs: 6000,
+  celebrationDurationMs: 5040,
   getMessage,
 };
