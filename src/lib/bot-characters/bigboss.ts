@@ -11,33 +11,33 @@ function getMessage(event: LeadEvent): string {
   const g = event.agentGender;
   switch (event.type) {
     case "accepted":
-      return `Mission complete, Boss. ${event.leadName} is with ${event.agentName ?? "an agent"}.`;
+      return `Got 'em, Colonel. ${event.leadName} is with ${event.agentName ?? "an agent"}. That's one in the bag.`;
     case "failed":
-      return `Boss — we couldn't make the link. ${event.leadName} got away. We'll need a new angle.`;
+      return `Colonel — they slipped past me. ${event.leadName} got away. We'll catch the next one.`;
     case "new":
-      return "Movement on the line, Boss. New contact.";
+      return "Movement on the line, Colonel. New contact in the area.";
     case "manual":
-      return "Taking the shot yourself, Boss? Understood. I'll stand back.";
+      return "Going in solo on this one, Colonel? Roger that — I'll cover your six.";
     case "routing":
-      return `Reaching out to ${event.agentName ?? "an agent"} now, Boss. ${pronoun(g, "subject")}'s the right hand for this.`;
+      return `Reaching out to ${event.agentName ?? "an agent"} now, Colonel. Should be the right operator for this.`;
     case "followup":
-      return `${event.agentName ?? "The agent"} hasn't responded. I'll prod ${pronoun(g, "object")} again — a good soldier follows up.`;
+      return `${event.agentName ?? "The agent"} hasn't checked in yet. I'll signal again, Colonel — sometimes you've gotta wait out the brush.`;
     case "reroute":
-      return `${event.agentName ?? "The agent"} didn't pick up. Switching to a fresh contact. The mission continues.`;
+      return `${event.agentName ?? "The agent"} didn't bite, Colonel. Switching to a fresh hand. Plenty of wildlife out here.`;
     case "owned_by_other":
-      return `${event.agentName ?? "An agent"} already has this one in hand, Boss. I'll let ${pronoun(g, "object")} know we saw it.`;
+      return `${event.agentName ?? "An agent"} already has eyes on this one, Colonel. I'll let ${pronoun(g, "object")} know we noticed.`;
     case "done":
-      return "Mission accomplished, Boss. Moving on.";
+      return "Mission's a wrap, Colonel. Good work.";
     case "text_me":
-      return "Sending the file to your handheld, Boss. Read it carefully.";
+      return "Sending the file to your handheld, Colonel. Read it carefully.";
     case "bad_data":
-      return `Bad intel, Boss. ${event.leadName} flagged. We've all seen our share.`;
+      return `That one's a decoy, Colonel. ${event.leadName} flagged. Not every track's worth following.`;
     case "email_draft_new":
-      return "Incoming traffic, Boss. The drafter has a reply ready. Take a look before it goes out.";
+      return "Incoming letter, Colonel. The drafter has a reply ready — give it a once-over.";
     case "email_draft_approved":
-      return "Approved. Putting it on the wire.";
+      return "Roger. Putting it on the wire.";
     case "email_sent":
-      return "Message away, Boss.";
+      return "Message away, Colonel. On to the next.";
   }
 }
 
@@ -45,16 +45,16 @@ export const bigboss: BotCharacter = {
   id: "bigboss",
   displayName: "Big Boss",
   welcomeMessages: [
-    "Boss. Reporting in.",
-    "On the line, Boss.",
-    "Operator's awake. Let's get to work.",
-    "Boss. The wire's clear.",
-    "Stand by, Boss.",
-    "Long day ahead. Let's move.",
-    "Boss. Standing by.",
-    "Awaiting orders.",
-    "On station. Ready when you are.",
-    "Eyes on the field, Boss.",
+    "Colonel. Snake here.",
+    "Reading you, Colonel.",
+    "On the line, Colonel.",
+    "Snake here. What's the situation?",
+    "Colonel — I'm in position.",
+    "Standing by, Colonel.",
+    "Colonel. Awaiting orders.",
+    "Snake here. Eyes open.",
+    "Reading you loud and clear, Colonel.",
+    "Colonel — let's see what the day brings.",
   ],
   // Sharing the codec opening with the others — same MGS callsign sound works.
   welcomeSound: "/sounds/codec-opening2.mp3",
