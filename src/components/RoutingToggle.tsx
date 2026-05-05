@@ -82,6 +82,14 @@ export default function RoutingToggle() {
   // component re-renders when the schedule loads or when the user saves a
   // new schedule via the editor on the Agents page.
   const activeCharacter = useActiveCharacter();
+  // Mirror activeCharacter into a ref so the celebration listener (whose
+  // useEffect has empty deps) always reads the current character's
+  // celebrationDurationMs, not the one captured at mount before the
+  // schedule loaded.
+  const activeCharacterRef = useRef(activeCharacter);
+  useEffect(() => {
+    activeCharacterRef.current = activeCharacter;
+  }, [activeCharacter]);
 
   // Preload every GIF so the first transition between states (especially
   // standing → celebrating) doesn't flash blank while the new image loads.
@@ -140,7 +148,7 @@ export default function RoutingToggle() {
       });
 
       // Return to previous state after the animation plays
-      const duration = activeCharacter.celebrationDurationMs ?? DEFAULT_CELEBRATION_DURATION_MS;
+      const duration = activeCharacterRef.current.celebrationDurationMs ?? DEFAULT_CELEBRATION_DURATION_MS;
       celebrationTimer.current = setTimeout(() => {
         setCharacter(preCharacter.current);
         celebrationTimer.current = null;
