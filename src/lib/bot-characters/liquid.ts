@@ -75,7 +75,7 @@ export const liquid: BotCharacter = {
   sneakingSizeScale: 1.87,
   // Nudge Liquid ~4px right and ~3px down so he lands in the same visual
   // spot Snake renders at in the routing toggle and avatar circles.
-  avatarTransform: "translate(4px, 3px)",
+  avatarTransform: "translate(8px, 6px)",
   celebrationDurationMs: 4680,
   getMessage,
 };
