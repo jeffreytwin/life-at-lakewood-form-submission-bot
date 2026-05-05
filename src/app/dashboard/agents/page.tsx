@@ -944,12 +944,25 @@ export default function AgentsPage() {
             <div className="form-row">
               <div className="form-group">
                 <label>Name *</label>
-                <input
-                  className="form-input"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="John Smith"
-                />
+                {isFrontlines && editing ? (
+                  <div
+                    className="form-input"
+                    style={{
+                      background: "var(--bg-input, #111318)",
+                      opacity: 0.7,
+                      cursor: "default",
+                    }}
+                  >
+                    {getDisplayAgent(editing).name}
+                  </div>
+                ) : (
+                  <input
+                    className="form-input"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="John Smith"
+                  />
+                )}
               </div>
               <div className="form-group">
                 <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
