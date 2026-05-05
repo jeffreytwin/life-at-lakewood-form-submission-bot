@@ -76,6 +76,6 @@ export const bigboss: BotCharacter = {
   celebrationDurationMs: 11100,
   // Same nudge as Ocelot/Liquid so he lands in the same visual spot Snake
   // renders at in the routing toggle.
-  avatarTransform: "translate(4px, 3px)",
+  avatarTransform: "translate(4px, 1px)",
   getMessage,
 };
