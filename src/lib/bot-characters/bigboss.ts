@@ -69,10 +69,10 @@ export const bigboss: BotCharacter = {
     sneaking: "/Big Boss - Crawling.gif",
   },
   // Tune size and celebration duration to taste once we see it in motion.
-  gifSizeScale: 1.25,
+  gifSizeScale: 1.15,
   // Quiet-hours GIF reads small at the base scale; bumped further so it
   // has comparable visual weight to Ocelot's and Liquid's.
-  sneakingSizeScale: 1.625,
+  sneakingSizeScale: 1.495,
   celebrationDurationMs: 11100,
   // Same nudge as Ocelot/Liquid so he lands in the same visual spot Snake
   // renders at in the routing toggle.
