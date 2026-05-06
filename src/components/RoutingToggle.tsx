@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import SpeechBubble from "./SpeechBubble";
-import { onLeadEvent } from "@/lib/lead-events";
+import { onLeadEvent, triggerWelcome } from "@/lib/lead-events";
 import { type BotCharacterGifs } from "@/lib/bot-characters";
 import { useActiveCharacter } from "@/lib/bot-characters/use-active-character";
 
@@ -269,12 +269,14 @@ export default function RoutingToggle() {
             <img
               src={src}
               alt="Character"
+              onClick={() => triggerWelcome()}
               style={{
                 width: size,
                 height: size,
                 imageRendering: "pixelated",
                 objectFit: "contain",
                 transform: activeCharacter.avatarTransform ?? "none",
+                cursor: "pointer",
               }}
             />
             <button

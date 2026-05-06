@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { onLeadEvent } from "@/lib/lead-events";
+import { onLeadEvent, onWelcomeTrigger } from "@/lib/lead-events";
 import { getActiveCharacter, ensureScheduleLoaded } from "@/lib/bot-characters";
 
 const CHAR_DELAY = 35; // ms per character — SNES typewriter speed
@@ -41,6 +41,16 @@ export default function SpeechBubble() {
     typeTimer.current = setTimeout(typeNext, 200);
   }, [clearTimers, typeNext]);
 
+  const playWelcome = useCallback(() => {
+    const character = getActiveCharacter();
+    const messages = character.welcomeMessages;
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    showMessage(msg);
+    const audio = new Audio(character.welcomeSound);
+    audio.volume = 0.6;
+    audio.play().catch(() => {});
+  }, [showMessage]);
+
   // Welcome message on mount — waits for the schedule to load so we use
   // today's actual character and not the default fallback.
   useEffect(() => {
@@ -52,14 +62,8 @@ export default function SpeechBubble() {
 
     ensureScheduleLoaded().then(() => {
       if (cancelled) return;
-      const character = getActiveCharacter();
-      const messages = character.welcomeMessages;
-      const msg = messages[Math.floor(Math.random() * messages.length)];
       timer = setTimeout(() => {
-        showMessage(msg);
-        const audio = new Audio(character.welcomeSound);
-        audio.volume = 0.6;
-        audio.play().catch(() => {});
+        playWelcome();
       }, 500);
     });
 
@@ -67,7 +71,7 @@ export default function SpeechBubble() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [showMessage]);
+  }, [playWelcome]);
 
   useEffect(() => {
     const unsub = onLeadEvent((event) => {
@@ -79,6 +83,10 @@ export default function SpeechBubble() {
       clearTimers();
     };
   }, [clearTimers, showMessage]);
+
+  useEffect(() => {
+    return onWelcomeTrigger(() => playWelcome());
+  }, [playWelcome]);
 
   if (!visible) return null;
 
