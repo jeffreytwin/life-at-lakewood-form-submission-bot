@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import SpeechBubble from "./SpeechBubble";
-import { onLeadEvent, triggerWelcome } from "@/lib/lead-events";
+import { onLeadEvent } from "@/lib/lead-events";
 import { type BotCharacterGifs } from "@/lib/bot-characters";
 import { useActiveCharacter } from "@/lib/bot-characters/use-active-character";
 
@@ -276,7 +276,6 @@ export default function RoutingToggle() {
               src={src}
               alt="Character"
               onClick={() => {
-                triggerWelcome();
                 playCelebration.current();
               }}
               style={{

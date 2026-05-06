@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { onLeadEvent, onWelcomeTrigger } from "@/lib/lead-events";
+import { onLeadEvent } from "@/lib/lead-events";
 import { getActiveCharacter, ensureScheduleLoaded } from "@/lib/bot-characters";
 
 const CHAR_DELAY = 35; // ms per character — SNES typewriter speed
@@ -83,10 +83,6 @@ export default function SpeechBubble() {
       clearTimers();
     };
   }, [clearTimers, showMessage]);
-
-  useEffect(() => {
-    return onWelcomeTrigger(() => playWelcome());
-  }, [playWelcome]);
 
   if (!visible) return null;
 
