@@ -15,7 +15,7 @@ function getMessage(event: LeadEvent): string {
     case "failed":
       return `Colonel — they slipped past me. ${event.leadName} got away. We'll catch the next one.`;
     case "new":
-      return "Movement on the line, Colonel. New contact in the area.";
+      return "New form submission on the line, Colonel. Fresh contact in the area.";
     case "manual":
       return "Going in solo on this one, Colonel? Roger that — I'll cover your six.";
     case "routing":
@@ -33,7 +33,7 @@ function getMessage(event: LeadEvent): string {
     case "bad_data":
       return `That one's a decoy, Colonel. ${event.leadName} flagged. Not every track's worth following.`;
     case "email_draft_new":
-      return "Incoming letter, Colonel. The drafter has a reply ready — give it a once-over.";
+      return "New email, Colonel. The drafter has a reply ready — give it a once-over.";
     case "email_draft_approved":
       return "Roger. Putting it on the wire.";
     case "email_sent":
