@@ -928,14 +928,16 @@ export default function AgentsPage() {
                     onChange={handlePhotoUpload}
                     style={{ display: "none" }}
                   />
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => photoInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                  >
-                    {uploadingPhoto ? "Uploading..." : "Upload Photo"}
-                  </button>
+                  {!isFrontlines && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                    >
+                      {uploadingPhoto ? "Uploading..." : "Upload Photo"}
+                    </button>
+                  )}
                 </div>
               </div>
               );
@@ -997,17 +999,17 @@ export default function AgentsPage() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Email{requiresFullProfile ? " *" : ""}</label>
-                <input
-                  className="form-input"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="agent@example.com"
-                />
-              </div>
-              {!isFrontlines && (
+            {!isFrontlines && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Email{requiresFullProfile ? " *" : ""}</label>
+                  <input
+                    className="form-input"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="agent@example.com"
+                  />
+                </div>
                 <div className="form-group">
                   <label>Gender</label>
                   <select
@@ -1020,40 +1022,42 @@ export default function AgentsPage() {
                     <option value="female">Female</option>
                   </select>
                 </div>
-              )}
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  Salesforce User ID{requiresFullProfile ? " *" : ""}
-                  <span
-                    title="Required for Salesforce lead ownership to transfer when this agent accepts a lead. To find it: in Salesforce, go to 'People', select the user, and copy the ID from the URL (the string after /lightning/r/User/ — starts with 005)."
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      border: "1px solid var(--text-muted)",
-                      fontSize: 11,
-                      color: "var(--text-muted)",
-                      cursor: "help",
-                      flexShrink: 0,
-                    }}
-                  >
-                    i
-                  </span>
-                </label>
-                <input
-                  className="form-input"
-                  value={form.salesforce_user_id}
-                  onChange={(e) => setForm({ ...form, salesforce_user_id: e.target.value })}
-                  placeholder="005..."
-                />
               </div>
-            </div>
+            )}
+
+            {!isFrontlines && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    Salesforce User ID{requiresFullProfile ? " *" : ""}
+                    <span
+                      title="Required for Salesforce lead ownership to transfer when this agent accepts a lead. To find it: in Salesforce, go to 'People', select the user, and copy the ID from the URL (the string after /lightning/r/User/ — starts with 005)."
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        border: "1px solid var(--text-muted)",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                        cursor: "help",
+                        flexShrink: 0,
+                      }}
+                    >
+                      i
+                    </span>
+                  </label>
+                  <input
+                    className="form-input"
+                    value={form.salesforce_user_id}
+                    onChange={(e) => setForm({ ...form, salesforce_user_id: e.target.value })}
+                    placeholder="005..."
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Draft success text notifications (frontlines only) */}
             {isFrontlines && (
