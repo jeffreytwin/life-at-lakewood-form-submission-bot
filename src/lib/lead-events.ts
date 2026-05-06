@@ -45,16 +45,3 @@ export function clearFailed() {
   attentionCount = 0;
   badgeListeners.forEach((fn) => fn(attentionCount));
 }
-
-// --- Welcome trigger (e.g. clicking the character) ---
-type WelcomeListener = () => void;
-const welcomeListeners = new Set<WelcomeListener>();
-
-export function onWelcomeTrigger(fn: WelcomeListener): () => void {
-  welcomeListeners.add(fn);
-  return () => welcomeListeners.delete(fn);
-}
-
-export function triggerWelcome() {
-  welcomeListeners.forEach((fn) => fn());
-}
