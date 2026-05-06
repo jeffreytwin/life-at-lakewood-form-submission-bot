@@ -128,16 +128,9 @@ export default function RoutingToggle() {
   }, []);
 
   // Play celebration animation when a lead is accepted, marked done, or an email is sent
+  const playCelebration = useRef<() => void>(() => {});
   useEffect(() => {
-    const unsub = onLeadEvent((event) => {
-      if (
-        event.type !== "accepted" &&
-        event.type !== "done" &&
-        event.type !== "email_sent"
-      ) {
-        return;
-      }
-
+    playCelebration.current = () => {
       // Clear any existing celebration timer
       if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
 
@@ -153,6 +146,19 @@ export default function RoutingToggle() {
         setCharacter(preCharacter.current);
         celebrationTimer.current = null;
       }, duration);
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsub = onLeadEvent((event) => {
+      if (
+        event.type !== "accepted" &&
+        event.type !== "done" &&
+        event.type !== "email_sent"
+      ) {
+        return;
+      }
+      playCelebration.current();
     });
 
     return () => {
@@ -269,7 +275,10 @@ export default function RoutingToggle() {
             <img
               src={src}
               alt="Character"
-              onClick={() => triggerWelcome()}
+              onClick={() => {
+                triggerWelcome();
+                playCelebration.current();
+              }}
               style={{
                 width: size,
                 height: size,
