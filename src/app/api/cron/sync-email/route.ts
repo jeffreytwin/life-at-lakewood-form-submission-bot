@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
         matched: sent.totalMatched,
         changedFromDraft: sent.totalChanged,
       },
-      draftsReconciled: reconciled.discarded > 0 ? reconciled : undefined,
+      draftsReconciled: reconciled.discarded > 0 || reconciled.sent > 0 ? reconciled : undefined,
       watches: watches.renewed > 0 || watches.failed > 0 ? watches : undefined,
     };
 
