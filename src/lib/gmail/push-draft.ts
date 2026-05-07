@@ -174,20 +174,31 @@ export async function pushAllPendingDrafts(): Promise<{
 /**
  * Check approved drafts that were pushed to Gmail — if the Gmail draft
  * was deleted (user decided not to send), mark it as "discarded" in our app.
+ *
+ * Important: Sending a draft from Gmail also makes the Gmail draft disappear
+ * (it gets converted into a sent message). To avoid mis-flagging a sent reply
+ * as discarded, we first look for an outbound message on the same thread that
+ * arrived after the draft was created — if one exists, the draft was sent and
+ * we mark it accordingly. We also defer the decision for drafts approved
+ * within the last few minutes, giving sync-sent time to record the outbound
+ * message before we make a call.
  */
-export async function reconcileDeletedDrafts(): Promise<{ discarded: number }> {
+const APPROVE_GRACE_MS = 10 * 60 * 1000;
+
+export async function reconcileDeletedDrafts(): Promise<{ discarded: number; sent: number }> {
   // Find drafted/approved drafts that have been pushed to Gmail
   const { data: drafts, error } = await supabase
     .from("email_drafts")
-    .select("id, provider_draft_id, email_account_id")
+    .select("id, provider_draft_id, email_account_id, thread_id, status, body_text, created_at, approved_at")
     .in("status", ["drafted", "approved"])
     .eq("is_simulation", false)
     .not("provider_draft_id", "is", null)
     .not("email_account_id", "is", null);
 
-  if (error || !drafts || drafts.length === 0) return { discarded: 0 };
+  if (error || !drafts || drafts.length === 0) return { discarded: 0, sent: 0 };
 
   let discarded = 0;
+  let sent = 0;
 
   // Group by account to reuse credentials
   const byAccount: Record<string, typeof drafts> = {};
@@ -210,17 +221,67 @@ export async function reconcileDeletedDrafts(): Promise<{ discarded: number }> {
     for (const draft of accountDrafts) {
       try {
         const exists = await draftExists(accountId, creds, draft.provider_draft_id!);
-        if (!exists) {
+        if (exists) continue;
+
+        // Gmail draft is gone — figure out whether it was sent or discarded.
+        let outbound: { body_text: string | null; received_at: string | null } | null = null;
+        if (draft.thread_id) {
+          const { data: outboundRows } = await supabase
+            .from("email_messages")
+            .select("body_text, received_at")
+            .eq("thread_id", draft.thread_id)
+            .eq("direction", "outbound")
+            .gte("received_at", draft.created_at)
+            .order("received_at", { ascending: false })
+            .limit(1);
+          outbound = outboundRows?.[0] ?? null;
+        }
+
+        if (outbound) {
+          const sentAt = outbound.received_at ?? new Date().toISOString();
+          const sentBody = outbound.body_text ?? "";
+          const wasChanged =
+            sentBody.replace(/\s+/g, " ").trim() !==
+            (draft.body_text ?? "").replace(/\s+/g, " ").trim();
           await supabase
             .from("email_drafts")
-            .update({ status: "discarded" })
+            .update({
+              status: "sent",
+              sent_at: sentAt,
+              sent_body_text: sentBody,
+              was_changed: wasChanged,
+            })
             .eq("id", draft.id);
-          discarded++;
-          logger.info("Draft discarded — deleted from Gmail", {
+          sent++;
+          logger.info("Draft reconciled as sent — outbound message found", {
             draftId: draft.id,
             gmailDraftId: draft.provider_draft_id,
           });
+          continue;
         }
+
+        // No outbound message yet. If the user just approved, give sync-sent
+        // a chance to catch up before we mark this discarded.
+        if (draft.status === "approved" && draft.approved_at) {
+          const approvedMs = new Date(draft.approved_at).getTime();
+          if (Date.now() - approvedMs < APPROVE_GRACE_MS) {
+            logger.info("Deferring discard for recently-approved draft", {
+              draftId: draft.id,
+              gmailDraftId: draft.provider_draft_id,
+            });
+            continue;
+          }
+        }
+
+        await supabase
+          .from("email_drafts")
+          .update({ status: "discarded" })
+          .eq("id", draft.id);
+        discarded++;
+        logger.info("Draft discarded — deleted from Gmail", {
+          draftId: draft.id,
+          gmailDraftId: draft.provider_draft_id,
+        });
       } catch (err) {
         logger.warn("Failed to check Gmail draft status", {
           draftId: draft.id,
@@ -230,9 +291,9 @@ export async function reconcileDeletedDrafts(): Promise<{ discarded: number }> {
     }
   }
 
-  if (discarded > 0) {
-    logger.info("Draft reconciliation complete", { discarded });
+  if (discarded > 0 || sent > 0) {
+    logger.info("Draft reconciliation complete", { discarded, sent });
   }
 
-  return { discarded };
+  return { discarded, sent };
 }
