@@ -1037,6 +1037,16 @@ select.form-input {
   .table-wrapper {
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Bar charts: horizontally scroll on mobile so bars and labels stay readable */
+  .chart-mobile-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chart-mobile-scroll-inner {
+    min-width: calc(var(--chart-bar-count, 1) * 56px);
+  }
 }
 
 /* Small phone adjustments */

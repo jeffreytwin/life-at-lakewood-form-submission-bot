@@ -578,7 +578,11 @@ function LeadDistributionChart({ data }: { data: LeadDistEntry[] }) {
   const chartHeight = 220;
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="chart-mobile-scroll">
+      <div
+        className="chart-mobile-scroll-inner"
+        style={{ position: "relative", ["--chart-bar-count" as string]: data.length }}
+      >
       {/* Y-axis labels + grid lines */}
       <div
         style={{
@@ -704,6 +708,7 @@ function LeadDistributionChart({ data }: { data: LeadDistEntry[] }) {
         style={{ textAlign: "center", fontSize: 11, marginTop: 12 }}
       >
         Lead Owner
+      </div>
       </div>
     </div>
   );
@@ -845,7 +850,11 @@ function ResponseTimeAgentChart({
   for (let i = 0; i <= tickCount; i++) ticks.push(Math.round(i * tickStep * 10) / 10);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="chart-mobile-scroll">
+      <div
+        className="chart-mobile-scroll-inner"
+        style={{ position: "relative", ["--chart-bar-count" as string]: agentStats.length }}
+      >
       <div
         style={{
           position: "relative",
@@ -975,6 +984,7 @@ function ResponseTimeAgentChart({
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
