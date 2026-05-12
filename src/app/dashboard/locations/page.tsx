@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import type { Location } from "@/lib/supabase/types";
+import { formatDateET } from "@/lib/shared/format-date";
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -212,7 +213,7 @@ export default function LocationsPage() {
                       </td>
                       <td style={{ fontWeight: 600 }}>{loc.name}</td>
                       <td className="text-muted text-sm font-mono">
-                        {new Date(loc.created_at).toLocaleDateString()}
+                        {formatDateET(loc.created_at)}
                       </td>
                     </tr>
                   ))}

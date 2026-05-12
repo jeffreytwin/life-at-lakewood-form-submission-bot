@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { formatStatus } from "@/lib/shared/status-display";
+import { formatDateTimeET, formatTimeET } from "@/lib/shared/format-date";
 import { suppressNextSoundForLead } from "@/components/StatusSoundMonitor";
 import { emitLeadEvent } from "@/lib/lead-events";
 
@@ -554,7 +555,7 @@ export default function LeadsPage() {
                         {lead.routing_attempts?.length ?? 0}
                       </td>
                       <td className="text-muted text-sm font-mono hide-mobile">
-                        {new Date(lead.created_at).toLocaleString()}
+                        {formatDateTimeET(lead.created_at)}
                       </td>
                     </tr>
                     {expandedLead === lead.id && (
@@ -699,9 +700,7 @@ export default function LeadsPage() {
                                               : "-"}
                                           </td>
                                           <td className="text-muted text-sm font-mono hide-mobile">
-                                            {new Date(
-                                              attempt.created_at
-                                            ).toLocaleTimeString()}
+                                            {formatTimeET(attempt.created_at)}
                                           </td>
                                           <td className="text-muted text-sm font-mono hide-mobile">
                                             {formatResponseTime(attempt.created_at, attempt.updated_at, attempt.status)}

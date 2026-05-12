@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { formatDateTimeET } from "@/lib/shared/format-date";
 
 interface EmailAccount {
   id: string;
@@ -243,7 +244,7 @@ export default function EmailHubSettingsPage() {
                       <>
                         {" "}
                         &middot; Last synced{" "}
-                        {new Date(account.last_synced_at).toLocaleString()}
+                        {formatDateTimeET(account.last_synced_at)}
                       </>
                     )}
                   </div>

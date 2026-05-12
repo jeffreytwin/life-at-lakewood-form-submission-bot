@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { emitLeadEvent } from "@/lib/lead-events";
+import { formatDateET } from "@/lib/shared/format-date";
 
 type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
 type TrainingCategory =
@@ -240,7 +241,7 @@ function formatRelativeDate(dateStr: string): string {
   if (diffMin < 60) return `${diffMin}m ago`;
   if (diffHr < 24) return `${diffHr}h ago`;
   if (diffDay < 7) return `${diffDay}d ago`;
-  return date.toLocaleDateString();
+  return formatDateET(dateStr);
 }
 
 function truncate(text: string, maxLen: number): string {
