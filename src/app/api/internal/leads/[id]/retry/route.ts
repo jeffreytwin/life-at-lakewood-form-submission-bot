@@ -13,7 +13,10 @@ import { logger } from "@/lib/shared/logger";
  * Resets routing_status to "pending" and clears final_agent_id, then
  * delegates to startRouting to score agents fresh and start a new
  * attempt sequence. Prior routing_attempts rows are preserved for
- * audit history; new attempts continue the attempt_number.
+ * audit history; the manual_retry audit event marks the start of the
+ * new routing cycle so previously timed-out agents become re-eligible
+ * and the escalation counter resets. Agents who explicitly declined
+ * the lead remain excluded across cycles.
  */
 export async function POST(
   _request: NextRequest,

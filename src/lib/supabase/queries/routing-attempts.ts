@@ -93,14 +93,32 @@ export async function getActiveAttemptByAgentPhone(
 export async function getDeclinedAgentIdsForLead(
   leadId: string
 ): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("routing_attempts")
-    .select("agent_id")
-    .eq("lead_id", leadId)
-    .in("status", ["declined", "timed_out", "error"]);
+  const cycleStartedAt = await getCycleStartedAt(leadId);
 
-  if (error) throw error;
-  return data.map((row) => row.agent_id);
+  // Declines persist across retry cycles — an explicit "NO" disqualifies an
+  // agent for this lead. Timeouts and errors only disqualify within the
+  // current cycle, so retry can re-engage agents who never responded.
+  const [declined, currentCycleTimeouts] = await Promise.all([
+    supabase
+      .from("routing_attempts")
+      .select("agent_id")
+      .eq("lead_id", leadId)
+      .eq("status", "declined"),
+    supabase
+      .from("routing_attempts")
+      .select("agent_id")
+      .eq("lead_id", leadId)
+      .in("status", ["timed_out", "error"])
+      .gte("created_at", cycleStartedAt),
+  ]);
+
+  if (declined.error) throw declined.error;
+  if (currentCycleTimeouts.error) throw currentCycleTimeouts.error;
+
+  const ids = new Set<string>();
+  for (const row of declined.data ?? []) ids.add(row.agent_id);
+  for (const row of currentCycleTimeouts.data ?? []) ids.add(row.agent_id);
+  return Array.from(ids);
 }
 
 /**
@@ -154,14 +172,44 @@ export async function getTodayAcceptedCountsByAgent(
 }
 
 export async function getMaxAttemptNumber(leadId: string): Promise<number> {
+  const cycleStartedAt = await getCycleStartedAt(leadId);
+
   const { data, error } = await supabase
     .from("routing_attempts")
     .select("attempt_number")
     .eq("lead_id", leadId)
+    .gte("created_at", cycleStartedAt)
     .order("attempt_number", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
   return data?.attempt_number ?? 0;
+}
+
+/**
+ * Returns the timestamp marking the start of the lead's current routing cycle.
+ * If the lead has been retried, this is the latest manual_retry timestamp;
+ * otherwise it's the lead's creation time. Used to scope exclusions and the
+ * MAX_ESCALATION_ATTEMPTS counter so a retry behaves like a fresh round.
+ */
+async function getCycleStartedAt(leadId: string): Promise<string> {
+  const { data: retry, error: retryErr } = await supabase
+    .from("audit_log")
+    .select("created_at")
+    .eq("lead_id", leadId)
+    .eq("event_type", "manual_retry")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (retryErr) throw retryErr;
+  if (retry?.created_at) return retry.created_at;
+
+  const { data: lead, error: leadErr } = await supabase
+    .from("leads")
+    .select("created_at")
+    .eq("id", leadId)
+    .single();
+  if (leadErr) throw leadErr;
+  return lead.created_at;
 }
