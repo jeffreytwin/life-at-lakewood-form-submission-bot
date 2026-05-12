@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatDateTimeET } from "@/lib/shared/format-date";
 
 interface AuditEvent {
   id: string;
@@ -135,7 +136,7 @@ export default function AuditPage() {
                       )}
                     </div>
                     <span className="timeline-time">
-                      {new Date(event.created_at).toLocaleString()}
+                      {formatDateTimeET(event.created_at)}
                     </span>
                   </div>
                   {event.details && (

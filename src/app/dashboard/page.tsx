@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { formatStatus } from "@/lib/shared/status-display";
+import { formatDateTimeET } from "@/lib/shared/format-date";
 
 interface LeadDistEntry {
   agentName: string;
@@ -403,7 +404,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
                         </span>
                       </td>
                       <td className="text-muted text-sm font-mono hide-mobile">
-                        {new Date(lead.created_at).toLocaleString()}
+                        {formatDateTimeET(lead.created_at)}
                       </td>
                     </tr>
                   ))}
