@@ -16,7 +16,14 @@ interface PromptContext {
   agentHandoff?: {
     agentName: string;
     agentEmail: string;
+    agentGender: "male" | "female" | null;
   };
+}
+
+function pronounPhrase(gender: "male" | "female" | null): string {
+  if (gender === "male") return "he/him/his";
+  if (gender === "female") return "she/her/hers";
+  return "they/them/their";
 }
 
 /**
@@ -64,10 +71,11 @@ ${feedbackSection}`;
   }
 
   if (ctx.agentHandoff) {
+    const pronouns = pronounPhrase(ctx.agentHandoff.agentGender);
     systemPrompt += `
 
 ## Available Agent for Handoff
-An agent is available if this lead is ready to be connected with a live salesperson — for example, they want to schedule a tour, speak with someone on the phone, make an offer, or discuss specifics that need a licensed agent. In that case, hand the lead off to ${ctx.agentHandoff.agentName}: let them know you're connecting them with ${ctx.agentHandoff.agentName} and mention that you're CCing ${ctx.agentHandoff.agentName} on this email.
+An agent is available if this lead is ready to be connected with a live salesperson — for example, they want to schedule a tour, speak with someone on the phone, make an offer, or discuss specifics that need a licensed agent. In that case, hand the lead off to ${ctx.agentHandoff.agentName}: let them know you're connecting them with ${ctx.agentHandoff.agentName} and mention that you're CCing ${ctx.agentHandoff.agentName} on this email. When you refer to ${ctx.agentHandoff.agentName} with a pronoun, use ${pronouns}.
 
 If the lead is still in early information-gathering (general questions, pricing inquiries, availability, etc.), reply normally and do not mention ${ctx.agentHandoff.agentName} at all.`;
   }
