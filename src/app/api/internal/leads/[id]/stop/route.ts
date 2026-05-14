@@ -4,7 +4,9 @@ import {
   getActiveAttemptForLead,
   updateRoutingAttemptStatus,
 } from "@/lib/supabase/queries/routing-attempts";
+import { getAgentById } from "@/lib/supabase/queries/agents";
 import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
+import { sendRoutingStoppedByAdmin } from "@/lib/twilio/send-sms";
 import { logger } from "@/lib/shared/logger";
 
 export async function POST(
@@ -32,6 +34,19 @@ export async function POST(
       await updateRoutingAttemptStatus(activeAttempt.id, "timed_out", {
         expires_at: null,
       });
+
+      // Tell the agent currently on the hook that they can disregard the lead.
+      const agent = await getAgentById(activeAttempt.agent_id);
+      if (agent?.phone) {
+        try {
+          await sendRoutingStoppedByAdmin(agent.phone);
+        } catch (smsErr) {
+          logger.warn("Failed to notify agent that routing was stopped", {
+            agentId: agent.id,
+            error: smsErr instanceof Error ? smsErr.message : String(smsErr),
+          });
+        }
+      }
     }
 
     // Move lead to manual
