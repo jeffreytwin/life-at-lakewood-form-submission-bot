@@ -456,6 +456,7 @@ export interface DraftHandoffAgent {
   agentId: string;
   agentName: string;
   agentEmail: string;
+  agentGender: "male" | "female" | null;
 }
 
 /**
@@ -523,7 +524,7 @@ export async function generateAndStoreDraft(
       if (best) {
         const { data: agentRow } = await supabase
           .from("agents")
-          .select("email")
+          .select("email, gender")
           .eq("id", best.agentId)
           .single();
         if (agentRow?.email) {
@@ -531,6 +532,7 @@ export async function generateAndStoreDraft(
             agentId: best.agentId,
             agentName: best.agentName,
             agentEmail: agentRow.email,
+            agentGender: (agentRow.gender as "male" | "female" | null) ?? null,
           };
         }
       }
@@ -551,6 +553,7 @@ export async function generateAndStoreDraft(
         ? {
             agentName: candidateHandoff.agentName,
             agentEmail: candidateHandoff.agentEmail,
+            agentGender: candidateHandoff.agentGender,
           }
         : undefined,
     });

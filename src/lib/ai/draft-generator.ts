@@ -33,6 +33,7 @@ export interface DraftInput {
   agentHandoff?: {
     agentName: string;
     agentEmail: string;
+    agentGender: "male" | "female" | null;
   };
   /** Override training examples (for simulation) */
   trainingExamples?: TrainingExample[];
