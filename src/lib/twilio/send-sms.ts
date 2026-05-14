@@ -192,6 +192,17 @@ export async function sendMovedOn(agentPhone: string): Promise<string> {
   return message.sid;
 }
 
+export async function sendRoutingStoppedByAdmin(agentPhone: string): Promise<string> {
+  const message = await getTwilioClient().messages.create({
+    to: agentPhone,
+    from: getTwilioPhoneNumber(),
+    body: "Looks like the frontlines team stopped this lead and is handling it themselves (likely bad data). Please disregard.",
+  });
+
+  logger.info("Routing-stopped SMS sent", { to: agentPhone, messageSid: message.sid });
+  return message.sid;
+}
+
 export async function sendAcceptedNotification(
   frontlinesPhone: string,
   agentName: string,
