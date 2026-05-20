@@ -20,21 +20,38 @@ const NEGATIVE_PATTERNS = [
   /^❌$/,
 ];
 
+function matchPatterns(text: string): ResponseClassification {
+  for (const pattern of AFFIRMATIVE_PATTERNS) {
+    if (pattern.test(text)) return "affirmative";
+  }
+  for (const pattern of NEGATIVE_PATTERNS) {
+    if (pattern.test(text)) return "negative";
+  }
+  return "unclear";
+}
+
+function stripTrailingNoise(text: string): string {
+  let prev = "";
+  let cur = text;
+  while (cur !== prev) {
+    prev = cur;
+    cur = cur
+      .replace(/[\s!.,?;:)("'`]+$/, "")
+      .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]+$/u, "")
+      .replace(/\s*please$/i, "");
+  }
+  return cur;
+}
+
 export function classifyResponse(text: string): ResponseClassification {
   const trimmed = text.trim();
 
-  // Check affirmative patterns
-  for (const pattern of AFFIRMATIVE_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      return "affirmative";
-    }
-  }
+  const direct = matchPatterns(trimmed);
+  if (direct !== "unclear") return direct;
 
-  // Check negative patterns
-  for (const pattern of NEGATIVE_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      return "negative";
-    }
+  const stripped = stripTrailingNoise(trimmed);
+  if (stripped && stripped.length < trimmed.length) {
+    return matchPatterns(stripped);
   }
 
   return "unclear";

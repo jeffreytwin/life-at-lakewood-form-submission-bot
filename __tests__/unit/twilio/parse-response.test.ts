@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifyResponse } from "@/lib/twilio/parse-response";
+import { classifyResponse, type ResponseClassification } from "@/lib/twilio/parse-response";
 
 describe("classifyResponse", () => {
   describe("affirmative responses", () => {
@@ -105,5 +105,29 @@ describe("classifyResponse", () => {
   it("trims whitespace before classifying", () => {
     expect(classifyResponse("  Yes  ")).toBe("affirmative");
     expect(classifyResponse("\nNo\n")).toBe("negative");
+  });
+
+  describe("tolerates trailing punctuation, emoji, and politeness", () => {
+    const cases: Array<[string, ResponseClassification]> = [
+      ["Yes.", "affirmative"],
+      ["Yes!", "affirmative"],
+      ["Yes please", "affirmative"],
+      ["Yes please.", "affirmative"],
+      ["Yes please :)", "affirmative"],
+      ["yep!", "affirmative"],
+      ["Yeah 👍", "affirmative"],
+      ["Ok!!!", "affirmative"],
+      ["Sure :)", "affirmative"],
+      ["No.", "negative"],
+      ["No thanks.", "negative"],
+      ["Pass!", "negative"],
+      ["Busy.", "negative"],
+    ];
+
+    for (const [input, expected] of cases) {
+      it(`classifies "${input}" as ${expected}`, () => {
+        expect(classifyResponse(input)).toBe(expected);
+      });
+    }
   });
 });
