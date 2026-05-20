@@ -161,6 +161,33 @@ export async function triggerAgentHandoff(
     })
     .eq("id", draftId);
 
+  try {
+    const yearMonth = new Date().toISOString().slice(0, 7);
+    const { data: existing } = await supabase
+      .from("monthly_lead_counts")
+      .select("id, lead_count")
+      .eq("agent_id", resolvedAgentId)
+      .eq("year_month", yearMonth)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("monthly_lead_counts")
+        .update({ lead_count: (existing.lead_count as number) + 1 })
+        .eq("id", existing.id);
+    } else {
+      await supabase
+        .from("monthly_lead_counts")
+        .insert({ agent_id: resolvedAgentId, year_month: yearMonth, lead_count: 1 });
+    }
+  } catch (countError) {
+    logger.error("Failed to increment monthly_lead_counts after handoff (non-blocking)", {
+      draftId,
+      agentId: resolvedAgentId,
+      error: countError instanceof Error ? countError.message : String(countError),
+    });
+  }
+
   logger.info("Agent handoff transferred", {
     draftId,
     agentName: agentInfo.name ?? "none",
