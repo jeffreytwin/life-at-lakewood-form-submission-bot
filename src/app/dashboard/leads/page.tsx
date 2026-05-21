@@ -670,7 +670,8 @@ export default function LeadsPage() {
                                     {lead.routing_attempts
                                       .sort(
                                         (a, b) =>
-                                          a.attempt_number - b.attempt_number
+                                          new Date(a.created_at).getTime() -
+                                          new Date(b.created_at).getTime()
                                       )
                                       .map((attempt) => (
                                         <tr key={attempt.id}>
