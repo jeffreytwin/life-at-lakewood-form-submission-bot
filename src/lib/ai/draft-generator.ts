@@ -46,7 +46,7 @@ export interface DraftOutput {
   completionTokens: number;
 }
 
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-sonnet-4-6";
 
 /**
  * Generate an email draft using Claude.
