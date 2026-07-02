@@ -18,8 +18,12 @@ interface PendingChange {
     beds?: string;
     baths?: string;
     sqft?: number | null;
+    garages?: string | null;
+    homeType?: string | null;
     quickMoveIn?: boolean;
     sourceUrl?: string | null;
+    primaryImage?: string | null;
+    userEditedFields?: string[];
   } | null;
   fp_sites: { domain: string; name: string } | null;
   fp_communities: { name: string } | null;
@@ -40,6 +44,17 @@ export default function FloorPlansPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [editing, setEditing] = useState<PendingChange | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    priceDisplay: "",
+    beds: "",
+    baths: "",
+    sqft: "",
+    garages: "",
+    homeType: "",
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchChanges = useCallback(() => {
     fetch(`/api/internal/floorplans/changes?status=${statusFilter}`)
@@ -79,6 +94,39 @@ export default function FloorPlansPage() {
         next.delete(id);
         return next;
       });
+      fetchChanges();
+    }
+  }
+
+  function openEdit(c: PendingChange) {
+    const rec = c.proposed_record ?? {};
+    setEditForm({
+      name: rec.name ?? "",
+      priceDisplay: rec.priceDisplay ?? "",
+      beds: rec.beds ?? "",
+      baths: rec.baths ?? "",
+      sqft: rec.sqft != null ? String(rec.sqft) : "",
+      garages: rec.garages ?? "",
+      homeType: rec.homeType ?? "",
+    });
+    setEditing(c);
+  }
+
+  async function saveEdit(approveAfter: boolean) {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/internal/floorplans/changes/${editing.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ record: editForm }),
+      });
+      if (res.ok && approveAfter) {
+        await fetch(`/api/internal/floorplans/changes/${editing.id}/approve`, { method: "POST" });
+      }
+    } finally {
+      setSavingEdit(false);
+      setEditing(null);
       fetchChanges();
     }
   }
@@ -152,6 +200,7 @@ export default function FloorPlansPage() {
             <table>
               <thead>
                 <tr>
+                  <th></th>
                   <th>Type</th>
                   <th>Plan</th>
                   <th>Details</th>
@@ -165,6 +214,20 @@ export default function FloorPlansPage() {
                   const rec = c.proposed_record;
                   return (
                     <tr key={c.id}>
+                      <td style={{ width: 92 }}>
+                        {rec?.primaryImage ? (
+                          <a href={rec.primaryImage} target="_blank" rel="noreferrer">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={rec.primaryImage}
+                              alt={rec?.name ?? c.plan_key}
+                              style={{ width: 84, height: 56, objectFit: "cover", borderRadius: 6, display: "block" }}
+                            />
+                          </a>
+                        ) : (
+                          <span className="text-muted text-sm">no image</span>
+                        )}
+                      </td>
                       <td>
                         <span className={`badge ${c.change_type === "remove" ? "badge-danger" : c.change_type === "add" ? "badge-success" : "badge-warning"}`}>
                           {CHANGE_LABEL[c.change_type]}
@@ -175,6 +238,9 @@ export default function FloorPlansPage() {
                       </td>
                       <td>
                         <strong>{rec?.name ?? c.plan_key}</strong>
+                        {(rec?.userEditedFields?.length ?? 0) > 0 && (
+                          <div className="text-muted text-sm">✎ edited: {rec?.userEditedFields?.join(", ")}</div>
+                        )}
                         {rec?.quickMoveIn && <div className="text-muted text-sm">Quick Move-In</div>}
                         {rec?.sourceUrl && (
                           <div>
@@ -223,6 +289,13 @@ export default function FloorPlansPage() {
                             <button
                               className="btn btn-secondary"
                               disabled={busy.has(c.id)}
+                              onClick={() => openEdit(c)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              disabled={busy.has(c.id)}
                               onClick={() => act(c.id, "reject")}
                             >
                               Reject
@@ -235,6 +308,49 @@ export default function FloorPlansPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className="modal-overlay" onClick={() => setEditing(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Edit before approving</h3>
+            <p className="text-muted text-sm">
+              Edited fields are marked as manual overrides — future scrapes will not
+              propose reverting them to the builder&apos;s values.
+            </p>
+            {(
+              [
+                ["name", "Plan name"],
+                ["priceDisplay", "Price (e.g. $807,995)"],
+                ["beds", "Bedrooms"],
+                ["baths", "Bathrooms"],
+                ["sqft", "Square feet"],
+                ["garages", "Garages (e.g. 3 car)"],
+                ["homeType", "Home type"],
+              ] as const
+            ).map(([field, label]) => (
+              <div className="form-group" key={field}>
+                <label>{label}</label>
+                <input
+                  className="form-input"
+                  value={editForm[field]}
+                  onChange={(e) => setEditForm((f) => ({ ...f, [field]: e.target.value }))}
+                />
+              </div>
+            ))}
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setEditing(null)} disabled={savingEdit}>
+                Cancel
+              </button>
+              <button className="btn btn-secondary" onClick={() => saveEdit(false)} disabled={savingEdit}>
+                {savingEdit ? "Saving…" : "Save"}
+              </button>
+              <button className="btn btn-primary" onClick={() => saveEdit(true)} disabled={savingEdit}>
+                {savingEdit ? "Saving…" : "Save & Approve"}
+              </button>
+            </div>
           </div>
         </div>
       )}
