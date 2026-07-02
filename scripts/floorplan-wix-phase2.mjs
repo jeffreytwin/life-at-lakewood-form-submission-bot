@@ -115,6 +115,37 @@ for (const site of sites) {
   }
 }
 
+// ---- Step 1b: enable the publish (draft/published) plugin on V2 ----
+// New collections are created without the publish plugin; the legacy
+// FloorPlans collections have it (their items carry _publishStatus).
+// Copy the plugin config from legacy onto V2 on each site.
+for (const site of sites) {
+  const legacy = await wix('GET', '/wix-data/v2/collections/FloorPlans', site.wix_site_id);
+  const legacyPlugins = legacy.json?.collection?.plugins ?? [];
+  log(`${site.domain}: legacy plugins = ${JSON.stringify(legacyPlugins).slice(0, 400)}`);
+  const v2 = await wix('GET', `/wix-data/v2/collections/${COLLECTION_ID}`, site.wix_site_id);
+  const v2col = v2.json?.collection;
+  if (!v2col) continue;
+  const v2Plugins = v2col.plugins ?? [];
+  log(`${site.domain}: V2 plugins = ${JSON.stringify(v2Plugins).slice(0, 400)}`);
+  const publishPlugins = legacyPlugins.filter((p) =>
+    /publish/i.test(JSON.stringify(p)),
+  );
+  const missing = publishPlugins.filter(
+    (p) => !JSON.stringify(v2Plugins).includes(JSON.stringify(p.type ?? p)),
+  );
+  if (missing.length) {
+    const updated = await wix('PUT', `/wix-data/v2/collections/${COLLECTION_ID}`, site.wix_site_id, {
+      collection: { ...v2col, plugins: [...v2Plugins, ...missing] },
+    });
+    log(`${site.domain}: add publish plugin -> ${short(updated)}`);
+  } else if (!publishPlugins.length) {
+    log(`${site.domain}: no publish plugin found on legacy collection to copy`);
+  } else {
+    log(`${site.domain}: publish plugin already present on V2`);
+  }
+}
+
 // ---- Step 2: draft lifecycle probe (first site only) ----
 const probeSite = sites[0];
 log(`--- item lifecycle probe on ${probeSite.domain} ---`);
