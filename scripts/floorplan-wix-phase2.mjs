@@ -207,6 +207,56 @@ for (const includeDrafts of [false, true]) {
   log(`query(includeDrafts=${includeDrafts}) -> ${q.status} items=${q.json?.dataItems?.length ?? '?'} statuses=${JSON.stringify((q.json?.dataItems ?? []).map((i) => i.data?._publishStatus))}`);
 }
 
+// ---- Step 2b: ensure floorPlanBluePrintGallery exists on V2 collections ----
+for (const site of sites) {
+  const v2 = await wix('GET', `/wix-data/v2/collections/${COLLECTION_ID}`, site.wix_site_id);
+  const col = v2.json?.collection;
+  if (!col) continue;
+  if (!col.fields?.some((f) => f.key === 'floorPlanBluePrintGallery')) {
+    const updated = await wix('PUT', '/wix-data/v2/collections', site.wix_site_id, {
+      collection: {
+        ...col,
+        fields: [...col.fields, { key: 'floorPlanBluePrintGallery', type: 'MEDIA_GALLERY' }],
+      },
+    });
+    log(`${site.domain}: add blueprint gallery field -> ${updated.status}`);
+  }
+}
+
+// ---- Step 2c: MEDIA_GALLERY payload format probe ----
+// Try candidate shapes for gallery fields; read back what persists.
+{
+  const img = 'wix:image://v1/d0be81_45fd4f965be8496094860243fb700c60~mv2.png/probe.png';
+  const variants = [
+    { label: 'A objects with type+src', value: [{ type: 'image', src: img }, { type: 'image', src: img }] },
+    { label: 'B objects with src only', value: [{ src: img }] },
+    { label: 'C plain string array', value: [img] },
+  ];
+  for (const v of variants) {
+    const ins = await wix('POST', '/wix-data/v2/items', probeSite.wix_site_id, {
+      dataCollectionId: COLLECTION_ID,
+      dataItem: {
+        data: {
+          floorPlanName: `GALLERY-PROBE-${v.label[0]} (delete me)`,
+          syncKey: 'test:probe',
+          floorPlanImageGalleryLink: v.value,
+        },
+      },
+    });
+    const id = ins.json?.dataItem?.id;
+    log(`gallery probe ${v.label}: insert -> ${ins.status}${ins.status !== 200 ? ' ' + short(ins) : ''}`);
+    if (id) {
+      cleanupIds.push(id);
+      const read = await wix(
+        'GET',
+        `/wix-data/v2/items/${id}?dataCollectionId=${COLLECTION_ID}&publishPluginOptions.includeDraftItems=true`,
+        probeSite.wix_site_id,
+      );
+      log(`gallery probe ${v.label}: readback = ${JSON.stringify(read.json?.dataItem?.data?.floorPlanImageGalleryLink).slice(0, 400)}`);
+    }
+  }
+}
+
 // ---- Step 3: media import probe ----
 const media = await wix('POST', '/site-media/v1/files/import', probeSite.wix_site_id, {
   url: 'https://static.wixstatic.com/media/d0be81_f345a9c85f234f6b8f240bbdefa0ed9b~mv2.png',
