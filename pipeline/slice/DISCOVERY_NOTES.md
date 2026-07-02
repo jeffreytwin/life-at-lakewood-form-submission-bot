@@ -139,6 +139,19 @@ ICI/Neal Signature → (done) Toll QMIs.
   `fetch_claude` over its community/available-homes pages; round 5 collects
   rendered links/text to pick the pages.
 
+## Vercel egress probe (ICI, Neal Signature, M/I) — awaiting readout
+
+`scripts/floorplan-egress-probe.mjs` runs as a prebuild on every Vercel
+build of this branch and logs `FP-EGRESS: <target> -> <status>` lines to
+the build log. Read them via the Vercel dashboard or MCP
+(`get_deployment_build_logs`; MCP was approval-gated when the probe
+landed). Interpretation:
+- ICI / Neal Signature `200` → they're runnable from Vercel with the
+  existing generic engines; `403` → residential-egress decision needed.
+- M/I SSC endpoints `200` with ~500 KB → M/I is runnable on Vercel with a
+  small extractor over the Search API (shapes in `round7/mihomes-*` and
+  round-5 captures); timeout/error → Playwright-in-Actions path.
+
 ## ICI Homes (`Oakbend`, `Palmera`) — blocked at the IP level
 
 - Hard 403 to GitHub runners on every header profile AND with real Chrome
