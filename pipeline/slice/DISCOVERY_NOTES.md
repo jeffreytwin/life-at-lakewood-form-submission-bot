@@ -15,9 +15,14 @@ ICI/Neal Signature → (done) Toll QMIs.
   `round2/meritage-*.nextdata.pruned.json` — no plan names appear).
   `componentProps` has community aggregates (`lowPrice`, `totalQmis`,
   `communitySearch.communityData`) but no per-plan rows.
-- Bot posture: 200 with the full Chrome header profile (sec-ch-ua +
-  sec-fetch-*), 403 with a thin profile (round 3). Pace requests.
-- Round 4 greps the Next chunks for the data API and probes candidates.
+- Bot posture: 200 with the full Chrome header profile in round 2, then
+  **403 for every Node-fetch attempt in rounds 3–4 regardless of headers**
+  — the WAF is TLS-fingerprinting the client, not reading headers. Round 5
+  renders with real Chrome (Playwright) and captures the plan-grid XHRs.
+- Production caveat: the nightly runs on Vercel with Node fetch, so once
+  the data API is known, verify Node fetch passes on the API path itself
+  (WAFs often exempt API routes). If not, Meritage needs a
+  Playwright-in-Actions engine instead of the Vercel path.
 
 ## Mattamy Homes (was `render_claude`, 6 Wellen Park communities)
 
@@ -29,9 +34,11 @@ ICI/Neal Signature → (done) Toll QMIs.
   CTA to `/search?productType=qmi&metro=Sarasota-Bradenton&country=USA&community=…&hideMap=true`.
 - Bundles: Sitecore JSS with `graphQLEndpoint = https://mattamyhomes.com/api/mattamy-homes`,
   REST layout service config `jss`.
-- Round 4 checks whether `/search` server-renders the complete card lists
-  (QMI + model product types) in its own JSS state → if yes, Mattamy is a
-  clean fetch+parse extractor, no Playwright.
+- Round 4: `/search` is a 22 KB JSS shell — results are client-fetched via
+  the GraphQL endpoint. The community page's own subnav links the full
+  lists: `/search?productType=plan&metro=…&community=Brightmore at Wellen Park`
+  (plans) and `productType=qmi` (QMIs). Round 5+ captures the GraphQL
+  queries those pages fire so the extractor can call them directly.
 
 ## Taylor Morrison (was `render_claude`, Azario/Esplanade/Firethorn…)
 
@@ -63,10 +70,11 @@ ICI/Neal Signature → (done) Toll QMIs.
 
 - `leewetherington.com` is a 114-byte JS shell redirecting to `/lander`
   (empty). `www.leewetheringtonhomes.com` → **`lwhomes.com`**, a WordPress
-  site with `wp-json` enabled (`round3/lee-wetherington-summary.json`).
-- Round 4 enumerates `wp-json/wp/v2/types` for custom post types
-  (available homes / floor plans / communities) → likely `json_api` via WP
-  REST.
+  site (`round3/lee-wetherington-summary.json`).
+- Round 4: `wp-json` is auth-gated (401 on `/wp/v2/types` and every CPT
+  guess) — REST route closed. Fallback: the site is server-rendered WP, so
+  `fetch_claude` over its community/available-homes pages; round 5 collects
+  rendered links/text to pick the pages.
 
 ## ICI Homes (`Oakbend`, `Palmera`) — blocked
 
@@ -79,11 +87,11 @@ ICI/Neal Signature → (done) Toll QMIs.
 
 ## Neal Signature Homes (`Waterbury Park`, `The Alcove`) — blocked
 
-- `nealsignaturehomes.com` hard-403s like ICI (same rounds/profiles).
+- `nealsignaturehomes.com` hard-403s like ICI (same rounds/profiles), and
+  round 4 confirmed `wp-json` 403s too — but `robots.txt` returns 200, so
+  the WAF is path-selective. Round 5 probes with real Chrome.
 - Parent `nealcommunities.com` (WordPress) works from runners but its
   sitemap carries **no Signature community pages** — only news posts.
-  Round 4 probes `nealsignaturehomes.com/wp-json/` through the wall; if
-  that fails, same Vercel-egress fallback as ICI.
 
 ## Toll Brothers QMI subpages — done (no scrape needed)
 
