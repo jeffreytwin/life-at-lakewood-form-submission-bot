@@ -19,14 +19,19 @@ concurrency:
 jobs:
   slice:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
 
+      - name: Install Playwright Chromium
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+
       - name: Run slice discovery
-        run: node pipeline/slice/discover-round4.mjs
+        run: node pipeline/slice/discover-round5-playwright.mjs
 
       - name: Commit results back to branch
         run: |
@@ -36,7 +41,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No slice changes to commit."
           else
-            git commit -m "Floor plan slice: round-4 discovery [skip ci]"
+            git commit -m "Floor plan slice: round-5 playwright discovery [skip ci]"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
