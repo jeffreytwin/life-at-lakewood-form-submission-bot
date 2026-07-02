@@ -1,0 +1,4282 @@
+{
+ "props": {
+  "pageProps": {
+   "componentType": "MasterCommunityComponent",
+   "pageData": {
+    "componentType": "MasterCommunityComponent",
+    "path": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+    "apiUrl": "/api/v1/mastercommunity/765",
+    "name": "The Isles at Lakewood Ranch",
+    "internetId": "765",
+    "projectId": "62300000",
+    "community_id": null,
+    "mastercommunity_id": null,
+    "communityComponent": null,
+    "masterCommunityComponent": {
+     "name": "The Isles at Lakewood Ranch",
+     "city": "Lakewood Ranch",
+     "state": "FL",
+     "zip": "34202",
+     "county": "Manatee",
+     "metroName": "Sarasota, FL",
+     "metroUrl": "/Sarasota-FL",
+     "lat": "27.39",
+     "lon": "-82.36",
+     "metroId": 835,
+     "communityFilters": [
+      "Award-Winning",
+      "Gated",
+      "Integrated Retail",
+      "…(5 items total)"
+     ],
+     "masterCommunityId": 765,
+     "e1id": "62300000",
+     "jdeNum": "6230",
+     "acquireId": "FLW",
+     "pricedFrom": "807,995",
+     "acquireJde": "6231",
+     "cpRegion": "FL-TAMPA SARASOTA",
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+     "loanLimit": 766550,
+     "pricedFromInt": 807995,
+     "standardMortgageRate": "6.375",
+     "jumboMortgageRate": "6.375",
+     "salesOffice": {
+      "city": "Lakewood Ranch",
+      "state": "FL",
+      "zip": "34202",
+      "street": "17523 Fairwinds Dr",
+      "lat": "27.39",
+      "lon": "-82.36",
+      "salesOfficeOffsite": false,
+      "showHours": true,
+      "byAppointmentOnly": false,
+      "hideDirections": false,
+      "salesOfficePhone": "941-313-7373",
+      "salesPeople": [
+       {
+        "firstName": "Mario",
+        "lastName": "Menoscal"
+       },
+       {
+        "firstName": "Heather",
+        "lastName": "Caserta"
+       }
+      ],
+      "onlineConcierge": [
+       {
+        "firstName": "Kathleen",
+        "lastName": "C.",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       },
+       {
+        "firstName": "Patty",
+        "lastName": "M.",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       },
+       {
+        "firstName": "Arianna",
+        "lastName": "M.",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       },
+       "…(4 items total)"
+      ],
+      "hideTour": false,
+      "hideSalesOffice": false,
+      "hideNeighborhoodMap": false,
+      "operatingHours": [
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Monday",
+        "day": "Mon",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Tuesday",
+        "day": "Tue",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Wednesday",
+        "day": "Wed",
+        "appointmentOnly": false
+       },
+       "…(7 items total)"
+      ]
+     },
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Luxury Home"
+     ],
+     "overview": {
+      "title": "New Home Community The Isles at Lakewood Ranch in Florida by Toll Brothers",
+      "shortDescription": "The Isles at Lakewood Ranch is a luxury, gated community featuring unique architecture and resort-style amenities built with Toll Brothers' commitment to quality, value, and craftsmanship.",
+      "bulletPoints": [
+       {
+        "text": "Luxury appointments include gourmet kitchens, spacious living areas, and private primary bedroom suites"
+       },
+       {
+        "text": "Enjoy the spectacular Florida lifestyle at The Pier House, the residents' clubhouse featuring a state-of-the-art fitness center, resort-style swimming pool, fishing pier, and dog park"
+       },
+       {
+        "text": "Choose from hundreds of designer options to personalize your home at the Toll Brothers Design Studio"
+       },
+       "…(4 items total)"
+      ],
+      "overviewGallery": [
+       {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/images/DSC_1596-Edit1_CC_1920.jpg",
+        "description": "Coastal-inspired home designs",
+        "representative": false
+       },
+       {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/images/Main_Street_Twilight_1920.jpg",
+        "description": "Lakewood Ranch Main Street",
+        "representative": false
+       },
+       {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/images-resized/FLT_Lakewood-Ranch_Waterside_Area_8-(1)_1920.jpg",
+        "description": "Just a short drive to Waterside Place, the only waterfront retail and lifestyle destination in Sarasota",
+        "representative": false
+       }
+      ],
+      "secondaryImages": [
+       {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+        "description": "Welcome home to The Isles at Lakewood Ranch by Toll Brothers",
+        "representative": false
+       },
+       {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/images-resized/RG2_9960_CC_1920.jpg",
+        "description": "Luxury outdoor area",
+        "representative": false
+       }
+      ],
+      "headshot": {
+       "type": "video::MP4",
+       "url": "https://cdn.tollbrothers.com/communities/masters/765/images-resized/4848201-FLT-The-Isles-at-Lakewood-Ranch-Update-Hero-Image-with-Video_1920.jpg",
+       "link": "https://cdn.tollbrothers.com/communities/masters/765/videos-resized/4848201-FLT-The-Isles-at-Lakewood-Ranch-Update-Hero-Image-with-Video-0625.mp4",
+       "representative": false
+      },
+      "paragraphs": [
+       "The Isles at Lakewood Ranch is a luxury community by Toll Brothers featuring single-family homes with exquisite architectural appointments, outstanding included features, and hundreds of options to pe…(359)"
+      ]
+     },
+     "amenities": {
+      "amenityGroups": [
+       {
+        "name": "",
+        "amenities": [
+         {
+          "name": "Amenity Center",
+          "icon": "Clubhouse.svg"
+         },
+         {
+          "name": "Cabanas",
+          "icon": "Cabana.svg"
+         },
+         {
+          "name": "Dock",
+          "icon": "Dock.svg"
+         },
+         "…(15 items total)"
+        ],
+        "media": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6605-Update_1920.jpg",
+          "description": "Aerial view of The Pier House, the community amenity center",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6596-Update_1920.jpg",
+          "description": "The Pier House, the community amenity center",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+          "description": "The Lounge at The Pier House, the community amenity center",
+          "representative": false
+         },
+         "…(8 items total)"
+        ],
+        "ordinal": 0
+       }
+      ],
+      "title": "Some title",
+      "headshot": {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6605-Update_1920.jpg",
+       "description": "Aerial view of The Pier House, the community amenity center",
+       "representative": false
+      }
+     },
+     "logo": {
+      "type": "image",
+      "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+      "representative": false
+     },
+     "siteplan": [
+      {
+       "type": "siteplan:svg",
+       "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+       "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+       "siteplanId": "691884",
+       "representative": false
+      }
+     ],
+     "gallery": {
+      "title": null,
+      "mediaGroups": [
+       {
+        "name": "",
+        "media": [
+         {
+          "type": "video::MP4",
+          "url": "https://cdn.tollbrothers.com/communities/masters/765/images-resized/4848201-FLT-The-Isles-at-Lakewood-Ranch-Update-Hero-Image-with-Video_1920.jpg",
+          "link": "https://cdn.tollbrothers.com/communities/masters/765/videos-resized/4848201-FLT-The-Isles-at-Lakewood-Ranch-Update-Hero-Image-with-Video-0625.mp4",
+          "representative": false
+         },
+         {
+          "type": "video::vimeo",
+          "description": "The Isles at Lakewood Ranch Community Tour",
+          "link": "452335433",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/masters/765/images/DSC_1596-Edit1_CC_1920.jpg",
+          "description": "Coastal-inspired home designs",
+          "representative": false
+         },
+         "…(7 items total)"
+        ]
+       }
+      ],
+      "walkThroughs": [
+       {
+        "name": "Avery",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "hbqMarketInterest": "FL",
+        "headShot": {
+         "title": "We need a title here",
+         "media": {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         }
+        },
+        "homeType": "Single-Family Home",
+        "feature": "TODO: POPULATE FEATURE",
+        "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Avery",
+        "masterBedroomLocation": "1st Floor",
+        "minBed": 3,
+        "minBath": 3,
+        "minSqft": 2443,
+        "minHalfBath": 1,
+        "maxBed": 3,
+        "maxBath": 3,
+        "maxHalfBath": 1,
+        "masterPlanID": 10799,
+        "pricedFrom": 807995,
+        "commPlanID": 246158,
+        "stories": "1.0",
+        "minGarage": "3.0",
+        "maxGarage": "3.0",
+        "isFormerDecorated": false,
+        "isQMI": false,
+        "isComingSoon": false,
+        "isDecoratedModel": true,
+        "isBiddableQMI": false,
+        "isBiddableLot": false,
+        "hidePlusSignForSqft": false,
+        "communityId": 13003,
+        "loanLimit": 766550,
+        "standardMortgageRate": "6.375",
+        "jumboMortgageRate": "6.375",
+        "media": {
+         "type": "walkthrough::matterport",
+         "url": "https://cdn.tollbrothers.com/models/avery_10799_/matterports/The-Avery-Island-Colonial-12122018_080245_1920.jpg",
+         "link": "HQYuPU2ve1n",
+         "name": "HQYuPU2ve1n",
+         "representative": false
+        },
+        "logo": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+         "representative": false
+        },
+        "communityE1id": "62310000",
+        "communityJdeNum": "6231",
+        "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "modelName": "Avery",
+        "showMortgageCalculator": false,
+        "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+        "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+        "collectionName": "Sanibel Collection",
+        "options": [
+         {
+          "id": "75",
+          "name": "Do Not Generate Email For Matterport"
+         },
+         {
+          "id": "92",
+          "name": "Featured Home Design"
+         },
+         {
+          "id": "32",
+          "name": "Show Directions on Future Community"
+         },
+         "…(4 items total)"
+        ],
+        "communityTypes": [
+         "Luxury Home"
+        ],
+        "cpRegion": "FL-TAMPA SARASOTA",
+        "masterCommunityId": 765,
+        "masterCommunityName": "The Isles at Lakewood Ranch",
+        "qmiCount": 0,
+        "elevations": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ANT_FLT_3CE_6231_5_1920.jpg",
+          "title": "Antilles",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ISCL_FLT_3CE_6231_5_1920.jpg",
+          "title": "Island Colonial",
+          "representative": false
+         }
+        ],
+        "modelBullets": [
+         "A large gourmet kitchen opens to the dining area, great room, and covered lanai",
+         "The impressive primary bedroom suite features a spacious walk-in closet and a luxurious primary bathroom with a private water closet, expansive shower, dual-sink vanity, and a large linen closet",
+         "This home includes two additional bedrooms, two full bathrooms, and a spacious laundry room"
+        ],
+        "description": "Contemporary elegance. The Avery's welcoming covered entry and foyer reveal views of the spacious great room and dining room, both with tray ceilings, and the desirable covered lanai beyond. The well-…(730)",
+        "pricedFromWithQMI": 807995
+       },
+       {
+        "name": "Carver Elite",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "hbqMarketInterest": "FL",
+        "headShot": {
+         "title": "We need a title here",
+         "media": {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+          "title": "Antillies",
+          "representative": false
+         }
+        },
+        "homeType": "Single-Family Home",
+        "feature": "TODO: POPULATE FEATURE",
+        "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver-Elite",
+        "masterBedroomLocation": "1st Floor",
+        "minBed": 3,
+        "minBath": 4,
+        "minSqft": 3431,
+        "minHalfBath": 1,
+        "maxBed": 4,
+        "maxBath": 4,
+        "maxHalfBath": 1,
+        "masterPlanID": 11044,
+        "pricedFrom": 951995,
+        "commPlanID": 246163,
+        "stories": "2.0",
+        "minGarage": "2.0",
+        "maxGarage": "2.0",
+        "isFormerDecorated": false,
+        "isQMI": false,
+        "isComingSoon": false,
+        "isDecoratedModel": false,
+        "isBiddableQMI": false,
+        "isBiddableLot": false,
+        "hidePlusSignForSqft": false,
+        "communityId": 13003,
+        "loanLimit": 766550,
+        "standardMortgageRate": "6.375",
+        "jumboMortgageRate": "6.375",
+        "media": {
+         "type": "walkthrough::matterport",
+         "url": "https://cdn.tollbrothers.com/models/carver_elite_11044_/matterports/The-Carver-Elite-West-Indies-12132018_080720_1920.jpg",
+         "link": "ENpfXb9qmms",
+         "name": "ENpfXb9qmms",
+         "representative": false
+        },
+        "logo": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+         "representative": false
+        },
+        "communityE1id": "62310000",
+        "communityJdeNum": "6231",
+        "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "modelName": "Carver Elite",
+        "showMortgageCalculator": false,
+        "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+        "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+        "collectionName": "Sanibel Collection",
+        "options": [
+         {
+          "id": "32",
+          "name": "Show Directions on Future Community"
+         },
+         {
+          "id": "93",
+          "name": "DYOH V2"
+         }
+        ],
+        "communityTypes": [
+         "Luxury Home"
+        ],
+        "cpRegion": "FL-TAMPA SARASOTA",
+        "masterCommunityId": 765,
+        "masterCommunityName": "The Isles at Lakewood Ranch",
+        "qmiCount": 0,
+        "elevations": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+          "title": "Antilles",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_CRB_FLT_2FE_6231_6_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ISCL_FLT_2FE_6231_7_1920.jpg",
+          "title": "Island Colonial",
+          "representative": false
+         }
+        ],
+        "modelBullets": [
+         "The spacious kitchen includes a large island for culinary convenience, a walk-in pantry, and is centrally located providing direct view and access to the dining area, great room, and covered lanai",
+         "The primary bedroom suite with double-door entry includes two walk-in closets and luxurious primary bath with a glass-enclosed shower and freestanding tub, and a dual-sink vanity",
+         "This house also features additional bedrooms and baths and a second floor with a large loft for entertaining and a generous storage area"
+        ],
+        "description": "Deluxe contemporary design and style. The Carver Elite's impressive two-story covered entry and foyer open onto the expansive great room with tray ceiling, sunny dining area, and desirable covered lan…(774)",
+        "pricedFromWithQMI": 951995
+       },
+       {
+        "name": "Palacios",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "hbqMarketInterest": "FL",
+        "headShot": {
+         "title": "We need a title here",
+         "media": {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_CRB_FL_2FE_LREX4039_3_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         }
+        },
+        "homeType": "Single-Family Home",
+        "feature": "TODO: POPULATE FEATURE",
+        "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Palacios",
+        "masterBedroomLocation": "1st Floor",
+        "minBed": 3,
+        "minBath": 2,
+        "minSqft": 2275,
+        "minHalfBath": 1,
+        "maxBed": 4,
+        "maxBath": 2,
+        "maxHalfBath": 1,
+        "masterPlanID": 11119,
+        "commPlanID": 246165,
+        "stories": "1.0",
+        "minGarage": "2.0",
+        "maxGarage": "2.0",
+        "isFormerDecorated": false,
+        "isQMI": false,
+        "isComingSoon": false,
+        "isDecoratedModel": false,
+        "isBiddableQMI": false,
+        "isBiddableLot": false,
+        "hidePlusSignForSqft": false,
+        "communityId": 13003,
+        "loanLimit": 766550,
+        "standardMortgageRate": "6.375",
+        "jumboMortgageRate": "6.375",
+        "media": {
+         "type": "walkthrough::matterport",
+         "url": "https://cdn.tollbrothers.com/models/palacios_11120_/matterports/The-Palacios-06142017_094442_1920.jpg",
+         "link": "aDvxPwY3g9o",
+         "name": "aDvxPwY3g9o",
+         "representative": false
+        },
+        "logo": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+         "representative": false
+        },
+        "communityE1id": "62310000",
+        "communityJdeNum": "6231",
+        "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "modelName": "Palacios",
+        "showMortgageCalculator": false,
+        "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+        "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+        "collectionName": "Sanibel Collection",
+        "options": [
+         {
+          "id": "85",
+          "name": "Hide Price"
+         },
+         {
+          "id": "86",
+          "name": "Hide On TB.com"
+         },
+         {
+          "id": "92",
+          "name": "Featured Home Design"
+         },
+         "…(5 items total)"
+        ],
+        "communityTypes": [
+         "Luxury Home"
+        ],
+        "cpRegion": "FL-TAMPA SARASOTA",
+        "masterCommunityId": 765,
+        "masterCommunityName": "The Isles at Lakewood Ranch",
+        "qmiCount": 0,
+        "elevations": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_ANT_FL_2FE_LREX4039_3_1920.jpg",
+          "title": "Antilles",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_CRB_FL_2FE_LREX4039_3_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_ISCL_FL_2FE_LREX4039_3_1920.jpg",
+          "title": "Island Colonial",
+          "representative": false
+         }
+        ],
+        "modelBullets": [
+         "The living area includes a gourmet kitchen with a breakfast bar, a sunlit casual dining area, and an expansive great room with a coffered ceiling and access to the covered lanai",
+         "The primary bedroom suite is highlighted by an elegant coffered ceiling, dual walk-in closets, and a private bathroom with a dual-sink vanity, a Roman tub, a separate shower, and a private water close…(201)",
+         "This home features a covered entry that leads to the foyer with an adjacent office with double-door entry"
+        ],
+        "description": "Deluxe urban lifestyle. The Palacios' impressive covered entry and foyer flow into the stunning great room with coffered ceiling, offering views of the desirable covered lanai beyond. The well-equippe…(787)"
+       },
+       "…(20 items total)"
+      ],
+      "externalImages": null
+     },
+     "homes": {
+      "title": null,
+      "models": [
+       {
+        "name": "Avery",
+        "city": "Lakewood Ranch",
+        "state": "FL",
+        "zip": "34202",
+        "county": "Manatee",
+        "metroName": "Sarasota, FL",
+        "metroUrl": "/Sarasota-FL",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "hbqMarketInterest": "FL",
+        "metroId": 835,
+        "headShot": {
+         "title": "We need a title here",
+         "media": {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         }
+        },
+        "homeType": "Single-Family Home",
+        "feature": "TODO: POPULATE FEATURE",
+        "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Avery",
+        "masterBedroomLocation": "1st Floor",
+        "minBed": 3,
+        "minBath": 3,
+        "minSqft": 2443,
+        "minHalfBath": 1,
+        "maxBed": 3,
+        "maxBath": 3,
+        "maxHalfBath": 1,
+        "masterPlanID": 10799,
+        "pricedFrom": 807995,
+        "commPlanID": 246158,
+        "stories": "1.0",
+        "minGarage": "3.0",
+        "maxGarage": "3.0",
+        "isFormerDecorated": false,
+        "isQMI": false,
+        "isComingSoon": false,
+        "isDecoratedModel": true,
+        "isBiddableQMI": false,
+        "isBiddableLot": false,
+        "hidePlusSignForSqft": false,
+        "communityId": 13003,
+        "gallery": {
+         "title": null,
+         "mediaGroups": null,
+         "walkThroughs": [
+          {
+           "name": "Avery",
+           "isFormerDecorated": false,
+           "isQMI": false,
+           "isComingSoon": false,
+           "isDecoratedModel": false,
+           "isBiddableQMI": false,
+           "isBiddableLot": false,
+           "media": {
+            "type": "walkthrough::matterport",
+            "url": "https://cdn.tollbrothers.com/models/avery_10799_/matterports/The-Avery-Island-Colonial-12122018_080245_1920.jpg",
+            "link": "HQYuPU2ve1n",
+            "name": "HQYuPU2ve1n",
+            "representative": false
+           },
+           "showMortgageCalculator": false
+          }
+         ],
+         "externalImages": []
+        },
+        "loanLimit": 766550,
+        "standardMortgageRate": "6.375",
+        "jumboMortgageRate": "6.375",
+        "media": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+         "title": "Caribbean",
+         "representative": false
+        },
+        "logo": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+         "representative": false
+        },
+        "floorplans": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/floorplans-original/aver4DL-6231-pln-339296-01.svg",
+          "description": "Floor Plan",
+          "title": "Floor Plan",
+          "representative": false
+         }
+        ],
+        "communityE1id": "62310000",
+        "communityJdeNum": "6231",
+        "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "modelName": "Avery",
+        "showMortgageCalculator": false,
+        "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+        "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+        "collectionName": "Sanibel Collection",
+        "options": [
+         {
+          "id": "75",
+          "name": "Do Not Generate Email For Matterport"
+         },
+         {
+          "id": "92",
+          "name": "Featured Home Design"
+         },
+         {
+          "id": "32",
+          "name": "Show Directions on Future Community"
+         },
+         "…(4 items total)"
+        ],
+        "communityTypes": [
+         "Luxury Home"
+        ],
+        "cpRegion": "FL-TAMPA SARASOTA",
+        "masterCommunityId": 765,
+        "masterCommunityName": "The Isles at Lakewood Ranch",
+        "qmiCount": 0,
+        "elevations": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ANT_FLT_3CE_6231_5_1920.jpg",
+          "title": "Antilles",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ISCL_FLT_3CE_6231_5_1920.jpg",
+          "title": "Island Colonial",
+          "representative": false
+         }
+        ],
+        "modelBullets": [
+         "A large gourmet kitchen opens to the dining area, great room, and covered lanai",
+         "The impressive primary bedroom suite features a spacious walk-in closet and a luxurious primary bathroom with a private water closet, expansive shower, dual-sink vanity, and a large linen closet",
+         "This home includes two additional bedrooms, two full bathrooms, and a spacious laundry room"
+        ],
+        "description": "Contemporary elegance. The Avery's welcoming covered entry and foyer reveal views of the spacious great room and dining room, both with tray ceilings, and the desirable covered lanai beyond. The well-…(730)",
+        "pricedFromWithQMI": 807995
+       },
+       {
+        "name": "Carver",
+        "city": "Lakewood Ranch",
+        "state": "FL",
+        "zip": "34202",
+        "county": "Manatee",
+        "metroName": "Sarasota, FL",
+        "metroUrl": "/Sarasota-FL",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "hbqMarketInterest": "FL",
+        "metroId": 835,
+        "headShot": {
+         "title": "We need a title here",
+         "media": {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+          "title": "Antillies",
+          "representative": false
+         }
+        },
+        "homeType": "Single-Family Home",
+        "feature": "TODO: POPULATE FEATURE",
+        "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver",
+        "masterBedroomLocation": "1st Floor",
+        "minBed": 3,
+        "minBath": 3,
+        "minSqft": 2858,
+        "minHalfBath": 1,
+        "maxBed": 3,
+        "maxBath": 3,
+        "maxHalfBath": 1,
+        "masterPlanID": 11045,
+        "pricedFrom": 835995,
+        "commPlanID": 246162,
+        "stories": "1.0",
+        "minGarage": "2.0",
+        "maxGarage": "2.0",
+        "isFormerDecorated": false,
+        "isQMI": false,
+        "isComingSoon": false,
+        "isDecoratedModel": false,
+        "isBiddableQMI": false,
+        "isBiddableLot": false,
+        "hidePlusSignForSqft": false,
+        "communityId": 13003,
+        "gallery": {
+         "title": null,
+         "mediaGroups": null,
+         "walkThroughs": [
+          {
+           "name": "Carver",
+           "isFormerDecorated": false,
+           "isQMI": false,
+           "isComingSoon": false,
+           "isDecoratedModel": false,
+           "isBiddableQMI": false,
+           "isBiddableLot": false,
+           "media": {
+            "type": "walkthrough",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/images-resized/walkthrough-snapshot-(76)_1920.jpg",
+            "link": "https://www.insidemaps.com/app/walkthrough-v2/?projectId=VkEegq7SBT&env=production&disableCookie=true",
+            "representative": false,
+            "description": "Carver | 3D Walkthrough is for representational purposes only. Actual product may differ."
+           },
+           "showMortgageCalculator": false
+          }
+         ],
+         "externalImages": []
+        },
+        "loanLimit": 766550,
+        "standardMortgageRate": "6.375",
+        "jumboMortgageRate": "6.375",
+        "media": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+         "title": "Antillies",
+         "representative": false
+        },
+        "logo": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+         "representative": false
+        },
+        "floorplans": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/floorplans-resized/carv4V1-6231-pln-282712-01.svg",
+          "representative": false
+         }
+        ],
+        "communityE1id": "62310000",
+        "communityJdeNum": "6231",
+        "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "modelName": "Carver",
+        "showMortgageCalculator": false,
+        "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+        "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+        "collectionName": "Sanibel Collection",
+        "options": [
+         {
+          "id": "92",
+          "name": "Featured Home Design"
+         },
+         {
+          "id": "32",
+          "name": "Show Directions on Future Community"
+         },
+         {
+          "id": "93",
+          "name": "DYOH V2"
+         }
+        ],
+        "communityTypes": [
+         "Luxury Home"
+        ],
+        "cpRegion": "FL-TAMPA SARASOTA",
+        "masterCommunityId": 765,
+        "masterCommunityName": "The Isles at Lakewood Ranch",
+        "qmiCount": 0,
+        "elevations": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+          "title": "Antilles",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_CRB_FLT_2FE_6231_7_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ISCL_FLT_2FE_6231_7_1920.jpg",
+          "title": "Island Colonial",
+          "representative": false
+         }
+        ],
+        "modelBullets": [
+         "The spacious kitchen includes a large island for culinary convenience, a walk-in pantry, and is centrally located providing direct view and access to the dining area, great room, and covered lanai",
+         "The primary bedroom suite with double-door entry includes two walk-in closets and luxurious primary bathroom with a spacious shower and tub, and dual-sink vanity",
+         "This house also features two additional bedrooms and baths, an office, and a large laundry room"
+        ],
+        "description": "Urban design and style. The Carver's inviting covered entry and foyer open onto the expansive great room with tray ceiling, bright dining area, and desirable covered lanai beyond. The well-designed go…(766)",
+        "pricedFromWithQMI": 835995
+       },
+       {
+        "name": "Carver Elite",
+        "city": "Lakewood Ranch",
+        "state": "FL",
+        "zip": "34202",
+        "county": "Manatee",
+        "metroName": "Sarasota, FL",
+        "metroUrl": "/Sarasota-FL",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "hbqMarketInterest": "FL",
+        "metroId": 835,
+        "headShot": {
+         "title": "We need a title here",
+         "media": {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+          "title": "Antillies",
+          "representative": false
+         }
+        },
+        "homeType": "Single-Family Home",
+        "feature": "TODO: POPULATE FEATURE",
+        "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver-Elite",
+        "masterBedroomLocation": "1st Floor",
+        "minBed": 3,
+        "minBath": 4,
+        "minSqft": 3431,
+        "minHalfBath": 1,
+        "maxBed": 4,
+        "maxBath": 4,
+        "maxHalfBath": 1,
+        "masterPlanID": 11044,
+        "pricedFrom": 951995,
+        "commPlanID": 246163,
+        "stories": "2.0",
+        "minGarage": "2.0",
+        "maxGarage": "2.0",
+        "isFormerDecorated": false,
+        "isQMI": false,
+        "isComingSoon": false,
+        "isDecoratedModel": false,
+        "isBiddableQMI": false,
+        "isBiddableLot": false,
+        "hidePlusSignForSqft": false,
+        "communityId": 13003,
+        "gallery": {
+         "title": null,
+         "mediaGroups": null,
+         "walkThroughs": [
+          {
+           "name": "Carver Elite",
+           "isFormerDecorated": false,
+           "isQMI": false,
+           "isComingSoon": false,
+           "isDecoratedModel": false,
+           "isBiddableQMI": false,
+           "isBiddableLot": false,
+           "media": {
+            "type": "walkthrough::matterport",
+            "url": "https://cdn.tollbrothers.com/models/carver_elite_11044_/matterports/The-Carver-Elite-West-Indies-12132018_080720_1920.jpg",
+            "link": "ENpfXb9qmms",
+            "name": "ENpfXb9qmms",
+            "representative": false
+           },
+           "showMortgageCalculator": false
+          }
+         ],
+         "externalImages": []
+        },
+        "loanLimit": 766550,
+        "standardMortgageRate": "6.375",
+        "jumboMortgageRate": "6.375",
+        "media": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+         "title": "Antillies",
+         "representative": false
+        },
+        "logo": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+         "representative": false
+        },
+        "floorplans": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/floorplans-resized/carvel4V2-6231-pln-282713-01.svg",
+          "title": "1st floor",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/floorplans-resized/carvel4V2-6231-pln-282713-02.svg",
+          "title": "2nd floor",
+          "representative": false
+         }
+        ],
+        "communityE1id": "62310000",
+        "communityJdeNum": "6231",
+        "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "modelName": "Carver Elite",
+        "showMortgageCalculator": false,
+        "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+        "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+        "collectionName": "Sanibel Collection",
+        "options": [
+         {
+          "id": "32",
+          "name": "Show Directions on Future Community"
+         },
+         {
+          "id": "93",
+          "name": "DYOH V2"
+         }
+        ],
+        "communityTypes": [
+         "Luxury Home"
+        ],
+        "cpRegion": "FL-TAMPA SARASOTA",
+        "masterCommunityId": 765,
+        "masterCommunityName": "The Isles at Lakewood Ranch",
+        "qmiCount": 0,
+        "elevations": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+          "title": "Antilles",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_CRB_FLT_2FE_6231_6_1920.jpg",
+          "title": "Caribbean",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ISCL_FLT_2FE_6231_7_1920.jpg",
+          "title": "Island Colonial",
+          "representative": false
+         }
+        ],
+        "modelBullets": [
+         "The spacious kitchen includes a large island for culinary convenience, a walk-in pantry, and is centrally located providing direct view and access to the dining area, great room, and covered lanai",
+         "The primary bedroom suite with double-door entry includes two walk-in closets and luxurious primary bath with a glass-enclosed shower and freestanding tub, and a dual-sink vanity",
+         "This house also features additional bedrooms and baths and a second floor with a large loft for entertaining and a generous storage area"
+        ],
+        "description": "Deluxe contemporary design and style. The Carver Elite's impressive two-story covered entry and foyer open onto the expansive great room with tray ceiling, sunny dining area, and desirable covered lan…(774)",
+        "pricedFromWithQMI": 951995
+       },
+       "…(11 items total)"
+      ]
+     },
+     "headShot": {
+      "title": "The Isles at Lakewood Ranch",
+      "media": {
+       "type": "video::MP4",
+       "url": "https://cdn.tollbrothers.com/communities/masters/765/images-resized/4848201-FLT-The-Isles-at-Lakewood-Ranch-Update-Hero-Image-with-Video_1920.jpg",
+       "link": "https://cdn.tollbrothers.com/communities/masters/765/videos-resized/4848201-FLT-The-Isles-at-Lakewood-Ranch-Update-Hero-Image-with-Video-0625.mp4",
+       "representative": false
+      }
+     },
+     "badgeText": "Model Home For Sale",
+     "isFuture": false,
+     "hasNeighborhoodMap": true,
+     "hideComingSoon": false,
+     "badgeLink": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/285955",
+     "metaDescription": "The Isles at Lake Ranch is a gated master-planned new home community in FL featuring single-family homes with unique architecture, resort style & amenities.",
+     "rangeBath": "2-5",
+     "rangeBed": "3-6",
+     "rangeGarage": "2.0-4.0",
+     "rangeSqft": "2443-4097",
+     "rangeHalfBath": "1-2",
+     "showMortgageCalculator": false,
+     "availableLots": 24,
+     "soldLots": 28,
+     "notReleasedLots": 7,
+     "reservedLots": 1,
+     "closedLots": 378,
+     "qmiSitePlanLots": 14,
+     "offline": false,
+     "events": [
+      {
+       "headline": {
+        "text": "Learn More About\nFinancing Offers\nAvailable Now",
+        "link": "/lowest"
+       },
+       "byline": {},
+       "startDate": "2025-03-06",
+       "eventType": "bannerEventISPT",
+       "eventID": 4894
+      },
+      {
+       "headline": {
+        "text": "3.99% (6.04% APR)†\nFirst-Year Rate",
+        "link": "/3.99",
+        "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions and restrictions. Valid for new buyers only who sign a Sales Agreement for select q…(1808)"
+       },
+       "byline": {
+        "text": "30-Year Fixed Rate with 2/1 Buydown Program"
+       },
+       "formName": "TB299FHA_012026",
+       "slugName": "3.99",
+       "paragraphs": [
+        {
+         "text": "For a limited time on select quick move-in homes, Toll Brothers Mortgage Company is offering reduced interest rates for the first two years of your 30-year fixed loan, and then enjoy a locked interest…(368)"
+        },
+        {
+         "text": "Discover the Toll Brothers 2/1 Buydown Program and give yourself one more reason to make your next move. "
+        }
+       ],
+       "graphs": [
+        {
+         "text": "[{\"rate\":3.99,\"apr\":6.04},{\"rate\":4.99,\"apr\":6.04},{\"rate\":5.99,\"apr\":6.04}]"
+        }
+       ],
+       "bullets": [
+        {
+         "text": "500000"
+        },
+        {
+         "text": "Bullet 2"
+        }
+       ],
+       "color": "275661",
+       "startDate": "2026-06-05",
+       "endDate": "2026-09-01",
+       "eventType": "bannerEventNational",
+       "template": {
+        "text": "buydown-bluediamond"
+       },
+       "eventID": 9831
+      },
+      {
+       "headline": {
+        "text": "Up to $15,000 to Use Your Way on Select Homes",
+        "link": "/nse"
+       },
+       "cta": {
+        "text": "Get Started"
+       },
+       "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_vertical_2601.svg",
+       "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_horizontal_2601.svg",
+       "formName": "NSE_2604",
+       "formCallback": "https://hello.tollbrothers.com/l/402642/2026-06-23/2cwjkh2",
+       "eventName": "National Sales Event",
+       "dateText": "Jun 27-Jul 12",
+       "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 6/27/2026 and 7/12/2026, sign an agreement of sale, and close on the home. Offers, incentive…(784)",
+       "paragraphs": [
+        {
+         "text": "June 27-July 12"
+        }
+       ],
+       "color": "0070cd",
+       "startDate": "2026-06-27",
+       "endDate": "2026-07-19",
+       "eventType": "nationalEvent",
+       "template": {
+        "text": "NSE"
+       },
+       "parentEventId": 9561,
+       "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/tb_nse_autoresponder_2606.jpg",
+       "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_landing_page_2601.svg",
+       "eventID": 9564
+      }
+     ],
+     "hasSitePlan": true,
+     "communities": [
+      {
+       "name": "The Isles at Lakewood Ranch - Sanibel Collection",
+       "city": "Lakewood Ranch",
+       "state": "FL",
+       "zip": "34202",
+       "county": "Manatee",
+       "metroName": "Sarasota, FL",
+       "metroUrl": "/Sarasota-FL",
+       "lat": "27.39",
+       "lon": "-82.36",
+       "hbqMarketInterest": "FL",
+       "metroId": 835,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Integrated Retail",
+        "…(5 items total)"
+       ],
+       "communityId": 13003,
+       "masterCommunityId": 765,
+       "e1id": "62310000",
+       "jdeNum": "6231",
+       "acquireId": "FLW",
+       "pricedFrom": "807,995",
+       "acquireJde": "6231",
+       "productId": "06231",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+       "loanLimit": 766550,
+       "pricedFromInt": 807995,
+       "standardMortgageRate": "6.375",
+       "jumboMortgageRate": "6.375",
+       "salesOffice": {
+        "city": "Lakewood Ranch",
+        "state": "FL",
+        "zip": "34202",
+        "street": "17523 Fairwinds Dr",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "salesOfficeOffsite": false,
+        "showHours": true,
+        "byAppointmentOnly": false,
+        "hideDirections": false,
+        "salesOfficePhone": "941-313-7373",
+        "salesPeople": [
+         {
+          "firstName": "Mario",
+          "lastName": "Menoscal"
+         },
+         {
+          "firstName": "Heather",
+          "lastName": "Caserta"
+         }
+        ],
+        "onlineConcierge": [
+         {
+          "firstName": "Kathleen",
+          "lastName": "C.",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Patty",
+          "lastName": "M.",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Arianna",
+          "lastName": "M.",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         "…(4 items total)"
+        ],
+        "hideTour": false,
+        "hideSalesOffice": false,
+        "hideNeighborhoodMap": false,
+        "operatingHours": [
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Monday",
+          "day": "Mon",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Tuesday",
+          "day": "Tue",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Wednesday",
+          "day": "Wed",
+          "appointmentOnly": false
+         },
+         "…(7 items total)"
+        ],
+        "communities": []
+       },
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "overview": {
+        "title": "New Home Community The Isles at Lakewood Ranch - Sanibel Collection in Lakewood Ranch, FL by Toll Brothers",
+        "shortDescription": "The Sanibel Collection includes one- and two-story home designs from 3,420 to over 3,700 square feet with flexible floor plans, expansive great rooms, and private primary suites.",
+        "description": "The Sanibel Collection at The Isles at Lakewood Ranch offers spacious home designs with hundreds of designer options to personalize your home. Enjoy an unparalleled lifestyle of luxury and convenience…(611)",
+        "bulletPoints": [
+         {
+          "text": "Luxury appointments include gourmet kitchens, spacious living areas, and private primary bedroom suites"
+         },
+         {
+          "text": "Enjoy the spectacular Florida lifestyle at The Pier House, the residents' clubhouse featuring a state-of-the-art fitness center, resort-style swimming pool, fishing pier, and dog park"
+         },
+         {
+          "text": "Ideally located close to Lakewood Ranch shopping, dining and entertainment, major highways, and Sarasota area beaches"
+         },
+         "…(5 items total)"
+        ],
+        "overviewGallery": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/014_Toll_12_3_18_Avery_conversion1_1920.jpg",
+          "description": "Spa-inspired baths",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/016_Toll_12_3_18_Carver_conversion1_1920.jpg",
+          "description": "Spacious lofts",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/RG2_9918_conversion1_1920.jpg",
+          "description": "Spectacular outdoor living",
+          "representative": false
+         }
+        ],
+        "secondaryImages": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/011_Toll_12_3_18_Carver_conversion1_1920.jpg",
+          "description": "Expansive primary bedroom suites",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/008_Toll_12_3_18_Carver_conversion1_1920.jpg",
+          "description": "Casual dining areas",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/004_Toll_12_3_18_Carver_conversion1_1920.jpg",
+          "description": "Open floor plans",
+          "representative": false
+         },
+         "…(8 items total)"
+        ],
+        "headshot": {
+         "type": "video::MP4",
+         "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/8557224-Video-FLT-TheIslesAtLakewoodRanch-Bianca-Hero_thumbnail_1920.jpg",
+         "link": "https://cdn.tollbrothers.com/communities/13003/videos-resized/8557224-Video-FLT-TheIslesAtLakewoodRanch-Bianca-Hero-v02.mp4",
+         "representative": false
+        }
+       },
+       "amenities": {
+        "amenityGroups": [
+         {
+          "name": "",
+          "amenities": [
+           {
+            "name": "Amenity Center",
+            "icon": "Clubhouse.svg"
+           },
+           {
+            "name": "Cabanas",
+            "icon": "Cabana.svg"
+           },
+           {
+            "name": "Dock",
+            "icon": "Dock.svg"
+           },
+           "…(19 items total)"
+          ],
+          "media": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+            "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+            "description": "The Lounge at The Pier House, the community amenity center",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6476-Update_1920.jpg",
+            "description": "The Veranda at The Pier House, the community amenity center",
+            "representative": false
+           },
+           "…(9 items total)"
+          ],
+          "ordinal": 0
+         }
+        ],
+        "title": "Some title",
+        "headshot": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+         "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+         "representative": false
+        }
+       },
+       "schoolInfo": {
+        "schoolDistrict": "Manatee",
+        "highSchool": "Lakewood Ranch High School",
+        "middleSchool": "R Dan Nolan Middle School",
+        "elementarySchool": "Robert E Willis Elementary School"
+       },
+       "logo": {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+        "representative": false
+       },
+       "siteplan": [
+        {
+         "type": "siteplan:svg",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+         "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+         "siteplanId": "691884",
+         "representative": false
+        }
+       ],
+       "gallery": {
+        "title": null,
+        "mediaGroups": [
+         {
+          "name": "",
+          "media": [
+           {
+            "type": "video::MP4",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/8557224-Video-FLT-TheIslesAtLakewoodRanch-Bianca-Hero_thumbnail_1920.jpg",
+            "link": "https://cdn.tollbrothers.com/communities/13003/videos-resized/8557224-Video-FLT-TheIslesAtLakewoodRanch-Bianca-Hero-v02.mp4",
+            "representative": false
+           },
+           {
+            "type": "video::vimeo",
+            "description": "The Isles at Lakewood Ranch Community Tour",
+            "link": "452335433",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/014_Toll_12_3_18_Avery_conversion1_1920.jpg",
+            "description": "Spa-inspired baths",
+            "representative": false
+           },
+           "…(13 items total)"
+          ]
+         }
+        ],
+        "walkThroughs": [
+         {
+          "name": "Avery",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Avery",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 3,
+          "minSqft": 2443,
+          "minHalfBath": 1,
+          "maxBed": 3,
+          "maxBath": 3,
+          "maxHalfBath": 1,
+          "masterPlanID": 10799,
+          "pricedFrom": 807995,
+          "commPlanID": 246158,
+          "stories": "1.0",
+          "minGarage": "3.0",
+          "maxGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": true,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "walkthrough::matterport",
+           "url": "https://cdn.tollbrothers.com/models/avery_10799_/matterports/The-Avery-Island-Colonial-12122018_080245_1920.jpg",
+           "link": "HQYuPU2ve1n",
+           "name": "HQYuPU2ve1n",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Avery",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "options": [
+           {
+            "id": "75",
+            "name": "Do Not Generate Email For Matterport"
+           },
+           {
+            "id": "92",
+            "name": "Featured Home Design"
+           },
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           "…(4 items total)"
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ANT_FLT_3CE_6231_5_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ISCL_FLT_3CE_6231_5_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "A large gourmet kitchen opens to the dining area, great room, and covered lanai",
+           "The impressive primary bedroom suite features a spacious walk-in closet and a luxurious primary bathroom with a private water closet, expansive shower, dual-sink vanity, and a large linen closet",
+           "This home includes two additional bedrooms, two full bathrooms, and a spacious laundry room"
+          ],
+          "description": "Contemporary elegance. The Avery's welcoming covered entry and foyer reveal views of the spacious great room and dining room, both with tray ceilings, and the desirable covered lanai beyond. The well-…(730)",
+          "pricedFromWithQMI": 807995
+         },
+         {
+          "name": "Carver Elite",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+            "title": "Antillies",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver-Elite",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 4,
+          "minSqft": 3431,
+          "minHalfBath": 1,
+          "maxBed": 4,
+          "maxBath": 4,
+          "maxHalfBath": 1,
+          "masterPlanID": 11044,
+          "pricedFrom": 951995,
+          "commPlanID": 246163,
+          "stories": "2.0",
+          "minGarage": "2.0",
+          "maxGarage": "2.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "walkthrough::matterport",
+           "url": "https://cdn.tollbrothers.com/models/carver_elite_11044_/matterports/The-Carver-Elite-West-Indies-12132018_080720_1920.jpg",
+           "link": "ENpfXb9qmms",
+           "name": "ENpfXb9qmms",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Carver Elite",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_CRB_FLT_2FE_6231_6_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ISCL_FLT_2FE_6231_7_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "The spacious kitchen includes a large island for culinary convenience, a walk-in pantry, and is centrally located providing direct view and access to the dining area, great room, and covered lanai",
+           "The primary bedroom suite with double-door entry includes two walk-in closets and luxurious primary bath with a glass-enclosed shower and freestanding tub, and a dual-sink vanity",
+           "This house also features additional bedrooms and baths and a second floor with a large loft for entertaining and a generous storage area"
+          ],
+          "description": "Deluxe contemporary design and style. The Carver Elite's impressive two-story covered entry and foyer open onto the expansive great room with tray ceiling, sunny dining area, and desirable covered lan…(774)",
+          "pricedFromWithQMI": 951995
+         },
+         {
+          "name": "Palacios",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_CRB_FL_2FE_LREX4039_3_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Palacios",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 2,
+          "minSqft": 2275,
+          "minHalfBath": 1,
+          "maxBed": 4,
+          "maxBath": 2,
+          "maxHalfBath": 1,
+          "masterPlanID": 11119,
+          "commPlanID": 246165,
+          "stories": "1.0",
+          "minGarage": "2.0",
+          "maxGarage": "2.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "walkthrough::matterport",
+           "url": "https://cdn.tollbrothers.com/models/palacios_11120_/matterports/The-Palacios-06142017_094442_1920.jpg",
+           "link": "aDvxPwY3g9o",
+           "name": "aDvxPwY3g9o",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Palacios",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "options": [
+           {
+            "id": "85",
+            "name": "Hide Price"
+           },
+           {
+            "id": "86",
+            "name": "Hide On TB.com"
+           },
+           {
+            "id": "92",
+            "name": "Featured Home Design"
+           },
+           "…(5 items total)"
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_ANT_FL_2FE_LREX4039_3_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_CRB_FL_2FE_LREX4039_3_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246165/exteriors-resized/PALC_ISCL_FL_2FE_LREX4039_3_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "The living area includes a gourmet kitchen with a breakfast bar, a sunlit casual dining area, and an expansive great room with a coffered ceiling and access to the covered lanai",
+           "The primary bedroom suite is highlighted by an elegant coffered ceiling, dual walk-in closets, and a private bathroom with a dual-sink vanity, a Roman tub, a separate shower, and a private water close…(201)",
+           "This home features a covered entry that leads to the foyer with an adjacent office with double-door entry"
+          ],
+          "description": "Deluxe urban lifestyle. The Palacios' impressive covered entry and foyer flow into the stunning great room with coffered ceiling, offering views of the desirable covered lanai beyond. The well-equippe…(787)"
+         },
+         "…(13 items total)"
+        ],
+        "externalImages": null
+       },
+       "homes": {
+        "title": "TODO: MAKE TITLE",
+        "models": [
+         {
+          "name": "Avery",
+          "city": "Lakewood Ranch",
+          "state": "FL",
+          "zip": "34202",
+          "county": "Manatee",
+          "metroName": "Sarasota, FL",
+          "metroUrl": "/Sarasota-FL",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "metroId": 835,
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Avery",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 3,
+          "minSqft": 2443,
+          "minHalfBath": 1,
+          "maxBed": 3,
+          "maxBath": 3,
+          "maxHalfBath": 1,
+          "masterPlanID": 10799,
+          "pricedFrom": 807995,
+          "commPlanID": 246158,
+          "stories": "1.0",
+          "minGarage": "3.0",
+          "maxGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": true,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "gallery": {
+           "title": null,
+           "mediaGroups": null,
+           "walkThroughs": [
+            {
+             "name": "Avery",
+             "isFormerDecorated": false,
+             "isQMI": false,
+             "isComingSoon": false,
+             "isDecoratedModel": false,
+             "isBiddableQMI": false,
+             "isBiddableLot": false,
+             "media": {
+              "type": "walkthrough::matterport",
+              "url": "https://cdn.tollbrothers.com/models/avery_10799_/matterports/The-Avery-Island-Colonial-12122018_080245_1920.jpg",
+              "link": "HQYuPU2ve1n",
+              "name": "HQYuPU2ve1n",
+              "representative": false
+             },
+             "showMortgageCalculator": false
+            }
+           ],
+           "externalImages": []
+          },
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+           "title": "Caribbean",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "floorplans": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/floorplans-original/aver4DL-6231-pln-339296-01.svg",
+            "description": "Floor Plan",
+            "title": "Floor Plan",
+            "representative": false
+           }
+          ],
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Avery",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "options": [
+           {
+            "id": "75",
+            "name": "Do Not Generate Email For Matterport"
+           },
+           {
+            "id": "92",
+            "name": "Featured Home Design"
+           },
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           "…(4 items total)"
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ANT_FLT_3CE_6231_5_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_ISCL_FLT_3CE_6231_5_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "A large gourmet kitchen opens to the dining area, great room, and covered lanai",
+           "The impressive primary bedroom suite features a spacious walk-in closet and a luxurious primary bathroom with a private water closet, expansive shower, dual-sink vanity, and a large linen closet",
+           "This home includes two additional bedrooms, two full bathrooms, and a spacious laundry room"
+          ],
+          "description": "Contemporary elegance. The Avery's welcoming covered entry and foyer reveal views of the spacious great room and dining room, both with tray ceilings, and the desirable covered lanai beyond. The well-…(730)",
+          "pricedFromWithQMI": 807995
+         },
+         {
+          "name": "Carver",
+          "city": "Lakewood Ranch",
+          "state": "FL",
+          "zip": "34202",
+          "county": "Manatee",
+          "metroName": "Sarasota, FL",
+          "metroUrl": "/Sarasota-FL",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "metroId": 835,
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+            "title": "Antillies",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 3,
+          "minSqft": 2858,
+          "minHalfBath": 1,
+          "maxBed": 3,
+          "maxBath": 3,
+          "maxHalfBath": 1,
+          "masterPlanID": 11045,
+          "pricedFrom": 835995,
+          "commPlanID": 246162,
+          "stories": "1.0",
+          "minGarage": "2.0",
+          "maxGarage": "2.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "gallery": {
+           "title": null,
+           "mediaGroups": null,
+           "walkThroughs": [
+            {
+             "name": "Carver",
+             "isFormerDecorated": false,
+             "isQMI": false,
+             "isComingSoon": false,
+             "isDecoratedModel": false,
+             "isBiddableQMI": false,
+             "isBiddableLot": false,
+             "media": {
+              "type": "walkthrough",
+              "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/images-resized/walkthrough-snapshot-(76)_1920.jpg",
+              "link": "https://www.insidemaps.com/app/walkthrough-v2/?projectId=VkEegq7SBT&env=production&disableCookie=true",
+              "representative": false
+             },
+             "showMortgageCalculator": false
+            }
+           ],
+           "externalImages": []
+          },
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+           "title": "Antillies",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "floorplans": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/floorplans-resized/carv4V1-6231-pln-282712-01.svg",
+            "representative": false
+           }
+          ],
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Carver",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "options": [
+           {
+            "id": "92",
+            "name": "Featured Home Design"
+           },
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_CRB_FLT_2FE_6231_7_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ISCL_FLT_2FE_6231_7_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "The spacious kitchen includes a large island for culinary convenience, a walk-in pantry, and is centrally located providing direct view and access to the dining area, great room, and covered lanai",
+           "The primary bedroom suite with double-door entry includes two walk-in closets and luxurious primary bathroom with a spacious shower and tub, and dual-sink vanity",
+           "This house also features two additional bedrooms and baths, an office, and a large laundry room"
+          ],
+          "description": "Urban design and style. The Carver's inviting covered entry and foyer open onto the expansive great room with tray ceiling, bright dining area, and desirable covered lanai beyond. The well-designed go…(766)",
+          "pricedFromWithQMI": 835995
+         },
+         {
+          "name": "Carver Elite",
+          "city": "Lakewood Ranch",
+          "state": "FL",
+          "zip": "34202",
+          "county": "Manatee",
+          "metroName": "Sarasota, FL",
+          "metroUrl": "/Sarasota-FL",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "metroId": 835,
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+            "title": "Antillies",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver-Elite",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 4,
+          "minSqft": 3431,
+          "minHalfBath": 1,
+          "maxBed": 4,
+          "maxBath": 4,
+          "maxHalfBath": 1,
+          "masterPlanID": 11044,
+          "pricedFrom": 951995,
+          "commPlanID": 246163,
+          "stories": "2.0",
+          "minGarage": "2.0",
+          "maxGarage": "2.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "gallery": {
+           "title": null,
+           "mediaGroups": null,
+           "walkThroughs": [
+            {
+             "name": "Carver Elite",
+             "isFormerDecorated": false,
+             "isQMI": false,
+             "isComingSoon": false,
+             "isDecoratedModel": false,
+             "isBiddableQMI": false,
+             "isBiddableLot": false,
+             "media": {
+              "type": "walkthrough::matterport",
+              "url": "https://cdn.tollbrothers.com/models/carver_elite_11044_/matterports/The-Carver-Elite-West-Indies-12132018_080720_1920.jpg",
+              "link": "ENpfXb9qmms",
+              "name": "ENpfXb9qmms",
+              "representative": false
+             },
+             "showMortgageCalculator": false
+            }
+           ],
+           "externalImages": []
+          },
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+           "title": "Antillies",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "floorplans": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/floorplans-resized/carvel4V2-6231-pln-282713-01.svg",
+            "title": "1st floor",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/floorplans-resized/carvel4V2-6231-pln-282713-02.svg",
+            "title": "2nd floor",
+            "representative": false
+           }
+          ],
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Carver Elite",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_CRB_FLT_2FE_6231_6_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ISCL_FLT_2FE_6231_7_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "The spacious kitchen includes a large island for culinary convenience, a walk-in pantry, and is centrally located providing direct view and access to the dining area, great room, and covered lanai",
+           "The primary bedroom suite with double-door entry includes two walk-in closets and luxurious primary bath with a glass-enclosed shower and freestanding tub, and a dual-sink vanity",
+           "This house also features additional bedrooms and baths and a second floor with a large loft for entertaining and a generous storage area"
+          ],
+          "description": "Deluxe contemporary design and style. The Carver Elite's impressive two-story covered entry and foyer open onto the expansive great room with tray ceiling, sunny dining area, and desirable covered lan…(774)",
+          "pricedFromWithQMI": 951995
+         },
+         "…(8 items total)"
+        ]
+       },
+       "headShot": {
+        "title": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "media": {
+         "type": "video::MP4",
+         "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/8557224-Video-FLT-TheIslesAtLakewoodRanch-Bianca-Hero_thumbnail_1920.jpg",
+         "link": "https://cdn.tollbrothers.com/communities/13003/videos-resized/8557224-Video-FLT-TheIslesAtLakewoodRanch-Bianca-Hero-v02.mp4",
+         "representative": false
+        }
+       },
+       "badgeText": "Model Home For Sale",
+       "isFuture": false,
+       "hasNeighborhoodMap": true,
+       "hideComingSoon": false,
+       "badgeLink": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/285955",
+       "cleanName": "Sanibel Collection",
+       "metaDescription": "The Isles at Lakewood Ranch - Sanibel Collection is an outstanding new home community in Lakewood Ranch, FL that offers a variety of luxurious home designs in a great location.",
+       "rangeBath": "2-5",
+       "rangeBed": "3-6",
+       "rangeGarage": "2.0-3.0",
+       "rangeSqft": "2443-3915",
+       "rangeHalfBath": "1",
+       "showMortgageCalculator": false,
+       "availableLots": 24,
+       "soldLots": 18,
+       "notReleasedLots": 4,
+       "reservedLots": 1,
+       "closedLots": 208,
+       "qmiSitePlanLots": 11,
+       "offline": false,
+       "socialMedia": [
+        {
+         "type": "socialmeadia::facebook",
+         "link": "https://www.facebook.com/TollFLW",
+         "representative": false
+        }
+       ],
+       "events": [
+        {
+         "headline": {
+          "text": "Learn More About\nFinancing Offers\nAvailable Now",
+          "link": "/lowest"
+         },
+         "byline": {},
+         "startDate": "2025-03-06",
+         "eventType": "bannerEventISPT",
+         "eventID": 4894
+        },
+        {
+         "headline": {
+          "text": "Free Outdoor Kitchen + 50% Off Design Studio Options Up to $70,000 on Select Homes",
+          "link": "/nse"
+         },
+         "cta": {
+          "text": "Get Started"
+         },
+         "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_vertical_2601.svg",
+         "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_horizontal_2601.svg",
+         "formName": "NSE_2604",
+         "formCallback": "https://hello.tollbrothers.com/l/402642/2026-06-23/2cwjkh2",
+         "eventName": "National Sales Event",
+         "dateText": "Jun 27-Jul 12",
+         "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 6/27/2026 and 7/12/2026, sign an agreement of sale, and close on the home. Offers, incentive…(784)",
+         "paragraphs": [
+          {
+           "text": "June 27-July 12"
+          }
+         ],
+         "color": "0070cd",
+         "startDate": "2026-06-27",
+         "endDate": "2026-07-19",
+         "eventType": "nationalEvent",
+         "template": {
+          "text": "NSE"
+         },
+         "parentEventId": 9561,
+         "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/tb_nse_autoresponder_2606.jpg",
+         "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_landing_page_2601.svg",
+         "eventID": 9564
+        },
+        {
+         "headline": {
+          "text": "Honoring the Past. Looking to the Future.\nHappy 250th Birthday, America!"
+         },
+         "startDate": "2026-06-27",
+         "eventType": "bannerEventISPT",
+         "eventID": 9825
+        },
+        "…(4 items total)"
+       ],
+       "options": [
+        {
+         "id": "32",
+         "name": "Show Directions on Future Community"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "tour": {
+        "type": "tour::selfguided",
+        "link": "https://tollbrothers.utourhomes.com/visitor?community=5f7c6d5d-4b91-4c83-a069-3f586b135caa&rootUrl=community&lang=en",
+        "representative": false
+       },
+       "masterCommunityName": "The Isles at Lakewood Ranch",
+       "hasSitePlan": true,
+       "designStudio": {
+        "name": "FL - Tampa",
+        "designStudioNbr": "45",
+        "url": "https://www.tollbrothersdesignstudio.com/studio-locations/fl/tampa-sarasota"
+       },
+       "activeDate": "2018-10-25",
+       "onlineDate": "2018-09-13"
+      },
+      {
+       "name": "The Isles at Lakewood Ranch - Captiva Collection",
+       "city": "Lakewood Ranch",
+       "state": "FL",
+       "zip": "34202",
+       "county": "Manatee",
+       "metroName": "Sarasota, FL",
+       "metroUrl": "/Sarasota-FL",
+       "lat": "27.39",
+       "lon": "-82.36",
+       "hbqMarketInterest": "FL",
+       "metroId": 835,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Integrated Retail",
+        "…(5 items total)"
+       ],
+       "communityId": 13004,
+       "masterCommunityId": 765,
+       "e1id": "62320000",
+       "jdeNum": "6232",
+       "acquireId": "FLW",
+       "pricedFrom": "1,086,995",
+       "acquireJde": "6232",
+       "productId": "06232",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+       "loanLimit": 766550,
+       "pricedFromInt": 1086995,
+       "standardMortgageRate": "6.375",
+       "jumboMortgageRate": "6.375",
+       "salesOffice": {
+        "city": "Lakewood Ranch",
+        "state": "FL",
+        "zip": "34202",
+        "street": "17523 Fairwinds Dr",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "salesOfficeOffsite": false,
+        "showHours": true,
+        "byAppointmentOnly": false,
+        "hideDirections": false,
+        "salesOfficePhone": "941-313-7373",
+        "salesPeople": [
+         {
+          "firstName": "Mario",
+          "lastName": "Menoscal"
+         },
+         {
+          "firstName": "Heather",
+          "lastName": "Caserta"
+         }
+        ],
+        "onlineConcierge": [
+         {
+          "firstName": "Kathleen",
+          "lastName": "C.",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Patty",
+          "lastName": "M.",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Arianna",
+          "lastName": "M.",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         "…(4 items total)"
+        ],
+        "hideTour": false,
+        "hideSalesOffice": false,
+        "hideNeighborhoodMap": false,
+        "operatingHours": [
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Monday",
+          "day": "Mon",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Tuesday",
+          "day": "Tue",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Wednesday",
+          "day": "Wed",
+          "appointmentOnly": false
+         },
+         "…(7 items total)"
+        ],
+        "communities": [
+         {
+          "name": "Sanibel Collection",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection"
+         },
+         {
+          "name": "Captiva Collection",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection"
+         }
+        ]
+       },
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "overview": {
+        "title": "New Home Community Captiva Collection in Lakewood Ranch, FL  | Toll Brothers",
+        "shortDescription": "The Captiva Collection features the community's most luxurious homes with gourmet kitchens, spacious living areas, and elegant primary bedroom suites on oversized home sites.",
+        "description": "The Isles at Lakewood Ranch is a luxury community by Toll Brothers featuring single-family homes with exquisite architectural appointments, outstanding included features, and hundreds of options to pe…(359)",
+        "bulletPoints": [
+         {
+          "text": "Home designs ranging from 2,700 to over 4,100 square feet"
+         },
+         {
+          "text": "Enjoy the spectacular Florida lifestyle at The Pier House, the residents' clubhouse featuring a state-of-the-art fitness center, resort-style swimming pool, fishing pier, and dog park"
+         },
+         {
+          "text": "Top-rated public and private schools are within minutes of the community"
+         },
+         "…(5 items total)"
+        ],
+        "overviewGallery": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/004_Toll_12_3_18_Solana_CC_conversion1_1920.jpg",
+          "description": "Gourmet kitchens with oversize center island",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/010_Toll_12_3_18_Solana_CC_conversion1_1920.jpg",
+          "description": "Warm and inviting entry foyers",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/013_Toll_12_3_18_Solana_conversion1_1920.jpg",
+          "description": "Luxurious primary bedroom suites",
+          "representative": false
+         }
+        ],
+        "secondaryImages": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/011_Toll_12_3_18_Solana_conversion1_1920.jpg",
+          "description": "Bright and spacious great rooms",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/RG2_9888_conversion1_1920.jpg",
+          "description": "Enjoy spectacular Florida weather on an expanded lanai",
+          "representative": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/RG2_0031_conversion1_1920.jpg",
+          "description": "Expansive sliding glass doors lead to covered lanai",
+          "representative": false
+         },
+         "…(7 items total)"
+        ],
+        "headshot": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_1920.jpg",
+         "representative": false
+        }
+       },
+       "amenities": {
+        "amenityGroups": [
+         {
+          "name": "",
+          "amenities": [
+           {
+            "name": "Amenity Center",
+            "icon": "Clubhouse.svg"
+           },
+           {
+            "name": "Cabanas",
+            "icon": "Cabana.svg"
+           },
+           {
+            "name": "Dock",
+            "icon": "Dock.svg"
+           },
+           "…(20 items total)"
+          ],
+          "media": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+            "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+            "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+            "description": "The Lounge at The Pier House, the community amenity center",
+            "representative": false
+           },
+           "…(9 items total)"
+          ],
+          "ordinal": 0
+         }
+        ],
+        "title": "Some title",
+        "headshot": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+         "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+         "representative": false
+        }
+       },
+       "schoolInfo": {
+        "schoolDistrict": "Manatee",
+        "highSchool": "Lakewood Ranch High School",
+        "middleSchool": "R Dan Nolan Middle School",
+        "elementarySchool": "Robert E Willis Elementary School"
+       },
+       "logo": {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+        "representative": false
+       },
+       "siteplan": [
+        {
+         "type": "siteplan:svg",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+         "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+         "siteplanId": "691884",
+         "representative": false
+        }
+       ],
+       "gallery": {
+        "title": null,
+        "mediaGroups": [
+         {
+          "name": "",
+          "media": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_1920.jpg",
+            "representative": false
+           },
+           {
+            "type": "video::vimeo",
+            "description": "The Isles at Lakewood Ranch Community Tour",
+            "link": "452335433",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/004_Toll_12_3_18_Solana_CC_conversion1_1920.jpg",
+            "description": "Gourmet kitchens with oversize center island",
+            "representative": false
+           },
+           "…(10 items total)"
+          ]
+         }
+        ],
+        "walkThroughs": [
+         {
+          "name": "Avery Island Colonial",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/285789/exteriors-resized/RG2_9960_CC_conversion1_1920.jpg",
+            "title": "Beautiful outdoor living space with swimming pool, perfect for entertaining",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "moveInDate": "2026-07-02",
+          "address": "17519 Fairwinds Dr",
+          "lotNumber": "4",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/285955",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 3,
+          "minSqft": 2500,
+          "minHalfBath": 1,
+          "masterPlanID": 10799,
+          "pricedFrom": 1498000,
+          "commPlanID": 285955,
+          "stories": "1.0",
+          "minGarage": "3.0",
+          "isFormerDecorated": true,
+          "isQMI": true,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13004,
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "walkthrough::matterport",
+           "url": "https://cdn.tollbrothers.com/models/avery_10799_/matterports/The-Avery-Island-Colonial-12122018_080245_1920.jpg",
+           "link": "HQYuPU2ve1n",
+           "name": "HQYuPU2ve1n",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "communityE1id": "62320000",
+          "communityJdeNum": "6232",
+          "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+          "modelName": "Avery",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Captiva Collection",
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "89",
+            "name": "Resend Community Email"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/285789/exteriors-resized/RG2_9960_CC_conversion1_1920.jpg",
+            "title": "Beautiful outdoor living space with swimming pool, perfect for entertaining",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "Beautiful custom pool, arbor, outdoor kitchen, and 90-degree corner slider so that you can enjoy the Florida lifestyle",
+           "En-suite baths in both secondary bathrooms mean privacy for your guests",
+           "Built-in organization systems in the primary closet and pantry help to maximize your space",
+           "…(4 items total)"
+          ],
+          "description": "Contemporary elegance. The Avery's welcoming covered entry and foyer reveal views of the spacious great room and dining room, both with tray ceilings, and the desirable covered lanai beyond. The well-…(730)",
+          "featureCallouts": [
+           "Pool",
+           "Lake View"
+          ],
+          "onlineDate": "2026-04-29",
+          "featured": true
+         },
+         {
+          "name": "Maxwell",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246149/exteriors-resized/MXWL_CRB_FLT_3CE_6232_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Maxwell",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 4,
+          "minBath": 4,
+          "minSqft": 3597,
+          "minHalfBath": 1,
+          "maxBed": 5,
+          "maxBath": 4,
+          "maxHalfBath": 1,
+          "masterPlanID": 11109,
+          "commPlanID": 246149,
+          "stories": "1.0",
+          "minGarage": "3.0",
+          "maxGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13004,
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "walkthrough",
+           "url": "https://cdn.tollbrothers.com/communities/13004/plans/246149/images-resized/Maxwell-VRT_1920.jpg",
+           "link": "https://www.insidemaps.com/app/walkthrough-v2/?projectId=Yj5yOLnaOf&disableCookie=true",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "communityE1id": "62320000",
+          "communityJdeNum": "6232",
+          "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+          "modelName": "Maxwell",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Captiva Collection",
+          "options": [
+           {
+            "id": "85",
+            "name": "Hide Price"
+           },
+           {
+            "id": "86",
+            "name": "Hide On TB.com"
+           },
+           {
+            "id": "92",
+            "name": "Featured Home Design"
+           },
+           "…(6 items total)"
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246149/exteriors-resized/MXWL_ISCL_FLT_3CE_6232_6_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246149/exteriors-resized/MXWL_CRB_FLT_3CE_6232_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246149/exteriors-resized/MXWL_ANT_FLT_3CE_6232_5_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "The inviting covered entry leads you to the impressive foyer and private office",
+           "The gourmet kitchen features a large center island and direct access to the dining room, great room, and covered lanai",
+           "The primary bedroom suite features a coffered ceiling, spacious walk-in closets, and a luxury primary bathroom which includes dual vanities, a private water closet, and a unique shower and tub room en…(227)"
+          ],
+          "description": "Deluxe contemporary design. The Maxwell's inviting covered entry and foyer flow into the impressive great room with coffered ceiling, and views to the desirable covered lanai beyond. The well-designed…(812)"
+         },
+         {
+          "name": "San Giorgio",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246151/exteriors-resized/SNGO_ISCL_FLT_3SPE_6232_4_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/San-Giorgio",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 3,
+          "minSqft": 3566,
+          "minHalfBath": 1,
+          "maxBed": 4,
+          "maxBath": 4,
+          "maxHalfBath": 1,
+          "masterPlanID": 10352,
+          "commPlanID": 246151,
+          "stories": "1.0",
+          "minGarage": "3.0",
+          "maxGarage": "4.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13004,
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "walkthrough",
+           "url": "https://cdn.tollbrothers.com/communities/13004/plans/246151/images-resized/San-Giorgio-VRT_1920.jpg",
+           "link": "https://www.insidemaps.com/app/walkthrough-v2/?projectId=xGWZo69Hgx&disableCookie=true",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "communityE1id": "62320000",
+          "communityJdeNum": "6232",
+          "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+          "modelName": "San Giorgio",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Captiva Collection",
+          "options": [
+           {
+            "id": "85",
+            "name": "Hide Price"
+           },
+           {
+            "id": "86",
+            "name": "Hide On TB.com"
+           },
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           "…(5 items total)"
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmiCount": 0,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246151/exteriors-resized/SNGO_ANT_FLT_3SPE_6232_4_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246151/exteriors-resized/SNGO_ISCL_FLT_3SPE_6232_4_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246151/exteriors-resized/SNGO_CRB_FLT_3SPE_6232_4_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "This home has an open layout of the gourmet kitchen, dining area, and great room, which is convenient for entertaining",
+           "The massive office boasts ample windows",
+           "The primary bathroom features a centrally-located luxurious tub"
+          ],
+          "description": "The San Giorgio is perfect for expansive living and entertaining. The attractive covered entry and foyer open up to the spacious great room with a coffered ceiling and access to the covered lanai thro…(704)"
+         },
+         "…(7 items total)"
+        ],
+        "externalImages": null
+       },
+       "homes": {
+        "title": "TODO: MAKE TITLE",
+        "models": [
+         {
+          "name": "Maxwell Elite",
+          "city": "Lakewood Ranch",
+          "state": "FL",
+          "zip": "34202",
+          "county": "Manatee",
+          "metroName": "Sarasota, FL",
+          "metroUrl": "/Sarasota-FL",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "metroId": 835,
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ISCL_FLT_3CE_6232_6_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Maxwell-Elite",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 4,
+          "minBath": 5,
+          "minSqft": 4028,
+          "minHalfBath": 1,
+          "maxBed": 4,
+          "maxBath": 5,
+          "maxHalfBath": 1,
+          "masterPlanID": 11110,
+          "pricedFrom": 1162995,
+          "commPlanID": 246150,
+          "stories": "2.0",
+          "minGarage": "3.0",
+          "maxGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13004,
+          "gallery": {
+           "title": null,
+           "mediaGroups": null,
+           "walkThroughs": [
+            {
+             "name": "Maxwell Elite",
+             "isFormerDecorated": false,
+             "isQMI": false,
+             "isComingSoon": false,
+             "isDecoratedModel": false,
+             "isBiddableQMI": false,
+             "isBiddableLot": false,
+             "media": {
+              "type": "walkthrough",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/images-resized/Maxwell-Elite-VRT_1920.jpg",
+              "link": "https://www.insidemaps.com/app/walkthrough-v2/?projectId=aEkAUnWV8O&disableCookie=true",
+              "representative": false
+             },
+             "showMortgageCalculator": false
+            }
+           ],
+           "externalImages": []
+          },
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ISCL_FLT_3CE_6232_6_1920.jpg",
+           "title": "Island Colonial",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "floorplans": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/floorplans-resized/mxwlel4X9-6232-pln-287701-01.svg",
+            "title": "1st floor",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/floorplans-resized/mxwlel4X9-6232-pln-287701-02.svg",
+            "title": "2nd floor",
+            "representative": false
+           }
+          ],
+          "communityE1id": "62320000",
+          "communityJdeNum": "6232",
+          "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+          "modelName": "Maxwell Elite",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Captiva Collection",
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "89",
+            "name": "Resend Community Email"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmis": [
+           {
+            "name": "Maxwell Elite Island Colonial",
+            "city": "Lakewood Ranch",
+            "state": "FL",
+            "zip": "34202",
+            "street": "8029 Nevis Run",
+            "county": "Manatee",
+            "metroName": "Sarasota, FL",
+            "metroUrl": "/Sarasota-FL",
+            "lat": "27.39573",
+            "lon": "-82.35548",
+            "hbqMarketInterest": "FL",
+            "metroId": 835,
+            "communityFilters": [
+             "Award-Winning",
+             "Gated",
+             "Integrated Retail",
+             "…(5 items total)"
+            ],
+            "headShot": {
+             "title": "We need a title here",
+             "media": {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ISCL_FLT_3CE_6232_6_1920.jpg",
+              "title": "Island Colonial",
+              "representative": false
+             }
+            },
+            "homeType": "Single-Family Home",
+            "feature": "TODO: POPULATE FEATURE",
+            "moveInDate": "2027-06-30",
+            "address": "8029 Nevis Run",
+            "lotNumber": "330",
+            "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/287393",
+            "masterBedroomLocation": "1st Floor",
+            "minBed": 4,
+            "minBath": 5,
+            "minSqft": 4097,
+            "minHalfBath": 2,
+            "masterPlanID": 11110,
+            "pricedFrom": 1484000,
+            "commPlanID": 287393,
+            "stories": "2.0",
+            "minGarage": "3.0",
+            "isFormerDecorated": false,
+            "isQMI": true,
+            "isComingSoon": false,
+            "isDecoratedModel": false,
+            "isBiddableQMI": false,
+            "isBiddableLot": false,
+            "hidePlusSignForSqft": false,
+            "communityId": 13004,
+            "gallery": {
+             "title": null,
+             "mediaGroups": [],
+             "walkThroughs": [
+              {
+               "name": "Maxwell Elite Island Colonial",
+               "lat": "27.39",
+               "lon": "-82.36",
+               "hbqMarketInterest": "FL",
+               "headShot": "…(depth)",
+               "homeType": "Single-Family Home",
+               "feature": "TODO: POPULATE FEATURE",
+               "moveInDate": "2027-06-30",
+               "address": "8029 Nevis Run",
+               "lotNumber": "330",
+               "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/287393",
+               "masterBedroomLocation": "1st Floor",
+               "minBed": 4,
+               "minBath": 5,
+               "minSqft": 4097,
+               "minHalfBath": 2,
+               "masterPlanID": 11110,
+               "pricedFrom": 1484000,
+               "commPlanID": 287393,
+               "stories": "2.0",
+               "minGarage": "3.0",
+               "isFormerDecorated": false,
+               "isQMI": true,
+               "isComingSoon": false,
+               "isDecoratedModel": false,
+               "isBiddableQMI": false,
+               "isBiddableLot": false,
+               "hidePlusSignForSqft": false,
+               "communityId": 13004,
+               "loanLimit": 766550,
+               "standardMortgageRate": "6.375",
+               "jumboMortgageRate": "6.375",
+               "media": "…(depth)",
+               "logo": "…(depth)",
+               "communityE1id": "62320000",
+               "communityJdeNum": "6232",
+               "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+               "modelName": "Maxwell Elite",
+               "showMortgageCalculator": false,
+               "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+               "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+               "collectionName": "Captiva Collection",
+               "options": [
+                "…(depth)",
+                "…(depth)",
+                "…(depth)"
+               ],
+               "communityTypes": [
+                "Luxury Home"
+               ],
+               "cpRegion": "FL-TAMPA SARASOTA",
+               "masterCommunityId": 765,
+               "masterCommunityName": "The Isles at Lakewood Ranch",
+               "dacID": "C14",
+               "elevations": [
+                "…(depth)"
+               ],
+               "modelBullets": [
+                "Last Maxwell Elite at The Isles at Lakewood Ranch with Design Studio personalization still available",
+                "90-degree corner slider creating a seamless transition to the covered lanai with 12' ceilings",
+                "Alternate primary bath featuring a frameless glass-enclosed shower, soaking tub, dual vanities, and private water closet",
+                "…(4 items total)"
+               ],
+               "dacName": "Classic Farmhouse Refined",
+               "description": "Deluxe modern family living. The Maxwell Elite's spacious covered entry and foyer reveal the expansive great room and casual dining area with coffered ceilings, and a view of the desirable covered lan…(888)",
+               "featureCallouts": [
+                "Private Nature Views",
+                "First-Floor Bedroom"
+               ],
+               "onlineDate": "2026-07-02",
+               "designReadyOptions": [
+                "…(depth)"
+               ],
+               "featured": false
+              }
+             ],
+             "externalImages": []
+            },
+            "loanLimit": 766550,
+            "standardMortgageRate": "6.375",
+            "jumboMortgageRate": "6.375",
+            "logo": {
+             "type": "image",
+             "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+             "representative": false
+            },
+            "floorplans": [
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/floorplans-resized/mxwlel4X9-6232-pln-287701-01.svg",
+              "title": "1st floor",
+              "representative": false
+             },
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/floorplans-resized/mxwlel4X9-6232-pln-287701-02.svg",
+              "title": "2nd floor",
+              "representative": false
+             }
+            ],
+            "externalFloorplans": [],
+            "communityE1id": "62320000",
+            "communityJdeNum": "6232",
+            "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+            "modelName": "Maxwell Elite",
+            "siteplan": [
+             {
+              "type": "siteplan:svg",
+              "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+              "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+              "siteplanId": "691884",
+              "representative": false
+             }
+            ],
+            "showMortgageCalculator": false,
+            "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+            "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+            "collectionName": "Captiva Collection",
+            "downloadables": [],
+            "designerAppointed": [],
+            "events": [
+             {
+              "headline": {
+               "text": "Learn More About\nFinancing Offers\nAvailable Now",
+               "link": "/lowest"
+              },
+              "byline": {},
+              "startDate": "2025-03-06",
+              "eventType": "bannerEventISPT",
+              "eventID": 4894
+             },
+             {
+              "headline": {
+               "text": "Up to $15,000 to Use Your Way on Select Homes",
+               "link": "/nse"
+              },
+              "cta": {
+               "text": "Get Started"
+              },
+              "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_vertical_2601.svg",
+              "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_horizontal_2601.svg",
+              "formName": "NSE_2604",
+              "formCallback": "https://hello.tollbrothers.com/l/402642/2026-06-23/2cwjkh2",
+              "eventName": "National Sales Event",
+              "dateText": "Jun 27-Jul 12",
+              "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 6/27/2026 and 7/12/2026, sign an agreement of sale, and close on the home. Offers, incentive…(784)",
+              "paragraphs": [
+               "…(depth)"
+              ],
+              "color": "0070cd",
+              "startDate": "2026-06-27",
+              "endDate": "2026-07-19",
+              "eventType": "nationalEvent",
+              "template": {
+               "text": "NSE"
+              },
+              "parentEventId": 9561,
+              "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/tb_nse_autoresponder_2606.jpg",
+              "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_landing_page_2601.svg",
+              "eventID": 9564
+             },
+             {
+              "headline": {
+               "text": "Honoring the Past. Looking to the Future.\nHappy 250th Birthday, America!"
+              },
+              "startDate": "2026-06-27",
+              "eventType": "bannerEventISPT",
+              "eventID": 9825
+             },
+             "…(4 items total)"
+            ],
+            "options": [
+             {
+              "id": "32",
+              "name": "Show Directions on Future Community"
+             },
+             {
+              "id": "89",
+              "name": "Resend Community Email"
+             },
+             {
+              "id": "93",
+              "name": "DYOH V2"
+             }
+            ],
+            "communityTypes": [
+             "Luxury Home"
+            ],
+            "cpRegion": "FL-TAMPA SARASOTA",
+            "masterCommunityId": 765,
+            "masterCommunityName": "The Isles at Lakewood Ranch",
+            "dacID": "C14",
+            "qmis": [],
+            "elevations": [
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ISCL_FLT_3CE_6232_6_1920.jpg",
+              "title": "Island Colonial",
+              "representative": false
+             }
+            ],
+            "modelBullets": [
+             "Last Maxwell Elite at The Isles at Lakewood Ranch with Design Studio personalization still available",
+             "90-degree corner slider creating a seamless transition to the covered lanai with 12' ceilings",
+             "Alternate primary bath featuring a frameless glass-enclosed shower, soaking tub, dual vanities, and private water closet",
+             "…(4 items total)"
+            ],
+            "subModels": [],
+            "dacName": "Classic Farmhouse Refined",
+            "description": "Deluxe modern family living. The Maxwell Elite's spacious covered entry and foyer reveal the expansive great room and casual dining area with coffered ceilings, and a view of the desirable covered lan…(888)",
+            "featureCallouts": [
+             "Private Nature Views",
+             "First-Floor Bedroom"
+            ],
+            "onlineDate": "2026-07-02",
+            "designReadyOptions": [
+             {
+              "date": "2026-10-30",
+              "options": [
+               "Cabinetry"
+              ]
+             }
+            ],
+            "featured": false,
+            "salesOffice": {
+             "city": "Lakewood Ranch",
+             "state": "FL",
+             "zip": "34202",
+             "street": "17523 Fairwinds Dr",
+             "lat": "27.39",
+             "lon": "-82.36",
+             "salesOfficeOffsite": false,
+             "showHours": true,
+             "byAppointmentOnly": false,
+             "hideDirections": false,
+             "salesOfficePhone": "941-313-7373",
+             "salesPeople": [
+              {
+               "firstName": "Mario",
+               "lastName": "Menoscal"
+              },
+              {
+               "firstName": "Heather",
+               "lastName": "Caserta"
+              }
+             ],
+             "onlineConcierge": [
+              {
+               "firstName": "Kathleen",
+               "lastName": "C.",
+               "email": "FLOnlineSales@tollbrothers.com",
+               "phone": "855-600-8655",
+               "sms": "855-600-8655"
+              },
+              {
+               "firstName": "Patty",
+               "lastName": "M.",
+               "email": "FLOnlineSales@tollbrothers.com",
+               "phone": "855-600-8655",
+               "sms": "855-600-8655"
+              },
+              {
+               "firstName": "Arianna",
+               "lastName": "M.",
+               "email": "FLOnlineSales@tollbrothers.com",
+               "phone": "855-600-8655",
+               "sms": "855-600-8655"
+              },
+              "…(4 items total)"
+             ],
+             "hideTour": false,
+             "hideSalesOffice": false,
+             "hideNeighborhoodMap": false,
+             "operatingHours": [
+              {
+               "timeString": "10 am to 6 pm",
+               "fullDay": "Monday",
+               "day": "Mon",
+               "appointmentOnly": false
+              },
+              {
+               "timeString": "10 am to 6 pm",
+               "fullDay": "Tuesday",
+               "day": "Tue",
+               "appointmentOnly": false
+              },
+              {
+               "timeString": "10 am to 6 pm",
+               "fullDay": "Wednesday",
+               "day": "Wed",
+               "appointmentOnly": false
+              },
+              "…(7 items total)"
+             ]
+            },
+            "acquireId": "FLW",
+            "acquireJde": "6232",
+            "amenities": {
+             "amenityGroups": [
+              {
+               "name": "",
+               "amenities": [
+                "…(depth)",
+                "…(depth)",
+                "…(depth)",
+                "…(20 items total)"
+               ],
+               "media": [
+                "…(depth)",
+                "…(depth)",
+                "…(depth)",
+                "…(9 items total)"
+               ],
+               "ordinal": 0
+              }
+             ],
+             "title": "Some title",
+             "headshot": {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+              "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+              "representative": false
+             }
+            }
+           }
+          ],
+          "qmiCount": 1,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ISCL_FLT_3CE_6232_6_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_CRB_FLT_3CE_6232_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ANT_FLT_3CE_6232_4_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "The inviting covered entry leads you to the impressive foyer and private office. Stairs lead to a spacious finished loft with bath",
+           "The gourmet kitchen features a large center island and direct access to the dining room, great room, and covered lanai",
+           "The primary bedroom suite features a coffered ceiling, spacious walk-in closets, and a luxury primary bathroom which includes dual vanities, a private water closet, and a unique shower and tub room en…(227)"
+          ],
+          "description": "Deluxe modern family living. The Maxwell Elite's spacious covered entry and foyer reveal the expansive great room and casual dining area with coffered ceilings, and a view of the desirable covered lan…(888)",
+          "onlineDate": "2020-04-30",
+          "pricedFromWithQMI": 1162995
+         },
+         {
+          "name": "Aragon",
+          "city": "Lakewood Ranch",
+          "state": "FL",
+          "zip": "34202",
+          "county": "Manatee",
+          "metroName": "Sarasota, FL",
+          "metroUrl": "/Sarasota-FL",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "metroId": 835,
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246300/exteriors-resized/ARGN_ANT_FLT_3CE_6232_5_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Aragon",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 3,
+          "minBath": 3,
+          "minSqft": 3202,
+          "minHalfBath": 1,
+          "maxBed": 5,
+          "maxBath": 4,
+          "maxHalfBath": 1,
+          "masterPlanID": 519,
+          "pricedFrom": 1086995,
+          "commPlanID": 246300,
+          "stories": "1.0",
+          "minGarage": "3.0",
+          "maxGarage": "4.0",
+          "isFormerDecorated": false,
+          "isQMI": false,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13004,
+          "gallery": {
+           "title": null,
+           "mediaGroups": null,
+           "walkThroughs": [],
+           "externalImages": []
+          },
+          "loanLimit": 766550,
+          "standardMortgageRate": "6.375",
+          "jumboMortgageRate": "6.375",
+          "media": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/13004/plans/246300/exteriors-resized/ARGN_ANT_FLT_3CE_6232_5_1920.jpg",
+           "title": "Antilles",
+           "representative": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false
+          },
+          "floorplans": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246300/floorplans-resized/argn519-6232-pln-282707-01.svg",
+            "representative": false
+           }
+          ],
+          "communityE1id": "62320000",
+          "communityJdeNum": "6232",
+          "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+          "modelName": "Aragon",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Captiva Collection",
+          "options": [
+           {
+            "id": "92",
+            "name": "Featured Home Design"
+           },
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "89",
+            "name": "Resend Community Email"
+           },
+           "…(4 items total)"
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "qmis": [
+           {
+            "name": "Aragon Island Colonial",
+            "city": "Lakewood Ranch",
+            "state": "FL",
+            "zip": "34202",
+            "street": "8065 Nevis Run",
+            "county": "Manatee",
+            "metroName": "Sarasota, FL",
+            "metroUrl": "/Sarasota-FL",
+            "lat": "27.393967510520312",
+            "lon": "-82.355142063816",
+            "hbqMarketInterest": "FL",
+            "metroId": 835,
+            "communityFilters": [
+             "Award-Winning",
+             "Gated",
+             "Integrated Retail",
+             "…(5 items total)"
+            ],
+            "headShot": {
+             "title": "We need a title here",
+             "media": {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/279573/exteriors-resized/TheIslesatLakewoodRanch-CaptivaCollection_Aargon_337_OUTDOOR_LIVING_1_1920.jpg",
+              "description": "Enjoy the Florida sun in your private screened-in pool and spa",
+              "representative": false
+             }
+            },
+            "homeType": "Single-Family Home",
+            "feature": "TODO: POPULATE FEATURE",
+            "moveInDate": "2026-07-02",
+            "address": "8065 Nevis Run",
+            "lotNumber": "337",
+            "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/MLS-A4661594",
+            "masterBedroomLocation": "1st Floor",
+            "minBed": 3,
+            "minBath": 3,
+            "minSqft": 3211,
+            "minHalfBath": 1,
+            "masterPlanID": 519,
+            "pricedFrom": 1399000,
+            "commPlanID": 279573,
+            "stories": "1.0",
+            "minGarage": "3.0",
+            "isFormerDecorated": false,
+            "isQMI": true,
+            "isComingSoon": false,
+            "isDecoratedModel": false,
+            "isBiddableQMI": false,
+            "isBiddableLot": false,
+            "hidePlusSignForSqft": false,
+            "communityId": 13004,
+            "gallery": {
+             "title": null,
+             "mediaGroups": [
+              {
+               "name": "",
+               "media": [
+                "…(depth)",
+                "…(depth)",
+                "…(depth)",
+                "…(7 items total)"
+               ]
+              }
+             ],
+             "walkThroughs": [],
+             "externalImages": []
+            },
+            "loanLimit": 766550,
+            "standardMortgageRate": "6.375",
+            "jumboMortgageRate": "6.375",
+            "logo": {
+             "type": "image",
+             "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+             "representative": false
+            },
+            "floorplans": [
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/279573/floorplans-resized/4512526-FL-IslesLakewood-337-Aragon-1.svg",
+              "description": "Floor Plan",
+              "title": "Floor Plan",
+              "representative": false
+             }
+            ],
+            "externalFloorplans": [],
+            "communityE1id": "62320000",
+            "communityJdeNum": "6232",
+            "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+            "modelName": "Aragon",
+            "siteplan": [
+             {
+              "type": "siteplan:svg",
+              "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+              "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+              "siteplanId": "691884",
+              "representative": false
+             }
+            ],
+            "mls": "A4661594",
+            "showMortgageCalculator": false,
+            "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+            "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+            "collectionName": "Captiva Collection",
+            "downloadables": [
+             {
+              "type": "pdf::designerAppointed",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/279573/daf-original/4512526_337_-_Aragon_Island_Colonial_with_pool.pdf",
+              "representative": false
+             }
+            ],
+            "designerAppointed": [
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/279573/daf-resized/4512526_337_-_Aragon_Island_Colonial_with_pool_page1_1800.jpg",
+              "representative": false
+             },
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/279573/daf-resized/4512526_337_-_Aragon_Island_Colonial_with_pool_page2_1800.jpg",
+              "representative": false
+             },
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/279573/daf-resized/4512526_337_-_Aragon_Island_Colonial_with_pool_page3_1800.jpg",
+              "representative": false
+             },
+             "…(14 items total)"
+            ],
+            "events": [
+             {
+              "headline": {
+               "text": "Learn More About\nFinancing Offers\nAvailable Now",
+               "link": "/lowest"
+              },
+              "byline": {},
+              "startDate": "2025-03-06",
+              "eventType": "bannerEventISPT",
+              "eventID": 4894
+             },
+             {
+              "headline": {
+               "text": "Up to $15,000 to Use Your Way on Select Homes",
+               "link": "/nse"
+              },
+              "cta": {
+               "text": "Get Started"
+              },
+              "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_vertical_2601.svg",
+              "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_horizontal_2601.svg",
+              "formName": "NSE_2604",
+              "formCallback": "https://hello.tollbrothers.com/l/402642/2026-06-23/2cwjkh2",
+              "eventName": "National Sales Event",
+              "dateText": "Jun 27-Jul 12",
+              "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 6/27/2026 and 7/12/2026, sign an agreement of sale, and close on the home. Offers, incentive…(784)",
+              "paragraphs": [
+               "…(depth)"
+              ],
+              "color": "0070cd",
+              "startDate": "2026-06-27",
+              "endDate": "2026-07-19",
+              "eventType": "nationalEvent",
+              "template": {
+               "text": "NSE"
+              },
+              "parentEventId": 9561,
+              "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/tb_nse_autoresponder_2606.jpg",
+              "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_landing_page_2601.svg",
+              "eventID": 9564
+             },
+             {
+              "headline": {
+               "text": "Honoring the Past. Looking to the Future.\nHappy 250th Birthday, America!"
+              },
+              "startDate": "2026-06-27",
+              "eventType": "bannerEventISPT",
+              "eventID": 9825
+             },
+             "…(4 items total)"
+            ],
+            "options": [
+             {
+              "id": "32",
+              "name": "Show Directions on Future Community"
+             },
+             {
+              "id": "89",
+              "name": "Resend Community Email"
+             },
+             {
+              "id": "93",
+              "name": "DYOH V2"
+             }
+            ],
+            "tour": {
+             "type": "tour::selfguided",
+             "link": "https://tollbrothers.utourhomes.com/visitor?tourPropertyId=d7d82659-0d2b-497f-ba3b-0d2575e9477a&lang=en",
+             "representative": false
+            },
+            "communityTypes": [
+             "Luxury Home"
+            ],
+            "cpRegion": "FL-TAMPA SARASOTA",
+            "masterCommunityId": 765,
+            "masterCommunityName": "The Isles at Lakewood Ranch",
+            "dacID": "C23",
+            "qmis": [],
+            "elevations": [
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13004/plans/279573/exteriors-resized/ARGN_ISCL_FLT_3CE_6232_6_copy_1920.jpg",
+              "title": "Island Colonial",
+              "representative": false
+             }
+            ],
+            "modelBullets": [
+             "Private pool and covered outdoor space perfect for relaxing or entertaining year-round",
+             "Luxurious primary suite with a spa-inspired bathroom and generous walk-in closet",
+             "Versatile flex room offers a study or office space",
+             "…(4 items total)"
+            ],
+            "subModels": [],
+            "dacName": "Cool Contemporary Refined",
+            "description": "The Aragon Island Colonial is a beautifully crafted single-story home featuring 3 spacious bedrooms, 3.5 baths, a generous flex room, and a private pool—designed for comfort, style, and effortless liv…(611)",
+            "featureCallouts": [
+             "Pool With Screen Enclosure",
+             "Corner Home Site"
+            ],
+            "onlineDate": "2025-05-31",
+            "designReadyOptions": [],
+            "featured": true,
+            "salesOffice": {
+             "city": "Lakewood Ranch",
+             "state": "FL",
+             "zip": "34202",
+             "street": "17523 Fairwinds Dr",
+             "lat": "27.39",
+             "lon": "-82.36",
+             "salesOfficeOffsite": false,
+             "showHours": true,
+             "byAppointmentOnly": false,
+             "hideDirections": false,
+             "salesOfficePhone": "941-313-7373",
+             "salesPeople": [
+              {
+               "firstName": "Mario",
+               "lastName": "Menoscal"
+              },
+              {
+               "firstName": "Heather",
+               "lastName": "Caserta"
+              }
+             ],
+             "onlineConcierge": [
+              {
+               "firstName": "Kathleen",
+               "lastName": "C.",
+               "email": "FLOnlineSales@tollbrothers.com",
+               "phone": "855-600-8655",
+               "sms": "855-600-8655"
+              },
+              {
+               "firstName": "Patty",
+               "lastName": "M.",
+               "email": "FLOnlineSales@tollbrothers.com",
+               "phone": "855-600-8655",
+               "sms": "855-600-8655"
+              },
+              {
+               "firstName": "Arianna",
+               "lastName": "M.",
+               "email": "FLOnlineSales@tollbrothers.com",
+               "phone": "855-600-8655",
+               "sms": "855-600-8655"
+              },
+              "…(4 items total)"
+             ],
+             "hideTour": false,
+             "hideSalesOffice": false,
+             "hideNeighborhoodMap": false,
+             "operatingHours": [
+              {
+               "timeString": "10 am to 6 pm",
+               "fullDay": "Monday",
+               "day": "Mon",
+               "appointmentOnly": false
+              },
+              {
+               "timeString": "10 am to 6 pm",
+               "fullDay": "Tuesday",
+               "day": "Tue",
+               "appointmentOnly": false
+              },
+              {
+               "timeString": "10 am to 6 pm",
+               "fullDay": "Wednesday",
+               "day": "Wed",
+               "appointmentOnly": false
+              },
+              "…(7 items total)"
+             ]
+            },
+            "acquireId": "FLW",
+            "acquireJde": "6232",
+            "amenities": {
+             "amenityGroups": [
+              {
+               "name": "",
+               "amenities": [
+                "…(depth)",
+                "…(depth)",
+                "…(depth)",
+                "…(20 items total)"
+               ],
+               "media": [
+                "…(depth)",
+                "…(depth)",
+                "…(depth)",
+                "…(9 items total)"
+               ],
+               "ordinal": 0
+              }
+             ],
+             "title": "Some title",
+             "headshot": {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+              "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+              "representative": false
+             }
+            }
+           }
+          ],
+          "qmiCount": 1,
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246300/exteriors-resized/ARGN_ANT_FLT_3CE_6232_5_1920.jpg",
+            "title": "Antilles",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246300/exteriors-resized/ARGN_CRB_FLT_3CE_6232_5_1920.jpg",
+            "title": "Caribbean",
+            "representative": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13004/plans/246300/exteriors-resized/ARGN_ISCL_FLT_3CE_6232_6_1920.jpg",
+            "title": "Island Plains",
+            "representative": false
+           }
+          ],
+          "modelBullets": [
+           "A well-lit and octagonal-shaped dining room features an elegant coffered ceiling and an art niche",
+           "The full cabana bath is conveniently accessible from the third bedroom and the covered lanai",
+           "The primary bedroom suite with grand double-door entry and private access to the covered lanai presents spacious walk-in closets and a luxurious bathroom with dual vanities, a private water closet, an…(224)"
+          ],
+          "description": "This exceptional two-story design features an inviting covered entry that opens to an elegant foyer, a charming formal dining room, and a spacious great room with coffered ceiling and pocketing slidin…(547)",
+          "pricedFromWithQMI": 1086995
+         },
+         {
+          "isFormerDecorated": false,
+          "isQMI": true,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "communityId": 13004,
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+          "qmis": [
+           {
+            "name": "Avery Island Colonial",
+            "city": "Lakewood Ranch",
+            "state": "FL",
+            "zip": "34202",
+            "street": "17519 Fairwinds Dr",
+            "county": "Manatee",
+            "metroName": "Sarasota, FL",
+            "metroUrl": "/Sarasota-FL",
+            "lat": "27.38947",
+            "lon": "-82.36168",
+            "hbqMarketInterest": "FL",
+            "metroId": 835,
+            "headShot": {
+             "title": "We need a title here",
+             "media": {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13003/plans/285789/exteriors-resized/RG2_9960_CC_conversion1_1920.jpg",
+              "title": "Beautiful outdoor living space with swimming pool, perfect for entertaining",
+              "representative": false
+             }
+            },
+            "homeType": "Single-Family Home",
+            "feature": "TODO: POPULATE FEATURE",
+            "moveInDate": "2026-07-02",
+            "address": "17519 Fairwinds Dr",
+            "lotNumber": "4",
+            "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/285955",
+            "masterBedroomLocation": "1st Floor",
+            "minBed": 3,
+            "minBath": 3,
+            "minSqft": 2500,
+            "minHalfBath": 1,
+            "masterPlanID": 10799,
+            "pricedFrom": 1498000,
+            "commPlanID": 285955,
+            "stories": "1.0",
+            "minGarage": "3.0",
+            "isFormerDecorated": true,
+            "isQMI": true,
+            "isComingSoon": false,
+            "isDecoratedModel": false,
+            "isBiddableQMI": false,
+            "isBiddableLot": false,
+            "hidePlusSignForSqft": false,
+            "communityId": 13004,
+            "gallery": {
+             "title": null,
+             "mediaGroups": null,
+             "walkThroughs": [
+              {
+               "name": "Avery Island Colonial",
+               "lotNumber": "4",
+               "isFormerDecorated": false,
+               "isQMI": false,
+               "isComingSoon": false,
+               "isDecoratedModel": false,
+               "isBiddableQMI": false,
+               "isBiddableLot": false,
+               "media": "…(depth)",
+               "showMortgageCalculator": false
+              }
+             ],
+             "externalImages": []
+            },
+            "loanLimit": 766550,
+            "standardMortgageRate": "6.375",
+            "jumboMortgageRate": "6.375",
+            "media": {
+             "type": "image",
+             "url": "https://cdn.tollbrothers.com/communities/13003/plans/285789/exteriors-resized/RG2_9960_CC_conversion1_1920.jpg",
+             "title": "Beautiful outdoor living space with swimming pool, perfect for entertaining",
+             "representative": false
+            },
+            "logo": {
+             "type": "image",
+             "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+             "representative": false
+            },
+            "floorplans": [
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/models/_10799_/floorplans-original/aver-mast-pln-319704.svg",
+              "description": "Floor Plan",
+              "title": "Floor Plan",
+              "representative": false
+             }
+            ],
+            "communityE1id": "62320000",
+            "communityJdeNum": "6232",
+            "communityName": "The Isles at Lakewood Ranch - Captiva Collection",
+            "modelName": "Avery",
+            "showMortgageCalculator": false,
+            "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+            "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+            "collectionName": "Captiva Collection",
+            "options": [
+             {
+              "id": "32",
+              "name": "Show Directions on Future Community"
+             },
+             {
+              "id": "89",
+              "name": "Resend Community Email"
+             },
+             {
+              "id": "93",
+              "name": "DYOH V2"
+             }
+            ],
+            "communityTypes": [
+             "Luxury Home"
+            ],
+            "cpRegion": "FL-TAMPA SARASOTA",
+            "masterCommunityId": 765,
+            "masterCommunityName": "The Isles at Lakewood Ranch",
+            "elevations": [
+             {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/13003/plans/285789/exteriors-resized/RG2_9960_CC_conversion1_1920.jpg",
+              "title": "Beautiful outdoor living space with swimming pool, perfect for entertaining",
+              "representative": false
+             }
+            ],
+            "modelBullets": [
+             "Beautiful custom pool, arbor, outdoor kitchen, and 90-degree corner slider so that you can enjoy the Florida lifestyle",
+             "En-suite baths in both secondary bathrooms mean privacy for your guests",
+             "Built-in organization systems in the primary closet and pantry help to maximize your space",
+             "…(4 items total)"
+            ],
+            "description": "Contemporary elegance. The Avery's welcoming covered entry and foyer reveal views of the spacious great room and dining room, both with tray ceilings, and the desirable covered lanai beyond. The well-…(730)",
+            "featureCallouts": [
+             "Pool",
+             "Lake View"
+            ],
+            "onlineDate": "2026-04-29",
+            "featured": true
+           }
+          ]
+         }
+        ]
+       },
+       "headShot": {
+        "title": "The Isles at Lakewood Ranch - Captiva Collection",
+        "media": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_1920.jpg",
+         "representative": false
+        }
+       },
+       "badgeText": "Model Home For Sale",
+       "isFuture": false,
+       "hasNeighborhoodMap": true,
+       "hideComingSoon": false,
+       "badgeLink": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/285955",
+       "cleanName": "Captiva Collection",
+       "metaDescription": "The Captiva Collection in Lakewood Ranch, FL is a gated new home community that offers exquisite oversized homes. Schedule an appointment today.",
+       "rangeBath": "3-5",
+       "rangeBed": "3-5",
+       "rangeGarage": "3.0-4.0",
+       "rangeSqft": "2500-4097",
+       "rangeHalfBath": "1-2",
+       "showMortgageCalculator": false,
+       "availableLots": 0,
+       "soldLots": 10,
+       "notReleasedLots": 3,
+       "reservedLots": 0,
+       "closedLots": 170,
+       "qmiSitePlanLots": 3,
+       "offline": false,
+       "socialMedia": [
+        {
+         "type": "socialmeadia::facebook",
+         "link": "https://www.facebook.com/TollFLW",
+         "representative": false
+        }
+       ],
+       "events": [
+        {
+         "headline": {
+          "text": "Learn More About\nFinancing Offers\nAvailable Now",
+          "link": "/lowest"
+         },
+         "byline": {},
+         "startDate": "2025-03-06",
+         "eventType": "bannerEventISPT",
+         "eventID": 4894
+        },
+        {
+         "headline": {
+          "text": "Up to $15,000 to Use Your Way on Select Homes",
+          "link": "/nse"
+         },
+         "cta": {
+          "text": "Get Started"
+         },
+         "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_vertical_2601.svg",
+         "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_horizontal_2601.svg",
+         "formName": "NSE_2604",
+         "formCallback": "https://hello.tollbrothers.com/l/402642/2026-06-23/2cwjkh2",
+         "eventName": "National Sales Event",
+         "dateText": "Jun 27-Jul 12",
+         "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 6/27/2026 and 7/12/2026, sign an agreement of sale, and close on the home. Offers, incentive…(784)",
+         "paragraphs": [
+          {
+           "text": "June 27-July 12"
+          }
+         ],
+         "color": "0070cd",
+         "startDate": "2026-06-27",
+         "endDate": "2026-07-19",
+         "eventType": "nationalEvent",
+         "template": {
+          "text": "NSE"
+         },
+         "parentEventId": 9561,
+         "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/tb_nse_autoresponder_2606.jpg",
+         "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/01/tb_nse_landing_page_2601.svg",
+         "eventID": 9564
+        },
+        {
+         "headline": {
+          "text": "Honoring the Past. Looking to the Future.\nHappy 250th Birthday, America!"
+         },
+         "startDate": "2026-06-27",
+         "eventType": "bannerEventISPT",
+         "eventID": 9825
+        },
+        "…(4 items total)"
+       ],
+       "options": [
+        {
+         "id": "32",
+         "name": "Show Directions on Future Community"
+        },
+        {
+         "id": "89",
+         "name": "Resend Community Email"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "tour": {
+        "type": "tour::selfguided",
+        "link": "https://tollbrothers.utourhomes.com/visitor?community=5668f5b4-749f-455d-aa7a-0aab7160ef05&rootUrl=community&lang=en",
+        "representative": false
+       },
+       "masterCommunityName": "The Isles at Lakewood Ranch",
+       "hasSitePlan": true,
+       "designStudio": {
+        "name": "FL - Tampa",
+        "designStudioNbr": "45",
+        "url": "https://www.tollbrothersdesignstudio.com/studio-locations/fl/tampa-sarasota"
+       },
+       "activeDate": "2018-10-25",
+       "onlineDate": "2018-09-13"
+      }
+     ],
+     "showCollectionSalesOffices": false,
+     "neighborhoodMapCommunityId": 13003,
+     "isMaster": true
+    },
+    "modelComponent": null,
+    "eventComponent": null
+   },
+   "projectId": "62300000",
+   "robots": true,
+   "isProductPage": true,
+   "disableChat": false
+  },
+  "__N_SSP": true
+ },
+ "page": "/luxury-homes-for-sale/[[...product]]",
+ "query": {
+  "product": [
+   "Florida",
+   "The-Isles-at-Lakewood-Ranch"
+  ]
+ },
+ "buildId": "mwT7T32oD3juLeQ7_WBLV",
+ "runtimeConfig": {
+  "services": {
+   "okta": [
+    "/my-favorites",
+    "/luxury-homes-for-sale/[[...product]]"
+   ],
+   "mapkit": [
+    "/[[...slug]]",
+    "/details",
+    "/luxury-homes/[[...searchSlug]]",
+    "…(5 items total)"
+   ]
+  }
+ },
+ "isFallback": false,
+ "isExperimentalCompile": false,
+ "dynamicIds": [
+  33188,
+  59426
+ ],
+ "gssp": true,
+ "scriptLoader": []
+}
