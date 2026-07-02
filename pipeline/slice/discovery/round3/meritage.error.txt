@@ -1,0 +1,5 @@
+Error: series page: 403
+    at file:///home/runner/work/life-at-lakewood-form-submission-bot/life-at-lakewood-form-submission-bot/pipeline/slice/discover-round3.mjs:136:34
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async section (file:///home/runner/work/life-at-lakewood-form-submission-bot/life-at-lakewood-form-submission-bot/pipeline/slice/discover-round3.mjs:60:5)
+    at async file:///home/runner/work/life-at-lakewood-form-submission-bot/life-at-lakewood-form-submission-bot/pipeline/slice/discover-round3.mjs:134:1

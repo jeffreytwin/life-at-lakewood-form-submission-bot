@@ -1,0 +1,126 @@
+{
+ "mattamy": [
+  {
+   "slug": "brightmore",
+   "status": 200,
+   "jssBytes": 275077
+  },
+  {
+   "slug": "lakespur",
+   "status": 200,
+   "jssBytes": 229528
+  }
+ ],
+ "mihomes": {
+  "ids": 0,
+  "probes": [
+   {
+    "url": ".mihomes.com/api/v1/community/hometypes/",
+    "status": 404,
+    "json": true
+   }
+  ]
+ },
+ "taylorMorrison": [
+  {
+   "slug": "firethorn-floorplans",
+   "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans",
+   "status": 200,
+   "jsonScripts": [],
+   "text": {
+    "chars": 40,
+    "prices": 0,
+    "sqfts": 0
+   }
+  },
+  {
+   "slug": "firethorn-plan-ambrosia",
+   "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/ambrosia",
+   "status": 200,
+   "jsonScripts": [],
+   "text": {
+    "chars": 47,
+    "prices": 0,
+    "sqfts": 0
+   }
+  },
+  {
+   "slug": "firethorn-qmi",
+   "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/available-homes",
+   "status": 200,
+   "jsonScripts": [],
+   "text": {
+    "chars": 55,
+    "prices": 0,
+    "sqfts": 0
+   }
+  }
+ ],
+ "drb": [
+  {
+   "tab": "overview",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0
+  },
+  {
+   "tab": "floorplans",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0
+  },
+  {
+   "tab": "floor-plans",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0
+  },
+  {
+   "tab": "homes",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0
+  },
+  {
+   "tab": "quick-move-ins",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0
+  },
+  {
+   "tab": "available-homes",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0
+  }
+ ],
+ "leeWetherington": [
+  {
+   "url": "https://leewetherington.com/",
+   "status": 200,
+   "bytes": 114,
+   "redirectsTo": "https://leewetherington.com/lander",
+   "followStatus": 200
+  },
+  {
+   "url": "https://www.leewetheringtonhomes.com/",
+   "status": 200,
+   "bytes": 159014
+  },
+  {
+   "url": "https://lwhomes.net/",
+   "status": 404,
+   "bytes": 3312
+  }
+ ],
+ "nealSignature": [
+  {
+   "url": "mmunities.com/communities/waterbury-park",
+   "status": 404
+  },
+  {
+   "url": "alcommunities.com/communities/the-alcove",
+   "status": 404
+  }
+ ]
+}

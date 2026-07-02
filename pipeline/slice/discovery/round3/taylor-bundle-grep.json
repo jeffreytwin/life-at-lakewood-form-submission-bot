@@ -1,0 +1,302 @@
+[
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/preApp.bundle.js?v=07022026030000",
+  "hit": "/api/sitecore/",
+  "context": "intsMock.registerEndpoint(e,t)},setPostData:function(e,t,n){\"undefined\"!=typeof postMock&&postMock.registerMockResponse(e,t,n)},fetchData:function(e,t){var n,r=new s;return a.a.extend(r,e),(!r.url||r.url.length<=0)&&(n=window.location.origin,r.url=\"\".concat(n,\"/api/sitecore/\").concat(r.controller,\"/\").concat(r.action)),\"undefined\"!=typeof postMock&&null!==r.key?postMock.handleMockPost(null,e,t):i.a.get(r.url,c({},t))}};void 0===r.a.scDataStore&&(r.a.scDataStore=o);t.a=r.a.scDataStore},1:function(e,qa,t){\"use strict\";t.r(qa),func"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "https://www.google.com/maps/dir/?api=1&origin&destination=",
+  "context": ";n(window).width()<=767&&(e=\"\".concat(e.address1,\", \").concat(e.address2?e.address2+\", \":\"\").concat(e.city,\", \").concat(e.state,\", \").concat(e.zipCode),t=encodeURIComponent(e),this.getPreferredMap().then(function(e){switch(e){case\"google\":window.location.href=\"https://www.google.com/maps/dir/?api=1&origin&destination=\".concat(t);break;case\"apple\":window.location.href=\"http://maps.apple.com/?saddr&daddr=\".concat(t);break;case\"waze\":window.location.href=\"https://waze.com/ul?q=\".concat(t,\"&navigate=yes\")}}).catch(function(e){console.log(\"Preferred mobile map not selected bec"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "https://maps.googleapis.com/maps/api/js",
+  "context": "elete window[o]};var r=document.createElement(\"script\"),a=[\"callback=\".concat(o)];s.forEach(function(e){i[e]&&a.push(\"\".concat(e,\"=\").concat(i[e]))}),i.libraries&&i.libraries.length&&a.push(\"libraries=\".concat(i.libraries.join(\",\"))),r.src=\"\".concat(i.apiUrl||\"https://maps.googleapis.com/maps/api/js\",\"?\").concat(a.join(\"&\")),document.body.appendChild(r)})}},function(e,o,s){\"use strict\";!function(n){var e=s(0),t=s(7),r=s(17),a=s(335),i=s.n(a),a=s(55);o.a={template:i.a,components:{CornerHeading:r.a,Slick:t.a,AvailableHomeCard:a.a},props:{dataid:{type:Stri"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "https://www.google.com/recaptcha/api.js",
+  "context": "timeout||1e4);window[o]=function(){null!==n&&clearTimeout(n),e(window.grecaptcha),delete window[o]};var r=[\"\"];s.forEach(function(e){i[e]&&\"callback\"!==e&&r.push(\"\".concat(e,\"=\").concat(i[e]))});var a=document.createElement(\"script\");a.src=\"\".concat(i.apiUrl||\"https://www.google.com/recaptcha/api.js\",\"?\").concat(r.join(\"&\")),document.body.appendChild(a),i.callback(void 0)})}},function(e,t){e.exports='<div v-if=\"!checkStatus(scData.communityData.statusValue, communityStatus.closed)\"\\r\\n    :id=\"sectionId\"\\r\\n    class=\"qmi-lead-form mx-auto tm-section\"\\r"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "https://my.matterport.com/api/v1/player/models/",
+  "context": "e(\"data-src\")&&!l.getAttribute(\"src\")&&(l.setAttribute(\"src\",l.getAttribute(\"data-src\")),l.style.display=\"block\"))}}},tourPoster:function(e){if(e.image&&e.image.src)return e.image.src;e=(e.vidSrc||\"\").match(/matterport\\.com\\/show\\/\\?m=([^&]+)/);return e&&e[1]?\"https://my.matterport.com/api/v1/player/models/\"+e[1]+\"/thumb?width=1200&dpr=1&disable=upscale\":this.tourPlaceholder}},computed:{showVideoHeroOverride:function(){if(!this.scData||!this.scData.videoHeroOverride||!this.scData.videoHeroOverride.enableHeroAssetOverride)return!1;var e=this.scData.videoHeroOver"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/CoupleDogiStock1344021882ec00f662fbda45c7b7fdde56a9942ac5?v=0e8a3a7a",
+  "context": " class=\"center\">\\r\\n                <h1>Animations - Container</h1>\\r\\n                <Animation motion=\"scaleup\" classes=\"center-block\" >\\r\\n                    <div>\\r\\n                        <LazyImage maxWidth=\"1000\"\\r\\n                            image=\"https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/CoupleDogiStock1344021882ec00f662fbda45c7b7fdde56a9942ac5?v=0e8a3a7a\"\\r\\n                            alt=\"An example image\" />\\r\\n                    </div>\\r\\n                </Animation>\\r\\n            </div>\\r\\n        <div>\\r\\n            <h1>Dropdown</h1>\\r\\n            <div class=\"component-container\">\\r\\n              "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "https://www.google.com/maps/dir/?api=1&origin=",
+  "context": "ta.contact.scheduleButton&&0<this.scData.contact.scheduleButton.url.length&&(this.checkStatus(e,this.communityStatus.open)||this.checkStatus(e,this.communityStatus.preSelling)||this.checkStatus(e,this.communityStatus.closeout))},sendToGoogleMaps:function(e){e=\"https://www.google.com/maps/dir/?api=1&origin=\".concat(encodeURIComponent(this.userLocation),\"&destination=\").concat(encodeURIComponent(e));window.open(e,\"_blank\").focus()},locationSuccess:function(e){this.userLocation=\"\".concat(e.coords.latitude,\", \").concat(e.coords.longitude)},locationError:function()"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "https://www.google.com/maps/dir/?api=1",
+  "context": "ing:function(){window.open(this.scData.communityData.communityBookingLink.Url,\"_blank\")}},data:function(){return Nh(Nh({},ap.a),{},{origin:null,destination:null,gmapEmbedUrl:\"https://www.google.com/maps/embed/v1/directions?key=\".concat(Qm.a),gMapDirectionsUrl:\"https://www.google.com/maps/dir/?api=1\",enteredAddress:null,originAddress:null,gmapIframeSrc:null,hideOnMobile:!0,saleCenterType:0,activeCommunitySalesCenterData:null,defaultDropdownCommunity:null,scData:em.a.getData(this.dataid)})}},Ta=n(454),Ma=n.n(Ta),Pa={props:{name:{type:String,default:null}"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "/api/sitecore/",
+  "context": "intsMock.registerEndpoint(e,t)},setPostData:function(e,t,n){\"undefined\"!=typeof postMock&&postMock.registerMockResponse(e,t,n)},fetchData:function(e,t){var n,r=new s;return o.a.extend(r,e),(!r.url||r.url.length<=0)&&(n=window.location.origin,r.url=\"\".concat(n,\"/api/sitecore/\").concat(r.controller,\"/\").concat(r.action)),\"undefined\"!=typeof postMock&&null!==r.key?postMock.handleMockPost(null,e,t):i.a.get(r.url,c({},t))}};void 0===r.a.scDataStore&&(r.a.scDataStore=a);t.a=r.a.scDataStore},function(e,Yo,t){\"use strict\";t.r(Yo),functi"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-image-gallery-modal",
+  "context": "function(e,t,n){var r=n(62);e.exports=function(e){if(!r(e))throw TypeError(e+\" is not an object!\");return e}},function(e,a,i){\"use strict\";!function(n){var e=i(0),t=i(7),r=i(320);a.a={template:i.n(r).a,components:{Slick:t.a},props:{dataid:{type:String,default:\"qmi-image-gallery-modal\"},variant:{type:String,default:\"details-gallery\"},displayModal:{type:Boolean,required:!0,default:!1},focusSlide:{type:Number},imageList:{type:Array}},mounted:function(){\"features-gallery\"===this.variant&&window.addEventListener(\"resize\",this.toggleBodyStyles"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "request-autocomplete-floorplans",
+  "context": "(){return{key:\"request-autocomplete-communities\"}}},ScRequestAutocompleteCommunityAreasByZip:{type:Object,default:function(){return{key:\"request-autocomplete-community-areas-by-zip\"}}},ScRequestAutocompleteFloorplans:{type:Object,default:function(){return{key:\"request-autocomplete-floorplans\"}}},ScRequestAutocompleteHomes:{type:Object,default:function(){return{key:\"request-autocomplete-homes\"}}},ScCloseByCommunityRedirectUrl:{type:Object,default:function(){return{key:\"close-by-community-redirect-url\"}}},ScRequestAutocompleteProximity:{type:Objec"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-image-gallery-data",
+  "context": " strict\";var r=n(0),a=n(7),i=n(321),o=n.n(i),s=n(322),l=n(114),c=n(115),i=n(116),n=n(54);t.a={template:o.a,components:{Slick:a.a,ImageContainer:s.a,FourImageGrid:l.a,ThreeImageGrid:c.a,TwoImageGrid:i.a,ImageGalleryModal:n.a},props:{dataid:{type:String,default:\"qmi-image-gallery-data\"}},mounted:function(){this.communityImages=Array.from(this.scData.communityImages.images)},beforeDestroy:function(){},watch:{displayModal:function(){var e=document.getElementsByTagName(\"BODY\")[0],t=window.innerWidth||document.documentElement.clientWidth||doc"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "EspTMFloorPlanPage",
+  "context": "e)):this.$refs.slick1.goTo(this.activeItem)):(e.style.height=\"auto\",e.style.overflow=\"visible\",this.showGallery=!1,\"features-gallery\"!==this.variant&&window.scrollTo(this.lastScrollPositionX,this.lastScrollPositionY))}},computed:{LayoutClass:function(){return[\"EspTMFloorPlanPage\"].includes(this.scData.floorPlanLayout)?\"layout_padding\":\"\"}},methods:{startModal:function(e){this.modalOpen=!0,this.startingSlide=e},endModal:function(){this.modalOpen=!1},closeGallery:function(){this.$store.commit(\"setShowHomeGallery\",!1)}},data:function()"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-image-gallery",
+  "context": "s:[],modalOpen:!1,startingSlide:null,lastScrollPositionY:null,lastScrollPositionX:null,scData:r.a.getData(this.dataid)}}}},function(e,t,n){\"use strict\";var r=n(0),a=n(7),i=n(324);t.a={template:n.n(i).a,components:{Slick:a.a},props:{dataid:{type:String,default:\"qmi-image-gallery\"},images:{type:Array,default:[]},modalEvent:{type:Function}},mounted:function(){},beforeDestroy:function(){},methods:{},data:function(){return{scData:r.a.getData(this.dataid)}}}},function(e,t,n){\"use strict\";var r=n(0),a=n(7),i=n(325);t.a={template:n.n(i).a,"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "item.floorPlansLink",
+  "context": "es-text\"></span>\\r\\n                                            </li>\\r\\n                                        </ul>\\r\\n                                    </div>\\r\\n                                </div>\\r\\n    \\r\\n                                <div v-if=\"item.floorPlansLink\" \\r\\n                                    class=\"row align-items-start community-gallery__info-row tm-row\">\\r\\n                                    <div class=\"col-12\">\\r\\n                                        <div class=\"community-gallery__plan-details\" v-h"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "viewAllFloorPlansLink",
+  "context": "\\r\\n                <div class=\"row justify-content-center align-items-center\">\\r\\n                    <div class=\"col-auto\" v-html=\"viewAllHomesLink\" v-show=\"hasHomes\">\\r\\n\\r\\n                    </div>\\r\\n\\r\\n                    <div class=\"col-auto\" v-html=\"viewAllFloorPlansLink\">\\r\\n                    </div>\\r\\n                </div>\\r\\n            </div>\\r\\n        </div>\\r\\n\\r\\n        <div class=\"row community-gallery__links tm-row\">\\r\\n            <div class=\"col-12\">\\r\\n                <div class=\"row justify-content-center a"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "isForQmi",
+  "context": "munityButton - Active.svg\"\\r\\n            alt=\"Click to Remove from Favorites\"\\r\\n            class=\"favorite-icon__img favorite-icon__img-active\"\\r\\n            :class=\"{\\'d-inline-block\\': activeItem === true}\"\\r\\n        />\\r\\n    </span>\\r\\n    <span v-if=\"isForQmi\">\\r\\n        <svg width=\"50\" height=\"50\" viewBox=\"0 0 54 54\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\" class=\"favorite-icon__img-inactive\" :class=\"[activeItem === false ? \\'d-inline-block\\' : \\'d-none\\']\">\\r\\n            <path d=\"M26.995 36.697C24.46 34"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-image-gallery-grid",
+  "context": "        class=\"image-model\"/>\\r\\n</section>\\r\\n'},function(e,o,s){\"use strict\";!function(n){var e=s(0),t=s(319),r=s.n(t),a=s(54),i=s(113),t=s(7);o.a={template:r.a,components:{ImageGalleryModal:a.a,Slick:t.a,ImageGallery:i.a},props:{dataid:{type:String,default:\"qmi-image-gallery-grid\"},largeImageOnTop:{type:Boolean,default:!0},fiveImageGrid:{type:Boolean,default:!1},extendedLayout:{type:Boolean,default:!1}},mounted:function(){window.addEventListener(\"resize\",this.reSlickIfMobile)},beforeDestroy:function(){window.removeEventListener(\"resi"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-image-gallery-grid__button-label",
+  "context": "                         </div>\\r\\n                        </div>\\r\\n                    </div>\\r\\n                </div>\\r\\n                <button v-show=\"scData.galleryLabel\" class=\"qmi-image-gallery-grid__button flotating\" @click=\"startGallery()\"><a class=\"qmi-image-gallery-grid__button-label\">{{ scData.galleryLabel }}</a></button>\\r\\n            </div>\\r\\n        </div>\\r\\n    </div>\\r\\n\\r\\n    \\x3c!-- Begin: Image Gallery Modal --\\x3e\\r\\n    <ImageGalleryModal :dataid=\"dataid\" @closeModal=\"endModal\" :displayModal=\"modalOpen\" :focusSlide=\"starti"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-image-gallery-modal__slick-container",
+  "context": "r\\n    \\x3c!-- End:   Slick Carousel --\\x3e\\r\\n</section>\\r\\n'},function(e,t){e.exports='<section v-show=\"showModal\" class=\"qmi-image-gallery-modal\" :class=\"[isFeaturesGalleryVariant ? \\'featuresGalleryVariantStyles\\' : \\'position-fixed\\']\">\\r\\n    <div class=\"qmi-image-gallery-modal__slick-container\">\\r\\n        <button type=\"button\" class=\"qmi-image-gallery-modal__slick-container__close-icon position-absolute\"><i class=\"fal fa-times\" aria-label=\"Close modal window of photo gallery.\" @click=\"closeModal()\"></i> </button>\\r\\n        <div class=\"qmi-image-"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-image-gallery-modal__large-focused-image",
+  "context": "ck-container\">\\r\\n        <button type=\"button\" class=\"qmi-image-gallery-modal__slick-container__close-icon position-absolute\"><i class=\"fal fa-times\" aria-label=\"Close modal window of photo gallery.\" @click=\"closeModal()\"></i> </button>\\r\\n        <div class=\"qmi-image-gallery-modal__large-focused-image\" :class=\"{\\'featuresGalleryVariantStyles\\': isFeaturesGalleryVariant}\">\\r\\n            \\x3c!-- Begin: Slick Carousel --\\x3e\\r\\n            <slick id=\"slick1\" ref=\"slick1\" class=\"slick1\" :options=\"slickOptions1\" @setPosition=\"handleSetPosition\" @afterChange=\""
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-img-gallery",
+  "context": "            <p class=\"carousel-counter\">{{activeItem+1}}/{{imageList.length}}</p>\\r\\n            \\x3c!-- End:   Slick Carousel --\\x3e\\r\\n        </div>\\r\\n    </div>\\r\\n</section>'},function(e,t){e.exports='<section v-show=\"$store.state.showHomeGallery\" class=\"qmi-img-gallery\">\\r\\n    <div class=\"container\">\\r\\n        <div class=\"row no-gutters\">\\r\\n            <div class=\"col-12\">\\r\\n                <button type=\"button\" class=\"close-icon position-absolute\"><i class=\"fa-regular fa-chevron-left\" aria-label=\"Close modal window of"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "scData.floorplanImages",
+  "context": "   <ImageContainer :dataid=\"dataid\" :imageData=\"scData.interiorImages\" :modalEvent=\"startModal\"/>\\r\\n        <ImageContainer :dataid=\"dataid\" :imageData=\"scData.elevationImages\" :modalEvent=\"startModal\"/>\\r\\n        <ImageContainer :dataid=\"dataid\" :imageData=\"scData.floorplanImages\" :modalEvent=\"startModal\"/>\\r\\n        <ImageContainer :dataid=\"dataid\" :imageData=\"scData.representationImages\" :modalEvent=\"startModal\"/>\\r\\n        <ImageContainer :dataid=\"dataid\" :imageData=\"scData.communityImages\" :modalEvent=\"startModal\"/>\\r\\n\\r\\n    "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": ".floorplan-details__gallery-mobile-nav-item.availablehomes",
+  "context": "(335),i=s.n(a),a=s(55);o.a={template:i.a,components:{CornerHeading:r.a,Slick:t.a,AvailableHomeCard:a.a},props:{dataid:{type:String,default:\"available-homes-and-locations\"}},mounted:function(){var e=this;window.addEventListener(\"resize\",this.reSlickIfMobile),n(\".floorplan-details__gallery-mobile-nav-item.availablehomes\").on(\"availableHomesCarouselShown\",function(){e.$refs.slick.reSlick()})},beforeDestroy:function(){window.removeEventListener(\"resize\",this.reSlickIfMobile),n(\".floorplan-details__gallery-mobile-nav-item.availablehomes\").off()},computed:{availableHomesSorted:"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "other-qmi-homes",
+  "context": "ableHomeDataLabels.viewHomeButtonLabel }}\\r\\n        </span>\\r\\n        <i class=\"d-inline fal fa-chevron-circle-right available-home-card-single__reservation-chevron\" aria-hidden=\"true\"></i>\\r\\n    </a>\\r\\n</div>\\r\\n'},function(e,t){e.exports='<section class=\"other-qmi-homes\" v-show=\"!$store.state.showHomeGallery\">\\r\\n    <div class=\"container other-qmi-homes__container\">\\r\\n        <p class=\"other-qmi-homes__title px-3\">{{scData.OtherAvailableHomesAndLocationsSectionLabel}}</p>\\r\\n        <br>\\r\\n        <br>\\r\\n        <div cl"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__outer-wrapper",
+  "context": "mTarget\" :id=\"\\'id-\\' + scData.communityData.communityId\" :name=\"\\'id-\\' + scData.communityData.communityId\" ></a>\\r\\n    <div class=\"container\">\\r\\n        <div class=\"row\">\\r\\n            <div class=\"col-12\">\\r\\n                <div v-if=\"isSubmitted\" class=\"qmi-lead-form__outer-wrapper\" :class=\"{isVertical: !horizontal}\">\\r\\n                    <div class=\"row\">\\r\\n                        <div v-if=\"shouldShowCommunityIcon()\" class=\"text-center qmi-lead-form__form-logo qmi-lead-form__success-image\">\\r\\n                            <img :src"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__schedule-appointment-button",
+  "context": "     \\x3c!-- Thank you for signing up! Watch your inbox for exciting news and announcements about this neighborhood. --\\x3e\\r\\n                    </p>\\r\\n                    <a @click.prevent=\"goToCommunityBooking()\">\\r\\n                        <button class=\"qmi-lead-form__schedule-appointment-button\" type=\"submit\" v-html=\"scData.scheduleAppointmentLabel\">\\r\\n                        </button>\\r\\n                    </a>\\r\\n                </div>\\r\\n                <div v-if=\"!isSubmitted\" class=\"qmi-lead-form__outer-wrapper\" :class=\"{isVertical: !horizon"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__interest-header",
+  "context": "   <i v-else class=\"fal fa-envelope qmi-lead-form__icon-size\"></i>\\r\\n                                    </div>\\r\\n                                    <div class=\"col-12\">\\r\\n                                        <h3 v-if=\"!shouldShowCommunityIcon()\" class=\"qmi-lead-form__interest-header\" v-html=\"scData.appointmentCopy\">\\r\\n                                            \\x3c!-- Join the interest list --\\x3e\\r\\n                                        </h3>\\r\\n\\r\\n                                    </div>\\r\\n                                    <"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__interest-sub",
+  "context": "           \\x3c!-- Join the interest list --\\x3e\\r\\n                                        </h3>\\r\\n\\r\\n                                    </div>\\r\\n                                    <div class=\"col-12\">\\r\\n                                        <p class=\"qmi-lead-form__interest-sub\" v-html=\"scData.newUserSignUpCopy\">\\r\\n                                            \\x3c!-- Stay informed on everything this community has to offer --\\x3e\\r\\n                                        </p>\\r\\n                                    </div>\\r\\n       "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__form-section",
+  "context": "\\n                            <div class=\"col-12 center-section green\" :class=\"[{\\'col-lg-6\\' : horizontal}, {\\'text-center\\': isSubmittedWithDate}, {\\'d-flex flex-column justify-content-center\\': isSubmitted}]\" >\\r\\n                                <div class=\"qmi-lead-form__form-section\">\\r\\n                                    <div class=\"row no-gutters\">\\r\\n                                        <div class=\"col-12\" :class=\"{\\'col-sm-6\\' : horizontal}\">\\r\\n                                            <div class=\"row no-gutters w-96\">\\r\\n   "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__field-label",
+  "context": "   <div class=\"col-12\" :class=\"{\\'p-1\\':horizontal}\">\\r\\n                                                    <label class=\"sr-only\" for=\"firstName\">{{ scData.fields.firstName.label }}*</label>\\r\\n                                                    <span class=\"qmi-lead-form__field-label\">{{scData.fields.firstName.label}}</span>\\r\\n                                                    <b-input id=\"firstName\" class=\"qmi-lead-form__form-input\" :class=\"{isVertical: !horizontal}\"\\r\\n                                                        v-model=\""
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__form-input",
+  "context": "ta.fields.firstName.label }}*</label>\\r\\n                                                    <span class=\"qmi-lead-form__field-label\">{{scData.fields.firstName.label}}</span>\\r\\n                                                    <b-input id=\"firstName\" class=\"qmi-lead-form__form-input\" :class=\"{isVertical: !horizontal}\"\\r\\n                                                        v-model=\"formData.firstName\"\\r\\n                                                        name=\"First Name\" v-validate=\"\\'required|proper_name|max:40\\'\" required></b"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__form-appointment-copy",
+  "context": "a>\\r\\n                                        <b-collapse id=\"comment-section\" v-model=\"scData.isQuestionVisible\" class=\"col-12 order-1\" :class=\"[{\\'p-md-1 order-md-2\\': horizontal}]\">\\r\\n                                            <p v-if=\"isSubmitted\" class=\"qmi-lead-form__form-appointment-copy\" :class=\"{\\'isVertical\\': !horizontal, \\'isHorizontal-special\\': horizontal && isSubmitted, \\'d-block d-md-none\\': horizontal}\" >\\r\\n                                                <html-fragment v-if=\"!isSubmitted && scData.communityData.showAtAGlance\" :htm"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__form-checkbox",
+  "context": "                           <div class=\"col-1\">\\r\\n                                                <b-form-checkbox\\r\\n                                                ref=\"Text Message Consent Check Box\"\\r\\n                                                class=\"qmi-lead-form__form-checkbox\"\\r\\n                                                :class=\"[horizontal ? \\'isHorizontal\\' : \\'isVertical\\']\"\\r\\n                                                v-model=\"formData.textMessageConsent\">\\r\\n                                                </b-for"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__text-message-consent-label",
+  "context": ">\\r\\n                                            </div>\\r\\n                                            <div class=\"col\">\\r\\n                                                <div class=\"col-12\">\\r\\n                                                    <span class=\"qmi-lead-form__text-message-consent-label\" v-html=\"scData.mobileTextMessagesCopy\"></span>\\r\\n                                                </div>\\r\\n                                                <div class=\"col-12\">\\r\\n                                                    <a :href=\"scData.mobileTe"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__submitButton",
+  "context": "\\n                                    :class=\"[{\\'mb-md-0 mt-md-3 mb-5\\' : horizontal}, {\\'isVertical pb-4\\': !horizontal}]\" type=\"submit\"\\r\\n                                    v-on:click=\"validateForm\">\\r\\n                                        <span class=\"qmi-lead-form__submitButton\" v-html=\"scData.submitButtonLabel\">1</span>\\r\\n                                    </button>\\r\\n                                </div>\\r\\n                                <div class=\"row no-gutters\">\\r\\n                                    <div class=\"col-12\">"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__form-button-submit-cancel-container",
+  "context": "                              </button>\\r\\n                                </div>\\r\\n                                <div class=\"row no-gutters\">\\r\\n                                    <div class=\"col-12\">\\r\\n                                        <div class=\"qmi-lead-form__form-button-submit-cancel-container\" :class=\"[horizontal ? \\'isHorizontal\\' : \\'isVertical\\']\">\\r\\n                                            <div :class=\"{\\'d-md-none\\': horizontal}\">\\r\\n                                                <button class=\"qmi-lead-form__pill mt-3\"\\r\\n             "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-lead-form__form-eight-fourteen-day-button-container",
+  "context": "izontal ? \\'isHorizontal\\' : \\'isVertical\\']\"\\r\\n                                v-if=\"isSubmitted && submittedEightToFourteenDaysAgo && !checkStatus(scData.communityData.statusValue, communityStatus.comingSoon)\">\\r\\n                                <div class=\"qmi-lead-form__form-eight-fourteen-day-button-container\" :class=\"{\\'isVertical\\': !horizontal}\">\\r\\n                                    <a href=\"#\" class=\"qmi-lead-form__form-eight-fourteen-day-button qmi-lead-form__form-eight-fourteen-day-button--yes\" @click.prevent=\"postStillInterestedStatus(true, formData)\">\\r"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-stickynav__sticky",
+  "context": "                      </div>\\r\\n                        </div>\\r\\n                    </b-form>\\r\\n                </div>\\r\\n            </div>\\r\\n        </div>\\r\\n    </div>\\r\\n\\r\\n    <loading-indicator/>\\r\\n</div>\\r\\n'},function(e,t){e.exports='<div class=\"qmi-stickynav__sticky\">\\r\\n    <section id=\"StickyHeader\" class=\"qmi-stickynav js-community-stickynav dark-theme d-flex align-items-center\">\\r\\n        <div class=\"container d-none d-xl-block\">\\r\\n            <div class=\"row m-0 align-items-center flex-nowrap\">\\r\\n               "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-stickynav__nav-link",
+  "context": "  </div>\\r\\n                </div> \\r\\n                <div class=\"col-auto\">\\r\\n                    <nav v-if=\"!isClosed()\" class=\"qmi-stickynav__nav align-items-center\">\\r\\n                        <a v-for=\"(link, index) in navLinks\" :href=\"link.link\" class=\"qmi-stickynav__nav-link\" :class=\"{\\'is-active\\': link.isActive }\" v-html=\"link.text\"></a>\\r\\n                    </nav>\\r\\n                </div>\\r\\n            </div>\\r\\n        </div>\\r\\n        \\x3c!-- Mobile nav --\\x3e\\r\\n        <div class=\"col-12 d-xl-none\">\\r\\n            <d"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "qmi-stickynav__mobile-nav-link",
+  "context": "           <div class=\"row\">\\r\\n                <div class=\"col-12\">\\r\\n                    <nav v-if=\"!isClosed()\" class=\"d-flex pl-0 pr-0 qmi-stickynav__mobile-nav\">\\r\\n                            <a v-for=\"(link, index) in navLinks\" :href=\"link.link\" class=\"qmi-stickynav__mobile-nav-link\" :class=\"{\\'is-active\\': link.isActive }\" v-html=\"link.text\"></a>\\r\\n                    </nav>\\r\\n                </div>\\r\\n            </div>\\r\\n        </div>\\r\\n    </section>\\r\\n</div>\\r\\n'},function(e,t){e.exports='<section :style=\"{ top: topValue }\" c"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "floorplanpage_promo_banner_click",
+  "context": "er v-if=\"scData.promoBanner\"\\r\\n                            :promoBanner=\"scData.promoBanner\"\\r\\n                            :isContainer=\"false\"\\r\\n                            class=\"floor-plans-list__promo-banner\"\\r\\n                            taggingClass=\"floorplanpage_promo_banner_click\" />\\r\\n\\r\\n        <div class=\"floor-plans-list__header\">\\r\\n            <div class=\"floor-plans-list__header__title-row\">\\r\\n                <h1 class=\"floor-plans-list__header__title\" v-html=\"scData.floorPlansListH1Label\"></h1>\\r\\n                <div clas"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "scData.floorPlansListH1Label",
+  "context": "                    taggingClass=\"floorplanpage_promo_banner_click\" />\\r\\n\\r\\n        <div class=\"floor-plans-list__header\">\\r\\n            <div class=\"floor-plans-list__header__title-row\">\\r\\n                <h1 class=\"floor-plans-list__header__title\" v-html=\"scData.floorPlansListH1Label\"></h1>\\r\\n                <div class=\"floor-plans-list__header__dropdown d-none d-lg-flex\">\\r\\n                    <div class=\"floor-plans-list__header__dropdown__toggle sort_by_filter_click\"\\r\\n                         @click=\"toggleSortDropdown\">\\r\\n      "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "scData.floorPlanDataLabels",
+  "context": "ntainer\">\\r\\n                    <FloorPlanCard v-for=\"(plan, i) in group.plans\"\\r\\n                                   :key=\"group.collection.id + \\'-\\' + i\"\\r\\n                                   :floorPlan=\"plan\"\\r\\n                                   :labels=\"scData.floorPlanDataLabels\"\\r\\n                                   :collections=\"scData.floorPlanCollections\" />\\r\\n                </div>\\r\\n            </section>\\r\\n        </template>\\r\\n        <template v-else>\\r\\n            <div class=\"floor-plans-list__cards-container\">\\r\\n   "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "scData.floorPlanCollections",
+  "context": "\\r\\n                                   :key=\"group.collection.id + \\'-\\' + i\"\\r\\n                                   :floorPlan=\"plan\"\\r\\n                                   :labels=\"scData.floorPlanDataLabels\"\\r\\n                                   :collections=\"scData.floorPlanCollections\" />\\r\\n                </div>\\r\\n            </section>\\r\\n        </template>\\r\\n        <template v-else>\\r\\n            <div class=\"floor-plans-list__cards-container\">\\r\\n                <FloorPlanCard v-for=\"(plan, i) in sortedFloorPlans\"\\r\\n            "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "floorPlan.floorPlanDetailsLink.Url",
+  "context": "                @click=\"closeSortFilterDrawer\">\\r\\n                        Apply\\r\\n                    </button>\\r\\n                </footer>\\r\\n            </aside>\\r\\n        </div>\\r\\n    </transition>\\r\\n</section>\\r\\n'},function(e,t){e.exports='<a :href=\"floorPlan.floorPlanDetailsLink.Url\" class=\"floor-plans-list-card\">\\r\\n    <div class=\"floor-plans-list-card__image\" v-lazy:background-image=\"imageSrc\">\\r\\n        <div v-if=\"floorPlan.floorPlanHasModelHome\"\\r\\n             class=\"floor-plans-list-card__image__upper-overlay\"\\r\\n             v-"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "floorPlan.floorPlanHasModelHome",
+  "context": "    </div>\\r\\n    </transition>\\r\\n</section>\\r\\n'},function(e,t){e.exports='<a :href=\"floorPlan.floorPlanDetailsLink.Url\" class=\"floor-plans-list-card\">\\r\\n    <div class=\"floor-plans-list-card__image\" v-lazy:background-image=\"imageSrc\">\\r\\n        <div v-if=\"floorPlan.floorPlanHasModelHome\"\\r\\n             class=\"floor-plans-list-card__image__upper-overlay\"\\r\\n             v-html=\"floorPlan.floorPlanModelHomeText\"></div>\\r\\n        <div v-if=\"floorPlan.uniqueSellingPoint\"\\r\\n             class=\"floor-plans-list-card__image__lower-overlay\"\\r\\n "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "floorPlan.floorPlanModelHomeText",
+  "context": "ass=\"floor-plans-list-card\">\\r\\n    <div class=\"floor-plans-list-card__image\" v-lazy:background-image=\"imageSrc\">\\r\\n        <div v-if=\"floorPlan.floorPlanHasModelHome\"\\r\\n             class=\"floor-plans-list-card__image__upper-overlay\"\\r\\n             v-html=\"floorPlan.floorPlanModelHomeText\"></div>\\r\\n        <div v-if=\"floorPlan.uniqueSellingPoint\"\\r\\n             class=\"floor-plans-list-card__image__lower-overlay\"\\r\\n             v-html=\"floorPlan.uniqueSellingPoint\"></div>\\r\\n    </div>\\r\\n    <div class=\"floor-plans-list-card__info\">\\r\\n   "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "floorPlan.uniqueSellingPoint",
+  "context": "t-card__image\" v-lazy:background-image=\"imageSrc\">\\r\\n        <div v-if=\"floorPlan.floorPlanHasModelHome\"\\r\\n             class=\"floor-plans-list-card__image__upper-overlay\"\\r\\n             v-html=\"floorPlan.floorPlanModelHomeText\"></div>\\r\\n        <div v-if=\"floorPlan.uniqueSellingPoint\"\\r\\n             class=\"floor-plans-list-card__image__lower-overlay\"\\r\\n             v-html=\"floorPlan.uniqueSellingPoint\"></div>\\r\\n    </div>\\r\\n    <div class=\"floor-plans-list-card__info\">\\r\\n        <div class=\"floor-plans-list-card__info__section\">\\r\\n"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "floorPlan.floorPlanName",
+  "context": "\">\\r\\n            <div v-if=\"collectionLabel\"\\r\\n                 class=\"floor-plans-list-card__info__collection\"\\r\\n                 v-html=\"collectionLabel\"></div>\\r\\n            <h2 class=\"floor-plans-list-card__info__first__name\"\\r\\n                v-html=\"floorPlan.floorPlanName\"></h2>\\r\\n        </div>\\r\\n\\r\\n        <div class=\"floor-plans-list-card__info__section floor-plans-list-card__info__second\"\\r\\n             :class=\"{ \\'floor-plans-list-card__info__second__marketing-message\\': hasMessage }\">\\r\\n            <template>\\r\\n  "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "labels.floorPlanBedroomLabel",
+  "context": "      </div>\\r\\n\\r\\n        <div class=\"floor-plans-list-card__info__section floor-plans-list-card__info__fifth\">\\r\\n            <span class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"bedRange\"></span>\\r\\n                <span class=\"label\" v-html=\"labels.floorPlanBedroomLabel\"></span>\\r\\n            </span>\\r\\n            <span class=\"sep\">|</span>\\r\\n            <span class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"bathRange\"></span>\\r\\n                <span class=\"label\" v-html=\"labels.floorPlanFullBathLabel\"></spa"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "labels.floorPlanFullBathLabel",
+  "context": "\" v-html=\"labels.floorPlanBedroomLabel\"></span>\\r\\n            </span>\\r\\n            <span class=\"sep\">|</span>\\r\\n            <span class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"bathRange\"></span>\\r\\n                <span class=\"label\" v-html=\"labels.floorPlanFullBathLabel\"></span>\\r\\n            </span>\\r\\n            <span class=\"sep\">|</span>\\r\\n            <span class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"areaRange\"></span>\\r\\n                <span class=\"label\" v-html=\"labels.floorPlanAreaLabel\"></span>\\r"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "labels.floorPlanAreaLabel",
+  "context": " v-html=\"labels.floorPlanFullBathLabel\"></span>\\r\\n            </span>\\r\\n            <span class=\"sep\">|</span>\\r\\n            <span class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"areaRange\"></span>\\r\\n                <span class=\"label\" v-html=\"labels.floorPlanAreaLabel\"></span>\\r\\n            </span>\\r\\n            <span v-if=\"garageRange || storyRange\" class=\"sep\">|</span>\\r\\n            <span v-if=\"garageRange\" class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"garageRange\"></span>\\r\\n                <span clas"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "labels.floorPlanCarGarageLabel",
+  "context": "         </span>\\r\\n            <span v-if=\"garageRange || storyRange\" class=\"sep\">|</span>\\r\\n            <span v-if=\"garageRange\" class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"garageRange\"></span>\\r\\n                <span class=\"label\" v-html=\"labels.floorPlanCarGarageLabel\"></span>\\r\\n            </span>\\r\\n            <span v-if=\"garageRange && storyRange\" class=\"sep\">|</span>\\r\\n            <span v-if=\"storyRange\" class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"storyRange\"></span>\\r\\n                <span class="
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "labels.floorPlanStoryLabel",
+  "context": "           </span>\\r\\n            <span v-if=\"garageRange && storyRange\" class=\"sep\">|</span>\\r\\n            <span v-if=\"storyRange\" class=\"spec\">\\r\\n                <span class=\"value\" v-html=\"storyRange\"></span>\\r\\n                <span class=\"label\" v-html=\"labels.floorPlanStoryLabel\"></span>\\r\\n            </span>\\r\\n        </div>\\r\\n    </div>\\r\\n</a>\\r\\n'},function(e,t){e.exports='<div class=\"select-dropdown__wrapper\" v-click-outside=\"onClickOutside\">\\r\\n    <div class=\"dropdown\" :class=\"{\\'opened\\': opened}\" @click=\"toggleDropdown\">"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "communities-with-this-plan-map__community-inventory",
+  "context": " id=\"communities-with-this-plan-map__map-container\"></div>\\r\\n            </div>\\r\\n\\r\\n            <div class=\"col-12 col-lg-7 col-xl-6\">\\r\\n\\r\\n                <div class=\"row\">\\r\\n                    <div class=\"col-12\">\\r\\n                        <p class=\"communities-with-this-plan-map__community-inventory\">{{ scData.communityInventoryLabel }} ({{ scData.availableInTheseCommunities.length }})</p>\\r\\n                    </div>\\r\\n\\r\\n                    <div class=\"col-12 communities-with-this-plan-map__community-cards\">\\r\\n                        <div v-for=\"("
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "read-more-floorplans",
+  "context": ":function(e){return null==e?\"\":\"$\"+e.toLocaleString(\"en-US\")},formatRange:function(e,t){var n=this.isMobile?\"-\":\" - \";return e===t?\"\".concat(e):\"\".concat(e).concat(n).concat(t)}}}},function(e,t){e.exports='<div v-if=\"floorPlans && floorPlans.length > 0\" class=\"read-more-floorplans\">\\r\\n    <div class=\"read-more-floorplans__header\">\\r\\n        Choose your floor plan:&nbsp;\\r\\n    </div>\\r\\n    <ul class=\"read-more-floorplans__list\">\\r\\n        <li v-for=\"(floorplan, index) in floorPlans\" :key=\"index\" class=\"read-more-floorplans__plan\">"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "read-more-floorplans__header",
+  "context": "aleString(\"en-US\")},formatRange:function(e,t){var n=this.isMobile?\"-\":\" - \";return e===t?\"\".concat(e):\"\".concat(e).concat(n).concat(t)}}}},function(e,t){e.exports='<div v-if=\"floorPlans && floorPlans.length > 0\" class=\"read-more-floorplans\">\\r\\n    <div class=\"read-more-floorplans__header\">\\r\\n        Choose your floor plan:&nbsp;\\r\\n    </div>\\r\\n    <ul class=\"read-more-floorplans__list\">\\r\\n        <li v-for=\"(floorplan, index) in floorPlans\" :key=\"index\" class=\"read-more-floorplans__plan\">\\r\\n            <div class=\"read-more-floorplans__"
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "read-more-floorplans__list",
+  "context": ".concat(e).concat(n).concat(t)}}}},function(e,t){e.exports='<div v-if=\"floorPlans && floorPlans.length > 0\" class=\"read-more-floorplans\">\\r\\n    <div class=\"read-more-floorplans__header\">\\r\\n        Choose your floor plan:&nbsp;\\r\\n    </div>\\r\\n    <ul class=\"read-more-floorplans__list\">\\r\\n        <li v-for=\"(floorplan, index) in floorPlans\" :key=\"index\" class=\"read-more-floorplans__plan\">\\r\\n            <div class=\"read-more-floorplans__plan-top-row\">\\r\\n                <span class=\"read-more-floorplans__plan-link\">\\r\\n                  "
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "hit": "read-more-floorplans__plan",
+  "context": "0\" class=\"read-more-floorplans\">\\r\\n    <div class=\"read-more-floorplans__header\">\\r\\n        Choose your floor plan:&nbsp;\\r\\n    </div>\\r\\n    <ul class=\"read-more-floorplans__list\">\\r\\n        <li v-for=\"(floorplan, index) in floorPlans\" :key=\"index\" class=\"read-more-floorplans__plan\">\\r\\n            <div class=\"read-more-floorplans__plan-top-row\">\\r\\n                <span class=\"read-more-floorplans__plan-link\">\\r\\n                     <a :href=\"floorplan.url\">{{ floorplan.name }}</a>\\r\\n                </span>\\r\\n                 <span"
+ }
+]

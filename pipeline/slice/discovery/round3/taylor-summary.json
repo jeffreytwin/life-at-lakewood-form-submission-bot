@@ -1,0 +1,35 @@
+[
+ {
+  "slug": "firethorn-floorplans",
+  "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans",
+  "status": 200,
+  "jsonScripts": [],
+  "text": {
+   "chars": 40,
+   "prices": 0,
+   "sqfts": 0
+  }
+ },
+ {
+  "slug": "firethorn-plan-ambrosia",
+  "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/ambrosia",
+  "status": 200,
+  "jsonScripts": [],
+  "text": {
+   "chars": 47,
+   "prices": 0,
+   "sqfts": 0
+  }
+ },
+ {
+  "slug": "firethorn-qmi",
+  "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/available-homes",
+  "status": 200,
+  "jsonScripts": [],
+  "text": {
+   "chars": 55,
+   "prices": 0,
+   "sqfts": 0
+  }
+ }
+]
