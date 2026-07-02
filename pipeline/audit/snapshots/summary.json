@@ -1,0 +1,281 @@
+{
+  "generatedBy": "pipeline/audit/fetch-sites.mjs",
+  "sites": {
+    "lifeatlakewood.com": [
+      {
+        "url": "https://lifeatlakewood.com/",
+        "label": "homepage",
+        "slug": "homepage",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/",
+        "bytes": 930318,
+        "title": "Life at Lakewood™ | Homes for Sale in Lakewood Ranch Florida",
+        "linkCount": 90
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/villages",
+        "label": "keyword-match: Villages",
+        "slug": "villages",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/villages",
+        "bytes": 2185243,
+        "title": "Compare Villages | Life at Lakewood",
+        "linkCount": 95
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/edgewater",
+        "label": "keyword-match: Edgewater Village",
+        "slug": "edgewater",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/edgewater",
+        "bytes": 1091624,
+        "title": "Edgewater - Lakewood Ranch | Life at Lakewood",
+        "linkCount": 57
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/community-map",
+        "label": "keyword-match: Community Map",
+        "slug": "community-map",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/community-map",
+        "bytes": 707662,
+        "title": "Community Map | Life at Lakewood",
+        "linkCount": 57
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale",
+        "label": "keyword-match: Buy",
+        "slug": "homes-for-sale",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale",
+        "bytes": 2375429,
+        "title": "Homes for Sale in Lakewood Ranch FL | Life at Lakewood",
+        "linkCount": 107
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/build-your-home",
+        "label": "keyword-match: Build",
+        "slug": "build-your-home",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/build-your-home",
+        "bytes": 1729895,
+        "title": "Build Your Home | Life at Lakewood",
+        "linkCount": 97
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/azario-esplanade",
+        "label": "keyword-match: Azario - Esplanade",
+        "slug": "azario-esplanade",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/azario-esplanade",
+        "bytes": 1145153,
+        "title": "Esplanade at Azario - Lakewood Ranch | Life at Lakewood",
+        "linkCount": 58
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/greenbrook-village",
+        "label": "keyword-match: Greenbrook Village",
+        "slug": "greenbrook-village",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/greenbrook-village",
+        "bytes": 1553075,
+        "title": "Greenbrook Village - Lakewood Ranch | Life at Lakewood",
+        "linkCount": 74
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/village/waterbury-park",
+        "label": "keyword-match: Waterbury Park",
+        "slug": "village_waterbury-park",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/village/waterbury-park",
+        "bytes": 1363060,
+        "title": "Waterbury Park | Lakewood Ranch | Life at Lakewood",
+        "linkCount": 65
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-indigo",
+        "label": "keyword-match: Indigo",
+        "slug": "homes-for-sale-in-indigo",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-indigo",
+        "bytes": 1191435,
+        "title": "Homes for Sale in Indigo | Lakewood Ranch | Life At Lakewood",
+        "linkCount": 66
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-solera",
+        "label": "keyword-match: Solera",
+        "slug": "homes-for-sale-in-solera",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-solera",
+        "bytes": 1276454,
+        "title": "Homes for Sale in Solera | Lakewood Ranch | Life At Lakewood",
+        "linkCount": 69
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-harmony",
+        "label": "keyword-match: Harmony",
+        "slug": "homes-for-sale-in-harmony",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-harmony",
+        "bytes": 1385442,
+        "title": "Homes for Sale in Harmony | Lakewood Ranch | Life At Lakewood",
+        "linkCount": 75
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-savanna",
+        "label": "keyword-match: Savanna",
+        "slug": "homes-for-sale-in-savanna",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-savanna",
+        "bytes": 1334200,
+        "title": "Homes for Sale in Savanna | Lakewood Ranch | Life At Lakewood",
+        "linkCount": 71
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-del-webb",
+        "label": "keyword-match: Del Webb",
+        "slug": "homes-for-sale-in-del-webb",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-del-webb",
+        "bytes": 1730746,
+        "title": "Homes for Sale in Del Webb | Lakewood Ranch | Life at Lakewood",
+        "linkCount": 79
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-windward",
+        "label": "keyword-match: Windward",
+        "slug": "homes-for-sale-in-windward",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-windward",
+        "bytes": 1542357,
+        "title": "Homes for Sale in Windward | Lakewood Ranch | Life at Lakewood",
+        "linkCount": 86
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-polo-run",
+        "label": "keyword-match: Polo Run",
+        "slug": "homes-for-sale-in-polo-run",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-polo-run",
+        "bytes": 1187129,
+        "title": "Homes for Sale in Polo Run | Lakewood Ranch | Life At Lakewood",
+        "linkCount": 66
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-arbor-grande",
+        "label": "keyword-match: Arbor Grande",
+        "slug": "homes-for-sale-arbor-grande",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-arbor-grande",
+        "bytes": 1097807,
+        "title": "Homes for Sale in Arbor Grande | Lakewood Ranch Real Estate",
+        "linkCount": 63
+      },
+      {
+        "url": "https://www.lifeatlakewood.com/homes-for-sale-in-cresswind",
+        "label": "keyword-match: Cresswind",
+        "slug": "homes-for-sale-in-cresswind",
+        "status": 200,
+        "finalUrl": "https://www.lifeatlakewood.com/homes-for-sale-in-cresswind",
+        "bytes": 1498110,
+        "title": "Homes for Sale in Cresswind | Lakewood Ranch | Life at Lakewood",
+        "linkCount": 78
+      }
+    ],
+    "lifeinwellenpark.com": [
+      {
+        "url": "https://lifeinwellenpark.com/",
+        "label": "homepage",
+        "slug": "homepage",
+        "status": 200,
+        "finalUrl": "https://www.lifeinwellenpark.com/",
+        "bytes": 1162093,
+        "title": "Life in Wellen Park | Your Guide to Homes in Wellen Park",
+        "linkCount": 33
+      },
+      {
+        "url": "https://www.lifeinwellenpark.com/community-map",
+        "label": "keyword-match: Community Map",
+        "slug": "community-map",
+        "status": 200,
+        "finalUrl": "https://www.lifeinwellenpark.com/community-map",
+        "bytes": 551122,
+        "title": "Community Map | Life in Wellen Park",
+        "linkCount": 33
+      },
+      {
+        "url": "https://www.lifeinwellenpark.com/homes-for-sale",
+        "label": "keyword-match: Buy",
+        "slug": "homes-for-sale",
+        "status": 200,
+        "finalUrl": "https://www.lifeinwellenpark.com/homes-for-sale",
+        "bytes": 2202254,
+        "title": "Homes for Sale in Wellen Park | Life in Wellen Park",
+        "linkCount": 83
+      },
+      {
+        "url": "https://www.lifeinwellenpark.com/build-your-home",
+        "label": "keyword-match: Build",
+        "slug": "build-your-home",
+        "status": 200,
+        "finalUrl": "https://www.lifeinwellenpark.com/build-your-home",
+        "bytes": 2070188,
+        "title": "Build Your Home | Life in Wellen Park",
+        "linkCount": 71
+      },
+      {
+        "url": "https://www.lifeinwellenpark.com/neighborhood/esplanade",
+        "label": "keyword-match: Esplanade",
+        "slug": "neighborhood_esplanade",
+        "status": 200,
+        "finalUrl": "https://www.lifeinwellenpark.com/neighborhood/esplanade",
+        "bytes": 1744073,
+        "title": "Esplanade at Wellen Park | Life in Wellen Park",
+        "linkCount": 41
+      }
+    ],
+    "lifeatparrish.com": [
+      {
+        "url": "https://lifeatparrish.com/",
+        "label": "homepage",
+        "slug": "homepage",
+        "status": 200,
+        "finalUrl": "https://www.lifeatparrish.com/",
+        "bytes": 1673577,
+        "title": "Life at Parrish | Your Guide to Homes for Sale in Parrish, Florida",
+        "linkCount": 58
+      },
+      {
+        "url": "https://www.lifeatparrish.com/homes-for-sale",
+        "label": "keyword-match: Buy",
+        "slug": "homes-for-sale",
+        "status": 200,
+        "finalUrl": "https://www.lifeatparrish.com/homes-for-sale",
+        "bytes": 2050354,
+        "title": "Homes for Sale in Parrish, Florida | Life at Parrish",
+        "linkCount": 108
+      },
+      {
+        "url": "https://www.lifeatparrish.com/build-your-home",
+        "label": "keyword-match: Build",
+        "slug": "build-your-home",
+        "status": 200,
+        "finalUrl": "https://www.lifeatparrish.com/build-your-home",
+        "bytes": 2038778,
+        "title": "Build Your Home | Life at Parrish",
+        "linkCount": 100
+      },
+      {
+        "url": "https://www.lifeatparrish.com/neighborhood/river-plantation",
+        "label": "keyword-match: River Plantation",
+        "slug": "neighborhood_river-plantation",
+        "status": 200,
+        "finalUrl": "https://www.lifeatparrish.com/neighborhood/river-plantation",
+        "bytes": 2039984,
+        "title": "River Plantation | Life at Parrish",
+        "linkCount": 65
+      }
+    ]
+  }
+}
