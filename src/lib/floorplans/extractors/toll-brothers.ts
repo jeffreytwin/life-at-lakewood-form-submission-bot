@@ -1,7 +1,12 @@
 // Toll Brothers extractor (json_api): community pages embed complete
-// model/QMI data in __NEXT_DATA__ (masterCommunityComponent.homes.models).
-// Photos and blueprint drawings arrive pre-separated (headShot/media vs the
-// floorplans array), which maps directly onto galleryImages/blueprintImages.
+// model/QMI data in __NEXT_DATA__. Master community pages carry the
+// aggregate base models at masterCommunityComponent.homes.models plus a
+// per-collection communities[] array whose models hold the quick move-in
+// inventory in a qmis[] list (QMI subpages are separate URLs, but their
+// data is embedded here in full). Collection pages carry the same shape
+// under communityComponent instead. Photos and blueprint drawings arrive
+// pre-separated (headShot/media vs the floorplans array), which maps
+// directly onto galleryImages/blueprintImages.
 
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
@@ -28,6 +33,18 @@ interface TollModel {
   headShot?: { media?: { url?: string } };
   media?: { url?: string };
   floorplans?: { url?: string }[];
+  // QMI-specific fields (entries inside a model's qmis[] list)
+  address?: string;
+  street?: string;
+  modelName?: string;
+  moveInDate?: string;
+  lotNumber?: string;
+  qmis?: TollModel[];
+}
+
+interface TollHomesContainer {
+  homes?: { models?: TollModel[] };
+  communities?: TollHomesContainer[];
 }
 
 const money = (n: number | undefined) =>
@@ -70,6 +87,63 @@ function normalizeModel(m: TollModel): NormalizedPlan {
   };
 }
 
+function normalizeQmi(q: TollModel): NormalizedPlan {
+  const base = normalizeModel(q);
+  const address = (q.address ?? q.street ?? "").trim();
+  const name = address || `${q.modelName ?? q.name ?? "Home"} (Quick Move-In ${q.commPlanID ?? ""})`.trim();
+  return {
+    ...base,
+    planKey: normKey(name),
+    name,
+    quickMoveIn: true,
+    raw: {
+      ...base.raw,
+      relatedPlan: q.modelName ?? null,
+      moveInDate: q.moveInDate ?? null,
+      lotNumber: q.lotNumber ?? null,
+    },
+  };
+}
+
+/** Collect base models and every model's embedded QMI inventory. */
+function collectPlans(container: TollHomesContainer | null | undefined): NormalizedPlan[] {
+  if (!container) return [];
+  const out: NormalizedPlan[] = [];
+  const modelLists = [
+    container.homes?.models ?? [],
+    ...(container.communities ?? []).map((c) => c?.homes?.models ?? []),
+  ];
+  for (const models of modelLists) {
+    for (const m of models) {
+      // Base plan (nameless entries are QMI-only wrappers — skip the shell,
+      // keep its qmis).
+      const plan = normalizeModel(m);
+      if (plan.planKey && !m.isQMI) out.push(plan);
+      for (const q of m.qmis ?? []) {
+        const qmi = normalizeQmi(q);
+        if (qmi.planKey) out.push(qmi);
+      }
+    }
+  }
+  return out;
+}
+
+/** Pure mapping from a parsed __NEXT_DATA__ document to normalized plans. */
+export function plansFromNextData(data: unknown): NormalizedPlan[] {
+  const pageData = (data as {
+    props?: { pageProps?: { pageData?: Record<string, unknown> } };
+  })?.props?.pageProps?.pageData;
+  // Master community pages embed everything (all collections + QMIs);
+  // collection pages carry the same shape under communityComponent.
+  const plans = [
+    ...collectPlans(pageData?.masterCommunityComponent as TollHomesContainer | null),
+    ...collectPlans(pageData?.communityComponent as TollHomesContainer | null),
+  ];
+  const byKey = new Map<string, NormalizedPlan>();
+  for (const p of plans) if (!byKey.has(p.planKey)) byKey.set(p.planKey, p);
+  return [...byKey.values()];
+}
+
 export async function extractTollBrothers(params: {
   url?: string;
 }): Promise<NormalizedPlan[]> {
@@ -83,9 +157,7 @@ export async function extractTollBrothers(params: {
   const html = await res.text();
   const m = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
   if (!m) throw new Error("no __NEXT_DATA__ found (page structure changed?)");
-  const data = JSON.parse(m[1]);
-  const models: TollModel[] | undefined =
-    data?.props?.pageProps?.pageData?.masterCommunityComponent?.homes?.models;
-  if (!Array.isArray(models)) throw new Error("homes.models missing from __NEXT_DATA__");
-  return models.map(normalizeModel).filter((p) => p.planKey);
+  const plans = plansFromNextData(JSON.parse(m[1]));
+  if (!plans.length) throw new Error("no models found in __NEXT_DATA__ (page structure changed?)");
+  return plans;
 }
