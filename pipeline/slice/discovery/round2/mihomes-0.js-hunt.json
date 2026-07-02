@@ -1,0 +1,44 @@
+[
+ {
+  "src": "https://www.mihomes.com/layouts/system/VisitorIdentification.js",
+  "bytes": 3088,
+  "endpoints": []
+ },
+ {
+  "src": "https://cdn.mihomes.com/assets/toolkit/js/toolkit_common.js?ver=202606182348",
+  "bytes": 652265,
+  "endpoints": [
+   "https://maps.googleapis.com/maps/api/js"
+  ]
+ },
+ {
+  "src": "https://cdn.mihomes.com/assets/toolkit/js/toolkit.js?ver=202606182348",
+  "bytes": 148575,
+  "endpoints": [
+   "https://maps.googleapis.com/maps/api/staticmap?size=376x423&markers=size:small%7Ccolor:0xA8160F%7C&center=",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/SearchVirtualTour",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/Favorite/",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/Favorite/__OBJECT_ID__",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/TypeaheadSearch",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/DivisionSearch",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/FavoriteDataEndpoint/FavoriteSearches",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/Favorite/?__OBJECT_ID__",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/MarketName/",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/Search",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/LocationSearch",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/LocationSearchTypeahead",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/SiteSearch",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api-Controllers/CalculatorPreference/",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/Auth/",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/Auth/_/IsEmailAddressNotAssociatedWithAccount",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api/PrivacyPolicyApi",
+   "/sitecore/api/ssc/MIHomes-Project-Website-Api-Controllers/PlansQmi/?id=%7B",
+   "/sitecore/api/ssc/MIHomes-Feature-website-Api-Controllers/similarCommunities?id="
+  ]
+ },
+ {
+  "src": "https://cdn.mihomes.com/assets/toolkit/js/common.js?ver=202606182348",
+  "bytes": 3069,
+  "endpoints": []
+ }
+]

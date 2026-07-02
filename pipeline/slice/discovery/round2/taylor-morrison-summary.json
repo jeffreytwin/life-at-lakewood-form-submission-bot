@@ -1,0 +1,63 @@
+[
+ {
+  "url": "https://www.taylormorrison.com/fl/sarasota/lakewood-ranch",
+  "status": 200,
+  "bytes": 119050,
+  "hasNextData": false,
+  "hasNuxt": false,
+  "hasApollo": false,
+  "hasInitialState": false,
+  "jsonScripts": [
+   {
+    "attrs": "type=\"application/ld+json\"",
+    "bytes": 43106
+   }
+  ],
+  "apiUrls": [
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/cluster90c7af740ac14ae3bc51297e2696c11e?v=5f0b8cd2",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/clusterhover8ced5c860816477f979dce5fc73d3952?v=4618a078",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/disclaimers-logos-2-color12a3abb800ca43178a580a339c5d7d37?v=8c3f55a7",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogo8e0a015d08ba4e4a8481ef628c0b006f?v=6cb9996e",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogoMobileffadcc3a0fa949eea295aad259e20658?v=1a6508f4",
+   "https://www.lifestoryresearch.com\\",
+   "https://www.taylormorrison.com/search?&q={query}",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/IBISCOAAsch514a2e96bee5cb404bbddde10925df6627?v=cb85ef54"
+  ],
+  "blocks": 0,
+  "nextData": false,
+  "jsHunt": 3
+ },
+ {
+  "url": "https://www.taylormorrison.com/fl/tampa/firethorn-community-group-page",
+  "status": 200,
+  "bytes": 194463,
+  "hasNextData": false,
+  "hasNuxt": false,
+  "hasApollo": false,
+  "hasInitialState": false,
+  "jsonScripts": [
+   {
+    "attrs": "type=\"application/ld+json\"",
+    "bytes": 33559
+   }
+  ],
+  "apiUrls": [
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/Breianne-Medinaf48e0b2366494fec84fcf3ad8429f7a0?v=e88efd28",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/RiversLandingResortPool1005-1200x6756cb8c37976dd451aa00ba0f8cbf6b8f3?v=f183a2af",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/taylor-morrison-community-family-dogf996215595e14ed3b550c0a8dc83b670?v=c39aeaee",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/6465-SWFL-Firethorn-Logo-CMYKaaecb56fa1e94d16b521fc8cd5e0cc49?v=6dc888a2",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/80b475ca12be49d6bbba435a22e4bdff?v=5439fd60",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogo8e0a015d08ba4e4a8481ef628c0b006f?v=6cb9996e",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogoMobileffadcc3a0fa949eea295aad259e20658?v=1a6508f4",
+   "https://www.lifestoryresearch.com\\",
+   "https://www.taylormorrison.com/search?&q={query}",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/SpruceAsch6A34cde55f981b4c11b508f6821f771448?v=f96342d6",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/CypressAsch6A051524a3e484c2c37c44cda3497e71b15aeb93?v=0add7418",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/AzeleaDsch1051524a69b8ab0bea64c9592d3b92ae8d8b290?v=e9aca57d",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/HollyCsch9A051524c3f7c6f8e3d9451885e31df6b7ae751a?v=cc0a60c5"
+  ],
+  "blocks": 0,
+  "nextData": false,
+  "jsHunt": 3
+ }
+]

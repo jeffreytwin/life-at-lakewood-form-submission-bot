@@ -1,0 +1,13 @@
+[
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "bytes": 868767,
+  "endpoints": [
+   "https://mattamyhomes.com/api/mattamy-homes",
+   "/api/mattamy-homes",
+   "/sitecore/api/jss/dictionary/",
+   "/sitecore/api/layout/",
+   "/graphql"
+  ]
+ }
+]

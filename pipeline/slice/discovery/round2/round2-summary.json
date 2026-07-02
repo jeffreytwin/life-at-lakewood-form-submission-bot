@@ -1,0 +1,109 @@
+{
+ "meritage": {
+  "pages": [
+   {
+    "slug": "salt-meadows-main",
+    "status": 200,
+    "nextData": true
+   },
+   {
+    "slug": "salt-meadows-classic",
+    "status": 200,
+    "nextData": true
+   },
+   {
+    "slug": "salt-meadows-premier",
+    "status": 200,
+    "nextData": true
+   },
+   {
+    "slug": "salt-meadows-plan-bluebell",
+    "status": 200,
+    "nextData": true
+   }
+  ],
+  "sitemapUrls": 13
+ },
+ "taylorMorrison": {
+  "sitemapMatches": 78,
+  "pages": [
+   {
+    "status": 200,
+    "apiUrls": 8
+   },
+   {
+    "status": 200,
+    "apiUrls": 13
+   }
+  ]
+ },
+ "mattamy": [
+  {
+   "status": 200,
+   "apiUrls": 0
+  },
+  {
+   "status": 200,
+   "apiUrls": 0
+  }
+ ],
+ "mihomes": {
+  "searchJs": 200,
+  "pages": [
+   {
+    "status": 200,
+    "apiUrls": 4
+   },
+   {
+    "status": 200,
+    "apiUrls": 4
+   }
+  ]
+ },
+ "drb": {
+  "homeStatus": 200,
+  "target": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview",
+  "targetStatus": 200
+ },
+ "leeWetherington": [
+  {
+   "domain": "leewetherington.com",
+   "status": 200
+  },
+  {
+   "domain": "www.lwhomes.net",
+   "status": 404
+  }
+ ],
+ "ici": [
+  {
+   "profile": "chrome-full",
+   "status": 403
+  },
+  {
+   "profile": "firefox",
+   "status": 403
+  },
+  {
+   "profile": "googlebot",
+   "status": 403
+  }
+ ],
+ "nealSignature": {
+  "attempts": [
+   {
+    "profile": "chrome-full",
+    "status": 403
+   },
+   {
+    "profile": "firefox",
+    "status": 403
+   },
+   {
+    "profile": "googlebot",
+    "status": 403
+   }
+  ],
+  "viaParent": 4
+ }
+}

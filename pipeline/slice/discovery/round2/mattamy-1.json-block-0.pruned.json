@@ -1,0 +1,1540 @@
+{
+ "scriptAttrs": "type=\"application/json\" id=\"__JSS_STATE__\"",
+ "data": {
+  "sitecore": {
+   "context": {
+    "visitorIdentificationTimestamp": 639186273531278600,
+    "pageEditing": false,
+    "site": {
+     "name": "mattamy-homes"
+    },
+    "pageState": "normal",
+    "language": "en",
+    "itemPath": "/florida/sarasota-bradenton/venice/wellen-park/lakespur",
+    "ContextID": {
+     "value": "{B4731AE3-A04F-4B06-8C10-FC796EB04321}"
+    },
+    "geolocation": {
+     "value": {
+      "latitude": 38.7095,
+      "longitude": -78.1539,
+      "country": "US"
+     }
+    }
+   },
+   "route": {
+    "name": "lakespur",
+    "displayName": "Lakespur at Wellen Park",
+    "fields": {
+     "Select a MLS Name": {
+      "id": "30ab28de-c8a7-428c-8987-5b57ee7cb574",
+      "url": "/florida/sarasota-bradenton/MLS/My-Florida-Regional-MLS-dba-Stellar-MLS",
+      "name": "My Florida Regional MLS dba Stellar MLS",
+      "displayName": "My Florida Regional MLS dba Stellar MLS [Stellar MLS / MFRMLS]",
+      "fields": {
+       "dSID": {
+        "value": "ORFL"
+       }
+      }
+     },
+     "Community status": {
+      "id": "67321274-1706-4984-ae92-4e3eeeec1015",
+      "url": "/Data/Lookups/Community-Statuses/Now-Selling",
+      "name": "Now Selling",
+      "displayName": "Now Selling",
+      "fields": {
+       "title": {
+        "value": "Now Selling"
+       },
+       "shortDescription": {
+        "value": "Now Selling"
+       },
+       "Community Status": {
+        "id": "44c85f30-e833-4124-aa0a-b77b5d818841",
+        "url": "/Data/Lookups/BDX/Community-Statuses/Active",
+        "name": "Active",
+        "displayName": "Active",
+        "fields": {}
+       }
+      }
+     },
+     "closeDate": {
+      "value": "0001-01-01T00:00:00Z"
+     },
+     "Community styles": [
+      {
+       "id": "05695d7c-ba92-49fe-84fb-089925cb5dc6",
+       "url": "/Data/Lookups/BDX/Community-Styles/Low-Maintenance",
+       "name": "Low Maintenance",
+       "displayName": "Low Maintenance",
+       "fields": {
+        "donotincludeinthethirdpartyfeeds": {
+         "value": true
+        },
+        "displayName": {
+         "value": "Low Maintenance"
+        }
+       }
+      },
+      {
+       "id": "d96f27de-7743-41ed-9e2e-fc8dd80716ec",
+       "url": "/Data/Lookups/BDX/Community-Styles/MasterPlanned",
+       "name": "MasterPlanned",
+       "displayName": "MasterPlanned",
+       "fields": {
+        "donotincludeinthethirdpartyfeeds": {
+         "value": false
+        },
+        "displayName": {
+         "value": "Master-Planned Community"
+        }
+       }
+      }
+     ],
+     "communityOverrideText": {
+      "value": ""
+     },
+     "qMIDefaultSort": {
+      "value": "Ready Date"
+     },
+     "Form Selector": {
+      "id": "1ec0519a-2eab-406e-a52d-53252e25b9a4",
+      "url": "/sitecore/Forms/Feature/Product/ScheduleAVisit",
+      "name": "ScheduleAVisit",
+      "displayName": "ScheduleAVisit",
+      "fields": {
+       "cssClass": {
+        "value": ""
+       },
+       "Css Class Options": [],
+       "isAjax": {
+        "value": true
+       },
+       "isRobotDetectionEnabled": {
+        "value": true
+       },
+       "isTemplate": {
+        "value": false
+       },
+       "scripts": {
+        "value": "jquery-3.4.1.min.js|jquery.validate.min.js|jquery.validate.unobtrusive.min.js|jquery.unobtrusive-ajax.min.js|form.validate.js|form.tracking.js|form.conditions.js|jquery.validate.unobtrusive.bootstrap.…(206)"
+       },
+       "styles": {
+        "value": ""
+       },
+       "Field Type": {
+        "id": "3a4df9c0-7c82-4415-90c3-25440257756d",
+        "url": "/sitecore/system/Settings/Forms/Field-Types/Form",
+        "name": "Form",
+        "displayName": "Form",
+        "fields": {
+         "backgroundColor": {
+          "value": ""
+         },
+         "Icon": {
+          "value": ""
+         },
+         "isDisabled": {
+          "value": false
+         },
+         "spritePosition": {
+          "value": ""
+         },
+         "Field Template": null,
+         "Allowed Validations": [],
+         "Css Class Autocomplete Options": [],
+         "modelType": {
+          "value": "Sitecore.ExperienceForms.Mvc.Models.FormViewModel,Sitecore.ExperienceForms.Mvc"
+         },
+         "Property Editor": null,
+         "viewPath": {
+          "value": "Form"
+         }
+        }
+       },
+       "isTrackingEnabled": {
+        "value": true
+       },
+       "ValueProviderConditions": null
+      }
+     },
+     "Search Items": [],
+     "divisionCode": {
+      "value": "SWF"
+     },
+     "disableChatbotforthiscommunity": {
+      "value": false
+     },
+     "eloquaID": {
+      "value": "LSP"
+     },
+     "activeBanner": {
+      "value": false
+     },
+     "bannerText": {
+      "value": ""
+     },
+     "bannerAlignment": {
+      "value": ""
+     },
+     "Design Studio": [
+      {
+       "id": "29db68d5-be0b-4cce-bda4-9df20ef14c85",
+       "url": "/Data/Design-Studio/tampa-and-southwest-florida-design-studio",
+       "name": "tampa-and-southwest-florida-design-studio",
+       "displayName": "Tampa Design Studio",
+       "fields": {
+        "Logo": {
+         "value": ""
+        },
+        "Other Photo": {
+         "value": ""
+        },
+        "legacyLogo": {
+         "value": {
+          "src": "https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/MAT_LOGO_02.png?h=500&iar=0&w=500&hash=3C1D252521A54DCB26020FE61F73FB93",
+          "alt": "Mattamy logo",
+          "width": "500",
+          "height": "500"
+         }
+        },
+        "legacyOtherPhoto": {
+         "value": {}
+        },
+        "cTAURL": {
+         "value": {
+          "href": ""
+         }
+        },
+        "contactPageDescription": {
+         "value": ""
+        },
+        "cTAText": {
+         "value": ""
+        },
+        "listingsShortDescription": {
+         "value": "Personalize your new construction Mattamy home in Tampa Florida at the design studio."
+        },
+        "listingsKeywords": {
+         "value": ""
+        },
+        "listingsLongDescription": {
+         "value": "Visit the Tampa Florida Design Studio by Appointment Only. Mattamy Homes is the largest family-owned homebuilder in North America. We have built more than 135,000 homes in hundreds of communities. We …(244)"
+        },
+        "email": {
+         "value": ""
+        },
+        "gBPLink": {
+         "value": {
+          "href": ""
+         }
+        },
+        "Website": {
+         "value": "<link linktype=\"external\" url=\"https://mattamyhomes.com/florida/tampa/market-design-studio\" />"
+        },
+        "storeCode": {
+         "value": ""
+        },
+        "displayTextSunday": {
+         "value": ""
+        },
+        "Special End": {
+         "value": ""
+        },
+        "showFriday": {
+         "value": true
+        },
+        "showTuesday": {
+         "value": true
+        },
+        "displayTextFriday": {
+         "value": "By Appointment Only"
+        },
+        "Wednesday Start": {
+         "value": ""
+        },
+        "showWednesday": {
+         "value": true
+        },
+        "Saturday End": {
+         "value": ""
+        },
+        "showThursday": {
+         "value": true
+        },
+        "displayTextWednesday": {
+         "value": "By Appointment Only"
+        },
+        "Saturday Start": {
+         "value": ""
+        },
+        "Friday Start": {
+         "value": ""
+        },
+        "Wednesday End": {
+         "value": ""
+        },
+        "showSpecial": {
+         "value": false
+        },
+        "displayTextThursday": {
+         "value": "By Appointment Only"
+        },
+        "Friday End": {
+         "value": ""
+        },
+        "Tuesday End": {
+         "value": ""
+        },
+        "showSunday": {
+         "value": false
+        },
+        "showSaturday": {
+         "value": false
+        },
+        "Special Start": {
+         "value": ""
+        },
+        "Monday Start": {
+         "value": ""
+        },
+        "Sunday Start": {
+         "value": ""
+        },
+        "Thursday Start": {
+         "value": ""
+        },
+        "Thursday End": {
+         "value": ""
+        },
+        "displayTextSaturday": {
+         "value": ""
+        },
+        "Tuesday Start": {
+         "value": ""
+        },
+        "Sunday End": {
+         "value": ""
+        },
+        "Monday End": {
+         "value": ""
+        },
+        "showMonday": {
+         "value": true
+        },
+        "displayTextTuesday": {
+         "value": "By Appointment Only"
+        },
+        "displayTextMonday": {
+         "value": "By Appointment Only"
+        },
+        "divisionCode": {
+         "value": ""
+        },
+        "State or Province": {
+         "id": "1ba57216-ee56-476d-ac96-4a198a20aa14",
+         "url": "/Data/Lookups/States/Florida",
+         "name": "Florida",
+         "displayName": "Florida",
+         "fields": {
+          "abbreviation": {
+           "value": "FL"
+          },
+          "name": {
+           "value": "Florida"
+          }
+         }
+        },
+        "streetAddress1": {
+         "value": "4107 Crescent Park Drive"
+        },
+        "ziporPostalCode": {
+         "value": "33578"
+        },
+        "phoneNumberMessage": {
+         "value": ""
+        },
+        "city": {
+         "value": "Riverview"
+        },
+        "streetAddress2": {
+         "value": ""
+        },
+        "phoneNumberCall": {
+         "value": "813-723-3046"
+        },
+        "Country": {
+         "id": "3be74693-64b4-4879-8bae-b64b7d4451ca",
+         "url": "/Data/Lookups/Countries/United-States",
+         "name": "United States",
+         "displayName": "United States",
+         "fields": {
+          "abbreviation": {
+           "value": "US"
+          },
+          "name": {
+           "value": "USA"
+          }
+         }
+        },
+        "latitude": {
+         "value": 27.9133678
+        },
+        "longitude": {
+         "value": -82.3484983
+        },
+        "locationName": {
+         "value": "Mattamy Homes - Tampa Design Studio"
+        },
+        "eloquaID": {
+         "value": "TPADS"
+        },
+        "locationActive": {
+         "value": true
+        },
+        "openingDate": {
+         "value": "0001-01-01T00:00:00Z"
+        },
+        "timeZone": {
+         "value": "Eastern"
+        }
+       }
+      }
+     ],
+     "homeCutawayTitle": {
+      "value": "Building Better"
+     },
+     "homeCutawayURL": {
+      "value": ""
+     },
+     "homeCutawayCopy": {
+      "value": "We build homes that provide additional comfort and greater savings thanks to innovative solutions."
+     },
+     "textStyle": {
+      "value": ""
+     },
+     "donotshowplanprice": {
+      "value": false
+     },
+     "displayText": {
+      "value": ""
+     },
+     "Coming Soon or Zero Plan Home Types": [
+      {
+       "id": "1eb959b2-786c-4d44-8ed0-da620af82209",
+       "url": "/Data/Lookups/Home-Types/Condominium",
+       "name": "Condominium",
+       "displayName": "Condominium",
+       "fields": {
+        "planSEOHomeType": {
+         "value": "Condominium"
+        },
+        "communitySEOHomeType": {
+         "value": "Condominiums"
+        },
+        "metaHomeType": {
+         "value": "Condo"
+        },
+        "homeType": {
+         "value": "Condominium"
+        }
+       }
+      }
+     ],
+     "elementarySchool": {
+      "value": "Taylor Ranch Elementary School"
+     },
+     "highSchool": {
+      "value": "Venice High School"
+     },
+     "districtName": {
+      "value": "Sarasota County Public Schools"
+     },
+     "middleSchool": {
+      "value": "Venice Middle School"
+     },
+     "textAlignment": {
+      "value": "left"
+     },
+     "latitude": {
+      "value": 27.008088
+     },
+     "longitude": {
+      "value": -82.301455
+     },
+     "State or Province": {
+      "id": "1ba57216-ee56-476d-ac96-4a198a20aa14",
+      "url": "/Data/Lookups/States/Florida",
+      "name": "Florida",
+      "displayName": "Florida",
+      "fields": {
+       "abbreviation": {
+        "value": "FL"
+       },
+       "name": {
+        "value": "Florida"
+       }
+      }
+     },
+     "streetAddress1": {
+      "value": "Luminous Ave"
+     },
+     "ziporPostalCode": {
+      "value": "34293"
+     },
+     "phoneNumberMessage": {
+      "value": ""
+     },
+     "city": {
+      "value": "Venice"
+     },
+     "streetAddress2": {
+      "value": ""
+     },
+     "phoneNumberCall": {
+      "value": ""
+     },
+     "Country": {
+      "id": "3be74693-64b4-4879-8bae-b64b7d4451ca",
+      "url": "/Data/Lookups/Countries/United-States",
+      "name": "United States",
+      "displayName": "United States",
+      "fields": {
+       "abbreviation": {
+        "value": "US"
+       },
+       "name": {
+        "value": "USA"
+       }
+      }
+     },
+     "planBlockHeadline": {
+      "value": "Explore available floorplans"
+     },
+     "planBlockCopy": {
+      "value": "Take a look at the variety of plans this community offers."
+     },
+     "qMIBlockCopy": {
+      "value": "If time is of the essence, then our Quick Move-In Homes are for you."
+     },
+     "qMIBlockHeadline": {
+      "value": "Quick Move-In Homes ready when you are"
+     },
+     "interactiveSitemapDesktopURL": {
+      "value": "https://myscp.ml3ds-icon.com/scp/159749/site-map/184897?standalone=true"
+     },
+     "Interactive Sitemap Image": {
+      "value": ""
+     },
+     "interactiveSitemapTitle": {
+      "value": "Explore the community"
+     },
+     "interactiveSitemapFullWidth": {
+      "value": false
+     },
+     "interactiveSitemapCopy": {
+      "value": "Take a closer look at the community sitemap and get familiar with our available offerings."
+     },
+     "interactiveSitemapMobileCTACopy": {
+      "value": "VIEW SITEMAP"
+     },
+     "Interactive Sitemap PDF": {
+      "value": ""
+     },
+     "contactCopy": {
+      "value": ""
+     },
+     "scheduleAppointmentCTA": {
+      "value": "Schedule Appointment"
+     },
+     "2ndSalesCenterSalesPersonTitle": {
+      "value": "New Home Team"
+     },
+     "2ndSalesCenterScheduleTitle": {
+      "value": "Hours"
+     },
+     "salesCenterTitle": {
+      "value": "New Home Gallery"
+     },
+     "notinCommunity": {
+      "value": false
+     },
+     "scheduleAppointment": {
+      "value": "Schedule an Appointment"
+     },
+     "cTATitle": {
+      "value": "Get Information"
+     },
+     "contactTitle": {
+      "value": ""
+     },
+     "Customer Portal Customer Care": [],
+     "customerCareTitle": {
+      "value": "Customer Care"
+     },
+     "2ndSalesCenterSalesCenterTitle": {
+      "value": "New Home Gallery"
+     },
+     "Sales Centers": [
+      {
+       "id": "da8317f6-0899-4bb0-9287-bc1581388147",
+       "url": "/Data/Sales-Centers/tpa-lakespur-pj",
+       "name": "tpa-lakespur-pj",
+       "displayName": "Tpa Lakespur Pj",
+       "fields": {
+        "latitude": {
+         "value": null
+        },
+        "longitude": {
+         "value": null
+        },
+        "listingsLongDescription": {
+         "value": "Discover the best of Southwest Florida at Lakespur, an ideally located neighborhood of thoughtfully designed coach homes and resort-style amenities. The community features a resort-style pool, shaded …(622)"
+        },
+        "gBPLink": {
+         "value": {
+          "href": "https://maps.google.com/maps?cid=4074743322467816360",
+          "linktype": "external",
+          "url": "https://maps.google.com/maps?cid=4074743322467816360"
+         }
+        },
+        "email": {
+         "value": "wp.lakespur.tpa@mattamycorp.com"
+        },
+        "thirdPartyFeedAgentName": {
+         "value": "Lakespur at Wellen Park"
+        },
+        "Website": {
+         "value": "<link linktype=\"external\" url=\"https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/lakespur\" />"
+        },
+        "Sales Center Note": null,
+        "listingsKeywords": {
+         "value": "mattamy homes, new homes, new construction near me, new home construction near me,  home builders, home builder, new home builders, new home builders near me, home builders near me, new home construct…(5118)"
+        },
+        "listingsShortDescription": {
+         "value": "Explore new homes by Mattamy Homes in the Sarasota-Bradenton area. Find your dream home today!"
+        },
+        "showMonday": {
+         "value": true
+        },
+        "Saturday End": {
+         "value": "6:00 PM"
+        },
+        "showSaturday": {
+         "value": true
+        },
+        "Friday Start": {
+         "value": "10:00 AM"
+        },
+        "displayTextTuesday": {
+         "value": ""
+        },
+        "showFriday": {
+         "value": true
+        },
+        "displayTextWednesday": {
+         "value": ""
+        },
+        "displayTextThursday": {
+         "value": ""
+        },
+        "displayTextMonday": {
+         "value": ""
+        },
+        "Monday Start": {
+         "value": "12:00 PM"
+        },
+        "Thursday Start": {
+         "value": "10:00 AM"
+        },
+        "showSunday": {
+         "value": true
+        },
+        "Wednesday End": {
+         "value": "6:00 PM"
+        },
+        "showTuesday": {
+         "value": true
+        },
+        "displayTextSunday": {
+         "value": ""
+        },
+        "Sunday End": {
+         "value": "6:00 PM"
+        },
+        "Sunday Start": {
+         "value": "12:00 PM"
+        },
+        "showThursday": {
+         "value": true
+        },
+        "Tuesday End": {
+         "value": "6:00 PM"
+        },
+        "displayTextSaturday": {
+         "value": ""
+        },
+        "Wednesday Start": {
+         "value": "10:00 AM"
+        },
+        "Friday End": {
+         "value": "6:00 PM"
+        },
+        "Tuesday Start": {
+         "value": "10:00 AM"
+        },
+        "Monday End": {
+         "value": "6:00 PM"
+        },
+        "displayTextFriday": {
+         "value": ""
+        },
+        "Thursday End": {
+         "value": "6:00 PM"
+        },
+        "Saturday Start": {
+         "value": "10:00 AM"
+        },
+        "showWednesday": {
+         "value": true
+        },
+        "State or Province": {
+         "id": "1ba57216-ee56-476d-ac96-4a198a20aa14",
+         "url": "/Data/Lookups/States/Florida",
+         "name": "Florida",
+         "displayName": "Florida",
+         "fields": {
+          "abbreviation": {
+           "value": "FL"
+          },
+          "name": {
+           "value": "Florida"
+          }
+         }
+        },
+        "streetAddress1": {
+         "value": "17330 Moonflower Dr"
+        },
+        "ziporPostalCode": {
+         "value": "34293"
+        },
+        "phoneNumberMessage": {
+         "value": ""
+        },
+        "city": {
+         "value": "Venice"
+        },
+        "streetAddress2": {
+         "value": ""
+        },
+        "phoneNumberCall": {
+         "value": "941-367-4524"
+        },
+        "Country": {
+         "id": "3be74693-64b4-4879-8bae-b64b7d4451ca",
+         "url": "/Data/Lookups/Countries/United-States",
+         "name": "United States",
+         "displayName": "United States",
+         "fields": {
+          "abbreviation": {
+           "value": "US"
+          },
+          "name": {
+           "value": "USA"
+          }
+         }
+        },
+        "timeZone": {
+         "value": "Eastern"
+        }
+       }
+      }
+     ],
+     "2nd Sales Center": [],
+     "salesPersonTitle": {
+      "value": "New Home Team"
+     },
+     "scheduleTitle": {
+      "value": "Hours"
+     },
+     "formTitle": {
+      "value": "Sign Up For Community Updates"
+     },
+     "searchCTALink": {
+      "value": {
+       "href": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/lakespur#contact",
+       "linktype": "external",
+       "url": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/lakespur#contact",
+       "anchor": "",
+       "target": "_blank"
+      }
+     },
+     "searchCTAText": {
+      "value": "Get Information"
+     },
+     "locationName": {
+      "value": "Mattamy Homes - Lakespur at Wellen Park"
+     },
+     "locationActive": {
+      "value": true
+     },
+     "openingDate": {
+      "value": "0001-01-01T00:00:00Z"
+     },
+     "sitemapChangeFrequency": {
+      "value": ""
+     },
+     "donotincludeSitemap": {
+      "value": false
+     },
+     "sitemappriority": {
+      "value": "0.1"
+     },
+     "heroScrollToSection": {
+      "value": ""
+     },
+     "Hero Card Image": {
+      "value": ""
+     },
+     "hidePromoBanner": {
+      "value": false
+     },
+     "line1": {
+      "value": ""
+     },
+     "cTALink": {
+      "value": {
+       "href": ""
+      }
+     },
+     "DAM CTA Link": {
+      "value": ""
+     },
+     "line2": {
+      "value": ""
+     },
+     "enablePopup": {
+      "value": false
+     },
+     "displayBanner": {
+      "value": false
+     },
+     "line3": {
+      "value": ""
+     },
+     "cTAText": {
+      "value": ""
+     },
+     "Banner Image": {
+      "value": ""
+     },
+     "title": {
+      "value": ""
+     },
+     "reducedPadding": {
+      "value": false
+     },
+     "firstCTAText": {
+      "value": ""
+     },
+     "secondCTALink": {
+      "value": {
+       "href": ""
+      }
+     },
+     "DAM First CTA Link": {
+      "value": ""
+     },
+     "DAM Second CTA Link": {
+      "value": ""
+     },
+     "firstCTALink": {
+      "value": {
+       "href": ""
+      }
+     },
+     "secondCTAText": {
+      "value": ""
+     },
+     "legacyOpenGraphImage": {
+      "value": {
+       "src": "https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/MAT_LOGO_02.png?h=500&iar=0&w=500&hash=3C1D252521A54DCB26020FE61F73FB93",
+       "alt": "Mattamy logo",
+       "width": "500",
+       "height": "500"
+      }
+     },
+     "Open Graph Image": {
+      "value": ""
+     },
+     "openGraphMetaDescription": {
+      "value": "Lakespur offers thoughtfully designed, low-maintenance condos near shopping, dining, trails Downtown Wellen & resort-style amenities. Visit today!"
+     },
+     "openGraphTitle": {
+      "value": "New Condos in Venice, FL | Lakespur at Wellen Park"
+     },
+     "headline": {
+      "value": "Designed For the Way You Live"
+     },
+     "Logo": {
+      "value": "<asset assetItemId=\"{56588EB7-42E4-BFFE-CDE7-7710ECEEAA0E}\" quality=\"50037\" language=\"en\" assetId=\"75820\" />"
+     },
+     "copy": {
+      "value": "New beautifully decorated models are now open! Elevate your lifestyle with a new thoughtfully designed condo in the ideally located Lakespur neighborhood in Wellen Park. Here you will discover the bes…(825)"
+     },
+     "showFavorites": {
+      "value": true
+     },
+     "backgroundColor": {
+      "value": "bg-white"
+     },
+     "heroCopy": {
+      "value": "Stylish low-maintenance condos for vacation-style or year-round living "
+     },
+     "heroTitle": {
+      "value": "Lakespur at Wellen Park"
+     },
+     "Hero Image": {
+      "value": "<asset assetItemId=\"{00600DD6-7813-9AE2-C0C9-A0370E76C53D}\" quality=\"50034\" language=\"en\" assetId=\"113455\" />"
+     },
+     "heroVideoAltTextFileLinkText": {
+      "value": ""
+     },
+     "heroVideoBackgroundColor": {
+      "value": ""
+     },
+     "heroDisplayOption": {
+      "value": "Image"
+     },
+     "Hero Video Alt Text File": {
+      "value": ""
+     },
+     "Hero Video": {
+      "value": ""
+     }
+    },
+    "databaseName": "web",
+    "deviceId": "fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3",
+    "itemId": "b4731ae3-a04f-4b06-8c10-fc796eb04321",
+    "itemLanguage": "en",
+    "itemVersion": 38,
+    "layoutId": "53a20de9-1e21-525d-a382-96b8b7ef53d5",
+    "templateId": "690b696a-d887-47c6-b19b-db81cf88941a",
+    "templateName": "Community",
+    "placeholders": {
+     "jss-main": [
+      {
+       "uid": "067fa9b4-4cd6-43ca-ade4-5252d2b5ed38",
+       "componentName": "StandardPage",
+       "dataSource": "",
+       "params": {},
+       "placeholders": {
+        "page-head": [
+         {
+          "uid": "0ac9e090-8b73-4510-8459-628fd3638cb2",
+          "componentName": "Favicon",
+          "dataSource": "/sitecore/content/mattamy-homes/Data/Identity/Favicon",
+          "params": {},
+          "fields": {
+           "image_16x16": {
+            "value": {
+             "src": "https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/favicon-16x16.png?h=16&iar=0&w=16&hash=99AB50E12823AB9DC9652BD83E336427",
+             "alt": "favicon",
+             "width": "16",
+             "height": "16"
+            }
+           },
+           "image_32x32": {
+            "value": {
+             "src": "https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/favicon-32x32.png?h=32&iar=0&w=32&hash=8D07DD95840D13FA4D3DE47C4B6B2924",
+             "alt": "favicon",
+             "width": "32",
+             "height": "32"
+            }
+           }
+          }
+         },
+         {
+          "uid": "0598cc09-7bd4-40c7-bd0e-40d86b25319c",
+          "componentName": "OpenGraph",
+          "dataSource": "",
+          "params": {},
+          "fields": {
+           "value": {
+            "title": "New Condos in Venice, FL | Lakespur at Wellen Park",
+            "type": "website",
+            "url": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/lakespur",
+            "image": "https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/MAT_LOGO_02.png?as=0&dmc=0&iar=0&thn=0&udi=0",
+            "description": "Lakespur offers thoughtfully designed, low-maintenance condos near shopping, dining, trails Downtown Wellen & resort-style amenities. Visit today!"
+           }
+          }
+         },
+         {
+          "uid": "a493d6c5-c204-4e10-b01b-63f73d6bab2b",
+          "componentName": "CountrySelector",
+          "dataSource": "",
+          "params": {},
+          "fields": {
+           "titleCountrySelector": {
+            "value": "Welcome to Mattamy Homes"
+           },
+           "descriptionCountrySelector": {
+            "value": "Please tell us which country you are looking for a new home in."
+           }
+          }
+         }
+        ],
+        "page-header": [
+         {
+          "uid": "c0d40ac5-6ea3-4eb0-b0fb-949d390bfbb9",
+          "componentName": "Header",
+          "dataSource": "",
+          "params": {},
+          "fields": {
+           "logoSrc": {
+            "value": "https://mattamyhomes.com/-/media/Feature/Content/Identity/MattamyLogo.svg?as=0&dmc=0&iar=0&thn=0&udi=0"
+           },
+           "logoAlt": {
+            "value": "Lakespur at Wellen Park Mattamy logo in Venice Florida by Mattamy Homes"
+           },
+           "navigationItems": {
+            "value": [
+             {
+              "name": "USA Navigation Menu",
+              "navigationItems": [
+               {
+                "navigationTitle": "Find Your Dream Home",
+                "redirectUrl": "/search",
+                "navigationItems": []
+               },
+               {
+                "navigationTitle": "Design Studio",
+                "redirectUrl": "/design-studio",
+                "navigationItems": []
+               },
+               {
+                "navigationTitle": "Homebuying",
+                "redirectUrl": null,
+                "navigationItems": [
+                 "…(depth)",
+                 "…(depth)",
+                 "…(depth)"
+                ]
+               },
+               "…(6 items total)"
+              ]
+             },
+             {
+              "name": "CAN Navigation Menu",
+              "navigationItems": [
+               {
+                "navigationTitle": "Find Your Dream Home",
+                "redirectUrl": "/search",
+                "navigationItems": []
+               },
+               {
+                "navigationTitle": "Sustainability",
+                "redirectUrl": "/about/sustainability",
+                "navigationItems": []
+               },
+               {
+                "navigationTitle": "Resources",
+                "redirectUrl": null,
+                "navigationItems": [
+                 "…(depth)",
+                 "…(depth)",
+                 "…(depth)"
+                ]
+               },
+               "…(6 items total)"
+              ]
+             }
+            ]
+           },
+           "cities": {
+            "value": [
+             {
+              "state": "Alberta",
+              "href": "/search?productType=community&metro=Alberta&country=CAN&community=&hideMap=false",
+              "country": "CAN",
+              "cities": [
+               {
+                "name": "Calgary",
+                "href": "/search?productType=community&metro=Calgary&country=CAN&community=&hideMap=false",
+                "target": "",
+                "doNotSearch": false
+               },
+               {
+                "name": "Edmonton",
+                "href": "/search?productType=community&metro=Edmonton&country=CAN&community=&hideMap=false",
+                "target": "",
+                "doNotSearch": false
+               }
+              ],
+              "doNotSearch": false
+             },
+             {
+              "state": "Arizona",
+              "href": "/search?productType=community&metro=Arizona&country=USA&community=&hideMap=false",
+              "country": "USA",
+              "cities": [
+               {
+                "name": "Phoenix",
+                "href": "/search?productType=community&metro=Phoenix&country=USA&community=&hideMap=false",
+                "target": "",
+                "doNotSearch": false
+               },
+               {
+                "name": "Tucson",
+                "href": "/search?productType=community&metro=Tucson&country=USA&community=&hideMap=false",
+                "target": "",
+                "doNotSearch": false
+               }
+              ],
+              "doNotSearch": false
+             },
+             {
+              "state": "Florida",
+              "href": "/search?productType=community&metro=Florida&country=USA&community=&hideMap=false",
+              "country": "USA",
+              "cities": [
+               {
+                "name": "Fort Lauderdale",
+                "href": "/search?productType=community&metro=Fort Lauderdale&country=USA&community=&hideMap=false",
+                "target": "",
+                "doNotSearch": false
+               },
+               {
+                "name": "Jacksonville-St. Augustine",
+                "href": "/search?productType=community&metro=Jacksonville-St. Augustine&country=USA&community=&hideMap=false",
+                "target": "",
+                "doNotSearch": false
+               },
+               {
+                "name": "Naples-Fort Myers",
+                "href": "/search?productType=community&metro=Naples-Fort Myers&country=USA&community=&hideMap=false",
+                "target": "",
+                "doNotSearch": false
+               },
+               "…(9 items total)"
+              ],
+              "doNotSearch": false
+             },
+             "…(6 items total)"
+            ]
+           },
+           "currentPageType": {
+            "value": 2
+           },
+           "goToFavorites": {
+            "value": {
+             "sectionName": null,
+             "primary": false,
+             "text": "Go to Favorites",
+             "href": "/favorites",
+             "target": "",
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           },
+           "mouseflowTrackingURL": {
+            "value": "//cdn.mouseflow.com/projects/e3c0d243-4d49-4d8b-adf5-2679c9f97171.js"
+           },
+           "dynamicsJavaScriptCode": {
+            "value": ""
+           },
+           "dynamicsFormCaptureCode": {
+            "value": ""
+           },
+           "dataFormBlockID": {
+            "value": "f3a16ef9-a64d-ee11-be6f-000d3aff3da3"
+           },
+           "dynamicsScript": {
+            "value": "<script>\r\n                 (function (a, t, i) { var e = \"MSCI\"; var s = \"Analytics\"; var o = e + \"queue\"; a[o] = a[o] || []; var r = a[e] || function (n) { var t = {}; t[s] = {}; function e(e) { whil…(1796)"
+           },
+           "dynamicsChatbot": {
+            "value": {
+             "enableChatbot": true
+            }
+           },
+           "atlasRTXChatbotScript": {
+            "value": "<script type=\"text/javascript\">\r\n\twindow.atlasSettings = {\"auth_id\":\"3666b6b9a41f4d73908791ad9c8755d6\",\"snippetUrl\":\"https://static.atlasrtx.com/snippets/AtlasRTXV3.min.js\",\"env\":\"\",\"rtxContext\":{\"mod…(675)"
+           },
+           "canadaAtlasRTXChatbotScript": {
+            "value": "<script type=\"text/javascript\">\r\n\twindow.atlasSettings = {\"auth_id\":\"6E746BD617314F59BA3FAEE363C8DDDA\",\"snippetUrl\":\"https://static.atlasrtx.com/snippets/AtlasRTXV3.min.js\",\"env\":\"\",\"rtxContext\":{\"mod…(675)"
+           },
+           "dynaMXFormID": {
+            "value": "2abc10eb-63ed-ee11-a1fd-6045bd60a7a2"
+           },
+           "dynaMXFormAPIURL": {
+            "value": "https://public-can.mkt.dynamics.com/api/v1.0/orgs/f0894d05-5d8b-4c09-bbf1-2027d72f2841/landingpageforms"
+           },
+           "doNotIncludeSitemap": {
+            "value": false
+           }
+          }
+         }
+        ],
+        "page-content": [
+         {
+          "uid": "758887f2-4e4f-4185-b674-ff9d1ca637ef",
+          "componentName": "PromotionBanner",
+          "dataSource": "",
+          "params": {},
+          "fields": {
+           "promotionBanner": {
+            "value": {
+             "promotionBannerCA": {
+              "line1": null,
+              "line2": null,
+              "line3": null,
+              "ctaText": null,
+              "ctaLink": null,
+              "displayBanner": false,
+              "country": null,
+              "enablePopup": false,
+              "bannerImage": null
+             },
+             "promotionBannerUSA": {
+              "line1": "",
+              "line2": "<p style=\"font-size: 24px; line-height:24px; margin-bottom: 0; padding-bottom: 0; text-align: center;\">\nSave During our Semi-Annual <br />New Home Event -&nbsp;<a href=\"https://mattamyhomes.com/florid…(264)",
+              "line3": "",
+              "ctaText": "View Offers",
+              "ctaLink": {
+               "sectionName": null,
+               "primary": false,
+               "text": "View Offers",
+               "href": "https://mattamyhomes.com/florida/sarasota-bradenton/promos/jun-aug-2026",
+               "target": "",
+               "label": "",
+               "key": null,
+               "type": null,
+               "alternateText": null
+              },
+              "displayBanner": true,
+              "country": "United States",
+              "enablePopup": true,
+              "bannerImage": {
+               "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/150965-50420/matnat-460-june-july-campaign-2026-pop-up-promo",
+               "srcMobile": null,
+               "srcDesktop": null,
+               "alt": " Marketing"
+              }
+             }
+            }
+           }
+          }
+         },
+         {
+          "uid": "4fd38381-6812-4636-854b-2d8914428265",
+          "componentName": "NotificationBanner",
+          "dataSource": "",
+          "params": {},
+          "fields": {
+           "bannerText": {
+            "value": "Due to routine maintenance, our website may be inaccessible from 2-3 AM EST on October 28th."
+           },
+           "active": {
+            "value": ""
+           },
+           "marketBannerText": {
+            "value": null
+           },
+           "marketBannerActive": {
+            "value": false
+           },
+           "marketBannerAlignment": {
+            "value": null
+           }
+          }
+         },
+         {
+          "uid": "8c2d0b0d-2389-4b5f-ab38-40320279739c",
+          "componentName": "SubNavigationBar",
+          "dataSource": "",
+          "params": {},
+          "fields": {
+           "title": {
+            "value": "Lakespur at Wellen Park"
+           },
+           "state": {
+            "value": "Florida"
+           },
+           "stateAbbreviation": {
+            "value": "FL"
+           },
+           "city": {
+            "value": "Venice"
+           },
+           "zipcode": {
+            "value": "34293"
+           },
+           "firstAddress": {
+            "value": "17330 Moonflower Dr"
+           },
+           "secondAddress": {
+            "value": ""
+           }
+          },
+          "placeholders": {
+           "btn-cta": [
+            {
+             "uid": "92f582b2-14c5-4a67-943e-ec3395811125",
+             "componentName": "ButtonCTA",
+             "dataSource": "",
+             "params": {},
+             "fields": {
+              "buttonCta": {
+               "value": {
+                "sectionName": null,
+                "primary": false,
+                "text": "Get Information",
+                "href": null,
+                "target": null,
+                "label": null,
+                "key": null,
+                "type": null,
+                "alternateText": null
+               }
+              },
+              "scheduleAppointmentCTA": {
+               "value": {
+                "sectionName": null,
+                "primary": false,
+                "text": "Schedule Appointment",
+                "href": null,
+                "target": null,
+                "label": null,
+                "key": null,
+                "type": null,
+                "alternateText": null
+               }
+              },
+              "scheduleAppointment": {
+               "value": {
+                "title": "Schedule an appointment",
+                "firstCtaLink": "…(depth)",
+                "secondCtaLink": "…(depth)",
+                "textStyle": "blue-blue",
+                "reducedPadding": false
+               }
+              }
+             }
+            }
+           ]
+          }
+         },
+         "…(25 items total)"
+        ],
+        "page-footer": [
+         {
+          "uid": "ffac9be3-1c84-4327-98d9-0a021a3c80f2",
+          "componentName": "Footer",
+          "dataSource": "/sitecore/content/mattamy-homes/Data/Navigation/Footer/Footer",
+          "params": {},
+          "fields": {
+           "navigation": {
+            "value": [
+             {
+              "sectionName": "Explore",
+              "primary": false,
+              "text": "Find My Home",
+              "href": "/search",
+              "target": "",
+              "label": null,
+              "key": null,
+              "type": null,
+              "alternateText": null
+             },
+             {
+              "sectionName": "Explore",
+              "primary": false,
+              "text": "Design Studio",
+              "href": "/design-studio",
+              "target": "",
+              "label": null,
+              "key": null,
+              "type": null,
+              "alternateText": null
+             },
+             {
+              "sectionName": "Explore",
+              "primary": false,
+              "text": "Customer Care",
+              "href": "/customer-care",
+              "target": "",
+              "label": null,
+              "key": null,
+              "type": null,
+              "alternateText": null
+             },
+             "…(7 items total)"
+            ]
+           },
+           "social": {
+            "value": [
+             {
+              "sectionName": "Connect With Us",
+              "icon": "facebook",
+              "href": "https://www.facebook.com/MattamyHomesUSA"
+             },
+             {
+              "sectionName": "Connect With Us",
+              "icon": "instagram",
+              "href": "https://www.instagram.com/mattamyhomesusa/"
+             },
+             {
+              "sectionName": "Connect With Us",
+              "icon": "youtube",
+              "href": "https://www.youtube.com/user/MattamyHomesOnline"
+             },
+             "…(5 items total)"
+            ]
+           },
+           "news": {
+            "value": []
+           },
+           "copyright": {
+            "value": "Copyright © 2026 Mattamy Homes. All rights reserved. "
+           },
+           "disclamer": {
+            "value": ""
+           },
+           "legalLinks": {
+            "value": [
+             {
+              "sectionName": null,
+              "primary": false,
+              "text": "Accessibility",
+              "href": "/accessibility",
+              "target": "",
+              "label": null,
+              "key": null,
+              "type": null,
+              "alternateText": null
+             },
+             {
+              "sectionName": null,
+              "primary": false,
+              "text": "Cookie Settings",
+              "href": "javascript:Optanon.ToggleInfoDisplay()",
+              "target": "",
+              "label": null,
+              "key": null,
+              "type": null,
+              "alternateText": null
+             },
+             {
+              "sectionName": null,
+              "primary": false,
+              "text": "Legal Disclaimers",
+              "href": "/legal-disclaimers",
+              "target": "",
+              "label": null,
+              "key": null,
+              "type": null,
+              "alternateText": null
+             },
+             "…(5 items total)"
+            ]
+           },
+           "logo": {
+            "value": "https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/MattamyLogo.svg?as=0&dmc=0&iar=0&thn=0&udi=0"
+           },
+           "currentPageType": {
+            "value": 2
+           },
+           "organizationalschema": {
+            "value": {
+             "@context": "https://schema.org",
+             "@type": "Organization",
+             "name": "Mattamy Homes",
+             "legalName": "Mattamy Homes Corporation",
+             "url": "",
+             "logo": "https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/mattamy-logo.png",
+             "foundingDate": "1978",
+             "founder": {
+              "@type": "Person",
+              "name": "Peter Gilgan"
+             },
+             "contactPoint": {
+              "@type": "ContactPoint",
+              "url": "https://mattamyhomes.com/contact",
+              "contactType": "Public Relations",
+              "email": "media@mattamycorp.com"
+             },
+             "sameAs": [
+              "https://www.facebook.com/MattamyHomesUSA",
+              "https://www.instagram.com/mattamyhomesusa/",
+              "https://www.youtube.com/user/MattamyHomesOnline",
+              "…(5 items total)"
+             ]
+            }
+           }
+          }
+         }
+        ]
+       }
+      },
+      {
+       "uid": "ec007dd9-bc29-4981-80a5-4442634b37b4",
+       "componentName": "GTM",
+       "dataSource": "",
+       "params": {},
+       "fields": {
+        "code": {
+         "value": "GTM-MR39N4"
+        }
+       }
+      },
+      {
+       "uid": "ce22fc24-4d59-47cf-a2e9-f4ab858d2b02",
+       "componentName": "BreadcrumbSchema",
+       "dataSource": "",
+       "params": {},
+       "fields": {
+        "script": {
+         "value": {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+           {
+            "@type": "ListItem",
+            "position": 1,
+            "item": {
+             "@id": "https://mattamyhomes.com",
+             "name": "Find Your Dream Home"
+            }
+           },
+           {
+            "@type": "ListItem",
+            "position": 2,
+            "item": {
+             "@id": "https://mattamyhomes.com/florida/sarasota-bradenton",
+             "name": "Sarasota-Bradenton"
+            }
+           },
+           {
+            "@type": "ListItem",
+            "position": 3,
+            "item": {
+             "@id": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park",
+             "name": "Wellen Park - Master-Planned Community"
+            }
+           },
+           "…(4 items total)"
+          ]
+         }
+        }
+       }
+      },
+      "…(5 items total)"
+     ]
+    }
+   }
+  },
+  "APOLLO_STATE": {}
+ }
+}
