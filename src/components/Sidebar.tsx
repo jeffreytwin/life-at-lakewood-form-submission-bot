@@ -9,6 +9,7 @@ const navItems = [
   { href: "/dashboard", label: "Overview", icon: "\u2302" },
   { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2630" },
   { href: "/dashboard/email-hub/drafts", label: "Email", icon: "\u2709" },
+  { href: "/dashboard/floor-plans", label: "Floor Plans", icon: "\u25A6" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
 ];
 
@@ -23,6 +24,7 @@ export default function Sidebar({
   const router = useRouter();
   const [failedBadge, setFailedBadge] = useState(0);
   const [draftCount, setDraftCount] = useState(0);
+  const [floorPlanCount, setFloorPlanCount] = useState(0);
 
   useEffect(() => {
     return onFailedCount(setFailedBadge);
@@ -47,6 +49,21 @@ export default function Sidebar({
     }
     fetchDraftCount();
     const interval = setInterval(fetchDraftCount, 15_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll for pending floor plan change count
+  useEffect(() => {
+    function fetchFloorPlanCount() {
+      fetch("/api/internal/floorplans/changes?status=pending&limit=200")
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data)) setFloorPlanCount(data.length);
+        })
+        .catch(() => {});
+    }
+    fetchFloorPlanCount();
+    const interval = setInterval(fetchFloorPlanCount, 30_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -91,6 +108,9 @@ export default function Sidebar({
                 )}
                 {item.href === "/dashboard/email-hub/drafts" && draftCount > 0 && (
                   <span className="nav-badge">{draftCount}</span>
+                )}
+                {item.href === "/dashboard/floor-plans" && floorPlanCount > 0 && (
+                  <span className="nav-badge">{floorPlanCount}</span>
                 )}
               </Link>
             </li>
