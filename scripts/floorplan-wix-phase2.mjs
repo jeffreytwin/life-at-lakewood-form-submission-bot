@@ -164,23 +164,37 @@ if (idA) {
   log(`read(plain insert) publishStatus=${read.json?.dataItem?.data?._publishStatus} -> ${read.status}`);
 }
 
+// Pre-clean any probe leftovers from earlier runs (drafts included).
+const leftovers = await wix('POST', '/wix-data/v2/items/query', probeSite.wix_site_id, {
+  dataCollectionId: COLLECTION_ID,
+  query: { filter: { syncKey: 'test:probe' }, paging: { limit: 50 } },
+  publishPluginOptions: { includeDraftItems: true },
+});
+for (const item of leftovers.json?.dataItems ?? []) cleanupIds.push(item.id);
+log(`pre-clean found ${leftovers.json?.dataItems?.length ?? 0} leftover probe items`);
+
 // Probe B: insert with _publishStatus=DRAFT directly in the item data.
 const insB = await wix('POST', '/wix-data/v2/items', probeSite.wix_site_id, {
   dataCollectionId: COLLECTION_ID,
   dataItem: { data: { ...testData, floorPlanName: 'FP-SYNC-TEST-B (delete me)', _publishStatus: 'DRAFT' } },
 });
-log(`insert(data._publishStatus=DRAFT) -> ${short(insB)}`);
+log(`insert(data._publishStatus=DRAFT) -> ${insB.status} status=${insB.json?.dataItem?.data?._publishStatus}`);
 const idB = insB.json?.dataItem?.id;
 if (idB) {
   cleanupIds.push(idB);
-  const readB = await wix('GET', `/wix-data/v2/items/${idB}?dataCollectionId=${COLLECTION_ID}`, probeSite.wix_site_id);
-  log(`read(B) publishStatus=${readB.json?.dataItem?.data?._publishStatus}`);
-  // Probe B2: flip the draft to published via update.
+  const readB = await wix(
+    'GET',
+    `/wix-data/v2/items/${idB}?dataCollectionId=${COLLECTION_ID}&publishPluginOptions.includeDraftItems=true`,
+    probeSite.wix_site_id,
+  );
+  log(`read(B, includeDrafts) -> ${readB.status} publishStatus=${readB.json?.dataItem?.data?._publishStatus}`);
+  // Probe B2: flip the draft to published via update (with draft visibility).
   const upd = await wix('PUT', `/wix-data/v2/items/${idB}`, probeSite.wix_site_id, {
     dataCollectionId: COLLECTION_ID,
-    dataItem: { data: { ...(readB.json?.dataItem?.data ?? {}), _publishStatus: 'PUBLISHED' } },
+    dataItem: { data: { ...(readB.json?.dataItem?.data ?? { ...testData, _id: idB }), _publishStatus: 'PUBLISHED' } },
+    publishPluginOptions: { includeDraftItems: true },
   });
-  log(`update(B -> PUBLISHED) -> ${upd.status} publishStatus=${upd.json?.dataItem?.data?._publishStatus}`);
+  log(`update(B -> PUBLISHED) -> ${upd.status} publishStatus=${upd.json?.dataItem?.data?._publishStatus} ${upd.status !== 200 ? short(upd) : ''}`);
 }
 
 // Probe C: query visibility with/without draft items included.
@@ -200,10 +214,14 @@ const media = await wix('POST', '/site-media/v1/files/import', probeSite.wix_sit
 });
 log(`media import -> ${short(media)}`);
 
-// ---- Cleanup test items ----
-for (const id of cleanupIds) {
-  const del = await wix('DELETE', `/wix-data/v2/items/${id}?dataCollectionId=${COLLECTION_ID}`, probeSite.wix_site_id);
-  log(`cleanup ${id} -> ${del.status}`);
+// ---- Cleanup test items (drafts need includeDraftItems too) ----
+for (const id of [...new Set(cleanupIds)]) {
+  const del = await wix(
+    'DELETE',
+    `/wix-data/v2/items/${id}?dataCollectionId=${COLLECTION_ID}&publishPluginOptions.includeDraftItems=true`,
+    probeSite.wix_site_id,
+  );
+  log(`cleanup ${id} -> ${del.status}${del.status !== 200 ? ' ' + short(del) : ''}`);
 }
 
 log('done.');
