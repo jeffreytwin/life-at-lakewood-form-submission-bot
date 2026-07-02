@@ -23,6 +23,8 @@ interface PendingChange {
     quickMoveIn?: boolean;
     sourceUrl?: string | null;
     primaryImage?: string | null;
+    galleryImages?: string[];
+    blueprintImages?: string[];
     userEditedFields?: string[];
   } | null;
   fp_sites: { domain: string; name: string } | null;
@@ -55,6 +57,8 @@ export default function FloorPlansPage() {
     homeType: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editGallery, setEditGallery] = useState<string[]>([]);
+  const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
 
   const fetchChanges = useCallback(() => {
     fetch(`/api/internal/floorplans/changes?status=${statusFilter}`)
@@ -109,7 +113,22 @@ export default function FloorPlansPage() {
       garages: rec.garages ?? "",
       homeType: rec.homeType ?? "",
     });
+    const gallery = rec.galleryImages?.length
+      ? rec.galleryImages
+      : rec.primaryImage
+        ? [rec.primaryImage]
+        : [];
+    setEditGallery(gallery);
+    setEditBlueprints(rec.blueprintImages ?? []);
     setEditing(c);
+  }
+
+  function moveImage(list: string[], setList: (v: string[]) => void, index: number, dir: -1 | 1) {
+    const next = [...list];
+    const target = index + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    setList(next);
   }
 
   async function saveEdit(approveAfter: boolean) {
@@ -119,7 +138,9 @@ export default function FloorPlansPage() {
       const res = await fetch(`/api/internal/floorplans/changes/${editing.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ record: editForm }),
+        body: JSON.stringify({
+          record: { ...editForm, galleryImages: editGallery, blueprintImages: editBlueprints },
+        }),
       });
       if (res.ok && approveAfter) {
         await fetch(`/api/internal/floorplans/changes/${editing.id}/approve`, { method: "POST" });
@@ -340,6 +361,44 @@ export default function FloorPlansPage() {
                 />
               </div>
             ))}
+            {(
+              [
+                ["Photo gallery (first image is the main image)", editGallery, setEditGallery],
+                ["Blueprints", editBlueprints, setEditBlueprints],
+              ] as const
+            ).map(([label, list, setList]) =>
+              list.length === 0 ? null : (
+                <div className="form-group" key={label}>
+                  <label>{label}</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {list.map((url, i) => (
+                      <div key={url} style={{ position: "relative", textAlign: "center" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt=""
+                          style={{
+                            width: 96, height: 64, objectFit: "cover", borderRadius: 6,
+                            border: i === 0 && list === editGallery ? "2px solid var(--accent, #2563eb)" : "1px solid #ccc",
+                            display: "block",
+                          }}
+                        />
+                        {i === 0 && list === editGallery && (
+                          <span className="text-sm" style={{ position: "absolute", top: 2, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", borderRadius: 4, padding: "0 4px" }}>
+                            main
+                          </span>
+                        )}
+                        <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 2 }}>
+                          <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => moveImage(list, setList, i, -1)} disabled={i === 0}>←</button>
+                          <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => setList(list.filter((u) => u !== url))}>✕</button>
+                          <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => moveImage(list, setList, i, 1)} disabled={i === list.length - 1}>→</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            )}
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setEditing(null)} disabled={savingEdit}>
                 Cancel

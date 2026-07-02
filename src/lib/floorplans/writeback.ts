@@ -28,8 +28,30 @@ interface ProposedRecord {
   homeType: string | null;
   quickMoveIn: boolean;
   sourceUrl: string | null;
-  primaryImage: string | null;
+  /** Legacy field from early slice rows; galleryImages[0] is authoritative. */
+  primaryImage?: string | null;
   galleryImages: string[];
+  blueprintImages?: string[];
+}
+
+const MAX_GALLERY_IMAGES = 10;
+
+type GalleryItem = { type: "image"; src: string };
+
+/** Imports an ordered list of source URLs, preserving order; failures are skipped. */
+async function importGallery(
+  siteId: string,
+  wixSiteId: string,
+  urls: string[],
+  planKey: string,
+  suffix: string
+): Promise<GalleryItem[]> {
+  const items: GalleryItem[] = [];
+  for (const [i, url] of urls.slice(0, MAX_GALLERY_IMAGES).entries()) {
+    const uri = await importImage(siteId, wixSiteId, url, `${planKey}-${suffix}-${i + 1}.jpg`);
+    if (uri) items.push({ type: "image", src: uri });
+  }
+  return items;
 }
 
 /** URL-deduped image import; returns a wix:image URI for IMAGE fields. */
@@ -73,7 +95,8 @@ function toWixData(
   rec: ProposedRecord,
   communityName: string,
   builderName: string,
-  imageUri: string | null
+  gallery: GalleryItem[],
+  blueprints: GalleryItem[]
 ): WixItemData {
   return {
     floorPlanName: rec.name,
@@ -86,11 +109,20 @@ function toWixData(
     garages: rec.garages ?? undefined,
     squareFeet: rec.sqft ? rec.sqft.toLocaleString("en-US") : undefined,
     quickMoveInAvailable: rec.quickMoveIn,
-    ...(imageUri ? { floorPlanImage: imageUri } : {}),
+    // The main image is gallery position #1, always.
+    ...(gallery[0] ? { floorPlanImage: gallery[0].src } : {}),
+    ...(gallery.length ? { floorPlanImageGalleryLink: gallery } : {}),
+    ...(blueprints.length ? { floorPlanBluePrintGallery: blueprints } : {}),
     sourceUrl: rec.sourceUrl ?? undefined,
     syncKey: rec.planKey,
     lastSyncedAt: new Date().toISOString(),
   };
+}
+
+function galleryUrls(rec: ProposedRecord): string[] {
+  const urls = rec.galleryImages ?? [];
+  if (urls.length) return urls;
+  return rec.primaryImage ? [rec.primaryImage] : [];
 }
 
 export async function applyPendingChange(changeId: string): Promise<{
@@ -132,13 +164,12 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
       const asDraft = site.insert_publish_mode !== "published";
-      const imageUri = rec.primaryImage
-        ? await importImage(site.id, site.wix_site_id, rec.primaryImage, `${rec.planKey}.jpg`)
-        : null;
+      const gallery = await importGallery(site.id, site.wix_site_id, galleryUrls(rec), rec.planKey, "photo");
+      const blueprints = await importGallery(site.id, site.wix_site_id, rec.blueprintImages ?? [], rec.planKey, "plan");
       const item = await insertItem(
         site.wix_site_id,
         site.wix_collection_id,
-        toWixData(rec, community.name, builder.name, imageUri),
+        toWixData(rec, community.name, builder.name, gallery, blueprints),
         { asDraft }
       );
 
@@ -184,14 +215,13 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
-      const imageUri = rec.primaryImage
-        ? await importImage(site.id, site.wix_site_id, rec.primaryImage, `${rec.planKey}.jpg`)
-        : null;
+      const gallery = await importGallery(site.id, site.wix_site_id, galleryUrls(rec), rec.planKey, "photo");
+      const blueprints = await importGallery(site.id, site.wix_site_id, rec.blueprintImages ?? [], rec.planKey, "plan");
       await updateItem(
         site.wix_site_id,
         site.wix_collection_id,
         change.wix_record_id,
-        toWixData(rec, community.name, builder.name, imageUri)
+        toWixData(rec, community.name, builder.name, gallery, blueprints)
       );
       await supabase
         .from("fp_floor_plans")

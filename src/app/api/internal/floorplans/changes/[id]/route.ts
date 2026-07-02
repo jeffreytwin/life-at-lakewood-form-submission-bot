@@ -61,6 +61,23 @@ export async function PATCH(
       const parsed = parseInt(String(record.sqft).replace(/[^0-9]/g, ""), 10);
       record.sqft = Number.isFinite(parsed) ? parsed : null;
     }
+    // Gallery edits: reorder/remove only — every entry must come from the
+    // originally scraped image set. Position 0 is the main image.
+    for (const galleryField of ["galleryImages", "blueprintImages"] as const) {
+      const proposed = edits[galleryField];
+      if (!Array.isArray(proposed)) continue;
+      const original = new Set([
+        ...((record.galleryImages as string[]) ?? []),
+        ...((record.blueprintImages as string[]) ?? []),
+        ...((record.primaryImage ? [record.primaryImage as string] : [])),
+      ]);
+      const cleaned = proposed.filter((u): u is string => typeof u === "string" && original.has(u));
+      if (JSON.stringify(cleaned) !== JSON.stringify(record[galleryField] ?? [])) {
+        record[galleryField] = cleaned;
+        edited.add(galleryField);
+      }
+    }
+
     record.userEditedFields = [...edited];
 
     const { data: updated, error } = await supabase
