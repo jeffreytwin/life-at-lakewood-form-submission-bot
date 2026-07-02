@@ -1,0 +1,14 @@
+[
+ {
+  "api": "discover",
+  "status": 200,
+  "bytes": 720,
+  "json": true
+ },
+ {
+  "api": "web-lots",
+  "status": 200,
+  "bytes": 8888,
+  "json": true
+ }
+]
