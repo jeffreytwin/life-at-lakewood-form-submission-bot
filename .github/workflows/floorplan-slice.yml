@@ -33,8 +33,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright Chromium
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+
       - name: Live extractor verification
         run: FP_LIVE=1 npx vitest run __tests__/integration/floorplans-live.test.ts
+
+      - name: Run slice discovery
+        run: node pipeline/slice/discover-round7.mjs
 
       - name: Commit results back to branch
         run: |
