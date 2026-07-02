@@ -1,0 +1,4 @@
+Error: series page: 403 then 403
+    at file:///home/runner/work/life-at-lakewood-form-submission-bot/life-at-lakewood-form-submission-bot/pipeline/slice/discover-round4.mjs:128:37
+    at async section (file:///home/runner/work/life-at-lakewood-form-submission-bot/life-at-lakewood-form-submission-bot/pipeline/slice/discover-round4.mjs:71:5)
+    at async file:///home/runner/work/life-at-lakewood-form-submission-bot/life-at-lakewood-form-submission-bot/pipeline/slice/discover-round4.mjs:119:1

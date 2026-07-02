@@ -1,0 +1,19 @@
+[
+ {
+  "url": "https://www.nealsignaturehomes.com/wp-json/",
+  "status": 403,
+  "bytes": 5867,
+  "head": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta nam"
+ },
+ {
+  "url": "https://www.nealsignaturehomes.com/robots.txt",
+  "status": 200,
+  "bytes": 1248
+ },
+ {
+  "url": "https://nealsignaturehomes.com/wp-json/wp/v2/types",
+  "status": 403,
+  "bytes": 5896,
+  "head": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta nam"
+ }
+]

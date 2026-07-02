@@ -1,0 +1,82 @@
+{
+ "mattamySearch": [
+  {
+   "slug": "qmi-brightmore",
+   "status": 200,
+   "jssBytes": 22141
+  },
+  {
+   "slug": "model-brightmore",
+   "status": 200,
+   "jssBytes": 22141
+  },
+  {
+   "slug": "all-wellen",
+   "status": 200,
+   "jssBytes": 22141
+  }
+ ],
+ "taylorMorrison": {
+  "bundles": 3,
+  "pairs": [],
+  "probes": []
+ },
+ "mihomes": {
+  "links": 0,
+  "pages": [],
+  "probes": []
+ },
+ "lwhomes": {
+  "typesStatus": 401,
+  "probes": [
+   {
+    "type": "available-homes",
+    "status": 401,
+    "json": true,
+    "bytes": 96
+   },
+   {
+    "type": "floorplans",
+    "status": 401,
+    "json": true,
+    "bytes": 96
+   },
+   {
+    "type": "floor-plans",
+    "status": 401,
+    "json": true,
+    "bytes": 96
+   },
+   {
+    "type": "communities",
+    "status": 401,
+    "json": true,
+    "bytes": 96
+   },
+   {
+    "type": "homes",
+    "status": 401,
+    "json": true,
+    "bytes": 96
+   }
+  ]
+ },
+ "drb": {
+  "scripts": 4,
+  "bundlesWithHits": 1
+ },
+ "nealSignature": [
+  {
+   "url": "ps://www.nealsignaturehomes.com/wp-json/",
+   "status": 403
+  },
+  {
+   "url": "://www.nealsignaturehomes.com/robots.txt",
+   "status": 200
+  },
+  {
+   "url": "alsignaturehomes.com/wp-json/wp/v2/types",
+   "status": 403
+  }
+ ]
+}
