@@ -5,6 +5,8 @@
 import { describe, it, expect } from "vitest";
 import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
+import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morrison";
+import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 
 const live = process.env.FP_LIVE === "1";
 
@@ -21,6 +23,36 @@ describe.runIf(live)("live: Meritage via Sitecore Discover", () => {
     expect(plans.some((p) => (p.price ?? 0) > 100_000)).toBe(true);
     expect(plans.some((p) => p.galleryImages.length > 0)).toBe(true);
   }, 90_000);
+});
+
+describe.runIf(live)("live: Taylor Morrison inline scData", () => {
+  it("extracts Firethorn base plans and available homes", async () => {
+    const plans = await extractTaylorMorrison({
+      url: "https://www.taylormorrison.com/fl/tampa/parrish/firethorn",
+    });
+    const bases = plans.filter((p) => !p.quickMoveIn);
+    const qmis = plans.filter((p) => p.quickMoveIn);
+    console.log(`taylor-morrison: ${bases.length} base plans, ${qmis.length} QMIs`);
+    console.log(JSON.stringify([bases[0], qmis[0]], null, 1));
+    expect(bases.length).toBeGreaterThanOrEqual(10); // page shows 37 plans
+    expect(qmis.length).toBeGreaterThanOrEqual(1);
+    expect(bases.some((p) => (p.price ?? 0) > 100_000)).toBe(true);
+    for (const q of qmis) expect(q.raw?.relatedPlan).toBeTruthy();
+  }, 90_000);
+});
+
+describe.runIf(live)("live: Mattamy via JSS search-data", () => {
+  it("extracts Brightmore plans and QMIs", async () => {
+    const plans = await extractMattamy({
+      url: "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/brightmore",
+    });
+    const bases = plans.filter((p) => !p.quickMoveIn);
+    const qmis = plans.filter((p) => p.quickMoveIn);
+    console.log(`mattamy: ${bases.length} base plans, ${qmis.length} QMIs`);
+    console.log(JSON.stringify([bases[0], qmis[0]].filter(Boolean), null, 1));
+    expect(plans.length).toBeGreaterThanOrEqual(3);
+    expect(plans.some((p) => (p.price ?? 0) > 100_000)).toBe(true);
+  }, 120_000);
 });
 
 describe.runIf(live)("live: Toll Brothers QMI harvest", () => {

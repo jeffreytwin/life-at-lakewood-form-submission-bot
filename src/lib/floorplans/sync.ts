@@ -16,6 +16,8 @@ import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
 import { extractWithClaude } from "@/lib/floorplans/extractors/claude-extract";
 import { extractLennar } from "@/lib/floorplans/extractors/lennar";
 import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
+import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morrison";
+import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -25,6 +27,8 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Toll Brothers": extractTollBrothers,
   Lennar: extractLennar,
   "Meritage Homes": extractMeritage,
+  "Taylor Morrison": extractTaylorMorrison,
+  "Mattamy Homes": extractMattamy,
 };
 
 const METHOD_EXTRACTORS: Record<string, Extractor> = {

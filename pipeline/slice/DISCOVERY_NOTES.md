@@ -5,7 +5,22 @@ in `discovery/round*/`). Updated as rounds complete. Goal: close out the 8
 builders not yet runnable, in the order Meritage → render_claude five →
 ICI/Neal Signature → (done) Toll QMIs.
 
-## Meritage Homes (`json_api`, Salt Meadows @ Parrish)
+## Meritage Homes — DONE (extractor live-verified)
+
+- Data source: **Sitecore Discover** (`POST https://discover.sitecorecloud.io/discover/v2/173266879`,
+  public client-side auth key from the site bundle) — a third-party API the
+  WAF never sees; plain Node fetch gets 200 (round-6 replay + live
+  integration test). One query per Salesforce community id (Classic
+  `a078a0000115gcVAAQ`, Premier `a078a0000115gcGAAQ`) returns every home:
+  floorplan_name, address, price, beds/baths/sqft, gallery,
+  interactive_floorplan_image. Salt Meadows is "QMI Only" → records map to
+  address-named QMIs with the plan in raw.relatedPlan.
+- `extractors/meritage.ts`, registered in sync.ts; URL auto-discovery
+  skipped for Meritage (URLLESS_BUILDERS) since its pages 403 Node fetch.
+- There is also a Salesforce lots API (`apim-…azure-api.net/cache/sf/web-lots`,
+  public subscription key) with richer pricing detail if ever needed.
+
+### Original findings (rounds 2–5)
 
 - Pages: `/state/fl/tampa/meritage-homes-salt-meadows` (master),
   `salt-meadows-classic-series`, `salt-meadows-premier-series`, plan pages
@@ -45,10 +60,11 @@ ICI/Neal Signature → (done) Toll QMIs.
 - Sitemap exposes exact per-community pages:
   `/fl/tampa/parrish/firethorn/floor-plans`, per-plan pages, and QMI pages
   (`…/floor-plans/<plan>/home-available-now-at-<address>`).
-- Pages are client-rendered (visible text ≈ 40 chars). Components fetch
-  `GET {origin}/api/sitecore/{controller}/{action}` (fetchData in
-  `scDataStore`, see `round3/taylor-bundle-grep.json`). Round 4 greps the
-  page bundles for controller/action pairs and probes them.
+- Round 5/6: the floor-plans page renders 37 plans with full specs and no
+  data XHR — the dataset ships inline as `window.TM.client.scDataStore.data`
+  (incl. `floorPlanCollections`), and **Node fetch reads the page fine**
+  (200, 339 KB). Round 7 dumps the full object → json_api extractor that
+  regex-extracts the inline JSON. No Playwright needed.
 
 ## M/I Homes (was `render_claude`, Sweetwater/Nautique/Palmera)
 
@@ -62,9 +78,12 @@ ICI/Neal Signature → (done) Toll QMIs.
 ## DRB Homes (was `render_claude`, Seaire → Biscayne Landing)
 
 - Community page found: `…/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview` (200).
-- Fully client-rendered SPA — visible text 33 chars on every tab; no
-  same-host bundles matched round-3's hunt. Round 4 fetches the script
-  bundles from whatever host serves them and greps for endpoints.
+- Round 5/6: the SPA is backed by an **open public REST API** —
+  `api.drbhomes.com/api/v1/public/{division,plan,inventory}` (paginated,
+  `items`+`meta`, plans 401 total / inventory 926 total, full specs +
+  basePrice + marketing). Node fetch passes. Round 7 finds the community
+  resource/filters and the Seaire community id by capturing the SPA's own
+  calls.
 
 ## Lee Wetherington (was `render_claude`, Star Farms/Shellstone/Wild Blue/Everly)
 
@@ -76,20 +95,18 @@ ICI/Neal Signature → (done) Toll QMIs.
   `fetch_claude` over its community/available-homes pages; round 5 collects
   rendered links/text to pick the pages.
 
-## ICI Homes (`Oakbend`, `Palmera`) — blocked
+## ICI Homes (`Oakbend`, `Palmera`) — blocked at the IP level
 
-- Hard 403 to GitHub runners on all header profiles (chrome-full, firefox,
-  googlebot) — `round2/ici-attempts.json`. WAF/datacenter-IP block.
-- Next option: run the fetch from Vercel serverless egress (the
-  branch-guarded prebuild pattern in `scripts/`), which exits from a
-  different IP space; if that also 403s, needs a residential-egress
-  decision from Jeff before we can automate.
+- Hard 403 to GitHub runners on every header profile AND with real Chrome
+  (Playwright, round 5) — the block is on the runner IP ranges, not the
+  client fingerprint. Next option: probe from Vercel serverless egress
+  (branch-guarded prebuild in `scripts/`); if that also 403s, this builder
+  needs a residential-egress decision from Jeff before it can be automated.
 
-## Neal Signature Homes (`Waterbury Park`, `The Alcove`) — blocked
+## Neal Signature Homes (`Waterbury Park`, `The Alcove`) — blocked at the IP level
 
-- `nealsignaturehomes.com` hard-403s like ICI (same rounds/profiles), and
-  round 4 confirmed `wp-json` 403s too — but `robots.txt` returns 200, so
-  the WAF is path-selective. Round 5 probes with real Chrome.
+- Same picture as ICI: 403 for headers, wp-json, and real Chrome; only
+  `robots.txt` passes. Same Vercel-egress next step.
 - Parent `nealcommunities.com` (WordPress) works from runners but its
   sitemap carries **no Signature community pages** — only news posts.
 
