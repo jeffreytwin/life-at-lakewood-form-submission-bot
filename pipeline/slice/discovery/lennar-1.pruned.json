@@ -1,0 +1,1281 @@
+{
+ "props": {
+  "pageProps": {
+   "appInsightsConfig": {
+    "enabled": false,
+    "connectionString": ""
+   },
+   "rfiLegalDisclaimers": [
+    "By selecting \"I consent\" {placement}, you consent to receive marketing SMS communications from Lennar Homes and other communications (via mail, email, or telephone) from Lennar Homes and its affiliate…(906)",
+    "Al seleccionar \"Doy mi consentimiento\" {placement}, usted acepta recibir comunicaciones de marketing por SMS de Lennar Homes y otras comunicaciones (por correo postal, correo electrónico o teléfono) d…(1120)"
+   ],
+   "sessionRefetchInterval": 60,
+   "pageHead": {
+    "title": "Move-in ready Aurora Plan 5580 in Destiny at Aloravita, $799,990 by Lennar",
+    "description": "Everything’s included by Lennar, the leading homebuilder of new homes in Phoenix, AZ. This Aurora Plan 5580 is ready for you today. ",
+    "schema": {
+     "@context": "https://schema.org",
+     "@graph": [
+      {
+       "@type": "Organization",
+       "name": "Lennar",
+       "url": "https://www.lennar.com",
+       "logo": "https://www.lennar.com/api/images/images/com/images/version10/emails/lennar-logo.png",
+       "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1-800-532-6993",
+        "contactType": "Sales"
+       }
+      },
+      {
+       "@type": "Product",
+       "name": "Aurora Plan 5580 New Home at Aloravita",
+       "description": "Move-in ready Aurora Plan 5580 floor plan in Destiny at Aloravita, Peoria, AZ. 4 beds • 3 baths • 2,835 ft². Priced at $799,990.",
+       "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186",
+       "image": [
+        "https://cdn.lennar.com/api/images/contentassets/bc3355daefe04fcdb57f49866302e49e/7966-w-rowel-rd---print-quality---001---01-exterior-front.jpg?d=20260501T225105"
+       ],
+       "mainEntityOfPage": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186",
+       "brand": {
+        "@type": "Organization",
+        "name": "Lennar",
+        "url": "https://www.lennar.com",
+        "telephone": "+1-800-532-6993"
+       },
+       "potentialAction": [
+        {
+         "@type": "ViewAction",
+         "name": "View Virtual Tour",
+         "target": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186/virtual-tour"
+        },
+        {
+         "@type": "ViewAction",
+         "name": "Interactive Floor Plan Tool",
+         "target": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186/floorplan"
+        },
+        {
+         "@type": "ViewAction",
+         "name": "View Video Tour",
+         "target": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186/video"
+        }
+       ],
+       "offers": {
+        "@type": "Offer",
+        "price": 799990,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186",
+        "itemOffered": {
+         "@type": "SingleFamilyResidence",
+         "name": "Aurora Plan 5580",
+         "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580",
+         "numberOfBedrooms": 4,
+         "numberOfBathroomsTotal": 3,
+         "floorSize": {
+          "@type": "QuantitativeValue",
+          "value": 2835,
+          "unitCode": "SQF"
+         },
+         "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "7966 W ROWEL RD",
+          "addressLocality": "Peoria",
+          "addressRegion": "AZ",
+          "postalCode": "85383",
+          "addressCountry": "US"
+         }
+        }
+       },
+       "additionalProperty": [
+        {
+         "@type": "PropertyValue",
+         "name": "Community Name",
+         "value": "Destiny"
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "Price (From)",
+         "value": "$799,990"
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "Playground",
+         "value": true
+        },
+        "…(5 items total)"
+       ]
+      }
+     ]
+    },
+    "breadcrumbSchema": {
+     "@context": "https://schema.org",
+     "@type": "BreadcrumbList",
+     "itemListElement": [
+      {
+       "@type": "ListItem",
+       "position": 1,
+       "name": "Home",
+       "item": "https://www.lennar.com"
+      },
+      {
+       "@type": "ListItem",
+       "position": 2,
+       "name": "Arizona",
+       "item": "https://www.lennar.com/new-homes/arizona"
+      },
+      {
+       "@type": "ListItem",
+       "position": 3,
+       "name": "Phoenix",
+       "item": "https://www.lennar.com/new-homes/arizona/phoenix"
+      },
+      "…(8 items total)"
+     ]
+    }
+   },
+   "initialApolloState": {
+    "StateType:st_2": {
+     "__typename": "StateType",
+     "id": "st_2",
+     "code": "AZ",
+     "name": "Arizona",
+     "slug": "arizona",
+     "url": "/new-homes/arizona"
+    },
+    "MarketType:mk_54": {
+     "__typename": "MarketType",
+     "id": "mk_54",
+     "code": "PHO",
+     "name": "Phoenix",
+     "slug": "phoenix",
+     "state": {
+      "__ref": "StateType:st_2"
+     },
+     "hideOpenDoor": false,
+     "hideContingencyQuestion": false,
+     "hideFinancialDocuments": false,
+     "hideCustomerNotesPage": false,
+     "hidePrimaryResidenceQuestion": false,
+     "hideStateQuestionOnRFI": false,
+     "consultants": {
+      "__typename": "ConsultantType",
+      "hours": [
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       "…(7 items total)"
+      ],
+      "phoneNumber": "602-661-3437",
+      "timeZone": "MT",
+      "introText": "Get in touch with our team of real estate professionals to learn about communities and available homes.&nbsp;",
+      "image": null,
+      "individuals": [
+       {
+        "__typename": "ConsultantType",
+        "name": "Lauren Evans",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/b1b63c80acfb4346bab11093b69ae226/lauren.jpg?d=20250223T200745",
+         "alt": "Image: Lauren Evans Copy: Internet Sale Consultant"
+        }
+       },
+       {
+        "__typename": "ConsultantType",
+        "name": "Debbie Webb",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/a24447806eb14b5ca2649ec1483d332d/debbie.jpg?d=20250223T200558",
+         "alt": "Image: Debbie Webb Copy: Internet Sales Consultant"
+        }
+       },
+       {
+        "__typename": "ConsultantType",
+        "name": "Peggy Wagner",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/70f97d5979174ea7a474fb4295d5687f/azh_headshot_isc_peggy.jpg?d=20250223T200841",
+         "alt": "Image: Peggy Wagner Copy: Internet Sales Consultant"
+        }
+       },
+       "…(7 items total)"
+      ]
+     },
+     "noBroker": false,
+     "lennarMortgageDisclaimerText": null,
+     "hideCheckOutMortCalc": false,
+     "url": "/new-homes/arizona/phoenix",
+     "hotw": {
+      "__typename": "HotwType",
+      "showHotw": true
+     }
+    },
+    "default-home-page": {
+     "__typename": "HomePageDataType",
+     "market": {
+      "__ref": "MarketType:mk_54"
+     },
+     "communityCarousel": {
+      "__typename": "CommunityCarouselType",
+      "items": [
+       {
+        "__typename": "CommunityCarouselItemType",
+        "title": "Single-family",
+        "filters": [
+         {
+          "__typename": "SearchFilterType",
+          "code": "homeType",
+          "options": [
+           "SingleFamily"
+          ]
+         }
+        ]
+       },
+       {
+        "__typename": "CommunityCarouselItemType",
+        "title": "Active Adult",
+        "filters": [
+         {
+          "__typename": "SearchFilterType",
+          "code": "homeType",
+          "options": [
+           "ActiveAdult"
+          ]
+         }
+        ]
+       },
+       {
+        "__typename": "CommunityCarouselItemType",
+        "title": "Next Gen®",
+        "filters": [
+         {
+          "__typename": "SearchFilterType",
+          "code": "homeType",
+          "options": [
+           "NextGen"
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    },
+    "ROOT_QUERY": {
+     "__typename": "Query",
+     "homePage({\"mc\":\"PHO\",\"sc\":\"AZ\"})": {
+      "__ref": "default-home-page"
+     },
+     "market({\"slugs\":{\"market\":\"phoenix\",\"state\":\"arizona\"}})": {
+      "__typename": "MarketType",
+      "code": "PHO",
+      "state": {
+       "__typename": "StateType",
+       "code": "AZ"
+      }
+     },
+     "rfiV2": {
+      "__typename": "RfiV2Type",
+      "inlineHeaderTitle": null,
+      "showContainer": true
+     },
+     "chatSettings({\"mc\":\"PHO\",\"sc\":\"AZ\"})": {
+      "__typename": "ChatSettingsType",
+      "isSierraChatEnabled": true,
+      "isSierraCustomerCareEnabled": false,
+      "isSierraSalesEnabled": false,
+      "isAgentforceEnabled": true
+     },
+     "market({\"mc\":\"phoenix\",\"sc\":\"arizona\"})": null,
+     "market({\"mc\":\"PHO\",\"sc\":\"AZ\"})": {
+      "__ref": "MarketType:mk_54"
+     },
+     "messagesV3({\"comnum\":\"3358\",\"mpcid\":null})": [
+      {
+       "__ref": "MessageV3Type:ac8c0fc3-495b-459f-85de-f08f926a9e7b"
+      }
+     ],
+     "community({\"comnum\":\"3358\"})": {
+      "__ref": "CommunityType:c_8154"
+     },
+     "plan({\"comnum\":\"3358\",\"plannum\":\"5580\"})": {
+      "__ref": "PlanType:p_67892"
+     },
+     "homesite({\"lotid\":\"3358510186\"})": {
+      "__ref": "HomesiteType:h_858806"
+     },
+     "marketReviews({\"mc\":\"PHO\",\"sc\":\"AZ\"})": [
+      {
+       "__ref": "TrustBuilderReviewType:2282"
+      },
+      {
+       "__ref": "TrustBuilderReviewType:2714"
+      },
+      {
+       "__ref": "TrustBuilderReviewType:2879"
+      },
+      "…(4 items total)"
+     ]
+    },
+    "MessageV3Type:ac8c0fc3-495b-459f-85de-f08f926a9e7b": {
+     "__typename": "MessageV3Type",
+     "id": "ac8c0fc3-495b-459f-85de-f08f926a9e7b",
+     "styling": {
+      "__typename": "MessageV3StylingType",
+      "takeoverBackgroundColor": "radial-gradient(52.1% 52.1% at 50% 47.9%, #BA2222 61.33%, #AB1B1B 100%)",
+      "takeoverButtonColor": "#FFFFFF",
+      "takeoverButtonTextColor": "#020F33",
+      "takeoverTextColor": "#FFFFFF",
+      "takeoverCloseIconAndCTA": "#FFFFFF",
+      "takeoverLennarLogo": "#FFFFFF",
+      "topBannerBackgroundColor": "#BA2222",
+      "topBannerTextColor": "#FFFFFF",
+      "inlineBackgroundColor": "#BA2222",
+      "inlineColorCopy": "#FFFFFF",
+      "inlineDescriptionColor": "#FFFFFF",
+      "inlineCtaColor": "#FFFFFF",
+      "inlineCtaCopyColor": "#020F33",
+      "inlineTimerHeaderColor": null,
+      "inlineTimerContainerColor": null,
+      "inlineTimerClockBackgroundColor": null,
+      "inlineTimerClockTextColor": null,
+      "inlineCreativeOutlineColor": "#BA2222",
+      "promoSearchBackgroundColor": "#BA2222",
+      "promoSearchColorCopy": "#FFFFFF",
+      "promoSearchCtaColor": "#FFFFFF",
+      "promoSearchCtaCopyColor": "#020F33",
+      "promoSearchTimerHeaderColor": null,
+      "promoSearchTimerContainerColor": null,
+      "promoSearchTimerClockBackgroundColor": null,
+      "promoSearchTimerClockTextColor": null,
+      "nseHotwBackgroundColor": "#BA2222",
+      "nseHotwTitleColor": "#FFFFFF",
+      "nseHotwDescriptionColor": "#FFFFFF",
+      "nseHotwCtaTextColor": "#020F33",
+      "nseHotwCtaBackgroundColor": "#FFFFFF"
+     },
+     "blockType": "Corporate",
+     "startDate": "2026-06-19T00:00:00Z",
+     "endDate": "2026-08-30T00:00:00Z",
+     "link": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/corporate/corp_oydq326",
+      "text": "View offer",
+      "target": "_blank"
+     },
+     "hamburgerPromoImage": {
+      "__typename": "ImageType",
+      "alt": "Group 396749",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/group-396749.png?d=20260622T154015"
+     },
+     "takeoverTitle": "Huge Savings. Limited Time Only.",
+     "takeoverCta": "View offer",
+     "takeoverCreative": {
+      "__typename": "ImageType",
+      "alt": "Mask group (14)",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/mask-group-14.png?d=20260622T153727"
+     },
+     "showTakeover": true,
+     "promoSearchTitleCopy": "4th of July Sale",
+     "promoSearchCTACopy": "View offer",
+     "promoSearchPromotionEnds": null,
+     "showPromoInSearch": true,
+     "inlineTitle": "4th of July Sale ",
+     "inlineCTACopy": "View offer",
+     "inlineCountdownDays": null,
+     "inlineDescription": null,
+     "inlineCreativeImage": {
+      "__typename": "ImageType",
+      "alt": "Promo Graphic (7)",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/promo_graphic-7.png?d=20260622T153826"
+     },
+     "showInlinePromo": true,
+     "topBannerTitle": "🎉 Exclusive celebratory savings on new homes nationwide 🏡",
+     "promotionIconImage": null,
+     "showTopBanner": true,
+     "nseHotwTitle": "Even More Savings",
+     "nseHotwDescription": "*Home of the Week homes may qualify for additional incentives.",
+     "nseHotwCtaCopy": "View offer",
+     "nseHotwCreative": {
+      "__typename": "ImageType",
+      "alt": "Promo Graphic (7)",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/promo_graphic-7.png?d=20260622T153826"
+     },
+     "showNseHotwPromo": true
+    },
+    "MpcType:m_2319": {
+     "__typename": "MpcType",
+     "name": "Aloravita",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita",
+     "id": "m_2319",
+     "mpcid": 2319,
+     "googleBusinessListingOverride": null,
+     "heroImage": {
+      "__typename": "ImageType",
+      "alt": "Aloravita Entry Monument",
+      "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_entrymonument.jpg?d=20260319T165649"
+     },
+     "heroVideo": {
+      "__typename": "VideoType",
+      "alt": "030724 32387 Aloravita MPC",
+      "desc": "",
+      "title": "",
+      "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/030724_azh_32387_aloravita_vid_mpc.mp4?d=20250220T042434"
+     },
+     "amenityInfo": {
+      "__typename": "AmenityInfoType",
+      "amenities": [
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/d857faab6e444d59af1560091455c081/playground.svg?d=20250219T221610"
+        },
+        "name": "Playground",
+        "desc": "Children will enjoy making life-long memories while playing on the fully-equipped playground and surrounding green space",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Shaded playground that has a jungle gym",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_playground.jpg?d=20260413T232421"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/454809f2c82940efa0d7b18cac1481a6/basketball-court.svg?d=20250219T221613"
+        },
+        "name": "Basketball Court",
+        "desc": "Enjoy a friendly game or just shoot some hoops at the community basketball court",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Basketball court in a grassy area",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_basketball.jpg?d=20260413T232415"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/8694c21cfdb44be29bcbcb8d7b17900f/picnic-area.svg?d=20250219T221602"
+        },
+        "name": "Picnic Area",
+        "desc": "",
+        "images": null
+       }
+      ],
+      "text": "The community features fantastic onsite amenities to encourage active living, including a playground and basketball court. "
+     }
+    },
+    "CityType:ct_54_peoria": {
+     "__typename": "CityType",
+     "market": {
+      "__ref": "MarketType:mk_54"
+     },
+     "id": "ct_54_peoria",
+     "name": "Peoria",
+     "slug": "peoria",
+     "url": "/new-homes/arizona/phoenix/peoria"
+    },
+    "CommunityType:c_8154": {
+     "__typename": "CommunityType",
+     "id": "c_8154",
+     "divisionNumber": "AZHLEN",
+     "name": "Destiny",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny",
+     "mpc": {
+      "__ref": "MpcType:m_2319"
+     },
+     "city": {
+      "__ref": "CityType:ct_54_peoria"
+     },
+     "depositAmount": 100,
+     "number": "3358",
+     "hoaFee": 99,
+     "stateCode": "AZ",
+     "appointmentCounter": null,
+     "cityName": "Peoria",
+     "heroVideo": null,
+     "isTourable": true,
+     "consultants": {
+      "__typename": "ConsultantType",
+      "introText": "Get in touch with our team of real estate professionals to learn about communities and available homes.&nbsp;",
+      "image": null,
+      "individuals": [
+       {
+        "__typename": "ConsultantType",
+        "name": "Lauren Evans",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/b1b63c80acfb4346bab11093b69ae226/lauren.jpg?d=20250223T200745",
+         "alt": "Image: Lauren Evans Copy: Internet Sale Consultant"
+        }
+       },
+       {
+        "__typename": "ConsultantType",
+        "name": "Debbie Webb",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/a24447806eb14b5ca2649ec1483d332d/debbie.jpg?d=20250223T200558",
+         "alt": "Image: Debbie Webb Copy: Internet Sales Consultant"
+        }
+       },
+       {
+        "__typename": "ConsultantType",
+        "name": "Peggy Wagner",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/70f97d5979174ea7a474fb4295d5687f/azh_headshot_isc_peggy.jpg?d=20250223T200841",
+         "alt": "Image: Peggy Wagner Copy: Internet Sales Consultant"
+        }
+       },
+       "…(7 items total)"
+      ],
+      "phoneNumber": "602-661-3437",
+      "hours": [
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       "…(7 items total)"
+      ],
+      "timeZone": "MT"
+     },
+     "hasSchools": true,
+     "monthlyHoaFee": false,
+     "developmentFee": 0,
+     "monthlySpecialAssessmentFee": false,
+     "taxRate": 0.53,
+     "isFeatured": false,
+     "types": [
+      "NextGen",
+      "Single Family"
+     ],
+     "address": "25942 N 77th Drive",
+     "dynamicDirections": true,
+     "latitude": 33.719364,
+     "longitude": -112.225838,
+     "zipCode": "85383",
+     "comingSoonText": null,
+     "homesitesCount": 128,
+     "priceRange": [
+      741490,
+      840490
+     ],
+     "customPrice": null,
+     "overview": "The Destiny Collection at the Aloravita master-planned community offers new single-family homes for sale in the city of Peoria, AZ. These homes feature different design options for various lifestyle t…(541)",
+     "status": "ACTIVE",
+     "displayBrokerCo": false,
+     "hours": [
+      {
+       "__typename": "HoursType",
+       "opening": "10AM",
+       "closing": "5PM",
+       "byAppointment": false
+      },
+      {
+       "__typename": "HoursType",
+       "opening": "10AM",
+       "closing": "5PM",
+       "byAppointment": false
+      },
+      {
+       "__typename": "HoursType",
+       "opening": "10AM",
+       "closing": "5PM",
+       "byAppointment": false
+      },
+      "…(7 items total)"
+     ],
+     "heroImage": {
+      "__typename": "ImageType",
+      "alt": "Aloravita Amenity Basketball",
+      "url": "https://cdn.lennar.com/api/images/contentassets/37b9530bdd394ed38182cbe0d4eaa89c/azh_aloravita_rend_amenity_basketball.jpg?d=20260325T165714"
+     },
+     "abadInfo": {
+      "__typename": "AbadInfoType",
+      "prequalUrl": "https://www.lennarmortgage.com/community-search?comid=3358",
+      "prequalAbadCode": "LennarMortgage"
+     },
+     "hidePrequalLink": false,
+     "vipResOverrideText": "",
+     "availabilityMap": {
+      "__typename": "AvailabilityMapType",
+      "geoJsonSrc": "https://cdn.lennar.com/api/images/contentassets/37b9530bdd394ed38182cbe0d4eaa89c/maps/3358-aloravita-destiny.geojson?d=20250908T175016",
+      "image": {
+       "__typename": "ImageType",
+       "url": "https://cdn.lennar.com/api/images/contentassets/37b9530bdd394ed38182cbe0d4eaa89c/azh_aloravita_destiny_siteplan.svg?d=20260513T174828"
+      }
+     },
+     "mapBounds": [
+      33.72478103637695,
+      -112.22210693359375,
+      33.71807861328125,
+      "…(4 items total)"
+     ],
+     "amenityInfo": {
+      "__typename": "AmenityInfoType",
+      "amenities": [
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/d857faab6e444d59af1560091455c081/playground.svg?d=20250219T221610"
+        },
+        "name": "Playground",
+        "desc": "Children will enjoy making life-long memories while playing on the fully-equipped playground and surrounding green space",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Shaded playground that has a jungle gym",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_playground.jpg?d=20260413T232421"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/454809f2c82940efa0d7b18cac1481a6/basketball-court.svg?d=20250219T221613"
+        },
+        "name": "Basketball Court",
+        "desc": "Enjoy a friendly game or just shoot some hoops at the community basketball court",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Basketball court in a grassy area",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_basketball.jpg?d=20260413T232415"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/8694c21cfdb44be29bcbcb8d7b17900f/picnic-area.svg?d=20250219T221602"
+        },
+        "name": "Picnic Area",
+        "desc": "",
+        "images": null
+       }
+      ],
+      "text": ""
+     },
+     "googleBusinessListingOverride": null,
+     "isScattered": false
+    },
+    "PlanType:p_67892": {
+     "__typename": "PlanType",
+     "name": "Aurora Plan 5580",
+     "id": "p_67892",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580",
+     "metadata": null,
+     "number": "5580",
+     "heroImage": {
+      "__typename": "ImageType",
+      "title": "",
+      "alt": "Aurora Great Room",
+      "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_pic_aurora_great_4of4_f1_base4.jpg?d=20250220T125755"
+     },
+     "walkthrough": {
+      "__typename": "PlanWalkthroughType",
+      "allRooms": [
+       {
+        "__typename": "RoomType",
+        "name": "Kitchen",
+        "content": {
+         "__typename": "RoomContentType",
+         "hero": {
+          "__typename": "RoomHeroType",
+          "image": {
+           "__typename": "ImageType",
+           "alt": "Aurora Kitchen",
+           "url": "https://cdn.lennar.com/api/images/contentassets/cf81d4094bcf42ba8de52da50dbed68e/azh_5580_pic_aurora_kitchen_1of3_f1_base4.jpg?d=20250222T235232"
+          }
+         },
+         "roomImageGallery": []
+        }
+       },
+       {
+        "__typename": "RoomType",
+        "name": "Dining Room",
+        "content": {
+         "__typename": "RoomContentType",
+         "hero": {
+          "__typename": "RoomHeroType",
+          "image": {
+           "__typename": "ImageType",
+           "alt": "Aurora Dining Room",
+           "url": "https://cdn.lennar.com/api/images/contentassets/681bff1a42914c2390222c89a58e1bdf/azh_5580_pic_aurora_dining_1of2_f1_base4.jpg?d=20250222T235234"
+          }
+         },
+         "roomImageGallery": []
+        }
+       },
+       {
+        "__typename": "RoomType",
+        "name": "Great Room",
+        "content": {
+         "__typename": "RoomContentType",
+         "hero": {
+          "__typename": "RoomHeroType",
+          "image": {
+           "__typename": "ImageType",
+           "alt": "Aurora Great Room",
+           "url": "https://cdn.lennar.com/api/images/contentassets/b6539bbbbbfa481a8e3057880c0bb783/azh_5580_pic_aurora_great_4of4_f1_base4.jpg?d=20250222T235236"
+          }
+         },
+         "roomImageGallery": []
+        }
+       },
+       "…(13 items total)"
+      ],
+      "roomImagesCount": 20
+     },
+     "virtualTourUrl": "https://my.matterport.com/show/?m=AdAjpnTLwhd",
+     "videoTourUrl": "https://www.youtube.com/watch?v=qkKi_si3YoU",
+     "elevationImages({\"first\":1})": [
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg?d=20250220T125756",
+        "alt": "Spanish Colonial home exterior image"
+       }
+      }
+     ],
+     "eiFeatures": [
+      {
+       "__typename": "EiCategoryType",
+       "name": "Kitchen",
+       "iconImage": null,
+       "list": [
+        {
+         "__typename": "EiContentType",
+         "desc": "Brand-new set of stainless steel appliances elevate the space",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "4584 Juniper Kitchen 4of6 F1 Base3",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b2d993dbb69f4e22ac650d8761db8258/azh_4584_pic_juniper_kitchen_4of6_f1_base3.jpg?d=20260121T165940"
+         }
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Quartz kitchen countertop",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Timberlake linen square panel cabinets with 36\" uppers",
+         "image": null
+        },
+        "…(8 items total)"
+       ]
+      },
+      {
+       "__typename": "EiCategoryType",
+       "name": "Owners Suite",
+       "iconImage": null,
+       "list": [
+        {
+         "__typename": "EiContentType",
+         "desc": "Glass-enclosed shower with swing door in the owner’s suite bathroom  ",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "Pic EI Owners Swing Door Shower",
+          "url": "https://cdn.lennar.com/api/images/contentassets/82da81a8538346b2bc67d3c68cd53f46/azh_pic_ei_owners_swingdoorshower.jpg?d=20260121T165537"
+         }
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Fiberglass enclosed swing door shower with cultured marble surrounds ",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Chrome rain shower head ",
+         "image": null
+        },
+        "…(4 items total)"
+       ]
+      },
+      {
+       "__typename": "EiCategoryType",
+       "name": "NextGen Suite",
+       "iconImage": null,
+       "list": [
+        {
+         "__typename": "EiContentType",
+         "desc": "Quartz kitchen countertop",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Stainless steel dishwasher ",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Stainless steel side-by-side refrigerator ",
+         "image": null
+        },
+        "…(8 items total)"
+       ]
+      },
+      "…(8 items total)"
+     ],
+     "floorplans": [
+      {
+       "__typename": "FloorplanFloorType",
+       "name": "1st Floor",
+       "default": {
+        "__typename": "TitleImageType",
+        "desc": "",
+        "image": {
+         "__typename": "ImageType",
+         "alt": "5580 Aurora Aloravita OW",
+         "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_ow.svg?d=20251007T202213"
+        },
+        "title": ""
+       },
+       "options": [
+        {
+         "__typename": "TitleImageType",
+         "desc": "",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "5580 Aurora Aloravita F1 Option Chef Kitchen",
+          "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_f1_option_chefkitchen.svg?d=20251007T202210"
+         },
+         "title": "Optional chef kitchen"
+        },
+        {
+         "__typename": "TitleImageType",
+         "desc": "",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "5580 Aurora Aloravita F1 Option Gourmet Kitchen",
+          "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_f1_option_gourmetkitchen.svg?d=20251007T202211"
+         },
+         "title": "Optional gourmet kitchen"
+        }
+       ],
+       "reversed": {
+        "__typename": "TitleImageType",
+        "desc": "",
+        "image": {
+         "__typename": "ImageType",
+         "alt": "5580 Aurora Aloravita OW Rev",
+         "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_ow_rev.svg?d=20251007T202212"
+        },
+        "title": ""
+       }
+      }
+     ],
+     "useBayGarage": true,
+     "isNextGen": false,
+     "community": {
+      "__ref": "CommunityType:c_8154"
+     }
+    },
+    "HomesiteType:h_858806": {
+     "__typename": "HomesiteType",
+     "id": "h_858806",
+     "name": "Aurora Plan 5580",
+     "price": 799990,
+     "overview": "Find all the room you need in this thoughtful home design. To one side of the foyer is a game room with a secondary bedroom on either side plus a secondary bathroom. The owner’s suite is spacious and …(543)",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186",
+     "metadata": null,
+     "address": "7966 W ROWEL RD",
+     "jdeLatitude": 0,
+     "jdeLongitude": 0,
+     "latitude": 33.724602,
+     "longitude": -112.230675,
+     "beds": 4,
+     "baths": 3,
+     "checkoutType": "BUY_NOW_NO_DEPOSIT",
+     "halfBaths": 0,
+     "garages": 3,
+     "stories": 1,
+     "sqft": 2835,
+     "lotid": "3358510186",
+     "number": "0186",
+     "closingCostIncentive": "",
+     "incentiveDisclaimer": null,
+     "wasPrice": 854990,
+     "formattedPrice": "",
+     "writerOverview": "",
+     "tpmAttributes": [],
+     "optionsGallery": [],
+     "optionsPDF": "",
+     "virtualTourUrl": "https://my.matterport.com/show/?m=AdAjpnTLwhd",
+     "status": "MOVE_IN_READY",
+     "isReserved": false,
+     "reducedApr": "0",
+     "showEstimatedMonthlyPayment": false,
+     "attributes": [],
+     "estMoveInDate": null,
+     "isHotw": true,
+     "badge": null,
+     "pageViews": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "url": "https://cdn.lennar.com/api/images/contentassets/bc3355daefe04fcdb57f49866302e49e/7966-w-rowel-rd---print-quality---001---01-exterior-front.jpg?d=20260501T225105",
+       "alt": "7966 W Rowel Rd   Print Quality   001   01 Exterior Front"
+      }
+     },
+     "defaultEiImage": null,
+     "isTourable": true,
+     "smartRentUrl": "https://selftournow.com/property/2f3052fc-48c0-40cf-9df0-3e9c6db608f7",
+     "featuredhighlights": [],
+     "offerAvailable": true,
+     "offerEndDate": "2027-07-02T00:00:00Z",
+     "offerStartDate": "2025-07-02T00:00:00Z",
+     "offerTimeZone": null,
+     "estimatedMonthlyPayment": null,
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "similarHomesites({\"first\":4})": [
+      {
+       "__ref": "HomesiteType:h_955264"
+      },
+      {
+       "__ref": "HomesiteType:h_951736"
+      },
+      {
+       "__ref": "HomesiteType:h_858807"
+      },
+      "…(4 items total)"
+     ]
+    },
+    "TrustBuilderReviewType:2282": {
+     "__typename": "TrustBuilderReviewType",
+     "id": 2282,
+     "content": "Everything was first rate quality-- our home was turned over to us in a timely manner with no outstanding repairs needed.  Construction crew and Lennar consruction representative were courteous and ve…(211)",
+     "title": "Lennar only missed theproojected completion dae by a month -- which is pretty good during these wilder market times.",
+     "firstName": "C.",
+     "lastName": "Frey",
+     "marketName": "Phoenix-Mesa",
+     "stateCode": "AZ"
+    },
+    "TrustBuilderReviewType:2714": {
+     "__typename": "TrustBuilderReviewType",
+     "id": 2714,
+     "content": "Quality of the build was outstanding.  All the people we worked with were available to answer questions and concerns.  Have recommended this builder and community to others.",
+     "title": "Lennar - Quality of the build was outstanding.",
+     "firstName": "Donald",
+     "lastName": "Oshiro",
+     "marketName": "Phoenix-Mesa",
+     "stateCode": "AZ"
+    },
+    "TrustBuilderReviewType:2879": {
+     "__typename": "TrustBuilderReviewType",
+     "id": 2879,
+     "content": "The home purchasing process was vey easy.  From Sales to the Mortgage Team everything was seamless.  Everyone at Lennar was professional, timely, and very helpful.",
+     "title": "Lennar - The home purchasing process was vey easy.",
+     "firstName": "David",
+     "lastName": "Freedline",
+     "marketName": "Phoenix-Mesa",
+     "stateCode": "AZ"
+    },
+    "TrustBuilderReviewType:3488": {
+     "__typename": "TrustBuilderReviewType",
+     "id": 3488,
+     "content": "Good quality control and excellent customer service follow up.   Thank You!",
+     "title": "Lennar - Good quality control and excellent customer service follow up.",
+     "firstName": "David",
+     "lastName": "Pruitt",
+     "marketName": "Phoenix-Mesa",
+     "stateCode": "AZ"
+    },
+    "PlanType:p_67893": {
+     "__typename": "PlanType",
+     "id": "p_67893",
+     "name": "Evolution Plan 5582",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/evolution-plan-5582",
+     "community": {
+      "__ref": "CommunityType:c_8154"
+     }
+    },
+    "HomesiteType:h_955264": {
+     "__typename": "HomesiteType",
+     "id": "h_955264",
+     "status": "COMING_SOON",
+     "price": 840490,
+     "wasPrice": 0,
+     "formattedPrice": "Mid $800K",
+     "baths": 3,
+     "halfBaths": 0,
+     "beds": 4,
+     "sqft": 3024,
+     "address": "8025 W ROWEL RD",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/evolution-plan-5582/3358510219",
+     "name": "Evolution Plan 5582",
+     "number": "0219",
+     "closingCostIncentive": "",
+     "showEstimatedMonthlyPayment": false,
+     "isHotw": false,
+     "estimatedMonthlyPayment": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg?d=20250220T125759",
+       "alt": "Western Territorial home exterior"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     }
+    },
+    "HomesiteType:h_951736": {
+     "__typename": "HomesiteType",
+     "id": "h_951736",
+     "status": "COMING_SOON",
+     "price": 840490,
+     "wasPrice": 0,
+     "formattedPrice": "Low $900K",
+     "baths": 3,
+     "halfBaths": 0,
+     "beds": 4,
+     "sqft": 3024,
+     "address": "8001 W ROWEL RD",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/evolution-plan-5582/3358510221",
+     "name": "Evolution Plan 5582",
+     "number": "0221",
+     "closingCostIncentive": "",
+     "showEstimatedMonthlyPayment": false,
+     "isHotw": false,
+     "estimatedMonthlyPayment": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg?d=20250220T125800",
+       "alt": "French Country home exterior image"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     }
+    },
+    "HomesiteType:h_858807": {
+     "__typename": "HomesiteType",
+     "id": "h_858807",
+     "status": "MOVE_IN_READY",
+     "price": 842990,
+     "wasPrice": 0,
+     "formattedPrice": "",
+     "baths": 3,
+     "halfBaths": 0,
+     "beds": 4,
+     "sqft": 2835,
+     "address": "7942 W ROWEL RD",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510188",
+     "name": "Aurora Plan 5580",
+     "number": "0188",
+     "closingCostIncentive": "",
+     "showEstimatedMonthlyPayment": false,
+     "isHotw": true,
+     "estimatedMonthlyPayment": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "url": "https://cdn.lennar.com/api/images/contentassets/1fcf8e10c69544acb6da57e7bac1c169/7942-w-rowel-rd---print-quality---001---01-exterior-front.jpg?d=20260623T225737",
+       "alt": "7942 W Rowel Rd   Print Quality   001   01 Exterior Front"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     }
+    },
+    "HomesiteType:h_902143": {
+     "__typename": "HomesiteType",
+     "id": "h_902143",
+     "status": "UNDER_CONSTRUCTION",
+     "price": 862490,
+     "wasPrice": 0,
+     "formattedPrice": "",
+     "baths": 3,
+     "halfBaths": 0,
+     "beds": 4,
+     "sqft": 2835,
+     "address": "7938 W TETHER TRL",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510166",
+     "name": "Aurora Plan 5580",
+     "number": "0166",
+     "closingCostIncentive": "",
+     "showEstimatedMonthlyPayment": false,
+     "isHotw": false,
+     "estimatedMonthlyPayment": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg?d=20250220T125756",
+       "alt": "Ranch Hacienda home exterior image"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     }
+    }
+   },
+   "pageSubtype": "",
+   "pageType": "HOMESITE",
+   "title": "Lot 3358510186 - Aurora Plan 5580",
+   "divisionNumber": "AZHLEN",
+   "variables": {
+    "lotid": "3358510186",
+    "plannum": "5580",
+    "comnum": "3358",
+    "id": "68592c7f-3a92-41f1-b856-0661db6976c9"
+   },
+   "csrfToken": "IFR5psNp-q7h57rVSv84_heoiRocpVM29wds",
+   "legalDisclaimerText": [
+    "By selecting \"I consent\" {placement}, you consent to receive marketing SMS communications from Lennar Homes and other communications (via mail, email, or telephone) from Lennar Homes and its affiliate…(906)",
+    "Al seleccionar \"Doy mi consentimiento\" {placement}, usted acepta recibir comunicaciones de marketing por SMS de Lennar Homes y otras comunicaciones (por correo postal, correo electrónico o teléfono) d…(1120)"
+   ],
+   "shouldDebugErrors": false
+  },
+  "__N_SSP": true
+ },
+ "page": "/new-homes/[state]/[market]/[submarket]/[...slugs]",
+ "query": {
+  "state": "arizona",
+  "market": "phoenix",
+  "submarket": "peoria",
+  "slugs": [
+   "aloravita",
+   "destiny",
+   "aurora-plan-5580",
+   "…(4 items total)"
+  ]
+ },
+ "buildId": "q3D-QxkDzxKPYQzzqZfEe",
+ "runtimeConfig": {
+  "CHAT_SALESFORCE_HOST": "https://len.my.salesforce.com",
+  "CHAT_FORCE_HOST": "https://len.my.site.com/LennarChat",
+  "CHAT_INIT_ID": "00D36000000JZvE",
+  "CHAT_LIVE_AGENT_CONTENT_URL": "https://c.la3-c2-ia4.salesforceliveagent.com/content",
+  "CHAT_LIVE_AGENT_URL": "https://d.la3-c2-ia4.salesforceliveagent.com/chat",
+  "CHAT_LIVE_AGENT_DEV_NAME": "EmbeddedServiceLiveAgent_Parent04I1Q000000GmfTUAS_174b6baa897",
+  "CHAT_DEPLOYMENT_ID": "5721Q000000D2HS",
+  "CHAT_BUTTON_ID": "5731Q000000D40j",
+  "CHAT_SERVICE_SCRIPT": "https://len.my.salesforce.com/embeddedservice/5.0/esw.min.js",
+  "DEBUG_ERRORS": "",
+  "IS_PRODUCTION": "true",
+  "AUTO_REDIRECT_HTTPS": "false",
+  "LINK_CAREERS": "https://careers.lennar.com",
+  "LINK_BLOG": "https://resourcecenter.lennar.com",
+  "LINK_INVESTOR_MARKETPLACE": "https://investor-marketplace.lennar.com/",
+  "LINK_EMPLOYMENT_VERIFICATION": "https://www.experian.com/employer-services/products/verification-fulfillment/experian-verify",
+  "LINK_FACEBOOK": "https://www.facebook.com/Lennar",
+  "LINK_INSTAGRAM": "https://www.instagram.com/lennarhomes",
+  "LINK_INVESTORS": "https://investors.lennar.com/",
+  "LINK_LINKEDIN": "https://www.linkedin.com/company/lennar",
+  "LINK_MYLENNAR": "https://www.lennar.com/contact/",
+  "LINK_NEWSROOM": "https://newsroom.lennar.com/",
+  "LINK_RESOURCES": "https://resourcecenter.lennar.com/",
+  "LINK_MYHOME": "https://myhome.lennar.com/lennarhomeownerexperience/s/",
+  "LINK_BROKER_POLICY": "https://resourcecenter.lennar.com/lennar-news/our-broker-real-estate-agent-policy/",
+  "LINK_TWITTER": "https://twitter.com/lennar",
+  "LINK_WARRANTY": "https://www.lennar.com/contact/customercarewarranty",
+  "LINK_WARRANTY_LOGGEDIN": "https://www.lennar.com/account/authorize?returnTo=%2Fcontact%2Fcustomercarewarranty",
+  "LINK_WARRANTY_MYHOME": "https://myhome.lennar.com/lennarhomeownerexperience/s/contactsupport",
+  "LINK_YOUTUBE": "https://www.youtube.com/user/LennarOnline",
+  "MPARTICLE_API_KEY": "us1-0579633ea8846a43abee653a45ea4049",
+  "MPARTICLE_PLAN_VERSION": "2",
+  "OPTIMIZELY_KEY": "20139847744",
+  "LENNAR_ENVIRONMENT": "Production",
+  "OPTIMIZELY_SDK_KEY": "6DkvSj3y8qErBXsB8Pnhu",
+  "SITECORE_DOCUMENT_REST_API": "https://lnos-lcw-app-be-cd-prod01.azurewebsites.net/services/rest/documents.svc/uploadofferdocument",
+  "SITECORE_TEMP_DOCUMENT_REST_API": "https://lnos-lcw-app-be-cd-prod01.azurewebsites.net/services/rest/documents.svc/uploadtempofferdocument",
+  "AUTH_PROVIDER": "ping",
+  "AUTH0_DOMAIN": "auth.lennar.com",
+  "AUTH0_CLIENT_ID": "M9P0B7GnDuatTp3MY7qVjxgykNm7jdF0",
+  "AUTH0_CONNECTION": "Auth0-LEN-Prod",
+  "AUTH0_REDIRECT_FLOW": "",
+  "AUTH_PINGID_ID": "ca15005c-d682-43bb-818c-9aaec75336cb",
+  "PING_ISSUER": "https://identity.lennar.com/as",
+  "PING_POST_LOGOUT_REDIRECT_URI": "https://www.lennar.com/account/logout-callback",
+  "ONETRUST_PRIVACY": "https://lennar-privacy.my.onetrust.com/webform/28241770-ebef-41ce-ad79-79c8275b52ce/4a145a0f-1efc-4ad5-8878-7c3609052d3d",
+  "ONETRUST_HEAD_DOMAIN_SCRIPT": "44a74418-9f8d-4f2b-9a9c-da325f3c8879",
+  "ONETRUST_HEAD_CUSTOM_SCRIPT": "/onetrust.js",
+  "TIME_TO_REFRESH": "120000",
+  "TIME_INACTIVE_LOGOUT": "1200000",
+  "NOAUTH_PROFILE_EXPIRATION": "43800",
+  "GOOGLE_PLACES_API_KEY": "AIzaSyDF58qGE--T_WRdZRRNksCO9teX1h4AMtg",
+  "JS_TOKEN_API": "https://www.e-billexpress.com:443/PayIQ/Api/PaymentAccount/StoreFromJS",
+  "ONETRUST_AUTOBLOCK_LOAD_STRATEGY": "",
+  "COMMUNITY_MAP_SHOPPING_IMAGE": "/images/com/images/version10/default/communityMapShoppingPhoto.jpg",
+  "CDN_ASSET_PREFIX": "",
+  "DOMAIN": "www.lennar.com",
+  "WEB_TO_CASE_CITY": "00N1Q00000TXvyb",
+  "WEB_TO_CASE_COUNTRY": "00N0R0000038uch",
+  "WEB_TO_CASE_ENV_FROM_URL": "https://webto.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8",
+  "WEB_TO_CASE_FIRST_NAME": "00N1Q00000TXvyd",
+  "WEB_TO_CASE_FLAG": "00N1Q00000TXvIV",
+  "WEB_TO_CASE_HOMESITE_ID": "00N1Q00000TXvye",
+  "WEB_TO_CASE_LAST_NAME": "00N1Q00000TXvyf",
+  "WEB_TO_CASE_ORG_ID": "00D36000000JZvE",
+  "WEB_TO_CASE_STATE": "00N1Q00000TXvyg",
+  "WEB_TO_CASE_STREET_ADDRESS": "00N1Q00000TXvyh",
+  "WEB_TO_CASE_WORK_ORDER": "00N1Q00000TXvya",
+  "WEB_TO_CASE_ZIP": "00N1Q00000TXvyi",
+  "SIERRA_URL": "https://sierra.chat/agent/iMd9AP8BkvWvPxEBmieeYmRxDOIdvoZhkwOCUNPhpog/embed",
+  "AGENTFORCE_ORG_ID": "00D36000000JZvE",
+  "AGENTFORCE_DEPLOYMENT_NAME": "AISC_Web",
+  "AGENTFORCE_COMMUNITY_URL": "https://len.my.site.com/ESWAISCWeb1756413103754",
+  "AGENTFORCE_SCRT2_URL": "https://len.my.salesforce-scrt.com",
+  "SEARCH_CITY_RADIUS": "",
+  "SEARCH_PAGE_MAP_ID": "32bd9412a889b91942a4ee31",
+  "LIGHT_GRAPHQL_PROXY_ALLOWED": "true",
+  "COOKIE_MIGRATION_ENABLED": "true"
+ },
+ "isFallback": false,
+ "dynamicIds": [
+  42567,
+  95497,
+  16861,
+  "…(4 items total)"
+ ],
+ "gssp": true,
+ "appGip": true,
+ "scriptLoader": []
+}

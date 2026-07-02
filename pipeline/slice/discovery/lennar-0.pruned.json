@@ -1,0 +1,6643 @@
+{
+ "props": {
+  "pageProps": {
+   "appInsightsConfig": {
+    "enabled": false,
+    "connectionString": ""
+   },
+   "rfiLegalDisclaimers": [
+    "By selecting \"I consent\" {placement}, you consent to receive marketing SMS communications from Lennar Homes and other communications (via mail, email, or telephone) from Lennar Homes and its affiliate…(906)",
+    "Al seleccionar \"Doy mi consentimiento\" {placement}, usted acepta recibir comunicaciones de marketing por SMS de Lennar Homes y otras comunicaciones (por correo postal, correo electrónico o teléfono) d…(1120)"
+   ],
+   "sessionRefetchInterval": 60,
+   "pageHead": {
+    "title": "Aurora Plan 5580 New Home Plan in Destiny at Aloravita by Lennar",
+    "description": "Everything’s included by Lennar, the leading homebuilder of new homes in Phoenix, AZ. Don't miss the Aurora Plan 5580 plan in Aloravita at Destiny.",
+    "schema": {
+     "@context": "https://schema.org",
+     "@graph": [
+      {
+       "@type": "Product",
+       "name": "Aurora Plan 5580",
+       "description": "Find all the room you need in this thoughtful home design. To one side of the foyer is a game room with a secondary bedroom on either side plus a secondary bathroom. The owner’s suite is spacious and …(543)",
+       "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580",
+       "image": [
+        {
+         "@type": "ImageObject",
+         "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_pic_aurora_great_4of4_f1_base4.jpg?d=20250220T125755",
+         "name": "Aurora Great Room"
+        },
+        {
+         "@type": "ImageObject",
+         "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg?d=20250220T125756",
+         "name": "Spanish Colonial home exterior image"
+        },
+        {
+         "@type": "ImageObject",
+         "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg?d=20250220T125756",
+         "name": "Craftsman home exterior imag"
+        },
+        "…(4 items total)"
+       ],
+       "mainEntityOfPage": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580",
+       "brand": {
+        "@type": "Organization",
+        "name": "Lennar",
+        "url": "https://www.lennar.com",
+        "telephone": "+1-800-532-6993"
+       },
+       "potentialAction": [
+        {
+         "@type": "ViewAction",
+         "name": "View Virtual Tour",
+         "target": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/virtual-tour"
+        },
+        {
+         "@type": "ViewAction",
+         "name": "Interactive Floor Plan Tool",
+         "target": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/floorplan"
+        },
+        {
+         "@type": "ViewAction",
+         "name": "View Video Tour",
+         "target": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/video"
+        }
+       ],
+       "isRelatedTo": {
+        "@type": "SingleFamilyResidence",
+        "name": "Aurora Plan 5580",
+        "numberOfBedrooms": 4,
+        "numberOfBathroomsTotal": 3,
+        "floorSize": {
+         "@type": "QuantitativeValue",
+         "value": 2835,
+         "unitCode": "SQF"
+        },
+        "additionalProperty": [
+         {
+          "@type": "PropertyValue",
+          "name": "Bedrooms",
+          "value": 4
+         },
+         {
+          "@type": "PropertyValue",
+          "name": "Bathrooms",
+          "value": 3
+         },
+         {
+          "@type": "PropertyValue",
+          "name": "Garage",
+          "value": true
+         },
+         "…(6 items total)"
+        ]
+       },
+       "additionalProperty": [
+        {
+         "@type": "PropertyValue",
+         "name": "Playground",
+         "value": true
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "Basketball Court",
+         "value": true
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "Picnic Area",
+         "value": true
+        },
+        "…(5 items total)"
+       ]
+      },
+      {
+       "@type": "Product",
+       "name": "Aurora Plan 5580 Spec Home - 7966 W ROWEL RD",
+       "sku": "3358510186",
+       "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186",
+       "image": [
+        {
+         "@type": "ImageObject",
+         "url": "https://cdn.lennar.com/api/images/contentassets/bc3355daefe04fcdb57f49866302e49e/7966-w-rowel-rd---print-quality---001---01-exterior-front.jpg?d=20260501T225105",
+         "name": "7966 W Rowel Rd   Print Quality   001   01 Exterior Front"
+        }
+       ],
+       "offers": {
+        "@type": "Offer",
+        "price": 799990,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186"
+       },
+       "additionalProperty": [
+        {
+         "@type": "PropertyValue",
+         "name": "Street Address",
+         "value": "7966 W ROWEL RD"
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "City",
+         "value": "Peoria"
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "State",
+         "value": "AZ"
+        },
+        "…(4 items total)"
+       ]
+      },
+      {
+       "@type": "Product",
+       "name": "Aurora Plan 5580 Spec Home - 7942 W ROWEL RD",
+       "sku": "3358510188",
+       "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510188",
+       "image": [
+        {
+         "@type": "ImageObject",
+         "url": "https://cdn.lennar.com/api/images/contentassets/1fcf8e10c69544acb6da57e7bac1c169/7942-w-rowel-rd---print-quality---001---01-exterior-front.jpg?d=20260623T225737",
+         "name": "7942 W Rowel Rd   Print Quality   001   01 Exterior Front"
+        }
+       ],
+       "offers": {
+        "@type": "Offer",
+        "price": 842990,
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.lennar.com/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510188"
+       },
+       "additionalProperty": [
+        {
+         "@type": "PropertyValue",
+         "name": "Street Address",
+         "value": "7942 W ROWEL RD"
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "City",
+         "value": "Peoria"
+        },
+        {
+         "@type": "PropertyValue",
+         "name": "State",
+         "value": "AZ"
+        },
+        "…(4 items total)"
+       ]
+      },
+      "…(4 items total)"
+     ]
+    },
+    "breadcrumbSchema": {
+     "@context": "https://schema.org",
+     "@type": "BreadcrumbList",
+     "itemListElement": [
+      {
+       "@type": "ListItem",
+       "position": 1,
+       "name": "Home",
+       "item": "https://www.lennar.com"
+      },
+      {
+       "@type": "ListItem",
+       "position": 2,
+       "name": "Arizona",
+       "item": "https://www.lennar.com/new-homes/arizona"
+      },
+      {
+       "@type": "ListItem",
+       "position": 3,
+       "name": "Phoenix",
+       "item": "https://www.lennar.com/new-homes/arizona/phoenix"
+      },
+      "…(7 items total)"
+     ]
+    }
+   },
+   "initialApolloState": {
+    "ROOT_QUERY": {
+     "__typename": "Query",
+     "rfiV2": {
+      "__typename": "RfiV2Type",
+      "inlineHeaderTitle": null,
+      "showContainer": true,
+      "headerTitle": "Our team is here to help",
+      "headerDescription": "Connect with our team to receive the latest updates on pricing, availability, community features and more.",
+      "incentiveTitle1": "Personalized help",
+      "incentiveDescription1": "Dedicated experts to guide you, answer questions, and help you find your dream home.",
+      "incentiveTitle2": "Financing options",
+      "incentiveDescription2": "Learn about special promotions available when financing through Lennar Mortgage.",
+      "incentiveTitle3": "Access to digital brochure",
+      "incentiveDescription3": "Download an in-depth look at floorplans, community features and available homes.",
+      "postRfiFormHeaderCopy": "let's make sure we have everything we need from you before we chat.",
+      "postRfiFormDescriptionCopy": "Share more details to submit your request."
+     },
+     "market({\"mc\":\"phoenix\",\"sc\":\"arizona\"})": null,
+     "messagesV3({\"comnum\":\"3358\",\"mpcid\":null})": [
+      {
+       "__ref": "MessageV3Type:ac8c0fc3-495b-459f-85de-f08f926a9e7b"
+      }
+     ],
+     "market({\"slugs\":{\"market\":\"phoenix\",\"state\":\"arizona\"}})": {
+      "__typename": "MarketType",
+      "code": "PHO",
+      "state": {
+       "__typename": "StateType",
+       "code": "AZ"
+      }
+     },
+     "plan({\"comnum\":\"3358\",\"plannum\":\"5580\"})": {
+      "__ref": "PlanType:p_67892"
+     },
+     "community({\"comnum\":\"3358\"})": {
+      "__ref": "CommunityType:c_8154"
+     },
+     "states": [
+      {
+       "__ref": "StateType:st_29"
+      },
+      {
+       "__ref": "StateType:st_17"
+      },
+      {
+       "__ref": "StateType:st_7"
+      },
+      "…(32 items total)"
+     ]
+    },
+    "MessageV3Type:ac8c0fc3-495b-459f-85de-f08f926a9e7b": {
+     "__typename": "MessageV3Type",
+     "id": "ac8c0fc3-495b-459f-85de-f08f926a9e7b",
+     "styling": {
+      "__typename": "MessageV3StylingType",
+      "takeoverBackgroundColor": "radial-gradient(52.1% 52.1% at 50% 47.9%, #BA2222 61.33%, #AB1B1B 100%)",
+      "takeoverButtonColor": "#FFFFFF",
+      "takeoverButtonTextColor": "#020F33",
+      "takeoverTextColor": "#FFFFFF",
+      "takeoverCloseIconAndCTA": "#FFFFFF",
+      "takeoverLennarLogo": "#FFFFFF",
+      "topBannerBackgroundColor": "#BA2222",
+      "topBannerTextColor": "#FFFFFF",
+      "inlineBackgroundColor": "#BA2222",
+      "inlineColorCopy": "#FFFFFF",
+      "inlineDescriptionColor": "#FFFFFF",
+      "inlineCtaColor": "#FFFFFF",
+      "inlineCtaCopyColor": "#020F33",
+      "inlineTimerHeaderColor": null,
+      "inlineTimerContainerColor": null,
+      "inlineTimerClockBackgroundColor": null,
+      "inlineTimerClockTextColor": null,
+      "inlineCreativeOutlineColor": "#BA2222",
+      "promoSearchBackgroundColor": "#BA2222",
+      "promoSearchColorCopy": "#FFFFFF",
+      "promoSearchCtaColor": "#FFFFFF",
+      "promoSearchCtaCopyColor": "#020F33",
+      "promoSearchTimerHeaderColor": null,
+      "promoSearchTimerContainerColor": null,
+      "promoSearchTimerClockBackgroundColor": null,
+      "promoSearchTimerClockTextColor": null,
+      "nseHotwBackgroundColor": "#BA2222",
+      "nseHotwTitleColor": "#FFFFFF",
+      "nseHotwDescriptionColor": "#FFFFFF",
+      "nseHotwCtaTextColor": "#020F33",
+      "nseHotwCtaBackgroundColor": "#FFFFFF"
+     },
+     "blockType": "Corporate",
+     "startDate": "2026-06-19T00:00:00Z",
+     "endDate": "2026-08-30T00:00:00Z",
+     "link": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/corporate/corp_oydq326",
+      "text": "View offer",
+      "target": "_blank"
+     },
+     "hamburgerPromoImage": {
+      "__typename": "ImageType",
+      "alt": "Group 396749",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/group-396749.png?d=20260622T154015"
+     },
+     "takeoverTitle": "Huge Savings. Limited Time Only.",
+     "takeoverCta": "View offer",
+     "takeoverCreative": {
+      "__typename": "ImageType",
+      "alt": "Mask group (14)",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/mask-group-14.png?d=20260622T153727"
+     },
+     "showTakeover": true,
+     "promoSearchTitleCopy": "4th of July Sale",
+     "promoSearchCTACopy": "View offer",
+     "promoSearchPromotionEnds": null,
+     "showPromoInSearch": true,
+     "inlineTitle": "4th of July Sale ",
+     "inlineCTACopy": "View offer",
+     "inlineCountdownDays": null,
+     "inlineDescription": null,
+     "inlineCreativeImage": {
+      "__typename": "ImageType",
+      "alt": "Promo Graphic (7)",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/promo_graphic-7.png?d=20260622T153826"
+     },
+     "showInlinePromo": true,
+     "topBannerTitle": "🎉 Exclusive celebratory savings on new homes nationwide 🏡",
+     "promotionIconImage": null,
+     "showTopBanner": true,
+     "nseHotwTitle": "Even More Savings",
+     "nseHotwDescription": "*Home of the Week homes may qualify for additional incentives.",
+     "nseHotwCtaCopy": "View offer",
+     "nseHotwCreative": {
+      "__typename": "ImageType",
+      "alt": "Promo Graphic (7)",
+      "url": "https://cdn.lennar.com/api/images/contentassets/796263cded94453fa7b87f75cb4c3d15/promo_graphic-7.png?d=20260622T153826"
+     },
+     "showNseHotwPromo": true
+    },
+    "PlanType:p_67892": {
+     "__typename": "PlanType",
+     "name": "Aurora Plan 5580",
+     "id": "p_67892",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580",
+     "metadata": null,
+     "isNextGen": false,
+     "availableHomesitesCount": 3,
+     "smartRentUrl": "https://selftournow.com/property/2f3052fc-48c0-40cf-9df0-3e9c6db608f7",
+     "isTourable": true,
+     "community": {
+      "__ref": "CommunityType:c_8154"
+     },
+     "startingPrice": 791490,
+     "sqft": 2835,
+     "beds": 4,
+     "baths": 3,
+     "number": "5580",
+     "elevationImages": [
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "alt": "Spanish Colonial home exterior image",
+        "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg?d=20250220T125756"
+       },
+       "desc": "A Spanish-inspired exterior with clean stucco, metal accents, decorative window shutters and concrete roof tiles",
+       "title": "A - Spanish Colonial"
+      },
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "alt": "Craftsman home exterior imag",
+        "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg?d=20250220T125756"
+       },
+       "desc": "A craftsman-inspired exterior with gable rooflines featuring wood accents, stucco and shake-shingle siding with stone details",
+       "title": "C - Craftsman"
+      },
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "alt": "Ranch Hacienda home exterior image",
+        "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg?d=20250220T125756"
+       },
+       "desc": "A ranch-inspired exterior featuring gable rooflines, clay roof tiles, clean stucco, brick accents and decorative window shutters",
+       "title": "H - Ranch Hacienda"
+      }
+     ],
+     "heroImage": {
+      "__typename": "ImageType",
+      "alt": "Aurora Great Room",
+      "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_pic_aurora_great_4of4_f1_base4.jpg?d=20250220T125755"
+     },
+     "status": "ACTIVE",
+     "walkthrough": {
+      "__typename": "PlanWalkthroughType",
+      "allRooms": [
+       {
+        "__typename": "RoomType",
+        "name": "Kitchen",
+        "content": {
+         "__typename": "RoomContentType",
+         "hero": {
+          "__typename": "RoomHeroType",
+          "image": {
+           "__typename": "ImageType",
+           "alt": "Aurora Kitchen",
+           "url": "https://cdn.lennar.com/api/images/contentassets/cf81d4094bcf42ba8de52da50dbed68e/azh_5580_pic_aurora_kitchen_1of3_f1_base4.jpg?d=20250222T235232"
+          }
+         },
+         "roomImageGallery": []
+        }
+       },
+       {
+        "__typename": "RoomType",
+        "name": "Dining Room",
+        "content": {
+         "__typename": "RoomContentType",
+         "hero": {
+          "__typename": "RoomHeroType",
+          "image": {
+           "__typename": "ImageType",
+           "alt": "Aurora Dining Room",
+           "url": "https://cdn.lennar.com/api/images/contentassets/681bff1a42914c2390222c89a58e1bdf/azh_5580_pic_aurora_dining_1of2_f1_base4.jpg?d=20250222T235234"
+          }
+         },
+         "roomImageGallery": []
+        }
+       },
+       {
+        "__typename": "RoomType",
+        "name": "Great Room",
+        "content": {
+         "__typename": "RoomContentType",
+         "hero": {
+          "__typename": "RoomHeroType",
+          "image": {
+           "__typename": "ImageType",
+           "alt": "Aurora Great Room",
+           "url": "https://cdn.lennar.com/api/images/contentassets/b6539bbbbbfa481a8e3057880c0bb783/azh_5580_pic_aurora_great_4of4_f1_base4.jpg?d=20250222T235236"
+          }
+         },
+         "roomImageGallery": []
+        }
+       },
+       "…(13 items total)"
+      ],
+      "roomImagesCount": 20
+     },
+     "virtualTourUrl": "https://my.matterport.com/show/?m=AdAjpnTLwhd",
+     "customPrice": null,
+     "halfBaths": 0,
+     "overview": "Find all the room you need in this thoughtful home design. To one side of the foyer is a game room with a secondary bedroom on either side plus a secondary bathroom. The owner’s suite is spacious and …(543)",
+     "wasStartingPrice": 0,
+     "isAcceptingOffers": false,
+     "garages": 3,
+     "useBayGarage": true,
+     "floorplans": [
+      {
+       "__typename": "FloorplanFloorType",
+       "name": "1st Floor",
+       "default": {
+        "__typename": "TitleImageType",
+        "desc": "",
+        "image": {
+         "__typename": "ImageType",
+         "alt": "5580 Aurora Aloravita OW",
+         "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_ow.svg?d=20251007T202213"
+        },
+        "title": ""
+       },
+       "options": [
+        {
+         "__typename": "TitleImageType",
+         "desc": "",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "5580 Aurora Aloravita F1 Option Chef Kitchen",
+          "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_f1_option_chefkitchen.svg?d=20251007T202210"
+         },
+         "title": "Optional chef kitchen"
+        },
+        {
+         "__typename": "TitleImageType",
+         "desc": "",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "5580 Aurora Aloravita F1 Option Gourmet Kitchen",
+          "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_f1_option_gourmetkitchen.svg?d=20251007T202211"
+         },
+         "title": "Optional gourmet kitchen"
+        }
+       ],
+       "reversed": {
+        "__typename": "TitleImageType",
+        "desc": "",
+        "image": {
+         "__typename": "ImageType",
+         "alt": "5580 Aurora Aloravita OW Rev",
+         "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_fp_aurora_aloravita_ow_rev.svg?d=20251007T202212"
+        },
+        "title": ""
+       }
+      }
+     ],
+     "nearbyAvailableCommunities": [],
+     "otherHomes": [
+      {
+       "__ref": "PlanType:p_67891"
+      },
+      {
+       "__ref": "PlanType:p_67893"
+      },
+      {
+       "__ref": "PlanType:p_67894"
+      }
+     ],
+     "similarHomes": [
+      {
+       "__ref": "PlanType:p_69537"
+      }
+     ],
+     "eiFeatures": [
+      {
+       "__typename": "EiCategoryType",
+       "name": "Kitchen",
+       "iconImage": null,
+       "list": [
+        {
+         "__typename": "EiContentType",
+         "desc": "Brand-new set of stainless steel appliances elevate the space",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "4584 Juniper Kitchen 4of6 F1 Base3",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b2d993dbb69f4e22ac650d8761db8258/azh_4584_pic_juniper_kitchen_4of6_f1_base3.jpg?d=20260121T165940"
+         }
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Quartz kitchen countertop",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Timberlake linen square panel cabinets with 36\" uppers",
+         "image": null
+        },
+        "…(8 items total)"
+       ]
+      },
+      {
+       "__typename": "EiCategoryType",
+       "name": "Owners Suite",
+       "iconImage": null,
+       "list": [
+        {
+         "__typename": "EiContentType",
+         "desc": "Glass-enclosed shower with swing door in the owner’s suite bathroom  ",
+         "image": {
+          "__typename": "ImageType",
+          "alt": "Pic EI Owners Swing Door Shower",
+          "url": "https://cdn.lennar.com/api/images/contentassets/82da81a8538346b2bc67d3c68cd53f46/azh_pic_ei_owners_swingdoorshower.jpg?d=20260121T165537"
+         }
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Fiberglass enclosed swing door shower with cultured marble surrounds ",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Chrome rain shower head ",
+         "image": null
+        },
+        "…(4 items total)"
+       ]
+      },
+      {
+       "__typename": "EiCategoryType",
+       "name": "NextGen Suite",
+       "iconImage": null,
+       "list": [
+        {
+         "__typename": "EiContentType",
+         "desc": "Quartz kitchen countertop",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Stainless steel dishwasher ",
+         "image": null
+        },
+        {
+         "__typename": "EiContentType",
+         "desc": "Stainless steel side-by-side refrigerator ",
+         "image": null
+        },
+        "…(8 items total)"
+       ]
+      },
+      "…(8 items total)"
+     ],
+     "videoTourUrl": "https://www.youtube.com/watch?v=qkKi_si3YoU",
+     "homesites": [
+      {
+       "__typename": "HomesiteType",
+       "name": "Aurora Plan 5580",
+       "status": "MOVE_IN_READY"
+      },
+      {
+       "__typename": "HomesiteType",
+       "name": "Aurora Plan 5580",
+       "status": "MOVE_IN_READY"
+      },
+      {
+       "__typename": "HomesiteType",
+       "name": "Aurora Plan 5580",
+       "status": "UNDER_CONSTRUCTION"
+      }
+     ],
+     "planFeaturedHighlights": null,
+     "modelTourAvailable": true
+    },
+    "MpcType:m_2319": {
+     "__typename": "MpcType",
+     "id": "m_2319",
+     "name": "Aloravita",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita",
+     "mpcid": 2319,
+     "googleBusinessListingOverride": null,
+     "sitePlanPdf": null,
+     "heroVideo": {
+      "__typename": "VideoType",
+      "alt": "030724 32387 Aloravita MPC",
+      "desc": "",
+      "title": "",
+      "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/030724_azh_32387_aloravita_vid_mpc.mp4?d=20250220T042434"
+     },
+     "heroImage": {
+      "__typename": "ImageType",
+      "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_entrymonument.jpg?d=20260319T165649",
+      "alt": "Aloravita Entry Monument"
+     },
+     "amenityInfo": {
+      "__typename": "AmenityInfoType",
+      "amenities": [
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/d857faab6e444d59af1560091455c081/playground.svg?d=20250219T221610"
+        },
+        "name": "Playground",
+        "desc": "Children will enjoy making life-long memories while playing on the fully-equipped playground and surrounding green space",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Shaded playground that has a jungle gym",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_playground.jpg?d=20260413T232421"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/454809f2c82940efa0d7b18cac1481a6/basketball-court.svg?d=20250219T221613"
+        },
+        "name": "Basketball Court",
+        "desc": "Enjoy a friendly game or just shoot some hoops at the community basketball court",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Basketball court in a grassy area",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_basketball.jpg?d=20260413T232415"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/8694c21cfdb44be29bcbcb8d7b17900f/picnic-area.svg?d=20250219T221602"
+        },
+        "name": "Picnic Area",
+        "desc": "",
+        "images": null
+       }
+      ],
+      "text": "The community features fantastic onsite amenities to encourage active living, including a playground and basketball court. "
+     }
+    },
+    "StateType:st_2": {
+     "__typename": "StateType",
+     "id": "st_2",
+     "code": "AZ",
+     "name": "Arizona",
+     "slug": "arizona",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_54"
+      },
+      {
+       "__ref": "MarketType:mk_74"
+      }
+     ],
+     "url": "/new-homes/arizona"
+    },
+    "MarketType:mk_54": {
+     "__typename": "MarketType",
+     "id": "mk_54",
+     "name": "Phoenix",
+     "state": {
+      "__ref": "StateType:st_2"
+     },
+     "code": "PHO",
+     "slug": "phoenix",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/arizona/phoenix/promo/azhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null,
+     "url": "/new-homes/arizona/phoenix",
+     "hideStateQuestionOnRFI": false,
+     "hideOpenDoor": false
+    },
+    "CityType:ct_54_peoria": {
+     "__typename": "CityType",
+     "id": "ct_54_peoria",
+     "name": "Peoria",
+     "market": {
+      "__ref": "MarketType:mk_54"
+     },
+     "url": "/new-homes/arizona/phoenix/peoria"
+    },
+    "CommunityType:c_8154": {
+     "__typename": "CommunityType",
+     "id": "c_8154",
+     "divisionNumber": "AZHLEN",
+     "name": "Destiny",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny",
+     "mpc": {
+      "__ref": "MpcType:m_2319"
+     },
+     "city": {
+      "__ref": "CityType:ct_54_peoria"
+     },
+     "number": "3358",
+     "abadInfo": {
+      "__typename": "AbadInfoType",
+      "prequalUrl": "https://www.lennarmortgage.com/community-search?comid=3358",
+      "prequalAbadCode": "LennarMortgage",
+      "calculatorUrl": "https://www.lennarmortgage.com/calculators/monthly-payment-calculator",
+      "calculatorAbadCode": "LennarMortgage"
+     },
+     "isTourable": true,
+     "isScattered": false,
+     "consultants": {
+      "__typename": "ConsultantType",
+      "introText": "Get in touch with our team of real estate professionals to learn about communities and available homes.&nbsp;",
+      "image": null,
+      "individuals": [
+       {
+        "__typename": "ConsultantType",
+        "name": "Lauren Evans",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/b1b63c80acfb4346bab11093b69ae226/lauren.jpg?d=20250223T200745",
+         "alt": "Image: Lauren Evans Copy: Internet Sale Consultant"
+        }
+       },
+       {
+        "__typename": "ConsultantType",
+        "name": "Debbie Webb",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/a24447806eb14b5ca2649ec1483d332d/debbie.jpg?d=20250223T200558",
+         "alt": "Image: Debbie Webb Copy: Internet Sales Consultant"
+        }
+       },
+       {
+        "__typename": "ConsultantType",
+        "name": "Peggy Wagner",
+        "image": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/70f97d5979174ea7a474fb4295d5687f/azh_headshot_isc_peggy.jpg?d=20250223T200841",
+         "alt": "Image: Peggy Wagner Copy: Internet Sales Consultant"
+        }
+       },
+       "…(7 items total)"
+      ],
+      "phoneNumber": "602-661-3437",
+      "hours": [
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       {
+        "__typename": "HoursType",
+        "opening": "9:00 am",
+        "closing": "5:00 pm",
+        "byAppointment": false
+       },
+       "…(7 items total)"
+      ],
+      "timeZone": "MT"
+     },
+     "hasSchools": true,
+     "hasServices": true,
+     "status": "ACTIVE",
+     "types": [
+      "NextGen",
+      "Single Family"
+     ],
+     "zipCode": "85383",
+     "displayBrokerCo": false,
+     "stateCode": "AZ",
+     "hidePrequalLink": false,
+     "mapBounds": [
+      33.72478103637695,
+      -112.22210693359375,
+      33.71807861328125,
+      "…(4 items total)"
+     ],
+     "googleBusinessListingOverride": null,
+     "sitePlanPdf": null,
+     "availabilityMap": {
+      "__typename": "AvailabilityMapType",
+      "homesites": [
+       {
+        "__ref": "HomesiteType:ah_728301"
+       },
+       {
+        "__ref": "HomesiteType:ah_728300"
+       },
+       {
+        "__ref": "HomesiteType:ah_728299"
+       },
+       "…(102 items total)"
+      ],
+      "geoJsonSrc": "https://cdn.lennar.com/api/images/contentassets/37b9530bdd394ed38182cbe0d4eaa89c/maps/3358-aloravita-destiny.geojson?d=20250908T175016",
+      "image": {
+       "__typename": "ImageType",
+       "url": "https://cdn.lennar.com/api/images/contentassets/37b9530bdd394ed38182cbe0d4eaa89c/azh_aloravita_destiny_siteplan.svg?d=20260513T174828"
+      },
+      "introText": null
+     },
+     "metadata": null,
+     "address": "25942 N 77th Drive",
+     "dynamicDirections": true,
+     "latitude": 33.719364,
+     "longitude": -112.225838,
+     "heroImage": {
+      "__typename": "ImageType",
+      "url": "https://cdn.lennar.com/api/images/contentassets/37b9530bdd394ed38182cbe0d4eaa89c/azh_aloravita_rend_amenity_basketball.jpg?d=20260325T165714",
+      "alt": "Aloravita Amenity Basketball"
+     },
+     "heroVideo": null,
+     "isFeatured": false,
+     "hours": [
+      {
+       "__typename": "HoursType",
+       "opening": "10AM",
+       "closing": "5PM",
+       "byAppointment": false
+      },
+      {
+       "__typename": "HoursType",
+       "opening": "10AM",
+       "closing": "5PM",
+       "byAppointment": false
+      },
+      {
+       "__typename": "HoursType",
+       "opening": "10AM",
+       "closing": "5PM",
+       "byAppointment": false
+      },
+      "…(7 items total)"
+     ],
+     "overview": "The Destiny Collection at the Aloravita master-planned community offers new single-family homes for sale in the city of Peoria, AZ. These homes feature different design options for various lifestyle t…(541)",
+     "amenityInfo": {
+      "__typename": "AmenityInfoType",
+      "amenities": [
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/d857faab6e444d59af1560091455c081/playground.svg?d=20250219T221610"
+        },
+        "name": "Playground",
+        "desc": "Children will enjoy making life-long memories while playing on the fully-equipped playground and surrounding green space",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Shaded playground that has a jungle gym",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_playground.jpg?d=20260413T232421"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/454809f2c82940efa0d7b18cac1481a6/basketball-court.svg?d=20250219T221613"
+        },
+        "name": "Basketball Court",
+        "desc": "Enjoy a friendly game or just shoot some hoops at the community basketball court",
+        "images": [
+         {
+          "__typename": "ImageType",
+          "alt": "Basketball court in a grassy area",
+          "url": "https://cdn.lennar.com/api/images/contentassets/b328b873562b4fd6b5fafd4be71f5ace/azh_aloravita_rend_amenity_basketball.jpg?d=20260413T232415"
+         }
+        ]
+       },
+       {
+        "__typename": "AmenityType",
+        "icon": {
+         "__typename": "ImageType",
+         "url": "https://cdn.lennar.com/api/images/contentassets/8694c21cfdb44be29bcbcb8d7b17900f/picnic-area.svg?d=20250219T221602"
+        },
+        "name": "Picnic Area",
+        "desc": "",
+        "images": null
+       }
+      ],
+      "text": ""
+     },
+     "hoaFee": 99,
+     "monthlyHoaFee": false,
+     "developmentFee": 0,
+     "monthlySpecialAssessmentFee": false,
+     "taxRate": 0.53,
+     "plans": [
+      {
+       "__typename": "PlanType",
+       "homesites": []
+      },
+      {
+       "__typename": "PlanType",
+       "homesites": []
+      },
+      {
+       "__typename": "PlanType",
+       "homesites": [
+        {
+         "__ref": "HomesiteType:h_858806"
+        },
+        {
+         "__ref": "HomesiteType:h_858807"
+        },
+        {
+         "__ref": "HomesiteType:h_902143"
+        }
+       ]
+      },
+      "…(4 items total)"
+     ]
+    },
+    "MarketType:mk_155": {
+     "__typename": "MarketType",
+     "id": "mk_155",
+     "code": "MAD",
+     "name": "Madison",
+     "slug": "madison",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/wisconsin/madison/promo/chblen_mad_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_29": {
+     "__typename": "StateType",
+     "code": "WI",
+     "name": "Wisconsin",
+     "id": "st_29",
+     "slug": "wisconsin",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_155"
+      }
+     ]
+    },
+    "MarketType:mk_10": {
+     "__typename": "MarketType",
+     "id": "mk_10",
+     "code": "CHR",
+     "name": "Charleston",
+     "slug": "charleston",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/south-carolina/charleston/promo/crslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_8": {
+     "__typename": "MarketType",
+     "id": "mk_8",
+     "code": "CHA",
+     "name": "Charlotte",
+     "slug": "charlotte",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/north-carolina/charlotte/promo/gallen_oydq326",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_159": {
+     "__typename": "MarketType",
+     "id": "mk_159",
+     "code": "CLM",
+     "name": "Columbia",
+     "slug": "columbia",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/south-carolina/columbia/promo/gallen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_26": {
+     "__typename": "MarketType",
+     "id": "mk_26",
+     "code": "GRN",
+     "name": "Greenville",
+     "slug": "greenville",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/south-carolina/greenville/promo/gvllen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_152": {
+     "__typename": "MarketType",
+     "id": "mk_152",
+     "code": "HHB",
+     "name": "Hilton Head / Bluffton",
+     "slug": "hilton-head-bluffton",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/georgia/savannah/promo/crslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_47": {
+     "__typename": "MarketType",
+     "id": "mk_47",
+     "code": "MYB",
+     "name": "Myrtle Beach",
+     "slug": "myrtle-beach",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/south-carolina/myrtle-beach/promo/crslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_17": {
+     "__typename": "StateType",
+     "code": "SC",
+     "name": "South Carolina",
+     "id": "st_17",
+     "slug": "south-carolina",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_10"
+      },
+      {
+       "__ref": "MarketType:mk_8"
+      },
+      {
+       "__ref": "MarketType:mk_159"
+      },
+      "…(6 items total)"
+     ]
+    },
+    "MarketType:mk_9": {
+     "__typename": "MarketType",
+     "id": "mk_9",
+     "code": "CHI",
+     "name": "Chicago",
+     "slug": "chicago",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/illinois/chicago/promo/chblen_chi_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_7": {
+     "__typename": "StateType",
+     "code": "IL",
+     "name": "Illinois",
+     "id": "st_7",
+     "slug": "illinois",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_9"
+      }
+     ]
+    },
+    "MarketType:mk_164": {
+     "__typename": "MarketType",
+     "id": "mk_164",
+     "code": "OKL",
+     "name": "Oklahoma City",
+     "slug": "oklahoma-city",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/oklahoma/oklahoma-city/promo/okclen_closing_costs",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_187": {
+     "__typename": "MarketType",
+     "id": "mk_187",
+     "code": "STW",
+     "name": "Stillwater",
+     "slug": "stillwater",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/oklahoma/oklahoma-city/promo/okclen_closing_costs",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_186": {
+     "__typename": "MarketType",
+     "id": "mk_186",
+     "code": "TUL",
+     "name": "Tulsa",
+     "slug": "tulsa",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/oklahoma/tulsa/promo/tlalen_current_incentives",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_31": {
+     "__typename": "StateType",
+     "code": "OK",
+     "name": "Oklahoma",
+     "id": "st_31",
+     "slug": "oklahoma",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_164"
+      },
+      {
+       "__ref": "MarketType:mk_187"
+      },
+      {
+       "__ref": "MarketType:mk_186"
+      }
+     ]
+    },
+    "MarketType:mk_174": {
+     "__typename": "MarketType",
+     "id": "mk_174",
+     "code": "NCC",
+     "name": "New Castle / Kent County",
+     "slug": "new-castle-kent-county",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/delaware/new-castle-kent-county/promo/penlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_131": {
+     "__typename": "MarketType",
+     "id": "mk_131",
+     "code": "SUX",
+     "name": "Sussex County",
+     "slug": "sussex-county",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/delaware/sussex-county/promo/penlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_5": {
+     "__typename": "StateType",
+     "code": "DE",
+     "name": "Delaware",
+     "id": "st_5",
+     "slug": "delaware",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_174"
+      },
+      {
+       "__ref": "MarketType:mk_131"
+      }
+     ]
+    },
+    "MarketType:mk_12": {
+     "__typename": "MarketType",
+     "id": "mk_12",
+     "code": "COS",
+     "name": "Colorado Springs",
+     "slug": "colorado-springs",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/colorado/colorado-springs/promo/coslen_oydq326coloradosprings2",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_17": {
+     "__typename": "MarketType",
+     "id": "mk_17",
+     "code": "DEN",
+     "name": "Denver",
+     "slug": "denver",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/colorado/denver/promo/coslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_191": {
+     "__typename": "MarketType",
+     "id": "mk_191",
+     "code": "GRJ",
+     "name": "Grand Junction",
+     "slug": "grand-junction",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/colorado/grand-junction/promo/coslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_4": {
+     "__typename": "StateType",
+     "code": "CO",
+     "name": "Colorado",
+     "id": "st_4",
+     "slug": "colorado",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_12"
+      },
+      {
+       "__ref": "MarketType:mk_17"
+      },
+      {
+       "__ref": "MarketType:mk_191"
+      }
+     ]
+    },
+    "MarketType:mk_197": {
+     "__typename": "MarketType",
+     "id": "mk_197",
+     "code": "OMA",
+     "name": "Omaha",
+     "slug": "omaha",
+     "nationalPromo": null,
+     "mapBounds": null
+    },
+    "StateType:st_36": {
+     "__typename": "StateType",
+     "code": "NE",
+     "name": "Nebraska",
+     "id": "st_36",
+     "slug": "nebraska",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_197"
+      }
+     ]
+    },
+    "MarketType:mk_38": {
+     "__typename": "MarketType",
+     "id": "mk_38",
+     "code": "LVE",
+     "name": "Las Vegas",
+     "slug": "las-vegas",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/nevada/las-vegas/promo/nevlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_58": {
+     "__typename": "MarketType",
+     "id": "mk_58",
+     "code": "REN",
+     "name": "Reno",
+     "slug": "reno",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/nevada/reno/promo/renlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_14": {
+     "__typename": "StateType",
+     "code": "NV",
+     "name": "Nevada",
+     "id": "st_14",
+     "slug": "nevada",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_38"
+      },
+      {
+       "__ref": "MarketType:mk_58"
+      }
+     ]
+    },
+    "MarketType:mk_117": {
+     "__typename": "MarketType",
+     "id": "mk_117",
+     "code": "INP",
+     "name": "Indianapolis",
+     "slug": "indianapolis",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/indiana/indianapolis/promo/indlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_115": {
+     "__typename": "MarketType",
+     "id": "mk_115",
+     "code": "NWI",
+     "name": "Northwest Indiana",
+     "slug": "northwest-indiana",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/indiana/northwest-indiana/promo/chblen_nwi_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_24": {
+     "__typename": "StateType",
+     "code": "IN",
+     "name": "Indiana",
+     "id": "st_24",
+     "slug": "indiana",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_117"
+      },
+      {
+       "__ref": "MarketType:mk_115"
+      }
+     ]
+    },
+    "MarketType:mk_156": {
+     "__typename": "MarketType",
+     "id": "mk_156",
+     "code": "INW",
+     "name": "Inland Northwest",
+     "slug": "inland-northwest",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/washington/inland-northwest/promo/sealen_inw_limited_time_promotions",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_86": {
+     "__typename": "MarketType",
+     "id": "mk_86",
+     "code": "SEA",
+     "name": "Seattle",
+     "slug": "seattle",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/washington/seattle/promo/sealen_limited_time_promotions",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_87": {
+     "__typename": "MarketType",
+     "id": "mk_87",
+     "code": "VAN",
+     "name": "Vancouver",
+     "slug": "vancouver",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/oregon/portland/promo/porlen_limited_time_promotions",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_21": {
+     "__typename": "StateType",
+     "code": "WA",
+     "name": "Washington",
+     "id": "st_21",
+     "slug": "washington",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_156"
+      },
+      {
+       "__ref": "MarketType:mk_86"
+      },
+      {
+       "__ref": "MarketType:mk_87"
+      }
+     ]
+    },
+    "MarketType:mk_181": {
+     "__typename": "MarketType",
+     "id": "mk_181",
+     "code": "BRM",
+     "name": "Birmingham",
+     "slug": "birmingham",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/alabama/birmingham/promo/bhmlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_160": {
+     "__typename": "MarketType",
+     "id": "mk_160",
+     "code": "HUN",
+     "name": "Huntsville",
+     "slug": "huntsville",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/alabama/huntsville/promo/nallen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_192": {
+     "__typename": "MarketType",
+     "id": "mk_192",
+     "code": "ALC",
+     "name": "Mobile / Baldwin",
+     "slug": "mobile-baldwin",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/alabama/mobile-baldwin/promo/gfclen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_180": {
+     "__typename": "MarketType",
+     "id": "mk_180",
+     "code": "TUS",
+     "name": "Tuscaloosa",
+     "slug": "tuscaloosa",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/alabama/birmingham/promo/bhmlen_oydq326",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_1": {
+     "__typename": "StateType",
+     "code": "AL",
+     "name": "Alabama",
+     "id": "st_1",
+     "slug": "alabama",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_181"
+      },
+      {
+       "__ref": "MarketType:mk_160"
+      },
+      {
+       "__ref": "MarketType:mk_192"
+      },
+      "…(4 items total)"
+     ]
+    },
+    "MarketType:mk_169": {
+     "__typename": "MarketType",
+     "id": "mk_169",
+     "code": "CHO",
+     "name": "Charlottesville Area",
+     "slug": "charlottesville-area",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/virginia/va-dc-metro/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_157": {
+     "__typename": "MarketType",
+     "id": "mk_157",
+     "code": "RVA",
+     "name": "Richmond Area",
+     "slug": "richmond-area",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/virginia/va-dc-metro/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_49": {
+     "__typename": "MarketType",
+     "id": "mk_49",
+     "code": "VDC",
+     "name": "VA / D.C. Metro",
+     "slug": "va-dc-metro",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/virginia/va-dc-metro/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_77": {
+     "__typename": "MarketType",
+     "id": "mk_77",
+     "code": "WIL",
+     "name": "Williamsburg",
+     "slug": "williamsburg",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/virginia/va-dc-metro/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_19": {
+     "__typename": "StateType",
+     "code": "VA",
+     "name": "Virginia",
+     "id": "st_19",
+     "slug": "virginia",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_169"
+      },
+      {
+       "__ref": "MarketType:mk_157"
+      },
+      {
+       "__ref": "MarketType:mk_49"
+      },
+      "…(4 items total)"
+     ]
+    },
+    "MarketType:mk_166": {
+     "__typename": "MarketType",
+     "id": "mk_166",
+     "code": "BER",
+     "name": "Berkeley County",
+     "slug": "berkeley-county",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/west-virginia/jefferson-county/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_143": {
+     "__typename": "MarketType",
+     "id": "mk_143",
+     "code": "JFC",
+     "name": "Jefferson County",
+     "slug": "jefferson-county",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/west-virginia/jefferson-county/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_27": {
+     "__typename": "StateType",
+     "code": "WV",
+     "name": "West Virginia",
+     "id": "st_27",
+     "slug": "west-virginia",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_166"
+      },
+      {
+       "__ref": "MarketType:mk_143"
+      }
+     ]
+    },
+    "MarketType:mk_196": {
+     "__typename": "MarketType",
+     "id": "mk_196",
+     "code": "DSM",
+     "name": "Des Moines",
+     "slug": "des-moines",
+     "nationalPromo": null,
+     "mapBounds": null
+    },
+    "StateType:st_35": {
+     "__typename": "StateType",
+     "code": "IA",
+     "name": "Iowa",
+     "id": "st_35",
+     "slug": "iowa",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_196"
+      }
+     ]
+    },
+    "MarketType:mk_182": {
+     "__typename": "MarketType",
+     "id": "mk_182",
+     "code": "FTS",
+     "name": "Fort Smith",
+     "slug": "fort-smith",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/arkansas/northwest-arkansas/promo/benlen_nwar_rate_closingcosts",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_179": {
+     "__typename": "MarketType",
+     "id": "mk_179",
+     "code": "JON",
+     "name": "Jonesboro",
+     "slug": "jonesboro",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/arkansas/little-rock/promo/lralen_lr_jb_closingcosts_rate_promo",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_184": {
+     "__typename": "MarketType",
+     "id": "mk_184",
+     "code": "LIT",
+     "name": "Little Rock",
+     "slug": "little-rock",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/arkansas/little-rock/promo/lralen_lr_jb_closingcosts_rate_promo",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_183": {
+     "__typename": "MarketType",
+     "id": "mk_183",
+     "code": "NWA",
+     "name": "Northwest Arkansas",
+     "slug": "northwest-arkansas",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/arkansas/northwest-arkansas/promo/benlen_nwar_rate_closingcosts",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_32": {
+     "__typename": "StateType",
+     "code": "AR",
+     "name": "Arkansas",
+     "id": "st_32",
+     "slug": "arkansas",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_182"
+      },
+      {
+       "__ref": "MarketType:mk_179"
+      },
+      {
+       "__ref": "MarketType:mk_184"
+      },
+      "…(4 items total)"
+     ]
+    },
+    "MarketType:mk_82": {
+     "__typename": "MarketType",
+     "id": "mk_82",
+     "code": "ATL",
+     "name": "Atlanta",
+     "slug": "atlanta",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/georgia/atlanta/promo/atllen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_177": {
+     "__typename": "MarketType",
+     "id": "mk_177",
+     "code": "MID",
+     "name": "Middle Georgia",
+     "slug": "middle-georgia",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/georgia/middle-georgia/promo/atllen_mid_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_151": {
+     "__typename": "MarketType",
+     "id": "mk_151",
+     "code": "SAV",
+     "name": "Savannah",
+     "slug": "savannah",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/georgia/savannah/promo/crslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_20": {
+     "__typename": "StateType",
+     "code": "GA",
+     "name": "Georgia",
+     "id": "st_20",
+     "slug": "georgia",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_82"
+      },
+      {
+       "__ref": "MarketType:mk_177"
+      },
+      {
+       "__ref": "MarketType:mk_151"
+      }
+     ]
+    },
+    "MarketType:mk_178": {
+     "__typename": "MarketType",
+     "id": "mk_178",
+     "code": "NYS",
+     "name": "New York",
+     "slug": "new-york",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/new-york/new-york/promo/nyslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_15": {
+     "__typename": "StateType",
+     "code": "NY",
+     "name": "New York",
+     "id": "st_15",
+     "slug": "new-york",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_178"
+      }
+     ]
+    },
+    "MarketType:mk_132": {
+     "__typename": "MarketType",
+     "id": "mk_132",
+     "code": "SLC",
+     "name": "Salt Lake City",
+     "slug": "salt-lake-city",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/utah/salt-lake-city/promo/uthlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_172": {
+     "__typename": "MarketType",
+     "id": "mk_172",
+     "code": "STG",
+     "name": "St. George",
+     "slug": "st-george",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/utah/st-george/promo/nevlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_26": {
+     "__typename": "StateType",
+     "code": "UT",
+     "name": "Utah",
+     "id": "st_26",
+     "slug": "utah",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_132"
+      },
+      {
+       "__ref": "MarketType:mk_172"
+      }
+     ]
+    },
+    "MarketType:mk_42": {
+     "__typename": "MarketType",
+     "id": "mk_42",
+     "code": "MIN",
+     "name": "Minneapolis / St. Paul",
+     "slug": "minneapolis-st-paul",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/minnesota/minneapolis-st-paul/promo/minlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_173": {
+     "__typename": "MarketType",
+     "id": "mk_173",
+     "code": "RCT",
+     "name": "Rochester",
+     "slug": "rochester",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/minnesota/rochester/promo/minlen_rct_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_11": {
+     "__typename": "StateType",
+     "code": "MN",
+     "name": "Minnesota",
+     "id": "st_11",
+     "slug": "minnesota",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_42"
+      },
+      {
+       "__ref": "MarketType:mk_173"
+      }
+     ]
+    },
+    "MarketType:mk_195": {
+     "__typename": "MarketType",
+     "id": "mk_195",
+     "code": "AVL",
+     "name": "Asheville",
+     "slug": "asheville",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/south-carolina/greenville/promo/gvllen_svd26",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_7": {
+     "__typename": "MarketType",
+     "id": "mk_7",
+     "code": "CHA",
+     "name": "Charlotte",
+     "slug": "charlotte",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/north-carolina/charlotte/promo/gallen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_57": {
+     "__typename": "MarketType",
+     "id": "mk_57",
+     "code": "RAL",
+     "name": "Raleigh",
+     "slug": "raleigh",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/north-carolina/raleigh/promo/sunlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_141": {
+     "__typename": "MarketType",
+     "id": "mk_141",
+     "code": "WLM",
+     "name": "Wilmington",
+     "slug": "wilmington",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/south-carolina/myrtle-beach/promo/crslen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_171": {
+     "__typename": "MarketType",
+     "id": "mk_171",
+     "code": "WSN",
+     "name": "Winston-Salem",
+     "slug": "winston-salem",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/north-carolina/winston-salem/promo/gallen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_12": {
+     "__typename": "StateType",
+     "code": "NC",
+     "name": "North Carolina",
+     "id": "st_12",
+     "slug": "north-carolina",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_195"
+      },
+      {
+       "__ref": "MarketType:mk_7"
+      },
+      {
+       "__ref": "MarketType:mk_57"
+      },
+      "…(5 items total)"
+     ]
+    },
+    "MarketType:mk_140": {
+     "__typename": "MarketType",
+     "id": "mk_140",
+     "code": "ADM",
+     "name": "Adams County",
+     "slug": "adams-county",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/pennsylvania/greater-philadelphia-area/promo/penlen_oydq326",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_100": {
+     "__typename": "MarketType",
+     "id": "mk_100",
+     "code": "PHI",
+     "name": "Greater Philadelphia Area",
+     "slug": "greater-philadelphia-area",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/pennsylvania/greater-philadelphia-area/promo/penlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_16": {
+     "__typename": "StateType",
+     "code": "PA",
+     "name": "Pennsylvania",
+     "id": "st_16",
+     "slug": "pennsylvania",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_140"
+      },
+      {
+       "__ref": "MarketType:mk_100"
+      }
+     ]
+    },
+    "MarketType:mk_194": {
+     "__typename": "MarketType",
+     "id": "mk_194",
+     "code": "KCK",
+     "name": "Kansas City",
+     "slug": "kansas-city",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/kansas/kansas-city/promo/kanlen_rate_buydown",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_34": {
+     "__typename": "StateType",
+     "code": "MO",
+     "name": "Missouri",
+     "id": "st_34",
+     "slug": "missouri",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_194"
+      }
+     ]
+    },
+    "MarketType:mk_145": {
+     "__typename": "MarketType",
+     "id": "mk_145",
+     "code": "CMD",
+     "name": "Central Maryland",
+     "slug": "central-maryland",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/maryland/central-maryland/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_144": {
+     "__typename": "MarketType",
+     "id": "mk_144",
+     "code": "EAS",
+     "name": "Eastern Shore",
+     "slug": "eastern-shore",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/maryland/central-maryland/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_70": {
+     "__typename": "MarketType",
+     "id": "mk_70",
+     "code": "MDC",
+     "name": "MD / D.C. Metro",
+     "slug": "md-dc-metro",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/maryland/central-maryland/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_146": {
+     "__typename": "MarketType",
+     "id": "mk_146",
+     "code": "SMD",
+     "name": "Southern Maryland",
+     "slug": "southern-maryland",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/maryland/central-maryland/promo/mdhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_9": {
+     "__typename": "StateType",
+     "code": "MD",
+     "name": "Maryland",
+     "id": "st_9",
+     "slug": "maryland",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_145"
+      },
+      {
+       "__ref": "MarketType:mk_144"
+      },
+      {
+       "__ref": "MarketType:mk_70"
+      },
+      "…(4 items total)"
+     ]
+    },
+    "MarketType:mk_147": {
+     "__typename": "MarketType",
+     "id": "mk_147",
+     "code": "CNJ",
+     "name": "New Jersey",
+     "slug": "new-jersey",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/new-jersey/new-jersey/promo/cjhlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_13": {
+     "__typename": "StateType",
+     "code": "NJ",
+     "name": "New Jersey",
+     "id": "st_13",
+     "slug": "new-jersey",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_147"
+      }
+     ]
+    },
+    "MarketType:mk_150": {
+     "__typename": "MarketType",
+     "id": "mk_150",
+     "code": "BOI",
+     "name": "Boise",
+     "slug": "boise",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/idaho/boise/promo/boilen_limited_time_promotions",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_153": {
+     "__typename": "MarketType",
+     "id": "mk_153",
+     "code": "INW",
+     "name": "Inland Northwest",
+     "slug": "inland-northwest",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/washington/inland-northwest/promo/sealen_inw_limited_time_promotions",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_28": {
+     "__typename": "StateType",
+     "code": "ID",
+     "name": "Idaho",
+     "id": "st_28",
+     "slug": "idaho",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_150"
+      },
+      {
+       "__ref": "MarketType:mk_153"
+      }
+     ]
+    },
+    "MarketType:mk_165": {
+     "__typename": "MarketType",
+     "id": "mk_165",
+     "code": "COR",
+     "name": "Central Oregon",
+     "slug": "central-oregon",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/oregon/portland/promo/porlen_limited_time_promotions",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_88": {
+     "__typename": "MarketType",
+     "id": "mk_88",
+     "code": "POT",
+     "name": "Portland",
+     "slug": "portland",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/oregon/portland/promo/porlen_limited_time_promotions",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_158": {
+     "__typename": "MarketType",
+     "id": "mk_158",
+     "code": "WMV",
+     "name": "Willamette Valley",
+     "slug": "willamette-valley",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/oregon/portland/promo/porlen_limited_time_promotions",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_22": {
+     "__typename": "StateType",
+     "code": "OR",
+     "name": "Oregon",
+     "id": "st_22",
+     "slug": "oregon",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_165"
+      },
+      {
+       "__ref": "MarketType:mk_88"
+      },
+      {
+       "__ref": "MarketType:mk_158"
+      }
+     ]
+    },
+    "MarketType:mk_148": {
+     "__typename": "MarketType",
+     "id": "mk_148",
+     "code": "CCA",
+     "name": "Fresno / Bakersfield",
+     "slug": "fresno-bakersfield",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/fresno-bakersfield/promo/fnolen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_32": {
+     "__typename": "MarketType",
+     "id": "mk_32",
+     "code": "INL",
+     "name": "Inland Empire",
+     "slug": "inland-empire",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/inland-empire/promo/inllen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_37": {
+     "__typename": "MarketType",
+     "id": "mk_37",
+     "code": "LSA",
+     "name": "Los Angeles / Ventura County",
+     "slug": "los-angeles-ventura-county",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/los-angeles-ventura-county/promo/ochlen_oydq326_la",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_51": {
+     "__typename": "MarketType",
+     "id": "mk_51",
+     "code": "ORA",
+     "name": "Orange County",
+     "slug": "orange-county",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/orange-county/promo/ochlen_oydq326_oc",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_18": {
+     "__typename": "MarketType",
+     "id": "mk_18",
+     "code": "DER",
+     "name": "Palm Springs / Coachella",
+     "slug": "palm-springs-coachella",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/palm-springs-coachella/promo/inllen_oydq326_desert",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_63": {
+     "__typename": "MarketType",
+     "id": "mk_63",
+     "code": "SAC",
+     "name": "Sacramento",
+     "slug": "sacramento",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/sacramento/promo/lsclen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_66": {
+     "__typename": "MarketType",
+     "id": "mk_66",
+     "code": "SDO",
+     "name": "San Diego",
+     "slug": "san-diego",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/san-diego/promo/sdglen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_67": {
+     "__typename": "MarketType",
+     "id": "mk_67",
+     "code": "SFR",
+     "name": "San Francisco / Bay Area",
+     "slug": "san-francisco-bay-area",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/california/san-francisco-bay-area/promo/bahlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_167": {
+     "__typename": "MarketType",
+     "id": "mk_167",
+     "code": "SFM",
+     "name": "San Francisco Metro Area",
+     "slug": "san-francisco-metro-area",
+     "nationalPromo": null,
+     "mapBounds": null
+    },
+    "StateType:st_3": {
+     "__typename": "StateType",
+     "code": "CA",
+     "name": "California",
+     "id": "st_3",
+     "slug": "california",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_148"
+      },
+      {
+       "__ref": "MarketType:mk_32"
+      },
+      {
+       "__ref": "MarketType:mk_37"
+      },
+      "…(9 items total)"
+     ]
+    },
+    "MarketType:mk_170": {
+     "__typename": "MarketType",
+     "id": "mk_170",
+     "code": "CHT",
+     "name": "Chattanooga",
+     "slug": "chattanooga",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/tennessee/chattanooga/promo/atllen_cht_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_93": {
+     "__typename": "MarketType",
+     "id": "mk_93",
+     "code": "NAS",
+     "name": "Nashville",
+     "slug": "nashville",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/tennessee/nashville/promo/nshlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_23": {
+     "__typename": "StateType",
+     "code": "TN",
+     "name": "Tennessee",
+     "id": "st_23",
+     "slug": "tennessee",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_170"
+      },
+      {
+       "__ref": "MarketType:mk_93"
+      }
+     ]
+    },
+    "MarketType:mk_74": {
+     "__typename": "MarketType",
+     "id": "mk_74",
+     "code": "TUC",
+     "name": "Tucson",
+     "slug": "tucson",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/arizona/tucson/promo/tuclen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_1": {
+     "__typename": "MarketType",
+     "id": "mk_1",
+     "code": "AUS",
+     "name": "Austin / Central Texas",
+     "slug": "austin-central-texas",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/austin-central-texas/promo/sanlen_aus_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_163": {
+     "__typename": "MarketType",
+     "id": "mk_163",
+     "code": "CPC",
+     "name": "Corpus Christi",
+     "slug": "corpus-christi",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/corpus-christi/promo/sanlen_cpc_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_14": {
+     "__typename": "MarketType",
+     "id": "mk_14",
+     "code": "DAL",
+     "name": "Dallas / Ft. Worth",
+     "slug": "dallas-ft-worth",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/dallas-ft-worth/promo/dfwlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_28": {
+     "__typename": "MarketType",
+     "id": "mk_28",
+     "code": "HOU",
+     "name": "Houston",
+     "slug": "houston",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/houston/promo/houlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_190": {
+     "__typename": "MarketType",
+     "id": "mk_190",
+     "code": "LUB",
+     "name": "Lubbock",
+     "slug": "lubbock",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/lubbock/promo/sanlen_lub_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_64": {
+     "__typename": "MarketType",
+     "id": "mk_64",
+     "code": "SAN",
+     "name": "San Antonio",
+     "slug": "san-antonio",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/san-antonio/promo/sanlen_san_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_90": {
+     "__typename": "MarketType",
+     "id": "mk_90",
+     "code": "TEP",
+     "name": "Temple",
+     "slug": "temple",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/temple/promo/sanlen_tep_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_168": {
+     "__typename": "MarketType",
+     "id": "mk_168",
+     "code": "THC",
+     "name": "Texas Hill Country",
+     "slug": "texas-hill-country",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/texas/texas-hill-country/promo/sanlen_thc_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_18": {
+     "__typename": "StateType",
+     "code": "TX",
+     "name": "Texas",
+     "id": "st_18",
+     "slug": "texas",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_1"
+      },
+      {
+       "__ref": "MarketType:mk_163"
+      },
+      {
+       "__ref": "MarketType:mk_14"
+      },
+      "…(8 items total)"
+     ]
+    },
+    "MarketType:mk_188": {
+     "__typename": "MarketType",
+     "id": "mk_188",
+     "code": "KCK",
+     "name": "Kansas City",
+     "slug": "kansas-city",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/kansas/kansas-city/promo/kanlen_rate_buydown",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_33": {
+     "__typename": "StateType",
+     "code": "KS",
+     "name": "Kansas",
+     "id": "st_33",
+     "slug": "kansas",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_188"
+      }
+     ]
+    },
+    "MarketType:mk_24": {
+     "__typename": "MarketType",
+     "id": "mk_24",
+     "code": "FTL",
+     "name": "Ft. Lauderdale",
+     "slug": "ft-lauderdale",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/miami/promo/dahlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_34": {
+     "__typename": "MarketType",
+     "id": "mk_34",
+     "code": "JAX",
+     "name": "Jacksonville / St. Augustine",
+     "slug": "jacksonville-st-augustine",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/jacksonville-st-augustine/promo/jaxlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_40": {
+     "__typename": "MarketType",
+     "id": "mk_40",
+     "code": "MIA",
+     "name": "Miami",
+     "slug": "miami",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/miami/promo/dahlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_25": {
+     "__typename": "MarketType",
+     "id": "mk_25",
+     "code": "FTM",
+     "name": "Naples / Ft. Myers",
+     "slug": "naples-ft-myers",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/naples-ft-myers/promo/lehlen_ftm_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_50": {
+     "__typename": "MarketType",
+     "id": "mk_50",
+     "code": "OCA",
+     "name": "Ocala",
+     "slug": "ocala",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/ocala/promo/mfl_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_52": {
+     "__typename": "MarketType",
+     "id": "mk_52",
+     "code": "ORL",
+     "name": "Orlando",
+     "slug": "orlando",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/orlando/promo/olhlen_offer",
+      "target": "_blank"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_55": {
+     "__typename": "MarketType",
+     "id": "mk_55",
+     "code": "PLM",
+     "name": "Palm Beach",
+     "slug": "palm-beach",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/palm-beach/promo/pbh_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_193": {
+     "__typename": "MarketType",
+     "id": "mk_193",
+     "code": "PAN",
+     "name": "Panama City",
+     "slug": "panama-city",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/panama-city/promo/panlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_109": {
+     "__typename": "MarketType",
+     "id": "mk_109",
+     "code": "PEN",
+     "name": "Pensacola",
+     "slug": "pensacola",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/pensacola/promo/penlen_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_65": {
+     "__typename": "MarketType",
+     "id": "mk_65",
+     "code": "SAR",
+     "name": "Sarasota / Manatee",
+     "slug": "sarasota-manatee",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/promo/lehlen_sar_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_71": {
+     "__typename": "MarketType",
+     "id": "mk_71",
+     "code": "SPA",
+     "name": "Space Coast / Melbourne",
+     "slug": "space-coast-melbourne",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/palm-beach/promo/pbh_oydq326",
+      "target": ""
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_72": {
+     "__typename": "MarketType",
+     "id": "mk_72",
+     "code": "TAM",
+     "name": "Tampa / Manatee",
+     "slug": "tampa-manatee",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/tampa-manatee/promo/tpulen_offers",
+      "target": ""
+     },
+     "mapBounds": null
+    },
+    "MarketType:mk_103": {
+     "__typename": "MarketType",
+     "id": "mk_103",
+     "code": "TRE",
+     "name": "Treasure Coast",
+     "slug": "treasure-coast",
+     "nationalPromo": {
+      "__typename": "LinkType",
+      "url": "https://www.lennar.com/new-homes/florida/palm-beach/promo/pbh_oydq326",
+      "target": "_self"
+     },
+     "mapBounds": null
+    },
+    "StateType:st_6": {
+     "__typename": "StateType",
+     "code": "FL",
+     "name": "Florida",
+     "id": "st_6",
+     "slug": "florida",
+     "markets": [
+      {
+       "__ref": "MarketType:mk_24"
+      },
+      {
+       "__ref": "MarketType:mk_34"
+      },
+      {
+       "__ref": "MarketType:mk_40"
+      },
+      "…(13 items total)"
+     ]
+    },
+    "PlanType:p_67891": {
+     "__typename": "PlanType",
+     "id": "p_67891",
+     "name": "Wayfarer II Plan 5579",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/wayfarer-ii-plan-5579",
+     "sqft": 2163,
+     "badge": "Featured",
+     "beds": 4,
+     "baths": 3,
+     "halfBaths": 0,
+     "customPrice": null,
+     "startingPrice": 741490,
+     "wasStartingPrice": 0,
+     "availableHomesitesCount": 0,
+     "number": "5579",
+     "heroImage": {
+      "__typename": "ImageType",
+      "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_pic_wayfarer_great_1of2_f1_base3.jpg?d=20250220T125806",
+      "alt": "Wayfarer Great Room"
+     },
+     "floorplans": [
+      {
+       "__typename": "FloorplanFloorType",
+       "name": "1st Floor"
+      }
+     ],
+     "isNextGen": false,
+     "distance": 0,
+     "status": "ACTIVE",
+     "elevationImages({\"first\":1})": [
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_spanishcolonial_a.jpg?d=20250220T125809",
+        "alt": "Spanish Colonial home image"
+       }
+      }
+     ],
+     "community": {
+      "__ref": "CommunityType:c_8154"
+     }
+    },
+    "PlanType:p_67893": {
+     "__typename": "PlanType",
+     "id": "p_67893",
+     "name": "Evolution Plan 5582",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/evolution-plan-5582",
+     "sqft": 3024,
+     "badge": null,
+     "beds": 4,
+     "baths": 3,
+     "halfBaths": 0,
+     "customPrice": null,
+     "startingPrice": 840490,
+     "wasStartingPrice": 0,
+     "availableHomesitesCount": 0,
+     "number": "5582",
+     "heroImage": {
+      "__typename": "ImageType",
+      "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_pic_evolution_great_3of3_f1_base5_planhero.jpg?d=20250220T125758",
+      "alt": "Evolution Great Room"
+     },
+     "floorplans": [
+      {
+       "__typename": "FloorplanFloorType",
+       "name": "1st Floor"
+      }
+     ],
+     "isNextGen": true,
+     "distance": 0,
+     "status": "ACTIVE",
+     "elevationImages({\"first\":1})": [
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg?d=20250220T125800",
+        "alt": "Spanish Colonial home exterior image"
+       }
+      }
+     ],
+     "community": {
+      "__ref": "CommunityType:c_8154"
+     }
+    },
+    "PlanType:p_67894": {
+     "__typename": "PlanType",
+     "id": "p_67894",
+     "name": "Explorer Plan 5583",
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/explorer-plan-5583",
+     "sqft": 2604,
+     "badge": "Featured",
+     "beds": 4,
+     "baths": 3,
+     "halfBaths": 0,
+     "customPrice": null,
+     "startingPrice": 801490,
+     "wasStartingPrice": 0,
+     "availableHomesitesCount": 0,
+     "number": "5583",
+     "heroImage": {
+      "__typename": "ImageType",
+      "url": "https://cdn.lennar.com/api/images/contentassets/fd385b44f4af44f8ab318283b9bd67d1/azh_5583_pic_explorer_great_3of3_f1_base3.jpg?d=20250813T185053",
+      "alt": "5583 Explorer Great 3of3 F1 Base3"
+     },
+     "floorplans": [
+      {
+       "__typename": "FloorplanFloorType",
+       "name": "1st Floor"
+      }
+     ],
+     "isNextGen": true,
+     "distance": 0,
+     "status": "ACTIVE",
+     "elevationImages({\"first\":1})": [
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg?d=20250220T125804",
+        "alt": "Spanish Colonial home image"
+       }
+      }
+     ],
+     "community": {
+      "__ref": "CommunityType:c_8154"
+     }
+    },
+    "CityType:ct_54_queen creek": {
+     "__typename": "CityType",
+     "id": "ct_54_queen creek",
+     "name": "Queen Creek",
+     "market": {
+      "__ref": "MarketType:mk_54"
+     }
+    },
+    "MpcType:m_2381": {
+     "__typename": "MpcType",
+     "id": "m_2381",
+     "name": "Madera",
+     "url": "/new-homes/arizona/phoenix/queen-creek/madera"
+    },
+    "CommunityType:c_8311": {
+     "__typename": "CommunityType",
+     "id": "c_8311",
+     "url": "/new-homes/arizona/phoenix/queen-creek/madera/destiny",
+     "number": "3617",
+     "city": {
+      "__ref": "CityType:ct_54_queen creek"
+     },
+     "mpc": {
+      "__ref": "MpcType:m_2381"
+     },
+     "name": "Destiny"
+    },
+    "PlanType:p_69537": {
+     "__typename": "PlanType",
+     "id": "p_69537",
+     "name": "Revelation Plan 6081",
+     "url": "/new-homes/arizona/phoenix/queen-creek/madera/destiny/revelation-plan-6081",
+     "sqft": 3230,
+     "badge": null,
+     "beds": 4,
+     "baths": 3.5,
+     "halfBaths": 0,
+     "customPrice": null,
+     "startingPrice": 796490,
+     "wasStartingPrice": 0,
+     "availableHomesitesCount": 1,
+     "number": "6081",
+     "heroImage": {
+      "__typename": "ImageType",
+      "url": "https://cdn.lennar.com/api/images/contentassets/809729468e7845b88ff0eb34353d1535/azh_6081_pic_revelation_great_f1_planhero_09-aug-2024.jpg?d=20250220T130143",
+      "alt": "Revelation Great Room"
+     },
+     "floorplans": [
+      {
+       "__typename": "FloorplanFloorType",
+       "name": "1st Floor"
+      }
+     ],
+     "isNextGen": true,
+     "distance": 48.54956485154861,
+     "status": "ACTIVE",
+     "elevationImages({\"first\":1})": [
+      {
+       "__typename": "TitleImageType",
+       "image": {
+        "__typename": "ImageType",
+        "url": "https://cdn.lennar.com/api/images/contentassets/809729468e7845b88ff0eb34353d1535/azh_6081_horizon_maderaiii_rend_revelation_spanishcolonial_a.jpg?d=20250220T130145",
+        "alt": "Spanish Colonial home exterior image"
+       }
+      }
+     ],
+     "community": {
+      "__ref": "CommunityType:c_8311"
+     }
+    },
+    "HomesiteType:ah_728301": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_728301",
+     "lotid": "3358516040",
+     "number": "6040",
+     "price": 751490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7670 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719643,
+     "longitude": -112.224121
+    },
+    "HomesiteType:ah_728300": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_728300",
+     "lotid": "3358516037",
+     "number": "6037",
+     "price": 741490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7634 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719646,
+     "longitude": -112.223434
+    },
+    "HomesiteType:ah_728299": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_728299",
+     "lotid": "3358516003",
+     "number": "6003",
+     "price": 747456,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25920 N 77TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719139,
+     "longitude": -112.2258
+    },
+    "HomesiteType:ah_728805": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_728805",
+     "lotid": "3358516009",
+     "number": "6009",
+     "price": 753490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7719 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718288,
+     "longitude": -112.225052
+    },
+    "HomesiteType:ah_732005": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_732005",
+     "lotid": "3358516013",
+     "number": "6013",
+     "price": 764490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7671 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718296,
+     "longitude": -112.224136
+    },
+    "HomesiteType:ah_728302": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_728302",
+     "lotid": "3358516144",
+     "number": "6144",
+     "price": 815190,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25973 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719643,
+     "longitude": -112.222382
+    },
+    "HomesiteType:ah_759734": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_759734",
+     "lotid": "3358516044",
+     "number": "6044",
+     "price": 767490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7714 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719635,
+     "longitude": -112.225037
+    },
+    "HomesiteType:ah_851684": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_851684",
+     "lotid": "3358510154",
+     "number": "0154",
+     "price": 779990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26391 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723366,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_851685": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_851685",
+     "lotid": "3358510156",
+     "number": "0156",
+     "price": 789190,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26367 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722984,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_895894": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_895894",
+     "lotid": "3358510170",
+     "number": "0170",
+     "price": 795990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7975 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723255,
+     "longitude": -112.230865
+    },
+    "HomesiteType:ah_917074": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_917074",
+     "lotid": "3358510160",
+     "number": "0160",
+     "price": 789990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7949 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722404,
+     "longitude": -112.230408
+    },
+    "HomesiteType:ah_917075": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_917075",
+     "lotid": "3358510165",
+     "number": "0165",
+     "price": 741990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7950 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722897,
+     "longitude": -112.230408
+    },
+    "HomesiteType:ah_915100": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_915100",
+     "lotid": "3358510162",
+     "number": "0162",
+     "price": 800390,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7973 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722397,
+     "longitude": -112.230865
+    },
+    "HomesiteType:ah_920964": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_920964",
+     "lotid": "3358510163",
+     "number": "0163",
+     "price": 796990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7974 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722897,
+     "longitude": -112.230865
+    },
+    "HomesiteType:ah_951735": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/a4d761cffdd44107994474c29cc23db9/azh_5579_destiny_aloravita_rend_wayfarerii_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67891"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2163,
+     "url": "",
+     "id": "ah_951735",
+     "lotid": "3358510220",
+     "number": "0220",
+     "price": 813490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "8013 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719364,
+     "longitude": -112.225838
+    },
+    "HomesiteType:ah_728308": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728308",
+     "lotid": "3358516036",
+     "number": "6036",
+     "price": 805990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7617 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719154,
+     "longitude": -112.223099
+    },
+    "HomesiteType:ah_728307": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728307",
+     "lotid": "3358516034",
+     "number": "6034",
+     "price": 788490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7641 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719151,
+     "longitude": -112.223557
+    },
+    "HomesiteType:ah_728807": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728807",
+     "lotid": "3358516028",
+     "number": "6028",
+     "price": 787590,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7709 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719143,
+     "longitude": -112.224945
+    },
+    "HomesiteType:ah_728303": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728303",
+     "lotid": "3358516004",
+     "number": "6004",
+     "price": 784447,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25898 N 77TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718948,
+     "longitude": -112.2258
+    },
+    "HomesiteType:ah_728306": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728306",
+     "lotid": "3358516031",
+     "number": "6031",
+     "price": 799490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7677 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719147,
+     "longitude": -112.224251
+    },
+    "HomesiteType:ah_728806": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728806",
+     "lotid": "3358516025",
+     "number": "6025",
+     "price": 805990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7698 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718788,
+     "longitude": -112.224709
+    },
+    "HomesiteType:ah_728305": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728305",
+     "lotid": "3358516021",
+     "number": "6021",
+     "price": 815990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7650 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718792,
+     "longitude": -112.223785
+    },
+    "HomesiteType:ah_728304": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728304",
+     "lotid": "3358516019",
+     "number": "6019",
+     "price": 813740,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7626 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718796,
+     "longitude": -112.223328
+    },
+    "HomesiteType:ah_737948": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_737948",
+     "lotid": "3358516137",
+     "number": "6137",
+     "price": 817990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7615 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718304,
+     "longitude": -112.223015
+    },
+    "HomesiteType:ah_746179": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_746179",
+     "lotid": "3358516140",
+     "number": "6140",
+     "price": 867990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25877 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718719,
+     "longitude": -112.222328
+    },
+    "HomesiteType:ah_728309": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728309",
+     "lotid": "3358516142",
+     "number": "6142",
+     "price": 870000,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25921 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719101,
+     "longitude": -112.222328
+    },
+    "HomesiteType:ah_759736": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_759736",
+     "lotid": "3358516008",
+     "number": "6008",
+     "price": 834990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25810 N 77TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718182,
+     "longitude": -112.22583
+    },
+    "HomesiteType:ah_759735": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_759735",
+     "lotid": "3358516006",
+     "number": "6006",
+     "price": 809990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25854 N 77TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718567,
+     "longitude": -112.225822
+    },
+    "HomesiteType:ah_728310": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_728310",
+     "lotid": "3358516147",
+     "number": "6147",
+     "price": 849990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26039 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.720215,
+     "longitude": -112.222473
+    },
+    "HomesiteType:ah_772730": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_772730",
+     "lotid": "3358516027",
+     "number": "6027",
+     "price": 827990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7721 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719139,
+     "longitude": -112.225174
+    },
+    "HomesiteType:ah_852041": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_852041",
+     "lotid": "3358510152",
+     "number": "0152",
+     "price": 835490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26425 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723751,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_890297": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_890297",
+     "lotid": "3358510173",
+     "number": "0173",
+     "price": 860690,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7988 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723747,
+     "longitude": -112.231102
+    },
+    "HomesiteType:ah_889477": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_889477",
+     "lotid": "3358510174",
+     "number": "0174",
+     "price": 827490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7976 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723747,
+     "longitude": -112.230865
+    },
+    "HomesiteType:ah_895895": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_895895",
+     "lotid": "3358510171",
+     "number": "0171",
+     "price": 829690,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7987 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723251,
+     "longitude": -112.231094
+    },
+    "HomesiteType:ah_904244": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_904244",
+     "lotid": "3358510164",
+     "number": "0164",
+     "price": 824290,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7962 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722897,
+     "longitude": -112.230637
+    },
+    "HomesiteType:ah_851687": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_851687",
+     "lotid": "3358510155",
+     "number": "0155",
+     "price": 848190,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26379 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723175,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_919228": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_919228",
+     "lotid": "3358510161",
+     "number": "0161",
+     "price": 848490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7961 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722397,
+     "longitude": -112.230637
+    },
+    "HomesiteType:ah_851686": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_851686",
+     "lotid": "3358510158",
+     "number": "0158",
+     "price": 824440,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26343 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722595,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_872527": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_872527",
+     "lotid": "3358510177",
+     "number": "0177",
+     "price": 839490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7940 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723747,
+     "longitude": -112.230179
+    },
+    "HomesiteType:ah_858805": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_858805",
+     "lotid": "3358510179",
+     "number": "0179",
+     "price": 839990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7953 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724106,
+     "longitude": -112.230408
+    },
+    "HomesiteType:ah_856211": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_856211",
+     "lotid": "3358510191",
+     "number": "0191",
+     "price": 844990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26475 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724163,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_875844": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_875844",
+     "lotid": "3358510168",
+     "number": "0168",
+     "price": 834490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7951 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723255,
+     "longitude": -112.230408
+    },
+    "HomesiteType:h_858806": {
+     "__typename": "HomesiteType",
+     "checkoutType": "BUY_NOW_NO_DEPOSIT",
+     "offerAvailable": true,
+     "offerEndDate": "2027-07-02T00:00:00Z",
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "7966 W Rowel Rd   Print Quality   001   01 Exterior Front",
+       "url": "https://cdn.lennar.com/api/images/contentassets/bc3355daefe04fcdb57f49866302e49e/7966-w-rowel-rd---print-quality---001---01-exterior-front.jpg?d=20260501T225105"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 854990,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510186",
+     "id": "h_858806",
+     "lotid": "3358510186",
+     "number": "0186",
+     "price": 799990,
+     "formattedPrice": "",
+     "lotSize": 0,
+     "status": "MOVE_IN_READY",
+     "address": "7966 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": true,
+     "soldDate": null,
+     "latitude": 33.724602,
+     "longitude": -112.230675
+    },
+    "HomesiteType:ah_858229": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior imag",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "",
+     "id": "ah_858229",
+     "lotid": "3358510180",
+     "number": "0180",
+     "price": 860990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7965 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724106,
+     "longitude": -112.230637
+    },
+    "HomesiteType:h_858807": {
+     "__typename": "HomesiteType",
+     "checkoutType": "BUY_NOW_NO_DEPOSIT",
+     "offerAvailable": true,
+     "offerEndDate": "2027-07-02T00:00:00Z",
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "7942 W Rowel Rd   Print Quality   001   01 Exterior Front",
+       "url": "https://cdn.lennar.com/api/images/contentassets/1fcf8e10c69544acb6da57e7bac1c169/7942-w-rowel-rd---print-quality---001---01-exterior-front.jpg?d=20260623T225737"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510188",
+     "id": "h_858807",
+     "lotid": "3358510188",
+     "number": "0188",
+     "price": 842990,
+     "formattedPrice": "",
+     "lotSize": 0,
+     "status": "MOVE_IN_READY",
+     "address": "7942 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": true,
+     "soldDate": null,
+     "latitude": 33.724602,
+     "longitude": -112.230217
+    },
+    "HomesiteType:h_902143": {
+     "__typename": "HomesiteType",
+     "checkoutType": "BUY_NOW_NO_DEPOSIT",
+     "offerAvailable": true,
+     "offerEndDate": "2027-07-02T00:00:00Z",
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Ranch Hacienda home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/36b6d8f687514ddba89d2559ec231916/azh_5580_destiny_aloravita_rend_aurora_ranchhacienda_h.jpg?d=20250220T125756"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67892"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2835,
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/aurora-plan-5580/3358510166",
+     "id": "h_902143",
+     "lotid": "3358510166",
+     "number": "0166",
+     "price": 862490,
+     "formattedPrice": "",
+     "lotSize": 0,
+     "status": "UNDER_CONSTRUCTION",
+     "address": "7938 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722897,
+     "longitude": -112.230179
+    },
+    "HomesiteType:ah_728319": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728319",
+     "lotid": "3358516035",
+     "number": "6035",
+     "price": 852990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7629 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719154,
+     "longitude": -112.223328
+    },
+    "HomesiteType:ah_728320": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728320",
+     "lotid": "3358516038",
+     "number": "6038",
+     "price": 870490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7646 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719646,
+     "longitude": -112.223663
+    },
+    "HomesiteType:ah_728317": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728317",
+     "lotid": "3358516032",
+     "number": "6032",
+     "price": 860490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7665 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719147,
+     "longitude": -112.224022
+    },
+    "HomesiteType:ah_728318": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728318",
+     "lotid": "3358516033",
+     "number": "6033",
+     "price": 875490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7653 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719151,
+     "longitude": -112.223793
+    },
+    "HomesiteType:ah_728315": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728315",
+     "lotid": "3358516029",
+     "number": "6029",
+     "price": 860490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7701 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719143,
+     "longitude": -112.224716
+    },
+    "HomesiteType:ah_728316": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728316",
+     "lotid": "3358516030",
+     "number": "6030",
+     "price": 860490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7689 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719147,
+     "longitude": -112.224487
+    },
+    "HomesiteType:ah_728311": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728311",
+     "lotid": "3358516002",
+     "number": "6002",
+     "price": 914665,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25942 N 77TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719334,
+     "longitude": -112.225784
+    },
+    "HomesiteType:ah_728809": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728809",
+     "lotid": "3358516026",
+     "number": "6026",
+     "price": 878990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7710 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718784,
+     "longitude": -112.224945
+    },
+    "HomesiteType:ah_728808": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728808",
+     "lotid": "3358516024",
+     "number": "6024",
+     "price": 867990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7686 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718788,
+     "longitude": -112.22448
+    },
+    "HomesiteType:ah_737949": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_737949",
+     "lotid": "3358516016",
+     "number": "6016",
+     "price": 894190,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7623 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.7183,
+     "longitude": -112.223244
+    },
+    "HomesiteType:ah_728312": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728312",
+     "lotid": "3358516017",
+     "number": "6017",
+     "price": 877490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7610 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.7188,
+     "longitude": -112.22287
+    },
+    "HomesiteType:ah_728314": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728314",
+     "lotid": "3358516020",
+     "number": "6020",
+     "price": 845000,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7638 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718796,
+     "longitude": -112.223557
+    },
+    "HomesiteType:ah_740066": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_740066",
+     "lotid": "3358516138",
+     "number": "6138",
+     "price": 889340,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7607 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718304,
+     "longitude": -112.222778
+    },
+    "HomesiteType:ah_740067": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_740067",
+     "lotid": "3358516139",
+     "number": "6139",
+     "price": 901590,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25855 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718521,
+     "longitude": -112.222282
+    },
+    "HomesiteType:ah_728322": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728322",
+     "lotid": "3358516136",
+     "number": "6136",
+     "price": 879990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7609 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719158,
+     "longitude": -112.22287
+    },
+    "HomesiteType:ah_728324": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728324",
+     "lotid": "3358516143",
+     "number": "6143",
+     "price": 905000,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25943 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719315,
+     "longitude": -112.222336
+    },
+    "HomesiteType:ah_728321": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728321",
+     "lotid": "3358516134",
+     "number": "6134",
+     "price": 857990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7614 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.71965,
+     "longitude": -112.222969
+    },
+    "HomesiteType:ah_728331": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728331",
+     "lotid": "3358516023",
+     "number": "6023",
+     "price": 884990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7674 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718788,
+     "longitude": -112.224243
+    },
+    "HomesiteType:ah_728323": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728323",
+     "lotid": "3358516141",
+     "number": "6141",
+     "price": 909990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25899 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.71891,
+     "longitude": -112.222328
+    },
+    "HomesiteType:ah_732006": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_732006",
+     "lotid": "3358516022",
+     "number": "6022",
+     "price": 854990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7662 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718792,
+     "longitude": -112.224014
+    },
+    "HomesiteType:ah_728313": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_728313",
+     "lotid": "3358516018",
+     "number": "6018",
+     "price": 864990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7618 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.7188,
+     "longitude": -112.223099
+    },
+    "HomesiteType:ah_759737": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_759737",
+     "lotid": "3358516007",
+     "number": "6007",
+     "price": 888490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25832 N 77TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718372,
+     "longitude": -112.22583
+    },
+    "HomesiteType:ah_858808": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_858808",
+     "lotid": "3358510178",
+     "number": "0178",
+     "price": 901490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7941 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724106,
+     "longitude": -112.230179
+    },
+    "HomesiteType:ah_851688": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_851688",
+     "lotid": "3358510157",
+     "number": "0157",
+     "price": 899540,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26355 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722786,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_852042": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_852042",
+     "lotid": "3358510153",
+     "number": "0153",
+     "price": 913790,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26403 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723557,
+     "longitude": -112.229614
+    },
+    "HomesiteType:ah_858809": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_858809",
+     "lotid": "3358510187",
+     "number": "0187",
+     "price": 899990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7954 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724602,
+     "longitude": -112.230446
+    },
+    "HomesiteType:ah_901104": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_901104",
+     "lotid": "3358510159",
+     "number": "0159",
+     "price": 918340,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7937 W TETHER TRL",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.722404,
+     "longitude": -112.230179
+    },
+    "HomesiteType:ah_856212": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_856212",
+     "lotid": "3358510189",
+     "number": "0189",
+     "price": 899990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7934 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724594,
+     "longitude": -112.229843
+    },
+    "HomesiteType:ah_875845": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_875845",
+     "lotid": "3358510167",
+     "number": "0167",
+     "price": 899790,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7939 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723255,
+     "longitude": -112.230179
+    },
+    "HomesiteType:ah_902144": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_902144",
+     "lotid": "3358510172",
+     "number": "0172",
+     "price": 888790,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7999 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723251,
+     "longitude": -112.231331
+    },
+    "HomesiteType:ah_872528": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_872528",
+     "lotid": "3358510183",
+     "number": "0183",
+     "price": 899990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "8002 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724602,
+     "longitude": -112.231369
+    },
+    "HomesiteType:ah_856213": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_856213",
+     "lotid": "3358510190",
+     "number": "0190",
+     "price": 919990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26493 N 79TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724487,
+     "longitude": -112.229645
+    },
+    "HomesiteType:h_955264": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home exterior",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_westernterritorial_i.jpg?d=20250220T125759"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/evolution-plan-5582/3358510219",
+     "id": "h_955264",
+     "lotid": "3358510219",
+     "number": "0219",
+     "price": 840490,
+     "formattedPrice": "Mid $800K",
+     "lotSize": 0,
+     "status": "COMING_SOON",
+     "address": "8025 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719364,
+     "longitude": -112.225838
+    },
+    "HomesiteType:ah_955263": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "",
+     "id": "ah_955263",
+     "lotid": "3358510194",
+     "number": "0194",
+     "price": 862490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "UNDEFINED",
+     "address": "26530 N 80TH DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719364,
+     "longitude": -112.225838
+    },
+    "HomesiteType:h_951736": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "French Country home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/b9f9bdc2d1aa49b68ea05a4ce093e79e/azh_5582_destiny_aloravita_rend_evolution_frenchcountry_f.jpg?d=20250220T125800"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67893"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 3024,
+     "url": "/new-homes/arizona/phoenix/peoria/aloravita/destiny/evolution-plan-5582/3358510221",
+     "id": "h_951736",
+     "lotid": "3358510221",
+     "number": "0221",
+     "price": 840490,
+     "formattedPrice": "Low $900K",
+     "lotSize": 0,
+     "status": "COMING_SOON",
+     "address": "8001 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719364,
+     "longitude": -112.225838
+    },
+    "HomesiteType:ah_728325": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728325",
+     "lotid": "3358516039",
+     "number": "6039",
+     "price": 808990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7658 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719643,
+     "longitude": -112.223892
+    },
+    "HomesiteType:ah_728327": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728327",
+     "lotid": "3358516042",
+     "number": "6042",
+     "price": 820490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7694 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719639,
+     "longitude": -112.224579
+    },
+    "HomesiteType:ah_728326": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728326",
+     "lotid": "3358516041",
+     "number": "6041",
+     "price": 829990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7682 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719643,
+     "longitude": -112.22435
+    },
+    "HomesiteType:ah_728811": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728811",
+     "lotid": "3358516011",
+     "number": "6011",
+     "price": 838990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7695 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718292,
+     "longitude": -112.224594
+    },
+    "HomesiteType:ah_728812": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728812",
+     "lotid": "3358516043",
+     "number": "6043",
+     "price": 819000,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7706 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719639,
+     "longitude": -112.224808
+    },
+    "HomesiteType:ah_732008": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_732008",
+     "lotid": "3358516014",
+     "number": "6014",
+     "price": 820000,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7659 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718296,
+     "longitude": -112.223907
+    },
+    "HomesiteType:ah_732007": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_732007",
+     "lotid": "3358516012",
+     "number": "6012",
+     "price": 834990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7683 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718292,
+     "longitude": -112.224365
+    },
+    "HomesiteType:ah_732009": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_732009",
+     "lotid": "3358516015",
+     "number": "6015",
+     "price": 843890,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7647 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.7183,
+     "longitude": -112.223679
+    },
+    "HomesiteType:ah_728810": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728810",
+     "lotid": "3358516010",
+     "number": "6010",
+     "price": 829990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7707 W ANTELOPE DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.718292,
+     "longitude": -112.224823
+    },
+    "HomesiteType:ah_728328": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728328",
+     "lotid": "3358516135",
+     "number": "6135",
+     "price": 835465,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7622 W DESERT SPOON DR",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.71965,
+     "longitude": -112.223198
+    },
+    "HomesiteType:ah_728329": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728329",
+     "lotid": "3358516145",
+     "number": "6145",
+     "price": 884990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "25995 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719833,
+     "longitude": -112.222412
+    },
+    "HomesiteType:ah_728330": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_728330",
+     "lotid": "3358516146",
+     "number": "6146",
+     "price": 884990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "26017 N 76TH AV",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.720024,
+     "longitude": -112.222443
+    },
+    "HomesiteType:ah_858231": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Craftsman home exterior image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_craftsman_c.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_858231",
+     "lotid": "3358510182",
+     "number": "0182",
+     "price": 868950,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7989 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724106,
+     "longitude": -112.231102
+    },
+    "HomesiteType:ah_858230": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_858230",
+     "lotid": "3358510185",
+     "number": "0185",
+     "price": 868990,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7978 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724602,
+     "longitude": -112.230904
+    },
+    "HomesiteType:ah_875848": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_875848",
+     "lotid": "3358510175",
+     "number": "0175",
+     "price": 783490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7964 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723747,
+     "longitude": -112.230637
+    },
+    "HomesiteType:ah_875847": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_875847",
+     "lotid": "3358510169",
+     "number": "0169",
+     "price": 861490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7963 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723255,
+     "longitude": -112.230637
+    },
+    "HomesiteType:ah_875846": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_875846",
+     "lotid": "3358510176",
+     "number": "0176",
+     "price": 796490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7952 W DESERT ELM LN",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.723747,
+     "longitude": -112.230408
+    },
+    "HomesiteType:ah_858228": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_858228",
+     "lotid": "3358510181",
+     "number": "0181",
+     "price": 849490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7977 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724106,
+     "longitude": -112.230873
+    },
+    "HomesiteType:ah_858227": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_858227",
+     "lotid": "3358510184",
+     "number": "0184",
+     "price": 860490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "SOLD",
+     "address": "7990 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.724602,
+     "longitude": -112.231133
+    },
+    "HomesiteType:ah_955265": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Western Territorial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_westernterritorial_i.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_955265",
+     "lotid": "3358510192",
+     "number": "0192",
+     "price": 826490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "UNDEFINED",
+     "address": "8014 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719364,
+     "longitude": -112.225838
+    },
+    "HomesiteType:ah_955266": {
+     "__typename": "HomesiteType",
+     "checkoutType": null,
+     "offerAvailable": false,
+     "offerEndDate": null,
+     "elevationImage": {
+      "__typename": "TitleImageType",
+      "image": {
+       "__typename": "ImageType",
+       "alt": "Spanish Colonial home image",
+       "url": "https://cdn.lennar.com/api/images/contentassets/04c174e899ef4bf1aa289a3670d07222/azh_5583_destiny_aloravita_rend_explorer_spanishcolonial_a.jpg"
+      }
+     },
+     "plan": {
+      "__ref": "PlanType:p_67894"
+     },
+     "wasPrice": 0,
+     "beds": 4,
+     "baths": 3,
+     "sqft": 2604,
+     "url": "",
+     "id": "ah_955266",
+     "lotid": "3358510193",
+     "number": "0193",
+     "price": 816490,
+     "formattedPrice": null,
+     "lotSize": 0,
+     "status": "UNDEFINED",
+     "address": "8026 W ROWEL RD",
+     "halfBaths": 0,
+     "isHotw": false,
+     "soldDate": null,
+     "latitude": 33.719364,
+     "longitude": -112.225838
+    }
+   },
+   "pageSubtype": "",
+   "pageType": "PLAN",
+   "divisionNumber": "AZHLEN",
+   "title": "Aurora Plan 5580",
+   "variables": {
+    "plannum": "5580",
+    "comnum": "3358",
+    "id": "5e0e00cd-8b22-4fe5-845a-0942591fe978"
+   },
+   "legalDisclaimerText": [
+    "By selecting \"I consent\" {placement}, you consent to receive marketing SMS communications from Lennar Homes and other communications (via mail, email, or telephone) from Lennar Homes and its affiliate…(906)",
+    "Al seleccionar \"Doy mi consentimiento\" {placement}, usted acepta recibir comunicaciones de marketing por SMS de Lennar Homes y otras comunicaciones (por correo postal, correo electrónico o teléfono) d…(1120)"
+   ],
+   "shouldDebugErrors": false
+  },
+  "__N_SSP": true
+ },
+ "page": "/new-homes/[state]/[market]/[submarket]/[...slugs]",
+ "query": {
+  "state": "arizona",
+  "market": "phoenix",
+  "submarket": "peoria",
+  "slugs": [
+   "aloravita",
+   "destiny",
+   "aurora-plan-5580"
+  ]
+ },
+ "buildId": "q3D-QxkDzxKPYQzzqZfEe",
+ "runtimeConfig": {
+  "CHAT_SALESFORCE_HOST": "https://len.my.salesforce.com",
+  "CHAT_FORCE_HOST": "https://len.my.site.com/LennarChat",
+  "CHAT_INIT_ID": "00D36000000JZvE",
+  "CHAT_LIVE_AGENT_CONTENT_URL": "https://c.la3-c2-ia4.salesforceliveagent.com/content",
+  "CHAT_LIVE_AGENT_URL": "https://d.la3-c2-ia4.salesforceliveagent.com/chat",
+  "CHAT_LIVE_AGENT_DEV_NAME": "EmbeddedServiceLiveAgent_Parent04I1Q000000GmfTUAS_174b6baa897",
+  "CHAT_DEPLOYMENT_ID": "5721Q000000D2HS",
+  "CHAT_BUTTON_ID": "5731Q000000D40j",
+  "CHAT_SERVICE_SCRIPT": "https://len.my.salesforce.com/embeddedservice/5.0/esw.min.js",
+  "DEBUG_ERRORS": "",
+  "IS_PRODUCTION": "true",
+  "AUTO_REDIRECT_HTTPS": "false",
+  "LINK_CAREERS": "https://careers.lennar.com",
+  "LINK_BLOG": "https://resourcecenter.lennar.com",
+  "LINK_INVESTOR_MARKETPLACE": "https://investor-marketplace.lennar.com/",
+  "LINK_EMPLOYMENT_VERIFICATION": "https://www.experian.com/employer-services/products/verification-fulfillment/experian-verify",
+  "LINK_FACEBOOK": "https://www.facebook.com/Lennar",
+  "LINK_INSTAGRAM": "https://www.instagram.com/lennarhomes",
+  "LINK_INVESTORS": "https://investors.lennar.com/",
+  "LINK_LINKEDIN": "https://www.linkedin.com/company/lennar",
+  "LINK_MYLENNAR": "https://www.lennar.com/contact/",
+  "LINK_NEWSROOM": "https://newsroom.lennar.com/",
+  "LINK_RESOURCES": "https://resourcecenter.lennar.com/",
+  "LINK_MYHOME": "https://myhome.lennar.com/lennarhomeownerexperience/s/",
+  "LINK_BROKER_POLICY": "https://resourcecenter.lennar.com/lennar-news/our-broker-real-estate-agent-policy/",
+  "LINK_TWITTER": "https://twitter.com/lennar",
+  "LINK_WARRANTY": "https://www.lennar.com/contact/customercarewarranty",
+  "LINK_WARRANTY_LOGGEDIN": "https://www.lennar.com/account/authorize?returnTo=%2Fcontact%2Fcustomercarewarranty",
+  "LINK_WARRANTY_MYHOME": "https://myhome.lennar.com/lennarhomeownerexperience/s/contactsupport",
+  "LINK_YOUTUBE": "https://www.youtube.com/user/LennarOnline",
+  "MPARTICLE_API_KEY": "us1-0579633ea8846a43abee653a45ea4049",
+  "MPARTICLE_PLAN_VERSION": "2",
+  "OPTIMIZELY_KEY": "20139847744",
+  "LENNAR_ENVIRONMENT": "Production",
+  "OPTIMIZELY_SDK_KEY": "6DkvSj3y8qErBXsB8Pnhu",
+  "SITECORE_DOCUMENT_REST_API": "https://lnos-lcw-app-be-cd-prod01.azurewebsites.net/services/rest/documents.svc/uploadofferdocument",
+  "SITECORE_TEMP_DOCUMENT_REST_API": "https://lnos-lcw-app-be-cd-prod01.azurewebsites.net/services/rest/documents.svc/uploadtempofferdocument",
+  "AUTH_PROVIDER": "ping",
+  "AUTH0_DOMAIN": "auth.lennar.com",
+  "AUTH0_CLIENT_ID": "M9P0B7GnDuatTp3MY7qVjxgykNm7jdF0",
+  "AUTH0_CONNECTION": "Auth0-LEN-Prod",
+  "AUTH0_REDIRECT_FLOW": "",
+  "AUTH_PINGID_ID": "ca15005c-d682-43bb-818c-9aaec75336cb",
+  "PING_ISSUER": "https://identity.lennar.com/as",
+  "PING_POST_LOGOUT_REDIRECT_URI": "https://www.lennar.com/account/logout-callback",
+  "ONETRUST_PRIVACY": "https://lennar-privacy.my.onetrust.com/webform/28241770-ebef-41ce-ad79-79c8275b52ce/4a145a0f-1efc-4ad5-8878-7c3609052d3d",
+  "ONETRUST_HEAD_DOMAIN_SCRIPT": "44a74418-9f8d-4f2b-9a9c-da325f3c8879",
+  "ONETRUST_HEAD_CUSTOM_SCRIPT": "/onetrust.js",
+  "TIME_TO_REFRESH": "120000",
+  "TIME_INACTIVE_LOGOUT": "1200000",
+  "NOAUTH_PROFILE_EXPIRATION": "43800",
+  "GOOGLE_PLACES_API_KEY": "AIzaSyDF58qGE--T_WRdZRRNksCO9teX1h4AMtg",
+  "JS_TOKEN_API": "https://www.e-billexpress.com:443/PayIQ/Api/PaymentAccount/StoreFromJS",
+  "ONETRUST_AUTOBLOCK_LOAD_STRATEGY": "",
+  "COMMUNITY_MAP_SHOPPING_IMAGE": "/images/com/images/version10/default/communityMapShoppingPhoto.jpg",
+  "CDN_ASSET_PREFIX": "",
+  "DOMAIN": "www.lennar.com",
+  "WEB_TO_CASE_CITY": "00N1Q00000TXvyb",
+  "WEB_TO_CASE_COUNTRY": "00N0R0000038uch",
+  "WEB_TO_CASE_ENV_FROM_URL": "https://webto.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8",
+  "WEB_TO_CASE_FIRST_NAME": "00N1Q00000TXvyd",
+  "WEB_TO_CASE_FLAG": "00N1Q00000TXvIV",
+  "WEB_TO_CASE_HOMESITE_ID": "00N1Q00000TXvye",
+  "WEB_TO_CASE_LAST_NAME": "00N1Q00000TXvyf",
+  "WEB_TO_CASE_ORG_ID": "00D36000000JZvE",
+  "WEB_TO_CASE_STATE": "00N1Q00000TXvyg",
+  "WEB_TO_CASE_STREET_ADDRESS": "00N1Q00000TXvyh",
+  "WEB_TO_CASE_WORK_ORDER": "00N1Q00000TXvya",
+  "WEB_TO_CASE_ZIP": "00N1Q00000TXvyi",
+  "SIERRA_URL": "https://sierra.chat/agent/iMd9AP8BkvWvPxEBmieeYmRxDOIdvoZhkwOCUNPhpog/embed",
+  "AGENTFORCE_ORG_ID": "00D36000000JZvE",
+  "AGENTFORCE_DEPLOYMENT_NAME": "AISC_Web",
+  "AGENTFORCE_COMMUNITY_URL": "https://len.my.site.com/ESWAISCWeb1756413103754",
+  "AGENTFORCE_SCRT2_URL": "https://len.my.salesforce-scrt.com",
+  "SEARCH_CITY_RADIUS": "",
+  "SEARCH_PAGE_MAP_ID": "32bd9412a889b91942a4ee31",
+  "LIGHT_GRAPHQL_PROXY_ALLOWED": "true",
+  "COOKIE_MIGRATION_ENABLED": "true"
+ },
+ "isFallback": false,
+ "dynamicIds": [
+  42567,
+  38628,
+  16861,
+  "…(4 items total)"
+ ],
+ "gssp": true,
+ "appGip": true,
+ "scriptLoader": []
+}
