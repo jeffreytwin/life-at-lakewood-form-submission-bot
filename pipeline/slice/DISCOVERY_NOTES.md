@@ -117,16 +117,17 @@ ICI/Neal Signature → (done) Toll QMIs.
   resource/filters and the Seaire community id by capturing the SPA's own
   calls.
 
-## Lee Wetherington — use the generic fetch_claude engine
+## Lee Wetherington — DONE (routed through the generic Claude engine)
 
 - Real site is `lwhomes.com` (WordPress). `/listings/` server-renders the
-  for-sale homes as posts (round-7 rendered text shows the listings), and
-  `/model-homes/` the models. No hidden API worth chasing (wp-json is
-  auth-gated; page XHRs are chat/anti-spam widgets only).
-- Action: reclassify the builder to `fetch_claude` with
-  `url = https://lwhomes.com/listings/` (Settings → Builder Connections /
-  fp_builders update — needs a DB write, Supabase MCP was approval-blocked
-  this session).
+  for-sale homes as posts; `/model-homes/` the models. No hidden API worth
+  chasing (wp-json is auth-gated; page XHRs are chat/anti-spam widgets).
+- Handled in code: sync.ts registers a Lee Wetherington wrapper that calls
+  the fetch_claude engine with `https://lwhomes.com/listings/` and a
+  per-community hint, so the stale render_claude classification and the
+  dead leewetherington.com base_url don't matter. Cosmetic fp_builders
+  label updates are queued in `pending-builder-updates.sql` (Supabase MCP
+  writes were approval-blocked this session).
 
 ### Original findings
 

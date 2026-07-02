@@ -22,6 +22,19 @@ import { extractDrb } from "@/lib/floorplans/extractors/drb";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
+// Lee Wetherington's real site (lwhomes.com; leewetherington.com is an
+// empty JS shell) server-renders all its for-sale homes on one shared
+// /listings/ page — route it through the generic Claude engine with the
+// community pinned in the hint so each connection only sees its own homes.
+const extractLeeWetherington: Extractor = (params) => {
+  const communityName = String(params.communityName ?? "");
+  const shortName = communityName.split(/\s*-\s*/).pop() ?? communityName;
+  return extractWithClaude({
+    url: typeof params.url === "string" && params.url ? params.url : "https://lwhomes.com/listings/",
+    hint: `The page lists Lee Wetherington homes across several communities. Only report homes/plans located in the "${shortName}" community; ignore every other community. If none are listed for it, report an empty list.`,
+  });
+};
+
 // Builder-specific engines take precedence (bespoke json_api parsers);
 // everything else falls back to its extraction_method's generic engine.
 const BUILDER_EXTRACTORS: Record<string, Extractor> = {
@@ -31,6 +44,7 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Taylor Morrison": extractTaylorMorrison,
   "Mattamy Homes": extractMattamy,
   "DRB Homes": extractDrb,
+  "Lee Wetherington": extractLeeWetherington,
 };
 
 const METHOD_EXTRACTORS: Record<string, Extractor> = {
@@ -40,7 +54,7 @@ const METHOD_EXTRACTORS: Record<string, Extractor> = {
 // Builders whose extractor works from API ids rather than a page URL —
 // URL auto-discovery is skipped (their pages block non-browser fetches,
 // which would fail discovery's verification step and abort the run).
-const URLLESS_BUILDERS = new Set(["Meritage Homes", "DRB Homes"]);
+const URLLESS_BUILDERS = new Set(["Meritage Homes", "DRB Homes", "Lee Wetherington"]);
 
 function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
