@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/sync-email",
       "schedule": "*/3 * * * *"
+    },
+    {
+      "path": "/api/cron/floorplan-publish-check",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/floorplan-nightly",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

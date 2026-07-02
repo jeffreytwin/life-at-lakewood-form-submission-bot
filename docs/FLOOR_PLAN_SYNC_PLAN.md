@@ -197,6 +197,13 @@ Estimated Claude cost at nightly × ~36 builders: single-digit dollars/month.
 - **Idempotent everything:** re-running the nightly job updates existing pending rows
   (dedupe index), image uploads are content-hash deduped, write-back is safe to retry
   per row via the status state machine.
+- **Rejections stick.** The nightly diff must not re-queue a change identical to a
+  rejected row (same plan_key + change_type + field + new_value). If the underlying
+  scraped value later changes, that is a NEW change and queues fresh. Rejecting means
+  "no to this," not "never sync this plan."
+- **User edits are overrides.** Fields edited in the Hub before approval are recorded
+  in the record's `userEditedFields`; the nightly diff skips proposing updates that
+  would revert an overridden field to the builder's value.
 - **Starred-plan friction:** approving a `remove` or price `update` on a starred plan
   shows an inline warning before the click and generates a follow-up task after sync.
 - **Credentials as secrets:** Wix API key in GitHub Actions secrets + Vercel env vars;
