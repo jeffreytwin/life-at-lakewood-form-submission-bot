@@ -33,6 +33,7 @@ export default function BuildersSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [running, setRunning] = useState<Set<string>>(new Set());
 
   const fetchBuilders = useCallback(() => {
     fetch("/api/internal/floorplans/builders")
@@ -68,6 +69,20 @@ export default function BuildersSettingsPage() {
       body: JSON.stringify({ active: !c.active }),
     });
     fetchBuilders();
+  }
+
+  async function runConnection(c: Connection) {
+    setRunning((s) => new Set(s).add(c.id));
+    try {
+      await fetch(`/api/internal/floorplans/connections/${c.id}/run`, { method: "POST" });
+    } finally {
+      setRunning((s) => {
+        const next = new Set(s);
+        next.delete(c.id);
+        return next;
+      });
+      fetchBuilders();
+    }
   }
 
   function health(b: Builder) {
@@ -185,14 +200,24 @@ export default function BuildersSettingsPage() {
                               {c.last_run_at ? new Date(c.last_run_at).toLocaleString() : "never"}
                             </td>
                             <td>
-                              <button
-                                className="btn btn-secondary"
-                                style={{ padding: "2px 10px" }}
-                                onClick={() => toggleConnection(c)}
-                                disabled={!b.active}
-                              >
-                                {c.active ? "Pause" : "Resume"}
-                              </button>
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <button
+                                  className="btn btn-primary"
+                                  style={{ padding: "2px 10px" }}
+                                  onClick={() => runConnection(c)}
+                                  disabled={!b.active || !c.active || running.has(c.id)}
+                                >
+                                  {running.has(c.id) ? "Running…" : "Run"}
+                                </button>
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: "2px 10px" }}
+                                  onClick={() => toggleConnection(c)}
+                                  disabled={!b.active}
+                                >
+                                  {c.active ? "Pause" : "Resume"}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
