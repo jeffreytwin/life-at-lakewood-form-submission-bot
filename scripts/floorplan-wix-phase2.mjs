@@ -131,18 +131,17 @@ for (const site of sites) {
   const publishPlugins = legacyPlugins.filter((p) =>
     /publish/i.test(JSON.stringify(p)),
   );
-  const missing = publishPlugins.filter(
-    (p) => !JSON.stringify(v2Plugins).includes(JSON.stringify(p.type ?? p)),
-  );
-  if (missing.length) {
-    const updated = await wix('PUT', `/wix-data/v2/collections/${COLLECTION_ID}`, site.wix_site_id, {
-      collection: { ...v2col, plugins: [...v2Plugins, ...missing] },
-    });
-    log(`${site.domain}: add publish plugin -> ${short(updated)}`);
-  } else if (!publishPlugins.length) {
-    log(`${site.domain}: no publish plugin found on legacy collection to copy`);
+  const hasPublish = v2Plugins.some((p) => p.type === 'PUBLISH');
+  if (!hasPublish && publishPlugins.length) {
+    const body = { collection: { ...v2col, plugins: [...v2Plugins, ...publishPlugins] } };
+    let updated = await wix('PUT', '/wix-data/v2/collections', site.wix_site_id, body);
+    log(`${site.domain}: add publish plugin (PUT base) -> ${short(updated)}`);
+    if (updated.status !== 200) {
+      updated = await wix('PATCH', `/wix-data/v2/collections/${COLLECTION_ID}`, site.wix_site_id, body);
+      log(`${site.domain}: add publish plugin (PATCH id) -> ${short(updated)}`);
+    }
   } else {
-    log(`${site.domain}: publish plugin already present on V2`);
+    log(`${site.domain}: publish plugin ${hasPublish ? 'already present' : 'not found on legacy'}`);
   }
 }
 
@@ -165,18 +164,23 @@ if (idA) {
   log(`read(plain insert) publishStatus=${read.json?.dataItem?.data?._publishStatus} -> ${read.status}`);
 }
 
-// Probe B: insert with publish plugin options requesting draft state.
+// Probe B: insert with _publishStatus=DRAFT directly in the item data.
 const insB = await wix('POST', '/wix-data/v2/items', probeSite.wix_site_id, {
   dataCollectionId: COLLECTION_ID,
-  dataItem: { data: { ...testData, floorPlanName: 'FP-SYNC-TEST-B (delete me)' } },
-  publishPluginOptions: { saveAsDraft: true },
+  dataItem: { data: { ...testData, floorPlanName: 'FP-SYNC-TEST-B (delete me)', _publishStatus: 'DRAFT' } },
 });
-log(`insert(publishPluginOptions.saveAsDraft) -> ${short(insB)}`);
+log(`insert(data._publishStatus=DRAFT) -> ${short(insB)}`);
 const idB = insB.json?.dataItem?.id;
 if (idB) {
   cleanupIds.push(idB);
   const readB = await wix('GET', `/wix-data/v2/items/${idB}?dataCollectionId=${COLLECTION_ID}`, probeSite.wix_site_id);
   log(`read(B) publishStatus=${readB.json?.dataItem?.data?._publishStatus}`);
+  // Probe B2: flip the draft to published via update.
+  const upd = await wix('PUT', `/wix-data/v2/items/${idB}`, probeSite.wix_site_id, {
+    dataCollectionId: COLLECTION_ID,
+    dataItem: { data: { ...(readB.json?.dataItem?.data ?? {}), _publishStatus: 'PUBLISHED' } },
+  });
+  log(`update(B -> PUBLISHED) -> ${upd.status} publishStatus=${upd.json?.dataItem?.data?._publishStatus}`);
 }
 
 // Probe C: query visibility with/without draft items included.
