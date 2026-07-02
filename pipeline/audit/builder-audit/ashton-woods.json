@@ -1,0 +1,37 @@
+{
+  "name": "Ashton Woods",
+  "slug": "ashton-woods",
+  "pages": [
+    {
+      "url": "https://www.ashtonwoods.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 275736,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyCCCPiE8uCuHvgajBMfzD5N5hLFt6qL-xQ&libraries=places&v=3.59&callback=__onGoogleMapsReady",
+        "https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit",
+        "https://cdn.jsdelivr.net/npm/algoliasearch@4.14.2/dist/algoliasearch-lite.umd.js",
+        "https://cdn.jsdelivr.net/npm/instantsearch.js@4.44/dist/instantsearch.production.min.js",
+        "https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js",
+        "https://player.vimeo.com/api/player.js"
+      ],
+      "visiblePriceCount": 13,
+      "visibleSqftCount": 6,
+      "visibleTextChars": 11032
+    }
+  ],
+  "domain": "www.ashtonwoods.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.ashtonwoods.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

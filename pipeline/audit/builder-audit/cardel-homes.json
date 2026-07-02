@@ -1,0 +1,57 @@
+{
+  "name": "Cardel Homes",
+  "slug": "cardel-homes",
+  "pages": [
+    {
+      "url": "https://www.cardelhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 134427,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 4222
+    },
+    {
+      "url": "https://www.cardelhomes.com/florida/north-river-ranch",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 387892,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyAO-75_Db5vVoUqZ1yEBRL4ATQZvrO4ljs&amp;callback=initGoogleMaps&amp;libraries=marker%2Cgeometry&amp;ver=1.0"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 4,
+      "visibleTextChars": 22348
+    }
+  ],
+  "domain": "www.cardelhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.cardelhomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.cardelhomes.com/florida/north-river-ranch",
+      "text": "North River Ranch - Manatee County"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.cardelhomes.com/florida/north-river-ranch/lot-maps/",
+      "https://www.cardelhomes.com/florida/north-river-ranch/"
+    ]
+  }
+}

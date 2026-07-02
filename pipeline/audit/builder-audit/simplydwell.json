@@ -1,0 +1,92 @@
+{
+  "name": "SimplyDwell Homes",
+  "slug": "simplydwell",
+  "pages": [
+    {
+      "url": "https://simplydwellhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 120068,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?render=6LdSGyYqAAAAAKm70Mh6YoniGu-DPQMOgHtHhC4U",
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyAK_WQatdetgx5_ohJ7TJbIKzJleuIePHM&#038;loading=async&#038;callback=initMap",
+        "https://www.google.com/recaptcha/api.js"
+      ],
+      "visiblePriceCount": 2,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 5936
+    },
+    {
+      "url": "https://simplydwellhomes.com/community/broadleaf/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 228893,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?render=6LdSGyYqAAAAAKm70Mh6YoniGu-DPQMOgHtHhC4U",
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyAK_WQatdetgx5_ohJ7TJbIKzJleuIePHM&#038;loading=async&#038;callback=initMap",
+        "https://www.google.com/recaptcha/api.js"
+      ],
+      "visiblePriceCount": 28,
+      "visibleSqftCount": 27,
+      "visibleTextChars": 16548
+    },
+    {
+      "url": "https://simplydwellhomes.com/community/madera-at-wellen-park/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 121010,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?render=6LdSGyYqAAAAAKm70Mh6YoniGu-DPQMOgHtHhC4U",
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyAK_WQatdetgx5_ohJ7TJbIKzJleuIePHM&#038;loading=async&#038;callback=initMap",
+        "https://www.google.com/recaptcha/api.js"
+      ],
+      "visiblePriceCount": 2,
+      "visibleSqftCount": 5,
+      "visibleTextChars": 8022
+    }
+  ],
+  "domain": "simplydwellhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://simplydwellhomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://simplydwellhomes.com/community/broadleaf/",
+      "text": "Broadleaf"
+    },
+    {
+      "url": "https://simplydwellhomes.com/community/madera-at-wellen-park/",
+      "text": "Madera at Wellen Park"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://simplydwellhomes.com/building-dreams-in-the-sunshine-state-a-homebuying-journey-rooted-in-sarasotas-future/",
+      "https://simplydwellhomes.com/local-couple-finds-their-dream-home-with-simplydwell-in-sarasota-florida/",
+      "https://simplydwellhomes.com/discover-affordable-new-construction-in-sarasota-florida-a-guide-for-first-time-homebuyers/",
+      "https://simplydwellhomes.com/new-construction-homes-near-sarasota-fl/",
+      "https://simplydwellhomes.com/new-construction-homes-near-lakewood-ranch-fl/",
+      "https://simplydwellhomes.com/community/broadleaf/",
+      "https://simplydwellhomes.com/community/madera-at-wellen-park/"
+    ]
+  }
+}

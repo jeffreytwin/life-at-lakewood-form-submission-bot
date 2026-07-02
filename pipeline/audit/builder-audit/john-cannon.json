@@ -1,0 +1,62 @@
+{
+  "name": "John Cannon Homes",
+  "slug": "john-cannon",
+  "pages": [
+    {
+      "url": "https://www.johncannonhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 226876,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 5517
+    },
+    {
+      "url": "https://www.johncannonhomes.com/wp-content/uploads/2026/01/Wild-Blue-105-custom-home-build-elevation-001-featured.jpg",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 145052,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 68513
+    }
+  ],
+  "domain": "www.johncannonhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.johncannonhomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.johncannonhomes.com/wp-content/uploads/2026/01/Wild-Blue-105-custom-home-build-elevation-001-featured.jpg",
+      "text": ""
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.johncannonhomes.com/working-with-custom-home-builders-in-sarasota/",
+      "https://www.johncannonhomes.com/model-home/wild-blue-105/",
+      "https://www.johncannonhomes.com/model-home/the-everly-showcase/",
+      "https://www.johncannonhomes.com/community/star-farms-at-lakewood-ranch/",
+      "https://www.johncannonhomes.com/community/monarch-acres/",
+      "https://www.johncannonhomes.com/community/everly-at-wellen-park/",
+      "https://www.johncannonhomes.com/community/kingfisher-estates/",
+      "https://www.johncannonhomes.com/community/wild-blue-at-waterside/",
+      "https://www.johncannonhomes.com/community/esplanade-at-wellen-park/"
+    ]
+  }
+}

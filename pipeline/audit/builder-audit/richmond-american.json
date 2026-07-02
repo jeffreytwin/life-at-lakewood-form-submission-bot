@@ -1,0 +1,94 @@
+{
+  "name": "Richmond American Homes",
+  "slug": "richmond-american",
+  "pages": [
+    {
+      "url": "https://www.richmondamerican.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 243716,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyCgX8Owc4ojBjlrbpjfIIh2KDrF13ZV1Pk",
+        "https://www.google.com/recaptcha/api.js"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 12736
+    },
+    {
+      "url": "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 277949,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyCgX8Owc4ojBjlrbpjfIIh2KDrF13ZV1Pk",
+        "https://www.google.com/recaptcha/api.js"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 91,
+      "visibleTextChars": 15500
+    },
+    {
+      "url": "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 240757,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyCgX8Owc4ojBjlrbpjfIIh2KDrF13ZV1Pk",
+        "https://www.google.com/recaptcha/api.js"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 11224
+    }
+  ],
+  "domain": "www.richmondamerican.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.richmondamerican.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/tourmaline/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/sage/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/ammolite/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/slate/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/palm/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/pine/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/lynwood/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/seth/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/dillon-ii/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/dayton/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/sage/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/darius/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/pinecrest/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/powell/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/agate/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/ammolite/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/ashwood/"
+    ]
+  }
+}

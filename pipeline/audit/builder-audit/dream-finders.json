@@ -1,0 +1,66 @@
+{
+  "name": "Dream Finders Homes",
+  "slug": "dream-finders",
+  "pages": [
+    {
+      "url": "https://dreamfindershomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 234766,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 17087
+    },
+    {
+      "url": "https://dreamfindershomes.com/blog/lakewood-ranch-good-place-to-live/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 212150,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 21506
+    },
+    {
+      "url": "https://dreamfindershomes.com/blog/lakewood-ranch-cost-of-living/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 213529,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 5,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 22026
+    }
+  ],
+  "domain": "www.dreamfindershomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://dreamfindershomes.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://dreamfindershomes.com/blog/lakewood-ranch-good-place-to-live/",
+      "https://dreamfindershomes.com/blog/lakewood-ranch-cost-of-living/"
+    ]
+  }
+}

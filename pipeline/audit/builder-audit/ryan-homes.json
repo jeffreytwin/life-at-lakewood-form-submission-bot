@@ -1,0 +1,104 @@
+{
+  "name": "Ryan Homes",
+  "slug": "ryan-homes",
+  "pages": [
+    {
+      "url": "https://www.ryanhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 116600,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.ryanhomes.com/new-homes?searchText={search_term_string}"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 3915
+    },
+    {
+      "url": "https://www.ryanhomes.com/new-homes/communities/florida/Sarasota-Florida",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 196242,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyAiQcVkOYvnohkM6oFd5PNKWbsv3M8hFeI&callback=initMap&sensor=false"
+      ],
+      "visiblePriceCount": 7,
+      "visibleSqftCount": 7,
+      "visibleTextChars": 15725
+    },
+    {
+      "url": "https://www.ryanhomes.com/new-homes/communities/florida/Venice-FL",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 176378,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.googleapis.com/maps/api/js?key=AIzaSyAiQcVkOYvnohkM6oFd5PNKWbsv3M8hFeI&callback=initMap&sensor=false"
+      ],
+      "visiblePriceCount": 3,
+      "visibleSqftCount": 3,
+      "visibleTextChars": 13121
+    }
+  ],
+  "domain": "www.ryanhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.ryanhomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.ryanhomes.com/new-homes/communities/florida/Sarasota-Florida",
+      "text": "Sarasota"
+    },
+    {
+      "url": "https://www.ryanhomes.com/new-homes/communities/florida/Venice-FL",
+      "text": "Venice"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.ryanhomes.com/new-homes/communities/florida/sarasota-florida",
+      "https://www.ryanhomes.com/new-homes/communities/florida/venice-fl",
+      "https://www.ryanhomes.com/new-homes/communities/florida/sarasota-florida/quick-move-in-homes",
+      "https://www.ryanhomes.com/quick-move-in-homes/sarasota-florida",
+      "https://www.ryanhomes.com/new-homes/communities/florida/lakewood-ranch",
+      "https://www.ryanhomes.com/new-homes/communities/florida/lakewood-ranch/quick-move-in-homes",
+      "https://www.ryanhomes.com/quick-move-in-homes/florida/lakewood-ranch",
+      "https://www.ryanhomes.com/new-homes/communities/florida/venice-fl/quick-move-in-homes",
+      "https://www.ryanhomes.com/quick-move-in-homes/venice-fl",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152240/florida/lakewood-ranch/avalon-woods-single-family",
+      "https://www.ryanhomes.com/new-homes/communities/directions/10222120152240/florida/lakewood-ranch/avalon-woods-single-family",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152240/products/62472/florida/lakewood-ranch/avalon-woods-single-family/century",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152240/products/62474/florida/lakewood-ranch/avalon-woods-single-family/hillcrest",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152240/products/62476/florida/lakewood-ranch/avalon-woods-single-family/windermere",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152240/specs/30204/florida/lakewood-ranch/avalon-woods-single-family",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152673/florida/lakewood-ranch/amber-creek",
+      "https://www.ryanhomes.com/new-homes/communities/directions/10222120152673/florida/lakewood-ranch/amber-creek",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152673/products/66768/florida/lakewood-ranch/amber-creek/mayport",
+      "https://www.ryanhomes.com/new-homes/communities/florida/bradenton",
+      "https://www.ryanhomes.com/new-homes/communities/florida/bradenton/quick-move-in-homes",
+      "https://www.ryanhomes.com/quick-move-in-homes/florida/bradenton",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152512/florida/bradenton/hillwood-preserve",
+      "https://www.ryanhomes.com/new-homes/communities/directions/10222120152512/florida/bradenton/hillwood-preserve",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152512/products/65277/florida/bradenton/hillwood-preserve/canary",
+      "https://www.ryanhomes.com/new-homes/communities/10222120152512/products/65278/florida/bradenton/hillwood-preserve/mahogany"
+    ]
+  }
+}

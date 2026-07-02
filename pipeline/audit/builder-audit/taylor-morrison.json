@@ -1,0 +1,113 @@
+{
+  "name": "Taylor Morrison",
+  "slug": "taylor-morrison",
+  "pages": [
+    {
+      "url": "https://www.taylormorrison.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 138076,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/b53890a0ccc64530ab2d883109a80bc6?v=5beab79e",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/d38c594bda7747318875c6ad9c30b0cd?v=345656ee",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/4b7ca2e704dc4d6380ab3a12bc92ee2a?v=cd598ee5",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/ca4654c479a3418783df93d55f1ea8ca?v=9b34696b",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/d033d5448ebf4b9db2cf8cdb185a4865?v=a9b791b2",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/disclaimers-logos-2-color12a3abb800ca43178a580a339c5d7d37?v=8c3f55a7",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TM-Logo-pill70fb0f8749f747c59458471fe8cef4a6?v=eabe2a02",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/esplanade-logo962e3172a7844edf8d315536da9e834c?v=45b935f2",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/yardly-logofb18cc32f8a847f090c65b0cc5e10067?v=77d003f3",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/newsweek-americas-greenest-companies-2025-taylor-morrison9709feeab78546b397fb906a4bc1e5ef?v=2610ad89",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/newsweek-americas-greenest-companies-2025-taylor-morrison9709feeab78546b397fb906a4bc1e5ef?v=2610ad89\\",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/forbes-most-trusted-companies-in-america-2025-taylor-morrison302bada4dd1c43e2923a81bf8389f292?v=de4ac193"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 63
+    },
+    {
+      "url": "https://www.taylormorrison.com/discover-esplanade",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 77961,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/disclaimers-logos-2-color12a3abb800ca43178a580a339c5d7d37?v=8c3f55a7",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogo8e0a015d08ba4e4a8481ef628c0b006f?v=6cb9996e",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogoMobileffadcc3a0fa949eea295aad259e20658?v=1a6508f4",
+        "https://www.lifestoryresearch.com\\"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 18
+    },
+    {
+      "url": "https://www.taylormorrison.com/discover-esplanade/communities",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 63727,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/8a5f98e6e5df4455898846fa8f92b261?v=a0eadc63",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/31403b09b15c44824861949da3bef07d4?v=04f720b1",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/2b5663b1b7dc4e3d80ba0416430f19b8?v=5b9b1ec5",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/80a21a9dd4134e3cbd4d518d0f569989?v=e826c562",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/39ac3d6727ec42bfba0bdddf76402117?v=55132591",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/77348a4afeb94bf9ab0e7eb0ebe28f23?v=2c48dba8",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/dfd31eed542e49348b9e855987a3890f?v=e140f4f8",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/faec26f3653a4171a356a15f267ee0ff?v=e948bc4a",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/b1b1313bb5554dd08c22e2a91d8bb4c4?v=e04ff9a1",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/Esplanade-at-Azario-Resort-Pool-1524-1200x6759a064c9d2ed84d39aa55b3760170b7db?v=12c3a7ab",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/f63ee8e72174480890ae2a4ab825e400?v=17d6f894",
+        "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/2b3d0ac0bac34cffafe96ce6210fe7ad?v=02f1c5b9"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 21
+    }
+  ],
+  "domain": "www.taylormorrison.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.taylormorrison.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.taylormorrison.com/discover-esplanade",
+      "https://www.taylormorrison.com/discover-esplanade/communities",
+      "https://www.taylormorrison.com/discover-esplanade/communities/california",
+      "https://www.taylormorrison.com/discover-esplanade/communities/florida",
+      "https://www.taylormorrison.com/discover-esplanade/communities/nevada",
+      "https://www.taylormorrison.com/discover-esplanade/communities/north-carolina",
+      "https://www.taylormorrison.com/discover-esplanade/championship-golf",
+      "https://www.taylormorrison.com/discover-esplanade/concierge-program",
+      "https://www.taylormorrison.com/discover-esplanade/culinary-and-dining",
+      "https://www.taylormorrison.com/discover-esplanade/events-outings-and-travel",
+      "https://www.taylormorrison.com/discover-esplanade/fitness",
+      "https://www.taylormorrison.com/discover-esplanade/pet-programs",
+      "https://www.taylormorrison.com/discover-esplanade/resort-style-living",
+      "https://www.taylormorrison.com/discover-esplanade/spa-and-wellness",
+      "https://www.taylormorrison.com/discover-esplanade/sports-programs",
+      "https://www.taylormorrison.com/discover-esplanade/daycation",
+      "https://www.taylormorrison.com/discover-esplanade/national-sales-event-florida",
+      "https://www.taylormorrison.com/make-moves/sarasota"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "name": "Arthur Rutenberg",
+  "slug": "arthur-rutenberg",
+  "pages": [
+    {
+      "url": "https://www.arhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 212574,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 6923
+    },
+    {
+      "url": "https://www.arhomes.com/news/celebrating-excellence-ar-homes-sarasota-nelson-homes-inc-wins-builder-of-the-year/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 137191,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 3687
+    },
+    {
+      "url": "https://www.arhomes.com/custom-home-builders-sarasota-fl/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 142629,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 3050
+    }
+  ],
+  "domain": "www.arhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.arhomes.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.arhomes.com/news/celebrating-excellence-ar-homes-sarasota-nelson-homes-inc-wins-builder-of-the-year/",
+      "https://www.arhomes.com/custom-home-builders-sarasota-fl/",
+      "https://www.arhomes.com/builder/nelson-homes-inc/available-homes/custom-lago-at-wild-blue-2/",
+      "https://www.arhomes.com/builder/nelson-homes-inc/available-homes/lago-model-at-wild-blue/",
+      "https://www.arhomes.com/builder/nelson-homes-inc/communities/wild-blue-in-waterside/"
+    ]
+  }
+}

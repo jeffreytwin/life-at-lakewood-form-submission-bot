@@ -1,0 +1,43 @@
+{
+  "name": "Lennar",
+  "slug": "lennar",
+  "pages": [
+    {
+      "url": "https://www.lennar.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 160377,
+      "hasNextData": true,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://cdn.lennar.com/api/images/contentassets/8d0f7a68831545c988f717f3dc3f7f08/pbh_arden_rend_clubhouse_aerial10_3_3_25.jpg?d=20250308T070130",
+        "https://cdn.lennar.com/api/images/contentassets/8d0f7a68831545c988f717f3dc3f7f08/pbh_arden_drone_vid_v2_9_23_22.mp4?d=20250220T064633",
+        "https://cdn.lennar.com/api/images/contentassets/8d0f7a68831545c988f717f3dc3f7f08/phb_14120_arden_still_cp_01_9_28_22.jpg?d=20250220T064619",
+        "https://cdn.lennar.com/api/images/contentassets/a5c717d1791546bda2d997fd33faff24/och_51341._rmv_vid_mpc.mp4?d=20250829T145357",
+        "https://cdn.lennar.com/api/images/contentassets/a5c717d1791546bda2d997fd33faff24/och_51341._rmv_pic_mpc_03.jpg?d=20250829T150112",
+        "https://cdn.lennar.com/api/images/contentassets/a9054fa76c6f4be0ab573ecb12b927c9/dfw_bridgewater_pic_amenities_entrymonument.jpg?d=20250220T104528",
+        "https://cdn.lennar.com/api/images/contentassets/a9054fa76c6f4be0ab573ecb12b927c9/dfw_24181_bridgewater_vid_mpc.mp4?d=20250220T104526",
+        "https://cdn.lennar.com/api/images/contentassets/a9054fa76c6f4be0ab573ecb12b927c9/dfw_24181_bridgewater_still_mpc_03.jpg?d=20250220T104513",
+        "https://cdn.lennar.com/api/images/contentassets/8e8993f6e52c4dc48b52531d1931870b/main_5_16_25.jpg?d=20250516T175631",
+        "https://cdn.lennar.com/api/images/contentassets/8e8993f6e52c4dc48b52531d1931870b/tpu_51078_angeline_vid_mpc.mp4?d=20250821T141839",
+        "https://cdn.lennar.com/api/images/contentassets/8e8993f6e52c4dc48b52531d1931870b/tpu_51078_angeline_pic_1.jpg?d=20250821T141926",
+        "https://cdn.lennar.com/api/images/contentassets/829449b7486548a5aecf02059ce9c9a0/mask-group.png?d=20260212T215742"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 4494
+    }
+  ],
+  "domain": "www.lennar.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.lennar.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

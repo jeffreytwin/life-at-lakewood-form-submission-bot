@@ -1,0 +1,86 @@
+{
+  "name": "Adams Homes",
+  "slug": "adams-homes",
+  "pages": [
+    {
+      "url": "https://www.adamshomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 15666703,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://lh6.googleusercontent.com/8u5yr-9N3y21hcvIpYaehaPihWXrWM4rxdX6q3JE0IdT3eNgkrfYfWULEQQnzjBZjWs9i5cN5jGVro8V-xB8HBqGHkCadXuzl08mFuatdmBFQj7wgCkEI5T0ScioD4zYhNIFh-WM\\",
+        "https://adamshomes-2020.builderpreviews.com/api/clear-ssr",
+        "https://www.adamshomes.com/api/clear-ssr",
+        "http://www.greatschools.org/school/rating.page?state=FL&id=13813&s_cid=gsapi",
+        "http://www.greatschools.org/florida/lehigh-acres/13813-Tortuga-Preserve-Elementary-School/?s_cid=gsapi",
+        "http://www.greatschools.org/school/parentReviews.page?state=FL&id=13813&s_cid=gsapi",
+        "http://www.greatschools.org/school/rating.page?state=FL&id=6363&s_cid=gsapi",
+        "http://www.greatschools.org/florida/lehigh-acres/6363-Varsity-Lakes-Middle-School/?s_cid=gsapi",
+        "http://www.greatschools.org/school/parentReviews.page?state=FL&id=6363&s_cid=gsapi",
+        "http://www.greatschools.org/school/rating.page?state=FL&id=1661&s_cid=gsapi",
+        "http://www.greatschools.org/florida/lehigh-acres/1661-Lehigh-Senior-High-School/?s_cid=gsapi",
+        "http://www.greatschools.org/school/parentReviews.page?state=FL&id=1661&s_cid=gsapi"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 4085
+    },
+    {
+      "url": "https://www.adamshomes.com/communities/florida/venice",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 15658162,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://lh6.googleusercontent.com/8u5yr-9N3y21hcvIpYaehaPihWXrWM4rxdX6q3JE0IdT3eNgkrfYfWULEQQnzjBZjWs9i5cN5jGVro8V-xB8HBqGHkCadXuzl08mFuatdmBFQj7wgCkEI5T0ScioD4zYhNIFh-WM\\",
+        "https://adamshomes-2020.builderpreviews.com/api/clear-ssr",
+        "https://www.adamshomes.com/api/clear-ssr",
+        "http://www.greatschools.org/school/rating.page?state=FL&id=13813&s_cid=gsapi",
+        "http://www.greatschools.org/florida/lehigh-acres/13813-Tortuga-Preserve-Elementary-School/?s_cid=gsapi",
+        "http://www.greatschools.org/school/parentReviews.page?state=FL&id=13813&s_cid=gsapi",
+        "http://www.greatschools.org/school/rating.page?state=FL&id=6363&s_cid=gsapi",
+        "http://www.greatschools.org/florida/lehigh-acres/6363-Varsity-Lakes-Middle-School/?s_cid=gsapi",
+        "http://www.greatschools.org/school/parentReviews.page?state=FL&id=6363&s_cid=gsapi",
+        "http://www.greatschools.org/school/rating.page?state=FL&id=1661&s_cid=gsapi",
+        "http://www.greatschools.org/florida/lehigh-acres/1661-Lehigh-Senior-High-School/?s_cid=gsapi",
+        "http://www.greatschools.org/school/parentReviews.page?state=FL&id=1661&s_cid=gsapi"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 2,
+      "visibleTextChars": 2870
+    }
+  ],
+  "domain": "www.adamshomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.adamshomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.adamshomes.com/communities/florida/venice",
+      "text": "Venice"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.adamshomes.com/communities/florida/venice",
+      "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch",
+      "https://www.adamshomes.com/communities/florida/venice/venice",
+      "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch/homes",
+      "https://www.adamshomes.com/communities/florida/venice/venice/homes",
+      "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch/plans",
+      "https://www.adamshomes.com/communities/florida/venice/venice/plans"
+    ]
+  }
+}

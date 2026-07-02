@@ -1,0 +1,12 @@
+{
+  "name": "ICI Homes",
+  "slug": "ici-homes",
+  "pages": [],
+  "domainAttempts": [
+    {
+      "domain": "www.icihomes.com",
+      "status": 403
+    }
+  ],
+  "error": "no working domain"
+}

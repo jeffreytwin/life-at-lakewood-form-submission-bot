@@ -1,0 +1,59 @@
+{
+  "name": "Centex Homes",
+  "slug": "centex",
+  "pages": [
+    {
+      "url": "https://www.centex.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 1310092,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://assets.sitescdn.net/answers-search-bar/v1.2/answerstemplates.compiled.min.js",
+        "https://assets.sitescdn.net/answers-search-bar/v1.2/answers.min.js",
+        "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoaded&render=explicit"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 11660
+    },
+    {
+      "url": "https://www.centex.com/homes/florida/sarasota",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 1584366,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://assets.sitescdn.net/answers-search-bar/v1.2/answerstemplates.compiled.min.js",
+        "https://assets.sitescdn.net/answers-search-bar/v1.2/answers.min.js",
+        "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoaded&render=explicit"
+      ],
+      "visiblePriceCount": 1,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 26378
+    }
+  ],
+  "domain": "www.centex.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.centex.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.centex.com/homes/florida/sarasota",
+      "text": "New Homes in Sarasota"
+    }
+  ],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

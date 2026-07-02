@@ -1,0 +1,32 @@
+{
+  "name": "DRB Homes",
+  "slug": "drb-homes",
+  "pages": [
+    {
+      "url": "https://www.drbhomes.com/drbhomes",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 34457,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.youtube.com/iframe_api"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 33
+    }
+  ],
+  "domain": "www.drbhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.drbhomes.com/drbhomes",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

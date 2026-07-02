@@ -1,0 +1,55 @@
+{
+  "name": "Pulte Homes",
+  "slug": "pulte",
+  "pages": [
+    {
+      "url": "https://www.pulte.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 1450369,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoaded&render=explicit"
+      ],
+      "visiblePriceCount": 2,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 25041
+    },
+    {
+      "url": "https://www.pulte.com/homes/florida/sarasota",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 1727223,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoaded&render=explicit"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 29021
+    }
+  ],
+  "domain": "www.pulte.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.pulte.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.pulte.com/homes/florida/sarasota",
+      "text": "New Homes for Sale in Sarasota"
+    }
+  ],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

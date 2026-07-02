@@ -1,0 +1,49 @@
+{
+  "name": "Anchor Builders",
+  "slug": "anchor-builders",
+  "pages": [
+    {
+      "url": "https://anchorbuilders.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 217513,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 4912
+    },
+    {
+      "url": "https://anchorbuilders.com/wildblue/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 166568,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 4280
+    }
+  ],
+  "domain": "anchorbuilders.com",
+  "homeStatus": 200,
+  "finalUrl": "https://anchorbuilders.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://anchorbuilders.com/wildblue/"
+    ]
+  }
+}

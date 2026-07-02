@@ -1,0 +1,57 @@
+{
+  "name": "D.R. Horton",
+  "slug": "dr-horton",
+  "pages": [
+    {
+      "url": "https://www.drhorton.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 227550,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&a=b",
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 3870
+    },
+    {
+      "url": "https://www.drhorton.com/florida/manatee-sarasota",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 253755,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&a=b",
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"
+      ],
+      "visiblePriceCount": 9,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 3946
+    }
+  ],
+  "domain": "www.drhorton.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.drhorton.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.drhorton.com/florida/manatee-sarasota",
+      "text": "Manatee Sarasota"
+    }
+  ],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "Stock Luxury Homes",
+  "slug": "stock-luxury",
+  "pages": [
+    {
+      "url": "https://www.stockdevelopment.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 119203,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 5166
+    },
+    {
+      "url": "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 97651,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 2129
+    }
+  ],
+  "domain": "www.stockdevelopment.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.stockdevelopment.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/",
+      "text": "Wild Blue at Waterside Lakewood Ranch, Florida Starting from $1.5M"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.stockdevelopment.com/projects/wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans",
+      "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/inventory",
+      "https://www.stockdevelopment.com/projects/wildblue",
+      "https://www.stockdevelopment.com/projects/wildblue/floorplans",
+      "https://www.stockdevelopment.com/projects/wildblue/inventory",
+      "https://www.stockdevelopment.com/hub/news/read/2024/7/11/all-10-models-by-stock-luxury-homesin-wild-blue-at-waterside-now-complete",
+      "https://www.stockdevelopment.com/hub/news/read/2024/6/4/construction-begins-on-13-acre-sports-complex-within-wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/hub/news/read/2026/2/19/construction-continues-on-resort-style-clubhouse-to-open-this-year-in-wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/hub/news/read/2019/6/27/continued-development-in-the-lake-club-offers-new-opportunities-for-lakewood-ranch-living",
+      "https://www.stockdevelopment.com/hub/news/read/2024/2/1/first-on-site-model-homes-opening-in-wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/hub/news/read/2019/2/22/homesites-released-for-sale-at-wildblue-a-one-of-a-kind-estero-waterfront-community",
+      "https://www.stockdevelopment.com/hub/news/read/2025/7/28/lakewood-ranch-once-again-holds-the-top-spot-as-the-nation-s-best-selling-multigenerational-community",
+      "https://www.stockdevelopment.com/hub/news/read/2025/7/15/multiple-designer-decorated-model-homes-available-in-wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/hub/news/read/2024/5/9/multiple-model-homes-now-open-in-wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/hub/news/read/2019/10/11/14-furnished-models-open-at-wildblue-grand-opening-event-this-weekend",
+      "https://www.stockdevelopment.com/hub/news/read/2019/2/13/18-models-in-the-lake-club-to-be-displayed-during-the-manatee-sarasota-building-industry-association-parade-of-homes",
+      "https://www.stockdevelopment.com/hub/news/read/2020/7/30/new-stock-custom-homes-estate-under-construction-in-wildblue",
+      "https://www.stockdevelopment.com/hub/news/read/2024/11/21/one-stock-home-remains-in-the-lake-club-at-lakewood-ranch",
+      "https://www.stockdevelopment.com/hub/news/read/2019/3/19/preferred-builders-in-the-lake-club-earn-more-than-20-awards-during-manatee-sarasota-parade-of-homes",
+      "https://www.stockdevelopment.com/hub/news/read/2025/11/18/resort-style-clubhouse-underway-in-wild-blue-at-waterside-by-stock-development",
+      "https://www.stockdevelopment.com/hub/news/read/2025/8/14/seven-designer-decorated-model-homes-sold-in-wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/hub/news/read/2020/12/10/stock-custom-homes-breaking-ground-on-new-wildblue-estate",
+      "https://www.stockdevelopment.com/hub/news/read/2026/4/30/stock-custom-homes-celebrates-landmark-sale-in-wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/hub/news/read/2025/10/22/stock-custom-homes-constructing-first-estate-in-wild-blue-at-waterside"
+    ]
+  }
+}
