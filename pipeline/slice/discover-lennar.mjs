@@ -39,24 +39,55 @@ function prune(node, depth = 0) {
 
 await mkdir(OUT, { recursive: true });
 
-// 1. Sitemap sweep for community URLs.
+// 1. Find community URLs: robots.txt sitemaps, then market-page links.
 const found = new Map();
-const root = await get('https://www.lennar.com/sitemap.xml');
-console.log(`sitemap root: ${root.status}`);
-let maps = [...root.text.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
-if (!maps.length) maps = ['https://www.lennar.com/sitemap.xml'];
-const childMaps = maps.filter((m) => /\.xml/.test(m)).slice(0, 12);
-for (const map of childMaps.length ? childMaps : maps) {
-  const child = await get(map);
-  if (child.status !== 200) continue;
-  for (const m of child.text.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) {
-    const url = m[1];
-    for (const key of COMMUNITY_KEYS) {
-      if (url.toLowerCase().includes(key) && !/\.xml/.test(url)) {
-        if (!found.has(key)) found.set(key, []);
-        if (found.get(key).length < 5) found.get(key).push(url);
-      }
+const note = (url) => {
+  for (const key of COMMUNITY_KEYS) {
+    if (url.toLowerCase().includes(key) && !/\.xml/.test(url)) {
+      if (!found.has(key)) found.set(key, []);
+      if (found.get(key).length < 5 && !found.get(key).includes(url)) found.get(key).push(url);
     }
+  }
+};
+
+const robots = await get('https://www.lennar.com/robots.txt');
+console.log(`robots.txt: ${robots.status}`);
+const sitemapUrls = [...robots.text.matchAll(/^sitemap:\s*(\S+)/gim)].map((m) => m[1]);
+console.log(`sitemaps in robots: ${JSON.stringify(sitemapUrls)}`);
+const queue = [...sitemapUrls];
+let fetched = 0;
+while (queue.length && fetched < 15) {
+  const map = queue.shift();
+  const res = await get(map);
+  fetched += 1;
+  console.log(`sitemap ${map}: ${res.status} (${res.text.length} bytes)`);
+  if (res.status !== 200) continue;
+  for (const m of res.text.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)) {
+    const url = m[1];
+    if (/\.xml/.test(url)) {
+      if (queue.length < 30 && /communit|new-homes|sarasota|florida|fl/i.test(url)) queue.push(url);
+    } else {
+      note(url);
+    }
+  }
+}
+
+// Fallback: crawl the Sarasota market page + homepage for community links.
+if (found.size === 0) {
+  for (const seed of [
+    'https://www.lennar.com/new-homes/florida/sarasota-manatee',
+    'https://www.lennar.com/new-homes/florida/sarasota',
+    'https://www.lennar.com/new-homes/florida',
+    'https://www.lennar.com/',
+  ]) {
+    const page = await get(seed);
+    console.log(`seed ${seed}: ${page.status} (${page.text.length} bytes)`);
+    if (page.status !== 200) continue;
+    for (const m of page.text.matchAll(/["'](\/new-homes\/[^"'#?]+|https?:\/\/www\.lennar\.com\/[^"'#?]+)["']/gi)) {
+      const url = m[1].startsWith('http') ? m[1] : `https://www.lennar.com${m[1]}`;
+      note(url);
+    }
+    if (found.size > 0) break;
   }
 }
 const urlIndex = Object.fromEntries(found);
