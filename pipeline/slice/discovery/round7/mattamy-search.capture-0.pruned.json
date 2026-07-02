@@ -1,0 +1,192 @@
+{
+ "url": "https://cdn.cookielaw.org/consent/bac8dc2f-1e7e-4a04-aca9-795d67d42e1c/bac8dc2f-1e7e-4a04-aca9-795d67d42e1c.json",
+ "postData": null,
+ "data": {
+  "CookieSPAEnabled": false,
+  "CookieSameSiteNoneEnabled": false,
+  "CookieV2CSPEnabled": false,
+  "MultiVariantTestingEnabled": false,
+  "UseV2": true,
+  "MobileSDK": false,
+  "SkipGeolocation": false,
+  "ScriptType": "PRODUCTION",
+  "Version": "202503.1.0",
+  "OptanonDataJSON": "bac8dc2f-1e7e-4a04-aca9-795d67d42e1c",
+  "GeolocationUrl": "https://geolocation.onetrust.com/cookieconsentpub/v1/geo/location",
+  "BulkDomainCheckUrl": "https://cookies-data.onetrust.io/bannersdk/v1/domaingroupcheck",
+  "RuleSet": [
+   {
+    "Id": "a2aec9d6-8fb7-40fd-9b9a-8efebf8daf78",
+    "Name": "US Only",
+    "Countries": [
+     "us"
+    ],
+    "States": {},
+    "LanguageSwitcherPlaceholder": {
+     "default": "en"
+    },
+    "BannerPushesDown": false,
+    "Default": false,
+    "Global": false,
+    "Type": "GENERIC",
+    "UseGoogleVendors": false,
+    "VariantEnabled": false,
+    "TestEndTime": null,
+    "Variants": [],
+    "TemplateName": "Mattamy US Cookie Banner",
+    "Conditions": [],
+    "GCEnable": false,
+    "IsGPPEnabled": false,
+    "EnableJWTAuthForKnownUsers": false
+   },
+   {
+    "Id": "bca31ac8-2495-409a-b27d-9c3869de9721",
+    "Name": "Canada Only",
+    "Countries": [
+     "ca"
+    ],
+    "States": {},
+    "LanguageSwitcherPlaceholder": {
+     "default": "en"
+    },
+    "BannerPushesDown": false,
+    "Default": false,
+    "Global": false,
+    "Type": "CCPA",
+    "UseGoogleVendors": false,
+    "VariantEnabled": false,
+    "TestEndTime": null,
+    "Variants": [],
+    "TemplateName": "Mattamy CAN Cookie Banner (CCPA)",
+    "Conditions": [],
+    "GCEnable": false,
+    "IsGPPEnabled": false,
+    "EnableJWTAuthForKnownUsers": false
+   },
+   {
+    "Id": "3fa338b4-5448-4c74-97e8-6e059163c32f",
+    "Name": "Global",
+    "Countries": [
+     "pr",
+     "ps",
+     "pw",
+     "py",
+     "qa",
+     "…(209 items total)"
+    ],
+    "States": {},
+    "LanguageSwitcherPlaceholder": {
+     "default": "en"
+    },
+    "BannerPushesDown": false,
+    "Default": true,
+    "Global": true,
+    "Type": "GENERIC",
+    "UseGoogleVendors": false,
+    "VariantEnabled": false,
+    "TestEndTime": null,
+    "Variants": [],
+    "TemplateName": "Mattamy US Cookie Banner",
+    "Conditions": [],
+    "GCEnable": false,
+    "IsGPPEnabled": false,
+    "EnableJWTAuthForKnownUsers": false
+   }
+  ],
+  "IabData": {
+   "cookieVersion": "1",
+   "createdTime": "2026-05-11T20:05:52.977578569",
+   "updatedTime": "2026-05-11T20:05:52.977593984",
+   "cmpId": "28",
+   "cmpVersion": "1",
+   "consentScreen": "1",
+   "consentLanguage": null,
+   "vendorListVersion": 0,
+   "maxVendorId": 0,
+   "encodingType": "0",
+   "globalVendorListUrl": "https://cdn.cookielaw.org/vendorlist/iabData.json"
+  },
+  "IabV2Data": {
+   "cookieVersion": "1",
+   "createdTime": "2026-05-11T20:05:53.080944944",
+   "updatedTime": "2026-05-11T20:05:53.080951887",
+   "cmpId": "28",
+   "cmpVersion": "1",
+   "consentScreen": "1",
+   "consentLanguage": null,
+   "vendorListVersion": 0,
+   "maxVendorId": 0,
+   "encodingType": "0",
+   "globalVendorListUrl": "https://cdn.cookielaw.org/vendorlist/iab2Data.json"
+  },
+  "Iab2V2Data": {
+   "cookieVersion": "1",
+   "createdTime": "2026-05-11T20:05:53.182719650",
+   "updatedTime": "2026-05-11T20:05:53.182726673",
+   "cmpId": "28",
+   "cmpVersion": "1",
+   "consentScreen": "1",
+   "consentLanguage": null,
+   "vendorListVersion": 0,
+   "maxVendorId": 0,
+   "encodingType": "0",
+   "globalVendorListUrl": "https://cdn.cookielaw.org/vendorlist/iab2V2Data.json"
+  },
+  "GoogleData": {
+   "vendorListVersion": 152,
+   "googleVendorListUrl": "https://cdn.cookielaw.org/vendorlist/googleData.json"
+  },
+  "ScriptDynamicLoadEnabled": false,
+  "TenantFeatures": {
+   "CookieV2BannerFocus": true,
+   "CookieV2RejectAll": true,
+   "CookieV2GPC": true,
+   "CookieV2GeolocationJsonApi": true,
+   "CookieV2TCF21": true,
+   "CookieV2SkipCategory": true,
+   "CookieV2BannerLogo": true,
+   "ConsentStoreConsentStrings": true,
+   "features.cmp-amazon-consent-Signal": true,
+   "CookieV2AssignTemplateRule": true,
+   "CookiesV2TCF2.3Adoption": true,
+   "MobileAuthenticatedConsents": true,
+   "CookieV2MicrosoftUET": true,
+   "CookieV2GCMDMA": true,
+   "CookieV2RemoveSettingsIcon": true,
+   "CookieV2NewConsentReceiptAPI": true,
+   "CookieV2GeneralVendors": true,
+   "CookieV2GPP": true
+  },
+  "IsSuppressBanner": false,
+  "IsSuppressPC": false,
+  "PublisherCC": "US",
+  "Domain": "mattamyhomes.com",
+  "TenantGuid": "27b05b0d-b0e7-462a-992b-6fe516cb30e5",
+  "EnvId": "app-prod",
+  "RemoteActionsEnabled": false,
+  "GeoRuleGroupName": "V2 Geolocation Rule",
+  "GATrackToggle": true,
+  "GATrackAssignedCategory": "AS",
+  "WebFormIntegrationEnabled": false,
+  "WebFormSrcUrl": "",
+  "WebFormWorkerUrl": "",
+  "GppData": {
+   "cmpId": "28"
+  },
+  "AuthenticatedConsent": false,
+  "AuthenticatedLoggedOutConsent": false,
+  "CDNLocation": "https://cdn.cookielaw.org",
+  "RootDomainConsentEnabled": false,
+  "RootDomainUrl": "",
+  "LanguageDetectionEnabled": true,
+  "LanguageDetectionByHtml": false,
+  "DataLanguage": "",
+  "DisclosureCDNUrl": "https://cdn.cookielaw.org/vendorlist/DeviceStorageDisclosureData",
+  "SEOOptimization": false,
+  "PartitionedCookieEnabled": false,
+  "BannerRefreshAfterCallToActionEnabled": false,
+  "SubDomainEnabled": false,
+  "DomainHashValue": "",
+  "SessionTrackingUrl": ""
+ }
+}

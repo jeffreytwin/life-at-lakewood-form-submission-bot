@@ -1,0 +1,82 @@
+[
+ {
+  "method": "POST",
+  "url": "https://fd-api.cleantalk.org/api3.0/frontend_data",
+  "postData": "{\"event_token\":null,\"js_event\":\"DOMContentLoaded\",\"page_url\":\"https://lwhomes.com/listings/\",\"data\":{\"agent\":\"bot_detector_1.1.67\",\"timestamp\":1783033095,\"bot_detector_list_keys_pressed\":{\"key_esc_pressed\":false,\"key_backspace_pressed\":false,\"key_space_pressed\":false,\"key_shift_pressed\":false,\"key_capslock_pressed\":false,\"key_shift_ctrl_pressed\":false,\"key_shift_alt_pressed\":false,\"key_mobile_capslock_pressed\":false},\"headless\":true,\"page_hits\":1,\"pointer_data\":0,\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"REFFERRER\":\"https://lwhomes.com/listings/\",\"REFFERRER_PREVIOUS\":\"\",\"cookies_enabled\":true},\"method_name\":\"frontend_data\"}",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 245
+ },
+ {
+  "method": "POST",
+  "url": "https://lwhomes.com/wp-admin/admin-ajax.php",
+  "postData": "------WebKitFormBoundaryoNKEAETDa0q6sDKW\r\nContent-Disposition: form-data; name=\"action\"\r\n\r\napbct_alt_session__save__AJAX\r\n------WebKitFormBoundaryoNKEAETDa0q6sDKW\r\nContent-Disposition: form-data; name=\"cookies\"\r\n\r\n[[\"wordpress_apbct_antibot\",\"3b570cc7316f073c1f05c53fa557f7e0cea1440d3aa2159a59b7a6e97bd416b7\",0]]\r\n------WebKitFormBoundaryoNKEAETDa0q6sDKW\r\nContent-Disposition: form-data; name=\"_ajax_nonce\"\r\n\r\n9ee2fb4bcc\r\n------WebKitFormBoundaryoNKEAETDa0q6sDKW\r\nContent-Disposition: form-data; name=\"no_cache\"\r\n\r\n0.5866068329325025\r\n------WebKitFormBoundaryoNKEAETDa0q6sDKW--\r\n",
+  "status": 200,
+  "type": "application/json; charset=UTF-8",
+  "bytes": 16
+ },
+ {
+  "method": "GET",
+  "url": "https://salesiq.zohopublic.com/visitor/v2/channels/website?widgetcode=siq0e2f73cc60b55744a0aea0bd087c89346bd18bbb7bf591bd7fc78cec2dabab2f&pagetitle=Listings+Archive+-+Lee+Wetherington+Homes%2C+Sarasota&current_domain=https%3A%2F%2Flwhomes.com&interna",
+  "postData": null,
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 32462
+ },
+ {
+  "method": "POST",
+  "url": "https://lwhomes.com/wp-admin/admin-ajax.php",
+  "postData": "------WebKitFormBoundaryKADBZZafBMScM8gB\r\nContent-Disposition: form-data; name=\"action\"\r\n\r\napbct_alt_session__save__AJAX\r\n------WebKitFormBoundaryKADBZZafBMScM8gB\r\nContent-Disposition: form-data; name=\"cookies\"\r\n\r\n{\"apbct_bot_detector_exist\":\"1\"}\r\n------WebKitFormBoundaryKADBZZafBMScM8gB\r\nContent-Disposition: form-data; name=\"_ajax_nonce\"\r\n\r\n9ee2fb4bcc\r\n------WebKitFormBoundaryKADBZZafBMScM8gB\r\nContent-Disposition: form-data; name=\"no_cache\"\r\n\r\n0.3956719549872135\r\n------WebKitFormBoundaryKADBZZafBMScM8gB--\r\n",
+  "status": 200,
+  "type": "application/json; charset=UTF-8",
+  "bytes": 16
+ },
+ {
+  "method": "POST",
+  "url": "https://salesiq.zohopublic.com/visitor/v2/ashleyberg/livevisitors/2a31eaa5-de73-46c8-b429-dfb566a0d196/triggers",
+  "postData": "{\"brand_id\":\"siq39da464a08d04f4f3ce12b45920fbaaa6fea83eeb4a3c778df048d32091faaa3\",\"action_type\":\"access_any_page_on_website\",\"current_page_title\":\"Listings Archive - Lee Wetherington Homes, Sarasota\",\"current_page_url\":\"https://lwhomes.com/listings/\",\"language\":\"en\",\"referer\":\"\"}",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 2325
+ },
+ {
+  "method": "PUT",
+  "url": "https://salesiq.zohopublic.com/visitor/v2/ashleyberg/livevisitors/2a31eaa5-de73-46c8-b429-dfb566a0d196/triggers",
+  "postData": "{\"triggered_id\":\"1070025000000021003\",\"encrypted_visitor_info\":\"2547266f32c8451ef97f461785b263bdd032e0ee1e8d00e503ac5601673ef0ca9ad28fe37c4bf7b0c023c8023757b2ce29a2e5488292f198dc1deefe81450f9485aba3c056ce606f4deeb11b368b5b8dfd2169688d6252d3b619d74981c44db460b1e1d8914e15b0d6766032a31d0d40512403d000434dd5a62697288074be6e8b5c984db405fbec79cdb99cbaacae8e65330a624b8f0619379cc6930c825f185042b6f5255180194a167027da75e957558c5f5c0dc471c6929d8429a5a6e49c59bdb39d4d6f96344cfd4981d3f5dd3cc0829a5338cf31b1cddc5a42661504cd57ad426d25751aae6e10ddb78f486aa6ab3d00d37a8e81cac053e390cf38bde714ee7af83d000e4c8797b447048d8d71407d3189f0dd38f71527ba9b7318244c2f356035ac20d1cd4e62c9b946bbb4e3954f00b8596b85d332c4908b1879404ad64db97ce8344adeb81187d71811a7b1260af88d187c489f17430f9ae5b87d47901f15ca5ce00d128e7e23b7c37a8a53045fa45be338fcdc7b49884df32989b0daad4379dd8ad796d4a54df08b3ae765803c8a0eb995b623f9123c139e4d6961260934bcee5d1a3affc9764e46437fd9\",\"bot_id\":\"1070025000000021001\"}",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 1070
+ },
+ {
+  "method": "POST",
+  "url": "https://salesiq.zohopublic.com/ashleyberg/logdebuginfo.ls",
+  "postData": "------WebKitFormBoundarypg16OBd483GqWt3P\r\nContent-Disposition: form-data; name=\"subject\"\r\n\r\nEmbed Revamp logs\r\n------WebKitFormBoundarypg16OBd483GqWt3P\r\nContent-Disposition: form-data; name=\"log\"\r\n\r\n[{\"time\":\"1783033098562\",\"info\":{\"action\":\"jsapi\"},\"subject\":\"iframe message\"},{\"time\":\"1783033098562\",\"info\":{\"action\":\"miniviewstate\"},\"subject\":\"iframe message\"},{\"time\":\"1783033098562\",\"info\":{\"action\":\"bottrigger\"},\"subject\":\"iframe message\"},{\"time\":\"1783033098562\",\"info\":{\"os\":\"linux\",\"browser\":\"chrome\",\"version\":\"149.0.7827.55\",\"avuid\":\"2a31eaa5-de73-46c8-b429-dfb566a0d196\",\"sid\":\"\",\"rsid\":\"\"},\"subject\":\"User Details\"}]\r\n------WebKitFormBoundarypg16OBd483GqWt3P\r\nContent-Disposition: form-data; name=\"logonly\"\r\n\r\ntrue\r\n------WebKitFormBoundarypg16OBd483GqWt3P--\r\n",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://salesiq.zohopublic.com/visitor/v2/ashleyberg/conversations?app_id=siq39da464a08d04f4f3ce12b45920fbaaa6fea83eeb4a3c778df048d32091faaa3&avuid=2a31eaa5-de73-46c8-b429-dfb566a0d196",
+  "postData": null,
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 100
+ },
+ {
+  "method": "POST",
+  "url": "https://fd-api.cleantalk.org/api3.0/frontend_data",
+  "postData": "{\"event_token\":\"8b9403c65137b9ca4b1d646425dcaa3e44aeb8c622038bc1040ba63ddef09c38\",\"js_event\":\"scrolled\",\"page_url\":\"https://lwhomes.com/listings/\",\"data\":{\"agent\":\"bot_detector_1.1.67\",\"timestamp\":1783033103,\"bot_detector_list_keys_pressed\":{\"key_esc_pressed\":false,\"key_backspace_pressed\":false,\"key_space_pressed\":false,\"key_shift_pressed\":false,\"key_capslock_pressed\":false,\"key_shift_ctrl_pressed\":false,\"key_shift_alt_pressed\":false,\"key_mobile_capslock_pressed\":false},\"headless\":true,\"navigator_property_bind\":false,\"page_hits\":1,\"has_scrolled\":true,\"pointer_data\":0,\"screen_info\":{\"fullWidth\":1440,\"fullHeight\":3228,\"visibleWidth\":1440,\"visibleHeight\":900},\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"REFFERRER\":\"https://lwhomes.com/listings/\",\"REFFERRER_PREVIOUS\":\"\",\"cookies_enabled\":true,\"webgl\":true,\"bot_detector_outer_vs_inner\":0},\"method_name\":\"frontend_data\"}",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 245
+ },
+ {
+  "method": "POST",
+  "url": "https://fd-api.cleantalk.org/api3.0/frontend_data",
+  "postData": "{\"event_token\":\"8b9403c65137b9ca4b1d646425dcaa3e44aeb8c622038bc1040ba63ddef09c38\",\"js_event\":\"cronHubEvent\",\"page_url\":\"https://lwhomes.com/listings/\",\"data\":{\"agent\":\"bot_detector_1.1.67\",\"timestamp\":1783033106,\"scrolling_additional\":[[\"timestamp\",\"scrollTop\",\"scrollSpeed\",\"scrollDistance\",\"scrollPercent\",\"scrollEndCount\",\"scrollDelay\",\"scrollCount\"],[1783033103986,1982,239.11207624562675,1982,100,1,8.289,1]]},\"method_name\":\"frontend_data\"}",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 245
+ }
+]

@@ -1,0 +1,1497 @@
+{
+ "modelec0229b486ee48f88a7e896f6b0fbf68": {
+  "promoHeader": "<style>\n    .top-red-banner__bannerColor {\n    background-color: #898178;\n    position: relative;\n    font-size: 16px;\n    font-weight: 700;\n    line-height: 160%;\n    font-family: \"Roboto Bold 700\";\n    height: 100%;\n    padding: 12px 20px;\n    }\n    @media (…(1280)"
+ },
+ "modelc3d7e25e58b5440b84c3a654a2032c6f": {
+  "profile": [
+   {
+    "url": "/mytm",
+    "text": "Sign In",
+    "authenticatedText": "{firstName}",
+    "isMobile": "",
+    "isDesktop": "1",
+    "subnav": [
+     {
+      "url": "/mytm",
+      "text": "Home",
+      "isMobile": "1",
+      "isDesktop": ""
+     },
+     {
+      "url": "/mytm/account-settings",
+      "text": "Account Settings",
+      "isMobile": "",
+      "isDesktop": ""
+     },
+     {
+      "url": "/mytm/change-email",
+      "text": "Email Preferences",
+      "isMobile": "1",
+      "isDesktop": ""
+     },
+     {
+      "url": "/mytm/logout",
+      "text": "Sign Out",
+      "isMobile": "1",
+      "isDesktop": ""
+     }
+    ]
+   },
+   {
+    "url": "/mytm",
+    "text": "Sign In",
+    "authenticatedText": "{firstName}",
+    "isMobile": "1",
+    "isDesktop": "",
+    "subnav": [
+     {
+      "url": "/mytm",
+      "text": "Home",
+      "isMobile": "1",
+      "isDesktop": ""
+     },
+     {
+      "url": "/mytm/my-favorites",
+      "text": "Favorites",
+      "isMobile": "1",
+      "isDesktop": ""
+     },
+     {
+      "url": "/home-financing",
+      "text": "Financing",
+      "isMobile": "1",
+      "isDesktop": ""
+     },
+     {
+      "url": "/mytm/warranty",
+      "text": "Warranty",
+      "isMobile": "1",
+      "isDesktop": ""
+     },
+     {
+      "url": "/mytm/account-settings",
+      "text": "Account Settings",
+      "isMobile": "",
+      "isDesktop": ""
+     },
+     {
+      "url": "/mytm/logout",
+      "text": "Sign Out",
+      "isMobile": "1",
+      "isDesktop": ""
+     }
+    ]
+   }
+  ],
+  "navLinks": [
+   {
+    "url": "",
+    "text": "Buy a home",
+    "subnav": [
+     {
+      "url": "/buying-online",
+      "text": "Buying Online"
+     },
+     {
+      "url": "/make-moves",
+      "text": "Current Offers"
+     },
+     {
+      "url": "/realtalk",
+      "text": "Homebuying Guide"
+     },
+     {
+      "url": "/designing-your-home",
+      "text": "Designing Your Home"
+     },
+     {
+      "url": "/quality-home-construction",
+      "text": "Our Construction Quality"
+     },
+     {
+      "url": "/home-financing",
+      "text": "Financing Your Home"
+     },
+     "…(7 items total)"
+    ]
+   },
+   {
+    "url": "",
+    "text": "Who we are",
+    "subnav": [
+     {
+      "url": "/discover-taylor-morrison/about-taylor-morrison",
+      "text": "About Us"
+     },
+     {
+      "url": "/liquid-death",
+      "text": "Liquid Death Sweepstakes"
+     },
+     {
+      "url": "/homes-built-for-real-life",
+      "text": "Homes for Real life"
+     },
+     {
+      "url": "/extreme",
+      "text": "Extreme Home Makeover"
+     },
+     {
+      "url": "/discover-taylor-morrison/inspired-by-good",
+      "text": "Inspired by Good"
+     },
+     {
+      "url": "/discover-taylor-morrison/our-history",
+      "text": "Our History"
+     },
+     "…(8 items total)"
+    ]
+   },
+   {
+    "url": "/homeowners",
+    "text": "Homeowners",
+    "subnav": []
+   }
+  ],
+  "logo": {
+   "url": "/",
+   "imgSrc": "/-/media/sites/tm/homes/corporate/logos/tm_logo_desktop.svg",
+   "alt": "Taylor Morrison Logo"
+  },
+  "mobileLogo": {
+   "url": "/",
+   "imgSrc": "/-/media/sites/tm/homes/corporate/logos/tm_logo_mobile.svg",
+   "alt": "Taylor Morrison Logo"
+  },
+  "whiteLogo": {
+   "url": "/",
+   "imgSrc": "/-/media/sites/tm/homes/corporate/logos/tm_logo_white.svg",
+   "alt": "TM_Logo"
+  },
+  "isHomePage": false,
+  "isHideHeaderDropShadow": false,
+  "fontColor": "#222222",
+  "searchButtonText": "Search homes"
+ },
+ "model9336c96c15894393843a18ec0f1b0aac": {
+  "inputPlaceholder": "Enter a city, zip code, or community",
+  "inputPlaceholderMobileExpanded": "City, zip code, or community",
+  "areaLabel": "AREAS",
+  "communityLabel": "COMMUNITIES",
+  "availableHomesLabel": "AVAILABLE HOMES",
+  "floorPlansLabel": "FLOOR PLANS",
+  "searchNearMeLabel": "Search near me",
+  "minimumSearchTermLength": "3",
+  "searchDebounceMilliseconds": "500",
+  "numberOfResultsWhenCollapsed": "3",
+  "noResultsText": "No results found",
+  "noResultsMessage": null,
+  "noResultsCtaText": null,
+  "noResultsCtaUrl": null
+ },
+ "model3963f971f8e942769a8ca7387525a4e6": {
+  "title": "Firethorn ",
+  "navLinks": [
+   {
+    "link": "/fl/tampa/parrish/firethorn#InteractiveSitemap",
+    "text": "Site Map",
+    "isActive": false,
+    "sortIndex": 1
+   },
+   {
+    "link": "/fl/tampa/parrish/firethorn/floor-plans",
+    "text": "Floor Plans",
+    "isActive": false,
+    "sortIndex": 2
+   },
+   {
+    "link": "/fl/tampa/parrish/firethorn/available-homes",
+    "text": "Available Homes",
+    "isActive": true,
+    "sortIndex": 3
+   },
+   {
+    "link": "/fl/tampa/parrish/firethorn/directions",
+    "text": "Hours & Directions",
+    "isActive": false,
+    "sortIndex": 4
+   }
+  ],
+  "tagText": null,
+  "previousPageUrl": "/fl/tampa/parrish/firethorn",
+  "contactUsLabel": "Contact Us",
+  "ctaOverrideText": "",
+  "ctaOverrideLink": ""
+ },
+ "model99e626ca83a44a129511d6908881274a": {
+  "heading": "Contact Us",
+  "subheading": "Learn more about this community from local experts.",
+  "anchortag": "",
+  "phone": "941-253-2391",
+  "teamName": "Online Sales Manager",
+  "scheduleButton": {
+   "text": "Schedule tour",
+   "url": "https://www.taylormorrison.com/scheduler?InputCommunityId=12376081"
+  },
+  "salespersons": [
+   {
+    "firstName": "Breianne ",
+    "lastName": "Medina",
+    "title": "Online Sales Manager",
+    "profile": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/Breianne-Medinaf48e0b2366494fec84fcf3ad8429f7a0?v=e88efd28",
+    "number": {
+     "text": "813-333-1171",
+     "link": "813-333-1171"
+    },
+    "email": "tampaonline@TaylorMorrison.com",
+    "license": ""
+   }
+  ],
+  "callLabel": "Call",
+  "emailLabel": "Email",
+  "textLabel": "Text",
+  "buttonLabel": "Contact Us"
+ },
+ "model37e602151f564acbb1498c02850a9c99": {
+  "contactUsLabel": "Contact Us",
+  "directionNav": {
+   "link": "/fl/tampa/parrish/firethorn/directions",
+   "text": "Hours & Directions"
+  },
+  "ctaOverrideText": "",
+  "ctaOverrideLink": ""
+ },
+ "modeldd9521911f3d4d498e11cc2a45827bca": {
+  "hideBreadcrumbOnMobile": true,
+  "breadcrumbs": [
+   {
+    "link": "/",
+    "text": "Home",
+    "isCurrentPage": false
+   },
+   {
+    "link": "/fl",
+    "text": "Florida",
+    "isCurrentPage": false
+   },
+   {
+    "link": "/fl/tampa",
+    "text": "Tampa",
+    "isCurrentPage": false
+   },
+   {
+    "link": "/fl/tampa/parrish",
+    "text": "Parrish",
+    "isCurrentPage": false
+   },
+   {
+    "link": "/fl/tampa/firethorn-community-group-page",
+    "text": "Firethorn",
+    "isCurrentPage": false
+   },
+   {
+    "link": "/fl/tampa/parrish/firethorn",
+    "text": "Firethorn",
+    "isCurrentPage": false
+   },
+   "…(7 items total)"
+  ],
+  "breadcrumbsStyle": null
+ },
+ "model67fd90c7598a4fe5ae3ac7485a722618": {
+  "props": {
+   "viewHome": "View Home",
+   "monthlyPi": "Est. Monthly Payment",
+   "bed": "Bed",
+   "bath": "Bath",
+   "garage": "Garage",
+   "sqft": "Sq.Ft.",
+   "save": "Save",
+   "ready": "Ready",
+   "readyLabel": "Ready now homes",
+   "qmi": "Quick move-in homes",
+   "dollar": "$",
+   "lot": "Lot",
+   "modelHomeLabel": "Model Home",
+   "reservedHomeLabel": "This home is reserved",
+   "comingSoonLabel": "Coming soon homes",
+   "mortgageCalcButton": "Mortgage calculator",
+   "sliderDescription": "What's the difference between the collections?"
+  },
+  "listId": "available-homes",
+  "heading": "Available homes",
+  "isGroup": false,
+  "availableHomesList": {
+   "communityCB": {
+    "placeholder": "Community",
+    "options": [
+     {
+      "value": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+      "text": "Firethorn "
+     }
+    ]
+   },
+   "sortDD": {
+    "placeholder": "Sort by",
+    "options": [
+     {
+      "value": "priceup",
+      "text": "Price: low to high"
+     },
+     {
+      "value": "pricedown",
+      "text": "Price: high to low"
+     },
+     {
+      "value": "sqftup",
+      "text": "Sq. ft: low to high"
+     },
+     {
+      "value": "sqftdown",
+      "text": "Sq. ft: high to low"
+     }
+    ]
+   },
+   "sections": [
+    {
+     "sectionLabel": "Ready now homes",
+     "sectionDescription": "",
+     "homes": [
+      {
+       "ItemId": "64643727-e206-4feb-b6c0-9a88310af4a4",
+       "homeReserved": false,
+       "address": "13509 Camelot Court",
+       "homeSite": "1263",
+       "isComingSoon": false,
+       "availabilityStatus": "0",
+       "readyDate": "6/8/2026",
+       "photo": {
+        "Src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/SpruceAsch6A34cde55f981b4c11b508f6821f771448?v=f96342d6",
+        "Alt": "Exterior A",
+        "BeginTag": "<img src=\"/-/media/sites/tm/homes/florida/florida-region/master-plans/s/spruce/elevations/spruce_a_sch6a.jpg?h=204&amp;iar=0&amp;mw=363&amp;w=363&amp;hash=3396D8AEFA4B1CCE9FEFF6379155D10B\" alt=\"Exterior A\" width=\"363\" height=\"204\" />",
+        "EndTag": ""
+       },
+       "viewHomeLink": {
+        "Url": "/fl/tampa/parrish/firethorn/floor-plans/spruce/home-available-now-at-13509-camelot-court",
+        "Text": "",
+        "Target": null,
+        "BeginTag": "<a href=\"/fl/tampa/parrish/firethorn/floor-plans/spruce/home-available-now-at-13509-camelot-court\" >",
+        "EndTag": "</a>"
+       },
+       "sqft": 1603,
+       "bed": 3,
+       "fullBath": 2,
+       "halfBath": 0,
+       "totalBath": 2,
+       "garages": 2,
+       "communityId": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+       "community_Name": "Firethorn ",
+       "price": 331929,
+       "wasPrice": 0,
+       "floorPlan": "Spruce",
+       "floorPlanCollection": "{B93DFABC-1909-4EA9-B453-DD9A69898E85}",
+       "isModelHome": false,
+       "uniqueSellingPoint": "Final Opportunity",
+       "city": "Parrish",
+       "state": "Florida",
+       "zip": "34219",
+       "is_FiftyFivePlus": false,
+       "is_HideCommunityNameTags": true,
+       "promoInterestRate": 0,
+       "propertyTaxes": 1,
+       "homeownersInsurance": 0.35,
+       "hoaDues": 151,
+       "mortgageCalculatorLiteData": {
+        "Price": 331929,
+        "IsPromo": true,
+        "PropertyTax": 1,
+        "HomeownerTax": 0.35,
+        "Hoa": 151,
+        "CalculatorType": {
+         "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+         "value": "conventional",
+         "text": "Conventional",
+         "description": "A standard financing option without government backing."
+        },
+        "IsLoanTypeFromPromo": false,
+        "UniqueRate": null
+       }
+      },
+      {
+       "ItemId": "4696bbd3-31b9-47ac-8a72-8d0b23ac4228",
+       "homeReserved": false,
+       "address": "13419 Commons Avenue",
+       "homeSite": "1310",
+       "isComingSoon": false,
+       "availabilityStatus": "0",
+       "readyDate": "3/31/2026",
+       "photo": {
+        "Src": "/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/13419-commons---captiva---lot-1310/hj-fl-tampa-firethorn-captiva-lot-1310-front-002.jpg?mw=363&hash=9F3B7EEDC6E94B33FDE1290568FEB342",
+        "Alt": "hj-fl-tampa-firethorn-captiva-lot-1310-front-002",
+        "BeginTag": "<img src=\"/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/13419-commons---captiva---lot-1310/hj-fl-tampa-firethorn-captiva-lot-1310-front-002.jpg?h=242&amp;iar=0&amp;mw=363&amp;w=363&amp;hash=EF9E41AA72A53B04B9C2A2A6C229AC8A\" alt=\"hj-fl-tampa…(326)",
+        "EndTag": ""
+       },
+       "viewHomeLink": {
+        "Url": "/fl/tampa/parrish/firethorn/floor-plans/captiva/home-available-now-at-13419-commons-avenue",
+        "Text": "",
+        "Target": null,
+        "BeginTag": "<a href=\"/fl/tampa/parrish/firethorn/floor-plans/captiva/home-available-now-at-13419-commons-avenue\" >",
+        "EndTag": "</a>"
+       },
+       "sqft": 1989,
+       "bed": 3,
+       "fullBath": 3,
+       "halfBath": 1,
+       "totalBath": 3.5,
+       "garages": 2,
+       "communityId": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+       "community_Name": "Firethorn ",
+       "price": 414644,
+       "wasPrice": 450144,
+       "floorPlan": "Captiva",
+       "floorPlanCollection": "{FC97755A-C9B6-4FA0-AE03-6599FB5F4BA4}",
+       "isModelHome": false,
+       "uniqueSellingPoint": "Home of the Week",
+       "city": "Parrish",
+       "state": "Florida",
+       "zip": "34219",
+       "is_FiftyFivePlus": false,
+       "is_HideCommunityNameTags": true,
+       "promoInterestRate": 0,
+       "propertyTaxes": 1,
+       "homeownersInsurance": 0.35,
+       "hoaDues": 151,
+       "mortgageCalculatorLiteData": {
+        "Price": 414644,
+        "IsPromo": true,
+        "PropertyTax": 1,
+        "HomeownerTax": 0.35,
+        "Hoa": 151,
+        "CalculatorType": {
+         "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+         "value": "conventional",
+         "text": "Conventional",
+         "description": "A standard financing option without government backing."
+        },
+        "IsLoanTypeFromPromo": false,
+        "UniqueRate": null
+       }
+      },
+      {
+       "ItemId": "97eb28d4-a98e-4b6f-9093-0dd5e5733230",
+       "homeReserved": false,
+       "address": "14238 Sawmill Street",
+       "homeSite": "1050",
+       "isComingSoon": false,
+       "availabilityStatus": "0",
+       "readyDate": "1/31/2026",
+       "photo": {
+        "Src": "/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/14238-sawmill---sand-key---lot-1050/hj-fl-tampa-firethorn-sand-key-lot-1050-front-002.jpg?mw=363&hash=4DB98DBA4C7D199542FE0BC2BB4E8FE3",
+        "Alt": "hj-fl-tampa-firethorn-sand-key-lot-1050-front-002",
+        "BeginTag": "<img src=\"/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/14238-sawmill---sand-key---lot-1050/hj-fl-tampa-firethorn-sand-key-lot-1050-front-002.jpg?h=242&amp;iar=0&amp;mw=363&amp;w=363&amp;hash=2A26E4493CDDFAF5815C4B4CD3F51161\" alt=\"hj-fl-tam…(329)",
+        "EndTag": ""
+       },
+       "viewHomeLink": {
+        "Url": "/fl/tampa/parrish/firethorn/floor-plans/sand-key/home-available-now-at-14238-sawmill-street",
+        "Text": "",
+        "Target": null,
+        "BeginTag": "<a href=\"/fl/tampa/parrish/firethorn/floor-plans/sand-key/home-available-now-at-14238-sawmill-street\" >",
+        "EndTag": "</a>"
+       },
+       "sqft": 3835,
+       "bed": 5,
+       "fullBath": 4,
+       "halfBath": 1,
+       "totalBath": 4.5,
+       "garages": 2,
+       "communityId": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+       "community_Name": "Firethorn ",
+       "price": 679999,
+       "wasPrice": 0,
+       "floorPlan": "Sand Key",
+       "floorPlanCollection": "{A519438E-6322-44E4-ADA3-DF2318389AFE}",
+       "isModelHome": false,
+       "uniqueSellingPoint": "Home of the Week",
+       "city": "Parrish",
+       "state": "Florida",
+       "zip": "34219",
+       "is_FiftyFivePlus": false,
+       "is_HideCommunityNameTags": true,
+       "promoInterestRate": 0,
+       "propertyTaxes": 1,
+       "homeownersInsurance": 0.35,
+       "hoaDues": 151,
+       "mortgageCalculatorLiteData": {
+        "Price": 679999,
+        "IsPromo": true,
+        "PropertyTax": 1,
+        "HomeownerTax": 0.35,
+        "Hoa": 151,
+        "CalculatorType": {
+         "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+         "value": "conventional",
+         "text": "Conventional",
+         "description": "A standard financing option without government backing."
+        },
+        "IsLoanTypeFromPromo": false,
+        "UniqueRate": null
+       }
+      },
+      {
+       "ItemId": "b60ffcc6-d567-41f9-92b1-bb3f013296b2",
+       "homeReserved": false,
+       "address": "13827 Sawmill Street",
+       "homeSite": "1296",
+       "isComingSoon": false,
+       "availabilityStatus": "0",
+       "readyDate": "5/22/2026",
+       "photo": {
+        "Src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/CypressAsch6A051524a3e484c2c37c44cda3497e71b15aeb93?v=0add7418",
+        "Alt": "Exterior A",
+        "BeginTag": "<img src=\"/-/media/sites/tm/homes/florida/florida-region/master-plans/c/cypress/elevations/cypress_a_sch6a_051524.jpg?h=204&amp;iar=0&amp;mw=363&amp;w=363&amp;hash=6603AE3091D1D7D58FAE7AE155F0241B\" alt=\"Exterior A\" width=\"363\" height=\"204\" />",
+        "EndTag": ""
+       },
+       "viewHomeLink": {
+        "Url": "/fl/tampa/parrish/firethorn/floor-plans/cypress/home-available-now-at-13827-sawmill-street",
+        "Text": "",
+        "Target": null,
+        "BeginTag": "<a href=\"/fl/tampa/parrish/firethorn/floor-plans/cypress/home-available-now-at-13827-sawmill-street\" >",
+        "EndTag": "</a>"
+       },
+       "sqft": 1848,
+       "bed": 4,
+       "fullBath": 2,
+       "halfBath": 0,
+       "totalBath": 2,
+       "garages": 2,
+       "communityId": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+       "community_Name": "Firethorn ",
+       "price": 343279,
+       "wasPrice": 353279,
+       "floorPlan": "Cypress",
+       "floorPlanCollection": "{DE7861B0-01C9-43B8-B385-870D21E32556}",
+       "isModelHome": false,
+       "uniqueSellingPoint": "Convenient 1st Floor Living",
+       "city": "Parrish",
+       "state": "Florida",
+       "zip": "34219",
+       "is_FiftyFivePlus": false,
+       "is_HideCommunityNameTags": true,
+       "promoInterestRate": 0,
+       "propertyTaxes": 1,
+       "homeownersInsurance": 0.35,
+       "hoaDues": 151,
+       "mortgageCalculatorLiteData": {
+        "Price": 343279,
+        "IsPromo": true,
+        "PropertyTax": 1,
+        "HomeownerTax": 0.35,
+        "Hoa": 151,
+        "CalculatorType": {
+         "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+         "value": "conventional",
+         "text": "Conventional",
+         "description": "A standard financing option without government backing."
+        },
+        "IsLoanTypeFromPromo": false,
+        "UniqueRate": null
+       }
+      },
+      {
+       "ItemId": "4a28e42d-0d80-4d4f-ba59-b1fd697e5f00",
+       "homeReserved": false,
+       "address": "14255 Sawmill Street",
+       "homeSite": "1034",
+       "isComingSoon": false,
+       "availabilityStatus": "0",
+       "readyDate": "1/30/2026",
+       "photo": {
+        "Src": "/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/14255-sawmill---saint-thomas---lot-1034/hj-fl-tampa-firethorn-saint-thomas-lot-1034-front-002.jpg?mw=363&hash=50EFDEC26B9A992B2A17C37D6CFB21D4",
+        "Alt": "hj-fl-tampa-firethorn-saint-thomas-lot-1034-front-002",
+        "BeginTag": "<img src=\"/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/14255-sawmill---saint-thomas---lot-1034/hj-fl-tampa-firethorn-saint-thomas-lot-1034-front-002.jpg?h=242&amp;iar=0&amp;mw=363&amp;w=363&amp;hash=E82A49A85F34E23F11E2C56C97D1D4DD\" alt=\"h…(341)",
+        "EndTag": ""
+       },
+       "viewHomeLink": {
+        "Url": "/fl/tampa/parrish/firethorn/floor-plans/saint-thomas/home-available-now-at-14255-sawmill-street",
+        "Text": "",
+        "Target": null,
+        "BeginTag": "<a href=\"/fl/tampa/parrish/firethorn/floor-plans/saint-thomas/home-available-now-at-14255-sawmill-street\" >",
+        "EndTag": "</a>"
+       },
+       "sqft": 2055,
+       "bed": 3,
+       "fullBath": 2,
+       "halfBath": 0,
+       "totalBath": 2,
+       "garages": 2,
+       "communityId": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+       "community_Name": "Firethorn ",
+       "price": 467944,
+       "wasPrice": 487944,
+       "floorPlan": "Saint Thomas",
+       "floorPlanCollection": "{45DFA3C1-472C-4D5F-B52F-AF384E5CE84A}",
+       "isModelHome": false,
+       "uniqueSellingPoint": "Self-Guided Tour",
+       "city": "Parrish",
+       "state": "Florida",
+       "zip": "34219",
+       "is_FiftyFivePlus": false,
+       "is_HideCommunityNameTags": true,
+       "promoInterestRate": 0,
+       "propertyTaxes": 1,
+       "homeownersInsurance": 0.35,
+       "hoaDues": 151,
+       "mortgageCalculatorLiteData": {
+        "Price": 467944,
+        "IsPromo": true,
+        "PropertyTax": 1,
+        "HomeownerTax": 0.35,
+        "Hoa": 151,
+        "CalculatorType": {
+         "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+         "value": "conventional",
+         "text": "Conventional",
+         "description": "A standard financing option without government backing."
+        },
+        "IsLoanTypeFromPromo": false,
+        "UniqueRate": null
+       }
+      },
+      {
+       "ItemId": "ece7afbf-3e2c-4d5d-ad54-4a663ea22b72",
+       "homeReserved": false,
+       "address": "14223 Sawmill Street",
+       "homeSite": "1037",
+       "isComingSoon": false,
+       "availabilityStatus": "0",
+       "readyDate": "6/12/2026",
+       "photo": {
+        "Src": "/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/14223-sawmill---tortola---lot-1037/hj-fl-tampa-firethorn-tortola-lot-1037-front-002.jpg?mw=363&hash=2FC7E7493BA47E783BA8AB9E356C1E61",
+        "Alt": "hj-fl-tampa-firethorn-tortola-lot-1037-front-002",
+        "BeginTag": "<img src=\"/-/media/sites/tm/homes/florida/tampa/parrish/firethorn/inventory/14223-sawmill---tortola---lot-1037/hj-fl-tampa-firethorn-tortola-lot-1037-front-002.jpg?h=242&amp;iar=0&amp;mw=363&amp;w=363&amp;hash=36253671039CE115C6A8B98A526BFFEC\" alt=\"hj-fl-tampa…(326)",
+        "EndTag": ""
+       },
+       "viewHomeLink": {
+        "Url": "/fl/tampa/parrish/firethorn/floor-plans/tortola/home-available-now-at-14223-sawmill-street",
+        "Text": "",
+        "Target": null,
+        "BeginTag": "<a href=\"/fl/tampa/parrish/firethorn/floor-plans/tortola/home-available-now-at-14223-sawmill-street\" >",
+        "EndTag": "</a>"
+       },
+       "sqft": 3461,
+       "bed": 5,
+       "fullBath": 4,
+       "halfBath": 1,
+       "totalBath": 4.5,
+       "garages": 3,
+       "communityId": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+       "community_Name": "Firethorn ",
+       "price": 674999,
+       "wasPrice": 0,
+       "floorPlan": "Tortola ",
+       "floorPlanCollection": "{A519438E-6322-44E4-ADA3-DF2318389AFE}",
+       "isModelHome": false,
+       "uniqueSellingPoint": "Final Opportunity",
+       "city": "Parrish",
+       "state": "Florida",
+       "zip": "34219",
+       "is_FiftyFivePlus": false,
+       "is_HideCommunityNameTags": true,
+       "promoInterestRate": 0,
+       "propertyTaxes": 1,
+       "homeownersInsurance": 0.35,
+       "hoaDues": 151,
+       "mortgageCalculatorLiteData": {
+        "Price": 674999,
+        "IsPromo": true,
+        "PropertyTax": 1,
+        "HomeownerTax": 0.35,
+        "Hoa": 151,
+        "CalculatorType": {
+         "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+         "value": "conventional",
+         "text": "Conventional",
+         "description": "A standard financing option without government backing."
+        },
+        "IsLoanTypeFromPromo": false,
+        "UniqueRate": null
+       }
+      },
+      "…(18 items total)"
+     ]
+    },
+    {
+     "sectionLabel": "Quick move-in homes",
+     "sectionDescription": "",
+     "homes": [
+      {
+       "ItemId": "467c6fc5-03dd-4b75-945b-368de22da4a9",
+       "homeReserved": false,
+       "address": "13818 Sawmill Street",
+       "homeSite": "1302",
+       "isComingSoon": false,
+       "availabilityStatus": "1",
+       "readyDate": "8/31/2026",
+       "photo": {
+        "Src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/AzeleaDsch1051524a69b8ab0bea64c9592d3b92ae8d8b290?v=e9aca57d",
+        "Alt": "Exterior D",
+        "BeginTag": "<img src=\"/-/media/sites/tm/homes/florida/florida-region/master-plans/a/azalea/elevations/azelea_d_sch1_051524.jpg?h=204&amp;iar=0&amp;mw=363&amp;w=363&amp;hash=B6A63E9DE8C60B25ED7EA40DFCFCB3C6\" alt=\"Exterior D\" width=\"363\" height=\"204\" />",
+        "EndTag": ""
+       },
+       "viewHomeLink": {
+        "Url": "/fl/tampa/parrish/firethorn/floor-plans/azalea/home-available-now-at-13818-sawmill-street",
+        "Text": "",
+        "Target": null,
+        "BeginTag": "<a href=\"/fl/tampa/parrish/firethorn/floor-plans/azalea/home-available-now-at-13818-sawmill-street\" >",
+        "EndTag": "</a>"
+       },
+       "sqft": 2287,
+       "bed": 5,
+       "fullBath": 3,
+       "halfBath": 0,
+       "totalBath": 3,
+       "garages": 2,
+       "communityId": "{C0D8D408-BF44-4427-AC3E-781108CE6C4A}",
+       "community_Name": "Firethorn ",
+       "price": 394477,
+       "wasPrice": 399477,
+       "floorPlan": "Azalea",
+       "floorPlanCollection": "{DE7861B0-01C9-43B8-B385-870D21E32556}",
+       "isModelHome": false,
+       "uniqueSellingPoint": "Final Opportunity",
+       "city": "Parrish",
+       "state": "Florida",
+       "zip": "34219",
+       "is_FiftyFivePlus": false,
+       "is_HideCommunityNameTags": true,
+       "promoInterestRate": 0,
+       "propertyTaxes": 1,
+       "homeownersInsurance": 0.35,
+       "hoaDues": 151,
+       "mortgageCalculatorLiteData": {
+        "Price": 394477,
+        "IsPromo": true,
+        "PropertyTax": 1,
+        "HomeownerTax": 0.35,
+        "Hoa": 151,
+        "CalculatorType": {
+         "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+         "value": "conventional",
+         "text": "Conventional",
+         "description": "A standard financing option without government backing."
+        },
+        "IsLoanTypeFromPromo": false,
+        "UniqueRate": null
+       }
+      }
+     ]
+    },
+    {
+     "sectionLabel": "Under construction homes",
+     "sectionDescription": "",
+     "homes": []
+    },
+    {
+     "sectionLabel": "Coming soon homes",
+     "sectionDescription": "",
+     "homes": []
+    }
+   ]
+  },
+  "floorPlanCollections": [
+   {
+    "id": "{B93DFABC-1909-4EA9-B453-DD9A69898E85}",
+    "name": "40' Journey Series",
+    "description": ""
+   },
+   {
+    "id": "{DE7861B0-01C9-43B8-B385-870D21E32556}",
+    "name": "50' Journey Series",
+    "description": ""
+   },
+   {
+    "id": "{FC97755A-C9B6-4FA0-AE03-6599FB5F4BA4}",
+    "name": "40' Adventure Series",
+    "description": ""
+   },
+   {
+    "id": "{45DFA3C1-472C-4D5F-B52F-AF384E5CE84A}",
+    "name": "52' Adventure Series",
+    "description": ""
+   },
+   {
+    "id": "{A519438E-6322-44E4-ADA3-DF2318389AFE}",
+    "name": "62' Adventure Series",
+    "description": ""
+   }
+  ],
+  "hideMortgageCalcCommunities": [],
+  "calculatorLoadType": 0,
+  "mortgageCalculatorData": {
+   "MortgageCalculatorHeader": "Mortgage calculator",
+   "MonthlyPaymentsLabel": "Total Estimated Monthly Payment",
+   "TotalCostMortgageLabel": "Loan Amount",
+   "InterestRateValidationMessage": "Interest Rate is not valid",
+   "DownpaymentValidationMessage": "Down Payment is not valid",
+   "LoanAmountValidationMessage": "Loan Amount is not valid",
+   "SalePriceValidationMessage": "Sale Price has invalid value",
+   "OtherValidationMessage": "Amount is not valid",
+   "CalculatorType": {
+    "Value": {
+     "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+     "value": "conventional",
+     "text": "Conventional",
+     "description": "A standard financing option without government backing."
+    },
+    "Dropdown": [
+     {
+      "Id": "{049C6C8B-C821-4A6A-AD13-F4BD10534980}",
+      "value": "conventional",
+      "text": "Conventional",
+      "description": "A standard financing option without government backing."
+     },
+     {
+      "Id": "{072BBAF4-11AD-4990-AADD-F93EAA22B2C9}",
+      "value": "fha",
+      "text": "FHA",
+      "description": "Government-insured financing with a lower down payment and flexible qualifying guidelines."
+     }
+    ]
+   },
+   "PrincipalInterest": {
+    "MonthlyCreditPayment": 0,
+    "Price": {
+     "Label": "Home price",
+     "Value": 0,
+     "SalePriceLowerBound": 5000
+    },
+    "DownPayment": {
+     "Label": "Down payment",
+     "DownpaymentLowerBound": 10000,
+     "LoanAmountUpperBound": 5000000,
+     "SelectedPaymentPercentage": 20,
+     "SelectedPaymentAmount": 0,
+     "ConventionalPercentage": 20,
+     "FhaPercentage": 3.5
+    },
+    "InterestRate": {
+     "Label": "Interest rate",
+     "LowerBound": 0,
+     "UpperBound": 10,
+     "SelectedInterestRate": 6.5,
+     "ConventionalPromoRate": 5.125,
+     "ConventionalNoPromoRate": 6.5,
+     "FhaPromoRate": 5,
+     "FhaNoPromoRate": 6.125
+    },
+    "Checkbox": {
+     "IsPromo": false,
+     "Value": false,
+     "Conventional": {
+      "Text": "Sample Conventional Forward Commitment Rate applied",
+      "Tooltip": "A builder paid rate commitment for a future home purchase using a conventional financing. Deselect this box to input your desired rate."
+     },
+     "Fha": {
+      "Text": "Sample FHA Forward Commitment Rate applied",
+      "Tooltip": "A builder paid rate commitment for a future home purchase using FHA financing. Deselect this box to input your desired rate."
+     }
+    },
+    "Mortgage": {
+     "Label": "Mortgage period",
+     "Value": {
+      "Id": "{AC8937A5-FF78-4E54-A53D-420F60363B96}",
+      "value": "30",
+      "text": "30-year",
+      "description": null
+     },
+     "Dropdown": [
+      {
+       "Id": "{AC8937A5-FF78-4E54-A53D-420F60363B96}",
+       "value": "30",
+       "text": "30-year",
+       "description": ""
+      },
+      {
+       "Id": "{962230A8-0875-4A71-950D-4222906D3D19}",
+       "value": "20",
+       "text": "20-year",
+       "description": ""
+      },
+      {
+       "Id": "{5121493C-0345-4732-A065-1B40ED3FBB49}",
+       "value": "15",
+       "text": "15-year",
+       "description": ""
+      },
+      {
+       "Id": "{2759EA58-2E49-4345-BFF5-340F0FBD21D6}",
+       "value": "10",
+       "text": "10-year",
+       "description": ""
+      }
+     ]
+    },
+    "TemporaryBuydown": {
+     "Label": "Temporary buydown options",
+     "Value": {
+      "Id": "{AC78194C-0617-4241-8372-DAB5D33D28FB}",
+      "value": "tb0",
+      "text": "None",
+      "description": null
+     },
+     "Dropdown": [
+      {
+       "Id": "{C812A499-374F-4EEB-AC21-EA82F8A9C6F2}",
+       "value": "tb10",
+       "text": "1-0 buydown",
+       "description": ""
+      },
+      {
+       "Id": "{6B2189E1-2517-4DF7-BCCE-9D69CA706296}",
+       "value": "tb11",
+       "text": "1-1 buydown",
+       "description": ""
+      },
+      {
+       "Id": "{034F89B7-907B-4068-B914-2C7D07519B39}",
+       "value": "tb21",
+       "text": "2-1 buydown",
+       "description": ""
+      },
+      {
+       "Id": "{552EE595-C811-41A1-B911-0417A5951038}",
+       "value": "tb321",
+       "text": "3-2-1 buydown",
+       "description": ""
+      },
+      {
+       "Id": "{AC78194C-0617-4241-8372-DAB5D33D28FB}",
+       "value": "tb0",
+       "text": "None",
+       "description": ""
+      }
+     ],
+     "Tooltip": "A seller paid payment subsidy which lowers your monthly payments for the first one to three years, followed by regular monthly payments for the remaining life of your loan.",
+     "Description": "Only available for conventional loans or 30-year term for FHA loans. Update your mortgage term or type to see buydown options."
+    },
+    "Title": "Principal & Interest",
+    "ShowSection": true
+   },
+   "TaxesInsurance": {
+    "TaxesInsuranceMonthlyPayment": 0,
+    "PropertyTax": {
+     "Label": "Property taxes",
+     "Percentage": 1,
+     "Amount": 0
+    },
+    "HomeownerInsurance": {
+     "Label": "Homeowners insurance",
+     "Percentage": 0.35,
+     "Amount": 0
+    },
+    "Title": "Taxes & Insurance",
+    "ShowSection": true
+   },
+   "MortgageInsurance": {
+    "MortgageInsuranceMonthlyPayment": 0,
+    "MonthlyMortgage": {
+     "Label": "Monthly mortgage insurance premium",
+     "Amount": 0,
+     "MIPTooltip": "<p><strong>FHA Monthly Mortgage Insurance Premium (MIP)<br />\n</strong>An ongoing monthly premium added to your mortgage payment, protecting the lender over the life of the loan.</p>",
+     "UpfrontMIPTooltip": "<p><strong>FHA Upfront Mortgage Insurance Premium (UFMIP)</strong><br />\nA one-time fee paid at closing (or financed into the loan) that helps fund the FHA insurance program.</p>"
+    },
+    "Title": "Mortgage Insurance Premium",
+    "ShowSection": false
+   },
+   "Other": {
+    "OtherMonthlyPayment": 0,
+    "Hoa": {
+     "Label": "HOA",
+     "Value": 151
+    },
+    "Other": {
+     "Label": "Other",
+     "Value": 0
+    },
+    "Title": "Other",
+    "ShowSection": true
+   },
+   "Resume": {
+    "BaseLoanAmount": "Base Loan amount",
+    "UpfrontMip": "Upfront MIP",
+    "TotalLoanAmount": "Total Loan Amount",
+    "EstimatedPayment": "Estimated payment",
+    "TemporaryBuydowns": {
+     "tb10": {
+      "Id": "tb10",
+      "Title": "1-0 Temporary buydown explained:",
+      "Selected": {
+       "Id": "tb10",
+       "value": "0",
+       "text": "Years 2-n",
+       "description": null
+      },
+      "Dropdown": [
+       {
+        "Id": "tb10",
+        "value": "1",
+        "text": "Year 1",
+        "description": null
+       },
+       {
+        "Id": "tb10",
+        "value": "0",
+        "text": "Years 2-n",
+        "description": null
+       }
+      ]
+     },
+     "tb11": {
+      "Id": "tb11",
+      "Title": "1-1 Temporary buydown explained:",
+      "Selected": {
+       "Id": "tb11",
+       "value": "0",
+       "text": "Years 3-n",
+       "description": null
+      },
+      "Dropdown": [
+       {
+        "Id": "tb11",
+        "value": "1",
+        "text": "Year 1",
+        "description": null
+       },
+       {
+        "Id": "tb11",
+        "value": "1",
+        "text": "Year 2",
+        "description": null
+       },
+       {
+        "Id": "tb11",
+        "value": "0",
+        "text": "Years 3-n",
+        "description": null
+       }
+      ]
+     },
+     "tb21": {
+      "Id": "tb21",
+      "Title": "2-1 Temporary buydown explained:",
+      "Selected": {
+       "Id": "tb21",
+       "value": "0",
+       "text": "Years 3-n",
+       "description": null
+      },
+      "Dropdown": [
+       {
+        "Id": "tb21",
+        "value": "2",
+        "text": "Year 1",
+        "description": null
+       },
+       {
+        "Id": "tb21",
+        "value": "1",
+        "text": "Year 2",
+        "description": null
+       },
+       {
+        "Id": "tb21",
+        "value": "0",
+        "text": "Years 3-n",
+        "description": null
+       }
+      ]
+     },
+     "tb321": {
+      "Id": "tb321",
+      "Title": "3-2-1 Temporary buydown explained:",
+      "Selected": {
+       "Id": "tb321",
+       "value": "0",
+       "text": "Years 4-n",
+       "description": null
+      },
+      "Dropdown": [
+       {
+        "Id": "tb321",
+        "value": "3",
+        "text": "Year 1",
+        "description": null
+       },
+       {
+        "Id": "tb321",
+        "value": "2",
+        "text": "Year 2",
+        "description": null
+       },
+       {
+        "Id": "tb321",
+        "value": "1",
+        "text": "Year 3",
+        "description": null
+       },
+       {
+        "Id": "tb321",
+        "value": "0",
+        "text": "Years 4-n",
+        "description": null
+       }
+      ]
+     }
+    }
+   },
+   "Disclaimer": "*Taylor Morrison&rsquo;s Mortgage Calculator is pre-populated with either a 3.5% downpayment FHA, a 20% downpayment Conventional program and may reflect market rate or Sample Forward Commitment Rate (\"FCR\"). The Mortgage Calculator is for informational and ill…(4024)",
+   "PromoBanner": null,
+   "IsLoanTypeFromPromo": false,
+   "UniqueRate": null
+  },
+  "promoBanner": {
+   "title": "Interested in self-touring a home?",
+   "description": "Explore select homes at your own time and pace.",
+   "displayTagIcon": true,
+   "downRates": [],
+   "popup": null,
+   "expirationDate": "12/31/2026",
+   "ctaLink": {
+    "url": "https://taylormorrison.utourhomes.com/visitor?community=8d5eb2fa-19b9-4bc1-8f5c-cdc8f227b5d8&rootUrl=community&lang=en",
+    "label": "View homes ",
+    "target": "_blank"
+   },
+   "settings": {
+    "nationalDisclaimerOn": {
+     "src": "/-/media/sites/tm/homes/corporate/logos/ada-ehl-eho-and-fha--logos-410x130-01.png",
+     "alt": "ADA EHL EHO and FHA  logos 410x130-01"
+    },
+    "nationalDisclaimerOff": {
+     "src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/disclaimers-logos-2-color12a3abb800ca43178a580a339c5d7d37?v=8c3f55a7",
+     "alt": "disclaimers-logos-2-color"
+    },
+    "taggingClass": ""
+   }
+  }
+ },
+ "model7b02a307b65a4086b3ac49e44bdc4227": {
+  "props": {
+   "title": "Other collections in Firethorn",
+   "bed": "Bed",
+   "bath": "Bath",
+   "garage": "Garage",
+   "sqft": "Sq.Ft.",
+   "from": "From",
+   "dollar": "$"
+  },
+  "homes": [
+   {
+    "photo": {
+     "Src": "/-/media/sites/tm/homes/florida/florida-region/master-plans/m/marigold/ve---the-towns-at-firethorn/dnu_model-rows---the-towns-at-firethorn-9-ps-jasmine-and-marigold.jpg?w=320&hash=B464151D1CCFA1FA3D6833F8F07D23AB",
+     "Alt": "6-Plex Exterior"
+    },
+    "count": "",
+    "sqft": "1180 - 1558",
+    "bed": "2 - 3",
+    "fullBath": "2",
+    "garages": "1",
+    "description": "4 Available homes",
+    "price": 229999,
+    "floorPlan": "The Towns at Firethorn",
+    "URL": "/fl/tampa/parrish/the-towns-at-firethorn"
+   }
+  ]
+ },
+ "model4a0160812ebd47bba41634c2ec6f46ee": {
+  "image": "<img src=\"/-/media/demodata/modal/mytm-log-in-image-desktop.jpg?h=537&amp;iar=0&amp;w=406&amp;hash=FBF9F134680DD19F675E91AA2D37368F\" class=\"d-none d-md-block\" alt=\"$name\" width=\"406\" height=\"537\" />",
+  "mobileImage": "<img src=\"/-/media/demodata/modal/mytm-log-in-image-mobile.jpg?h=312&amp;iar=0&amp;w=375&amp;hash=1AC4C2F131E4AD32C8576DA4EEC11522\" class=\"d-block d-md-none\" alt=\"$name\" width=\"375\" height=\"312\" />",
+  "tmLogo": "",
+  "signInButtonLink": {
+   "Url": "https://www.taylormorrison.com/authentication-redirects/signin?returnUrl=%252ffl%252ftampa%252fparrish%252ffirethorn%252favailable-homes",
+   "Text": "Sign-In"
+  },
+  "signUpCopy": "Dont have an account?",
+  "signUpLink": {
+   "Url": "https://www.taylormorrison.com/authentication-redirects/signin?returnUrl=%252ffl%252ftampa%252fparrish%252ffirethorn%252favailable-homes",
+   "Text": "Sign Up Now"
+  }
+ },
+ "modeleef70144538140e4a0f7645531792432": {
+  "brandsTitle": "Our brands",
+  "brandsLinks": [
+   {
+    "name": "Esplanade",
+    "url": "https://www.taylormorrison.com/discover-esplanade"
+   },
+   {
+    "name": "Yardly",
+    "url": "/yardly"
+   },
+   {
+    "name": "Taylor Morrison Home Funding",
+    "url": "https://www.taylormorrison.com/home-financing"
+   },
+   {
+    "name": "Inspired Title Services",
+    "url": "https://inspiredtitle.com/about/"
+   }
+  ],
+  "logo": {
+   "imgSrc": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogo8e0a015d08ba4e4a8481ef628c0b006f?v=6cb9996e",
+   "alt": "tm logo"
+  },
+  "mobileLogo": {
+   "imgSrc": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/TMFooterLogoMobileffadcc3a0fa949eea295aad259e20658?v=1a6508f4",
+   "alt": "tm logo"
+  },
+  "leftColTitle": "Get to know us",
+  "pagesLeftCol": [
+   {
+    "name": "Blog",
+    "url": "https://blog.taylormorrison.com/",
+    "link": {
+     "Url": "https://blog.taylormorrison.com/",
+     "Text": "Blog",
+     "Target": "_blank",
+     "BeginTag": "<a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://blog.taylormorrison.com/\">",
+     "EndTag": "</a>"
+    }
+   },
+   {
+    "name": "Careers",
+    "url": "https://careers.taylormorrison.com/",
+    "link": {
+     "Url": "https://careers.taylormorrison.com/",
+     "Text": "Careers",
+     "Target": "_blank",
+     "BeginTag": "<a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://careers.taylormorrison.com/\">",
+     "EndTag": "</a>"
+    }
+   },
+   {
+    "name": "Newsroom",
+    "url": "https://newsroom.taylormorrison.com",
+    "link": {
+     "Url": "https://newsroom.taylormorrison.com",
+     "Text": "Newsroom",
+     "Target": "_blank",
+     "BeginTag": "<a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://newsroom.taylormorrison.com\">",
+     "EndTag": "</a>"
+    }
+   },
+   {
+    "name": "Investor Relations",
+    "url": "https://investors.taylormorrison.com",
+    "link": {
+     "Url": "https://investors.taylormorrison.com",
+     "Text": "Investor Relations",
+     "Target": "_blank",
+     "BeginTag": "<a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://investors.taylormorrison.com\">",
+     "EndTag": "</a>"
+    }
+   }
+  ],
+  "rightColTitle": "Customer service",
+  "pagesRightCol": [
+   {
+    "name": "Contact Us",
+    "url": "/contact-us",
+    "link": {
+     "Url": "/contact-us",
+     "Text": "Contact Us",
+     "Target": "",
+     "BeginTag": "<a href=\"/contact-us\">",
+     "EndTag": "</a>"
+    }
+   },
+   {
+    "name": "FAQs",
+    "url": "/faqs",
+    "link": {
+     "Url": "/faqs",
+     "Text": "FAQs",
+     "Target": "",
+     "BeginTag": "<a href=\"/faqs\">",
+     "EndTag": "</a>"
+    }
+   },
+   {
+    "name": "Warranty",
+    "url": "/mytm/warranty",
+    "link": {
+     "Url": "/mytm/warranty",
+     "Text": "Warranty",
+     "Target": "",
+     "BeginTag": "<a href=\"/mytm/warranty\">",
+     "EndTag": "</a>"
+    }
+   },
+   {
+    "name": "Agents",
+    "url": "/agents",
+    "link": {
+     "Url": "/agents",
+     "Text": "Agents",
+     "Target": "",
+     "BeginTag": "<a href=\"/agents\">",
+     "EndTag": "</a>"
+    }
+   }
+  ],
+  "termLinks": [
+   {
+    "name": "Privacy Policy",
+    "url": "/privacy-policy"
+   },
+   {
+    "name": "Terms of Use",
+    "url": "/terms-of-use"
+   },
+   {
+    "name": "Do Not Sell My Personal Information",
+    "url": "/consumer-information-request"
+   },
+   {
+    "name": "ACCESSIBILITY",
+    "url": "#"
+   }
+  ],
+  "termIcons": [
+   {
+    "altText": "ADA Compliance",
+    "imgWidth": "19",
+    "imgUrl": "/-/media/sites/tm/homes/corporate/footer/ada-compliance.jpg"
+   },
+   {
+    "altText": "Equal Housing",
+    "imgWidth": "25",
+    "imgUrl": "/-/media/sites/tm/homes/corporate/footer/equal-housing.jpg"
+   }
+  ],
+  "areas": [
+   {
+    "name": "Atlanta",
+    "url": "/ga/atlanta"
+   },
+   {
+    "name": "Austin",
+    "url": "/tx/austin"
+   },
+   {
+    "name": "Bay Area",
+    "url": "/ca/bay-area"
+   },
+   {
+    "name": "Charlotte",
+    "url": "/nc/charlotte"
+   },
+   {
+    "name": "Dallas",
+    "url": "/tx/dallas"
+   },
+   {
+    "name": "Denver",
+    "url": "/co/denver"
+   },
+   "…(23 items total)"
+  ],
+  "socials": [
+   {
+    "url": "https://www.facebook.com/taylormorrison",
+    "classes": "fab fa-facebook-f"
+   },
+   {
+    "url": "https://www.youtube.com/user/TaylorMorrisonHomes",
+    "classes": "fab fa-youtube"
+   },
+   {
+    "url": "https://www.linkedin.com/company/taylor-morrison/",
+    "classes": "fab fa-linkedin-in"
+   },
+   {
+    "url": "https://blog.taylormorrison.com",
+    "classes": "fas fa-rss"
+   },
+   {
+    "url": "https://www.pinterest.com/TaylorMorrisonHomes/",
+    "classes": "fab fa-pinterest-p"
+   },
+   {
+    "url": "https://www.instagram.com/taylormorrisonhomes/",
+    "classes": "fab fa-instagram"
+   }
+  ],
+  "disclaimer": "All information (including, but not limited to prices, views, availability, school assignments and ratings, incentives, floor plans, exteriors, site plans, features, standards and options, assessments and fees, planned amenities, programs, conceptual artists&r…(1903)",
+  "communityPromoBannerDisclaimer": "",
+  "availableHomePromoBannerDisclaimer": "",
+  "adDisclaimers": [
+   {
+    "disclaimer": ""
+   }
+  ],
+  "extendedDisclaimer": "",
+  "copyright": "Copyright © 2007 - 2026 Taylor Morrison, Inc. All rights reserved.",
+  "findAHomeText": "Find a home in your area",
+  "desktopBackground": {
+   "imgSrc": "/-/media/sites/tm/homes/corporate/home-page/2025/footer-desktop.jpg",
+   "alt": "Footer-desktop"
+  },
+  "mobileBackground": {
+   "imgSrc": "/-/media/sites/tm/homes/corporate/home-page/2025/footer-desktop.jpg",
+   "alt": "Footer-desktop"
+  },
+  "disclaimerFontColor": "#222222",
+  "fixedBottomPromoDisclaimer": ""
+ },
+ "model_endpoints": {
+  "UserInfo": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.UserController, TaylorMorrison.Project.Common",
+   "action": "UserInfo",
+   "area": "common"
+  },
+  "Favorites": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.UserController, TaylorMorrison.Project.Common",
+   "action": "CheckFavorites",
+   "area": "common"
+  },
+  "SetFavorite": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.UserController, TaylorMorrison.Project.Common",
+   "action": "SetFavorite",
+   "area": "common"
+  },
+  "get-visible-map-states": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.SearchController, TaylorMorrison.Project.Common",
+   "action": "GetVisibleStatesResults",
+   "area": "Common"
+  },
+  "get-state-communities-search-results": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.SearchController, TaylorMorrison.Project.Common",
+   "action": "SearchCommunities",
+   "area": "Common"
+  },
+  "get-state-homes-search-results": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.SearchController, TaylorMorrison.Project.Common",
+   "action": "SearchHomes",
+   "area": "Common"
+  },
+  "load-external-appointment-scheduler": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.FormsController, TaylorMorrison.Project.Common",
+   "action": "LoadExternalAppointmentScheduler",
+   "area": "Common"
+  },
+  "submit-external-appointment-scheduler": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.FormsController, TaylorMorrison.Project.Common",
+   "action": "SubmitExternalAppointmentScheduler",
+   "area": "Common"
+  },
+  "lookup-appointment": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.FormsController, TaylorMorrison.Project.Common",
+   "action": "LookupAppointment",
+   "area": "Common"
+  },
+  "submit-appointment": {
+   "controller": "TaylorMorrison.Project.Common.Areas.Common.Controllers.FormsController, TaylorMorrison.Project.Common",
+   "action": "SubmitExternalAppointmentScheduler",
+   "area": "Common"
+  }
+ }
+}

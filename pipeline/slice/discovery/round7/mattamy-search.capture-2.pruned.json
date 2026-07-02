@@ -1,0 +1,165 @@
+{
+ "url": "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/search-data&sc_apikey={8C3D041E-BB12-4CC6-908A-4CF43E542E5B}&market=Sarasota-Bradenton&IsState=",
+ "postData": null,
+ "data": {
+  "sitecore": {
+   "context": {
+    "pageEditing": false,
+    "site": {
+     "name": "mattamy-homes"
+    },
+    "pageState": "normal",
+    "language": "en",
+    "itemPath": "/search-data",
+    "ContextID": {
+     "value": "{FE9308AD-B672-4B39-960D-AB1F5ABAE9FE}"
+    },
+    "geolocation": {
+     "value": {
+      "latitude": null,
+      "longitude": null,
+      "country": null
+     }
+    }
+   },
+   "route": {
+    "name": "search-data",
+    "displayName": "Search Data",
+    "fields": {},
+    "databaseName": "web",
+    "deviceId": "fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3",
+    "itemId": "fe9308ad-b672-4b39-960d-ab1f5abae9fe",
+    "itemLanguage": "en",
+    "itemVersion": 1,
+    "layoutId": "53a20de9-1e21-525d-a382-96b8b7ef53d5",
+    "templateId": "431ffe29-9c81-4968-8e7c-fd2593308cff",
+    "templateName": "Search",
+    "placeholders": {
+     "jss-main": [
+      {
+       "uid": "e977455e-2057-4ff0-a3ab-a0d65800688a",
+       "componentName": "Search",
+       "dataSource": "/sitecore/content/mattamy-homes/Data/Search/No Results",
+       "params": {},
+       "fields": {
+        "searchTypes": {
+         "value": [
+          {
+           "type": "Communities",
+           "title": "Communities"
+          },
+          {
+           "type": "Plans",
+           "title": "Plans"
+          },
+          {
+           "type": "QMI",
+           "title": "Quick Move-Ins"
+          }
+         ]
+        },
+        "metrosFilter": {
+         "value": [
+          {
+           "name": "Greater Toronto Area",
+           "divisionCode": "GTA",
+           "state": "Ontario",
+           "stateAbbrev": "ON",
+           "country": "CAN",
+           "latitude": "44.0384",
+           "longitude": "-79.2000",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Custom",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": [
+            "{D80E5A86-D64C-4A58-A247-4F183F5DE8E4}",
+            "{676043CE-4D59-444C-96EA-52CCE29312E0}",
+            "{703571C9-37EB-4E5A-B426-4EE4DBC87263}",
+            "{383F23EA-44C8-4B30-A55A-C833E38C3D43}",
+            "{552CFA0B-272E-4B60-AC8A-5F1F054D8493}",
+            "…(15 items total)"
+           ]
+          },
+          {
+           "name": "Kitchener-Waterloo-Guelph",
+           "divisionCode": "GTA",
+           "state": "Ontario",
+           "stateAbbrev": "ON",
+           "country": "CAN",
+           "latitude": "43.452969",
+           "longitude": "-80.495064",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Custom",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": [
+            "{47203FF6-821D-40DB-9C04-8A10576B3134}",
+            "{6A30C852-2677-481C-A2A2-354A82AF9158}",
+            "{5EF1B2A3-EFB6-4765-8C55-3C8FE55CA12A}",
+            "{39700EB2-2427-49F5-8332-0BFF1EF8B2C2}"
+           ]
+          },
+          {
+           "name": "Phoenix",
+           "divisionCode": "PHX",
+           "state": "Arizona",
+           "stateAbbrev": "AZ",
+           "country": "USA",
+           "latitude": "33.4484",
+           "longitude": "-112.074",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Alphabetical",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": null
+          },
+          {
+           "name": "Charlotte",
+           "divisionCode": "CLT",
+           "state": "North Carolina",
+           "stateAbbrev": "NC",
+           "country": "USA",
+           "latitude": "35.2271",
+           "longitude": "-80.8431",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Alphabetical",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": null
+          },
+          {
+           "name": "Dallas-Fort Worth",
+           "divisionCode": "DFW",
+           "state": "Texas",
+           "stateAbbrev": "TX",
+           "country": "USA",
+           "latitude": "32.7767",
+           "longitude": "-96.797",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Alphabetical",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": null
+          },
+          "…(20 items total)"
+         ]
+        }
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

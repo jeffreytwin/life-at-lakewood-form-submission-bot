@@ -1,0 +1,67 @@
+[
+ {
+  "slug": "community-paged",
+  "url": "https://api.drbhomes.com/api/v1/public/community?limit=25&page=1",
+  "status": 0,
+  "json": false,
+  "bytes": 0,
+  "error": "The operation was aborted due to timeout"
+ },
+ {
+  "slug": "community-search",
+  "url": "https://api.drbhomes.com/api/v1/public/community?search=seaire",
+  "status": 0,
+  "json": false,
+  "bytes": 0,
+  "error": "The operation was aborted due to timeout"
+ },
+ {
+  "slug": "inventory-by-community",
+  "url": "https://api.drbhomes.com/api/v1/public/inventory?communityId=281&limit=25",
+  "status": 200,
+  "json": true,
+  "bytes": 813269,
+  "meta": {
+   "totalItems": 926,
+   "itemCount": 25,
+   "itemsPerPage": 25,
+   "totalPages": 38,
+   "currentPage": 1
+  }
+ },
+ {
+  "slug": "inventory-filter",
+  "url": "https://api.drbhomes.com/api/v1/public/inventory?filter.communityId=$eq:281&limit=25",
+  "status": 200,
+  "json": true,
+  "bytes": 813269,
+  "meta": {
+   "totalItems": 926,
+   "itemCount": 25,
+   "itemsPerPage": 25,
+   "totalPages": 38,
+   "currentPage": 1
+  }
+ },
+ {
+  "slug": "plan-by-community",
+  "url": "https://api.drbhomes.com/api/v1/public/plan?communityId=281&limit=25",
+  "status": 200,
+  "json": true,
+  "bytes": 555327,
+  "meta": {
+   "totalItems": 401,
+   "itemCount": 25,
+   "itemsPerPage": 25,
+   "totalPages": 17,
+   "currentPage": 1
+  }
+ },
+ {
+  "slug": "homesite-params",
+  "url": "https://api.drbhomes.com/api/v1/public/homesite?communityId=281&limit=25",
+  "status": 200,
+  "json": true,
+  "bytes": 1501458
+ }
+]
