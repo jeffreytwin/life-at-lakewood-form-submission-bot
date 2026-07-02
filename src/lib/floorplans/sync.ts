@@ -14,6 +14,7 @@ import { logger } from "@/lib/shared/logger";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
 import { extractWithClaude } from "@/lib/floorplans/extractors/claude-extract";
+import { extractLennar } from "@/lib/floorplans/extractors/lennar";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -21,6 +22,7 @@ type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 // everything else falls back to its extraction_method's generic engine.
 const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Toll Brothers": extractTollBrothers,
+  Lennar: extractLennar,
 };
 
 const METHOD_EXTRACTORS: Record<string, Extractor> = {
