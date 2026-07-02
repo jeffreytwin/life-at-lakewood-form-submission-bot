@@ -1,0 +1,174 @@
+[
+ {
+  "url": "https://platform-api.sharethis.com/js/sharethis.js",
+  "status": 200,
+  "type": "text/javascript; charset=utf-8"
+ },
+ {
+  "url": "https://mattamyhomes.com/sitecore/api/jss/dictionary/mattamy-homes/en?sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 48
+ },
+ {
+  "url": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/126776-50420/swf-summerlit-lapis-cr-091025",
+  "status": 200,
+  "type": "image/jpeg"
+ },
+ {
+  "url": "https://player.vimeo.com/api/player.js",
+  "status": 200,
+  "type": "application/javascript;charset=utf-8"
+ },
+ {
+  "url": "https://mattamyhomes.com/api/sitecore/favorites",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 2
+ },
+ {
+  "url": "https://mattamyhomes.com/api/sitecore/favorites",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 2
+ },
+ {
+  "url": "https://mattamyhomes.com/api/sitecore/favorites",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 2
+ },
+ {
+  "url": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/68821-50420/tpa-brightmore-lapis-exterior",
+  "status": 200,
+  "type": "image/jpeg"
+ },
+ {
+  "url": "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=turnstileLoad",
+  "status": 302,
+  "type": ""
+ },
+ {
+  "url": "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=turnstileLoad",
+  "status": 302,
+  "type": ""
+ },
+ {
+  "url": "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=turnstileLoad",
+  "status": 302,
+  "type": ""
+ },
+ {
+  "url": "https://challenges.cloudflare.com/turnstile/v0/b/80a697ecdece/api.js",
+  "status": 200,
+  "type": "application/javascript; charset=UTF-8"
+ },
+ {
+  "url": "https://challenges.cloudflare.com/turnstile/v0/b/80a697ecdece/api.js",
+  "status": 200,
+  "type": "application/javascript; charset=UTF-8"
+ },
+ {
+  "url": "https://challenges.cloudflare.com/turnstile/v0/b/80a697ecdece/api.js",
+  "status": 200,
+  "type": "application/javascript; charset=UTF-8"
+ },
+ {
+  "url": "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=turnstileLoad",
+  "status": 200,
+  "type": "application/javascript; charset=UTF-8"
+ },
+ {
+  "url": "https://pixels.spotify.com/v1/config/208c76da036f492ea10e1fc1d207d7d0",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 80
+ },
+ {
+  "url": "https://px.ads.linkedin.com/attribution_trigger?pid=3591985&time=1783031678037&url=https%3A%2F%2Fmattamyhomes.com%2Fflorida%2Fsarasota-bradenton%2Fvenice%2Fwellen-park%2Fbrightmore",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 2
+ },
+ {
+  "url": "https://analytics.tiktok.com/api/v2/pixel",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://analytics.tiktok.com/api/v2/pixel",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://ct.pinterest.com/user/?tid=2614036700534&pd=%7B%22em%22%3A%2224aba99b2defbb47ee981b4200313f61f3ae31541d8717bdac1e463c838939b0%22%7D&cb=1783031678077&dep=2%2CPAGE_LOAD",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 405
+ },
+ {
+  "url": "https://mobile.events.data.microsoft.com/OneCollector/1.0/?cors=true&content-type=application/x-json-stream&w=2",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 24
+ },
+ {
+  "url": "https://pixels.spotify.com/v1/ingest",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 47
+ },
+ {
+  "url": "https://analytics.tiktok.com/api/v2/pixel/act",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://argo.ml3ds-cloud.com/api/communities/137754?dataLevel=2&filterToActiveOnly=true",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 1509182,
+  "savedAs": "mattamy-brightmore.capture-0.pruned.json"
+ },
+ {
+  "url": "https://argo.ml3ds-cloud.com/api/communities/137754?dataLevel=2&filterToActiveOnly=true",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 1509182,
+  "savedAs": "mattamy-brightmore.capture-1.pruned.json"
+ },
+ {
+  "url": "https://myscp.ml3ds-icon.com/assets/config/form_config.json",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 3834,
+  "savedAs": "mattamy-brightmore.capture-2.pruned.json"
+ },
+ {
+  "url": "https://myscp.ml3ds-icon.com/assets/config/form_config.json",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 3834,
+  "savedAs": "mattamy-brightmore.capture-3.pruned.json"
+ },
+ {
+  "url": "https://argo.ml3ds-stage.com/api/dia",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://argo.ml3ds-stage.com/api/dia",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://argo.ml3ds-stage.com/api/dia",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://argo.ml3ds-stage.com/api/dia",
+  "status": 200,
+  "type": ""
+ }
+]

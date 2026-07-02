@@ -1,0 +1,48 @@
+[
+ {
+  "url": "https://cdn.mihomes.com/assets/toolkit/js/search.js?ver=202606182350",
+  "status": 200,
+  "type": "application/javascript"
+ },
+ {
+  "url": "https://www.mihomes.com/sitecore/api/ssc/MIHomes-Project-Website-Api/TypeaheadSearch",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 423736,
+  "savedAs": "mihomes-plans.capture-0.pruned.json"
+ },
+ {
+  "url": "https://www.mihomes.com/sitecore/api/ssc/MIHomes-Project-Website-Api/MarketName/",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 26
+ },
+ {
+  "url": "https://px.ads.linkedin.com/attribution_trigger?pid=679818&time=1783031640204&url=https%3A%2F%2Fwww.mihomes.com%2Fnew-homes%2Fflorida%2Fsarasota-metro%2Fplans-ready-to-build",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 2
+ },
+ {
+  "url": "https://analytics.tiktok.com/api/v2/pixel",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://analytics.tiktok.com/api/v2/pixel",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://analytics.tiktok.com/api/v2/pixel/act",
+  "status": 200,
+  "type": ""
+ },
+ {
+  "url": "https://www.mihomes.com/sitecore/api/ssc/MIHomes-Project-Website-Api/Search?search=Sarasota%20Metro&searchtype=plans&typeahead_type=markets&x1=27.859657632391457&x2=26.860769413329233&y1=-82.09984218750002&y2=-82.8908578",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 553591,
+  "savedAs": "mihomes-plans.capture-1.pruned.json"
+ }
+]

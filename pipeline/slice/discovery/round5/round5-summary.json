@@ -1,0 +1,95 @@
+{
+ "meritage-classic": {
+  "url": "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series",
+  "status": 200,
+  "textChars": 3273,
+  "prices": 7,
+  "sqfts": 0,
+  "jsonResponses": 13,
+  "captures": 3
+ },
+ "meritage-premier": {
+  "url": "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series",
+  "status": 200,
+  "textChars": 2833,
+  "prices": 4,
+  "sqfts": 0,
+  "jsonResponses": 14,
+  "captures": 3
+ },
+ "taylor-firethorn-floorplans": {
+  "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans",
+  "status": 200,
+  "textChars": 7632,
+  "prices": 42,
+  "sqfts": 37,
+  "jsonResponses": 7,
+  "captures": 0
+ },
+ "mihomes-plans": {
+  "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/plans-ready-to-build",
+  "status": 200,
+  "textChars": 5417,
+  "prices": 25,
+  "sqfts": 0,
+  "jsonResponses": 4,
+  "captures": 2
+ },
+ "mihomes-qmi": {
+  "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/quick-move-in-homes",
+  "status": 200,
+  "textChars": 7032,
+  "prices": 29,
+  "sqfts": 0,
+  "jsonResponses": 4,
+  "captures": 2
+ },
+ "drb-seaire-floorplans": {
+  "url": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/floorplans",
+  "status": 404,
+  "textChars": 2400,
+  "prices": 0,
+  "sqfts": 0,
+  "jsonResponses": 2,
+  "captures": 1
+ },
+ "mattamy-brightmore": {
+  "url": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/brightmore",
+  "status": 200,
+  "textChars": 9377,
+  "prices": 4,
+  "sqfts": 4,
+  "jsonResponses": 13,
+  "captures": 4
+ },
+ "lwhomes-home": {
+  "url": "https://lwhomes.com/",
+  "status": 200,
+  "textChars": 1723,
+  "prices": 0,
+  "sqfts": 0,
+  "links": 36,
+  "jsonResponses": 16,
+  "captures": 0
+ },
+ "ici-home": {
+  "url": "https://www.icihomes.com/",
+  "status": 403,
+  "textChars": 264,
+  "prices": 0,
+  "sqfts": 0,
+  "links": 0,
+  "jsonResponses": 1,
+  "captures": 0
+ },
+ "neal-signature-home": {
+  "url": "https://www.nealsignaturehomes.com/",
+  "status": 403,
+  "textChars": 274,
+  "prices": 0,
+  "sqfts": 0,
+  "links": 0,
+  "jsonResponses": 0,
+  "captures": 0
+ }
+}
