@@ -25,13 +25,16 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Install Playwright Chromium
-        run: |
-          npm i --no-save playwright
-          npx playwright install --with-deps chromium
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
-      - name: Run slice discovery
-        run: node pipeline/slice/discover-round6.mjs
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Live extractor verification
+        run: FP_LIVE=1 npx vitest run __tests__/integration/floorplans-live.test.ts
 
       - name: Commit results back to branch
         run: |
@@ -41,7 +44,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No slice changes to commit."
           else
-            git commit -m "Floor plan slice: round-6 discovery [skip ci]"
+            git commit -m "Floor plan slice: slice results [skip ci]"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi

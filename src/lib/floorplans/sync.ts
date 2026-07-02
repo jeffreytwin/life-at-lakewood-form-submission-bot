@@ -15,6 +15,7 @@ import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
 import { extractWithClaude } from "@/lib/floorplans/extractors/claude-extract";
 import { extractLennar } from "@/lib/floorplans/extractors/lennar";
+import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -23,11 +24,17 @@ type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Toll Brothers": extractTollBrothers,
   Lennar: extractLennar,
+  "Meritage Homes": extractMeritage,
 };
 
 const METHOD_EXTRACTORS: Record<string, Extractor> = {
   fetch_claude: extractWithClaude,
 };
+
+// Builders whose extractor works from API ids rather than a page URL —
+// URL auto-discovery is skipped (their pages block non-browser fetches,
+// which would fail discovery's verification step and abort the run).
+const URLLESS_BUILDERS = new Set(["Meritage Homes"]);
 
 function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
@@ -180,7 +187,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
 
   // Auto-discover the community page URL on first run if not configured.
   let params = (conn.extractor_params ?? {}) as Record<string, unknown>;
-  if (!params.url) {
+  if (!params.url && !URLLESS_BUILDERS.has(builder.name)) {
     const { data: builderRow } = await supabase
       .from("fp_builders")
       .select("base_url, engine_config")
@@ -204,7 +211,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const runId = `manual-${Date.now()}`;
   let plans: NormalizedPlan[];
   try {
-    plans = await extractor(params);
+    plans = await extractor({ ...params, communityName: community.name });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     await setRunStatus(conn.id, `error: ${detail}`, null, true);
