@@ -13,13 +13,23 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
+import { extractWithClaude } from "@/lib/floorplans/extractors/claude-extract";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
-// Engine registry: builder name -> extractor. Grows as builders onboard.
-const EXTRACTORS: Record<string, Extractor> = {
+// Builder-specific engines take precedence (bespoke json_api parsers);
+// everything else falls back to its extraction_method's generic engine.
+const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Toll Brothers": extractTollBrothers,
 };
+
+const METHOD_EXTRACTORS: Record<string, Extractor> = {
+  fetch_claude: extractWithClaude,
+};
+
+function resolveExtractor(builderName: string, method: string | null): Extractor | null {
+  return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
+}
 
 interface RunResult {
   status: "ok" | "failed" | "skipped";
@@ -160,10 +170,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   if (!conn.active || !builder.active) {
     return { status: "skipped", detail: "connection or builder is paused" };
   }
-  const extractor = EXTRACTORS[builder.name];
+  const extractor = resolveExtractor(builder.name, builder.extraction_method);
   if (!extractor) {
-    await setRunStatus(conn.id, "no extractor implemented yet", null, true);
-    return { status: "failed", detail: `no extractor implemented for ${builder.name}` };
+    await setRunStatus(conn.id, "no extractor available for this builder yet", null, true);
+    return { status: "failed", detail: `no extractor available for ${builder.name} (${builder.extraction_method ?? "unclassified"})` };
   }
 
   const runId = `manual-${Date.now()}`;
@@ -255,6 +265,12 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
 
   const detail = `ok: ${plans.length} plans, ${queued} changes queued`;
   await setRunStatus(conn.id, detail, plans.length, false);
+  // First successful run marks the connection nightly-eligible.
+  await supabase
+    .from("fp_builder_communities")
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq("id", conn.id)
+    .is("onboarded_at", null);
   logger.info("Floor plan connection run complete", {
     connectionId, builder: builder.name, community: community.name, plans: plans.length, queued,
   });

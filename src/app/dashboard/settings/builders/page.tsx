@@ -28,12 +28,50 @@ const METHOD_LABEL: Record<string, string> = {
   render_claude: "Render + Claude",
 };
 
+interface SyncSettings {
+  fp_nightly_enabled: boolean;
+  fp_nightly_hour: number;
+  fp_digest_phone: string | null;
+  fp_nightly_state: { cycleDate?: string; completedAt?: string; ran?: number; failed?: number } | null;
+}
+
 export default function BuildersSettingsPage() {
   const [builders, setBuilders] = useState<Builder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [running, setRunning] = useState<Set<string>>(new Set());
+  const [sync, setSync] = useState<SyncSettings | null>(null);
+  const [savingSync, setSavingSync] = useState(false);
+
+  const fetchSync = useCallback(() => {
+    fetch("/api/internal/floorplans/sync-settings")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.error) setSync(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchSync();
+  }, [fetchSync]);
+
+  async function saveSync(updates: Partial<SyncSettings>) {
+    if (!sync) return;
+    setSavingSync(true);
+    try {
+      const res = await fetch("/api/internal/floorplans/sync-settings", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (data && !data.error) setSync(data);
+    } finally {
+      setSavingSync(false);
+    }
+  }
 
   const fetchBuilders = useCallback(() => {
     fetch("/api/internal/floorplans/builders")
@@ -106,6 +144,64 @@ export default function BuildersSettingsPage() {
           </p>
         </div>
       </div>
+
+      {sync && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={sync.fp_nightly_enabled}
+                disabled={savingSync}
+                onChange={(e) => saveSync({ fp_nightly_enabled: e.target.checked })}
+              />
+              <strong>Nightly sync {sync.fp_nightly_enabled ? "on" : "off"}</strong>
+            </label>
+            <label>
+              Run at{" "}
+              <select
+                className="form-input"
+                style={{ width: "auto", display: "inline-block" }}
+                value={sync.fp_nightly_hour}
+                disabled={savingSync}
+                onChange={(e) => saveSync({ fp_nightly_hour: parseInt(e.target.value, 10) })}
+              >
+                {Array.from({ length: 24 }, (_, h) => (
+                  <option key={h} value={h}>
+                    {((h % 12) || 12)}:00 {h < 12 ? "AM" : "PM"} ET
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Digest SMS to{" "}
+              <input
+                className="form-input"
+                style={{ width: 160, display: "inline-block" }}
+                placeholder="+1…  (optional)"
+                defaultValue={sync.fp_digest_phone ?? ""}
+                disabled={savingSync}
+                onBlur={(e) => {
+                  if ((e.target.value.trim() || null) !== (sync.fp_digest_phone ?? null)) {
+                    saveSync({ fp_digest_phone: e.target.value });
+                  }
+                }}
+              />
+            </label>
+            {sync.fp_nightly_state?.cycleDate && (
+              <span className="text-muted text-sm">
+                Last cycle {sync.fp_nightly_state.cycleDate}: ran {sync.fp_nightly_state.ran ?? 0}
+                {sync.fp_nightly_state.failed ? `, ${sync.fp_nightly_state.failed} failed` : ""}
+                {sync.fp_nightly_state.completedAt ? " ✓" : " (in progress)"}
+              </span>
+            )}
+          </div>
+          <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>
+            The nightly run only covers connections that have completed at least one
+            successful manual Run — onboard each builder by hand first.
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <div className="empty-state">Loading…</div>
