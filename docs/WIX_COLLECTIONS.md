@@ -79,6 +79,35 @@ Notes/warts to fix when defining the standard schema (new collections only):
 - `notes` is freelancer editorial state ("Done", "Not Found") — not synced
   data; the pipeline replaces its purpose with run status.
 
+## FloorPlansV2 (the new pipeline-operated collections) — verified behavior
+
+Created on all three sites via the Data Collections API: id `FloorPlansV2`,
+standardized schema (Parrish baseline, warts fixed, plus `syncKey`,
+`sourceUrl`, `lastSyncedAt`), permissions read=ANYONE / writes=ADMIN, and the
+publish plugin (`{"type":"PUBLISH","publishOptions":{"defaultStatus":
+"PUBLISHED","lifecycleStatus":"ACTIVE"}}`) copied from the legacy collections.
+Collection update endpoint is `PUT /wix-data/v2/collections` (id in body).
+
+Verified item lifecycle (probe run 2026-07-02, test items cleaned up):
+
+- Plain insert → lands `PUBLISHED`.
+- Insert with `data._publishStatus: "DRAFT"` → lands `DRAFT`. **Draft-first
+  inserts work.**
+- Default reads/queries DO NOT see drafts; pass
+  `publishPluginOptions.includeDraftItems: true` (body on query/update, query
+  param on get/delete) to see/touch them. Datasets and public consumers never
+  see drafts — exactly the safety wanted.
+- `_publishStatus` CANNOT be flipped via item update (200 but stays DRAFT).
+  Publishing a draft happens in the Wix CMS UI — which is the designed human
+  step anyway. The pipeline detects publication via a drafts-inclusive query
+  (status change → promote `synced_draft` → `synced`). Graduated
+  published-on-sync mode needs no flip either: it just inserts without the
+  DRAFT marker.
+- Media Manager import works: `POST /site-media/v1/files/import` with a
+  source `url` → returns Wix media file id + static URL (async,
+  `operationStatus: PENDING`). Feed the returned id/URL into IMAGE fields and
+  record it in `fp_media_map`.
+
 ## Supabase seed state
 
 `fp_sites` seeded with the three sites (wix_site_id + legacy_collection_id),
