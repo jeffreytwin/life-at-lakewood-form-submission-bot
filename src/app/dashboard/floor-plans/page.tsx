@@ -209,6 +209,7 @@ export default function FloorPlansPage() {
           <p className="text-muted">
             Detected changes from builder websites. Approved new plans are written to the
             Floor Plans V2 collection as drafts — publish them in the Wix CMS to make them live.
+            {" "}<a href="/dashboard/floor-plans/cutover">Cutover report →</a>
           </p>
         </div>
         {statusFilter === "pending" && visible.some((c) => c.status === "pending") && (
