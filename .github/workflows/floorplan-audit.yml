@@ -2,6 +2,11 @@ name: Floor Plan Audit — Site Recon
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - claude/wix-floor-plan-automation-sbqc80
+    paths:
+      - pipeline/audit/RUN
 
 permissions:
   contents: write
