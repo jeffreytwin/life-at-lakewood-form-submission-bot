@@ -24,8 +24,8 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Run slice extractor
-        run: node pipeline/slice/run-toll.mjs
+      - name: Run slice discovery
+        run: node pipeline/slice/discover-lennar.mjs
 
       - name: Commit results back to branch
         run: |
