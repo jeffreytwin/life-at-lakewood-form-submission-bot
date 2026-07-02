@@ -8,7 +8,7 @@ import { plansFromScData } from "@/lib/floorplans/extractors/taylor-morrison";
 const dump = (name: string) =>
   JSON.parse(
     readFileSync(
-      path.resolve(__dirname, `../../../pipeline/slice/discovery/round7/${name}`),
+      path.resolve(__dirname, `../../fixtures/floorplans/${name}`),
       "utf8"
     )
   );

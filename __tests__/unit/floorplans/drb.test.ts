@@ -7,7 +7,7 @@ import { normalizeDrbItem } from "@/lib/floorplans/extractors/drb";
 // captured in round-8 discovery and slimmed to the mapped fields.
 const fixture = JSON.parse(
   readFileSync(
-    path.resolve(__dirname, "../../../pipeline/slice/discovery/round8/drb-inventory-fixture.json"),
+    path.resolve(__dirname, "../../fixtures/floorplans/drb-inventory-fixture.json"),
     "utf8"
   )
 );

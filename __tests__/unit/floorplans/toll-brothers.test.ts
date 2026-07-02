@@ -9,7 +9,7 @@ import { plansFromNextData } from "@/lib/floorplans/extractors/toll-brothers";
 const dump = (name: string) =>
   JSON.parse(
     readFileSync(
-      path.resolve(__dirname, `../../../pipeline/slice/discovery/${name}.pruned.json`),
+      path.resolve(__dirname, `../../fixtures/floorplans/toll-${name}.pruned.json`),
       "utf8"
     )
   );

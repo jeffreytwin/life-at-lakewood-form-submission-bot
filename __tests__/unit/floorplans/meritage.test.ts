@@ -10,7 +10,7 @@ const dump = JSON.parse(
   readFileSync(
     path.resolve(
       __dirname,
-      "../../../pipeline/slice/discovery/round6/meritage-classic.response-0.pruned.json"
+      "../../fixtures/floorplans/meritage-discover-response.pruned.json"
     ),
     "utf8"
   )

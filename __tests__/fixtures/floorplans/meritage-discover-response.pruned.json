@@ -1,0 +1,590 @@
+{
+ "url": "https://discover.sitecorecloud.io/discover/v2/173266879",
+ "data": {
+  "widgets": [
+   {
+    "rfk_id": "rfkid_195",
+    "type": "preview_search",
+    "used_in": "common_across_pages",
+    "entity": "home",
+    "total_item": 0,
+    "limit": 0,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   },
+   {
+    "rfk_id": "rfkid_196",
+    "type": "preview_search",
+    "used_in": "common_across_pages",
+    "entity": "popularsearch",
+    "total_item": 0,
+    "limit": 0,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   },
+   {
+    "rfk_id": "rfkid_196",
+    "type": "preview_search",
+    "used_in": "common_across_pages",
+    "entity": "popularsearch",
+    "total_item": 0,
+    "limit": 0,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   },
+   {
+    "rfk_id": "rfkid_503",
+    "type": "content_grid",
+    "used_in": "common_across_pages",
+    "entity": "home",
+    "facet": [
+     {
+      "name": "bedrooms",
+      "label": "Bedrooms",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJiZWRyb29tcyIsInZhbHVlIjozfSx7InR5cGUiOiJsdCIsIm5hbWUiOiJiZWRyb29tcyIsInZhbHVlIjo0fV19",
+        "text": "3 - 4",
+        "count": 2,
+        "min": 3,
+        "max": 4
+       },
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJiZWRyb29tcyIsInZhbHVlIjo0fSx7InR5cGUiOiJsdCIsIm5hbWUiOiJiZWRyb29tcyIsInZhbHVlIjo1fV19",
+        "text": "4 - 5",
+        "count": 4,
+        "min": 4,
+        "max": 5
+       }
+      ]
+     },
+     {
+      "name": "full_bathrooms",
+      "label": "Full Bathrooms",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJmdWxsX2JhdGhyb29tcyIsInZhbHVlIjoyfSx7InR5cGUiOiJsdCIsIm5hbWUiOiJmdWxsX2JhdGhyb29tcyIsInZhbHVlIjozfV19",
+        "text": "2 - 3",
+        "count": 5,
+        "min": 2,
+        "max": 3
+       },
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJmdWxsX2JhdGhyb29tcyIsInZhbHVlIjozfSx7InR5cGUiOiJsdCIsIm5hbWUiOiJmdWxsX2JhdGhyb29tcyIsInZhbHVlIjo0fV19",
+        "text": "3 - 4",
+        "count": 1,
+        "min": 3,
+        "max": 4
+       }
+      ]
+     },
+     {
+      "name": "garages",
+      "label": "Garages",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJnYXJhZ2VzIiwidmFsdWUiOjJ9LHsidHlwZSI6Imx0IiwibmFtZSI6ImdhcmFnZXMiLCJ2YWx1ZSI6M31dfQ==",
+        "text": "2 - 3",
+        "count": 6,
+        "min": 2,
+        "max": 3
+       }
+      ]
+     },
+     {
+      "name": "half_bathrooms",
+      "label": "Half Bathrooms",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiZXEiLCJuYW1lIjoiaGFsZl9iYXRocm9vbXMiLCJ2YWx1ZSI6MH0=",
+        "text": "0 - 0",
+        "count": 6,
+        "min": 0,
+        "max": 0
+       }
+      ]
+     },
+     {
+      "name": "price",
+      "label": "Price",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJwcmljZSIsInZhbHVlIjozMDAwMDB9LHsidHlwZSI6Imx0IiwibmFtZSI6InByaWNlIiwidmFsdWUiOjM1MDAwMH1dfQ==",
+        "text": "300000 - 350000",
+        "count": 2,
+        "min": 300000,
+        "max": 350000
+       },
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJwcmljZSIsInZhbHVlIjozNTAwMDB9LHsidHlwZSI6Imx0IiwibmFtZSI6InByaWNlIiwidmFsdWUiOjQwMDAwMH1dfQ==",
+        "text": "350000 - 400000",
+        "count": 4,
+        "min": 350000,
+        "max": 400000
+       }
+      ]
+     },
+     {
+      "name": "sqft",
+      "label": "Square Footage",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJzcWZ0IiwidmFsdWUiOjEyNTB9LHsidHlwZSI6Imx0IiwibmFtZSI6InNxZnQiLCJ2YWx1ZSI6MTUwMH1dfQ==",
+        "text": "1250 - 1500",
+        "count": 2,
+        "min": 1250,
+        "max": 1500
+       },
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJzcWZ0IiwidmFsdWUiOjE3NTB9LHsidHlwZSI6Imx0IiwibmFtZSI6InNxZnQiLCJ2YWx1ZSI6MjAwMH1dfQ==",
+        "text": "1750 - 2000",
+        "count": 4,
+        "min": 1750,
+        "max": 2000
+       }
+      ]
+     },
+     "…(7 items total)"
+    ],
+    "content": [
+     {
+      "address": "7734 Satterfield Ter",
+      "bedrooms": 3,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcVAAQ",
+      "community_sheet_id": "a1C8a00000TLMDwEAP",
+      "community_sheet_name": "Salt Meadows - Classic Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1778630400,
+      "completion_estimated": 1775088000,
+      "construction_stage": "Construction Complete",
+      "crg_exception": false,
+      "description": "The Bluebell floorplan showcases an open-concept design with 3 bedrooms, 2 bathrooms and a spacious 2-car garage. The kitchen seamlessly connects to the great room, dining nook, and outdoor patio, perfect for both everyday living and entert…(247)",
+      "floorplan_description": "The Bluebell floorplan offers an open-concept floorplan featuring 3 bedrooms, 2 bathrooms and a 2-car garage. The spacious kitchen overlooks the great room, dining nook and outside patio.",
+      "floorplan_name": "Bluebell",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHUvEAO",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/d343c5eb458c4747af35ec64b77c9dbd?v=b4cb8ece",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/d343c5eb458c4747af35ec64b77c9dbd?v=b4cb8ece",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/00743822177e4cdd871fb9d5d2cd2b70?v=ba2825eb",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/e11de3865c634f18b4f5742ff3bf8cb5?v=df5a85fe",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/11477d1497e248039d06f0edf8c82453?v=fd22641b",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/5440fd5286e648e793f1c817d3d65144?v=4c2b6e9c",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/88705d5da16541c890570668f65d5b5e?v=0c9d078c",
+       "…(14 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/04f3167648194c8bb838e1eb528776d3?v=66df58e6",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2753&communityID=30251",
+      "location": "27.58383100988824, -82.39955764724286",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-05-14",
+      "mhdc_price_change_amount": -10000,
+      "mls_number": "TB8484829",
+      "monthly_payment": null,
+      "movein_timeframe": -91,
+      "previous_mhdc_price": 350000,
+      "price": 340000,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHUvEAO",
+      "snipe": "Pond View",
+      "source_id": "1152540",
+      "sqft": 1491,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7734-satterfield-ter",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=rSAYYGFm",
+      "zipcode": "34219"
+     },
+     {
+      "address": "7633 Satterfield Ter",
+      "bedrooms": 4,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcVAAQ",
+      "community_sheet_id": "a1C8a00000TLMDwEAP",
+      "community_sheet_name": "Salt Meadows - Classic Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1770076800,
+      "completion_estimated": 1769644800,
+      "construction_stage": "Construction Complete",
+      "crg_exception": true,
+      "description": "The Foxglove floorplan showcases a spacious open-concept layout with 4 bedrooms, 2 bathrooms, and a 2-car garage. The open kitchen overlooks a generous great room and dining area, making it ideal for both everyday living and entertaining.",
+      "floorplan_description": "The Foxglove floorplan offers an open-concept plan with 4 bedrooms, 2 bathrooms and a 2-car garage. Prepare dinner from this home's open kitchen which overlooks a spacious great room and dining area.",
+      "floorplan_name": "Foxglove",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHqlEAG",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7ada3a7abb854bfdb4954b8e5a1848b0?v=2913fe8f",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7ada3a7abb854bfdb4954b8e5a1848b0?v=2913fe8f",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/61d22bd2621843de8786cd8f6f66eb45?v=1fdeb691",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b80f011fde074f588e6566ad21b1d3b4?v=7cc666d7",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f880754164e748339393ba23d519b10d?v=e2f9740e",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/708fc563a3c74b64b22d178f447747f9?v=e79e62ab",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/2987b756275a45d3907613af7ce543c2?v=2bbc2af5",
+       "…(16 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/e6b5a105f94f4c08b517795754080540?v=855220be",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2753&communityID=30251",
+      "location": "27.582712183959696, -82.39888569171063",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-02-19",
+      "mhdc_price_change_amount": -8250,
+      "mls_number": "O6360314",
+      "monthly_payment": null,
+      "movein_timeframe": -154,
+      "previous_mhdc_price": 358250,
+      "price": 350000,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHqlEAG",
+      "snipe": "Open Floor Plan",
+      "source_id": "1152540",
+      "sqft": 1840,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7633-satterfield-ter",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=LaC98CZH",
+      "zipcode": "34219"
+     },
+     {
+      "address": "7742 Satterfield Ter",
+      "bedrooms": 4,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcVAAQ",
+      "community_sheet_id": "a1C8a00000TLMDwEAP",
+      "community_sheet_name": "Salt Meadows - Classic Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1778803200,
+      "completion_estimated": 1776816000,
+      "construction_stage": "Construction Complete",
+      "crg_exception": false,
+      "description": "The Hibiscus floorplan blends style and function with 4 bedrooms, 3 bathrooms, and a 2-car garage. Its open-concept design centers around a sleek kitchen that flows effortlessly into a spacious great room, perfect for gatherings or everyday…(248)",
+      "floorplan_description": "The Hibiscus floorplan offers an open-concept floorplan with 4 bedrooms, 3 bathrooms and a 2-car garage. The open floorplan creates a living space with a kitchen that overlooks the spacious great room.",
+      "floorplan_name": "Hibiscus",
+      "full_bathrooms": 3,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHf5EAG",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/07a483bd8a4c4d7cb509c6f9ea1689c5?v=ab917727",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/07a483bd8a4c4d7cb509c6f9ea1689c5?v=ab917727",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/9944f9c4e69a4c0aa53ae49759c2b1cc?v=49d883cb",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/735509123f5847638a1f3f4086ecc3d9?v=2407469a",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/795ce6112e6d4c5da87a1c067b5e1315?v=fc818297",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/dee760a9884442fdb8f454e2a4a548b6?v=d7c0cdef",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/12a3fd98dac34ff48d63d89b69e4e47b?v=c814e000",
+       "…(12 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/e9f3a0f910184d39addbcc83754770b2?v=ca1075a2",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2753&communityID=30251",
+      "location": "27.583940472272698, -82.39979297792618",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-05-14",
+      "mhdc_price_change_amount": -5000,
+      "mls_number": "TB8513500",
+      "monthly_payment": null,
+      "movein_timeframe": -71,
+      "previous_mhdc_price": 378420,
+      "price": 373420,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHf5EAG",
+      "snipe": null,
+      "source_id": "1152540",
+      "sqft": 1988,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7742-satterfield-ter",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=EHMWdoom",
+      "zipcode": "34219"
+     },
+     {
+      "address": "7737 Satterfield Ter",
+      "bedrooms": 3,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcVAAQ",
+      "community_sheet_id": "a1C8a00000TLMDwEAP",
+      "community_sheet_name": "Salt Meadows - Classic Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1781740800,
+      "completion_estimated": 1781827200,
+      "construction_stage": "Construction Complete",
+      "crg_exception": false,
+      "description": "The Bluebell floorplan showcases an open-concept design with 3 bedrooms, 2 bathrooms and a spacious 2-car garage. The kitchen seamlessly connects to the great room, dining nook, and outdoor patio, perfect for both everyday living and entert…(247)",
+      "floorplan_description": "The Bluebell floorplan offers an open-concept floorplan featuring 3 bedrooms, 2 bathrooms and a 2-car garage. The spacious kitchen overlooks the great room, dining nook and outside patio.",
+      "floorplan_name": "Bluebell",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHs3EAG",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/ba61fd4a30c94c8db6f17e95d0173a3e?v=8c4f179a",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/ba61fd4a30c94c8db6f17e95d0173a3e?v=8c4f179a",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b13b38aa06e448618b8eef3d05c01691?v=abd4296f",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/af12cdd09afd413fa6ef1ea1d976da72?v=4419e209",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/d879357f45164854ac69a31e7581b8d3?v=c3dffe5f",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/ac4ede60d65f410ebfc246f585f587f6?v=1cc146c7",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7e03792a4c8949ae844aa33100375f9e?v=f975a3e2"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/04f3167648194c8bb838e1eb528776d3?v=66df58e6",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2753&communityID=30251",
+      "location": "27.583565629222655, -82.4000445490908",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-05-29",
+      "mhdc_price_change_amount": -15000,
+      "mls_number": "TB8494713",
+      "monthly_payment": null,
+      "movein_timeframe": -13,
+      "previous_mhdc_price": 358970,
+      "price": 343970,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHs3EAG",
+      "snipe": "Move-In Ready: June",
+      "source_id": "1152540",
+      "sqft": 1491,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7737-satterfield-ter",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=rSAYYGFm",
+      "zipcode": "34219"
+     },
+     {
+      "address": "7721 Satterfield Ter",
+      "bedrooms": 4,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcVAAQ",
+      "community_sheet_id": "a1C8a00000TLMDwEAP",
+      "community_sheet_name": "Salt Meadows - Classic Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": null,
+      "completion_estimated": 1784073600,
+      "construction_stage": "Cabinets Complete",
+      "crg_exception": false,
+      "description": "The Foxglove floorplan showcases a spacious open-concept layout with 4 bedrooms, 2 bathrooms, and a 2-car garage. The open kitchen overlooks a generous great room and dining area, making it ideal for both everyday living and entertaining.",
+      "floorplan_description": "The Foxglove floorplan offers an open-concept plan with 4 bedrooms, 2 bathrooms and a 2-car garage. Prepare dinner from this home's open kitchen which overlooks a spacious great room and dining area.",
+      "floorplan_name": "Foxglove",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHrPEAW",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/d56bdc67ca4b478b93e5007833f6b37b?v=8c89c6d9",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/d56bdc67ca4b478b93e5007833f6b37b?v=8c89c6d9",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/58c8ef6db2fb41c7b723cce5f1981287?v=18950ea7",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/ba622bd483924116896fa3016759c96a?v=4a07a45b",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/715f86e2180c4de29ee87ee5ac74d7cc?v=9f9db088",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/df5ecdf8bfc94a1e9a7209a212f8d76d?v=06b6a0ef",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/ba16f25713f14d38951a63c42f7b9a2d?v=90dfc676",
+       "…(18 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/e6b5a105f94f4c08b517795754080540?v=855220be",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2753&communityID=30251",
+      "location": "27.583137526682858, -82.39929214539498",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-06-11",
+      "mhdc_price_change_amount": -5000,
+      "mls_number": null,
+      "monthly_payment": null,
+      "movein_timeframe": 13,
+      "previous_mhdc_price": 382470,
+      "price": 377470,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHrPEAW",
+      "snipe": null,
+      "source_id": "1152540",
+      "sqft": 1840,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7721-satterfield-ter",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=LaC98CZH",
+      "zipcode": "34219"
+     },
+     {
+      "address": "7717 Satterfield Ter",
+      "bedrooms": 4,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcVAAQ",
+      "community_sheet_id": "a1C8a00000TLMDwEAP",
+      "community_sheet_name": "Salt Meadows - Classic Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1774396800,
+      "completion_estimated": 1773187200,
+      "construction_stage": "Construction Complete",
+      "crg_exception": false,
+      "description": null,
+      "floorplan_description": "The Foxglove floorplan offers an open-concept plan with 4 bedrooms, 2 bathrooms and a 2-car garage. Prepare dinner from this home's open kitchen which overlooks a spacious great room and dining area.",
+      "floorplan_name": "Foxglove",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHrKEAW",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/9f423f6af2d942079f0e1290050672ce?v=51000645",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/9f423f6af2d942079f0e1290050672ce?v=51000645",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/61d22bd2621843de8786cd8f6f66eb45?v=1fdeb691",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b80f011fde074f588e6566ad21b1d3b4?v=7cc666d7",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f880754164e748339393ba23d519b10d?v=e2f9740e",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/708fc563a3c74b64b22d178f447747f9?v=e79e62ab",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/2987b756275a45d3907613af7ce543c2?v=2bbc2af5",
+       "…(12 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/e6b5a105f94f4c08b517795754080540?v=855220be",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2753&communityID=30251",
+      "location": "0, 0",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-05-08",
+      "mhdc_price_change_amount": -5000,
+      "mls_number": "TB8501388",
+      "monthly_payment": null,
+      "movein_timeframe": -113,
+      "previous_mhdc_price": 371250,
+      "price": 366250,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHrKEAW",
+      "snipe": null,
+      "source_id": "1152540",
+      "sqft": 1840,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7717-satterfield-ter",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=LaC98CZH",
+      "zipcode": "34219"
+     }
+    ],
+    "sort": {
+     "choices": [
+      {
+       "name": "incentive_descending",
+       "label": "Incentive Descending"
+      },
+      {
+       "name": "location_ascending",
+       "label": "Location Ascending"
+      },
+      {
+       "name": "market_ascending",
+       "label": "Days on Market Ascending"
+      },
+      {
+       "name": "market_descending",
+       "label": "Days on Market Descending"
+      },
+      {
+       "name": "price_ascending",
+       "label": "Price Ascending"
+      },
+      {
+       "name": "price_descending",
+       "label": "Price Descending"
+      },
+      "…(10 items total)"
+     ]
+    },
+    "total_item": 6,
+    "limit": 6,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   }
+  ],
+  "dt": 189,
+  "ts": 1783032018003
+ }
+}

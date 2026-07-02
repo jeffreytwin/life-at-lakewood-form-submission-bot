@@ -1,0 +1,2679 @@
+{
+ "url": "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/search-data&sc_apikey={8C3D041E-BB12-4CC6-908A-4CF43E542E5B}&market=Sarasota-Bradenton&IsState=0",
+ "postData": null,
+ "data": {
+  "sitecore": {
+   "context": {
+    "pageEditing": false,
+    "site": {
+     "name": "mattamy-homes"
+    },
+    "pageState": "normal",
+    "language": "en",
+    "itemPath": "/search-data",
+    "ContextID": {
+     "value": "{FE9308AD-B672-4B39-960D-AB1F5ABAE9FE}"
+    },
+    "geolocation": {
+     "value": {
+      "latitude": null,
+      "longitude": null,
+      "country": null
+     }
+    }
+   },
+   "route": {
+    "name": "search-data",
+    "displayName": "Search Data",
+    "fields": {},
+    "databaseName": "web",
+    "deviceId": "fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3",
+    "itemId": "fe9308ad-b672-4b39-960d-ab1f5abae9fe",
+    "itemLanguage": "en",
+    "itemVersion": 1,
+    "layoutId": "53a20de9-1e21-525d-a382-96b8b7ef53d5",
+    "templateId": "431ffe29-9c81-4968-8e7c-fd2593308cff",
+    "templateName": "Search",
+    "placeholders": {
+     "jss-main": [
+      {
+       "uid": "e977455e-2057-4ff0-a3ab-a0d65800688a",
+       "componentName": "Search",
+       "dataSource": "/sitecore/content/mattamy-homes/Data/Search/No Results",
+       "params": {},
+       "fields": {
+        "usaPriceRangeMin": {
+         "value": "250K"
+        },
+        "usaPriceRangeMax": {
+         "value": "1M"
+        },
+        "caPriceRangeMin": {
+         "value": "200K"
+        },
+        "caPriceRangeMax": {
+         "value": "2M"
+        },
+        "headlineCommunity": {
+         "value": "Communities"
+        },
+        "headlinePlan": {
+         "value": "Plans"
+        },
+        "headlineQMI": {
+         "value": "Quick Move-In Homes"
+        },
+        "homeTypesList": {
+         "value": [
+          "Single Family",
+          "Townhome",
+          "Single Family - Active Adult",
+          "Villa - Active Adult",
+          "Condominium",
+          "…(8 items total)"
+         ]
+        },
+        "nCommunity": {
+         "value": 46
+        },
+        "nPlan": {
+         "value": 333
+        },
+        "nQMI": {
+         "value": 362
+        },
+        "nMPC": {
+         "value": 5
+        },
+        "mpcCards": {
+         "value": [
+          {
+           "id": "{0922A0FB-6F21-46B7-BB64-7306DB2096DC}",
+           "type": "MPC",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/138303-50420/tpa-pasadenaridge-lifestyle-family-playing",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Lifestyle"
+           },
+           "title": "Pasadena Ridge Master-Planned Community",
+           "subtitle": "Single Family",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Homes start at",
+            "price": "$349,990",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": null,
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Tampa",
+           "city": "Dade City",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "28.29068",
+           "longitudeCommunity": "-82.235331",
+           "idCommunity": null,
+           "copy": "A peaceful, nature-rich community with resort-style amenities and close-to-everything convenience.",
+           "idMpc": "{0922A0FB-6F21-46B7-BB64-7306DB2096DC}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/tampa/dade-city/pasadena-ridge-mpc",
+           "salesContract": null,
+           "homeType": "Single Family",
+           "amenities": null,
+           "lotSizes": "40',50',60'",
+           "productLines": "Signature Series,Executive Series",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/tampa/dade-city/pasadena-ridge-mpc",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{B49FEABD-7D39-46AE-9786-14A29C9EDC8C}",
+           "type": "MPC",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/37476-50420/jaxrivertownamenitiesriverclubaerialjpg-jpg",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "JAXRiverTownAmenitiesRiverClubAerialjpg"
+           },
+           "title": "RiverTown - Master-Planned Community",
+           "subtitle": "Townhome, Single Family - Active Adult, Single Family, Villa - Active Adult",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Homes start at",
+            "price": "$244,000",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": null,
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Jacksonville-St. Augustine",
+           "city": "St. Johns",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "30.0424116",
+           "longitudeCommunity": "-81.6211569",
+           "idCommunity": null,
+           "copy": "An impressive riverfront master-planned community with incredible resort-style amenities. ",
+           "idMpc": "{B49FEABD-7D39-46AE-9786-14A29C9EDC8C}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/jacksonville-st-augustine/st-johns/rivertown",
+           "salesContract": null,
+           "homeType": "Townhome, Single Family - Active Adult, Single Family, Villa - Active Adult",
+           "amenities": null,
+           "lotSizes": "Townhomes,45',55',35' Villas,40',60'",
+           "productLines": "Spirit,Premier",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": "Schedule an appointment",
+            "href": "https://calendly.com/mattamy-homes-jacksonville/rivertown-new-home-consult?back=1&month=2021-07",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/jacksonville-st-augustine/st-johns/rivertown",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{75AE991A-0DC5-4693-91BD-5483B89222E9}",
+           "type": "MPC",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/83143-50420/tpa-wellenpark-downtown-wellen-aerial",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Lake Water Features"
+           },
+           "title": "Wellen Park - Master-Planned Community",
+           "subtitle": "Villa - Active Adult, Single Family - Active Adult, Condominium, Villa, Single Family",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Homes start at",
+            "price": "$284,000",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": null,
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Sarasota-Bradenton",
+           "city": "Venice",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.048277",
+           "longitudeCommunity": "-82.322003",
+           "idCommunity": null,
+           "copy": "Beautiful Gulf Coast neighborhoods surrounded by nature, recreation, and only 15 minutes to beaches.",
+           "idMpc": "{75AE991A-0DC5-4693-91BD-5483B89222E9}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/sarasota-bradenton/venice/wellen-park",
+           "salesContract": null,
+           "homeType": "Villa - Active Adult, Single Family - Active Adult, Condominium, Villa, Single Family",
+           "amenities": null,
+           "lotSizes": "35',40',50',30',60'",
+           "productLines": "Paired Villa,Signature Series,Executive Series,Condo,Attached Villa",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/sarasota-bradenton/venice/wellen-park",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{C529D532-AF4C-420B-8823-3FC2D61CDF6D}",
+           "type": "MPC",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/97836-50420/web-town-hall-ext-1-by-rhp",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Tradition Square"
+           },
+           "title": "Tradition - Master-Planned Community",
+           "subtitle": "Townhome, Single Family - Active Adult, Single Family",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Homes start at",
+            "price": "$330,990",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": null,
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Port St. Lucie",
+           "city": "Port St. Lucie",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.2561139",
+           "longitudeCommunity": "-80.433198",
+           "idCommunity": null,
+           "copy": "Refreshingly relaxed, endlessly active, life connected.",
+           "idMpc": "{C529D532-AF4C-420B-8823-3FC2D61CDF6D}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/port-st-lucie/port-st-lucie/tradition",
+           "salesContract": null,
+           "homeType": "Townhome, Single Family - Active Adult, Single Family",
+           "amenities": null,
+           "lotSizes": "60',50'",
+           "productLines": ",Patriot,Heritage,Inscription Collection,Autograph Collection,Legend Collection",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/port-st-lucie/port-st-lucie/tradition",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{B4EA5894-0531-43CD-90B0-9A308249C1AE}",
+           "type": "MPC",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/69278-50420/us-sefl-newfield-family-picking-vegetables-stock-image",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Family picking vegetables - Stock image"
+           },
+           "title": "Newfield - Master-Planned Community",
+           "subtitle": "Single Family, Townhome, Villa",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Homes start at",
+            "price": "$458,810",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": null,
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm City-Stuart",
+           "city": "Palm City",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.192247",
+           "longitudeCommunity": "-80.357544",
+           "idCommunity": null,
+           "copy": "Tucked within the lush greenery of Martin County will sit the home-grown community you’ve always dreamed of — made real. ",
+           "idMpc": "{B4EA5894-0531-43CD-90B0-9A308249C1AE}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/palm-city-stuart/palm-city/newfield",
+           "salesContract": null,
+           "homeType": "Single Family, Townhome, Villa",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/palm-city-stuart/palm-city/newfield",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          }
+         ]
+        },
+        "communityCards": {
+         "value": [
+          {
+           "id": "{3157F28A-C8DC-4A7E-9EF0-005698823B4A}",
+           "type": "Community",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/74270-50420/jax-rivertown-rowan-kit-dining-by-rhp",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "JAX_RiverTown_Rowan"
+           },
+           "title": "RiverTown - Cove",
+           "subtitle": "St. Johns, Florida",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$529,990",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Jacksonville-St. Augustine",
+           "city": "St. Johns",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "30.0384816",
+           "longitudeCommunity": "-81.6556809",
+           "idCommunity": "{3157F28A-C8DC-4A7E-9EF0-005698823B4A}",
+           "copy": "Choose a quick move-in home or personalize your dream home with your ideal homesite and floorplan—featuring serene wetland preserves and beautiful water views.",
+           "idMpc": "{B49FEABD-7D39-46AE-9786-14A29C9EDC8C}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/jacksonville-st-augustine/st-johns/rivertown/rivertown-cove",
+           "salesContract": null,
+           "homeType": "Single Family",
+           "amenities": "Clubhouse,Event Lawn,Firepit,Fitness Center,Game Room,Park,Paw Park,Playground,Pool,Sports Courts",
+           "lotSizes": "55'",
+           "productLines": "Premier",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": "Get Information",
+            "href": "https://mattamyhomes.com/florida/jacksonville-st-augustine/st-johns/rivertown/rivertown-cove#contact",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/jacksonville-st-augustine/st-johns/rivertown/rivertown-cove",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": "Master-Planned Community",
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": "United States",
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": "Ready Date"
+          },
+          {
+           "id": "{961D4FFA-3361-4A0E-A56D-10E96DB6BE90}",
+           "type": "Community",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/77956-50420/us-jax-rt-topazmodelhome",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "US_JAX_RT_TopazModelHome"
+           },
+           "title": "RiverTown - Springs",
+           "subtitle": "St. Johns, Florida",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$694,990",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Jacksonville-St. Augustine",
+           "city": "St. Johns",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "30.04536",
+           "longitudeCommunity": "-81.65727",
+           "idCommunity": "{961D4FFA-3361-4A0E-A56D-10E96DB6BE90}",
+           "copy": "Build your dream home on spacious 75' homesites with customizable floorplans and design options",
+           "idMpc": "{B49FEABD-7D39-46AE-9786-14A29C9EDC8C}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/jacksonville-st-augustine/st-johns/rivertown/rivertown-springs",
+           "salesContract": null,
+           "homeType": "Single Family",
+           "amenities": "Amphitheater,Clubhouse,Firepit,Fitness Center,Game Room,Park,Paw Park,Playground,Pool,Sports Courts",
+           "lotSizes": "",
+           "productLines": "Premier",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": "Get Information",
+            "href": "https://mattamyhomes.com/florida/jacksonville-st-augustine/st-johns/rivertown/rivertown-springs#contact",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/jacksonville-st-augustine/st-johns/rivertown/rivertown-springs",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": "Master-Planned Community",
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": "United States",
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": "Ready Date"
+          },
+          {
+           "id": "{B312572A-761A-4F7B-ADE6-D6B74BB08596}",
+           "type": "Community",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/83613-50420/high-res-eastwind-living-by-rhp",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Avila Eastwind Model"
+           },
+           "title": "Avila",
+           "subtitle": "Jensen Beach, Florida",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$389,990",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm City-Stuart",
+           "city": "Jensen Beach",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.25118",
+           "longitudeCommunity": "-80.272922",
+           "idCommunity": "{B312572A-761A-4F7B-ADE6-D6B74BB08596}",
+           "copy": "Coastal inspired townhomes & semi-detached homes conveniently located minutes to beach access, shopping, and A-rated schools. ",
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/palm-city-stuart/jensen-beach/avila",
+           "salesContract": null,
+           "homeType": "Townhome, Villa",
+           "amenities": "Cabana,Pool,Close to Everything,Charm",
+           "lotSizes": "",
+           "productLines": "",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": "Get Information",
+            "href": "https://mattamyhomes.com/florida/palm-city-stuart/jensen-beach/avila#contact",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/palm-city-stuart/jensen-beach/avila",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": "Low Maintenance,Gated",
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": "United States",
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": "Ready Date"
+          },
+          {
+           "id": "{4D0BC693-16B5-4E7F-A185-B47BFB8FE9AB}",
+           "type": "Community",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/88095-50420/seville-amenity-pool",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Seville Amenity Photos"
+           },
+           "title": "Tradition - Seville",
+           "subtitle": "Port St. Lucie, Florida",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$470,990",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Port St. Lucie",
+           "city": "Port St. Lucie",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.275691",
+           "longitudeCommunity": "-80.470555",
+           "idCommunity": "{4D0BC693-16B5-4E7F-A185-B47BFB8FE9AB}",
+           "copy": "Single-family luxury and lifestyle blend in grand fashion to provide resort recreation with a beach club pool oasis, clubhouse, and more.",
+           "idMpc": "{C529D532-AF4C-420B-8823-3FC2D61CDF6D}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/port-st-lucie/port-st-lucie/tradition/seville",
+           "salesContract": null,
+           "homeType": "Single Family",
+           "amenities": "Dog Park,Electric Bike Share,Event Lawn,Fitness Center,Grilling Station,Pool,Clubhouse,Tot Lot,T Trail",
+           "lotSizes": "50'",
+           "productLines": "Inscription Collection,Autograph Collection,Legend Collection",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": "Get Information",
+            "href": "https://mattamyhomes.com/florida/port-st-lucie/port-st-lucie/tradition/seville#contact",
+            "target": "_blank",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/port-st-lucie/port-st-lucie/tradition/seville",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": "Gated,Low Maintenance,Master-Planned Community",
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": "United States",
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": "Ready Date"
+          },
+          {
+           "id": "{B4731AE3-A04F-4B06-8C10-FC796EB04321}",
+           "type": "Community",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/113455-50420/tpa-lakespur-amenity-pool-new",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Community Pool Water Features"
+           },
+           "title": "Lakespur at Wellen Park",
+           "subtitle": "Venice, Florida",
+           "features": [],
+           "attributes": [],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$284,000",
+            "pricePerMonth": null,
+            "monthlyPriceLabel": null,
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Sarasota-Bradenton",
+           "city": "Venice",
+           "community": null,
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.008088",
+           "longitudeCommunity": "-82.301455",
+           "idCommunity": "{B4731AE3-A04F-4B06-8C10-FC796EB04321}",
+           "copy": "Stylish low-maintenance condos for vacation-style or year-round living ",
+           "idMpc": "{75AE991A-0DC5-4693-91BD-5483B89222E9}",
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": null,
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": "Active",
+           "availableDateMessage": "",
+           "url": "/florida/sarasota-bradenton/venice/wellen-park/lakespur",
+           "salesContract": null,
+           "homeType": "Condominium",
+           "amenities": "Resort-style Pool,Clubhouse,Tot Lot,Paw Park,Firepit,Event Lawn,Lawn Maintenance",
+           "lotSizes": "40'",
+           "productLines": "Condo",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": "Get Information",
+            "href": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/lakespur#contact",
+            "target": "_blank",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": [
+            {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "/florida/sarasota-bradenton/venice/wellen-park/lakespur",
+             "target": null,
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           ],
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": null,
+           "communityStyles": "Low Maintenance,Master-Planned Community",
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": "United States",
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": "Ready Date"
+          },
+          "…(46 items total)"
+         ]
+        },
+        "planCards": {
+         "value": [
+          {
+           "id": "{028BED40-CD02-4675-87DB-8321BC9A3B71}",
+           "type": "Plan",
+           "annotation": "Avila",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/83831-50420/high-res-ext-day-villas-1-by-rhp",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Avila Villa Exterior Day"
+           },
+           "title": "Oceana",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "2,351 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$506,990",
+            "pricePerMonth": "$2,623",
+            "monthlyPriceLabel": "Est. Mortgage",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm City-Stuart",
+           "city": "Jensen Beach",
+           "community": "Avila",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.25118",
+           "longitudeCommunity": "-80.272922",
+           "idCommunity": "{B312572A-761A-4F7B-ADE6-D6B74BB08596}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "",
+           "url": "/florida/palm-city-stuart/jensen-beach/avila/oceana",
+           "salesContract": null,
+           "homeType": "Villa",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": "Model Home",
+           "communityStyles": null,
+           "caContentText": "Floorplan details coming soon",
+           "usContentText": "Floorplan details coming soon",
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": true,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{66C67DCE-BE92-409B-A3F2-2ACE00DFC02B}",
+           "type": "Plan",
+           "annotation": "Avila",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/79236-50420/us-sefl-avila-aqua-exterior",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Avila Aqua Exterior"
+           },
+           "title": "Aqua",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "1,778 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$405,990",
+            "pricePerMonth": "$2,101",
+            "monthlyPriceLabel": "Est. Mortgage",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm City-Stuart",
+           "city": "Jensen Beach",
+           "community": "Avila",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.25118",
+           "longitudeCommunity": "-80.272922",
+           "idCommunity": "{B312572A-761A-4F7B-ADE6-D6B74BB08596}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "",
+           "url": "/florida/palm-city-stuart/jensen-beach/avila/aqua",
+           "salesContract": null,
+           "homeType": "Townhome",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": "",
+           "communityStyles": null,
+           "caContentText": "Floorplan details coming soon",
+           "usContentText": "Floorplan details coming soon",
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{C1675E28-67F5-4563-9773-096F1E2BA4EC}",
+           "type": "Plan",
+           "annotation": "Avila",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/138249-50420/us-sefl-avila-beacon",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "US_SEFL_Avila_Beacon"
+           },
+           "title": "Beacon",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "1,614 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$389,990",
+            "pricePerMonth": "$2,018",
+            "monthlyPriceLabel": "Est. Mortgage",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm City-Stuart",
+           "city": "Jensen Beach",
+           "community": "Avila",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.25118",
+           "longitudeCommunity": "-80.272922",
+           "idCommunity": "{B312572A-761A-4F7B-ADE6-D6B74BB08596}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "",
+           "url": "/florida/palm-city-stuart/jensen-beach/avila/beacon",
+           "salesContract": null,
+           "homeType": "Townhome",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": "",
+           "communityStyles": null,
+           "caContentText": "Floorplan details coming soon",
+           "usContentText": "Floorplan details coming soon",
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": true,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{E4E88497-B7FE-4329-8DEB-3F970D4D6D2E}",
+           "type": "Plan",
+           "annotation": "Avila",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/83831-50420/high-res-ext-day-villas-1-by-rhp",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Avila Villa Exterior Day"
+           },
+           "title": "Salina",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "2,547 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$526,990",
+            "pricePerMonth": "$2,727",
+            "monthlyPriceLabel": "Est. Mortgage",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm City-Stuart",
+           "city": "Jensen Beach",
+           "community": "Avila",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.25118",
+           "longitudeCommunity": "-80.272922",
+           "idCommunity": "{B312572A-761A-4F7B-ADE6-D6B74BB08596}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "",
+           "url": "/florida/palm-city-stuart/jensen-beach/avila/salina",
+           "salesContract": null,
+           "homeType": "Villa",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": "Model Home",
+           "communityStyles": null,
+           "caContentText": "Floorplan details coming soon",
+           "usContentText": "Floorplan details coming soon",
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": true,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{2674222C-7E9B-425D-94DF-B4D3F7A90BD2}",
+           "type": "Plan",
+           "annotation": "Avila",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/83830-50420/high-res-ext-day-townhomes-by-rhp",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Avila Townhome Exterior Day"
+           },
+           "title": "Dylan",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "1,865 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "Starting From",
+            "price": "$411,990",
+            "pricePerMonth": "$2,132",
+            "monthlyPriceLabel": "Est. Mortgage",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": null,
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm City-Stuart",
+           "city": "Jensen Beach",
+           "community": "Avila",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.25118",
+           "longitudeCommunity": "-80.272922",
+           "idCommunity": "{B312572A-761A-4F7B-ADE6-D6B74BB08596}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "",
+           "url": "/florida/palm-city-stuart/jensen-beach/avila/dylan",
+           "salesContract": null,
+           "homeType": "Townhome",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": null,
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": null,
+           "modelHome": "Model Home",
+           "communityStyles": null,
+           "caContentText": "Floorplan details coming soon",
+           "usContentText": "Floorplan details coming soon",
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": null,
+           "communityCountry": null,
+           "activeQMIs": true,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": null,
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          "…(333 items total)"
+         ]
+        },
+        "qmiCards": {
+         "value": [
+          {
+           "id": "{15C4E581-101B-4244-A8B4-000F23BEDBCC}",
+           "type": "QMI",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/78872-50420/tpa-woodruff-modern-mo2-06-18-24",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Elevation Front with window, garage, door and exterior stone"
+           },
+           "title": "1758 Soaring Vida St",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "2,323 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "",
+            "price": "$389,878",
+            "pricePerMonth": "$2,017",
+            "monthlyPriceLabel": "Estimated P&I",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": "$0",
+            "displayPreviousPrice": false
+           },
+           "metro": "Tampa",
+           "city": "Palmetto",
+           "community": "Sanderling",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.563991",
+           "longitudeCommunity": "-82.547523",
+           "idCommunity": "{328520A0-2A4C-411F-BE28-155EB65D530D}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "Ready October 2026",
+           "url": "/florida/tampa/palmetto/sanderling/woodruff/1758-soaring-vida-st",
+           "salesContract": "4SL",
+           "homeType": "Single Family",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": "20261001T000000",
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": "Woodruff",
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": true,
+           "countryQMI": "United States",
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": {
+            "prequalifyText": "Get Pre-Qualified",
+            "prequalifyLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "https://apply.mattamyhf.com/#/milestones?referrerId=mattampa%40mattamyhf.com&loanType=MORTGAGE",
+             "target": "_blank",
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           },
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{B4C6CCE9-4A76-43AC-98D7-BF92B7472E3D}",
+           "type": "QMI",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/41677-50420/tpa-windwater-isleroyal-westindies-jpg",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Elevation Front"
+           },
+           "title": "9021 SUNDANCE TERRACE",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "3 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "4 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "2,867 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "3 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "",
+            "price": "$479,990",
+            "pricePerMonth": "$2,484",
+            "monthlyPriceLabel": "Estimated P&I",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": "$0",
+            "displayPreviousPrice": false
+           },
+           "metro": "Tampa",
+           "city": "Parrish",
+           "community": "Crosswind Ranch",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.592673",
+           "longitudeCommunity": "-82.408163",
+           "idCommunity": "{A0F6CE12-5B02-4A38-9F35-A26FFF871144}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "",
+           "url": "/florida/tampa/parrish/crosswind-ranch/isle-royal/9021-sundance-terrace",
+           "salesContract": "4SL",
+           "homeType": "Single Family",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": "",
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": "Isle Royal",
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": true,
+           "countryQMI": "United States",
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": {
+            "prequalifyText": "Get Pre-Qualified",
+            "prequalifyLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "https://apply.mattamyhf.com/#/milestones?referrerId=mattampa%40mattamyhf.com&loanType=MORTGAGE",
+             "target": "_blank",
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           },
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{901C42C0-12A3-46AF-BEFB-7997D8E08830}",
+           "type": "QMI",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/49746-50420/tpa-asbury-pelican-kitchen1",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "L-Shaped Kitchen with pendant light, refrigerator, door, cooktop, white cabinets, raised panel cabinets, oven and wood flooring"
+           },
+           "title": "13004 PIERCE STREET",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "2 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "1,787 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "",
+            "price": "$309,990",
+            "pricePerMonth": "$1,604",
+            "monthlyPriceLabel": "Estimated P&I",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": "$0",
+            "displayPreviousPrice": false
+           },
+           "metro": "Tampa",
+           "city": "Parrish",
+           "community": "Crosswind Ranch",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "27.592673",
+           "longitudeCommunity": "-82.408163",
+           "idCommunity": "{A0F6CE12-5B02-4A38-9F35-A26FFF871144}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "",
+           "url": "/florida/tampa/parrish/crosswind-ranch/pelican/13004-pierce-street",
+           "salesContract": "4SL",
+           "homeType": "Single Family",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": "",
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": "Pelican",
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": true,
+           "countryQMI": "United States",
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": {
+            "prequalifyText": "Get Pre-Qualified",
+            "prequalifyLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "https://apply.mattamyhf.com/#/milestones?referrerId=mattampa%40mattamyhf.com&loanType=MORTGAGE",
+             "target": "_blank",
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           },
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{B62D754A-3F59-462D-BBDA-3A079AEA3159}",
+           "type": "QMI",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/88365-50420/18-townhomes-4-unit-co-full-string-th-gen3-elev-day",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "us_sefl_forest townhomes_renderings"
+           },
+           "title": "7095 Brenner Ave",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "1,579 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "1 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "",
+            "price": "$494,710",
+            "pricePerMonth": "$2,560",
+            "monthlyPriceLabel": "Estimated P&I",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": "$488,710",
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm Beach",
+           "city": "Lake Worth",
+           "community": "Forest – Townhomes",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "26.609087",
+           "longitudeCommunity": "-80.162948",
+           "idCommunity": "{9C1B801C-C5FE-4EAE-8473-8D057CB328CD}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "Ready August 2026",
+           "url": "/florida/palm-beach/lake-worth/forest-townhomes/hawthorn/7095-brenner-ave",
+           "salesContract": "4SL",
+           "homeType": "Townhome",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": "20260830T000000",
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": "Hawthorn",
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": "United States",
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": {
+            "prequalifyText": "Get Pre-Qualified",
+            "prequalifyLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "https://apply.mattamyhf.com/#/milestones?referrerId=matsefl%40mattamyhf.com&loanType=MORTGAGE",
+             "target": "_blank",
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           },
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          {
+           "id": "{0C9573BA-9C63-4226-9B2E-6EB476DD0E09}",
+           "type": "QMI",
+           "annotation": "",
+           "flag": "",
+           "isFavorite": false,
+           "image": {
+            "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/102155-50420/18-townhomes-4-unit-cn-laurel-th-gen3-elev-day",
+            "srcMobile": null,
+            "srcDesktop": null,
+            "alt": "Elevation Front with garage, window, door and exterior clapboard"
+           },
+           "title": "7082 Channing Ave",
+           "subtitle": "",
+           "features": [],
+           "attributes": [
+            {
+             "icon": "bath",
+             "label": "2 Bath",
+             "attribute": null
+            },
+            {
+             "icon": "half-baths",
+             "label": "1 Half Bath",
+             "attribute": null
+            },
+            {
+             "icon": "bed",
+             "label": "3 Bed",
+             "attribute": null
+            },
+            {
+             "icon": "ruler",
+             "label": "1,728 Sq. Ft.",
+             "attribute": null
+            },
+            {
+             "icon": "car",
+             "label": "2 Car Garage",
+             "attribute": null
+            },
+            "…(6 items total)"
+           ],
+           "price": {
+            "normalText": "",
+            "price": "$516,900",
+            "pricePerMonth": "$2,675",
+            "monthlyPriceLabel": "Estimated P&I",
+            "noPriceText": "Pricing Coming Soon",
+            "previousPriceQMI": "$556,990",
+            "displayPreviousPrice": false
+           },
+           "metro": "Palm Beach",
+           "city": "Lake Worth",
+           "community": "Forest – Townhomes",
+           "state": "Florida",
+           "stateAbbreviation": "FL",
+           "latitudeCommunity": "26.609087",
+           "longitudeCommunity": "-80.162948",
+           "idCommunity": "{9C1B801C-C5FE-4EAE-8473-8D057CB328CD}",
+           "copy": null,
+           "idMpc": null,
+           "communityStatusId": "{67321274-1706-4984-AE92-4E3EEEEC1015}",
+           "communityStatus": "Now Selling",
+           "planStatus": "active",
+           "promoStatus": null,
+           "statusShortDescription": "Now Selling",
+           "feedFileStatus": null,
+           "availableDateMessage": "Ready Now",
+           "url": "/florida/palm-beach/lake-worth/forest-townhomes/laurel/7082-channing-ave",
+           "salesContract": "4SL",
+           "homeType": "",
+           "amenities": null,
+           "lotSizes": "",
+           "productLines": "",
+           "date": "20260531T000000",
+           "ctaAction": {
+            "sectionName": null,
+            "primary": false,
+            "text": null,
+            "href": null,
+            "target": null,
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "ctas": null,
+           "parentID": null,
+           "isCondo": false,
+           "den": false,
+           "planName": "Laurel",
+           "modelHome": null,
+           "communityStyles": null,
+           "caContentText": null,
+           "usContentText": null,
+           "displayParkingSpace": false,
+           "doNotShowQMIPrice": false,
+           "preSellingHome": false,
+           "countryQMI": "United States",
+           "communityCountry": null,
+           "activeQMIs": false,
+           "messageFlag": null,
+           "rvGarage": false,
+           "qmiPrequalifyValues": {
+            "prequalifyText": "Get Pre-Qualified",
+            "prequalifyLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "https://apply.mattamyhf.com/#/milestones?referrerId=matsefl%40mattamyhf.com&loanType=MORTGAGE",
+             "target": "_blank",
+             "label": null,
+             "key": null,
+             "type": null,
+             "alternateText": null
+            }
+           },
+           "itemName": null,
+           "community_QMIDefaultSort": null
+          },
+          "…(362 items total)"
+         ]
+        },
+        "searchTypes": {
+         "value": [
+          {
+           "type": "Communities",
+           "title": "Communities"
+          },
+          {
+           "type": "Plans",
+           "title": "Plans"
+          },
+          {
+           "type": "QMI",
+           "title": "Quick Move-Ins"
+          }
+         ]
+        },
+        "metrosFilter": {
+         "value": [
+          {
+           "name": "Greater Toronto Area",
+           "divisionCode": "GTA",
+           "state": "Ontario",
+           "stateAbbrev": "ON",
+           "country": "CAN",
+           "latitude": "44.0384",
+           "longitude": "-79.2000",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Custom",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": [
+            "{D80E5A86-D64C-4A58-A247-4F183F5DE8E4}",
+            "{676043CE-4D59-444C-96EA-52CCE29312E0}",
+            "{703571C9-37EB-4E5A-B426-4EE4DBC87263}",
+            "{383F23EA-44C8-4B30-A55A-C833E38C3D43}",
+            "{552CFA0B-272E-4B60-AC8A-5F1F054D8493}",
+            "…(15 items total)"
+           ]
+          },
+          {
+           "name": "Kitchener-Waterloo-Guelph",
+           "divisionCode": "GTA",
+           "state": "Ontario",
+           "stateAbbrev": "ON",
+           "country": "CAN",
+           "latitude": "43.452969",
+           "longitude": "-80.495064",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Custom",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": [
+            "{47203FF6-821D-40DB-9C04-8A10576B3134}",
+            "{6A30C852-2677-481C-A2A2-354A82AF9158}",
+            "{5EF1B2A3-EFB6-4765-8C55-3C8FE55CA12A}",
+            "{39700EB2-2427-49F5-8332-0BFF1EF8B2C2}"
+           ]
+          },
+          {
+           "name": "Phoenix",
+           "divisionCode": "PHX",
+           "state": "Arizona",
+           "stateAbbrev": "AZ",
+           "country": "USA",
+           "latitude": "33.4484",
+           "longitude": "-112.074",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Alphabetical",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": null
+          },
+          {
+           "name": "Charlotte",
+           "divisionCode": "CLT",
+           "state": "North Carolina",
+           "stateAbbrev": "NC",
+           "country": "USA",
+           "latitude": "35.2271",
+           "longitude": "-80.8431",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Alphabetical",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": null
+          },
+          {
+           "name": "Dallas-Fort Worth",
+           "divisionCode": "DFW",
+           "state": "Texas",
+           "stateAbbrev": "TX",
+           "country": "USA",
+           "latitude": "32.7767",
+           "longitude": "-96.797",
+           "zoomLevel": null,
+           "zoomMin": null,
+           "metroCommunityDefaultSort": "Alphabetical",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "metroQMIDefaultSort": "Ready Date",
+           "stateQMIDefaultSort": "Ready Date",
+           "metroCommunityIDsCustomSort": null
+          },
+          "…(20 items total)"
+         ]
+        },
+        "statesCustomSort": {
+         "value": [
+          {
+           "state": "Ontario",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "stateQMIDefaultSort": "Ready Date",
+           "stateCommunityIDsCustomSort": null
+          },
+          {
+           "state": "Arizona",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "stateQMIDefaultSort": "Ready Date",
+           "stateCommunityIDsCustomSort": null
+          },
+          {
+           "state": "North Carolina",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "stateQMIDefaultSort": "Ready Date",
+           "stateCommunityIDsCustomSort": null
+          },
+          {
+           "state": "Texas",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "stateQMIDefaultSort": "Ready Date",
+           "stateCommunityIDsCustomSort": null
+          },
+          {
+           "state": "Florida",
+           "stateCommunityDefaultSort": "Alphabetical",
+           "stateQMIDefaultSort": "Ready Date",
+           "stateCommunityIDsCustomSort": null
+          },
+          "…(6 items total)"
+         ]
+        },
+        "noResults": {
+         "value": {
+          "title": "No results in this area, but your future home is waiting–adjust your search filters to find it",
+          "ctas": [
+           {
+            "sectionName": null,
+            "primary": false,
+            "text": "RESET FILTERS",
+            "href": "/",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           }
+          ]
+         }
+        },
+        "quickStartHomesTooltip": {
+         "value": "Quick Start Homes provide earlier move-in opportunities compared to a to-be-built home and you may be able to personalize based on the stage of construction which could affect the Total Purchase Price shown here."
+        },
+        "mortgageAmounts": {
+         "value": [
+          {
+           "market": "Greater Toronto Area",
+           "displayMortgageModal": true,
+           "interestRate": "4.59",
+           "paymentPercentage": "20",
+           "termInYears": "25",
+           "mortgageTitle": "Estimated Mortgage Payment*",
+           "disclaimerText": "Any price for a home in Ontario listed on Mattamy’s website includes an estimated amount for the temporary Ontario enhanced new housing HST rebate. This pricing assumes that the rebate is fully enacted as anticipated and that the purchaser meets all eligibilit…(2001)",
+           "ctaTitle": "",
+           "ctaText": "",
+           "ctaurl": {
+            "sectionName": null,
+            "primary": false,
+            "text": "",
+            "href": "",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "cardDisplayText": "Estimated Monthly Mortgage",
+           "cardDisplayPrice": true,
+           "tooltip": "This is an approximation. Actual results will be provided by your lender."
+          },
+          {
+           "market": "Kitchener-Waterloo-Guelph",
+           "displayMortgageModal": true,
+           "interestRate": "4.59",
+           "paymentPercentage": "20",
+           "termInYears": "25",
+           "mortgageTitle": "Estimated Mortgage Payment*",
+           "disclaimerText": "Any price for a home in Ontario listed on Mattamy’s website includes an estimated amount for the temporary Ontario enhanced new housing HST rebate. This pricing assumes that the rebate is fully enacted as anticipated and that the purchaser meets all eligibilit…(2001)",
+           "ctaTitle": "",
+           "ctaText": "",
+           "ctaurl": {
+            "sectionName": null,
+            "primary": false,
+            "text": "",
+            "href": "",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "cardDisplayText": "Estimated Monthly Mortgage",
+           "cardDisplayPrice": true,
+           "tooltip": "This is an approximation. Actual results will be provided by your lender."
+          },
+          {
+           "market": "Phoenix",
+           "displayMortgageModal": true,
+           "interestRate": "4.99",
+           "paymentPercentage": "3.5",
+           "termInYears": "30",
+           "mortgageTitle": "Estimate Mortgage Payment*",
+           "disclaimerText": "*Default amounts are hypothetical and may not apply to your individual situation.  This calculator provides approximations for information purposes only.  Actual results will be provided by your lender and will likely vary depending on your eligibility and cur…(1065)",
+           "ctaTitle": "Explore options to reduce your monthly payment with incentives offered by Mattamy Homes. ",
+           "ctaText": "",
+           "ctaurl": {
+            "sectionName": null,
+            "primary": false,
+            "text": "",
+            "href": "",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "cardDisplayText": "Estimated P&I",
+           "cardDisplayPrice": true,
+           "tooltip": ""
+          },
+          {
+           "market": "Charlotte",
+           "displayMortgageModal": true,
+           "interestRate": "4.99",
+           "paymentPercentage": "3.5",
+           "termInYears": "30",
+           "mortgageTitle": "Estimate Mortgage Payment*",
+           "disclaimerText": "*Default amounts are hypothetical and may not apply to your individual situation. This calculator provides approximations for informational purposes only. Actual results will be provided by your lender and will likely vary depending on your eligibility and cur…(1059)",
+           "ctaTitle": "Explore options to reduce your monthly payment with incentives offered by Mattamy Homes. ",
+           "ctaText": "",
+           "ctaurl": {
+            "sectionName": null,
+            "primary": false,
+            "text": "",
+            "href": "",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "cardDisplayText": "Estimated P&I",
+           "cardDisplayPrice": true,
+           "tooltip": ""
+          },
+          {
+           "market": "Dallas-Fort Worth",
+           "displayMortgageModal": true,
+           "interestRate": "4.99",
+           "paymentPercentage": "3.5",
+           "termInYears": "30",
+           "mortgageTitle": "Estimate Mortgage Payment*",
+           "disclaimerText": "*Default amounts are hypothetical and may not apply to your individual situation. This calculator provides approximations for informational purposes only. Actual results will be provided by your lender and will likely vary depending on your eligibility and cur…(1059)",
+           "ctaTitle": "Explore options to reduce your monthly payment with incentives offered by Mattamy Homes. ",
+           "ctaText": "",
+           "ctaurl": {
+            "sectionName": null,
+            "primary": false,
+            "text": "",
+            "href": "",
+            "target": "",
+            "label": null,
+            "key": null,
+            "type": null,
+            "alternateText": null
+           },
+           "cardDisplayText": "Estimated P&I",
+           "cardDisplayPrice": true,
+           "tooltip": ""
+          },
+          "…(20 items total)"
+         ]
+        },
+        "atlasRTXSearchValues": {
+         "value": [
+          {
+           "areaName": "Greater Toronto Area",
+           "divisionCode": "GTA",
+           "state": "Ontario"
+          },
+          {
+           "areaName": "Kitchener-Waterloo-Guelph",
+           "divisionCode": "GTA",
+           "state": "Ontario"
+          },
+          {
+           "areaName": "Phoenix",
+           "divisionCode": "PHX",
+           "state": "Arizona"
+          },
+          {
+           "areaName": "Charlotte",
+           "divisionCode": "CLT",
+           "state": "North Carolina"
+          },
+          {
+           "areaName": "Dallas-Fort Worth",
+           "divisionCode": "DFW",
+           "state": "Texas"
+          },
+          "…(20 items total)"
+         ]
+        },
+        "promotionBanner": {
+         "value": [
+          {
+           "market": "Greater Toronto Area",
+           "promotionBannerVM": {
+            "line1": "",
+            "line2": "<div style=\"display: flex; justify-content: center; align-items: center;\" class=\"flex-col md:flex-row\"><span style=\"font-size: 24px;\">\nGovernment Tax Rebates&nbsp;Available on New&nbsp;Homes! <a href=\"http://mattamyhomes.com/promos/government-rebates\">Learn Mo…(279)",
+            "line3": "",
+            "ctaText": "",
+            "ctaLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "",
+             "target": "",
+             "label": "",
+             "key": null,
+             "type": null,
+             "alternateText": null
+            },
+            "displayBanner": true,
+            "country": "Canada",
+            "enablePopup": false,
+            "bannerImage": null
+           }
+          },
+          {
+           "market": "Kitchener-Waterloo-Guelph",
+           "promotionBannerVM": {
+            "line1": "",
+            "line2": "<div style=\"display: flex; justify-content: center; align-items: center;\" class=\"flex-col md:flex-row\"><span style=\"font-size: 24px;\">\nGovernment Tax Rebates Available on New Homes! <a href=\"http://mattamyhomes.com/promos/government-rebates\">Learn More&nbsp;</…(275)",
+            "line3": "",
+            "ctaText": "",
+            "ctaLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "",
+             "href": "",
+             "target": "",
+             "label": "",
+             "key": null,
+             "type": null,
+             "alternateText": null
+            },
+            "displayBanner": true,
+            "country": "Canada",
+            "enablePopup": false,
+            "bannerImage": null
+           }
+          },
+          {
+           "market": "Phoenix",
+           "promotionBannerVM": {
+            "line1": "",
+            "line2": "<p style=\"font-size: 24px; line-height:24px; margin-bottom: 0; padding-bottom: 0; text-align: center;\">\nSave During our Semi-Annual <br />New Home Event -&nbsp;<a href=\"https://mattamyhomes.com/arizona/phoenix/promos/jun-aug-2026\">Going on Now!</a>\n</p>",
+            "line3": "",
+            "ctaText": "View Offers",
+            "ctaLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "View Offers",
+             "href": "https://mattamyhomes.com/arizona/phoenix/promos/jun-aug-2026",
+             "target": "",
+             "label": "",
+             "key": null,
+             "type": null,
+             "alternateText": null
+            },
+            "displayBanner": true,
+            "country": "United States",
+            "enablePopup": true,
+            "bannerImage": {
+             "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/150965-50420/matnat-460-june-july-campaign-2026-pop-up-promo",
+             "srcMobile": null,
+             "srcDesktop": null,
+             "alt": " Marketing"
+            }
+           }
+          },
+          {
+           "market": "Charlotte",
+           "promotionBannerVM": {
+            "line1": "",
+            "line2": "<p style=\"font-size: 24px; line-height:24px; margin-bottom: 0; padding-bottom: 0; text-align: center;\">\nLimited Time Promotions Going On Now!&nbsp;<a href=\"https://mattamyhomes.com/north-carolina/charlotte/promos/all\">View Promotions</a>\n</p>",
+            "line3": "",
+            "ctaText": "View Offers",
+            "ctaLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "View Offers",
+             "href": "https://mattamyhomes.com/north-carolina/charlotte/promos/all",
+             "target": "",
+             "label": "",
+             "key": null,
+             "type": null,
+             "alternateText": null
+            },
+            "displayBanner": true,
+            "country": "United States",
+            "enablePopup": true,
+            "bannerImage": {
+             "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/150965-50420/matnat-460-june-july-campaign-2026-pop-up-promo",
+             "srcMobile": null,
+             "srcDesktop": null,
+             "alt": " Marketing"
+            }
+           }
+          },
+          {
+           "market": "Dallas-Fort Worth",
+           "promotionBannerVM": {
+            "line1": "",
+            "line2": "<p style=\"font-size: 24px; line-height:24px; margin-bottom: 0; padding-bottom: 0; text-align: center;\">\nSave During our Semi-Annual <br />New Home Event -&nbsp;<a href=\"https://mattamyhomes.com/texas/dallas-fort-worth/promos/jun-aug-2026\">Going on Now!</a>\n</p…(261)",
+            "line3": "",
+            "ctaText": "View Offers",
+            "ctaLink": {
+             "sectionName": null,
+             "primary": false,
+             "text": "View Offers",
+             "href": "https://mattamyhomes.com/texas/dallas-fort-worth/promos/jun-aug-2026",
+             "target": "",
+             "label": "",
+             "key": null,
+             "type": null,
+             "alternateText": null
+            },
+            "displayBanner": true,
+            "country": "United States",
+            "enablePopup": true,
+            "bannerImage": {
+             "src": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/150965-50420/matnat-460-june-july-campaign-2026-pop-up-promo",
+             "srcMobile": null,
+             "srcDesktop": null,
+             "alt": " Marketing"
+            }
+           }
+          },
+          "…(18 items total)"
+         ]
+        },
+        "maximumZoom": {
+         "value": "15"
+        },
+        "priceDifferentialTextUSA": {
+         "value": "Save"
+        },
+        "priceDifferentialTextCAN": {
+         "value": "Save"
+        },
+        "usMarketSelectors": {
+         "value": false
+        },
+        "canadaMarketSelectors": {
+         "value": true
+        },
+        "atlasRTXChatbotScript": {
+         "value": "<script type=\"text/javascript\">\r\n\twindow.atlasSettings = {\"auth_id\":\"3666b6b9a41f4d73908791ad9c8755d6\",\"snippetUrl\":\"https://static.atlasrtx.com/snippets/AtlasRTXV3.min.js\",\"env\":\"\",\"rtxContext\":{\"mode\":\"search\",\"params\":{},\"segmentationContext\":{}}}\r\n\tfunctio…(615)"
+        },
+        "canadaAtlasRTXChatbotScript": {
+         "value": "<script type=\"text/javascript\">\r\n\twindow.atlasSettings = {\"auth_id\":\"6E746BD617314F59BA3FAEE363C8DDDA\",\"snippetUrl\":\"https://static.atlasrtx.com/snippets/AtlasRTXV3.min.js\",\"env\":\"\",\"rtxContext\":{\"mode\":\"search\",\"params\":{},\"segmentationContext\":{}}}\r\n\tfunctio…(615)"
+        }
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

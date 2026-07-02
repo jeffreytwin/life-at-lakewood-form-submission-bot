@@ -9,7 +9,7 @@ const capture = JSON.parse(
   readFileSync(
     path.resolve(
       __dirname,
-      "../../../pipeline/slice/discovery/round7/mattamy-search.capture-4.pruned.json"
+      "../../fixtures/floorplans/mattamy-search-data.pruned.json"
     ),
     "utf8"
   )
