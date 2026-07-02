@@ -176,10 +176,33 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     return { status: "failed", detail: `no extractor available for ${builder.name} (${builder.extraction_method ?? "unclassified"})` };
   }
 
+  // Auto-discover the community page URL on first run if not configured.
+  let params = (conn.extractor_params ?? {}) as Record<string, unknown>;
+  if (!params.url) {
+    const { data: builderRow } = await supabase
+      .from("fp_builders")
+      .select("base_url, engine_config")
+      .eq("id", builder.id)
+      .single();
+    const { discoverCommunityUrl } = await import("@/lib/floorplans/discover-url");
+    const url = builderRow
+      ? await discoverCommunityUrl(builderRow, community.name)
+      : null;
+    if (!url) {
+      await setRunStatus(conn.id, "could not auto-discover page URL — set it via Edit URL", null, true);
+      return { status: "failed", detail: `could not auto-discover a ${builder.name} page for ${community.name}; set the URL manually` };
+    }
+    params = { ...params, url };
+    await supabase
+      .from("fp_builder_communities")
+      .update({ extractor_params: params })
+      .eq("id", conn.id);
+  }
+
   const runId = `manual-${Date.now()}`;
   let plans: NormalizedPlan[];
   try {
-    plans = await extractor((conn.extractor_params ?? {}) as Record<string, unknown>);
+    plans = await extractor(params);
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     await setRunStatus(conn.id, `error: ${detail}`, null, true);

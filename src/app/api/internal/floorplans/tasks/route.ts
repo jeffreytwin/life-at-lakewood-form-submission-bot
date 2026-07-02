@@ -7,15 +7,17 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const { data, error } = await supabase
-      .from("fp_builders")
+      .from("fp_follow_up_tasks")
       .select(
-        "id, name, base_url, extraction_method, audit_notes, active, fp_builder_communities(id, active, last_run_at, last_run_status, last_plan_count, consecutive_failures, extractor_params, fp_communities:community_id(name, fp_sites:site_id(domain)))"
+        "id, task_type, detail, status, created_at, fp_floor_plans:floor_plan_id(name, fp_sites:site_id(domain))"
       )
-      .order("name");
+      .eq("status", "open")
+      .order("created_at", { ascending: false })
+      .limit(100);
     if (error) throw error;
     return NextResponse.json(data ?? []);
   } catch (error) {
-    logger.error("Failed to fetch floor plan builders", {
+    logger.error("Failed to fetch follow-up tasks", {
       error: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

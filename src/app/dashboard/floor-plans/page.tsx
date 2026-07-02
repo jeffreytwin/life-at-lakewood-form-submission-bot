@@ -30,6 +30,15 @@ interface PendingChange {
   fp_sites: { domain: string; name: string } | null;
   fp_communities: { name: string } | null;
   fp_builders: { name: string } | null;
+  fp_floor_plans: { id: string; starred: boolean } | null;
+}
+
+interface FollowUpTask {
+  id: string;
+  task_type: string;
+  detail: string | null;
+  created_at: string;
+  fp_floor_plans: { name: string; fp_sites: { domain: string } | null } | null;
 }
 
 const CHANGE_LABEL: Record<PendingChange["change_type"], string> = {
@@ -60,6 +69,21 @@ export default function FloorPlansPage() {
   const [editGallery, setEditGallery] = useState<string[]>([]);
   const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
 
+  const [tasks, setTasks] = useState<FollowUpTask[]>([]);
+
+  const fetchTasks = useCallback(() => {
+    fetch("/api/internal/floorplans/tasks")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setTasks(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
   const fetchChanges = useCallback(() => {
     fetch(`/api/internal/floorplans/changes?status=${statusFilter}`)
       .then((r) => r.json())
@@ -89,6 +113,17 @@ export default function FloorPlansPage() {
   );
 
   async function act(id: string, action: "approve" | "reject") {
+    const change = changes.find((c) => c.id === id);
+    if (
+      action === "approve" &&
+      change?.fp_floor_plans?.starred &&
+      (change.change_type === "remove" || change.change_type === "update") &&
+      !confirm(
+        `⭐ This plan is used in a brand email. Approving this ${change.change_type} will create a follow-up task to update the email. Continue?`
+      )
+    ) {
+      return;
+    }
     setBusy((b) => new Set(b).add(id));
     try {
       await fetch(`/api/internal/floorplans/changes/${id}/${action}`, { method: "POST" });
@@ -206,6 +241,30 @@ export default function FloorPlansPage() {
         </label>
       </div>
 
+      {tasks.length > 0 && (
+        <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid #f59e0b" }}>
+          <strong>⭐ Brand email follow-ups</strong>
+          {tasks.map((t) => (
+            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+              <span className="text-sm" style={{ flex: 1 }}>
+                {t.detail ?? t.task_type}
+                <span className="text-muted"> · {t.fp_floor_plans?.fp_sites?.domain}</span>
+              </span>
+              <button
+                className="btn btn-secondary"
+                style={{ padding: "2px 10px" }}
+                onClick={async () => {
+                  await fetch(`/api/internal/floorplans/tasks/${t.id}/done`, { method: "POST" });
+                  fetchTasks();
+                }}
+              >
+                Done
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="empty-state">Loading…</div>
       ) : error ? (
@@ -259,6 +318,22 @@ export default function FloorPlansPage() {
                       </td>
                       <td>
                         <strong>{rec?.name ?? c.plan_key}</strong>
+                        {c.fp_floor_plans && (
+                          <button
+                            title={c.fp_floor_plans.starred ? "Used in brand email — click to unstar" : "Star: mark as used in a brand email"}
+                            onClick={async () => {
+                              await fetch(`/api/internal/floorplans/plans/${c.fp_floor_plans!.id}/star`, {
+                                method: "POST",
+                                headers: { "content-type": "application/json" },
+                                body: JSON.stringify({ starred: !c.fp_floor_plans!.starred }),
+                              });
+                              fetchChanges();
+                            }}
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, marginLeft: 4, opacity: c.fp_floor_plans.starred ? 1 : 0.35 }}
+                          >
+                            ⭐
+                          </button>
+                        )}
                         {(rec?.userEditedFields?.length ?? 0) > 0 && (
                           <div className="text-muted text-sm">✎ edited: {rec?.userEditedFields?.join(", ")}</div>
                         )}
