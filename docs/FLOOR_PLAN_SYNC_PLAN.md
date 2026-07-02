@@ -35,6 +35,19 @@ Sites in scope: **lifeatlakewood.com**, **lifeinwellenpark.com**, **lifeatparris
 7. **Extraction is engine + config, not 36 bespoke scrapers.** Three generic engines
    (JSON API adapter, fetch → Claude extraction, Playwright render → Claude
    extraction); each builder is a config row selecting an engine plus params.
+8. **New insertions land in Wix as Drafts.** After approval, an `add` is written to
+   the Wix collection in draft state; the user publishes it in Wix manually. This is
+   an initial safety measure — a Hub setting (`insert_publish_mode`) flips inserts to
+   published-on-sync once confidence is earned. Updates and removes to existing rows
+   apply normally. The Hub keeps a "publish queue" of synced drafts so none are
+   forgotten; the nightly run detects items published in Wix and clears them
+   automatically.
+9. **Builders settings area in the Hub.** A Settings → Builders view shows every
+   builder connection (method, communities served, last run, health, plan counts)
+   with per-connection **pause/resume** — at both the builder level and the
+   builder×community level. A paused connection is skipped entirely: no scrape, no
+   diff, and critically no removals queued (a pause must never look like plans
+   disappearing).
 
 ---
 
@@ -61,8 +74,10 @@ REVIEW (Hub — this repo, on Vercel)
 WRITE-BACK (Vercel serverless, on approve)
   resolve site → Wix collection ID + credentials
   upload any new/changed images to Wix Media Manager (deduped via media_map)
-  push add/update/remove to Wix Data API
-  success → status=synced; update canonical floor_plans table
+  adds   → insert as DRAFT (or published, per insert_publish_mode setting)
+           → status=synced_draft, appears in Hub publish queue until published in Wix
+  updates/removes → apply to the live row via Wix Data API → status=synced
+  update canonical floor_plans table on success
   failure → status=failed + error_detail (visible in Hub)
   if plan is starred → create follow_up_task (own badge, persists until done)
 ```
@@ -89,13 +104,15 @@ cutover safe and future sites cheap.
 - `id` pk, `name`, `base_url`
 - `extraction_method` enum: `json_api` | `fetch_claude` | `render_claude`
 - `engine_config` jsonb (endpoint templates, selectors/hints, auth quirks)
-- `audit_notes`, `active` bool
+- `audit_notes`, `active` bool (pause/resume from the Hub's Settings → Builders view;
+  paused = skipped entirely by the nightly run, no diff, no removals)
 
 ### `fp_builder_communities` (the nightly work list)
 - `id` pk, `builder_id` fk, `community_id` fk
 - `extractor_params` jsonb (community URL, zip, builder-internal community id, …)
-- `active` bool
-- `last_run_at`, `last_run_status`, `last_plan_count` (drives the zero/partial-scrape guard)
+- `active` bool (per-community pause/resume, same semantics as the builder-level flag)
+- `last_run_at`, `last_run_status`, `last_plan_count`, `consecutive_failures`
+  (drives the zero/partial-scrape guard and the health display in Settings → Builders)
 
 ### `fp_floor_plans` (canonical record, Parrish-standard shape)
 - `id` pk, `site_id` fk, `community_id` fk, `builder_id` fk
@@ -120,7 +137,10 @@ cutover safe and future sites cheap.
 - `change_type` enum: `add` | `update` | `remove`
 - `field_changed`, `old_value`, `new_value` (nullable; for updates)
 - `proposed_record` jsonb (full canonical record for adds/updates)
-- `status` enum: `pending` | `approved` | `rejected` | `synced` | `failed`
+- `status` enum: `pending` | `approved` | `rejected` | `synced_draft` | `synced` | `failed`
+  (`synced_draft` = insert landed in Wix as a draft; the nightly run promotes it to
+  `synced` once it detects the item was published in Wix — until then it sits in the
+  Hub's publish queue)
 - `error_detail` nullable, `run_id`, `created_at`, `updated_at`
 - unique dedupe index on (site, community, builder, plan_key, field_changed) WHERE status = 'pending' — re-runs update the existing pending row, never duplicate it
 
@@ -133,6 +153,12 @@ cutover safe and future sites cheap.
 ### `fp_field_maps` (per-site legacy → standard mapping)
 - `id` pk, `site_id` fk, `legacy_field_key`, `standard_field_key`, `transform` nullable
 - Powers the cutover report and the one-time editorial port.
+
+### Settings (existing Hub settings mechanism)
+- `insert_publish_mode`: `draft` (default) | `published` — controls whether approved
+  `add`s land in Wix as drafts requiring manual publish, or go live on sync.
+  Flipped in the Hub settings UI once the process has earned trust; can be set
+  per site if we ever want to graduate sites independently.
 
 RLS mirrors the existing Hub pattern: service-role key for the Action inserts and
 write-back status updates; the Hub UI uses its existing authenticated access.
@@ -157,6 +183,13 @@ Estimated Claude cost at nightly × ~36 builders: single-digit dollars/month.
 
 - **No write without an approved row.** Ever. Auto-approve rules (later phase) are
   explicit, per-field, and conservative.
+- **Drafts-first inserts.** While `insert_publish_mode = draft`, an approved `add`
+  can never become publicly visible without a human publishing it in Wix. The Hub's
+  publish queue tracks synced drafts so none are forgotten.
+- **Pause is inert, never destructive.** A paused builder or builder×community is
+  skipped by the nightly run entirely — no scrape, no diff, and no removals queued.
+  Resuming picks up cleanly on the next run (the two-consecutive-nights removal rule
+  restarts from zero after a resume).
 - **Removal protection, two layers:** (1) zero-plan scrape for a builder that
   normally has plans = scrape FAILURE, skip diffing entirely; (2) a `remove` is only
   queued if the plan is missing on **two consecutive nights** AND the scrape returned
@@ -206,15 +239,22 @@ builder×community matrix.
   will need.
 - Build the Wix Data API client: CRUD on collection items + Media Manager upload,
   wired to `fp_media_map` for dedupe.
+- **Verify draft support in the Data API** as part of this phase: confirm the API can
+  insert items in draft state and read publish status. If the API can't express
+  drafts directly, fallback is a `pipeline_status` field ("staged"/"live") on the
+  collection plus a filter on the repeater's dataset at cutover — identical safety,
+  same publish queue UX in the Hub.
 
-**Done when:** a test record with an uploaded image can be created, updated, and
-removed in each site's new collection via the client.
+**Done when:** a test record with an uploaded image can be created **as a draft**,
+published, updated, and removed in each site's new collection via the client.
 
 ### Phase 3 — Vertical slice (one builder, one community, end to end)
 - Pick the most robust builder from the audit (ideally `json_api`) in one Lakewood
   community. Build: engine run → normalize → plan matching → diff → pending rows →
   Hub review view (table, filters, approve/reject, sidebar badge) → write-back into
-  the private Lakewood collection, including images.
+  the private Lakewood collection, including images. Inserts land as drafts
+  (`synced_draft`) and appear in the Hub's publish queue; the nightly run promotes
+  them to `synced` once published in Wix.
 - Hub view lives alongside the existing dashboard views; write-back is a serverless
   route following the existing `internal/` API patterns.
 
@@ -226,6 +266,10 @@ the private collection, and a rejected change never lands.
   automatically covers every community it serves via the join table.
 - Starred plans: star toggle in the Hub, follow-up task queue + badge, inline
   warnings on approval.
+- **Settings → Builders view**: every builder connection with its extraction method,
+  communities served, last run time/status, consecutive-failure health indicator,
+  and current plan counts — plus pause/resume toggles at the builder level and the
+  builder×community level.
 - Nightly digest notification ("14 changes await review — 2 touch starred plans").
 - During this phase the collections are private, so **bulk-approve aggressively** to
   push volume through the state machine and surface edge cases early; tighten the
