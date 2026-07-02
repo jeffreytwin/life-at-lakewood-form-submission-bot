@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("fp_pending_changes")
       .select(
-        "*, fp_sites:site_id(domain, name), fp_communities:community_id(name), fp_builders:builder_id(name)"
+        "*, fp_sites:site_id(domain, name), fp_communities:community_id(name), fp_builders:builder_id(name), fp_floor_plans:floor_plan_id(id, starred)"
       )
       .order("created_at", { ascending: false })
       .limit(limit);

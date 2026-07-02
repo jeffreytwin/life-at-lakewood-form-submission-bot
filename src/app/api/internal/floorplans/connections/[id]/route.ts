@@ -18,14 +18,31 @@ export async function PATCH(
   const { id } = await params;
   try {
     const body = await request.json();
-    if (typeof body.active !== "boolean") {
-      return NextResponse.json({ error: "active (boolean) is required" }, { status: 400 });
+    const updates: Record<string, unknown> = {};
+    if (typeof body.active === "boolean") updates.active = body.active;
+    if (typeof body.url === "string") {
+      const trimmed = body.url.trim();
+      if (trimmed && !/^https?:\/\//.test(trimmed)) {
+        return NextResponse.json({ error: "url must be absolute (https://…)" }, { status: 400 });
+      }
+      const { data: current } = await supabase
+        .from("fp_builder_communities")
+        .select("extractor_params")
+        .eq("id", id)
+        .single();
+      const params = { ...((current?.extractor_params as object) ?? {}) } as Record<string, unknown>;
+      if (trimmed) params.url = trimmed;
+      else delete params.url;
+      updates.extractor_params = params;
+    }
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "active (boolean) or url (string) required" }, { status: 400 });
     }
     const { data, error } = await supabase
       .from("fp_builder_communities")
-      .update({ active: body.active })
+      .update(updates)
       .eq("id", id)
-      .select("id, active")
+      .select("id, active, extractor_params")
       .maybeSingle();
     if (error) throw error;
     if (!data) return NextResponse.json({ error: "Connection not found" }, { status: 404 });

@@ -127,6 +127,19 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
       `. Ran ${ran} connections${failed ? `, ${failed} failed` : ""}.`;
     logger.info("Floor plan nightly cycle complete", { ran, failed, pendingCount });
     if (settings.fp_digest_phone) await sendDigest(settings.fp_digest_phone, digest);
+
+    // Refresh each site's cutover report at cycle end.
+    try {
+      const { generateCutoverReport } = await import("@/lib/floorplans/cutover");
+      const { data: sites } = await supabase.from("fp_sites").select("id").eq("active", true);
+      for (const s of sites ?? []) {
+        await generateCutoverReport(s.id).catch((e) =>
+          logger.warn("Cutover report failed", { siteId: s.id, error: String(e) })
+        );
+      }
+    } catch (e) {
+      logger.warn("Cutover report generation errored", { error: String(e) });
+    }
   }
 
   await supabase.from("system_settings").update({ fp_nightly_state: nextState }).eq("id", 1);

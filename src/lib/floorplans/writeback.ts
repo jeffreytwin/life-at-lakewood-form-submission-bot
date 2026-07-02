@@ -212,6 +212,24 @@ export async function applyPendingChange(changeId: string): Promise<{
       return { status: newStatus };
     }
 
+    // Starred-plan follow-up: the brand email lives outside Wix, so changes
+    // to starred plans create a persistent task after sync.
+    async function maybeCreateFollowUp(taskType: string, detail: string) {
+      if (!change.floor_plan_id) return;
+      const { data: plan } = await supabase
+        .from("fp_floor_plans")
+        .select("starred")
+        .eq("id", change.floor_plan_id)
+        .single();
+      if (!plan?.starred) return;
+      await supabase.from("fp_follow_up_tasks").insert({
+        floor_plan_id: change.floor_plan_id,
+        pending_change_id: change.id,
+        task_type: taskType,
+        detail,
+      });
+    }
+
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
@@ -240,6 +258,10 @@ export async function applyPendingChange(changeId: string): Promise<{
         .from("fp_pending_changes")
         .update({ status: "synced", updated_at: new Date().toISOString() })
         .eq("id", changeId);
+      await maybeCreateFollowUp(
+        change.field_changed === "price" ? "price_changed" : "other_change",
+        `${rec.name}: ${change.field_changed ?? "updated"} ${change.old_value ?? ""} → ${change.new_value ?? ""} — update the brand email`
+      );
       return { status: "synced" };
     }
 
@@ -255,6 +277,10 @@ export async function applyPendingChange(changeId: string): Promise<{
         .from("fp_pending_changes")
         .update({ status: "synced", updated_at: new Date().toISOString() })
         .eq("id", changeId);
+      await maybeCreateFollowUp(
+        "plan_removed",
+        `${change.plan_key} was removed by the builder — pick a replacement for the brand email`
+      );
       return { status: "synced" };
     }
 

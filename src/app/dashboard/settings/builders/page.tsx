@@ -9,6 +9,7 @@ interface Connection {
   last_run_status: string | null;
   last_plan_count: number | null;
   consecutive_failures: number;
+  extractor_params: { url?: string } | null;
   fp_communities: { name: string; fp_sites: { domain: string } | null } | null;
 }
 
@@ -284,6 +285,34 @@ export default function BuildersSettingsPage() {
                             <td className="text-sm" style={{ paddingLeft: 28 }}>
                               ↳ {c.fp_communities?.name}
                               <span className="text-muted"> · {c.fp_communities?.fp_sites?.domain}</span>
+                              <div>
+                                {c.extractor_params?.url ? (
+                                  <a href={c.extractor_params.url} target="_blank" rel="noreferrer" className="text-muted text-sm">
+                                    source page ↗
+                                  </a>
+                                ) : (
+                                  <span className="text-muted text-sm">URL auto-discovers on first run</span>
+                                )}{" "}
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: "0 6px", fontSize: 11 }}
+                                  onClick={async () => {
+                                    const url = window.prompt(
+                                      "Builder page URL for this community (blank = re-discover on next run):",
+                                      c.extractor_params?.url ?? ""
+                                    );
+                                    if (url === null) return;
+                                    await fetch(`/api/internal/floorplans/connections/${c.id}`, {
+                                      method: "PATCH",
+                                      headers: { "content-type": "application/json" },
+                                      body: JSON.stringify({ url }),
+                                    });
+                                    fetchBuilders();
+                                  }}
+                                >
+                                  edit URL
+                                </button>
+                              </div>
                             </td>
                             <td className="text-muted text-sm">
                               {c.last_plan_count != null ? `${c.last_plan_count} plans` : "—"}
