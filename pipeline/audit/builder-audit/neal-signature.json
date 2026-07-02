@@ -1,0 +1,12 @@
+{
+  "name": "Neal Signature Homes",
+  "slug": "neal-signature",
+  "pages": [],
+  "domainAttempts": [
+    {
+      "domain": "www.nealsignaturehomes.com",
+      "status": 403
+    }
+  ],
+  "error": "no working domain"
+}

@@ -1,0 +1,148 @@
+{
+  "name": "Neal Communities",
+  "slug": "neal-communities",
+  "pages": [
+    {
+      "url": "https://nealcommunities.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 602506,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://nealcommunities.com/wp-content/themes/neal-communities/blocks/search/view.js?ver=1.1.1"
+      ],
+      "visiblePriceCount": 117,
+      "visibleSqftCount": 113,
+      "visibleTextChars": 28355
+    },
+    {
+      "url": "https://nealcommunities.com/locations/bradenton-parrish/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 181024,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://nealcommunities.com/wp-content/themes/neal-communities/blocks/search/view.js?ver=1.1.1"
+      ],
+      "visiblePriceCount": 3,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 6196
+    },
+    {
+      "url": "https://nealcommunities.com/locations/lakewood-ranch/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 180804,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://nealcommunities.com/wp-content/themes/neal-communities/blocks/search/view.js?ver=1.1.1"
+      ],
+      "visiblePriceCount": 2,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 6433
+    },
+    {
+      "url": "https://nealcommunities.com/locations/sarasota/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 191488,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://nealcommunities.com/wp-content/themes/neal-communities/blocks/search/view.js?ver=1.1.1"
+      ],
+      "visiblePriceCount": 7,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 6189
+    },
+    {
+      "url": "https://nealcommunities.com/locations/venice/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 188735,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://nealcommunities.com/wp-content/themes/neal-communities/blocks/search/view.js?ver=1.1.1"
+      ],
+      "visiblePriceCount": 5,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 6491
+    }
+  ],
+  "domain": "www.nealcommunities.com",
+  "homeStatus": 200,
+  "finalUrl": "https://nealcommunities.com/",
+  "candidateLinks": [
+    {
+      "url": "https://nealcommunities.com/locations/bradenton-parrish/",
+      "text": "Bradenton &amp; Parrish"
+    },
+    {
+      "url": "https://nealcommunities.com/locations/lakewood-ranch/",
+      "text": "Lakewood Ranch"
+    },
+    {
+      "url": "https://nealcommunities.com/locations/sarasota/",
+      "text": "Sarasota"
+    },
+    {
+      "url": "https://nealcommunities.com/locations/venice/",
+      "text": "Venice"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://nealcommunities.com/neal-communities-wins-big-at-the-manatee-sarasota-parade-of-homes/",
+      "https://nealcommunities.com/grand-palm-couple-welcomes-baby-to-new-home/",
+      "https://nealcommunities.com/couple-finds-perfect-place-at-boca-royale/",
+      "https://nealcommunities.com/veteran-feels-at-home-at-boca-royale/",
+      "https://nealcommunities.com/top-ten-things-to-do-in-sarasota/",
+      "https://nealcommunities.com/grandeur-unleashed-the-celebration-series-at-grand-palm/",
+      "https://nealcommunities.com/the-neal-experience-the-martin-family-chooses-grand-palm/",
+      "https://nealcommunities.com/stewart-family-happy-homeowners-at-grand-palm/",
+      "https://nealcommunities.com/praise-for-the-grand-palm-team/",
+      "https://nealcommunities.com/praise-from-grand-palm/",
+      "https://nealcommunities.com/neal-communities-provides-funds-for-parrish-heritage-festival/",
+      "https://nealcommunities.com/grand-palm-named-in-top-50-best-master-planned-communities-in-the-u-s-by-where-to-retire-magazine/",
+      "https://nealcommunities.com/amazed-at-boca-royale/",
+      "https://nealcommunities.com/curious-about-boca-royale-summer-is-your-time-to-sample-the-amenities/",
+      "https://nealcommunities.com/very-happy-in-grand-palm/",
+      "https://nealcommunities.com/lakewood-ranch-no-1-in-the-nation-for-housing-starts-in-second-quarter/",
+      "https://nealcommunities.com/canoe-creek-amenity-center-grand-opening/",
+      "https://nealcommunities.com/sarasota-magazine-purestyles-charlene-neal-on-five-in-demand-interior-design-trends/",
+      "https://nealcommunities.com/neal-communities-breaks-ground-on-new-lakewood-ranch-neighborhood/",
+      "https://nealcommunities.com/introducing-windward-new-homes-in-lakewood-ranch/",
+      "https://nealcommunities.com/appreciation-and-a-second-neal-home-in-boca-royale/",
+      "https://nealcommunities.com/going-above-and-beyond-in-boca-royale/",
+      "https://nealcommunities.com/canoe-creek-making-the-neal-difference-for-homeowner/",
+      "https://nealcommunities.com/neal-communities-makes-5000-donation-to-boca-cares-at-boca-royale-golf-country-club/",
+      "https://nealcommunities.com/neal-communities-serves-as-5000-level-sponsor-of-the-parrish-chili-cook-off-family-festival/"
+    ]
+  }
+}

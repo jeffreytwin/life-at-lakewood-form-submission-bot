@@ -1,0 +1,93 @@
+{
+  "name": "KB Home",
+  "slug": "kb-home",
+  "pages": [
+    {
+      "url": "https://www.kbhome.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 620953,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.youtube.com/iframe_api",
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 18226
+    },
+    {
+      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 1052961,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.youtube.com/iframe_api",
+        "https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js",
+        "https://www.google.com/maps/search/?api=1\\u0026query=35 Mose Bluff Ave, St. Augustine, FL 32084",
+        "https://www.google.com/maps/search/?api=1\\u0026query=30.281285208658197,-81.56155922421394",
+        "https://www.google.com/maps/search/?api=1\\u0026query=28.160903,-81.279097",
+        "https://www.google.com/maps/search/?api=1\\u0026query=16505 Ocean Oasis Wy, Clermont, FL 34714",
+        "https://www.google.com/maps/search/?api=1\\u0026query=28.85185205352836,-81.63392754750585",
+        "https://www.google.com/maps/search/?api=1\\u0026query=28.1952338,-82.1844809",
+        "https://www.google.com/maps/search/?api=1\\u0026query=28.34854136327751,-82.1892192",
+        "https://www.google.com/maps/search/?api=1\\u0026query=28.49210888530533, -82.4311853",
+        "https://www.google.com/maps/search/?api=1\\u0026query=28.49210888530533,-82.4311853"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 3,
+      "visibleTextChars": 34226
+    }
+  ],
+  "domain": "www.kbhome.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.kbhome.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton",
+      "text": "Sarasota-Bradenton"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.kbhome.com/new-homes-florida/bradenton",
+      "https://www.kbhome.com/new-homes-florida/parrish",
+      "https://www.kbhome.com/new-homes-florida/sarasota",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1286",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1541",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1707-modeled",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1989-modeled",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-2168",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-2333-modeled",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-2566",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-2766",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-3016",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/mir",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen/plan-1346",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen/plan-1511",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen/plan-1637-modeled",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen/plan-1908",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen/plan-2107-modeled",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen/plan-2385",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/heron-glen/plan-2544",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/pepper-grove-i",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton/pepper-grove-i/plan-1272"
+    ]
+  }
+}

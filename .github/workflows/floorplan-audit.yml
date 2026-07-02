@@ -1,0 +1,40 @@
+name: Floor Plan Audit — Site Recon
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/wix-floor-plan-automation-sbqc80
+    paths:
+      - pipeline/audit/RUN
+
+permissions:
+  contents: write
+
+concurrency:
+  group: floorplan-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Fetch site snapshots
+        run: node pipeline/audit/fetch-sites.mjs
+
+      - name: Commit snapshots back to branch
+        run: |
+          git config user.name "floorplan-audit-bot"
+          git config user.email "actions@github.com"
+          git add pipeline/audit/snapshots
+          if git diff --cached --quiet; then
+            echo "No snapshot changes to commit."
+          else
+            git commit -m "Floor plan audit: site recon snapshots [skip ci]"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

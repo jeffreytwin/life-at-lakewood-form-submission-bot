@@ -1,0 +1,138 @@
+{
+  "name": "Homes by WestBay",
+  "slug": "homes-by-westbay",
+  "pages": [
+    {
+      "url": "https://www.homesbywestbay.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 176830,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 1,
+      "visibleSqftCount": 1,
+      "visibleTextChars": 5440
+    },
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/communities",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 203385,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 10119
+    },
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/lakewood-ranch",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 212254,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 7925
+    },
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/parrish",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 212227,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 7915
+    },
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/sarasota",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 212211,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 7917
+    }
+  ],
+  "domain": "www.homesbywestbay.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.homesbywestbay.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/communities",
+      "text": "Sarasota/Manatee Area"
+    },
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/lakewood-ranch",
+      "text": "Lakewood Ranch, FL"
+    },
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/parrish",
+      "text": "Parrish, FL"
+    },
+    {
+      "url": "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/sarasota",
+      "text": "Sarasota, FL"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/lakewood-ranch",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/parrish",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/sarasota",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/venice",
+      "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/communities",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/wellen-park-community",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area",
+      "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/floorplans",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/oakfield-community/islamorada-ii-17237767475038-detail",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-ranch-community",
+      "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/cities",
+      "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/quick-move-in-homes",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/wellen-park-community/siesta-key-ii-17237767437248-detail",
+      "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/model-homes",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-point-community",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/longleaf-at-grand-park-community",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/oakfield-community",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/north-river-ranch-inspiration-community",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/longleaf-at-grand-park-community/siesta-key-ii-grandpark-detail",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/longleaf-at-grand-park-community/biscayneii-grandpark-detail",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/oakfield-community/islamorada-i-1723776747475-detail",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/wellen-park-community/gasparilla-i-17237767435881-detail",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/wellen-park-community/siesta-key-i-17237767436994-detail",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/wellen-park-community/bayport-i-wp-detail"
+    ]
+  }
+}

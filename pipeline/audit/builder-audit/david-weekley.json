@@ -1,0 +1,86 @@
+{
+  "name": "David Weekley Homes",
+  "slug": "david-weekley",
+  "pages": [
+    {
+      "url": "https://www.davidweekleyhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 218735,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://player.vimeo.com/api/player.js"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 7878
+    },
+    {
+      "url": "https://www.davidweekleyhomes.com/new-homes/fl/sarasota",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 220760,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://player.vimeo.com/api/player.js",
+        "https://maps.googleapis.com/maps/api/js?v=3.60&amp;key=AIzaSyCLj6lnAdvi5PoGcj0-up-RcpadypmJrLo&amp;libraries=places",
+        "https://www.davidweekleyhomes.com/bundles/Search?v=wO05hNR7gySxikzgJQDcW72NhIBMNPzy8JWX-aY99aU1",
+        "https://www.davidweekleyhomes.com/_scripts/compiled/Bundles/searchPage.js?version=9.6534.0.0",
+        "https://www.davidweekleyhomes.com/_scripts/compiled/Bundles/homeSearch.js?version=9.6534.0.0"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 2,
+      "visibleTextChars": 7458
+    }
+  ],
+  "domain": "www.davidweekleyhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.davidweekleyhomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.davidweekleyhomes.com/new-homes/fl/sarasota",
+      "text": "Sarasota"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota",
+      "https://www.davidweekleyhomes.com/news/article/david-weekley-homes-opens-new-model-in-emerald-landing-at-waterside-at-lakewood-ranch",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/model-home-gallery",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/financing",
+      "https://www.davidweekleyhomes.com/news/article/david-weekley-homes-opens-new-model-in-emerald-landing-at-waterside-at-lakewood-ranch-towns",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/homes-ready-soon",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/close-out",
+      "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice",
+      "https://www.davidweekleyhomes.com/new-homes/fl/tampa/parrish",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/coming-soon",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/tampa/parrish/isles-at-bayview/39270046",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/tampa/parrish/isles-at-bayview/39270047",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/tampa/parrish/isles-at-bayview/39270048",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/tampa/parrish/isles-at-bayview/39270053",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/tampa/parrish/isles-at-bayview/39270054",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310016",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310014",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310015",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310013",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310005",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310003",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310004",
+      "https://www.davidweekleyhomes.com/homes-ready-soon/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes/39310002",
+      "https://www.davidweekleyhomes.com/my-plans/add?planId=showcases%2F89987&amp;goHere=%2Fnew-homes%2Ffl%2Fsarasota%2Fhomes-ready-soon",
+      "https://www.davidweekleyhomes.com/my-plans/add?planId=showcases%2F90234&amp;goHere=%2Fnew-homes%2Ffl%2Fsarasota%2Fhomes-ready-soon"
+    ]
+  }
+}

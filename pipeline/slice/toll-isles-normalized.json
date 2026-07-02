@@ -1,0 +1,278 @@
+{
+  "extractedFor": "toll-brothers|the-isles",
+  "plans": [
+    {
+      "planKey": "avery",
+      "name": "Avery",
+      "price": 807995,
+      "priceDisplay": "$807,995",
+      "beds": "3",
+      "baths": "3",
+      "sqft": 2443,
+      "garages": "3 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Avery",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/246158/exteriors-resized/AVER_CRB_FLT_3CE_6231_5_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/246158/floorplans-original/aver4DL-6231-pln-339296-01.svg"
+      ],
+      "raw": {
+        "masterPlanID": 10799,
+        "commPlanID": 246158,
+        "stories": "1.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "carver",
+      "name": "Carver",
+      "price": 835995,
+      "priceDisplay": "$835,995",
+      "beds": "3",
+      "baths": "3",
+      "sqft": 2858,
+      "garages": "2 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/246162/floorplans-resized/carv4V1-6231-pln-282712-01.svg"
+      ],
+      "raw": {
+        "masterPlanID": 11045,
+        "commPlanID": 246162,
+        "stories": "1.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "carver-elite",
+      "name": "Carver Elite",
+      "price": 951995,
+      "priceDisplay": "$951,995",
+      "beds": "3 - 4",
+      "baths": "4",
+      "sqft": 3431,
+      "garages": "2 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Carver-Elite",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/246163/exteriors-resized/CARVEL_ANT_FLT_2FE_6231_2_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/246163/floorplans-resized/carvel4V2-6231-pln-282713-01.svg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/246163/floorplans-resized/carvel4V2-6231-pln-282713-02.svg"
+      ],
+      "raw": {
+        "masterPlanID": 11044,
+        "commPlanID": 246163,
+        "stories": "2.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "kingsdale",
+      "name": "Kingsdale",
+      "price": 934995,
+      "priceDisplay": "$934,995",
+      "beds": "4",
+      "baths": "3",
+      "sqft": 3183,
+      "garages": "2 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Kingsdale",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/246164/exteriors-resized/KGDL_ISCL_FLT_2CE_6231_4_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/246164/exteriors-resized/KGDL_ISCL_FLT_2CE_6231_4_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/246164/floorplans-original/kgdl4YP-6231-pln-332276-01.svg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/246164/floorplans-original/kgdl4YP-6231-pln-332276-02.svg"
+      ],
+      "raw": {
+        "masterPlanID": 11118,
+        "commPlanID": 246164,
+        "stories": "2.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "lori",
+      "name": "Lori",
+      "price": 847995,
+      "priceDisplay": "$847,995",
+      "beds": "3",
+      "baths": "3",
+      "sqft": 2536,
+      "garages": "2 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Lori",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/269888/exteriors-resized/93D_CRB_FLT_2SE_6231_1_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/269888/exteriors-resized/93D_CRB_FLT_2SE_6231_1_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/269888/floorplans-original/93D-6231-pln-336971-01.svg"
+      ],
+      "raw": {
+        "masterPlanID": 14510,
+        "commPlanID": 269888,
+        "stories": "1.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "lori-elite",
+      "name": "Lori Elite",
+      "price": 1007995,
+      "priceDisplay": "$1,007,995",
+      "beds": "4 - 5",
+      "baths": "4 - 5",
+      "sqft": 3541,
+      "garages": "2 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Lori-Elite",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/269889/exteriors-resized/93E_ANT_FLT_2SE_6231_1_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/269889/exteriors-resized/93E_ANT_FLT_2SE_6231_1_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/269889/floorplans-original/93E-6231-pln-336465-01.svg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/269889/floorplans-original/93E-6231-pln-336465-02.svg"
+      ],
+      "raw": {
+        "masterPlanID": 14511,
+        "commPlanID": 269889,
+        "stories": "2.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "bianca",
+      "name": "Bianca",
+      "price": 907995,
+      "priceDisplay": "$907,995",
+      "beds": "3",
+      "baths": "2",
+      "sqft": 2767,
+      "garages": "3 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/269886/exteriors-resized/93F_ANT_FLT_3FE_6231_1_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/269886/exteriors-resized/93F_ANT_FLT_3FE_6231_1_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/269886/floorplans-original/93F-6231-pln-354723-01.svg"
+      ],
+      "raw": {
+        "masterPlanID": 14512,
+        "commPlanID": 269886,
+        "stories": "1.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "bianca-elite",
+      "name": "Bianca Elite",
+      "price": 1057995,
+      "priceDisplay": "$1,057,995",
+      "beds": "5",
+      "baths": "3",
+      "sqft": 3908,
+      "garages": "3 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/The_Isles_BiancaElite_FrontExterior_1_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/The_Isles_BiancaElite_FrontExterior_1_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/269887/floorplans-original/93G-6231-pln-354724-01.svg",
+        "https://cdn.tollbrothers.com/communities/13003/plans/269887/floorplans-original/93G-6231-pln-354724-02.svg"
+      ],
+      "raw": {
+        "masterPlanID": 14513,
+        "commPlanID": 269887,
+        "stories": "2.0",
+        "communityId": 13003
+      }
+    },
+    {
+      "planKey": "maxwell-elite",
+      "name": "Maxwell Elite",
+      "price": 1162995,
+      "priceDisplay": "$1,162,995",
+      "beds": "4",
+      "baths": "5",
+      "sqft": 4028,
+      "garages": "3 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Maxwell-Elite",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ISCL_FLT_3CE_6232_6_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13004/plans/246150/exteriors-resized/MXWLEL_ISCL_FLT_3CE_6232_6_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13004/plans/246150/floorplans-resized/mxwlel4X9-6232-pln-287701-01.svg",
+        "https://cdn.tollbrothers.com/communities/13004/plans/246150/floorplans-resized/mxwlel4X9-6232-pln-287701-02.svg"
+      ],
+      "raw": {
+        "masterPlanID": 11110,
+        "commPlanID": 246150,
+        "stories": "2.0",
+        "communityId": 13004
+      }
+    },
+    {
+      "planKey": "aragon",
+      "name": "Aragon",
+      "price": 1086995,
+      "priceDisplay": "$1,086,995",
+      "beds": "3 - 5",
+      "baths": "3 - 4",
+      "sqft": 3202,
+      "garages": "3 car",
+      "homeType": "Single-Family Home",
+      "quickMoveIn": false,
+      "comingSoon": false,
+      "sourceUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Aragon",
+      "primaryImage": "https://cdn.tollbrothers.com/communities/13004/plans/246300/exteriors-resized/ARGN_ANT_FLT_3CE_6232_5_1920.jpg",
+      "galleryImages": [
+        "https://cdn.tollbrothers.com/communities/13004/plans/246300/exteriors-resized/ARGN_ANT_FLT_3CE_6232_5_1920.jpg",
+        "https://cdn.tollbrothers.com/communities/13004/plans/246300/floorplans-resized/argn519-6232-pln-282707-01.svg"
+      ],
+      "raw": {
+        "masterPlanID": 519,
+        "commPlanID": 246300,
+        "stories": "1.0",
+        "communityId": 13004
+      }
+    },
+    {
+      "planKey": "",
+      "price": null,
+      "priceDisplay": null,
+      "beds": "",
+      "baths": "",
+      "sqft": null,
+      "garages": null,
+      "homeType": null,
+      "quickMoveIn": true,
+      "comingSoon": false,
+      "sourceUrl": null,
+      "primaryImage": null,
+      "galleryImages": [],
+      "raw": {
+        "communityId": 13004
+      }
+    }
+  ]
+}

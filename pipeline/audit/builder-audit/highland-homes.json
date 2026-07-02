@@ -1,0 +1,138 @@
+{
+  "name": "Highland Homes",
+  "slug": "highland-homes",
+  "pages": [
+    {
+      "url": "https://www.highlandhomes.org/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 182989,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 27,
+      "visibleSqftCount": 14,
+      "visibleTextChars": 8797
+    },
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 190633,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 30,
+      "visibleSqftCount": 20,
+      "visibleTextChars": 10238
+    },
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 223270,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 2,
+      "visibleSqftCount": 3,
+      "visibleTextChars": 11211
+    },
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 198628,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 32,
+      "visibleSqftCount": 20,
+      "visibleTextChars": 16230
+    },
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 245585,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 2,
+      "visibleSqftCount": 5,
+      "visibleTextChars": 11766
+    }
+  ],
+  "domain": "www.highlandhomes.org",
+  "homeStatus": 200,
+  "finalUrl": "https://www.highlandhomes.org/",
+  "candidateLinks": [
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto",
+      "text": "Palmetto, FL"
+    },
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing",
+      "text": "Jackson Crossing"
+    },
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish",
+      "text": "Parrish, FL"
+    },
+    {
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
+      "text": "Aviary at Rutland Ranch"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing/seabrooke-ii/JC1-00-084",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing/seabrooke-ii/JC1-00-083",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/parsyn/AV3-00-419",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/parker/AV3-00-441",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/aubrey/AV3-00-439",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/serendipity/AV3-00-427",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/savannah",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/westin-ii",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/summerlyn-ii",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/everly",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/waylyn",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch/monroe",
+      "https://www.highlandhomes.org/careers/career-opportunities-detail/sales-counselor-parrish-62",
+      "https://www.highlandhomes.org/blog/blog-detail/now-building-in-new-phase-of-aviary-at-rutland-ranch-in-parrish-fl-1089",
+      "https://www.highlandhomes.org/blog/blog-detail/7-reasons-to-move-to-parrish-fl-1102",
+      "https://www.highlandhomes.org/blog/blog-detail/top-5-reasons-you-will-love-living-at-aviary-at-rutland-ranch-1042",
+      "https://www.highlandhomes.org/blog/blog-detail/come-home-to-the-center-of-the-universe-in-parrish-fl-949",
+      "https://www.highlandhomes.org/blog/blog-detail/now-open-new-model-homes-in-parrish-fl-941",
+      "https://www.highlandhomes.org/blog/blog-detail/introducing-new-homes-in-parrish-fl-301",
+      "https://www.highlandhomes.org/blog/blog-article-list/communitiesaviary-at-rutland-ranch-38",
+      "https://www.highlandhomes.org/blog/blog-detail/now-building-in-new-phase-of-aviary-at-rutland-ranch-in-parrish-fl-1089",
+      "https://www.highlandhomes.org/blog/blog-detail/7-reasons-to-move-to-parrish-fl-1102"
+    ]
+  }
+}

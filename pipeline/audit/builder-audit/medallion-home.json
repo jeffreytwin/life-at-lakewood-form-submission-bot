@@ -1,0 +1,87 @@
+{
+  "name": "Medallion Home",
+  "slug": "medallion-home",
+  "pages": [
+    {
+      "url": "https://medallionhome.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 467630,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://medallionhome.com/wp-includes/js/dist/private-apis.min.js?ver=1780009501",
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      ],
+      "visiblePriceCount": 36,
+      "visibleSqftCount": 18,
+      "visibleTextChars": 18730
+    },
+    {
+      "url": "https://medallionhome.com/blog/top-beaches-of-sarasota/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 235892,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      ],
+      "visiblePriceCount": 15,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 11151
+    },
+    {
+      "url": "https://medallionhome.com/blog/waterview-homesites-now-available-in-legends-bay-in-bradenton/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 235441,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+      ],
+      "visiblePriceCount": 18,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 8793
+    }
+  ],
+  "domain": "www.medallionhome.com",
+  "homeStatus": 200,
+  "finalUrl": "https://medallionhome.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://medallionhome.com/blog/top-beaches-of-sarasota/",
+      "https://medallionhome.com/blog/waterview-homesites-now-available-in-legends-bay-in-bradenton/",
+      "https://medallionhome.com/blog/is-parrish-florida-a-nice-place-to-live/",
+      "https://medallionhome.com/blog/featured-community-watercolor-place-homes-in-bradenton-fl/",
+      "https://medallionhome.com/blog/featured-community-the-laurels-villas-in-parrish-florida/",
+      "https://medallionhome.com/blog/experience-the-best-of-tampa-from-the-comfort-of-sarasota/",
+      "https://medallionhome.com/blog/best-place-to-retire-sarasota/",
+      "https://medallionhome.com/blog/10-reasons-that-sarasota-bradenton-is-one-of-the-best-places-to-live-in-america/",
+      "https://medallionhome.com/blog/sarasota-attractions/",
+      "https://medallionhome.com/blog/best-bradenton-sarasota-beach-walks-for-locals/",
+      "https://medallionhome.com/blog/featured-community-river-preserve-estates-in-parrish-fl/",
+      "https://medallionhome.com/blog/featured-community-watercolor-place-villas-in-bradenton-fl/",
+      "https://medallionhome.com/blog/5-reasons-to-move-to-bradenton-fl/",
+      "https://medallionhome.com/blog/the-laurels-a-lovely-community-in-parrish-fl-with-big-perks/",
+      "https://medallionhome.com/blog/best-fishing-spots-in-sarasota-fl/",
+      "https://medallionhome.com/blog/learn-why-people-love-buying-quick-move-in-homes-and-discover-two-available-homes-at-the-willows-in-parrish-fl/"
+    ]
+  }
+}

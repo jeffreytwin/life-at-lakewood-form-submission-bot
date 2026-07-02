@@ -1,0 +1,103 @@
+{
+  "name": "M/I Homes",
+  "slug": "mi-homes",
+  "pages": [
+    {
+      "url": "https://www.mihomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 150817,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.youtube.com/iframe_api",
+        "https://challenges.cloudflare.com/turnstile/v0/api.js"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 5513
+    },
+    {
+      "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/communities",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 22978,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.google.com/maps/api/js?key=AIzaSyBp5ubxrEwsokyEZ9TVTMvEawOPB5dOZvc",
+        "https://cdn.mihomes.com/assets/toolkit/js/search.js?ver=202606182350"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 431
+    },
+    {
+      "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/plans-ready-to-build",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 22987,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.google.com/maps/api/js?key=AIzaSyBp5ubxrEwsokyEZ9TVTMvEawOPB5dOZvc",
+        "https://cdn.mihomes.com/assets/toolkit/js/search.js?ver=202606182348"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 431
+    },
+    {
+      "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/quick-move-in-homes",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 22986,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://maps.google.com/maps/api/js?key=AIzaSyBp5ubxrEwsokyEZ9TVTMvEawOPB5dOZvc",
+        "https://cdn.mihomes.com/assets/toolkit/js/search.js?ver=202606182350"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 431
+    }
+  ],
+  "domain": "www.mihomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.mihomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/communities",
+      "text": "View Communities"
+    },
+    {
+      "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/plans-ready-to-build",
+      "text": "Browse All Home Plans"
+    },
+    {
+      "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/quick-move-in-homes",
+      "text": "Browse Quick Move-In Homes"
+    }
+  ],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

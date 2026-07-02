@@ -1,0 +1,598 @@
+[
+  {
+    "name": "Adams Homes",
+    "slug": "adams-homes",
+    "domain": "www.adamshomes.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 7,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 12,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 4085
+    }
+  },
+  {
+    "name": "Anchor Builders",
+    "slug": "anchor-builders",
+    "domain": "anchorbuilders.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 0,
+    "sitemapMatches": 1,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 4912
+    }
+  },
+  {
+    "name": "Arthur Rutenberg",
+    "slug": "arthur-rutenberg",
+    "domain": "www.arhomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 5,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 6923
+    }
+  },
+  {
+    "name": "Ashton Woods",
+    "slug": "ashton-woods",
+    "domain": "www.ashtonwoods.com",
+    "error": null,
+    "pagesFetched": 1,
+    "candidateLinks": 0,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 6,
+      "visiblePriceCount": 13,
+      "visibleTextChars": 11032
+    }
+  },
+  {
+    "name": "Cardel Homes",
+    "slug": "cardel-homes",
+    "domain": "www.cardelhomes.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 2,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 4222
+    }
+  },
+  {
+    "name": "Centex Homes",
+    "slug": "centex",
+    "domain": "www.centex.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 3,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 11660
+    }
+  },
+  {
+    "name": "D.R. Horton",
+    "slug": "dr-horton",
+    "domain": "www.drhorton.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 2,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 3870
+    }
+  },
+  {
+    "name": "David Weekley Homes",
+    "slug": "david-weekley",
+    "domain": "www.davidweekleyhomes.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 1,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 7878
+    }
+  },
+  {
+    "name": "DRB Homes",
+    "slug": "drb-homes",
+    "domain": "www.drbhomes.com",
+    "error": null,
+    "pagesFetched": 1,
+    "candidateLinks": 0,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 1,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 33
+    }
+  },
+  {
+    "name": "Dream Finders Homes",
+    "slug": "dream-finders",
+    "domain": "www.dreamfindershomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 2,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 17087
+    }
+  },
+  {
+    "name": "Highland Homes",
+    "slug": "highland-homes",
+    "domain": "www.highlandhomes.org",
+    "error": null,
+    "pagesFetched": 5,
+    "candidateLinks": 4,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 27,
+      "visibleTextChars": 8797
+    }
+  },
+  {
+    "name": "Homes by Towne",
+    "slug": "homes-by-towne",
+    "domain": "www.homesbytowne.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 2,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 6,
+      "visibleTextChars": 810963
+    }
+  },
+  {
+    "name": "Homes by WestBay",
+    "slug": "homes-by-westbay",
+    "domain": "www.homesbywestbay.com",
+    "error": null,
+    "pagesFetched": 5,
+    "candidateLinks": 4,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 1,
+      "visibleTextChars": 5440
+    }
+  },
+  {
+    "name": "ICI Homes",
+    "slug": "ici-homes",
+    "domain": null,
+    "error": "no working domain",
+    "pagesFetched": 0,
+    "candidateLinks": 0,
+    "sitemapMatches": 0,
+    "homeSignals": null
+  },
+  {
+    "name": "Inland Homes",
+    "slug": "inland-homes",
+    "domain": "inlandhomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 2,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 1,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 5587
+    }
+  },
+  {
+    "name": "John Cannon Homes",
+    "slug": "john-cannon",
+    "domain": "www.johncannonhomes.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 9,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 5517
+    }
+  },
+  {
+    "name": "KB Home",
+    "slug": "kb-home",
+    "domain": "www.kbhome.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 2,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 18226
+    }
+  },
+  {
+    "name": "Kolter Homes",
+    "slug": "kolter-homes",
+    "domain": "www.kolterhomes.com",
+    "error": null,
+    "pagesFetched": 5,
+    "candidateLinks": 4,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 1,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 8732
+    }
+  },
+  {
+    "name": "Lee Wetherington",
+    "slug": "lee-wetherington",
+    "domain": "leewetherington.com",
+    "error": null,
+    "pagesFetched": 1,
+    "candidateLinks": 0,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 0
+    }
+  },
+  {
+    "name": "Lennar",
+    "slug": "lennar",
+    "domain": "www.lennar.com",
+    "error": null,
+    "pagesFetched": 1,
+    "candidateLinks": 0,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": true,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 12,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 4494
+    }
+  },
+  {
+    "name": "M/I Homes",
+    "slug": "mi-homes",
+    "domain": "www.mihomes.com",
+    "error": null,
+    "pagesFetched": 4,
+    "candidateLinks": 3,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 2,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 5513
+    }
+  },
+  {
+    "name": "Mattamy Homes",
+    "slug": "mattamy-homes",
+    "domain": "www.mattamyhomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 51
+    }
+  },
+  {
+    "name": "Medallion Home",
+    "slug": "medallion-home",
+    "domain": "www.medallionhome.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 16,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 2,
+      "visiblePriceCount": 36,
+      "visibleTextChars": 18730
+    }
+  },
+  {
+    "name": "Meritage Homes",
+    "slug": "meritage-homes",
+    "domain": "www.meritagehomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 14,
+    "homeSignals": {
+      "hasNextData": true,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 12,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 6311
+    }
+  },
+  {
+    "name": "Neal Communities",
+    "slug": "neal-communities",
+    "domain": "www.nealcommunities.com",
+    "error": null,
+    "pagesFetched": 5,
+    "candidateLinks": 4,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 1,
+      "visiblePriceCount": 117,
+      "visibleTextChars": 28355
+    }
+  },
+  {
+    "name": "Neal Signature Homes",
+    "slug": "neal-signature",
+    "domain": null,
+    "error": "no working domain",
+    "pagesFetched": 0,
+    "candidateLinks": 0,
+    "sitemapMatches": 0,
+    "homeSignals": null
+  },
+  {
+    "name": "Perry Homes",
+    "slug": "perry-homes",
+    "domain": "www.perryhomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 14706
+    }
+  },
+  {
+    "name": "Pulte Homes",
+    "slug": "pulte",
+    "domain": "www.pulte.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 0,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 1,
+      "visiblePriceCount": 2,
+      "visibleTextChars": 25041
+    }
+  },
+  {
+    "name": "Richmond American Homes",
+    "slug": "richmond-american",
+    "domain": "www.richmondamerican.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 21,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 2,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 12736
+    }
+  },
+  {
+    "name": "Ryan Homes",
+    "slug": "ryan-homes",
+    "domain": "www.ryanhomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 2,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 1,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 3915
+    }
+  },
+  {
+    "name": "SimplyDwell Homes",
+    "slug": "simplydwell",
+    "domain": "simplydwellhomes.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 2,
+    "sitemapMatches": 7,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 3,
+      "visiblePriceCount": 2,
+      "visibleTextChars": 5936
+    }
+  },
+  {
+    "name": "Stock Luxury Homes",
+    "slug": "stock-luxury",
+    "domain": "www.stockdevelopment.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 5166
+    }
+  },
+  {
+    "name": "Taylor Morrison",
+    "slug": "taylor-morrison",
+    "domain": "www.taylormorrison.com",
+    "error": null,
+    "pagesFetched": 3,
+    "candidateLinks": 0,
+    "sitemapMatches": 18,
+    "homeSignals": {
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 12,
+      "visiblePriceCount": 0,
+      "visibleTextChars": 63
+    }
+  },
+  {
+    "name": "Toll Brothers",
+    "slug": "toll-brothers",
+    "domain": "www.tollbrothers.com",
+    "error": null,
+    "pagesFetched": 2,
+    "candidateLinks": 1,
+    "sitemapMatches": 25,
+    "homeSignals": {
+      "hasNextData": true,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasWix": false,
+      "apiHints": 0,
+      "visiblePriceCount": 4,
+      "visibleTextChars": 5558
+    }
+  }
+]

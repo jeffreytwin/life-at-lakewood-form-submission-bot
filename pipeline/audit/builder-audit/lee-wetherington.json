@@ -1,0 +1,36 @@
+{
+  "name": "Lee Wetherington",
+  "slug": "lee-wetherington",
+  "pages": [
+    {
+      "url": "https://leewetherington.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 114,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 0
+    }
+  ],
+  "domainAttempts": [
+    {
+      "domain": "www.lwhomes.net",
+      "status": 404
+    }
+  ],
+  "domain": "leewetherington.com",
+  "homeStatus": 200,
+  "finalUrl": "https://leewetherington.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": false,
+    "matches": []
+  }
+}

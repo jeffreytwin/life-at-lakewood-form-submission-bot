@@ -1,0 +1,98 @@
+{
+  "name": "Homes by Towne",
+  "slug": "homes-by-towne",
+  "pages": [
+    {
+      "url": "https://homesbytowne.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 895700,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 6,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 810963
+    },
+    {
+      "url": "https://homesbytowne.com/florida/shellstone-at-waterside",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 3140447,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 276,
+      "visibleSqftCount": 1346,
+      "visibleTextChars": 2869114
+    },
+    {
+      "url": "https://homesbytowne.com/florida/palmera-at-wellen-park",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 2930263,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": false,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [],
+      "visiblePriceCount": 263,
+      "visibleSqftCount": 1339,
+      "visibleTextChars": 2754947
+    }
+  ],
+  "domain": "www.homesbytowne.com",
+  "homeStatus": 200,
+  "finalUrl": "https://homesbytowne.com/",
+  "candidateLinks": [
+    {
+      "url": "https://homesbytowne.com/florida/shellstone-at-waterside",
+      "text": "Shellstone at Waterside Lakewood Ranch"
+    },
+    {
+      "url": "https://homesbytowne.com/florida/palmera-at-wellen-park",
+      "text": "Palmera at Wellen Park"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://homesbytowne.com/forms/contact-shellstone-at-waterside-fl/",
+      "https://homesbytowne.com/forms/contact-palmera-at-wellen-park-fl/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/galley/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/fairlead/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/islander/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/belay/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/halyard/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/outrigger/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/lot-657/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/lot-362/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/tideland/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/lot-658/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/aviso/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/cay/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/camber/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/banyan/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/lot-666/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/portside/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/tiller/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/regatta/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/genoa/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/lot-50/",
+      "https://homesbytowne.com/florida/palmera-at-wellen-park/lot-171/",
+      "https://homesbytowne.com/florida/palmera-at-wellen-park/fairlead/"
+    ]
+  }
+}

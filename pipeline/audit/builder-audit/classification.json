@@ -1,0 +1,466 @@
+[
+  {
+    "slug": "adams-homes",
+    "name": "Adams Homes",
+    "method": "fetch_claude",
+    "domain": "www.adamshomes.com",
+    "note": "server HTML (text 2870, prices 0)",
+    "candidates": [
+      "https://www.adamshomes.com/communities/florida/venice"
+    ],
+    "sitemap": [
+      "https://www.adamshomes.com/communities/florida/venice",
+      "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch",
+      "https://www.adamshomes.com/communities/florida/venice/venice",
+      "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch/homes"
+    ]
+  },
+  {
+    "slug": "anchor-builders",
+    "name": "Anchor Builders",
+    "method": "fetch_claude",
+    "domain": "anchorbuilders.com",
+    "note": "server HTML (text 4280, prices 0)",
+    "candidates": [],
+    "sitemap": [
+      "https://anchorbuilders.com/wildblue/"
+    ]
+  },
+  {
+    "slug": "arthur-rutenberg",
+    "name": "Arthur Rutenberg",
+    "method": "fetch_claude",
+    "domain": "www.arhomes.com",
+    "note": "server HTML (text 3050, prices 0)",
+    "candidates": [],
+    "sitemap": [
+      "https://www.arhomes.com/news/celebrating-excellence-ar-homes-sarasota-nelson-homes-inc-wins-builder-of-the-year/",
+      "https://www.arhomes.com/custom-home-builders-sarasota-fl/",
+      "https://www.arhomes.com/builder/nelson-homes-inc/available-homes/custom-lago-at-wild-blue-2/",
+      "https://www.arhomes.com/builder/nelson-homes-inc/available-homes/lago-model-at-wild-blue/"
+    ]
+  },
+  {
+    "slug": "ashton-woods",
+    "name": "Ashton Woods",
+    "method": "fetch_claude",
+    "domain": "www.ashtonwoods.com",
+    "note": "server HTML (text 11032, prices 13)",
+    "candidates": [],
+    "sitemap": []
+  },
+  {
+    "slug": "cardel-homes",
+    "name": "Cardel Homes",
+    "method": "fetch_claude",
+    "domain": "www.cardelhomes.com",
+    "note": "server HTML (text 22348, prices 0)",
+    "candidates": [
+      "https://www.cardelhomes.com/florida/north-river-ranch"
+    ],
+    "sitemap": [
+      "https://www.cardelhomes.com/florida/north-river-ranch/lot-maps/",
+      "https://www.cardelhomes.com/florida/north-river-ranch/"
+    ]
+  },
+  {
+    "slug": "centex",
+    "name": "Centex Homes",
+    "method": "fetch_claude",
+    "domain": "www.centex.com",
+    "note": "server HTML (text 26378, prices 1)",
+    "candidates": [
+      "https://www.centex.com/homes/florida/sarasota"
+    ],
+    "sitemap": []
+  },
+  {
+    "slug": "david-weekley",
+    "name": "David Weekley Homes",
+    "method": "fetch_claude",
+    "domain": "www.davidweekleyhomes.com",
+    "note": "server HTML (text 7458, prices 0)",
+    "candidates": [
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota"
+    ],
+    "sitemap": [
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota",
+      "https://www.davidweekleyhomes.com/news/article/david-weekley-homes-opens-new-model-in-emerald-landing-at-waterside-at-lakewood-ranch",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/model-home-gallery",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/financing"
+    ]
+  },
+  {
+    "slug": "dr-horton",
+    "name": "D.R. Horton",
+    "method": "fetch_claude",
+    "domain": "www.drhorton.com",
+    "note": "server HTML (text 3946, prices 9)",
+    "candidates": [
+      "https://www.drhorton.com/florida/manatee-sarasota"
+    ],
+    "sitemap": []
+  },
+  {
+    "slug": "drb-homes",
+    "name": "DRB Homes",
+    "method": "render_claude",
+    "domain": "www.drbhomes.com",
+    "note": "JS shell (visible text 33 chars)",
+    "candidates": [],
+    "sitemap": []
+  },
+  {
+    "slug": "dream-finders",
+    "name": "Dream Finders Homes",
+    "method": "fetch_claude",
+    "domain": "www.dreamfindershomes.com",
+    "note": "server HTML (text 21506, prices 5)",
+    "candidates": [],
+    "sitemap": [
+      "https://dreamfindershomes.com/blog/lakewood-ranch-good-place-to-live/",
+      "https://dreamfindershomes.com/blog/lakewood-ranch-cost-of-living/"
+    ]
+  },
+  {
+    "slug": "highland-homes",
+    "name": "Highland Homes",
+    "method": "fetch_claude",
+    "domain": "www.highlandhomes.org",
+    "note": "server HTML (text 10238, prices 32)",
+    "candidates": [
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch"
+    ],
+    "sitemap": [
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing/seabrooke-ii/JC1-00-084",
+      "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/palmetto/jackson-crossing/seabrooke-ii/JC1-00-083"
+    ]
+  },
+  {
+    "slug": "homes-by-towne",
+    "name": "Homes by Towne",
+    "method": "fetch_claude",
+    "domain": "www.homesbytowne.com",
+    "note": "server HTML (text 2754947, prices 276)",
+    "candidates": [
+      "https://homesbytowne.com/florida/shellstone-at-waterside",
+      "https://homesbytowne.com/florida/palmera-at-wellen-park"
+    ],
+    "sitemap": [
+      "https://homesbytowne.com/forms/contact-shellstone-at-waterside-fl/",
+      "https://homesbytowne.com/forms/contact-palmera-at-wellen-park-fl/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/galley/",
+      "https://homesbytowne.com/florida/shellstone-at-waterside/fairlead/"
+    ]
+  },
+  {
+    "slug": "homes-by-westbay",
+    "name": "Homes by WestBay",
+    "method": "fetch_claude",
+    "domain": "www.homesbywestbay.com",
+    "note": "server HTML (text 7915, prices 0)",
+    "candidates": [
+      "https://www.homesbywestbay.com/where-we-build/sarasota-manatee-area/communities",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/lakewood-ranch",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/parrish",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/sarasota"
+    ],
+    "sitemap": [
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/lakewood-ranch",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/parrish",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/sarasota",
+      "https://www.homesbywestbay.com/where-we-build/new-homes-sarasota-manatee-area/venice"
+    ]
+  },
+  {
+    "slug": "ici-homes",
+    "name": "ICI Homes",
+    "method": null,
+    "note": "Blocked/unreachable from GH runner: [{\"domain\": \"www.icihomes.com\", \"status\": 403}]"
+  },
+  {
+    "slug": "inland-homes",
+    "name": "Inland Homes",
+    "method": "fetch_claude",
+    "domain": "inlandhomes.com",
+    "note": "server HTML (text 3334, prices 4)",
+    "candidates": [],
+    "sitemap": [
+      "https://inlandhomes.com/why-isles-at-bayview/",
+      "https://inlandhomes.com/communities/isles-at-bayview/"
+    ]
+  },
+  {
+    "slug": "john-cannon",
+    "name": "John Cannon Homes",
+    "method": "fetch_claude",
+    "domain": "www.johncannonhomes.com",
+    "note": "server HTML (text 68513, prices 0)",
+    "candidates": [
+      "https://www.johncannonhomes.com/wp-content/uploads/2026/01/Wild-Blue-105-custom-home-build-elevation-001-featured.jpg"
+    ],
+    "sitemap": [
+      "https://www.johncannonhomes.com/working-with-custom-home-builders-in-sarasota/",
+      "https://www.johncannonhomes.com/model-home/wild-blue-105/",
+      "https://www.johncannonhomes.com/model-home/the-everly-showcase/",
+      "https://www.johncannonhomes.com/community/star-farms-at-lakewood-ranch/"
+    ]
+  },
+  {
+    "slug": "kb-home",
+    "name": "KB Home",
+    "method": "fetch_claude",
+    "domain": "www.kbhome.com",
+    "note": "server HTML (text 34226, prices 0)",
+    "candidates": [
+      "https://www.kbhome.com/new-homes-sarasota-bradenton"
+    ],
+    "sitemap": [
+      "https://www.kbhome.com/new-homes-florida/bradenton",
+      "https://www.kbhome.com/new-homes-florida/parrish",
+      "https://www.kbhome.com/new-homes-florida/sarasota",
+      "https://www.kbhome.com/new-homes-sarasota-bradenton"
+    ]
+  },
+  {
+    "slug": "kolter-homes",
+    "name": "Kolter Homes",
+    "method": "fetch_claude",
+    "domain": "www.kolterhomes.com",
+    "note": "server HTML (text 4676, prices 8)",
+    "candidates": [
+      "https://www.kolterhomes.com/new-homes/locust-north-carolina-cresswind-rocky-river/",
+      "https://www.kolterhomes.com/new-homes/charlotte-north-carolina-active-adult-cresswind-charlotte/move-in-ready/",
+      "https://www.kolterhomes.com/new-homes/cresswind-fort-mill-sc-55-plus-community/",
+      "https://www.kolterhomes.com/new-homes/charlotte-north-carolina-active-adult-cresswind-wesley-chapel/"
+    ],
+    "sitemap": [
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/directions/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/homes/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/galleries/"
+    ]
+  },
+  {
+    "slug": "lee-wetherington",
+    "name": "Lee Wetherington",
+    "method": "render_claude",
+    "domain": "leewetherington.com",
+    "note": "JS shell (visible text 0 chars)",
+    "candidates": [],
+    "sitemap": []
+  },
+  {
+    "slug": "lennar",
+    "name": "Lennar",
+    "method": "json_api",
+    "domain": "www.lennar.com",
+    "note": "embedded JSON state (NEXT/NUXT/APOLLO)",
+    "candidates": [],
+    "sitemap": []
+  },
+  {
+    "slug": "mattamy-homes",
+    "name": "Mattamy Homes",
+    "method": "render_claude",
+    "domain": "www.mattamyhomes.com",
+    "note": "JS shell (visible text 51 chars)",
+    "candidates": [],
+    "sitemap": [
+      "https://mattamyhomes.com/florida/sarasota-bradenton",
+      "https://mattamyhomes.com/florida/sarasota-bradenton/market-design-studio",
+      "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/brightmore",
+      "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/lakespur"
+    ]
+  },
+  {
+    "slug": "medallion-home",
+    "name": "Medallion Home",
+    "method": "fetch_claude",
+    "domain": "www.medallionhome.com",
+    "note": "server HTML (text 8793, prices 18)",
+    "candidates": [],
+    "sitemap": [
+      "https://medallionhome.com/blog/top-beaches-of-sarasota/",
+      "https://medallionhome.com/blog/waterview-homesites-now-available-in-legends-bay-in-bradenton/",
+      "https://medallionhome.com/blog/is-parrish-florida-a-nice-place-to-live/",
+      "https://medallionhome.com/blog/featured-community-watercolor-place-homes-in-bradenton-fl/"
+    ]
+  },
+  {
+    "slug": "meritage-homes",
+    "name": "Meritage Homes",
+    "method": "json_api",
+    "domain": "www.meritagehomes.com",
+    "note": "embedded JSON state (NEXT/NUXT/APOLLO)",
+    "candidates": [],
+    "sitemap": [
+      "https://www.meritagehomes.com/state/fl/tampa/meritage-homes-salt-meadows",
+      "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series",
+      "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series",
+      "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series/bluebell-4l05"
+    ]
+  },
+  {
+    "slug": "mi-homes",
+    "name": "M/I Homes",
+    "method": "render_claude",
+    "domain": "www.mihomes.com",
+    "note": "JS shell (visible text 431 chars)",
+    "candidates": [
+      "https://www.mihomes.com/new-homes/florida/sarasota-metro/communities",
+      "https://www.mihomes.com/new-homes/florida/sarasota-metro/plans-ready-to-build",
+      "https://www.mihomes.com/new-homes/florida/sarasota-metro/quick-move-in-homes"
+    ],
+    "sitemap": []
+  },
+  {
+    "slug": "neal-communities",
+    "name": "Neal Communities",
+    "method": "fetch_claude",
+    "domain": "www.nealcommunities.com",
+    "note": "server HTML (text 6189, prices 7)",
+    "candidates": [
+      "https://nealcommunities.com/locations/bradenton-parrish/",
+      "https://nealcommunities.com/locations/lakewood-ranch/",
+      "https://nealcommunities.com/locations/sarasota/",
+      "https://nealcommunities.com/locations/venice/"
+    ],
+    "sitemap": [
+      "https://nealcommunities.com/neal-communities-wins-big-at-the-manatee-sarasota-parade-of-homes/",
+      "https://nealcommunities.com/grand-palm-couple-welcomes-baby-to-new-home/",
+      "https://nealcommunities.com/couple-finds-perfect-place-at-boca-royale/",
+      "https://nealcommunities.com/veteran-feels-at-home-at-boca-royale/"
+    ]
+  },
+  {
+    "slug": "neal-signature",
+    "name": "Neal Signature Homes",
+    "method": null,
+    "note": "Blocked/unreachable from GH runner: [{\"domain\": \"www.nealsignaturehomes.com\", \"status\": 403}]"
+  },
+  {
+    "slug": "perry-homes",
+    "name": "Perry Homes",
+    "method": "fetch_claude",
+    "domain": "www.perryhomes.com",
+    "note": "server HTML (text 2080, prices 0)",
+    "candidates": [],
+    "sitemap": [
+      "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch",
+      "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-90",
+      "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-90/3838-butte-trail",
+      "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-90/3834-butte-trail"
+    ]
+  },
+  {
+    "slug": "pulte",
+    "name": "Pulte Homes",
+    "method": "fetch_claude",
+    "domain": "www.pulte.com",
+    "note": "server HTML (text 29021, prices 0)",
+    "candidates": [
+      "https://www.pulte.com/homes/florida/sarasota"
+    ],
+    "sitemap": []
+  },
+  {
+    "slug": "richmond-american",
+    "name": "Richmond American Homes",
+    "method": "fetch_claude",
+    "domain": "www.richmondamerican.com",
+    "note": "server HTML (text 11224, prices 0)",
+    "candidates": [],
+    "sitemap": [
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/",
+      "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/tourmaline/"
+    ]
+  },
+  {
+    "slug": "ryan-homes",
+    "name": "Ryan Homes",
+    "method": "fetch_claude",
+    "domain": "www.ryanhomes.com",
+    "note": "server HTML (text 13121, prices 7)",
+    "candidates": [
+      "https://www.ryanhomes.com/new-homes/communities/florida/Sarasota-Florida",
+      "https://www.ryanhomes.com/new-homes/communities/florida/Venice-FL"
+    ],
+    "sitemap": [
+      "https://www.ryanhomes.com/new-homes/communities/florida/sarasota-florida",
+      "https://www.ryanhomes.com/new-homes/communities/florida/venice-fl",
+      "https://www.ryanhomes.com/new-homes/communities/florida/sarasota-florida/quick-move-in-homes",
+      "https://www.ryanhomes.com/quick-move-in-homes/sarasota-florida"
+    ]
+  },
+  {
+    "slug": "simplydwell",
+    "name": "SimplyDwell Homes",
+    "method": "fetch_claude",
+    "domain": "simplydwellhomes.com",
+    "note": "server HTML (text 8022, prices 28)",
+    "candidates": [
+      "https://simplydwellhomes.com/community/broadleaf/",
+      "https://simplydwellhomes.com/community/madera-at-wellen-park/"
+    ],
+    "sitemap": [
+      "https://simplydwellhomes.com/building-dreams-in-the-sunshine-state-a-homebuying-journey-rooted-in-sarasotas-future/",
+      "https://simplydwellhomes.com/local-couple-finds-their-dream-home-with-simplydwell-in-sarasota-florida/",
+      "https://simplydwellhomes.com/discover-affordable-new-construction-in-sarasota-florida-a-guide-for-first-time-homebuyers/",
+      "https://simplydwellhomes.com/new-construction-homes-near-sarasota-fl/"
+    ]
+  },
+  {
+    "slug": "stock-luxury",
+    "name": "Stock Luxury Homes",
+    "method": "fetch_claude",
+    "domain": "www.stockdevelopment.com",
+    "note": "server HTML (text 2129, prices 0)",
+    "candidates": [
+      "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/"
+    ],
+    "sitemap": [
+      "https://www.stockdevelopment.com/projects/wild-blue-at-waterside",
+      "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans",
+      "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/inventory",
+      "https://www.stockdevelopment.com/projects/wildblue"
+    ]
+  },
+  {
+    "slug": "taylor-morrison",
+    "name": "Taylor Morrison",
+    "method": "render_claude",
+    "domain": "www.taylormorrison.com",
+    "note": "JS shell (visible text 18 chars)",
+    "candidates": [],
+    "sitemap": [
+      "https://www.taylormorrison.com/discover-esplanade",
+      "https://www.taylormorrison.com/discover-esplanade/communities",
+      "https://www.taylormorrison.com/discover-esplanade/communities/california",
+      "https://www.taylormorrison.com/discover-esplanade/communities/florida"
+    ]
+  },
+  {
+    "slug": "toll-brothers",
+    "name": "Toll Brothers",
+    "method": "json_api",
+    "domain": "www.tollbrothers.com",
+    "note": "embedded JSON state (NEXT/NUXT/APOLLO)",
+    "candidates": [
+      "https://www.tollbrothers.com/luxury-homes/Sarasota-FL"
+    ],
+    "sitemap": [
+      "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+      "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+      "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/San-Giorgio",
+      "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection/Quick-Move-In/285955"
+    ]
+  }
+]

@@ -1,0 +1,148 @@
+{
+  "name": "Kolter Homes",
+  "slug": "kolter-homes",
+  "pages": [
+    {
+      "url": "https://www.kolterhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 99056,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 2,
+      "visibleTextChars": 8732
+    },
+    {
+      "url": "https://www.kolterhomes.com/new-homes/locust-north-carolina-cresswind-rocky-river/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 70717,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 15,
+      "visibleTextChars": 7247
+    },
+    {
+      "url": "https://www.kolterhomes.com/new-homes/charlotte-north-carolina-active-adult-cresswind-charlotte/move-in-ready/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 76105,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
+      ],
+      "visiblePriceCount": 8,
+      "visibleSqftCount": 27,
+      "visibleTextChars": 7015
+    },
+    {
+      "url": "https://www.kolterhomes.com/new-homes/cresswind-fort-mill-sc-55-plus-community/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 47207,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 4676
+    },
+    {
+      "url": "https://www.kolterhomes.com/new-homes/charlotte-north-carolina-active-adult-cresswind-wesley-chapel/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 77900,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 16,
+      "visibleTextChars": 7993
+    }
+  ],
+  "domain": "www.kolterhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://www.kolterhomes.com/",
+  "candidateLinks": [
+    {
+      "url": "https://www.kolterhomes.com/new-homes/locust-north-carolina-cresswind-rocky-river/",
+      "text": "Cresswind at Rocky River"
+    },
+    {
+      "url": "https://www.kolterhomes.com/new-homes/charlotte-north-carolina-active-adult-cresswind-charlotte/move-in-ready/",
+      "text": "Cresswind Charlotte"
+    },
+    {
+      "url": "https://www.kolterhomes.com/new-homes/cresswind-fort-mill-sc-55-plus-community/",
+      "text": "Cresswind Fort Mill"
+    },
+    {
+      "url": "https://www.kolterhomes.com/new-homes/charlotte-north-carolina-active-adult-cresswind-wesley-chapel/",
+      "text": "Cresswind Wesley Chapel"
+    }
+  ],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/directions/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/homes/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/galleries/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/move-in-ready/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/siteplans/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/features/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/lifestyle/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/area-information/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/request-information/",
+      "https://www.kolterhomes.com/new-homes/dawsonville-georgia-active-adult-cresswind-at-dawson-springs/schedule-your-tour/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/directions/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/homes/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5347/floorplan/ana/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5348/floorplan/bailey/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5349/floorplan/claire/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5350/floorplan/eva/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5351/floorplan/gabriella/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5352/floorplan/jade/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5354/floorplan/laura/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5356/floorplan/morgan/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5357/floorplan/nora/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5358/floorplan/pearl/",
+      "https://www.kolterhomes.com/new-homes/lady-lake-florida-active-adult-cresswind-hammock-oaks/5359/floorplan/rachel/"
+    ]
+  }
+}

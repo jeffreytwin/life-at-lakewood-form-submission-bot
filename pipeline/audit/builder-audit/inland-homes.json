@@ -1,0 +1,72 @@
+{
+  "name": "Inland Homes",
+  "slug": "inland-homes",
+  "pages": [
+    {
+      "url": "https://inlandhomes.com/",
+      "label": "homepage",
+      "status": 200,
+      "bytes": 302376,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?render=6LfhVcYrAAAAAFowHLt4xxo_maq4X-KGb2ODoDMT"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 5587
+    },
+    {
+      "url": "https://inlandhomes.com/why-isles-at-bayview/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 284990,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?render=6LfhVcYrAAAAAFowHLt4xxo_maq4X-KGb2ODoDMT"
+      ],
+      "visiblePriceCount": 0,
+      "visibleSqftCount": 0,
+      "visibleTextChars": 4089
+    },
+    {
+      "url": "https://inlandhomes.com/communities/isles-at-bayview/",
+      "label": "community-page",
+      "status": 200,
+      "bytes": 327604,
+      "hasNextData": false,
+      "hasNuxt": false,
+      "hasApollo": false,
+      "hasLdJson": true,
+      "hasAngular": false,
+      "hasWix": false,
+      "apiHints": [
+        "https://www.google.com/recaptcha/api.js?render=6LfhVcYrAAAAAFowHLt4xxo_maq4X-KGb2ODoDMT"
+      ],
+      "visiblePriceCount": 4,
+      "visibleSqftCount": 4,
+      "visibleTextChars": 3334
+    }
+  ],
+  "domain": "inlandhomes.com",
+  "homeStatus": 200,
+  "finalUrl": "https://inlandhomes.com/",
+  "candidateLinks": [],
+  "sitemap": {
+    "found": true,
+    "path": "/sitemap.xml",
+    "matches": [
+      "https://inlandhomes.com/why-isles-at-bayview/",
+      "https://inlandhomes.com/communities/isles-at-bayview/"
+    ]
+  }
+}
