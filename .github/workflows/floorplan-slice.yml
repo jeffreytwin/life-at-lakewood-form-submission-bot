@@ -24,8 +24,8 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Run slice script
-        run: node pipeline/slice/fetch-toll.mjs
+      - name: Run slice extractor
+        run: node pipeline/slice/run-toll.mjs
 
       - name: Commit results back to branch
         run: |
