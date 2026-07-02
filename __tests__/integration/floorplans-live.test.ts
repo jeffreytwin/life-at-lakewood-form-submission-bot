@@ -7,6 +7,7 @@ import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
 import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morrison";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
+import { extractDrb } from "@/lib/floorplans/extractors/drb";
 
 const live = process.env.FP_LIVE === "1";
 
@@ -53,6 +54,19 @@ describe.runIf(live)("live: Mattamy via JSS search-data", () => {
     expect(plans.length).toBeGreaterThanOrEqual(3);
     expect(plans.some((p) => (p.price ?? 0) > 100_000)).toBe(true);
   }, 120_000);
+});
+
+describe.runIf(live)("live: DRB inventory sweep", () => {
+  it("extracts Biscayne Landing at Seaire homes", async () => {
+    const plans = await extractDrb({ communityName: "Seaire" });
+    console.log(`drb: ${plans.length} inventory homes`);
+    console.log(JSON.stringify(plans.slice(0, 2), null, 1));
+    expect(plans.length).toBeGreaterThanOrEqual(1);
+    for (const p of plans) {
+      expect(p.quickMoveIn).toBe(true);
+      expect(p.raw?.relatedPlan).toBeTruthy();
+    }
+  }, 180_000);
 });
 
 describe.runIf(live)("live: Toll Brothers QMI harvest", () => {

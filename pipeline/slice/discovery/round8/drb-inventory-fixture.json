@@ -1,0 +1,58 @@
+{
+ "items": [
+  {
+   "id": 4728,
+   "communityId": 281,
+   "communityName": "Biscayne Landing at Seaire",
+   "community": {
+    "id": 281,
+    "name": "Biscayne Landing at Seaire"
+   },
+   "planName": "Eider",
+   "planId": 2006,
+   "price": 594990,
+   "beds": 3,
+   "fullBaths": 2,
+   "halfBaths": 1,
+   "sqFt": 2480,
+   "garageSpaces": 3,
+   "stories": 1,
+   "homesite": "92",
+   "lotNumber": null,
+   "salesStatus": "available",
+   "listingType": "new_home",
+   "isModel": false,
+   "websiteUrl": "https://www.drbhomes.com/drbhomes/fullscreen/interactive-floorplan/1543?isInventory=true",
+   "marketingHeadline": "Gourmet Kitchen, Jack & Jill Bath, and 3-Car Garage \u2013 The Eider Has It All!",
+   "images": [
+    {
+     "url": "https://assets.drbhomes.com/ndg-cms-prod-assets/image/1781616812582.png",
+     "type": "inventory_exterior",
+     "title": "8320 Golden Beach Court"
+    },
+    {
+     "url": "https://assets.drbhomes.com/ndg-cms-prod-assets/image/1750086851430.jpg",
+     "type": "inventory_exterior",
+     "title": "Front Exterior of 8320 Golden Beach Court"
+    },
+    {
+     "url": "https://assets.drbhomes.com/ndg-cms-prod-assets/image/1750088015505.jpg",
+     "type": "inventory_interior",
+     "title": "The Main Floor"
+    },
+    {
+     "url": "https://assets.drbhomes.com/ndg-cms-prod-assets/image/1750088030079.jpg",
+     "type": "inventory_interior",
+     "title": "The Main Floor"
+    }
+   ],
+   "availabilityDate": "2024-10-13",
+   "yearBuilt": 2024
+  }
+ ],
+ "meta": {
+  "totalItems": 926,
+  "totalPages": 186,
+  "currentPage": 1
+ }
+}

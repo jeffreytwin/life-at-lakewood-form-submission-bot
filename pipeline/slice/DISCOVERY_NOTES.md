@@ -39,7 +39,13 @@ ICI/Neal Signature → (done) Toll QMIs.
   (WAFs often exempt API routes). If not, Meritage needs a
   Playwright-in-Actions engine instead of the Vercel path.
 
-## Mattamy Homes (was `render_claude`, 6 Wellen Park communities)
+## Mattamy Homes — DONE pending live verify (extractor written)
+
+- `extractors/mattamy.ts`: GET the Sitecore JSS layout service `/search-data`
+  route (public sc_apikey) and scope planCards/qmiCards by the community
+  page URL prefix. Unit-tested against round-7 captures.
+
+### Original findings
 
 - **Server-renders a full Sitecore `__JSS_STATE__`** on community pages
   (`round3/mattamy-brightmore.jss-state.json`, 275 KB raw).
@@ -55,7 +61,16 @@ ICI/Neal Signature → (done) Toll QMIs.
   (plans) and `productType=qmi` (QMIs). Round 5+ captures the GraphQL
   queries those pages fire so the extractor can call them directly.
 
-## Taylor Morrison (was `render_claude`, Azario/Esplanade/Firethorn…)
+## Taylor Morrison — DONE pending live verify (extractor written)
+
+- `extractors/taylor-morrison.ts`: parses the inline
+  `window.TM.client.scDataStore.data` from `<community>/floor-plans`
+  (floorPlansListDataArray + series) and `<community>/available-homes`
+  (address-named QMIs). Plain fetch. Unit-tested against round-7 dumps.
+- Connection URLs: use the community base page, e.g.
+  `https://www.taylormorrison.com/fl/tampa/parrish/firethorn`.
+
+### Original findings
 
 - Sitemap exposes exact per-community pages:
   `/fl/tampa/parrish/firethorn/floor-plans`, per-plan pages, and QMI pages
@@ -66,7 +81,16 @@ ICI/Neal Signature → (done) Toll QMIs.
   (200, 339 KB). Round 7 dumps the full object → json_api extractor that
   regex-extracts the inline JSON. No Playwright needed.
 
-## M/I Homes (was `render_claude`, Sweetwater/Nautique/Palmera)
+## M/I Homes — still blocked for Node fetch
+
+- The SSC Search API (`/sitecore/api/ssc/MIHomes-Project-Website-Api/Search`,
+  `searchtype=plans|inventory`) returns 500 KB+ in a real browser but
+  **hangs until timeout for Node fetch** (rounds 6–7; Cloudflare holds
+  non-browser TLS connections on the API path while page HTML is served
+  fine). Options: Playwright-in-Actions engine, or a TLS-impersonation
+  fetch. Parked behind the others.
+
+### Original findings
 
 - `cdn.mihomes.com/assets/toolkit/js/search.js` calls
   `GET /api/v1/community/hometypes/{communityId}` (context saved in
@@ -75,7 +99,15 @@ ICI/Neal Signature → (done) Toll QMIs.
   0). Round 4 crawls the listing for community hrefs and extracts ids from
   the community pages, then probes the API.
 
-## DRB Homes (was `render_claude`, Seaire → Biscayne Landing)
+## DRB Homes — DONE pending live verify (extractor written)
+
+- `extractors/drb.ts`: sweeps `api.drbhomes.com/api/v1/public/inventory`
+  (filters are ignored server-side; ~19 pages at limit=50) and matches
+  items by community name — Biscayne Landing at Seaire is communityId 281.
+  Inventory homes only; DRB exposes no per-community to-be-built plan
+  listing (plan resource is templates without community linkage).
+
+### Original findings
 
 - Community page found: `…/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview` (200).
 - Round 5/6: the SPA is backed by an **open public REST API** —
@@ -85,7 +117,18 @@ ICI/Neal Signature → (done) Toll QMIs.
   resource/filters and the Seaire community id by capturing the SPA's own
   calls.
 
-## Lee Wetherington (was `render_claude`, Star Farms/Shellstone/Wild Blue/Everly)
+## Lee Wetherington — use the generic fetch_claude engine
+
+- Real site is `lwhomes.com` (WordPress). `/listings/` server-renders the
+  for-sale homes as posts (round-7 rendered text shows the listings), and
+  `/model-homes/` the models. No hidden API worth chasing (wp-json is
+  auth-gated; page XHRs are chat/anti-spam widgets only).
+- Action: reclassify the builder to `fetch_claude` with
+  `url = https://lwhomes.com/listings/` (Settings → Builder Connections /
+  fp_builders update — needs a DB write, Supabase MCP was approval-blocked
+  this session).
+
+### Original findings
 
 - `leewetherington.com` is a 114-byte JS shell redirecting to `/lander`
   (empty). `www.leewetheringtonhomes.com` → **`lwhomes.com`**, a WordPress

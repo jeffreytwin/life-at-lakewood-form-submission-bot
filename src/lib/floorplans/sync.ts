@@ -18,6 +18,7 @@ import { extractLennar } from "@/lib/floorplans/extractors/lennar";
 import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morrison";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
+import { extractDrb } from "@/lib/floorplans/extractors/drb";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -29,6 +30,7 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Meritage Homes": extractMeritage,
   "Taylor Morrison": extractTaylorMorrison,
   "Mattamy Homes": extractMattamy,
+  "DRB Homes": extractDrb,
 };
 
 const METHOD_EXTRACTORS: Record<string, Extractor> = {
@@ -38,7 +40,7 @@ const METHOD_EXTRACTORS: Record<string, Extractor> = {
 // Builders whose extractor works from API ids rather than a page URL —
 // URL auto-discovery is skipped (their pages block non-browser fetches,
 // which would fail discovery's verification step and abort the run).
-const URLLESS_BUILDERS = new Set(["Meritage Homes"]);
+const URLLESS_BUILDERS = new Set(["Meritage Homes", "DRB Homes"]);
 
 function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
