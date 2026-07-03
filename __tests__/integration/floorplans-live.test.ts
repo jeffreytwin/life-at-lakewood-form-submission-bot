@@ -8,6 +8,7 @@ import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
 import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morrison";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
+import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 const live = process.env.FP_LIVE === "1";
 
@@ -67,6 +68,27 @@ describe.runIf(live)("live: DRB inventory sweep", () => {
       expect(p.raw?.relatedPlan).toBeTruthy();
     }
   }, 180_000);
+});
+
+describe.runIf(live)("live: MPC aggregator (Wellen Park) for blocked builders", () => {
+  it("sources ICI Homes at Oakbend from wellenpark.com", async () => {
+    const plans = await extractMpcAggregator({ builderName: "ICI Homes", communityName: "Oakbend" });
+    console.log(`ici@oakbend via wellenpark: ${plans.length} homes`);
+    console.log(JSON.stringify(plans.slice(0, 2), null, 1));
+    expect(plans.length).toBeGreaterThanOrEqual(1);
+    for (const p of plans) {
+      expect(p.raw?.builderSlug).toBe("ici-homes");
+      expect(p.raw?.neighborhood).toBe("oakbend");
+      expect((p.price ?? 0) > 100_000).toBe(true);
+    }
+  }, 90_000);
+
+  it("sources M/I Homes at Palmera from wellenpark.com", async () => {
+    const plans = await extractMpcAggregator({ builderName: "M/I Homes", communityName: "Palmera" });
+    console.log(`mi@palmera via wellenpark: ${plans.length} homes`);
+    expect(plans.length).toBeGreaterThanOrEqual(1);
+    for (const p of plans) expect(p.raw?.builderSlug).toBe("mi-homes");
+  }, 90_000);
 });
 
 describe.runIf(live)("live: Toll Brothers QMI harvest", () => {
