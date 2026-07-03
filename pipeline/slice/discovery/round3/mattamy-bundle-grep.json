@@ -1,0 +1,57 @@
+[
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "https://mattamyhomes.com/api/mattamy-homes",
+  "context": "RAPH_QL_ENDPOINT:\"\",REACT_APP_LAYOUT_SERVICE_CONFIGURATION_NAME:\"jss\",REACT_APP_SITECORE_API_HOST:\"\",REACT_APP_SITECORE_API_KEY:\"\",REACT_APP_SITECORE_SITE_NAME:\"\"}.REACT_APP_GRAPH_QL_ENDPOINT_PATH||\"/api/mattamy-homes\",t.defaultLanguage=\"en\",t.graphQLEndpoint=\"https://mattamyhomes.com/api/mattamy-homes\",t.layoutServiceConfigurationName=\"jss\",e.exports=t},4465:(e,t,n)=>{\"use strict\";n.d(t,{DD:()=>o,EE:()=>a});const r=\"US\",i=\"CA\",o=e=>e&&[r,i].includes(e),a=e=>e===i?\"CAN\":e===r?\"USA\":\"\"},90360:(e,t,n)=>{\"use strict\";n.d(t,{ql:()=>q,B6:()=>U});var r=n(50390);"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "https://components.sitecorecloud.io/api",
+  "context": "==(n=null==e?void 0:e.getAttribute(\"environment\"))&&void 0!==n?n:void 0,frontend:null!==(r=null==e?void 0:e.getAttribute(\"frontend\"))&&void 0!==r?r:\"https://components.sitecorecloud.io\",backend:null!==(i=null==e?void 0:e.getAttribute(\"backend\"))&&void 0!==i?i:\"https://components.sitecorecloud.io/api\",cdn:null!==(o=null==e?void 0:e.getAttribute(\"cdn\"))&&void 0!==o?o:\"https://feaas.blob.core.windows.net\",auth:null,isolate:null==(null==e?void 0:e.getAttribute(\"isolate\"))||\"true\"==(null==e?void 0:e.getAttribute(\"isolate\"))}}an.observedAttributes=[\"library\","
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm",
+  "context": "!0,window.document&&window.top===window.self&&/^(https?|file):$/.test(window.location.protocol)&&setTimeout(function(){if(!window.__APOLLO_DEVTOOLS_GLOBAL_HOOK__){var e=window.navigator,t=e&&e.userAgent,n=void 0;\"string\"===typeof t&&(t.indexOf(\"Chrome/\")>-1?n=\"https://chrome.google.com/webstore/detail/apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm\":t.indexOf(\"Firefox/\")>-1&&(n=\"https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/\")),n&&!1!==globalThis.__DEV__&&C.log(\"Download the Apollo DevTools for a better development experience: %s\",n)}},1e4))}},Object.defineProperty(e.prototype,\""
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "/api/mattamy-homes",
+  "context": "PP_DEFAULT_LANGUAGE:\"\",REACT_APP_FETCH_WITH:\"REST\",REACT_APP_GRAPH_QL_ENDPOINT:\"\",REACT_APP_LAYOUT_SERVICE_CONFIGURATION_NAME:\"jss\",REACT_APP_SITECORE_API_HOST:\"\",REACT_APP_SITECORE_API_KEY:\"\",REACT_APP_SITECORE_SITE_NAME:\"\"}.REACT_APP_GRAPH_QL_ENDPOINT_PATH||\"/api/mattamy-homes\",t.defaultLanguage=\"en\",t.graphQLEndpoint=\"https://mattamyhomes.com/api/mattamy-homes\",t.layoutServiceConfigurationName=\"jss\",e.exports=t},4465:(e,t,n)=>{\"use strict\";n.d(t,{DD:()=>o,EE:()=>a});const r=\"US\",i=\"CA\",o=e=>e&&[r,i].includes(e),a=e=>e===i?\"CAN\":e"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "/sitecore/api/jss/dictionary/",
+  "context": "ching dictionary data for %s %s\",e,this.options.siteName);const r=this.options.dataFetcher||this.defaultFetcher,i=yield(0,a.fetchData)(t,r,{sc_apikey:this.options.apiKey});return this.setCacheValue(t,i.phrases)})}getUrl(e){return\"\".concat(this.options.apiHost,\"/sitecore/api/jss/dictionary/\").concat(this.options.siteName,\"/\").concat(e)}}t.RestDictionaryService=u},48659:(e,t,n)=>{\"use strict\";Object.defineProperty(t,\"__esModule\",{value:!0}),t.traverseComponent=t.traverseField=t.traversePlaceholder=t.getContentStylesheetUrl=t.getContentStylesheet"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "/sitecore/api/layout/",
+  "context": "r,i):this.getDefaultFetcher(r,i),u=this.resolveLayoutServiceUrl(\"placeholder\");return(0,s.fetchData)(u,a,Object.assign({placeholderName:e,item:t},o))}resolveLayoutServiceUrl(e){const{apiHost:t=\"\",configurationName:n=\"jss\"}=this.serviceConfig;return\"\".concat(t,\"/sitecore/api/layout/\").concat(e,\"/\").concat(n)}setupReqHeaders(e){const t=new Headers;return(null===e||void 0===e?void 0:e.headers)&&(Object.entries(e.headers).forEach(e=>{let[n,r]=e;r&&t.set(n,Array.isArray(r)?r.join(\", \"):r)}),e.headers.cookie&&t.set(\"cookie\",e.headers.cookie)"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "FloorPlan",
+  "context": "et(\"DoubleMedia\",Ee),Zt.set(\"EloquaIntegrationData\",Se),Zt.set(\"Error\",ct),Zt.set(\"ExtendedGallery\",xe),Zt.set(\"ExteriorStyles\",_e),Zt.set(\"FAQs\",Ce),Zt.set(\"FAQsSchema\",Te),Zt.set(\"Favicon\",Ae),Zt.set(\"FeaturesBlock\",Oe),Zt.set(\"FloatingAnchorLink\",Z),Zt.set(\"FloorPlan\",Pe),Zt.set(\"FloorplanSchema\",Re),Zt.set(\"Footer\",Ne),Zt.set(\"Form\",De),Zt.set(\"FormsConfirmationModal\",je),Zt.set(\"FormsTitle\",Le),Zt.set(\"FormsMarketCommunities\",Ie),Zt.set(\"GalleryComponent\",Fe),Zt.set(\"generalscript\",Ue),Zt.set(\"GenericFormContainer\",Be)"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "FloorplanSchema",
+  "context": ".set(\"EloquaIntegrationData\",Se),Zt.set(\"Error\",ct),Zt.set(\"ExtendedGallery\",xe),Zt.set(\"ExteriorStyles\",_e),Zt.set(\"FAQs\",Ce),Zt.set(\"FAQsSchema\",Te),Zt.set(\"Favicon\",Ae),Zt.set(\"FeaturesBlock\",Oe),Zt.set(\"FloatingAnchorLink\",Z),Zt.set(\"FloorPlan\",Pe),Zt.set(\"FloorplanSchema\",Re),Zt.set(\"Footer\",Ne),Zt.set(\"Form\",De),Zt.set(\"FormsConfirmationModal\",je),Zt.set(\"FormsTitle\",Le),Zt.set(\"FormsMarketCommunities\",Ie),Zt.set(\"GalleryComponent\",Fe),Zt.set(\"generalscript\",Ue),Zt.set(\"GenericFormContainer\",Be),Zt.set(\"GetInTouch\",ze),Zt.s"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "QMIBlock",
+  "context": "cription\",ft),Zt.set(\"PortraitCards\",dt),Zt.set(\"ProductCarousel\",pt),Zt.set(\"ProductDescription\",ke),Zt.set(\"ProductHero\",ht),Zt.set(\"ProductOverview\",vt),Zt.set(\"ProductSection\",mt),Zt.set(\"Promo\",yt),Zt.set(\"PromoBlock\",gt),Zt.set(\"PromosFlyout\",bt),Zt.set(\"QMIBlock\",Et),Zt.set(\"QMISchema\",wt),Zt.set(\"QMIInteractiveSitemap\",$e),Zt.set(\"RegistrationModal\",St),Zt.set(\"RegistrationPromo\",kt),Zt.set(\"ReverseComponentOrderContainer\",Ot),Zt.set(\"ReverseComponentStaticCarousel\",xt),Zt.set(\"SalesCenterContact\",_t),Zt.set(\"Sales"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "QMISchema",
+  "context": "PortraitCards\",dt),Zt.set(\"ProductCarousel\",pt),Zt.set(\"ProductDescription\",ke),Zt.set(\"ProductHero\",ht),Zt.set(\"ProductOverview\",vt),Zt.set(\"ProductSection\",mt),Zt.set(\"Promo\",yt),Zt.set(\"PromoBlock\",gt),Zt.set(\"PromosFlyout\",bt),Zt.set(\"QMIBlock\",Et),Zt.set(\"QMISchema\",wt),Zt.set(\"QMIInteractiveSitemap\",$e),Zt.set(\"RegistrationModal\",St),Zt.set(\"RegistrationPromo\",kt),Zt.set(\"ReverseComponentOrderContainer\",Ot),Zt.set(\"ReverseComponentStaticCarousel\",xt),Zt.set(\"SalesCenterContact\",_t),Zt.set(\"SalesPerson\",Ct),Zt.set(\"Sav"
+ },
+ {
+  "src": "https://mattamyhomes.com/dist/mattamy-homes/static/js/main.166d137d.js",
+  "hit": "QMIInteractiveSitemap",
+  "context": "et(\"ProductCarousel\",pt),Zt.set(\"ProductDescription\",ke),Zt.set(\"ProductHero\",ht),Zt.set(\"ProductOverview\",vt),Zt.set(\"ProductSection\",mt),Zt.set(\"Promo\",yt),Zt.set(\"PromoBlock\",gt),Zt.set(\"PromosFlyout\",bt),Zt.set(\"QMIBlock\",Et),Zt.set(\"QMISchema\",wt),Zt.set(\"QMIInteractiveSitemap\",$e),Zt.set(\"RegistrationModal\",St),Zt.set(\"RegistrationPromo\",kt),Zt.set(\"ReverseComponentOrderContainer\",Ot),Zt.set(\"ReverseComponentStaticCarousel\",xt),Zt.set(\"SalesCenterContact\",_t),Zt.set(\"SalesPerson\",Ct),Zt.set(\"SavingsCalculatorSidebar\",Tt),Zt.set(\""
+ }
+]

@@ -1,0 +1,55 @@
+{
+ "205": {
+  "count": 1,
+  "samples": [
+   {
+    "id": 9263,
+    "planId": 1572,
+    "headline": "Spectacular Home That Shows Like A Custom - Up to 5 Bedrooms!",
+    "price": 516215,
+    "address": null,
+    "websiteUrl": "https://www.drbhomes.com/drbhomes/fullscreen/interactive-floorplan/3129?isInventory=true"
+   }
+  ]
+ },
+ "280": {
+  "count": 3,
+  "samples": [
+   {
+    "id": 8513,
+    "planId": 1829,
+    "headline": "End of Row, 2 Level Townhome with 3 Bedrooms!",
+    "price": 459840,
+    "address": null
+   },
+   {
+    "id": 9221,
+    "planId": 1826,
+    "headline": "2 Level Townhome with 3 Bedrooms!",
+    "price": 381990,
+    "address": null
+   }
+  ]
+ },
+ "281": {
+  "count": 3,
+  "samples": [
+   {
+    "id": 4728,
+    "planId": 2006,
+    "headline": "Gourmet Kitchen, Jack & Jill Bath, and 3-Car Garage – The Eider Has It All!",
+    "price": 594990,
+    "address": null,
+    "websiteUrl": "https://www.drbhomes.com/drbhomes/fullscreen/interactive-floorplan/1543?isInventory=true"
+   },
+   {
+    "id": 7704,
+    "planId": 2297,
+    "headline": "A rare new-construction home featuring a full multi-generational suite and expansive loft",
+    "price": 649000,
+    "address": null,
+    "websiteUrl": "https://www.drbhomes.com/drbhomes/fullscreen/interactive-floorplan/1540?isInventory=true"
+   }
+  ]
+ }
+}

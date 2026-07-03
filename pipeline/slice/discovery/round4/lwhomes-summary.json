@@ -1,0 +1,35 @@
+{
+ "typesStatus": 401,
+ "probes": [
+  {
+   "type": "available-homes",
+   "status": 401,
+   "json": true,
+   "bytes": 96
+  },
+  {
+   "type": "floorplans",
+   "status": 401,
+   "json": true,
+   "bytes": 96
+  },
+  {
+   "type": "floor-plans",
+   "status": 401,
+   "json": true,
+   "bytes": 96
+  },
+  {
+   "type": "communities",
+   "status": 401,
+   "json": true,
+   "bytes": 96
+  },
+  {
+   "type": "homes",
+   "status": 401,
+   "json": true,
+   "bytes": 96
+  }
+ ]
+}

@@ -1,10 +1,11 @@
-name: Floor Plan Slice — Toll Brothers
+name: Floor Plan Slice — Discovery
 
 on:
   workflow_dispatch:
   push:
     branches:
       - claude/wix-floor-plan-automation-sbqc80
+      - claude/wix-floor-plan-automation-sbqc80-hyk0qe
     paths:
       - pipeline/audit/RUN_SLICE
 
@@ -18,14 +19,22 @@ concurrency:
 jobs:
   slice:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
 
-      - name: Run slice discovery
-        run: node pipeline/slice/discover-lennar.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Live extractor verification
+        run: FP_LIVE=1 npx vitest run __tests__/integration/floorplans-live.test.ts
 
       - name: Commit results back to branch
         run: |
@@ -35,7 +44,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No slice changes to commit."
           else
-            git commit -m "Floor plan slice: Toll Brothers discovery [skip ci]"
+            git commit -m "Floor plan slice: slice results [skip ci]"
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi

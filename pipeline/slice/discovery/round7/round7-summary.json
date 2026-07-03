@@ -1,0 +1,84 @@
+{
+ "taylor": [
+  {
+   "slug": "floor-plans",
+   "status": 200,
+   "bytes": 339515,
+   "scDataBytes": 132294,
+   "scDataKeys": 11
+  },
+  {
+   "slug": "available-homes",
+   "status": 200,
+   "bytes": 192928,
+   "scDataBytes": 66062,
+   "scDataKeys": 12
+  }
+ ],
+ "drbProbes": [
+  {
+   "slug": "community-paged",
+   "status": 0,
+   "bytes": 0
+  },
+  {
+   "slug": "community-search",
+   "status": 0,
+   "bytes": 0
+  },
+  {
+   "slug": "inventory-by-community",
+   "status": 200,
+   "bytes": 813269,
+   "total": 926
+  },
+  {
+   "slug": "inventory-filter",
+   "status": 200,
+   "bytes": 813269,
+   "total": 926
+  },
+  {
+   "slug": "plan-by-community",
+   "status": 200,
+   "bytes": 555327,
+   "total": 401
+  },
+  {
+   "slug": "homesite-params",
+   "status": 200,
+   "bytes": 1501458
+  }
+ ],
+ "drbCapture": {
+  "status": 200,
+  "calls": 1,
+  "saved": 1
+ },
+ "mattamyCapture": {
+  "status": 200,
+  "calls": 48,
+  "saved": 6,
+  "textChars": 3028
+ },
+ "lwhomesCapture": {
+  "status": 200,
+  "calls": 10,
+  "saved": 2,
+  "textChars": 1164
+ },
+ "mihomesRetry": [
+  {
+   "slug": "plans-simple",
+   "status": 0,
+   "bytes": 0,
+   "error": "The operation was aborted due to timeout"
+  },
+  {
+   "slug": "inventory-simple",
+   "status": 0,
+   "bytes": 0,
+   "error": "The operation was aborted due to timeout"
+  }
+ ]
+}

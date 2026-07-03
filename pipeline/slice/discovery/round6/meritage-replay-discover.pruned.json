@@ -1,0 +1,54 @@
+{
+ "widgets": [
+  {
+   "rfk_id": "rfkid_195",
+   "type": "preview_search",
+   "used_in": "common_across_pages",
+   "entity": "home",
+   "total_item": 0,
+   "limit": 0,
+   "offset": 0,
+   "errors": [
+    {
+     "message": "page not found for uri",
+     "type": "uri_not_found",
+     "severity": "high"
+    }
+   ]
+  },
+  {
+   "rfk_id": "rfkid_196",
+   "type": "preview_search",
+   "used_in": "common_across_pages",
+   "entity": "popularsearch",
+   "total_item": 0,
+   "limit": 0,
+   "offset": 0,
+   "errors": [
+    {
+     "message": "page not found for uri",
+     "type": "uri_not_found",
+     "severity": "high"
+    }
+   ]
+  },
+  {
+   "rfk_id": "rfkid_196",
+   "type": "preview_search",
+   "used_in": "common_across_pages",
+   "entity": "popularsearch",
+   "total_item": 0,
+   "limit": 0,
+   "offset": 0,
+   "errors": [
+    {
+     "message": "page not found for uri",
+     "type": "uri_not_found",
+     "severity": "high"
+    }
+   ]
+  }
+ ],
+ "dt": 626,
+ "ts": 1783032031431
+}

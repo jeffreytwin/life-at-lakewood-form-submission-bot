@@ -1,0 +1,13 @@
+{
+ "searchJs": 200,
+ "communityLinks": [],
+ "ids": [],
+ "probes": [
+  {
+   "url": "https://www.mihomes.com/api/v1/community/hometypes/",
+   "status": 404,
+   "json": true,
+   "bytes": 218
+  }
+ ]
+}

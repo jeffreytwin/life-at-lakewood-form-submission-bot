@@ -1,0 +1,76 @@
+{
+ "meritageCapture": {
+  "master": {
+   "status": 200,
+   "calls": 1
+  },
+  "classic": {
+   "status": 200,
+   "calls": 2
+  }
+ },
+ "meritageReplays": [
+  {
+   "api": "discover",
+   "status": 200,
+   "bytes": 720,
+   "json": true
+  },
+  {
+   "api": "web-lots",
+   "status": 200,
+   "bytes": 8888,
+   "json": true
+  }
+ ],
+ "mattamyCapture": {
+  "status": 200,
+  "calls": 0
+ },
+ "taylorInline": {
+  "status": 200,
+  "bytes": 339515,
+  "candidateScripts": 3,
+  "dumped": 0
+ },
+ "mihomesApi": [
+  {
+   "slug": "plans",
+   "status": 0,
+   "bytes": 0
+  },
+  {
+   "slug": "inventory",
+   "status": 0,
+   "bytes": 0
+  }
+ ],
+ "drbApi": [
+  "division",
+  "inventory",
+  "plan"
+ ],
+ "lwhomesPages": [
+  {
+   "slug": "listings",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0,
+   "chars": 1656
+  },
+  {
+   "slug": "model-homes",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0,
+   "chars": 1979
+  },
+  {
+   "slug": "where-we-build",
+   "status": 200,
+   "prices": 0,
+   "sqfts": 0,
+   "chars": 5508
+  }
+ ]
+}

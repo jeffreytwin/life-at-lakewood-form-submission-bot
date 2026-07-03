@@ -1,0 +1,28 @@
+[
+ {
+  "method": "POST",
+  "url": "https://discover.sitecorecloud.io/discover/v2/173266879",
+  "headers": {
+   "authorization": "01-dec3a440-8879157175b163c5989f6b77622e5db6db864b6c",
+   "referer": "https://www.meritagehomes.com/",
+   "accept-language": "en-US",
+   "content-type": "application/json"
+  },
+  "postData": "{\"context\":{\"page\":{\"uri\":\"/state/fl/tampa/salt-meadows-classic-series\"},\"user\":{\"uuid\":\"173266879-15-60-4w-1p-6t2ykvaa1oyzu0vz5ddt-1783032017192\"},\"browser\":{\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\"}},\"widget\":{\"items\":[{\"rfk_id\":\"rfkid_195\",\"search\":{\"content\":{},\"limit\":5,\"filter\":{\"name\":\"location\",\"type\":\"geoDistance\",\"distance\":\"50mi\",\"lat\":38.7095,\"lon\":-78.1539}},\"entity\":\"home\",\"sources\":[\"xm_cloud_public_website\"]},{\"rfk_id\":\"rfkid_196\",\"search\":{\"content\":{},\"limit\":5,\"filter\":{\"name\":\"location\",\"type\":\"geoDistance\",\"distance\":\"50mi\",\"lat\":38.7095,\"lon\":-78.1539}},\"entity\":\"popularsearch\",\"sources\":[\"xm_cloud_popular_searches\"]},{\"rfk_id\":\"rfkid_196\",\"search\":{\"content\":{},\"limit\":5,\"filter\":{\"name\":\"location\",\"type\":\"geoDistance\",\"distance\":\"50mi\",\"lat\":38.7095,\"lon\":-78.1539}},\"entity\":\"popularsearch\",\"sources\":[\"xm_cloud_popular_searches\"]},{\"rfk_id\":\"rfkid_503\",\"search\":{\"content\":{},\"facet\":{\"all\":true},\"offset\":0,\"sort\":{\"choices\":true},\"limit\":50,\"filter\":{\"type\":\"and\",\"filters\":[{\"type\":\"eq\",\"name\":\"community_id\",\"value\":\"a078a0000115gcVAAQ\"},{\"type\":\"anyOf\",\"name\":\"status\",\"values\":[\"Available\",\"Inventory\"]}]}},\"entity\":\"home\",\"sources\":[\"xm_cloud_public_website\"]}]}}",
+  "status": 200,
+  "responseBytes": 25195
+ },
+ {
+  "method": "GET",
+  "url": "https://apim-int-wus3-prod.azure-api.net/cache/sf/web-lots?externalId=externalId&lotIds=a0C8a00000uVHUvEAO,a0C8a00000uVHqlEAG,a0C8a00000uVHf5EAG,a0C8a00000uVHs3EAG,a0C8a00000uVHrPEAW,a0C8a00000uVHrKEAW",
+  "headers": {
+   "authorization": "Bearer",
+   "referer": "https://www.meritagehomes.com/",
+   "accept-language": "en-US",
+   "ocp-apim-subscription-key": "032d255f912045ceb8a1b4cd3b8c5b91"
+  },
+  "postData": null,
+  "status": 200,
+  "responseBytes": 8888
+ }
+]

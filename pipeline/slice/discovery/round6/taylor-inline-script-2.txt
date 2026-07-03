@@ -1,0 +1,273 @@
+
+    {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "name": "Floor Plans",
+      "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans",
+      "accessibilityFeature": [
+        "alternativeText",
+        "highContrastDisplay",
+        "lowVisionSupport",
+        "screenReaderSupport",
+        "largePrint",
+        "colorAdjustments",
+        "keyboardNavigation",
+        "displayTransformability",
+        "adjustableText",
+        "motionReduction",
+        "cognitiveSupport"
+      ],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://www.taylormorrison.com/search?&q={query}"
+        },
+        "query-input": {
+          "@type": "PropertyValueSpecification",
+          "valueRequired": "http://schema.org/True",
+          "valueName": "search_term_string"
+        }
+      },
+      "inLanguage": "English",
+      "isPartOf": [
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Finch",
+              "description": "Finch is a thoughtfully designed single-story home offering 1,476 sq. ft. of optimized living space. From the welcoming foyer, you’ll step into an open-concept dining and great room—perfect for gatherings and everyday living. The kitchen seamlessly connects to this space, featuring a central prep island, a walk-in corner pantry, and abundant natural light from a sliding glass door that opens to the back patio.\r\n\r\nThe private primary suite is tucked away on one side of the home, opposite two secondary bedrooms and a full bath. The primary bath includes dual vanities, a large shower, a spacious walk-in closet, and a convenient linen closet.\r\n\r\nFor added functionality, the laundry room is located off the foyer and provides direct access to the 2-car garage—ideal for keeping outdoor gear and sports equipment organized.",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/finch",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/f/finch/floor-plan/finch-florida-regional-40_1-30-26.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$309,999.00"
+              },
+              "floorSize": "1476 sq ft",
+              "numberOfBedrooms": 3,
+              "numberOfFullBathrooms": 2,
+              "numberOfPartialBathrooms": 0,
+              "floorLevel": "1 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Dove",
+              "description": "Introducing The Dove – a beautifully designed two-story home offering 1,850 square feet of modern living space with 3 bedrooms, 2.5 bathrooms, and a 2-car garage.\r\n\r\nOn the first floor, you’ll enjoy an open-concept layout featuring a spacious great room, dining area, and a stylish kitchen with a large island—perfect for entertaining.\r\n\r\nStep outside to your private patio for seamless indoor/outdoor Florida living. A convenient half bath off the foyer and direct access to the 2-car garage complete this level.\r\n\r\nUpstairs, your primary suite retreat includes a spacious bathroom with a walk-in shower, dual vanity sinks, and a generous walk-in closet. The second floor also offers two secondary bedrooms, an additional full bathroom, and a laundry closet for added convenience.",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/dove",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/d/dove/floor-plan/dove-florida-regional-01_1-30-26.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$321,999.00"
+              },
+              "floorSize": "1850 sq ft",
+              "numberOfBedrooms": 3,
+              "numberOfFullBathrooms": 2,
+              "numberOfPartialBathrooms": 1,
+              "floorLevel": "2 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Goldfinch",
+              "description": "Goldfinch is a cozy single-story plan that’s both smart and stylish. Enjoy all 1,813 sq. ft. of seamless open-concept living, where the great room, dining area, and well-equipped kitchen with a central island create a spacious and inviting atmosphere.\r\n\r\nThis home offers four bedrooms and two bathrooms, including a private primary suite at the back of the home. The suite features a dual-sink vanity, walk-in closet and shower. Three additional bedrooms and a bathroom are conveniently located off the foyer at the front of the home.\r\n\r\nExperience true indoor/outdoor Florida living with a relaxing lanai—perfect for entertaining or unwinding.",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/goldfinch",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/g/goldfinch/floor-plan/goldfinch-florida-regional-40_1-30-26.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$335,999.00"
+              },
+              "floorSize": "1813 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 2,
+              "numberOfPartialBathrooms": 0,
+              "floorLevel": "1 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Saint Vincent",
+              "description": "The remarkable Saint Vincent is the ideal complement to the ultimate Florida lifestyle. 1,790 sq. ft. of open-concept living space brings forwards 3 bedrooms, 2 full bathrooms, 1 half bathroom, a flex room and more! Notably, the flex area can be customized to be either a 4th bedroom or a study, allowing you to make the space optimal for your own living preferences! The home design’s main living areas are open and bright. presenting an air of comfort and space. Choose from a variety of features, vibrant upgrades and options to shape the Saint Vincent home to reflect your style!",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/saint-vincent",
+              "image": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/FLTBStVincentSevilleFlr112202353d7eb5d457143cb91f9f5408203f61c?v=da0a6896",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$347,999.00"
+              },
+              "floorSize": "1790 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 2,
+              "numberOfPartialBathrooms": 1,
+              "floorLevel": "1 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Eagle",
+              "description": "The two-story Eagle floor plan offers 2,271 square feet of thoughtfully designed, open-concept living space featuring 4 bedrooms, 2.5 bathrooms, a versatile loft, and a 2-car garage.\r\n\r\nOn the first floor, you’ll find a welcoming foyer that flows into a spacious great room, dining area, and modern kitchen, plus a convenient half bath. Upstairs, enjoy a flexible loft space, three secondary bedrooms, a full bathroom, and laundry room.\r\n\r\nYour private primary suite is also located upstairs and includes a spacious bathroom with dual vanity sinks, a walk-in shower, and a generous walk-in closet.\r\n\r\nTo top it off, the home includes a relaxing patio for seamless indoor/outdoor living—perfect for soaking up the beautiful Florida sunshine!",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/eagle",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/e/eagle/floor-plan/eagle-florida-regional-01_1-30-26.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$350,999.00"
+              },
+              "floorSize": "2271 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 2,
+              "numberOfPartialBathrooms": 1,
+              "floorLevel": "2 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Hummingbird",
+              "description": "The Hummingbird offers 2,075 sq. ft. of thoughtfully designed living space in a single-story layout with 4 bedrooms, 3 bathrooms, and a 2-car garage.\r\n\r\nFrom the foyer, you’ll find a secondary bedroom and full bath on one side, while the opposite hallway leads to two additional bedrooms, another full bath, and the laundry room with direct access to the garage. The heart of the home features an open-concept design where the dining area flows into the great room and a well-appointed kitchen with a central island and walk-in pantry. A sliding glass door opens to the lanai, perfect for enjoying Florida’s indoor-outdoor lifestyle.\r\n\r\nThe private primary suite is tucked away at the back of the home, offering a bathroom with dual vanities, a walk-in shower, and a spacious walk-in closet.",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/hummingbird",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/h/hummingbird/floor-plan/hummingbird-florida-regional_1-30-26.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$355,999.00"
+              },
+              "floorSize": "2075 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 3,
+              "numberOfPartialBathrooms": 0,
+              "floorLevel": "1 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Falcon",
+              "description": "The two-story Falcon floor plan in Firethorn features 2,471 square feet of open-concept living space, presenting 5 bedrooms, 3.5 bathrooms, a loft, 2-car garage, and many more memorable details. Downstairs includes a foyer, great room, a secondary bedroom with ensuite bathroom, kitchen and dining space alongside laundry and half-bath, while upstairs includes a loft space and three secondary bedrooms that share a bathroom. The primary suite is also nestled upstairs and includes a primary bathroom with dual vanity sinks, a walk-in shower, and spacious walk-in closet. Discover the Sherwood today!",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/falcon",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/f/falcon/floor-plans/falcon-florida-regional-01.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$360,999.00"
+              },
+              "floorSize": "2471 sq ft",
+              "numberOfBedrooms": 5,
+              "numberOfFullBathrooms": 3,
+              "numberOfPartialBathrooms": 1,
+              "floorLevel": "2 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Captiva",
+              "description": "With the Captiva floor plan, you are discovering a unique, two-story, home design with a well-thought-out layout, stylish touches throughout, and personalization options that allow you to truly make it your own. 1,989 square feet bring forward 3 bedrooms, 3 full bathrooms, 1 half bathroom, a 2-car garage, and more! \r\n\r\nInside the Captiva, you'll find the designer kitchen, the dining room, and a gathering room, which features a soaring 2-story ceiling, all spanning one side of the home. The kitchen features a pantry and counter with an L-shaped counter space that overlooks the dining and gathering rooms. You'll have easy access to the sunny lanai from this area as well, for those days that you want to change things up and have an outdoor meal and enjoy the sunny Florida weather. Here, you will find the option to also add an outdoor kitchen if you please.\r\n\r\nUpstairs, you’ll find bedrooms 2 and 3 along with two full baths and a loft area. Options for this level include a study or fourth bedroom in place of the loft. The bathrooms have personalization options for you as well, including switching out the bathtubs for showers.\r\n\r\nWith all of this, it is evident that the Captiva boasts every chance for prospective homebuyers to make it a reflection of their personal style and preferences.",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/captiva",
+              "image": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/FLTBCaptivaCallaway011220235c3bd86f835f4198904cc4a4d34c6d6b?v=a9b8598a",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$386,999.00"
+              },
+              "floorSize": "1989 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 3,
+              "numberOfPartialBathrooms": 1,
+              "floorLevel": "2 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Anastasia",
+              "description": "The spacious Anastasia floor plan offers a unique layout that’s ideal for Florida living. The foyer angles off the front porch, with access to the laundry room and a half bathroom on the right. Straight ahead, the designer kitchen with offers pantry and counter space with the sink square to the open dining room and gathering room area. The main level also includes a study with French doors. Step outside to the lanai, accessible from the gathering room. Add the optional outdoor kitchen to the lanai and create an outdoor living oasis of your own.\r\n\r\nThe primary bedroom is tucked away off the gathering room. A walk-in closet provides plenty of wardrobe space. The primary bath features a water closet for privacy and two sink vanities separated by an elegant over-sized shower. Upstairs you’ll find a loft with an open view down into the gathering room. Three additional bedrooms are on this level, one with a private full bath and the remaining two conveniently located near another full bath. You have several layout options on the second floor, including the option to enlarge one of the bedrooms into a second suite, which includes a walk-in closet and a two-sink full bath. ",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/anastasia",
+              "image": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/FLTBAnastasiaAugustineFLR1122023944bc141743645a7bac7fb03caa664e1?v=a7bfbf53",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$403,999.00"
+              },
+              "floorSize": "2582 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 3,
+              "numberOfPartialBathrooms": 1,
+              "floorLevel": "2 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Carlsbad",
+              "description": "Discover more room to live, play and grow in the 1-story Carlsbad floor plan, offering 4 bedrooms, 2 bathrooms, a 2-car garage and 2,115 square feet of thoughtfully designed living space. At the heart of the home, an open-concept great room flows into the dining area, kitchen with an island and a covered lanai, perfect for indoor/outdoor living. 3 bedrooms and 1 bathroom are near the front of the home, while the private primary suite is tucked away with a spacious walk-in closet and spa-inspired bathroom. A versatile flex room gives you space to design a home office, gym, or craft room—whatever fits your lifestyle. Plus, enjoy the convenience of the laundry room and entry just off your garage. And, you have options!\r\n\r\n• Optional gourmet kitchen\r\n• Optional 3-car garage\r\n• Optional outdoor kitchen\r\n• And more!",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/carlsbad",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/c/carlsbad/floor-plan/carlsbad-40-061626-01-nonporch.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$419,999.00"
+              },
+              "floorSize": "2115 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 2,
+              "numberOfPartialBathrooms": 0,
+              "floorLevel": "1 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Longboat",
+              "description": "Embrace spacious living in the 1-story Longboat floor plan, offering 4 bedrooms, 3 bathrooms, a 2-car garage and 2,395 square feet of thoughtfully designed space. At the heart of it all, an open-concept great room seamlessly connects to the dining area, kitchen with an island and a covered lanai—ideal for effortless indoor/outdoor living. 2 bedrooms, 1 bedroom suite and 2 bathrooms are thoughtfully placed, while the private primary suite is tucked away with a spa-inspired bathroom and large walk-in closet. A flex room invites you to create the space you need most—a home office, game room, movie room and beyond. Plus, enjoy everyday ease with a laundry room and entry conveniently located just off the garage. And, you have options!\r\n\r\n• Optional outdoor kitchen/rough in\r\n• Optional gourmet kitchen\r\n• Optional 3-car garage\r\n• And more!",
+              "url": "https://www.taylormorrison.com/fl/tampa/parrish/firethorn/floor-plans/longboat",
+              "image": "/-/media/sites/tm/homes/florida/florida-region/master-plans/l/longboat/floor-plan/longboat-40-061626-01-nonporch.jpg",
+              "additionalProperty": {
+                "@type": "PropertyValue",
+                "minValue": "$435,999.00"
+              },
+              "floorSize": "2395 sq ft",
+              "numberOfBedrooms": 4,
+              "numberOfFullBathrooms": 3,
+              "numberOfPartialBathrooms": 0,
+              "floorLevel": "1 Story"
+            }
+          ]
+        },
+        {
+          "@type": "WebPage",
+          "about": [
+            {
+              "@type": "House",
+              "name": "Bahama",
+              "description": "The Bahama floor plan offers traditional charm and livability. This two-story, four-bedroom plan is smartly designed to accommodate everyday living. The main living area on the ground floor combines the kitchen, casual dining area, gathering room with two-story high ceiling.  The designer kitchen offers a large island and pantry with direct access to the formal dining room, which is also accessible from the foyer. Gourmet options are available for the kitchen.\r\n\r\nA downstairs primary suite offers conv

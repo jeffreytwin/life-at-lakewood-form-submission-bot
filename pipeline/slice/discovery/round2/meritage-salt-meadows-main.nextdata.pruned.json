@@ -1,0 +1,1761 @@
+{
+ "props": {
+  "pageProps": {
+   "site": {
+    "name": "Public Website",
+    "language": "en",
+    "hostName": "*"
+   },
+   "locale": "en",
+   "layoutData": {
+    "sitecore": {
+     "context": {
+      "pageEditing": false,
+      "site": {
+       "name": "Public Website"
+      },
+      "pageState": "normal",
+      "editMode": "chromes",
+      "language": "en",
+      "itemPath": "/state/fl/tampa/meritage-homes-salt-meadows",
+      "variantId": "_default"
+     },
+     "route": {
+      "name": "Meritage Homes Salt Meadows",
+      "displayName": "Meritage Homes Salt Meadows",
+      "fields": {
+       "Content": {
+        "value": "<div class=\"ck-content\"><p>Salt Meadows offers single-family homes with open concept floorplans and professionally curated interior finishes. All residents will enjoy resort-style amenities including …(295)"
+       },
+       "Title": {
+        "value": "Meritage Homes Salt Meadows"
+       },
+       "NavigationFilter": [],
+       "NavigationTitle": {
+        "value": "Meritage Homes at Salt Meadows"
+       },
+       "NavigationClass": null,
+       "SxaTags": [],
+       "Page Design": {
+        "id": "51c44f94-bf62-45a9-84af-ad8210f8d75c",
+        "url": "/presentation/page-designs/multi-series-landing-page",
+        "name": "Multi Series Landing Page",
+        "displayName": "Multi Series Landing Page",
+        "fields": {
+         "PartialDesigns": [
+          {
+           "id": "784d264e-0af0-43b2-943d-4ecff8953417",
+           "url": "https://localhost/presentation/partial-designs/public-website/promotion-ribbon",
+           "name": "Promotion Ribbon",
+           "displayName": "Promotion Ribbon",
+           "fields": {
+            "Signature": {
+             "value": "promotion-ribbon"
+            },
+            "Base Partial Design": null
+           }
+          },
+          {
+           "id": "7c59ed69-e661-4eca-a758-0e17fe400f07",
+           "url": "https://localhost/presentation/partial-designs/common/header",
+           "name": "Header",
+           "displayName": "Header",
+           "fields": {
+            "Signature": {
+             "value": "header"
+            },
+            "Base Partial Design": null
+           }
+          },
+          {
+           "id": "016b5db3-0f3f-4e65-9abf-576cee28c250",
+           "url": "https://localhost/presentation/partial-designs/common/header-search-bar",
+           "name": "Header Search Bar",
+           "displayName": "Header Search Bar",
+           "fields": {
+            "Signature": {
+             "value": "header-search-bar"
+            },
+            "Base Partial Design": null
+           }
+          },
+          "…(8 items total)"
+         ]
+        }
+       },
+       "isBreadcrumbHidden": {
+        "value": false
+       },
+       "isNoFollow": {
+        "value": false
+       },
+       "isNoIndex": {
+        "value": false
+       },
+       "PageType": {
+        "id": "82bea42f-b6e3-4665-b950-20f83bf6fc64",
+        "url": "https://localhost/sitecore/login/sitecore/system/settings/project/meritage-homes/content/site-section/community-multi-series-landing-page",
+        "name": "Community Multi-Series Landing Page",
+        "displayName": "Community Multi-Series Landing Page",
+        "fields": {
+         "siteSectionLabel": {
+          "value": ""
+         },
+         "Type": {
+          "value": "Community Multi-Series Landing Page"
+         }
+        }
+       },
+       "searchBody": {
+        "value": ""
+       },
+       "searchImage": {
+        "value": {}
+       },
+       "searchTags": [],
+       "searchTitle": {
+        "value": "Meritage Homes at Salt Meadows"
+       },
+       "searchVideo": {
+        "value": ""
+       },
+       "pageMetaDescription": {
+        "value": "Find your new home in Salt Meadows. Meritage Homes offers smart, energy-efficient designs near Parrish."
+       },
+       "pageMetaKeywords": {
+        "value": ""
+       }
+      },
+      "databaseName": "master",
+      "deviceId": "fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3",
+      "itemId": "96f24d96-cfb1-478e-8019-d991d2ead632",
+      "itemLanguage": "en",
+      "itemVersion": 3,
+      "layoutId": "fd2e4131-2484-426f-9b35-74c717909267",
+      "templateId": "3a80e507-23f6-452b-a107-35f6912b9069",
+      "templateName": "PW - Generic Page",
+      "placeholders": {
+       "headless-header": [
+        {
+         "uid": "7c59ed69-e661-4eca-a758-0e17fe400f07",
+         "componentName": "PartialDesignDynamicPlaceholder",
+         "dataSource": "",
+         "params": {
+          "sid": "{7C59ED69-E661-4ECA-A758-0E17FE400F07}",
+          "ph": "headless-header",
+          "sig": "sxa-header"
+         },
+         "placeholders": {
+          "sxa-header": [
+           {
+            "uid": "6d97522f-4033-4893-b044-821e3be33990",
+            "componentName": "Header",
+            "dataSource": "/sitecore/content/Meritage Homes/Base/Corporate/Data/Header/Header",
+            "params": {
+             "GridParameters": "w-full basis-full",
+             "FieldNames": "Default",
+             "DynamicPlaceholderId": "1"
+            },
+            "fields": {
+             "logo": {
+              "value": {
+               "height": "292",
+               "dam-content-type": "Image",
+               "alt": "mobile logo png",
+               "width": "917",
+               "thumbnailsrc": "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/6225243/thumbnail",
+               "src": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/87ab653e0a5644d98073d2032f2bffdc?v=f0f565a8",
+               "dam-id": "HpRJph121kCZe-UTlV4jOw"
+              }
+             }
+            },
+            "placeholders": {
+             "header-mobile-navigation": [
+              {
+               "uid": "db184eec-69c5-4ea0-8c7e-2ce3632c3990",
+               "componentName": "Card",
+               "dataSource": "",
+               "params": "…(depth)",
+               "placeholders": "…(depth)"
+              }
+             ],
+             "header-mobile-navigation-{*}": [],
+             "header-mobile-navigation-authenticated": [
+              {
+               "uid": "161f5724-36f4-48a4-826b-17084f44dc98",
+               "componentName": "Card",
+               "dataSource": "",
+               "params": "…(depth)",
+               "placeholders": "…(depth)"
+              }
+             ],
+             "header-mobile-navigation-authenticated-{*}": []
+            }
+           }
+          ]
+         }
+        },
+        {
+         "uid": "016b5db3-0f3f-4e65-9abf-576cee28c250",
+         "componentName": "PartialDesignDynamicPlaceholder",
+         "dataSource": "",
+         "params": {
+          "sid": "{016B5DB3-0F3F-4E65-9ABF-576CEE28C250}",
+          "ph": "headless-header",
+          "sig": "sxa-header-search-bar"
+         },
+         "placeholders": {
+          "sxa-header-search-bar": [
+           {
+            "uid": "ca8dd457-5406-4eb9-86a1-0b6b21a0d743",
+            "componentName": "HeaderSearchBar",
+            "dataSource": "{D47DAB6D-BCDC-4086-A5DB-9C331B269D6D}",
+            "params": {
+             "DynamicPlaceholderId": "1",
+             "FieldNames": "Default"
+            },
+            "fields": {
+             "articleOneDescription": {
+              "value": "Weighing the benefits of new vs. used homes? Now you can get the best of both. "
+             },
+             "articleOneLink": {
+              "value": {
+               "class": "",
+               "querystring": "",
+               "id": "{87C8BF93-6474-4ABF-949F-0575C8C8E3C5}",
+               "anchor": "",
+               "target": "",
+               "title": "",
+               "linktype": "internal",
+               "text": "Best of Both Worlds",
+               "url": "/Meritage Homes/Public Website/Home/Meritage Difference/Best of Both Worlds",
+               "href": "/meritage-difference/best-of-both-worlds"
+              }
+             },
+             "articleThreeDescription": {
+              "value": "At Meritage Homes, energy efficiency isn’t an upgrade — it’s the standard."
+             },
+             "articleThreeLink": {
+              "value": {
+               "class": "",
+               "querystring": "",
+               "id": "{3FBA7075-180F-49B1-9D63-AED075BEC123}",
+               "anchor": "",
+               "target": "",
+               "title": "",
+               "linktype": "internal",
+               "text": "Energy Efficiency",
+               "url": "/Meritage Homes/Public Website/Home/Meritage Difference/Energy Efficiency",
+               "href": "/meritage-difference/energy-efficiency"
+              }
+             },
+             "articleTwoDescription": {
+              "value": "We value our real estate agent partners. So we treat you like rock stars."
+             },
+             "articleTwoLink": {
+              "value": {
+               "text": "Agent Advantage",
+               "anchor": "",
+               "linktype": "internal",
+               "class": "",
+               "title": "",
+               "target": "",
+               "querystring": "",
+               "id": "{D70332A7-4ABA-4493-A1AB-C2E4BB45E9EE}",
+               "href": "/buying-tools/homebuying/agent-advantage"
+              }
+             },
+             "noResultsText": {
+              "value": "We're sorry, we didn't find any homes within your area."
+             },
+             "seeMoreArticlesLink": {
+              "value": {
+               "class": "",
+               "id": "{60BCAFC8-BFD0-4DA8-96DD-8DF84651D4D6}",
+               "querystring": "",
+               "anchor": "",
+               "target": "",
+               "title": "",
+               "linktype": "internal",
+               "text": "View Buying Tools",
+               "url": "/Meritage Homes/Public Website/Home/Buying Tools",
+               "href": "/buying-tools"
+              }
+             },
+             "seeMoreLink": {
+              "value": {
+               "class": "",
+               "id": "{C1783E4A-B830-43E3-BB7F-B4BCC4BA86AD}",
+               "querystring": "",
+               "anchor": "",
+               "target": "",
+               "title": "",
+               "linktype": "internal",
+               "text": "View All",
+               "url": "/Meritage Homes/Public Website/Home/Search",
+               "href": "/search"
+              }
+             },
+             "targetSearchPageLink": {
+              "value": {
+               "class": "",
+               "id": "{C1783E4A-B830-43E3-BB7F-B4BCC4BA86AD}",
+               "querystring": "",
+               "anchor": "",
+               "target": "",
+               "title": "",
+               "linktype": "internal",
+               "text": "Target Search Page Link",
+               "url": "/Meritage Homes/Public Website/Home/Search",
+               "href": "/search"
+              }
+             },
+             "lblArticles": {
+              "value": "Articles"
+             },
+             "lblBaths": {
+              "value": "bath"
+             },
+             "lblBedrooms": {
+              "value": "bed"
+             },
+             "lblHalfBaths": {
+              "value": "&frac12; bath"
+             },
+             "lblHomesToConsider": {
+              "value": "Homes to Consider"
+             },
+             "lblNoGeolocationMessage": {
+              "value": "Enter your location to show homes to consider"
+             },
+             "lblPopularSearches": {
+              "value": "Popular Searches"
+             },
+             "lblPreviousSearches": {
+              "value": "Previous Searches"
+             },
+             "lblSearchPlaceholder": {
+              "value": "Search"
+             },
+             "lblSquareFeet": {
+              "value": "approx sq ft"
+             },
+             "lblSrClose": {
+              "value": "Close"
+             },
+             "lblSrSearch": {
+              "value": "Search"
+             },
+             "lblSrSearchBox": {
+              "value": "Search"
+             }
+            }
+           }
+          ]
+         }
+        },
+        {
+         "uid": "057a1e51-8143-4f05-94ae-3c0fb2341e03",
+         "componentName": "PartialDesignDynamicPlaceholder",
+         "dataSource": "",
+         "params": {
+          "sid": "{057A1E51-8143-4F05-94AE-3C0FB2341E03}",
+          "ph": "headless-header",
+          "sig": "sxa-breadcrumb"
+         },
+         "placeholders": {
+          "sxa-breadcrumb": [
+           {
+            "uid": "b2e1b300-7a3a-41e9-8e4c-8334aae2e004",
+            "componentName": "Breadcrumbs",
+            "dataSource": "",
+            "params": {
+             "DynamicPlaceholderId": "1",
+             "FieldNames": "Default"
+            }
+           }
+          ]
+         }
+        },
+        "…(5 items total)"
+       ],
+       "headless-main": [
+        {
+         "uid": "8560529c-b149-4725-9dd0-c057b5656451",
+         "componentName": "PartialDesignDynamicPlaceholder",
+         "dataSource": "",
+         "params": {
+          "sid": "{8560529C-B149-4725-9DD0-C057B5656451}",
+          "ph": "headless-main",
+          "sig": "sxa-multi-series-landing-page-panel"
+         },
+         "placeholders": {
+          "sxa-multi-series-landing-page-panel": [
+           {
+            "uid": "30641644-19a1-4637-a228-2bf86cc9a4c0",
+            "componentName": "Container",
+            "dataSource": "",
+            "params": {
+             "GridParameters": "w-full basis-full",
+             "DynamicPlaceholderId": "1",
+             "FieldNames": "Default"
+            },
+            "placeholders": {
+             "container-1": [
+              {
+               "uid": "6fbed71e-ce09-4348-a0ba-af2db5bfb713",
+               "componentName": "Container",
+               "dataSource": "",
+               "params": "…(depth)",
+               "placeholders": "…(depth)"
+              },
+              {
+               "uid": "f184c19e-4b08-472e-8a79-dc579a25ef67",
+               "componentName": "Card",
+               "dataSource": "92e4c953-4be8-4df6-9292-6b507a76413b",
+               "params": "…(depth)",
+               "fields": "…(depth)",
+               "placeholders": "…(depth)"
+              },
+              {
+               "uid": "94d2fac9-7cf2-4fbf-b048-c5d183f104e8",
+               "componentName": "ContactUsFormSlideOut",
+               "dataSource": "42b2fe94-508e-4175-9721-97b1806e2281",
+               "params": "…(depth)",
+               "fields": "…(depth)"
+              }
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ],
+       "headless-footer": [
+        {
+         "uid": "dd542e28-24d1-47b2-94ec-90e7b22055ae",
+         "componentName": "PartialDesignDynamicPlaceholder",
+         "dataSource": "",
+         "params": {
+          "sid": "{DD542E28-24D1-47B2-94EC-90E7B22055AE}",
+          "ph": "headless-footer",
+          "sig": "sxa-footer"
+         },
+         "placeholders": {
+          "sxa-footer": [
+           {
+            "uid": "7ec975b6-8dba-4467-a061-15ae415417ce",
+            "componentName": "Footer",
+            "dataSource": "/sitecore/content/Meritage Homes/Base/Corporate/Data/Footer/Footer",
+            "params": {
+             "GridParameters": "w-full basis-full",
+             "FieldNames": "Default",
+             "Styles": "text-sm",
+             "DynamicPlaceholderId": "1"
+            },
+            "fields": {
+             "copyrightText": {
+              "value": "All Rights Reserved"
+             },
+             "logo": {
+              "value": {
+               "src": "https://edge.sitecorecloud.io/meritagehom2db1-corporate8ff8-production6a37-b3e6/media/Project/Meritage-Homes/Base/Corporate/Realtor-Portal/Footer-Logo.svg?h=108&iar=0&w=242",
+               "alt": "Meritage Homes company logo",
+               "width": "242",
+               "height": "108"
+              }
+             }
+            },
+            "placeholders": {
+             "footer-main-navigation": [
+              {
+               "uid": "29d8ce00-05d6-46a3-94bc-bb95ed39e0c6",
+               "componentName": "ColumnSplitter",
+               "dataSource": "",
+               "params": "…(depth)",
+               "placeholders": "…(depth)"
+              }
+             ],
+             "footer-secondary-navigation": [
+              {
+               "uid": "98332c6e-05c5-483b-b73a-85367d0b2113",
+               "componentName": "AccordionItem",
+               "dataSource": "",
+               "params": "…(depth)",
+               "placeholders": "…(depth)"
+              },
+              {
+               "uid": "a7bc5840-be6c-4fae-9b9a-7505915ada31",
+               "componentName": "RowSplitter",
+               "dataSource": "",
+               "params": "…(depth)",
+               "placeholders": "…(depth)"
+              },
+              {
+               "uid": "ace7fb04-bd51-42ec-98ff-c2be29e58c5d",
+               "componentName": "ColumnSplitter",
+               "dataSource": "",
+               "params": "…(depth)",
+               "placeholders": "…(depth)"
+              }
+             ]
+            }
+           }
+          ]
+         }
+        }
+       ],
+       "headless-navigation-top": [
+        {
+         "uid": "784d264e-0af0-43b2-943d-4ecff8953417",
+         "componentName": "PartialDesignDynamicPlaceholder",
+         "dataSource": "",
+         "params": {
+          "sid": "{784D264E-0AF0-43B2-943D-4ECFF8953417}",
+          "ph": "headless-navigation-top",
+          "sig": "sxa-promotion-ribbon"
+         },
+         "placeholders": {
+          "sxa-promotion-ribbon": [
+           {
+            "uid": "2e98b007-2f40-4541-902f-9d32db147888",
+            "componentName": "PromotionRibbon",
+            "dataSource": "/sitecore/content/Meritage Homes/Base/Corporate/Presentation/Partial Designs/Public Website/Promotion Ribbon/Data/Promotion Ribbon",
+            "params": {
+             "GridParameters": "w-full basis-full",
+             "DynamicPlaceholderId": "1",
+             "FieldNames": "Default"
+            },
+            "fields": {
+             "ctaLink": {
+              "value": {
+               "text": "Request a tour",
+               "anchor": "",
+               "linktype": "internal",
+               "class": "",
+               "title": "",
+               "target": "_blank",
+               "querystring": "",
+               "id": "{AE563795-2D59-4259-97E0-21A2FEC011E3}",
+               "href": "https://localhost/data/hdp-request-a-tour/hdp-request-a-tour"
+              }
+             },
+             "ManualPromotions": null,
+             "hasPromotionType": {
+              "id": "01316233-c58a-45a6-a10e-86c6eb7dfcde",
+              "url": "https://xmc-meritagehom2db1-corporate8ff8-production6a37.sitecorecloud.io/sitecore/login/sitecore/system/settings/project/meritage-homes/promotions/promotion-types/ribbon",
+              "name": "Ribbon",
+              "displayName": "Ribbon",
+              "fields": {
+               "promotionType": "…(depth)"
+              }
+             }
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   "dictionary": {
+    "AddClient_Disclaimer": "We value the role that you play in the homebuying process and are committed to helping you find your client their dream home. We will stay in contact with you directly.",
+    "AddClient_Email_Invalid": "Email is invalid",
+    "AddClient_Email_Label": "Email *",
+    "AddClient_Email_Placeholder": "Email",
+    "AddClient_Email_Required": "Please enter your client's email address",
+    "AddClient_ErrorMessage": "An error occurred: {apiError}",
+    "AddClient_Firstname_Label": "First name*",
+    "AddClient_Firstname_Placeholder": "First name",
+    "AddClient_Firstname_Required": "Please enter your client's first name",
+    "AddClient_Lastname_Label": "Last name*",
+    "AddClient_Lastname_Placeholder": "Last name",
+    "AddClient_Lastname_Required": "Please enter your client's last name",
+    "AddClient_MajorCity_Label": "Major City",
+    "AddClient_MajorCity_Placeholder": "Major City",
+    "AddClient_MajorCity_Required": "Please select major city",
+    "AddClient_MobileNumber_Invalid": "Mobile number is invalid",
+    "AddClient_MobileNumber_Label": "Mobile number *",
+    "AddClient_MobileNumber_Placeholder": "Mobile number",
+    "AddClient_MobileNumber_Required": "Please enter your client's phone number",
+    "AddClient_PreferredContactMethod_Call": "Call",
+    "AddClient_PreferredContactMethod_Email": "Email",
+    "AddClient_PreferredContactMethod_Label": "Preferred contact method",
+    "AddClient_PreferredContactMethod_Text": "Text",
+    "AddClient_SalesCounsler_Label": "Select a Sales Counselor",
+    "AddClient_SalesCounsler_Placeholder": "Select a Sales Counselor",
+    "AddClient_Submit": "Submit",
+    "AddClient_Submitting": "Loading..",
+    "AddClient_SuccessMessage": "Saved!",
+    "AddClient_Timeframe_Label": "Time frame to move",
+    "AddClient_Timeframe_Placeholder": "Pick a move-in timeframe",
+    "AddClient_Timeframe_Required": "Please select Time frame to move value",
+    "ClientDetails_Comm_Pref": "Comm pref:",
+    "ClientDetails_EditButton": "Edit Information",
+    "ClientDetails_Phone": "Phone",
+    "ClientDetails_Status": "Status:",
+    "ClientDetails_Time_Frame": "Time frame:",
+    "ClientResults_AddNew": "Add New",
+    "ClientResults_Contact": "Contact",
+    "ClientResults_Email": "Email",
+    "ClientResults_Firstname": "First Name",
+    "ClientResults_Lastname": "Last Name",
+    "ClientResults_Phone": "Phone",
+    "ClientResults_SavedHomes": "Saved Homes",
+    "ClientResults_SavedSearches": "Saved Searches",
+    "ClientResults_Status": "Status",
+    "ClientResults_Timeframe": "Timeframe",
+    "Common_Back": "back",
+    "Common_Close": "Close",
+    "ContactsResults_ContactType": "Contact Type",
+    "ContactsResults_Email": "Email",
+    "ContactsResults_Firstname": "First Name",
+    "ContactsResults_Lastname": "Last Name",
+    "ContactsResults_Phone": "Phone",
+    "ContactsResults_Photo": "Picture",
+    "Footer_SocialLinks": "Social Links",
+    "Header_Menu": "Menu",
+    "Header_SignIn": "Agent Sign In",
+    "Header_Signin_Greeting": "Hi",
+    "Header_SignOut": "Sign Out",
+    "HeaderSearchBar:ArticlesTitle": "Articles",
+    "HeaderSearchBar:Baths": "bath",
+    "HeaderSearchBar:Bedrooms": "bed",
+    "HeaderSearchBar:CloseSrLabel": "Close",
+    "HeaderSearchBar:HalfBaths": "&half; bath",
+    "HeaderSearchBar:HomeTitles": "Homes",
+    "HeaderSearchBar:NoGeolocationMessage": "Enter your location to show homes to consider",
+    "HeaderSearchBar:Placeholder": "Search",
+    "HeaderSearchBar:PopularSearchesTitle": "Popular Searches",
+    "HeaderSearchBar:PreviousSearchesTitle": "Previous Searches",
+    "HeaderSearchBar:SearchBoxSrLabel": "Search",
+    "HeaderSearchBar:SearchButtonSrLabel": "Search",
+    "HeaderSearchBar:SquareFeet": "approx sq ft",
+    "HeroBanner:DidYouMean": "Did you mean?",
+    "HeroBanner:SearchBoxPlaceholder": "Start with Address, City, State, or ZIP",
+    "LotSocialShareText": "Check out this home",
+    "LotSocialShareTitle": "Home Details",
+    "LoyatlyTierTable_BulletSrText": "Included",
+    "MyClients-AddNew": "Add New",
+    "MyClients-ViewAllLinkText": "View all {clientCount} clients",
+    "MyClients_AddAClient": "Add a client",
+    "MyClients_SortOptions_Placeholder": "Sort by",
+    "Pagination_Next": "Next page",
+    "Pagination_Page": "Page {page}",
+    "Pagination_Previous": "Previous page",
+    "Rating_SrText": "Rated {rating} out of {maxRating}",
+    "SwitchControl_On": "On"
+   },
+   "headLinks": [
+    {
+     "href": "https://edge-platform.sitecorecloud.io/v1/files/pages/styles/content-styles.css?sitecoreContextId=4lzu8G3cmtC9XSQRn46Azl",
+     "rel": "stylesheet"
+    }
+   ],
+   "componentProps": {
+    "d949173e-557a-42e6-acd5-86065c0ae294": {
+     "data": {
+      "lotSearch": {
+       "lotData": {
+        "city": {
+         "value": "Raleigh"
+        },
+        "state": {
+         "value": "NC"
+        }
+       }
+      },
+      "metroSearch": {
+       "metroData": {
+        "displayName": {
+         "value": "Orlando"
+        },
+        "state": {
+         "value": "FL"
+        },
+        "stateName": {
+         "value": "Florida"
+        }
+       }
+      },
+      "communitySearch": {
+       "communityData": {
+        "city": {
+         "value": "Sacramento"
+        },
+        "state": {
+         "value": "CA"
+        }
+       }
+      },
+      "activeType": 2
+     }
+    },
+    "7ec975b6-8dba-4467-a061-15ae415417ce": {
+     "data": {
+      "datasource": {
+       "id": "C731B371C1D648DE89F988041D7C64DF",
+       "logo": {
+        "jsonValue": {
+         "value": {
+          "src": "https://edge.sitecorecloud.io/meritagehom2db1-corporate8ff8-production6a37-b3e6/media/Project/Meritage-Homes/Base/Corporate/Realtor-Portal/Footer-Logo.svg?h=108&iar=0&w=242",
+          "alt": "Meritage Homes company logo",
+          "width": "242",
+          "height": "108"
+         }
+        }
+       },
+       "copyrightText": {
+        "jsonValue": {
+         "value": "All Rights Reserved"
+        }
+       },
+       "children": {
+        "results": [
+         {
+          "allChildren": {
+           "results": [
+            {
+             "parent": {
+              "name": "Legal Links"
+             },
+             "template": {
+              "id": "3176F2C943294DC990DFAAFBD3B2DE5F",
+              "name": "Link"
+             },
+             "id": "858DC15D82584F31A47B6F4C440A89BD",
+             "name": "Privacy Policy",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             },
+             "image": null
+            },
+            {
+             "parent": {
+              "name": "Legal Links"
+             },
+             "template": {
+              "id": "3176F2C943294DC990DFAAFBD3B2DE5F",
+              "name": "Link"
+             },
+             "id": "2C5AFE4D068644CA8CEF6965654E1CCB",
+             "name": "Terms of Use",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             },
+             "image": null
+            }
+           ]
+          }
+         },
+         {
+          "allChildren": {
+           "results": [
+            {
+             "parent": {
+              "name": "Legal Links Folder"
+             },
+             "template": {
+              "id": "3176F2C943294DC990DFAAFBD3B2DE5F",
+              "name": "Link"
+             },
+             "id": "821C76519FF74452975E63FAED2C439C",
+             "name": "Claims",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             },
+             "image": null
+            },
+            {
+             "parent": {
+              "name": "Legal Links Folder"
+             },
+             "template": {
+              "id": "3176F2C943294DC990DFAAFBD3B2DE5F",
+              "name": "Link"
+             },
+             "id": "D75C85241BB04A3BAFC8C3740033B4F5",
+             "name": "Disclaimers",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             },
+             "image": null
+            },
+            {
+             "parent": {
+              "name": "Legal Links Folder"
+             },
+             "template": {
+              "id": "3176F2C943294DC990DFAAFBD3B2DE5F",
+              "name": "Link"
+             },
+             "id": "991CAEE676594C9286F82123B0F8C0FF",
+             "name": "Do Not Sell My Personal Information",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             },
+             "image": null
+            }
+           ]
+          }
+         },
+         {
+          "allChildren": {
+           "results": [
+            {
+             "parent": {
+              "name": "Legal Images"
+             },
+             "template": {
+              "id": "9D75D5BEE8074204A0FE21327442EA62",
+              "name": "Legal Image"
+             },
+             "id": "4C828A45461B4EE3BCFDDD676DAC3FDE",
+             "name": "Legal Image 1",
+             "link": null,
+             "image": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            {
+             "parent": {
+              "name": "Legal Images"
+             },
+             "template": {
+              "id": "9D75D5BEE8074204A0FE21327442EA62",
+              "name": "Legal Image"
+             },
+             "id": "C1A3EE9B8BFF4B11B66BC785802AEE65",
+             "name": "Legal Image 2",
+             "link": null,
+             "image": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            }
+           ]
+          }
+         },
+         "…(4 items total)"
+        ]
+       }
+      },
+      "legalLinks": [
+       {
+        "id": "858DC15D82584F31A47B6F4C440A89BD",
+        "name": "Privacy Policy",
+        "link": {
+         "jsonValue": {
+          "value": {
+           "class": "",
+           "id": "{908C8B6C-8B47-4E88-9AF9-947044DE02B0}",
+           "querystring": "",
+           "anchor": "",
+           "target": "_blank",
+           "title": "",
+           "linktype": "internal",
+           "text": "Privacy Policy",
+           "url": "/Meritage Homes/Public Website/Home/Company/Legal/Privacy Policy",
+           "href": "https://www.meritagehomes.com/company/legal/privacy-policy"
+          }
+         }
+        }
+       },
+       {
+        "id": "2C5AFE4D068644CA8CEF6965654E1CCB",
+        "name": "Terms of Use",
+        "link": {
+         "jsonValue": {
+          "value": {
+           "class": "",
+           "id": "{46D4D2B1-6964-41FB-9CFE-065EFA0D962E}",
+           "querystring": "",
+           "anchor": "",
+           "target": "_blank",
+           "title": "",
+           "linktype": "internal",
+           "text": "Terms of Use",
+           "url": "/Meritage Homes/Public Website/Home/Company/Legal/Terms of Use",
+           "href": "https://www.meritagehomes.com/company/legal/terms-of-use"
+          }
+         }
+        }
+       },
+       {
+        "id": "821C76519FF74452975E63FAED2C439C",
+        "name": "Claims",
+        "link": {
+         "jsonValue": {
+          "value": {
+           "href": "https://www.meritagehomes.com/claims",
+           "text": "Claims",
+           "linktype": "external",
+           "url": "https://www.meritagehomes.com/claims",
+           "anchor": "",
+           "target": ""
+          }
+         }
+        }
+       },
+       "…(5 items total)"
+      ],
+      "legalImages": [
+       {
+        "id": "4C828A45461B4EE3BCFDDD676DAC3FDE",
+        "image": {
+         "jsonValue": {
+          "value": {
+           "src": "https://edge.sitecorecloud.io/meritagehom2db1-corporate8ff8-production6a37-b3e6/media/Project/Meritage-Homes/Base/Corporate/Realtor-Portal/Legal-1.svg?iar=0",
+           "alt": "legal logo 1"
+          }
+         }
+        }
+       },
+       {
+        "id": "C1A3EE9B8BFF4B11B66BC785802AEE65",
+        "image": {
+         "jsonValue": {
+          "value": {
+           "src": "https://edge.sitecorecloud.io/meritagehom2db1-corporate8ff8-production6a37-b3e6/media/Project/Meritage-Homes/Base/Corporate/Realtor-Portal/Legal-2.svg?iar=0",
+           "alt": "legal logo 2"
+          }
+         }
+        }
+       }
+      ],
+      "socialIcons": [
+       {
+        "id": "FA964A32530D460591180775899B389B",
+        "image": {
+         "jsonValue": {
+          "value": {
+           "dam-content-type": "Image",
+           "alt": "MTH_Social Media Icons_Website_v1-01.png",
+           "thumbnailsrc": "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8810660/thumbnail",
+           "src": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/a7af04b50f8b4dd9a4592a3551cd3ff4?v=dbfe88b0",
+           "dam-id": "6O6pP-E0RTyQ0uJJaILc0g"
+          }
+         }
+        },
+        "link": {
+         "jsonValue": {
+          "value": {
+           "href": "https://x.com/meritagehomes",
+           "text": "twitter",
+           "linktype": "external",
+           "url": "https://x.com/meritagehomes",
+           "anchor": "",
+           "target": "_blank"
+          }
+         }
+        }
+       },
+       {
+        "id": "03B9457224874B7C809A2ED6EE177964",
+        "image": {
+         "jsonValue": {
+          "value": {
+           "src": "https://edge.sitecorecloud.io/meritagehom2db1-corporate8ff8-production6a37-b3e6/media/Project/Meritage-Homes/Base/Corporate/Realtor-Portal/Social/facebook.png?h=160&iar=0&w=160",
+           "alt": "",
+           "width": "160",
+           "height": "160"
+          }
+         }
+        },
+        "link": {
+         "jsonValue": {
+          "value": {
+           "href": "https://www.facebook.com/meritagehomes",
+           "text": "facebook",
+           "linktype": "external",
+           "url": "https://www.facebook.com/meritagehomes",
+           "anchor": "",
+           "target": "_blank"
+          }
+         }
+        }
+       },
+       {
+        "id": "DE26AF152871482785263C1DB3BFBD7E",
+        "image": {
+         "jsonValue": {
+          "value": {
+           "src": "https://edge.sitecorecloud.io/meritagehom2db1-corporate8ff8-production6a37-b3e6/media/Project/Meritage-Homes/Base/Corporate/Realtor-Portal/Social/instagram.png?h=160&iar=0&w=160",
+           "alt": "",
+           "width": "160",
+           "height": "160"
+          }
+         }
+        },
+        "link": {
+         "jsonValue": {
+          "value": {
+           "href": "https://www.instagram.com/meritagehomes",
+           "text": "instagram",
+           "linktype": "external",
+           "url": "https://www.instagram.com/meritagehomes",
+           "anchor": "",
+           "target": "_blank"
+          }
+         }
+        }
+       },
+       "…(5 items total)"
+      ]
+     }
+    },
+    "6d97522f-4033-4893-b044-821e3be33990": {
+     "data": {
+      "datasource": {
+       "id": "FCEBF08AC8D8453FB9DF7A377701D6D2",
+       "children": {
+        "results": [
+         {
+          "id": "05F9871A136148F88A6C12F9C5091CF1",
+          "name": "Homes for Sale",
+          "link": {
+           "jsonValue": {
+            "value": {
+             "class": "",
+             "id": "{C1783E4A-B830-43E3-BB7F-B4BCC4BA86AD}",
+             "querystring": "",
+             "anchor": "",
+             "target": "",
+             "title": "",
+             "linktype": "internal",
+             "text": "Homes for Sale",
+             "url": "/Meritage Homes/Public Website/Home/Search",
+             "href": "https://www.meritagehomes.com/search"
+            }
+           }
+          },
+          "children": {
+           "results": []
+          }
+         },
+         {
+          "id": "3EF97B02D73B4685B9F235B9E998D18D",
+          "name": "Meritage Difference",
+          "link": {
+           "jsonValue": {
+            "value": {
+             "class": "",
+             "querystring": "",
+             "id": "{42D71A1C-283B-4F99-921C-6F494976D084}",
+             "anchor": "",
+             "target": "",
+             "title": "",
+             "linktype": "internal",
+             "text": "Meritage Difference",
+             "url": "/Meritage Homes/Public Website/Home/Meritage Difference",
+             "href": "https://www.meritagehomes.com/meritage-difference"
+            }
+           }
+          },
+          "children": {
+           "results": [
+            {
+             "id": "A26E92E537EF46D8AF59847630B28D3E",
+             "name": "The Meritage Difference",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            {
+             "id": "C2D7189A304147949D713FC7E4D09840",
+             "name": "Best of both worlds",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            {
+             "id": "8FC8C0FBDD9C4DEA91AC148240BA1FDB",
+             "name": "Energy Efficiency",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            "…(5 items total)"
+           ]
+          }
+         },
+         {
+          "id": "DEBF080F051140DB92E4CCA4AAB966C5",
+          "name": "Buying Tools",
+          "link": {
+           "jsonValue": {
+            "value": {
+             "class": "",
+             "id": "{60BCAFC8-BFD0-4DA8-96DD-8DF84651D4D6}",
+             "querystring": "",
+             "anchor": "",
+             "target": "",
+             "title": "",
+             "linktype": "internal",
+             "text": "Buying Tools",
+             "url": "/Meritage Homes/Public Website/Home/Buying Tools",
+             "href": "https://www.meritagehomes.com/buying-tools"
+            }
+           }
+          },
+          "children": {
+           "results": [
+            {
+             "id": "2258A2BA88BD488FB0E566556D853E78",
+             "name": "Buying Tools",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            {
+             "id": "9B0146C9CC494F91B57A424999EF6390",
+             "name": "Financing",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            {
+             "id": "9041C04E77DD4B5C9B1A020A71CB6257",
+             "name": "Home Styling",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            "…(4 items total)"
+           ]
+          }
+         },
+         "…(4 items total)"
+        ]
+       },
+       "droplinks": {
+        "results": [
+         {
+          "agentFinder": {
+           "jsonValue": {
+            "value": {
+             "text": "Find an Agent",
+             "anchor": "",
+             "linktype": "internal",
+             "class": "",
+             "title": "",
+             "target": "",
+             "querystring": "",
+             "id": "{65D7389D-F283-42D3-BFDB-D278FB97B5AF}",
+             "href": "/presentation/partial-designs/public-website/agent-finder/data/agent-finder"
+            }
+           }
+          },
+          "children": {
+           "results": [
+            {
+             "id": "0621BE0B0A154383BAE2DF120CE3AA63",
+             "name": "Dashboard",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            {
+             "id": "D22E0F65EED54C99B6A20A4C85B8E2C0",
+             "name": "Saved Homes",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            },
+            {
+             "id": "E976581509DE4257AD3386AC7F63BCD1",
+             "name": "My Clients",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              }
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    "44c0919b-333f-45fa-941a-905430133243": {
+     "data": {
+      "fields": {
+       "agentFinderFormTitle": {
+        "value": "I'd like to purchase a home in:"
+       },
+       "agentFinderFormSubTitle": {
+        "value": "(Select one)*"
+       },
+       "agentFinderFormSpecialityTitle": {
+        "value": "Agent Specialties"
+       },
+       "agentFinderFormSpecialitySubTitle": {
+        "value": "I am looking to:"
+       },
+       "agentSpecialtyOptions": {
+        "value": "buyFirstHome=Buy%20my%20first%20home&upsizeHome=Upsize%20my%20current%20home&downsizeHome=Downsize%20my%20current%20home&relocateHome=Relocate%20my%20current%20home&investmentProperty=Buy%20an%20inves…(232)"
+       },
+       "languagesoptions": {
+        "value": "Arabic=Arabic&Armenian=Armenian&Bengali=Bengali&Chinese=Chinese&English=English&French=French&German=German&Greek=Greek&Gujarati=Gujarati&Hebrew=Hebrew&Hindi=Hindi&Hmong=Hmong&Italian=Italian&Japanese…(560)"
+       },
+       "submitButtonText": {
+        "value": "Submit"
+       },
+       "submittingButtonText": {
+        "value": "Submitting"
+       },
+       "languageLabel": {
+        "value": "Choose your preferred language"
+       },
+       "resultFoundAgentMatch": {
+        "value": "We found {0} agents that match your criteria."
+       },
+       "resultNotFound": {
+        "value": "We’re sorry, but no agents match your selections. Go back to update your selections or call us for assistance. "
+       },
+       "resultTemporarilyUnavailable": {
+        "value": "Agent Details Temporarily Unavailable"
+       },
+       "resultMatchNotUpdated": {
+        "value": "We found {0} agents in your area. Please try again later or contact us for assistance."
+       },
+       "resultFoundAgentunavailable": {
+        "value": "We found {0} agents that match your criteria."
+       },
+       "resultsViewSubTitle": {
+        "value": "Explore agent profiles to find the perfect match for your needs."
+       },
+       "viewProfileButtonText": {
+        "value": "View profile"
+       },
+       "profileLblExpierence": {
+        "value": "Experience"
+       },
+       "profileLblYears": {
+        "value": "year"
+       },
+       "profileLblYear": {
+        "value": ""
+       },
+       "profileConnectLabel": {
+        "value": "Connect with this agent"
+       },
+       "profileLblBio": {
+        "value": "Bio"
+       },
+       "profileLblLanguage": {
+        "value": "Languages spoken"
+       },
+       "profileLblWorkWith": {
+        "value": "Works with"
+       },
+       "profileLblPrimaryArea": {
+        "value": "Primary areas of business"
+       },
+       "profileLblAdditionalcCredentials": {
+        "value": "Additional Credentials"
+       },
+       "profileDataUnAvailable": {
+        "value": "Agent data is not available."
+       },
+       "profileLblPhoto": {
+        "value": "Profile Photo"
+       },
+       "profileLabelAgentPhoneNumber": {
+        "value": "Agent's phone number"
+       },
+       "profileLabelAgentTextMessageNumber": {
+        "value": "Agent's text message number"
+       },
+       "profileLabelAgentEmailAddress": {
+        "value": "Agent's email address"
+       },
+       "connectFormTitle": {
+        "value": "Connect with this Agent"
+       },
+       "connectFormRequired": {
+        "value": "*Required fields"
+       },
+       "connectFormFirstNameLabel": {
+        "value": "First name*"
+       },
+       "connectFormFirstNameValidation": {
+        "value": "First name is required"
+       },
+       "connectFormFirstNamePlaceHolder": {
+        "value": "First name"
+       },
+       "connectFormLastNameLabel": {
+        "value": "Last name*"
+       },
+       "connectFormLastNameValidation": {
+        "value": "Last name is required"
+       },
+       "connectFormLastNamePlaceHolder": {
+        "value": "Last name"
+       },
+       "connectFormEmailLabel": {
+        "value": "Email*"
+       },
+       "connectFormEmailValidation": {
+        "value": "Email is required"
+       },
+       "connectFormEmailPlaceHolder": {
+        "value": "Email"
+       },
+       "connectFormEmailInvalid": {
+        "value": "Invalid email address"
+       },
+       "connectFormMobileLabel": {
+        "value": "Mobile Phone*"
+       },
+       "connectFormMobileValidation": {
+        "value": "Mobile phone is required"
+       },
+       "connectFormMobilePlaceHolder": {
+        "value": "Mobile Phone"
+       },
+       "connectFormInvalidPhone": {
+        "value": "Please enter a complete 10-digit phone number."
+       },
+       "connectFormAgreeText": {
+        "value": "I agree to receive text messages from Meritage Homes"
+       },
+       "connectFormPurchaseTimeFrameLabel": {
+        "value": "Purchase Timeframe*"
+       },
+       "connectFormPurchaseTimeFrameValidation": {
+        "value": "Purchase timeframe is required"
+       },
+       "connectFormPurchaseTimeFramePlaceHolder": {
+        "value": "Select purchase timeframe"
+       },
+       "connectFormPurchaseCityLabel": {
+        "value": "Details on purchase location"
+       },
+       "connectFormPurchaseCityPlaceHolder": {
+        "value": "Provide additional details to this agent"
+       },
+       "connectFormPurchaseCityOptionalLabel": {
+        "value": "(Optional)"
+       },
+       "connectFormPurchaseCityValidation": {
+        "value": "Cannot exceed 255 characters"
+       },
+       "connectFormPerfredContactFormLabel": {
+        "value": "Preferred contact method*"
+       },
+       "connectFormDesclaimerText": {
+        "value": "<p><span data-olk-copy-source=\"MessageBody\">Meritage Homes makes no representations, warranties, or guarantees regarding any real estate agent or brokerage listed or identified through this platform. …(1745)"
+       },
+       "connectFormButtonText": {
+        "value": "Submit"
+       },
+       "connectFormSubmit": {
+        "value": "Submit"
+       },
+       "connectFormSubmiting": {
+        "value": "Submitting..."
+       },
+       "purchaseTimeFrameOptions": {
+        "value": "Immediate=immediate&1 month=1_month&2 months=2_months&3 months=3_months&6 months=6_months&12 months=12_months&24 + months=24_plus_months&I don't know=unknown"
+       },
+       "preferredContactOptions": {
+        "value": "Email=Email&SMS=SMS&Phone=Phone"
+       },
+       "thanksTitle": {
+        "value": "Thank You"
+       },
+       "thanksSubTitle": {
+        "value": "Agent information is currently unavailable."
+       },
+       "thanksRequestStatusTitle": {
+        "value": "Your connect request has been sent."
+       },
+       "thanksRequestStatusDescription": {
+        "value": "Within 24 hours, you’ll receive an email from us with the agent’s response."
+       },
+       "thanksExperienceLabel": {
+        "value": "Experience"
+       },
+       "thanksYearLabel": {
+        "value": "year"
+       },
+       "thanksYearsLabel": {
+        "value": ""
+       },
+       "modalTitle": {
+        "value": "Find an Agent"
+       },
+       "modalSubTitle": {
+        "value": "Looking for a real estate agent? The Agent Finder was created to help you find your personal advocate for your homebuying journey. Your criteria will filter a list of agent profiles who have Meritage …(509)"
+       },
+       "modalRequired": {
+        "value": "*Required Field"
+       },
+       "modalNotFound": {
+        "value": "Failed to find agents. Please try again."
+       },
+       "modalAgentDescription": {
+        "value": "We found {0} agents in your area. Please try again later."
+       },
+       "modalThankyou": {
+        "value": "Thank You."
+       },
+       "agentPendingMessageTitle": {
+        "value": "Thank You"
+       },
+       "agentPendingMessageDescription": {
+        "value": "We have found an existing invitation is still waiting for the agent’s response. If you need assistance, please reach out to us."
+       },
+       "defaultProfileImage": {
+        "value": {
+         "src": "https://edge.sitecorecloud.io/meritagehom2db1-corporate8ff8-production6a37-b3e6/media/Project/Meritage-Homes/Base/Corporate/Realtor-Portal/MTH_Sales-Counselor-Icons_80x80.png?h=80&iar=0&w=80",
+         "alt": "",
+         "width": "80",
+         "height": "80"
+        }
+       }
+      },
+      "enable_agent_finder_sort_option": false
+     }
+    },
+    "b2e1b300-7a3a-41e9-8e4c-8334aae2e004": {
+     "data": {
+      "isBreadcrumbHidden": false,
+      "breadcrumbs": [
+       {
+        "id": "D2583E5CC14A48B78BB289A722DF640A",
+        "url": {
+         "path": "/"
+        },
+        "title": {
+         "value": "Home"
+        },
+        "navigationtitle": {
+         "value": "Home"
+        },
+        "navigationFilter": {
+         "targetIds": []
+        }
+       },
+       {
+        "id": "B8AF58A8E6321B7AD90B54B707FBC90C",
+        "url": {
+         "path": "/state/fl/tampa"
+        },
+        "title": {
+         "value": "Tampa"
+        },
+        "navigationtitle": {
+         "value": "Tampa"
+        },
+        "navigationFilter": {
+         "targetIds": []
+        }
+       },
+       {
+        "id": "96F24D96CFB1478E8019D991D2EAD632",
+        "url": {
+         "path": "/state/fl/tampa/meritage-homes-salt-meadows"
+        },
+        "title": {
+         "value": "Meritage Homes Salt Meadows"
+        },
+        "navigationtitle": {
+         "value": "Meritage Homes at Salt Meadows"
+        },
+        "navigationFilter": {
+         "targetIds": []
+        }
+       }
+      ]
+     }
+    },
+    "95ff80e1-18ac-48c5-ae5c-889aa70b0186": {
+     "data": {
+      "datasource": {
+       "id": "00EAA4F3C2C44011832C943CD5D9BF00",
+       "title": {
+        "jsonValue": {
+         "value": "Agent Portal"
+        }
+       },
+       "children": {
+        "results": [
+         {
+          "id": "5F673554C9E844E88C00B0BBDE075DAE",
+          "name": "Dashboard",
+          "link": {
+           "jsonValue": {
+            "value": {
+             "text": "Dashboard",
+             "anchor": "",
+             "linktype": "internal",
+             "class": "",
+             "title": "",
+             "target": "",
+             "querystring": "",
+             "id": "{76A6AE40-B8B5-4319-8DBB-CFC74C316B0D}",
+             "href": "https://agents.meritagehomes.com/"
+            }
+           },
+           "targetItem": {
+            "id": "76A6AE40B8B543198DBBCFC74C316B0D",
+            "name": "Home"
+           }
+          },
+          "iconSelection": {
+           "jsonValue": {
+            "id": "72bb0481-a6b8-48b0-b4f7-f6cd686fd595",
+            "url": "https://xmc-meritagehom2db1-corporate8ff8-production6a37.sitecorecloud.io/sitecore/login/sitecore/system/settings/project/meritage-homes/navigation/icons/dashboard",
+            "name": "Dashboard",
+            "displayName": "Dashboard",
+            "fields": {
+             "iconName": {
+              "value": "dashboard"
+             }
+            }
+           }
+          },
+          "children": {
+           "results": []
+          }
+         },
+         {
+          "id": "3EC0943B287F454ABE8E7316EA7BE075",
+          "name": "Favorites",
+          "link": {
+           "jsonValue": {
+            "value": {
+             "text": "Favorites",
+             "anchor": "",
+             "linktype": "internal",
+             "class": "",
+             "title": "",
+             "target": "",
+             "querystring": "",
+             "id": "{C3F96047-C4C0-461B-8B32-13E7730A0F3A}",
+             "href": "https://agents.meritagehomes.com/favorites"
+            }
+           },
+           "targetItem": {
+            "id": "C3F96047C4C0461B8B3213E7730A0F3A",
+            "name": "Favorites"
+           }
+          },
+          "iconSelection": {
+           "jsonValue": {
+            "id": "0f5a2915-cd7e-4ab6-8190-dc9a7f71adc9",
+            "url": "https://xmc-meritagehom2db1-corporate8ff8-production6a37.sitecorecloud.io/sitecore/login/sitecore/system/settings/project/meritage-homes/navigation/icons/like",
+            "name": "Like",
+            "displayName": "Like",
+            "fields": {
+             "iconName": {
+              "value": "like"
+             }
+            }
+           }
+          },
+          "children": {
+           "results": [
+            {
+             "id": "5D1FDB52AEAF4E6BA018060089A08301",
+             "name": "Saved Searches",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              },
+              "targetItem": {
+               "id": "150930426B4F497088D3CA2574CC0BDE",
+               "name": "Search"
+              }
+             },
+             "iconSelection": {
+              "jsonValue": null
+             }
+            },
+            {
+             "id": "773EB125FEF042759AE7A4904CE563AA",
+             "name": "Save Homes",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              },
+              "targetItem": {
+               "id": "D0E4ABC25EF54DBF9CE7D2D4DC217981",
+               "name": "Homes"
+              }
+             },
+             "iconSelection": {
+              "jsonValue": null
+             }
+            }
+           ]
+          }
+         },
+         {
+          "id": "83A1E907E49D4CA5AB1EB285EFFDF039",
+          "name": "My Clients",
+          "link": {
+           "jsonValue": {
+            "value": {
+             "text": "My Clients",
+             "anchor": "",
+             "linktype": "internal",
+             "class": "",
+             "title": "",
+             "target": "",
+             "querystring": "",
+             "id": "{5A979A02-9C78-4B8A-B478-B1E2C889457B}",
+             "href": "https://agents.meritagehomes.com/my-clients"
+            }
+           },
+           "targetItem": {
+            "id": "5A979A029C784B8AB478B1E2C889457B",
+            "name": "My Clients"
+           }
+          },
+          "iconSelection": {
+           "jsonValue": {
+            "id": "acc4905d-920e-46ca-8fe7-d4ffab4b8c5c",
+            "url": "https://xmc-meritagehom2db1-corporate8ff8-production6a37.sitecorecloud.io/sitecore/login/sitecore/system/settings/project/meritage-homes/navigation/icons/team",
+            "name": "Team",
+            "displayName": "Team",
+            "fields": {
+             "iconName": {
+              "value": "team"
+             }
+            }
+           }
+          },
+          "children": {
+           "results": [
+            {
+             "id": "782506E459474861B4D4361D8EF59331",
+             "name": "All Clients",
+             "link": {
+              "jsonValue": {
+               "value": "…(depth)"
+              },
+              "targetItem": {
+               "id": "A01AB6A58C80483CB62F28F7E73D2617",
+               "name": "All"
+              }
+             },
+             "iconSelection": {
+              "jsonValue": null
+             }
+            }
+           ]
+          }
+         },
+         "…(5 items total)"
+        ]
+       }
+      },
+      "context": {
+       "id": "96F24D96CFB1478E8019D991D2EAD632",
+       "ancestors": [
+        {
+         "id": "B8AF58A8E6321B7AD90B54B707FBC90C",
+         "name": "Tampa"
+        },
+        {
+         "id": "F65E86BE96AC38A37F3E208B3E01428C",
+         "name": "FL"
+        },
+        {
+         "id": "DD94F016B00C4DC4947D4095C42F52E5",
+         "name": "State"
+        },
+        "…(8 items total)"
+       ]
+      }
+     }
+    },
+    "2e98b007-2f40-4541-902f-9d32db147888": {
+     "data": {
+      "nationalPromotions": [],
+      "promotions": [],
+      "pageType": {
+       "id": "82bea42f-b6e3-4665-b950-20f83bf6fc64",
+       "url": "https://localhost/sitecore/login/sitecore/system/settings/project/meritage-homes/content/site-section/community-multi-series-landing-page",
+       "name": "Community Multi-Series Landing Page",
+       "displayName": "Community Multi-Series Landing Page",
+       "fields": {
+        "siteSectionLabel": {
+         "value": ""
+        },
+        "Type": {
+         "value": "Community Multi-Series Landing Page"
+        }
+       }
+      },
+      "promo": null
+     }
+    }
+   }
+  },
+  "__N_SSG": true
+ },
+ "page": "/[[...path]]",
+ "query": {
+  "path": [
+   "_site_Public Website",
+   "state",
+   "fl",
+   "…(5 items total)"
+  ]
+ },
+ "buildId": "5z9eYQc65Gzhq64e-EFvS",
+ "assetPrefix": "https://www.meritagehomes.com",
+ "isFallback": false,
+ "isExperimentalCompile": false,
+ "dynamicIds": [
+  6148,
+  79488,
+  12872,
+  "…(4 items total)"
+ ],
+ "gsp": true,
+ "locale": "en",
+ "locales": [
+  "en"
+ ],
+ "defaultLocale": "en",
+ "scriptLoader": []
+}

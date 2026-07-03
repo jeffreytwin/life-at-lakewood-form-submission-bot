@@ -1,0 +1,148 @@
+{
+ "url": "https://myscp.ml3ds-icon.com/assets/config/form_config.json",
+ "data": {
+  "Clients": [
+   {
+    "ClientId": 126,
+    "Questions": [
+     {
+      "Name": "PostalCode",
+      "Question": "Postal Code*",
+      "Type": "text",
+      "Options": [],
+      "Required": true
+     },
+     {
+      "Name": "PriceRange",
+      "Question": "Price range you're looking to spend",
+      "Type": "select",
+      "Options": [
+       "$500,000-1,000,000",
+       "$1,000,000-1,500,000",
+       "$1,500,000-2,000,000",
+       "$2,000,000-3,000,000",
+       "$3,000,000-5,000,000",
+       "…(6 items total)"
+      ],
+      "Required": false
+     },
+     {
+      "Name": "Size",
+      "Question": "Home Size Preference",
+      "Type": "select",
+      "Options": [
+       "3,500 - 5,500 sq ft ",
+       "5,500 - 7,500 sq ft ",
+       "7,500 - 9,000 sq ft ",
+       "10,000+ sq ft"
+      ],
+      "Required": false
+     }
+    ],
+    "Existing": [
+     {
+      "Name": "First Name*",
+      "Required": true
+     },
+     {
+      "Name": "Last Name*",
+      "Required": true
+     },
+     {
+      "Name": "Telephone*",
+      "Required": true
+     }
+    ]
+   },
+   {
+    "ClientId": null,
+    "ClientIds": [
+     26,
+     124
+    ],
+    "UseCheckboxWithDisclaimer": true,
+    "Questions": [
+     {
+      "Name": "Country",
+      "Question": "Country*",
+      "Type": "select",
+      "Options": [],
+      "Required": true,
+      "Classnames": [
+       "col-3"
+      ],
+      "Disabled": false
+     },
+     {
+      "Name": "State",
+      "Question": "State / Province",
+      "Type": "select",
+      "Options": [],
+      "Required": false,
+      "Classnames": [
+       "col-3"
+      ],
+      "Disabled": false
+     },
+     {
+      "Name": "Zip",
+      "Question": "Zip* / Postal Code",
+      "Type": "text",
+      "Required": true,
+      "Classnames": [
+       "col-3"
+      ],
+      "Disabled": false
+     },
+     {
+      "Name": "WorkingWithRealtor",
+      "Question": "Are you working with a Real Estate Agent?*",
+      "Type": "checkbox",
+      "Required": true,
+      "DefaultValue": "",
+      "Disabled": false,
+      "Invalid": false
+     },
+     {
+      "Name": "Type",
+      "Question": "Are you a Real Estate Agent?*",
+      "Type": "checkbox",
+      "Required": true,
+      "DefaultValue": "",
+      "Disabled": false,
+      "Invalid": false
+     },
+     "…(7 items total)"
+    ],
+    "Existing": [
+     {
+      "Name": "First Name*",
+      "Required": true
+     },
+     {
+      "Name": "Last Name*",
+      "Required": true
+     },
+     {
+      "Name": "Telephone Number",
+      "Required": false
+     }
+    ]
+   }
+  ],
+  "Default": [
+   {
+    "Name": "First Name*",
+    "Required": true
+   },
+   {
+    "Name": "Last Name*",
+    "Required": true
+   },
+   {
+    "Name": "Telephone",
+    "Required": false
+   }
+  ]
+ }
+}

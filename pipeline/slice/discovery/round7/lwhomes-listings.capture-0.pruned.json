@@ -1,0 +1,920 @@
+{
+ "url": "https://salesiq.zohopublic.com/visitor/v2/channels/website?widgetcode=siq0e2f73cc60b55744a0aea0bd087c89346bd18bbb7bf591bd7fc78cec2dabab2f&pagetitle=Listings+Archive+-+Lee+Wetherington+Homes%2C+Sarasota&current_domain=https%3A%2F%2Flwhomes.com&interna",
+ "postData": null,
+ "data": {
+  "url": "/visitor/v2/channels/website",
+  "object": "channels",
+  "data": {
+   "read_receipt": false,
+   "homepage_configs": {
+    "offline_content": "",
+    "conversation_mode": [
+     "chat",
+     "call"
+    ],
+    "online_content": "",
+    "show_brand_logo": false
+   },
+   "allow_multiple_live_chat": false,
+   "version_changed": true,
+   "_zldp": "GxgAJKPGTDebV5tdVEbfpFpaTlOjYqDZ8bRexyD9XoRP6mRj0i2TUOJiu2kKiLpTmKwM1K1ctjo%3D",
+   "enabled": true,
+   "cdn": {
+    "js_static_server": "https://js.zohocdn.com",
+    "media_file_hashes": "{\"sound/ping.wav\":\"MIvrVlfGosBQ64WMzmJ3eNiLwybJRdxplQHGxgnhe_mIDq8SJhmbQHg8pNEEUofr\",\"sound/buzz.wav\":\"BAugnnEwdIh-3ge4hbZQJditOMfF6pim-qnxJzyHJj9RY5iicYCu7p8XP-DjGvQ-\",\"flash/player.swf\":\"vdFCfM9h3idF4FNktHB_mKzfYxnXbEFuBAzjjB5jptYdQjeBjOsBCtlQ3pZaTXmq\",\"soun…(1135)",
+    "css_static_server": "https://css.zohocdn.com",
+    "enabled": true,
+    "common_static_url": "https://static.zohocdn.com"
+   },
+   "product_name": "Zoho SalesIQ",
+   "google_translate_attribution_url": "https://cloud.google.com/translate/attribution",
+   "show_emojis": false,
+   "visitor_info": {
+    "pagetitle": "Listings Archive - Lee Wetherington Homes, Sarasota",
+    "country_code": "US",
+    "remote_ip": "4.236.159.225",
+    "country": "United States"
+   },
+   "resource": {
+    "use_chat_departments": true,
+    "departments": [
+     {
+      "1070025000000002022": "Lee Wetherington Homes"
+     }
+    ]
+   },
+   "track_dnt_websites": false,
+   "resources": {
+    "faq": {
+     "merge_department": true,
+     "categorial_view": true,
+     "sort_type": "most_viewed",
+     "custom_title": {
+      "th": "คำถามที่ถามบ่อย",
+      "ka": "FAQs",
+      "nb": "Vanlige spørsmål",
+      "te": "FAQs",
+      "zh": "常见问题",
+      "ta": "அடிக்கடி கேட்கப்படும் கேள்விகள்",
+      "ar": "أسئلة متكررة",
+      "gu": "FAQs",
+      "zh_tw": "常見問題",
+      "ms": "Soalan Lazim",
+      "fa_IR": "FAQs",
+      "mr": "FAQs",
+      "pt": "Perguntas frequentes",
+      "sv": "Vanliga frågor och svar",
+      "ml": "FAQs",
+      "de": "Häufig gestellte Fragen (FAQ)",
+      "pl": "Często zadawane pytania",
+      "fr_CA": "FAQ",
+      "sl": "Pogosta vprašanja",
+      "da": "Ofte stillede spørgsmål",
+      "sk": "Najčastejšie otázky",
+      "si": "නිති අසන පැන",
+      "ga": "FAQs",
+      "vi": "Những Câu Hỏi Thường Gặp",
+      "ja": "よくある質問",
+      "pa": "FAQs",
+      "cs": "Nejčastější dotazy",
+      "iw": "שאלות נפוצות",
+      "fr": "FAQ",
+      "it": "Domande frequenti",
+      "uz": "FAQs",
+      "ru": "Вопросы и ответы",
+      "or": "FAQs",
+      "fi": "Usein kysytyt kysymykset",
+      "ro": "FAQs",
+      "ca": "FAQs",
+      "id": "Tanya jawab",
+      "uk": "Запитання й відповіді",
+      "pt_br": "Perguntas frequentes",
+      "fil": "Mga FAQ",
+      "hy": "FAQs",
+      "es": "Preguntas frecuentes",
+      "hu": "GY.I.K.",
+      "bn": "FAQs",
+      "hr": "Najčešća pitanja",
+      "en": "FAQs",
+      "el": "Συχνές ερωτήσεις (FAQ)",
+      "ko": "FAQ",
+      "kn": "FAQs",
+      "bg": "ЧЗВ",
+      "tr": "SSS",
+      "kk": "FAQs",
+      "hi": "FAQs",
+      "nl": "Meest gestelde vragen",
+      "he": "שאלות נפוצות"
+     },
+     "enabled": true,
+     "allow_likes": true,
+     "show_creator_image": true,
+     "default_language": {
+      "enabled": true,
+      "code": "en"
+     }
+    },
+    "app_name": "Lee Wetherington Homes",
+    "code": "siq0e2f73cc60b55744a0aea0bd087c89346bd18bbb7bf591bd7fc78cec2dabab2f",
+    "article": {
+     "merge_department": true,
+     "categorial_view": true,
+     "sort_type": "most_viewed",
+     "custom_title": {
+      "th": "บทความ I",
+      "ka": "სტატიები",
+      "nb": "Artikler",
+      "te": "ఆర్టికల్స్",
+      "zh": "文章",
+      "ta": "கட்டுரைகள்",
+      "ar": "مقالات",
+      "gu": "લેખ",
+      "zh_tw": "文章",
+      "ms": "Artikel-artikel",
+      "fa_IR": "مقالات",
+      "mr": "वस्तू",
+      "pt": "Artigos",
+      "sv": "Artiklar",
+      "ml": "ലേഖനങ്ങൾ",
+      "de": "Artikel",
+      "pl": "Artykuły",
+      "fr_CA": "Articles",
+      "sl": "Članki",
+      "da": "Artikler",
+      "sk": "Články",
+      "si": "ලිපි",
+      "ga": "Ailt",
+      "vi": "Bài viết",
+      "ja": "記事",
+      "pa": "ਆਰਟੀਕਲ",
+      "cs": "Články",
+      "iw": "סעיפים",
+      "fr": "Articles",
+      "it": "Articoli",
+      "uz": "Maqolalar",
+      "ru": "Статьи",
+      "or": "ପ୍ରବନ୍ଧଗୁଡିକ",
+      "fi": "Artikkelit",
+      "ro": "Articole",
+      "ca": "Articles",
+      "id": "Artikel",
+      "uk": "Статті",
+      "pt_br": "Artigos",
+      "fil": "Mga Artikulo",
+      "hy": "Հոդվածներ",
+      "es": "Artículos",
+      "hu": "Cikkek",
+      "bn": "আর্টিকেলসমূহ",
+      "hr": "Članci",
+      "en": "Articles",
+      "el": "Άρθρα",
+      "ko": "글",
+      "kn": "ಲೇಖನಗಳು",
+      "bg": "Статии",
+      "tr": "Makaleler",
+      "kk": "Мақалалар",
+      "hi": "आलेख",
+      "nl": "Artikelen",
+      "he": "סעיפים"
+     },
+     "enabled": true,
+     "allow_likes": true,
+     "show_creator_image": true,
+     "default_language": {
+      "enabled": true,
+      "code": "en"
+     }
+    }
+   },
+   "dynamic_configurations": {
+    "use_samesite": true,
+    "isvoicenotesenabled": true,
+    "app_newconfig_enabled": false,
+    "is_language_selector_enabled": true,
+    "formremoval": true,
+    "is_triggers_without_tracking_enabled": true,
+    "use_emojis": true,
+    "reply_option_enabled": true,
+    "cookie_segregation": true,
+    "call_transfer_enabled": true,
+    "message_operations_enabled": true,
+    "is_multi_trigger_enabled": true,
+    "isbetaportal": false,
+    "whitelisted_attachements": false,
+    "media_device_settings": true,
+    "is_replyCard_delayTime_enabled": false,
+    "subresourceintegrity_enabled": true,
+    "is_white_labelling_enabled": true,
+    "is_web_proactive_enabled": false,
+    "is_header_options_enabled": true,
+    "is_payload_encryption_enabled": true,
+    "is_zoho_maps_v3_enabled": true,
+    "wms_debug_logs": false,
+    "cross_widget_navigation_enabled": true,
+    "embed_mobile_view": false,
+    "widget_performance_optimised": false,
+    "range_slider_text_input_supported": false,
+    "rtcp_enabled": true,
+    "is_rating_new_flow": false,
+    "video_call_enabled": true,
+    "display_trigger_message": true,
+    "migrate_embed_ls_calls": true,
+    "restrict_visitor_input": true,
+    "is_country_code_support_enabled": false,
+    "multilevel_category_supported": true,
+    "mail_transcript_newflow": false,
+    "is_fullname_card_enabled": true,
+    "live_transcription_enabled": false,
+    "intelligent_trigger_enabled": true,
+    "only_call_enabled": true,
+    "read_recipient_enabled": true,
+    "jwt_enabled": false,
+    "is_chat_window_fixed": false,
+    "disallow_ratings_overriden": true,
+    "hide_prechatform_question": false,
+    "embed_revamp": false,
+    "cookie_optimization": false,
+    "redirect_to_revamp": false,
+    "revamp_enabled": false,
+    "rtl_language_support": true,
+    "is_cookie_samesite_strict": false,
+    "has_self_service": false,
+    "article_revamp_enabled": true,
+    "waiting_banner_enabled": false,
+    "centralized_cookie_handler_enabled": true,
+    "visitor_name_newflow": true,
+    "message_sanitization_enabled": true,
+    "jquery_version_updated": false,
+    "staticfiles_delayloading_enabled": true,
+    "init_retracking": true,
+    "call_monitor_enabled": true,
+    "slider_default_value_enabled": true,
+    "conversation_newflow_enabled": true,
+    "disable_chat_broadcast": false,
+    "accessibility_enabled": false,
+    "offline_voice_note_in_transcript": true,
+    "allow_bottom_scroll": false,
+    "custom_theme_enabled": false,
+    "scroll_enabled": false,
+    "bot_rendering_ux_revamp": true,
+    "use_longpolling": true,
+    "screenshare_parallelchat": false,
+    "company_input_enhancment": true,
+    "wms_anon_register": false,
+    "is_widget_drag_supported": false
+   },
+   "widget_type": "float",
+   "window_type": 2,
+   "widget": {
+    "code": "siq0e2f73cc60b55744a0aea0bd087c89346bd18bbb7bf591bd7fc78cec2dabab2f",
+    "app_name": "Lee Wetherington Homes",
+    "float": {
+     "modified_time": "1753733483257",
+     "hide_when_offline": false,
+     "gravatar": {
+      "is_preview": false,
+      "url": "",
+      "enabled": false,
+      "fpath": "",
+      "file_name": "",
+      "id": ""
+     },
+     "hide_tooltip": false,
+     "hide_in_mobile_device": false,
+     "sticker": "coin",
+     "color": "#0066cc",
+     "custom_sticker": {
+      "offline": {
+       "uploaded": false,
+       "is_preview": false,
+       "url": "",
+       "file_name": "",
+       "id": ""
+      },
+      "online": {
+       "uploaded": false,
+       "is_preview": false,
+       "url": "",
+       "file_name": "",
+       "id": ""
+      },
+      "enabled": false
+     },
+     "position": "bottom_right",
+     "show_company_logo": false,
+     "draggable": true
+    },
+    "widget_type": "float"
+   },
+   "uts_server": "vts.zohopublic.com",
+   "mask_visitor_ip": true,
+   "forcehttps": false,
+   "offline_content": {
+    "sub_header": "",
+    "action": "",
+    "header": ""
+   },
+   "allow_chat_reopen": false,
+   "chat_assignment": "auto_assign",
+   "stun_turn_url": "stun:zvpturn1.zoho.com:443?transport=udp,stun:zvpturn2.zoho.com:443?transport=tcp,turn:zvpturn1.zoho.com:443?transport=udp,turn:zvpturn2.zoho.com:443?transport=tcp",
+   "missed_chat_end": {
+    "enabled": false,
+    "duration": "3_months"
+   },
+   "color": "#0066cc",
+   "version": "V26",
+   "cookie_preference": "default",
+   "online_content": {
+    "sub_header": "",
+    "action": "",
+    "header": ""
+   },
+   "credit_card_masking": {
+    "consent_banner_content": "",
+    "enabled": true,
+    "allow_operator_to_unmask": false,
+    "supported_roles": [
+     "Supervisor",
+     "Administrator"
+    ]
+   },
+   "privacy": true,
+   "bot_chats_exceeded": false,
+   "status": "online",
+   "app_id": "siq39da464a08d04f4f3ce12b45920fbaaa6fea83eeb4a3c778df048d32091faaa3",
+   "integration": {
+    "analytics": [],
+    "mailchimp": {
+     "enabled": false
+    },
+    "campaign": {},
+    "enabled_integrations": "[21, 13, 3, 6, 2, 14]"
+   },
+   "is_development_setup": false,
+   "media": {
+    "server": "https://static.zohocdn.com/salesiq/MEDIA_14"
+   },
+   "company_info": {
+    "logo_source": "https://us4-files.zohopublic.com/public/SalesIQ/download/d_894825102_company1775842314898_894825102?x-cli-msg=%7B%22x-siq-module%22%3A%22company%22%2C%22x-siq-soid%22%3A%22894825102%22%2C%22x-siq-resourceid%22%3A%221775842314898_894825102%22%2C%22x-siq-filetyp…(327)",
+    "clogo_fkey": "1775842314898_894825102"
+   },
+   "message_actions": {
+    "operator": {
+     "edit": true,
+     "delete": true
+    },
+    "enabled": true,
+    "visitor": {
+     "edit": false,
+     "delete": false
+    }
+   },
+   "google_map": "https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false",
+   "csrf_cookie": "LS_CSRF_TOKEN",
+   "zmap": {
+    "css_url": "https://css.zohocdn.com/salesiq/thirdparty/styles/mapboxgl/mapbox-gl.css",
+    "api_url": "https://js.zohocdn.com/salesiq/thirdparty/js/mapboxgl/mapbox-gl.js",
+    "api_key": "73f269cc3db5c26abb9a6b58b33e7452",
+    "static_url": "https://maps.zoho.com/"
+   },
+   "public_domain": "salesiq.zohopublic.com",
+   "call": {
+    "modified_time": "1753733483257",
+    "feedback": {
+     "enabled": true,
+     "message": ""
+    },
+    "code": "siq0e2f73cc60b55744a0aea0bd087c89346bd18bbb7bf591bd7fc78cec2dabab2f",
+    "call_waiting_queue": {
+     "enabled": false,
+     "size": 0
+    },
+    "operator_on_transfer": "retain",
+    "rating": {
+     "enabled": true,
+     "neutral": "",
+     "sad": "",
+     "happy": ""
+    },
+    "messages": {
+     "agents_engaged": "",
+     "waiting": "",
+     "offline_response": "",
+     "agents_busy": ""
+    },
+    "sdk_waiting_time": 60,
+    "app_name": "Lee Wetherington Homes",
+    "departments": [
+     {
+      "1070025000000002022": "Lee Wetherington Homes"
+     }
+    ],
+    "waiting_time": 60,
+    "show_conversation_question": true,
+    "status_based_fields": {
+     "web": {
+      "offline": [
+       {
+        "name": "",
+        "visibility": "online",
+        "maxlength": 100,
+        "id": "1070025000000002242",
+        "question": "",
+        "mandatory": false,
+        "index": 1,
+        "enabled": true,
+        "type": "visitor_last_name",
+        "placeholder": "",
+        "approved": true,
+        "options": []
+       },
+       {
+        "name": "",
+        "visibility": "online",
+        "maxlength": 100,
+        "id": "1070025000000002244",
+        "question": "",
+        "mandatory": false,
+        "index": 2,
+        "enabled": true,
+        "type": "visitor_email",
+        "placeholder": "",
+        "approved": true,
+        "options": []
+       }
+      ],
+      "online": [
+       {
+        "name": "",
+        "visibility": "online",
+        "maxlength": 100,
+        "id": "1070025000000002242",
+        "question": "",
+        "mandatory": false,
+        "index": 1,
+        "enabled": true,
+        "type": "visitor_last_name",
+        "placeholder": "",
+        "approved": true,
+        "options": []
+       },
+       {
+        "name": "",
+        "visibility": "online",
+        "maxlength": 100,
+        "id": "1070025000000002244",
+        "question": "",
+        "mandatory": false,
+        "index": 2,
+        "enabled": true,
+        "type": "visitor_email",
+        "placeholder": "",
+        "approved": true,
+        "options": []
+       }
+      ]
+     }
+    }
+   },
+   "chat_waiting_queue": {
+    "enabled": false,
+    "size": 0
+   },
+   "agent_chats_exceeded": false,
+   "wms_related_info": {
+    "js_static_domain": "js.zohostatic.com",
+    "public_domain": "wms.zohopublic.com",
+    "js_static_server": "https://static.zohocdn.com/ichat/js/Jun_08_2026_13632308_wmsliteapi.js",
+    "product_code": "LD"
+   },
+   "notify_terms": {
+    "url": "",
+    "banner_content": "",
+    "negative_button_content": "",
+    "code": 0,
+    "positive_button_content": ""
+   },
+   "view_conversation": false,
+   "jwt_authentication": {
+    "enabled": false,
+    "secret_key": ""
+   },
+   "static_urls": {
+    "widget_css_version": "FLOAT_CSS_55",
+    "resource_file": "https://js.zohocdn.com/salesiq/js/resource/embed/resource_T5pZqVCTIXvbuOW7UFL6HQvPERrPqvcDK3e4UO5XsM4VF5KT2jQfDuGKH3iZoYhj_.js",
+    "common_static_url": "https://js.zohostatic.com/salesiq/JUN_24_01_https",
+    "css_js_mapping": "{\"/styles/embedtheme7.css\":\"v6QkYvH4wJDGQ5xGRUBhlKOmFZXNPQNq9idd0tOtS6xtekcRy-6ve0NZM-R9lZez\",\"/js/floatbutton9.js\":\"0wu3PSLaZm5TwsNNBRc-Z59igeWsrTPS7MMvzlo4QaaoRZZjEgeLs6oVz5H3BtUc\",\"/js/siqchatwindow6.js\":\"_A-gGKH3PWPXj_heJb76S62ZExvc0Xwz1_7Q58j5VpOJAxRJUEWf…(9013)",
+    "image_server": "https://img.zohostatic.com/salesiq/JUN_24_01_https",
+    "ace_editor": "https://js.zohocdn.com/salesiq/thirdparty/js/aceeditor",
+    "css_server": "https://css.zohostatic.com/salesiq/JUN_24_01_https",
+    "js_file": "/js/siqchatwindow8.js",
+    "css_file": "/styles/embedtheme8.css",
+    "js_server": "https://js.zohostatic.com/salesiq/JUN_24_01_https"
+   },
+   "notify_googletranslator_usage": {
+    "url": "",
+    "code": 1
+   },
+   "visitor_question": {
+    "default_text": "",
+    "mandatory": true,
+    "place_holder": ""
+   },
+   "logo_url": "https://us4-files.zohopublic.com/public/SalesIQ/download/d_894825102_brandssiq39da464a08d04f4f3ce12b45920fbaaa6fea83eeb4a3c778df048d32091faaa3?x-cli-msg=%7B%22x-siq-module%22%3A%22brands%22%2C%22x-siq-soid%22%3A%22894825102%22%2C%22x-siq-resourceid%22%3A%22175…(475)",
+   "chat_inactivity_rules": {
+    "remainder_enabled": false,
+    "rules": [
+     {
+      "delay_mins": 60,
+      "message": {
+       "default": [
+        {
+         "text": ""
+        }
+       ]
+      },
+      "action": "end"
+     }
+    ]
+   },
+   "avuid": "2a31eaa5-de73-46c8-b429-dfb566a0d196",
+   "csrf_param": "zls_csrparam",
+   "seasonal_theme": {
+    "themes": [
+     {
+      "expiry_time": "1735583400000",
+      "enabled": false,
+      "type": "christmas",
+      "start_time": "1734460200000"
+     },
+     {
+      "expiry_time": "1730831340000",
+      "enabled": false,
+      "type": "diwali",
+      "start_time": "1729405800000"
+     },
+     {
+      "expiry_time": "1735842599000",
+      "enabled": false,
+      "type": "newyear",
+      "start_time": "1735497001000"
+     }
+    ],
+    "enabled": false
+   },
+   "language": "default",
+   "RTL_supported_language": false,
+   "departments": [
+    {
+     "status": true,
+     "name": "Lee Wetherington Homes",
+     "bot_users": [
+      "1070025000000021001"
+     ],
+     "is_only_bot_available": false,
+     "dname": "Lee Wetherington Homes",
+     "users": [
+      "1070025000000002002",
+      "1070025000000012001",
+      "1070025000000013001"
+     ],
+     "is_engaged": false,
+     "id": "1070025000000002022"
+    }
+   ],
+   "rtcp_related_info": {
+    "_RTCPCFCOOKIENAME": "RTCPLATFORM_CSRF_TOKEN",
+    "css_url": [
+     "https://static.zohocdn.com/rtcplatform/css/ipversioning.min.326ded6cf5cf7e6befcad579d7fc4734.css"
+    ],
+    "js_url": [
+     "https://static.zohocdn.com/rtcplatform/js/tp.min.1c6b888013be5e98bc709ff986360ca2.js",
+     "https://static.zohocdn.com/rtcplatform/js/components.min.860777ad94c69af7411d9802f13a1fd7.js",
+     "https://static.zohocdn.com/rtcplatform/js/util.min.3a59b75585f13f1064e272d4d7f5c0d0.js",
+     "https://static.zohocdn.com/rtcplatform/js/media.min.1bf563d81c7ce0b64c6e9301381d168d.js",
+     "https://static.zohocdn.com/rtcplatform/js/hls.min.03ec90db3c8c4b33e5436b0e778600c0.js",
+     "…(7 items total)"
+    ],
+    "domain_url": "https://rtcplatform.zoho.com",
+    "RTCPCFPARAMNAME": "rtcplatform_csrparam",
+    "prd": "LD"
+   },
+   "sesonaltheme_expiry_time": "1735583400000",
+   "siq_service_name": "LiveDesk",
+   "share_file": true,
+   "product_url": "salesiq.zoho.com",
+   "components": [
+    "chat"
+   ],
+   "share_screen": false,
+   "hide_when_offline": false,
+   "annon_register_timeout": "20000",
+   "i18nkeys": {
+    "chat_window": {
+     "cookie.your.preference": "Your Cookie Preference",
+     "cookie.analytics": "Analytics",
+     "cookie.analytics.desc": "These cookies are used to help us understand how our website is being used. They can also be used to analyze the effectiveness of our marketing activities and to create a personalized browsing experience for you.",
+     "cookie.performance.desc": "These cookies are used to enhance your browsing experience. Also, these cookies will aid us in assisting you better with our engagement and support tools. ",
+     "cookie.preference": "Preferences",
+     "cookie.learnmore": "Learn more",
+     "cookie.essential": "Essential",
+     "cookie.performance": "Performance",
+     "cookie.discard.changes": "Discard Changes",
+     "cookie.essential.desc": "These cookies are necessary for the basic functionality of the website. Without these cookies, certain functions, like live chat, knowledge base, etc., will not work. ",
+     "cookie.accept.all": "Accept All",
+     "cookie.save.accept": "Save & Accept",
+     "cookie.your.preference.desc": "We use different types of cookies to optimize your experience on our website. Click on the categories that you want to allow. Visit our website to learn more about our ",
+     "cookie.use.essential": "Use Essential Only",
+     "cookie.policy": "Cookie Policy"
+    },
+    "chat_widget": {
+     "float.title": "Hey there!",
+     "button.offline.maintitle": "We're offline!",
+     "av.info.callnow": "Call Now",
+     "gdpr.banner.accept": "Accept",
+     "button.online.maintitle": "We're online!",
+     "personalize.online.maintitle": "Let's chat!",
+     "float.description": "How can we help you?",
+     "gdpr.banner.decline": "Decline",
+     "gdpr.banner.notifypreferences": "We use cookies to improve user experience and analyze website traffic. By clicking \"Accept\", you agree to our website's cookie use as described in our Cookie Policy. You can change your cookie settings at any time by clicking \"Preferences\".",
+     "operatorimage.alt.text": "Operator",
+     "gdpr.banner.donottrack": "This website make use of cookies to give you the best possible experience when you visit our website. By continuing your browsing, you implicitly consent to our use of cookies on this website. If you do not want cookies on your device, please click \"Do not tra…(264)",
+     "button.online.byline": "Let's chat!",
+     "gdpr.banner.cookie.acceptall": "Accept All",
+     "customsticker.alt.text": "Chat Widget",
+     "gravatar.alt.text": "Gravatar",
+     "gdpr.banner.learnmore": "Learn More",
+     "float.chat.text": "Chat now",
+     "gdpr.banner.button.donottrack": "Do not track",
+     "float.online.maintitle": "We're Online!",
+     "companylogo.alt.text": "Company Logo",
+     "personalize.offline.maintitle": "Leave a message",
+     "button.offline.byline": "Leave a message",
+     "float.offline.byline": "Leave a message",
+     "gdpr.banner.preferences": "Preferences",
+     "float.online.byline": "How may I help you today?",
+     "gdpr.banner.notify": "We use cookies to give you the best possible experience while you browse through our website. By pursuing the use of our website you implicitly agree to the usage of cookies on this site.",
+     "gdpr.banner.button.ok": "Got it!",
+     "sticker.connect.text": "Connect",
+     "float.offline.maintitle": "We're offline"
+    }
+   },
+   "recording": {
+    "call_consent_message": "",
+    "type": "audio_call_and_screen_share",
+    "screenshare_consent_message": ""
+   },
+   "lsid": "1070025000000002238",
+   "seasonaltheme_enabled": false,
+   "consent_banner_content": "",
+   "appname": "Lee Wetherington Homes",
+   "timezone_offset": {
+    "portal": "-240",
+    "user": "",
+    "server": "-420"
+   },
+   "modified_time": "1776084259650",
+   "portal_config": {
+    "convSummaryWordsCount": "500",
+    "sendemailforipblockto": "true",
+    "isiossdkaccessed": "false",
+    "deptmappingmigrated": "true",
+    "trackportalcreation": "crmplus",
+    "mychats": "false",
+    "ss_r_engine": "2",
+    "voicenotes": "true",
+    "chattranscript": "Manual",
+    "longlastingcookiettl": "2",
+    "audiocall": "true",
+    "screensharing": "true",
+    "ss_vendor": "0",
+    "isvisitoreventapi": "false",
+    "zlogs_logtype_associated_botexecutions": "true",
+    "emailtranscripts": "true",
+    "frommailconfig": "1",
+    "weeklystats": "true",
+    "convSummaryModules": "chats,calls",
+    "gtpolicyurl": "",
+    "isandroidsdkaccessed": "false",
+    "isvisitorsessionapi": "false",
+    "templatemailconfig": "0",
+    "translate": "0",
+    "resEvaluationTone": "Informative",
+    "convSummaryMinMessages": "10",
+    "aiconvsummaryVendor": "openai",
+    "dailystatics": "true",
+    "channelInfoMessages": "enabled",
+    "verifyemail": "true",
+    "convSummaryTone": "Informative",
+    "trackingprivacystatement": "",
+    "gtprivacyconfig": "1",
+    "ss_z_responsegen_engine": "1",
+    "aiCallSummaryModel": "gpt-3.5-turbo",
+    "companylogoupdated": "true",
+    "isgdprenabled": "false",
+    "aibotskipwelcome": "false",
+    "mapsgoogleapikey": "",
+    "predictmessage": "true",
+    "airespevaluationVendor": "openai",
+    "chatcookiepolicyurl": "",
+    "inactiveperiod": "30",
+    "chatprivacyconfig": "0",
+    "filetransfer": "true",
+    "ss_z_model": "0",
+    "ss_o_model": "0",
+    "pushpage": "true",
+    "is_approval_needed": "false",
+    "id": "894825102",
+    "categorynamesmigrated": "true",
+    "cookiepolicyurl": "",
+    "semailsignature": "0",
+    "aiconvsummaryModel": "gpt-3.5-turbo",
+    "skipwelcome": "false",
+    "aiconvsummary": "0",
+    "inactivetrackingperiod": "180",
+    "brandSyncedToV3": "-1",
+    "callSummaryTone": "Informative",
+    "gt_consent_approver": "",
+    "idleasoffline": "false",
+    "aitagging": "0",
+    "siqscreensharing": "true",
+    "ss_o_engine": "2",
+    "name": "ashleyberg",
+    "faqrevampmigrated": "true",
+    "maxconcurrentchat": "-1",
+    "isvisitorinfoapi": "false",
+    "translatortype": "2",
+    "excludebottraffic": "false",
+    "fromname": "",
+    "ss_z_responsegen_status": "disabled",
+    "airespevaluation": "false",
+    "visitorfeedback": "true",
+    "Code Embedded": "true",
+    "smartsuggestions": "false",
+    "showtyping": "true",
+    "onboard": {},
+    "approval_duration": "0",
+    "trackingprivacyconfig": "0",
+    "isappsenabled": "true",
+    "ispasswordprotected": "true",
+    "offbusymsg": "true",
+    "aitaggingModel": "gpt-3.5-turbo",
+    "profileenrichment": "true",
+    "ss_z_engine": "0",
+    "brandMigrationStartedV3": "-1",
+    "sys.mig": "v2",
+    "mapstype": "0",
+    "istrackdnt": "false",
+    "chatbar": "0",
+    "isipmasking": "true",
+    "ccemailaddr": "true",
+    "isdowngradedtofreeplan": "false",
+    "zlogs_project_id": "4000674955049_1173000001709695",
+    "aitaggingVendor": "openai",
+    "sendtranasemail": "true",
+    "aiCallSummaryVendor": "zia",
+    "airespevaluationModel": "gpt-3.5-turbo"
+   },
+   "white_labelled": false,
+   "free_logo_url": "https://www.zoho.com/salesiq?source=freelogo",
+   "font": "Lato",
+   "waiting_time": 60,
+   "zspeech_transcription_api": "wss://speechprolive.zoho.com/api/v0/transcribe/live?pcm_format=S16LE&sample_rate=16000&zlabsspeech-token={token}",
+   "idle_chat_end": {
+    "enabled": true
+   },
+   "show_brand_logo": false,
+   "license_info": {
+    "filesharing": true,
+    "conversationallowed": true,
+    "issiqscreenshare": true,
+    "audiocall": true,
+    "planid": 30,
+    "creditmask": true,
+    "faqallowed": true,
+    "assistallowed": true
+   },
+   "notify_cookies": {
+    "link_content": "",
+    "link_url": "",
+    "banner_content": "",
+    "button_text": {
+     "text2": "",
+     "text1": ""
+    },
+    "code": 2
+   },
+   "language_changed_in_api": false,
+   "unique_name": "ashleyberg",
+   "upload_download_server": {
+    "event_based_url": true,
+    "upload_server": "https://us4-files.zohopublic.com",
+    "download_server": "https://us4-files.zohopublic.com",
+    "enabled": true,
+    "ud_revamp": true,
+    "siq_ud_servicename": "SalesIQ"
+   },
+   "mail_transcript": false,
+   "siq_help_link": "https://www.zoho.com/salesiq/help",
+   "company_name": "Lee Wetherington Homes",
+   "use_compression": true,
+   "is_business_hours_enabled": "false",
+   "voice_notes_enabled": false,
+   "form_type": "conversation",
+   "call_recording": true,
+   "use_apache": true,
+   "chat": {
+    "code": "siq0e2f73cc60b55744a0aea0bd087c89346bd18bbb7bf591bd7fc78cec2dabab2f",
+    "siq_share_screen": true,
+    "reaction": {
+     "enabled": true,
+     "neutral": "",
+     "sad": "",
+     "happy": ""
+    },
+    "print": true,
+    "feedback": {
+     "enabled": true,
+     "message": ""
+    },
+    "show_company_logo": true,
+    "custom_css": {
+     "url": "",
+     "enabled": false,
+     "new_float_url": "",
+     "new_float_file_name": "",
+     "file_name": ""
+    },
+    "show_operator_image": false,
+    "waiting_message": "",
+    "modified_time": "1753733483257",
+    "greeting": {
+     "enabled": true,
+     "message": ""
+    },
+    "agents_offline": {
+     "response": "",
+     "message": ""
+    },
+    "thanking_message": "",
+    "questioner": "",
+    "mute_sound": true,
+    "rating": {
+     "msg_5": "",
+     "msg_4": "",
+     "msg_3": "",
+     "msg_2": "",
+     "enabled": true,
+     "msg_1": ""
+    },
+    "question": "",
+    "agents_busy": {
+     "response": "",
+     "message": ""
+    },
+    "use_default_color": true,
+    "app_name": "Lee Wetherington Homes",
+    "size": "medium",
+    "color": "#0066cc",
+    "show_conversation_question": true,
+    "agents_engaged": {
+     "response": "",
+     "message": ""
+    },
+    "messages": {
+     "chat_transfer": [
+      {
+       "enabled": false,
+       "channel": "sdk",
+       "text": ""
+      },
+      {
+       "enabled": false,
+       "channel": "website",
+       "text": ""
+      }
+     ],
+     "agents_busy": [
+      {
+       "enabled": false,
+       "channel": "sdk",
+       "text": ""
+      },
+      {
+       "enabled": false,
+       "channel": "website",
+       "text": ""
+      }
+     ]
+    },
+    "labels": {
+     "feedback": "",
+     "feedback_and_rating": "",
+     "rating": ""
+    },
+    "theme": "pattern"
+   },
+   "form_fields_auto_pick_enabled": true
+  }
+ }
+}

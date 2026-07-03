@@ -1,0 +1,23 @@
+[
+ {
+  "slug": "qmi-brightmore",
+  "url": "https://mattamyhomes.com/search?productType=qmi&metro=Sarasota-Bradenton&country=USA&community=Brightmore%20at%20Wellen%20Park&hideMap=true",
+  "status": 200,
+  "bytes": 24549,
+  "jssBytes": 22141
+ },
+ {
+  "slug": "model-brightmore",
+  "url": "https://mattamyhomes.com/search?productType=model&metro=Sarasota-Bradenton&country=USA&community=Brightmore%20at%20Wellen%20Park&hideMap=true",
+  "status": 200,
+  "bytes": 24549,
+  "jssBytes": 22141
+ },
+ {
+  "slug": "all-wellen",
+  "url": "https://mattamyhomes.com/search?metro=Sarasota-Bradenton&country=USA&hideMap=true",
+  "status": 200,
+  "bytes": 24549,
+  "jssBytes": 22141
+ }
+]

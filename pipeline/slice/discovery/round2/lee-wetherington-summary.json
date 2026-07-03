@@ -1,0 +1,20 @@
+[
+ {
+  "domain": "leewetherington.com",
+  "status": 200,
+  "state": {
+   "bytes": 114,
+   "hasNextData": false,
+   "hasNuxt": false,
+   "hasApollo": false,
+   "hasInitialState": false,
+   "jsonScripts": [],
+   "apiUrls": []
+  },
+  "candidateLinks": []
+ },
+ {
+  "domain": "www.lwhomes.net",
+  "status": 404
+ }
+]

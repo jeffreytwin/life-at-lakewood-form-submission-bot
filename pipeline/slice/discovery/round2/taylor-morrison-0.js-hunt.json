@@ -1,0 +1,24 @@
+[
+ {
+  "src": "https://www.taylormorrison.com/layouts/system/VisitorIdentification.js",
+  "bytes": 3088,
+  "endpoints": []
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/preApp.bundle.js?v=07022026030000",
+  "bytes": 231875,
+  "endpoints": [
+   "/api/sitecore/"
+  ]
+ },
+ {
+  "src": "https://www.taylormorrison.com/Assets/Website/app.bundle.js?v=07022026030000",
+  "bytes": 4192003,
+  "endpoints": [
+   "https://maps.googleapis.com/maps/api/js",
+   "https://my.matterport.com/api/v1/player/models/",
+   "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/CoupleDogiStock1344021882ec00f662fbda45c7b7fdde56a9942ac5?v=0e8a3a7a",
+   "/api/sitecore/"
+  ]
+ }
+]

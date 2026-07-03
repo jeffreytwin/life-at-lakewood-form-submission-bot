@@ -1,0 +1,310 @@
+{
+ "url": "https://www.mihomes.com/sitecore/api/ssc/MIHomes-Project-Website-Api/TypeaheadSearch",
+ "data": {
+  "favorites": [],
+  "categories": [
+   {
+    "title": "Markets",
+    "items": [
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Southwest Florida</h1>\n \n<p>Looking for Southwest Florida homes for sale? With a variety of new home communities in the Southwest Florida area, we offer home designs and floorpla…(436)",
+      "title": "Southwest Florida",
+      "id": "6d6d2616-b885-448e-ad94-f35014fe4685",
+      "Location": {
+       "Latitude": 26.49952,
+       "Longitude": -81.86667
+      },
+      "zoom": 9,
+      "searchurl": "/new-homes/florida/southwest-florida"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Greater Cincinnati</h1>\n<p>Looking for <a href=\"https://www.mihomes.com/new-homes/ohio/greater-cincinnati/cincinnati\">Cincinnati</a>, Ohio homes for sale? With a variety of new h…(486)",
+      "title": "Greater Cincinnati",
+      "id": "151128a9-e9df-48cf-a53e-adee40fd1948",
+      "Location": {
+       "Latitude": 39.10312,
+       "Longitude": -84.51202
+      },
+      "zoom": 9,
+      "searchurl": "/new-homes/ohio/greater-cincinnati"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Dayton Metro</h1>\n \n<p>Looking for Dayton homes for sale? With a variety of new home communities in the Dayton Metro area, we offer home designs and floorplans designed with you …(404)",
+      "title": "Dayton Metro",
+      "id": "84f78ff2-3265-4821-acd2-3c7266041cac",
+      "Location": {
+       "Latitude": 39.73748,
+       "Longitude": -84.09264
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/ohio/dayton-metro"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Chicagoland</h1>\n \n<p>Looking for Chicagoland homes for sale? With a variety of new home communities, we offer home designs and floorplans designed with you in mind. With a new c…(384)",
+      "title": "Chicagoland",
+      "id": "bdca3437-2857-4fcb-9825-a7ba94e2f7c3",
+      "Location": {
+       "Latitude": 41.81586,
+       "Longitude": -88.01826
+      },
+      "zoom": 9,
+      "searchurl": "/new-homes/illinois/chicagoland"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Charlotte Metro</h1>\n \n<p>Looking for Charlotte homes for sale? With a variety of new home communities in the Charlotte Metro area, we offer home designs and floorplans designed …(416)",
+      "title": "Charlotte Metro",
+      "id": "ebc4bf1b-5a8c-42c4-8a18-3e27a1a7f287",
+      "Location": {
+       "Latitude": 35.22709,
+       "Longitude": -80.84312
+      },
+      "zoom": 9,
+      "searchurl": "/new-homes/north-carolina/charlotte-metro"
+     },
+     "…(18 items total)"
+    ],
+    "isLocation": true
+   },
+   {
+    "title": "Cities",
+    "items": [
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Plano</h1>\n<p>Looking for <a href=\"http://https://www.mihomes.com/new-homes/illinois/chicagoland/plano\">Plano</a>, Illinois homes for sale? With a variety of new home communities…(481)",
+      "title": "Plano",
+      "id": "8a8d9891-d07b-4815-9b7d-a636d9382297",
+      "Location": {
+       "Latitude": 41.67632,
+       "Longitude": -88.56493
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/illinois/chicagoland/plano"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in La Grange</h1>\n\n<p>Looking for La Grange, Illinois homes for sale? With a variety of new home communities in Chicagoland, we offer home designs and floorplans designed with you i…(406)",
+      "title": "La Grange",
+      "id": "a19b71e4-80b3-4de5-9553-9d4e2140c48b",
+      "Location": {
+       "Latitude": 41.80503,
+       "Longitude": -87.89182
+      },
+      "zoom": 11,
+      "searchurl": "/new-homes/illinois/chicagoland/la-grange"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Glen Ellyn</h1>\n\n<p>Looking for Glen Ellyn, Illinois homes for sale? With a variety of new home communities in Chicagoland, we offer home designs and floorplans designed with you…(409)",
+      "title": "Glen Ellyn",
+      "id": "89ce98ef-cd1c-4c85-85c0-2e860d76a901",
+      "Location": {
+       "Latitude": 41.86592,
+       "Longitude": -88.09341
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/illinois/chicagoland/glen-ellyn"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Geneva</h1>\n\n<p>Looking for Geneva, Illinois homes for sale? With a variety of new home communities in Chicagoland, we offer home designs and floorplans designed with you in mind…(397)",
+      "title": "Geneva",
+      "id": "3816c08b-86df-4333-a9be-bce2d80cc829",
+      "Location": {
+       "Latitude": 41.88118,
+       "Longitude": -88.36504
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/illinois/chicagoland/geneva"
+     },
+     {
+      "SearchFooter": "<h1>M/I Homes Has the New Home for You in Northwest Chicagoland</h1>\n\n<p>Looking for Northwest Chicagoland homes for sale? With a variety of new home communities, we offer home designs and floorplans designed with you in…(417)",
+      "title": "Northwest Chicagoland",
+      "id": "300dba60-bc33-4576-8754-ba40f9bcbb31",
+      "Location": {
+       "Latitude": 42.03474,
+       "Longitude": -88.08308
+      },
+      "zoom": 11,
+      "searchurl": "/new-homes/illinois/chicagoland/northwest-chicagoland"
+     },
+     "…(390 items total)"
+    ],
+    "isLocation": true
+   },
+   {
+    "title": "Zipcodes",
+    "items": [
+     {
+      "title": "77433",
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 29.904827,
+       "Longitude": -95.733578
+      },
+      "zoom": 12,
+      "searchurl": "/new-homes/texas/77433"
+     },
+     {
+      "title": "28278",
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 35.1341932,
+       "Longitude": -81.0174791
+      },
+      "zoom": 12,
+      "searchurl": "/new-homes/north-carolina/28278"
+     },
+     {
+      "title": "55038",
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 45.174585,
+       "Longitude": -92.9854
+      },
+      "zoom": 12,
+      "searchurl": "/new-homes/minnesota/55038"
+     },
+     {
+      "title": "55303",
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 45.2352544099101,
+       "Longitude": -93.4565104542824
+      },
+      "zoom": 12,
+      "searchurl": "/new-homes/minnesota/55303"
+     },
+     {
+      "title": "55387",
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 44.82553,
+       "Longitude": -93.76052
+      },
+      "zoom": 12,
+      "searchurl": "/new-homes/minnesota/55387"
+     },
+     "…(167 items total)"
+    ],
+    "isLocation": true
+   },
+   {
+    "title": "Counties",
+    "items": [
+     {
+      "title": "Anoka County, Minnesota",
+      "id": "29cf915c-5d1a-4faa-afb8-cfdc4d9d20d3",
+      "Location": {
+       "Latitude": 45.196819,
+       "Longitude": -93.107947
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/minnesota/anoka-county"
+     },
+     {
+      "title": "Bexar County, Texas",
+      "id": "48cbb2ce-ecab-46e7-99ca-d01695cb70bc",
+      "Location": {
+       "Latitude": 29.3425708,
+       "Longitude": -98.3905943
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/texas/bexar-county"
+     },
+     {
+      "title": "Butler County, Ohio",
+      "id": "e288449b-6b89-4783-a301-066e0118d741",
+      "Location": {
+       "Latitude": 39.370728,
+       "Longitude": -84.397617
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/ohio/butler-county"
+     },
+     {
+      "title": "Cabarrus County, North Carolina",
+      "id": "76bf0df9-4646-46ea-a588-b878d53f2230",
+      "Location": {
+       "Latitude": 35.4170577,
+       "Longitude": -80.7093845
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/north-carolina/cabarrus-county"
+     },
+     {
+      "title": "Carver County, Minnesota",
+      "id": "98c73943-7e72-41b4-b4b6-1ad1838fd5e6",
+      "Location": {
+       "Latitude": 44.818415,
+       "Longitude": -93.654642
+      },
+      "zoom": 10,
+      "searchurl": "/new-homes/minnesota/carver-county"
+     },
+     "…(82 items total)"
+    ],
+    "isLocation": true
+   },
+   {
+    "title": "States",
+    "items": [
+     {
+      "title": "District of Columbia",
+      "isState": true,
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 38.8964,
+       "Longitude": -77.0262
+      },
+      "zoom": 7,
+      "searchurl": "/new-homes/district-of-columbia"
+     },
+     {
+      "title": "Delaware",
+      "isState": true,
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 39.3498,
+       "Longitude": -75.5148
+      },
+      "zoom": 7,
+      "searchurl": "/new-homes/delaware"
+     },
+     {
+      "title": "Florida",
+      "isState": true,
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 27.8333,
+       "Longitude": -81.717
+      },
+      "zoom": 7,
+      "searchurl": "/new-homes/florida"
+     },
+     {
+      "title": "Illinois",
+      "isState": true,
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 40.3363,
+       "Longitude": -89.0022
+      },
+      "zoom": 7,
+      "searchurl": "/new-homes/illinois"
+     },
+     {
+      "title": "Indiana",
+      "isState": true,
+      "id": "00000000-0000-0000-0000-000000000000",
+      "Location": {
+       "Latitude": 39.8647,
+       "Longitude": -86.2604
+      },
+      "zoom": 7,
+      "searchurl": "/new-homes/indiana"
+     },
+     "…(19 items total)"
+    ],
+    "isLocation": true
+   },
+   "…(6 items total)"
+  ],
+  "computedsearchfooter": null
+ }
+}

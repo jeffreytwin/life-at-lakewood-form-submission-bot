@@ -1,0 +1,12 @@
+[
+ {
+  "src": "https://cdn.bc0a.com/autopilot/f00000000254989/autopilot_sdk.js",
+  "bytes": 87112,
+  "hits": [
+   {
+    "hit": "/api/ixf/",
+    "context": "f(h){var R=c[n.FDAPI_PARAMETER_LIST_CONFIG].split(\"|\");for(var P in I)if(-1!==R.indexOf(P)){c[n.API_ENDPOINT_CONFIG]=n.DEFAULT_DIRECT_API_ENDPOINT,a.Logger.debug(\"Using overridden api endpoint\");break}}var D=c[n.API_ENDPOINT_CONFIG],M=c[n.ACCOUNT_ID_CONFIG],j=\"/api/ixf/\"+n.API_VERSION+\"/get_capsule/\"+M+\"/\"+x;if(f=D+j+\"?client=\"+encodeURIComponent(n.CLIENT_NAME)+\"&client_version=\"+encodeURIComponent(n.CLIENT_VERSION),a.Logger.debug(\"Page_hash normalized_url=\"+p+\", page_hash=\"+x+\", api_url=\"+f),d=D+j,e.env.DEV&&(f=e.env.DEV_DOM"
+   }
+  ]
+ }
+]

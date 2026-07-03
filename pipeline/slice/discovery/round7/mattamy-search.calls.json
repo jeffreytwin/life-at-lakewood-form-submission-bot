@@ -1,0 +1,386 @@
+[
+ {
+  "method": "GET",
+  "url": "https://mattamyhomes.com/search?productType=plan&metro=Sarasota-Bradenton&country=USA&community=Brightmore%20at%20Wellen%20Park&hideMap=true",
+  "postData": null,
+  "status": 200,
+  "type": "text/html; charset=utf-8",
+  "bytes": 24490
+ },
+ {
+  "method": "GET",
+  "url": "https://platform-api.sharethis.com/js/sharethis.js",
+  "postData": null,
+  "status": 200,
+  "type": "text/javascript; charset=utf-8",
+  "bytes": 212851
+ },
+ {
+  "method": "GET",
+  "url": "https://cdn.cookielaw.org/consent/bac8dc2f-1e7e-4a04-aca9-795d67d42e1c/bac8dc2f-1e7e-4a04-aca9-795d67d42e1c.json",
+  "postData": null,
+  "status": 200,
+  "type": "application/json",
+  "bytes": 5364
+ },
+ {
+  "method": "GET",
+  "url": "https://l.sharethis.com/pview?event=pview&hostname=mattamyhomes.com&location=%2Fsearch&product=custom-share-buttons&url=https%3A%2F%2Fmattamyhomes.com%2Fsearch%3FproductType%3Dplan%26metro%3DSarasota-Bradenton%26country%3DUSA%26community%3DBrightmore",
+  "postData": null,
+  "status": 301,
+  "type": "text/html; charset=utf-8",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://l.sharethis.com/sc?event=pview&hostname=mattamyhomes.com&location=%2Fsearch&product=custom-share-buttons&url=https%3A%2F%2Fmattamyhomes.com%2Fsearch%3FproductType%3Dplan%26metro%3DSarasota-Bradenton%26country%3DUSA%26community%3DBrightmore%20",
+  "postData": null,
+  "status": 200,
+  "type": "text/plain; charset=utf-8",
+  "bytes": 176
+ },
+ {
+  "method": "GET",
+  "url": "https://platform-api.sharethis.com/panorama.js",
+  "postData": null,
+  "status": 200,
+  "type": "application/javascript; charset=UTF-8",
+  "bytes": 43872
+ },
+ {
+  "method": "GET",
+  "url": "https://cdn.cookielaw.org/consent/bac8dc2f-1e7e-4a04-aca9-795d67d42e1c/a2aec9d6-8fb7-40fd-9b9a-8efebf8daf78/en.json",
+  "postData": null,
+  "status": 200,
+  "type": "application/json",
+  "bytes": 225019
+ },
+ {
+  "method": "POST",
+  "url": "https://bcp.crwdcntrl.net/6/map",
+  "postData": "{\"r\":{\"rid\":true},\"m\":{\"dcc\":16621,\"src\":\"SYNCJS\",\"ch\":{\"brands\":[{\"brand\":\"HeadlessChrome\",\"version\":\"149\"},{\"brand\":\"Chromium\",\"version\":\"149\"},{\"brand\":\"Not)A;Brand\",\"version\":\"24\"}],\"fullVersionList\":[{\"brand\":\"HeadlessChrome\",\"version\":\"149.0.7827.55\"},{\"brand\":\"Chromium\",\"version\":\"149.0.7827.55\"},{\"brand\":\"Not)A;Brand\",\"version\":\"24.0.0.0\"}],\"mobile\":false,\"model\":\"\",\"platform\":\"Linux\",\"platformVersion\":\"\"}},\"d\":{},\"c\":[],\"consent\":{\"lac\":true}}",
+  "status": 200,
+  "type": "application/json;charset=utf-8",
+  "bytes": 154
+ },
+ {
+  "method": "GET",
+  "url": "https://cdn.cookielaw.org/scripttemplates/202503.1.0/assets/otFlat.json",
+  "postData": null,
+  "status": 200,
+  "type": "application/json",
+  "bytes": 15369
+ },
+ {
+  "method": "GET",
+  "url": "https://cdn.cookielaw.org/scripttemplates/202503.1.0/assets/v2/otPcPanel.json",
+  "postData": null,
+  "status": 200,
+  "type": "application/json",
+  "bytes": 67542
+ },
+ {
+  "method": "GET",
+  "url": "https://mattamyhomes.com/sitecore/api/jss/dictionary/mattamy-homes/en?sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 48
+ },
+ {
+  "method": "GET",
+  "url": "https://ttag.io/gtm?che=3007321582&paid=73e85394-b030-44e0-9dc5-1a1e6d82430f&ppid=&cmid=&utm_medium=&utm_source=&utm_term=undefined_$$$_undefined_$$$_undefined_$$$_undefined_$$$_undefined&utm_content=&utm_campaign=&url=https%3A%2F%2Fmattamyhomes.com%",
+  "postData": null,
+  "status": 200,
+  "type": "application/octet-stream",
+  "bytes": 43
+ },
+ {
+  "method": "GET",
+  "url": "https://mattamyhomes.com/api/sitecore/favorites",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 2
+ },
+ {
+  "method": "GET",
+  "url": "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/search-data&sc_apikey={8C3D041E-BB12-4CC6-908A-4CF43E542E5B}&market=Sarasota-Bradenton&IsState=",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 9300
+ },
+ {
+  "method": "GET",
+  "url": "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=%2Fsearch&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D&sc_site=mattamy-homes&sc_lang=en&tracking=true",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 20564
+ },
+ {
+  "method": "GET",
+  "url": "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/search-data&sc_apikey={8C3D041E-BB12-4CC6-908A-4CF43E542E5B}&market=Sarasota-Bradenton&IsState=0",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 1852921
+ },
+ {
+  "method": "GET",
+  "url": "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=%2Fsearch&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D&sc_site=mattamy-homes&sc_lang=en&tracking=true",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 20564
+ },
+ {
+  "method": "GET",
+  "url": "https://prodmh.b-cdn.net//dfsmedia/a2b99d47a71047839a5a4241f44710ce/69531-50420/tpa-brightmore-lapis-kitchen-hr",
+  "postData": null,
+  "status": 200,
+  "type": "image/jpeg",
+  "bytes": 303137
+ },
+ {
+  "method": "GET",
+  "url": "https://pixels.spotify.com/v1/config/208c76da036f492ea10e1fc1d207d7d0",
+  "postData": null,
+  "status": 200,
+  "type": "application/json",
+  "bytes": 80
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"before_init\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2236,\"time_to_navigation_start\":3627,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.-1\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[{\"name\":\"https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=C8BRNTOR5MNQBSHP68O0&lib=ttq\",\"duration\":111.30000000001746},{\"name\":\"https://analytics.tiktok.com/i18n/pixel/static/main.MTIwMGUyODI1MQ.js\",\"duration\":43.40000000002328}],\"pixel_list\":\"\",\"pixel_api_conflict_flag\":false,\"stack\":\"unknown\"}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"init_start\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2240,\"time_to_navigation_start\":3631,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.-1\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"\",\"pixel_api_conflict_flag\":false}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/pixel",
+  "postData": "{\"event\":\"LandingPageView\",\"event_id\":\"\",\"message_id\":\"messageId-1783033085549-6829252679193-C8BRNTOR5MNQBSHP68O0\",\"is_onsite\":false,\"timestamp\":\"2026-07-02T22:58:05.549Z\",\"context\":{\"ad\":{\"sdk_env\":\"external\",\"jsb_status\":2},\"device\":{\"platform\":\"pc\"},\"user\":{\"anonymous_id\":\"01KWJGVFK2FYMBGS9CBQGFJKZR_.tt.1\"},\"pixel\":{\"code\":\"C8BRNTOR5MNQBSHP68O0\",\"runtime\":\"1\"},\"page\":{\"url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"referrer\":\"\",\"load_progress\":\"2\"},\"library\":{\"name\":\"pixel.js\",\"version\":\"2.2.1\"},\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9-C8BRNTOR5MNQBSHP68O0\",\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0::7b173087-7669-11f1-aee7-b83fd2e1f3b2-C8BRNTOR5MNQBSHP68O0\",\"variation_id\":\"traffic_3::default\",\"csid\":\"1783033085543::9BakxsrFFNdix6cc1NP8\",\"page_csid\":\"1783033085543::orr8A9r2EIBvzmgQ90rX\",\"csct\":1,\"userAgent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\"},\"_inspection\":{\"trigger_source\":\"pixel_self\",\"ppf\":[],\"vids\":\"76066547\",\"inter_id\":\"1.-3645.0::0.0.0.0::0.0.0\"},\"properties\":{},\"signal_diagnostic_labels\":{\"raw_email\":{\"label\":\"missing\"},\"raw_auto_email\":{\"label\":\"missing\"},\"raw_phone\":{\"label\":\"missing\"},\"raw_auto_phone\":{\"label\":\"missing\"},\"hashed_email\":{\"label\":\"missing\"},\"hashed_phone\":{\"label\":\"missing\"},\"raw_eb_email\":{\"label\":\"missing\"},\"raw_eb_phone\":{\"label\":\"missing\"},\"hashed_eb_email\":{\"label\":\"missing\"},\"hashed_eb_phone\":{\"label\":\"missing\"}}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"init_end\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2246,\"time_to_navigation_start\":3637,\"latency\":6,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"\",\"pixel_api_conflict_flag\":false}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"ad_info_init_end\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2255,\"time_to_navigation_start\":3646,\"latency\":-1,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"C8BRNTOR5MNQBSHP68O0\",\"pixel_api_conflict_flag\":false,\"enabledAdTracking\":true}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://mobile.events.data.microsoft.com/OneCollector/1.0/?cors=true&content-type=application/x-json-stream&w=2",
+  "postData": "{\"name\":\"view\",\"time\":\"2026-07-02T22:58:05.346Z\",\"ver\":\"4.0\",\"iKey\":\"o:8efbb9c0b97a4602851c7bc39fe4ba20\",\"ext\":{\"sdk\":{\"ver\":\"1DS-Web-JS-3.2.18\"},\"metadata\":{\"f\":{\"msdynci_sessionduration\":{\"t\":6}}}},\"data\":{\"baseData\":{\"properties\":{\"version\":\"\"}},\"msdynci_viewtitle\":\"Find Your Dream Home in Sarasota-Bradenton | Mattamy Homes\",\"msdynci_viewtype\":\"page\",\"msdynci_viewuri\":\"https://mattamyhomes.com/search\",\"msdynci_viewname\":\"search\",\"msdynci_signalid\":\"baa9a71c-d429-485d-9893-bb3b3b67851b\",\"msdynci_signalversion\":\"1.0\",\"msdynci_orgid\":\"f0894d05-5d8b-4c09-bbf1-2027d72f2841\",\"msdynci_orgtenantid\":\"28930779-1f4a-4a2e-944a-880913fac80c\",\"msdynci_orggeo\":\"CAN\",\"msdynci_signalname\":\"view\",\"msdynci_signaltimezone\":\"+00:00\",\"msdynci_signalsource\":\"Web\",\"msdynci_sdkversion\":\"CI-JS-1.1.0\",\"msdynci_hostdomain\":\"mattamyhomes.com\",\"msdynci_userlocalid\":\"f232ee74-6f18-45f7-b641-b36cf41086b8\",\"msdynci_userstate\":\"new\",\"msdynci_sessionduration\":0,\"msdynci_sessionid\":\"b25d57b8-44e3-4426-b6c0-0b314ab0633f\"}}",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 24
+ },
+ {
+  "method": "GET",
+  "url": "https://ct.pinterest.com/user/?tid=2614036700534&pd=%7B%22em%22%3A%2224aba99b2defbb47ee981b4200313f61f3ae31541d8717bdac1e463c838939b0%22%7D&cb=1783033085476&dep=2%2CPAGE_LOAD",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 405
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/pixel",
+  "postData": "{\"event\":\"Pageview\",\"event_id\":\"\",\"message_id\":\"messageId-1783033085546-6694071098419-C8BRNTOR5MNQBSHP68O0\",\"is_onsite\":false,\"timestamp\":\"2026-07-02T22:58:05.546Z\",\"context\":{\"ad\":{\"sdk_env\":\"external\",\"jsb_status\":2},\"device\":{\"platform\":\"pc\"},\"user\":{\"anonymous_id\":\"01KWJGVFK2FYMBGS9CBQGFJKZR_.tt.1\"},\"pixel\":{\"code\":\"C8BRNTOR5MNQBSHP68O0\",\"runtime\":\"1\"},\"page\":{\"url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"referrer\":\"\",\"load_progress\":\"2\"},\"library\":{\"name\":\"pixel.js\",\"version\":\"2.2.1\"},\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9-C8BRNTOR5MNQBSHP68O0\",\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0::7b173087-7669-11f1-aee7-b83fd2e1f3b2-C8BRNTOR5MNQBSHP68O0\",\"variation_id\":\"traffic_3::default\",\"csid\":\"1783033085543::9BakxsrFFNdix6cc1NP8\",\"page_csid\":\"1783033085543::orr8A9r2EIBvzmgQ90rX\",\"csct\":1,\"css\":1,\"userAgent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\"},\"_inspection\":{\"ppf\":[{\"id\":7,\"d\":22100,\"f\":[{\"id\":19,\"d\":0},{\"id\":1,\"d\":500},{\"id\":19,\"d\":0},{\"id\":14,\"d\":100},{\"id\":13,\"d\":400},{\"id\":19,\"d\":0},{\"id\":19,\"d\":0},{\"id\":19,\"d\":0},{\"id\":19,\"d\":0},{\"id\":2,\"d\":10100},{\"id\":18,\"d\":100},{\"id\":15,\"d\":300},{\"id\":7,\"d\":100},{\"id\":6,\"d\":2400},{\"id\":8,\"d\":0},{\"id\":9,\"d\":0},{\"id\":11,\"d\":300},{\"id\":4,\"d\":5200},{\"id\":22,\"d\":1800},{\"id\":3,\"d\":7400},{\"id\":19,\"d\":0},{\"id\":16,\"d\":0},{\"id\":17,\"d\":0}]}],\"vids\":\"76066547\",\"inter_id\":\"1.-3645.0::0.0.0.0::0.0.0\"},\"properties\":{},\"signal_diagnostic_labels\":{\"raw_email\":{\"label\":\"missing\"},\"raw_auto_email\":{\"label\":\"missing\"},\"raw_phone\":{\"label\":\"missing\"},\"raw_auto_phone\":{\"label\":\"missing\"},\"hashed_email\":{\"label\":\"missing\"},\"hashed_phone\":{\"label\":\"missing\"},\"raw_eb_email\":{\"label\":\"missing\"},\"raw_eb_phone\":{\"label\":\"missing\"},\"hashed_eb_email\":{\"label\":\"missing\"},\"hashed_eb_phone\":{\"label\":\"missing\"}}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://tags.srv.stackadapt.com/saq_pxl?uid=fDAnausUZUMeKjkcc9IAog&is_js=true&landing_url=https%3A%2F%2Fmattamyhomes.com%2Fsearch%3Fcommunity%3DBrightmore%2Bat%2BWellen%2BPark%26country%3DUSA%26hideMap%3Dtrue%26homeType%3DAll%26metro%3DSarasota-Brade",
+  "postData": null,
+  "status": 200,
+  "type": "text/plain; charset=utf-8",
+  "bytes": 94
+ },
+ {
+  "method": "GET",
+  "url": "https://tags.srv.stackadapt.com/saq_pxl?uid=X-65k6q8SzFAz1NOu7U6Qg&is_js=true&landing_url=https%3A%2F%2Fmattamyhomes.com%2Fsearch%3Fcommunity%3DBrightmore%2Bat%2BWellen%2BPark%26country%3DUSA%26hideMap%3Dtrue%26homeType%3DAll%26metro%3DSarasota-Brade",
+  "postData": null,
+  "status": 200,
+  "type": "text/plain; charset=utf-8",
+  "bytes": 141
+ },
+ {
+  "method": "GET",
+  "url": "https://bat.bing.com/action/0?ti=20118374&tm=gtm002&Ver=2&mid=e64e9be3-d5df-4e93-a070-2c7056aa90f3&bo=1&sid=7c75f1d0766911f1aac9bf3a1bf94023&vid=7c763a90766911f1a4d3b974b0c86bc6&vids=1&msclkid=N&pi=0&lg=en-US&sw=1440&sh=900&sc=24&nwd=1&tl=Find%20Your",
+  "postData": null,
+  "status": 204,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://assistant.atlasrtx.com/api/init/3666b6b9a41f4d73908791ad9c8755d6",
+  "postData": null,
+  "status": 200,
+  "type": "text/javascript",
+  "bytes": 12787
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"pixel_send\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2260,\"time_to_navigation_start\":3651,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"C8BRNTOR5MNQBSHP68O0\",\"pixel_api_conflict_flag\":false,\"event\":\"LandingPageView\"}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://pixels.spotify.com/v1/ingest",
+  "postData": "{\"batch\":[{\"pid\":\"eca43994257e4498b9e859dcf01560ba\",\"sid\":\"f50b7054096d4f63924a8c6010d7459a\",\"events\":[{\"action\":\"view\",\"time\":1783033084.763,\"group\":null,\"label\":null,\"experiment\":null,\"body\":{\"url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"referrer\":\"\",\"inIframe\":false,\"windowWidth\":1440,\"windowHeight\":900,\"timezoneOffset\":0,\"viewParams\":{}}}],\"uid\":\"5e4eeaf395824df8955488cfe35cbfbd\",\"time\":1783033085.356,\"pixel_version\":\"2.2.0-b\",\"pixel_id\":\"208c76da036f492ea10e1fc1d207d7d0\"}]}",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 47
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"before_ad_info_init_start\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2241,\"time_to_navigation_start\":3632,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.-1\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"\",\"pixel_api_conflict_flag\":false}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"custom_info\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2391,\"time_to_navigation_start\":3782,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"custom_name\":\"cdp_visiter_plugin\",\"custom_enum\":\"extract_dataLayer_start\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"C8BRNTOR5MNQBSHP68O0\",\"pixel_api_conflict_flag\":false}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"pixel_send\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2257,\"time_to_navigation_start\":3648,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"C8BRNTOR5MNQBSHP68O0\",\"pixel_api_conflict_flag\":false,\"event\":\"Pageview\"}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://bat.bing.com/action/0?ti=20118374&tm=gtm002&Ver=2&mid=e64e9be3-d5df-4e93-a070-2c7056aa90f3&bo=2&sid=7c75f1d0766911f1aac9bf3a1bf94023&vid=7c763a90766911f1a4d3b974b0c86bc6&vids=0&msclkid=N&gtm_tag_source=ua&ec=Scroll%20Depth&el=https%3A%2F%2Fma",
+  "postData": null,
+  "status": 204,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://bat.bing.com/action/0?ti=20118374&tm=gtm002&Ver=2&mid=e64e9be3-d5df-4e93-a070-2c7056aa90f3&bo=4&sid=7c75f1d0766911f1aac9bf3a1bf94023&vid=7c763a90766911f1a4d3b974b0c86bc6&vids=0&msclkid=N&gtm_tag_source=ua&ec=Scroll%20Depth&el=https%3A%2F%2Fma",
+  "postData": null,
+  "status": 204,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://bat.bing.com/action/0?ti=20118374&tm=gtm002&Ver=2&mid=e64e9be3-d5df-4e93-a070-2c7056aa90f3&bo=5&sid=7c75f1d0766911f1aac9bf3a1bf94023&vid=7c763a90766911f1a4d3b974b0c86bc6&vids=0&msclkid=N&gtm_tag_source=ua&ec=Scroll%20Depth&el=https%3A%2F%2Fma",
+  "postData": null,
+  "status": 204,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://bat.bing.com/action/0?ti=20118374&tm=gtm002&Ver=2&mid=e64e9be3-d5df-4e93-a070-2c7056aa90f3&bo=3&sid=7c75f1d0766911f1aac9bf3a1bf94023&vid=7c763a90766911f1a4d3b974b0c86bc6&vids=0&msclkid=N&gtm_tag_source=ua&ec=Scroll%20Depth&el=https%3A%2F%2Fma",
+  "postData": null,
+  "status": 204,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"identify_init_end\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2433,\"time_to_navigation_start\":3824,\"latency\":193,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[{\"name\":\"https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=C8BRNTOR5MNQBSHP68O0&lib=ttq\",\"duration\":111.30000000001746},{\"name\":\"https://analytics.tiktok.com/i18n/pixel/static/identify_b8133453.js\",\"duration\":37.29999999998836}],\"pixel_list\":\"C8BRNTOR5MNQBSHP68O0\",\"pixel_api_conflict_flag\":false}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"identify_init_start\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":2240,\"time_to_navigation_start\":3631,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.-1\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"\",\"pixel_api_conflict_flag\":false}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "GET",
+  "url": "https://ct.pinterest.com/v3/?tid=2614036700534&pd=%7B%22em%22%3A%2224aba99b2defbb47ee981b4200313f61f3ae31541d8717bdac1e463c838939b0%22%7D&event=init&ad=%7B%22loc%22%3A%22https%3A%2F%2Fmattamyhomes.com%2Fsearch%3Fcommunity%3DBrightmore%2Bat%2BWellen%2",
+  "postData": null,
+  "status": 200,
+  "type": "image/gif",
+  "bytes": 35
+ },
+ {
+  "method": "POST",
+  "url": "https://assistant.atlasrtx.com/api/negotiate",
+  "postData": "{}",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 454
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/pixel/act",
+  "postData": "{\"event_id\":\"\",\"message_id\":\"messageId-1783033085992-1689827071717\",\"is_onsite\":false,\"timestamp\":\"2026-07-02T22:58:05.992Z\",\"context\":{\"ad\":{\"sdk_env\":\"external\",\"jsb_status\":2},\"device\":{\"platform\":\"pc\"},\"user\":{\"anonymous_id\":\"01KWJGVFK2FYMBGS9CBQGFJKZR_.tt.1\"},\"pixel\":{\"code\":\"C8BRNTOR5MNQBSHP68O0\",\"runtime\":\"1\",\"codes\":\"C8BRNTOR5MNQBSHP68O0\"},\"page\":{\"url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"referrer\":\"\",\"load_progress\":\"2\"},\"library\":{\"name\":\"pixel.js\",\"version\":\"2.2.1\"},\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0::7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"variation_id\":\"traffic_3::default\",\"userAgent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"index\":0,\"sessions\":[{\"csid\":\"1783033085543::9BakxsrFFNdix6cc1NP8\",\"page_csid\":\"1783033085543::orr8A9r2EIBvzmgQ90rX\",\"csct\":1,\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\"}]},\"_inspection\":{\"ppf\":[{\"id\":6,\"d\":6100,\"f\":[{\"id\":25,\"d\":0},{\"id\":25,\"d\":0}]},{\"id\":12,\"d\":0}],\"vids\":\"76066547\",\"inter_id\":\"1.-3645.0::0.0.0.0::130.1.0\"},\"properties\":{},\"signal_diagnostic_labels\":{\"raw_email\":{\"label\":\"missing\"},\"raw_auto_email\":{\"label\":\"missing\"},\"raw_phone\":{\"label\":\"missing\"},\"raw_auto_phone\":{\"label\":\"missing\"},\"hashed_email\":{\"label\":\"missing\"},\"hashed_phone\":{\"label\":\"missing\"},\"raw_eb_email\":{\"label\":\"missing\"},\"raw_eb_phone\":{\"label\":\"missing\"},\"hashed_eb_email\":{\"label\":\"missing\"},\"hashed_eb_phone\":{\"label\":\"missing\"}},\"action\":\"Metadata\",\"auto_collected_properties\":{\"page_trigger\":\"PageView\",\"content_data\":{\"open_graph\":\"{\\\"og:url\\\":\\\"https://mattamyhomes.com/search\\\",\\\"og:type\\\":\\\"website\\\",\\\"og:title\\\":\\\"Find Your Dream Home | Mattamy Homes\\\",\\\"og:description\\\":\\\"Discover our new home offerings throughout the United States and Canada.\\\",\\\"og:image\\\":\\\"https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/MAT_LOGO_02.png?as=0&dmc=0&iar=0&thn=0&udi=0\\\"}\",\"microdata\":\"[]\",\"json_ld\":\"[{\\\"@context\\\":\\\"https://schema.org\\\",\\\"@type\\\":\\\"BreadcrumbList\\\",\\\"itemListElement\\\":[{\\\"@type\\\":\\\"ListItem\\\",\\\"position\\\":1,\\\"item\\\":{\\\"@id\\\":\\\"https://mattamyhomes.com\\\",\\\"name\\\":\\\"Find Your Dream Home\\\"}},{\\\"@type\\\":\\\"ListItem\\\",\\\"position\\\":2,\\\"item\\\":{\\\"@id\\\":\\\"https://mattamyhomes.com/search\\\",\\\"name\\\":\\\"Search\\\"}}]},{\\\"@context\\\":\\\"https://schema.org\\\",\\\"@type\\\":\\\"Organization\\\",\\\"name\\\":\\\"Mattamy Homes\\\",\\\"legalName\\\":\\\"Mattamy Homes Corporation\\\",\\\"url\\\":\\\"\\\",\\\"logo\\\":\\\"https://prodmh.b-cdn.net/-/media/Feature/Content/Identity/mattamy-logo.png\\\",\\\"foundingDate\\\":\\\"1978\\\",\\\"founder\\\":{\\\"@type\\\":\\\"Person\\\"},\\\"contactPoint\\\":{\\\"@type\\\":\\\"ContactPoint\\\",\\\"url\\\":\\\"https://mattamyhomes.com/contact\\\",\\\"contactType\\\":\\\"Public Relations\\\",\\\"email\\\":\\\"media@mattamycorp.com\\\"},\\\"sameAs\\\":[\\\"https://www.facebook.com/MattamyHomesUSA\\\",\\\"https://www.instagram.com/mattamyhomesusa/\\\",\\\"https://www.youtube.com/user/MattamyHomesOnline\\\",\\\"https://www.pinterest.com/mattamyhomes/\\\",\\\"https://www.linkedin.com/company/mattamy-homes\\\"]}]\",\"meta\":\"{\\\"title\\\":\\\"Find Your Dream Home in Sarasota-Bradenton | Mattamy Homes\\\",\\\"meta:description\\\":\\\"Discover our new home offerings throughout the United States and Canada.\\\"}\"}}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://prod-atlassignalr-serverless.service.signalr.net/client/negotiate?hub=atlaswebchatv3&negotiateVersion=1",
+  "postData": null,
+  "status": 200,
+  "type": "application/json",
+  "bytes": 334
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"custom_info\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":4392,\"time_to_navigation_start\":5783,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"custom_name\":\"text_tree_walker_plugin\",\"custom_enum\":\"perf_log\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"C8BRNTOR5MNQBSHP68O0\",\"pixel_api_conflict_flag\":false,\"message\":\"{\\\"textNodesVisited\\\":107,\\\"skippedByTag\\\":146,\\\"skippedByPrecheck\\\":100,\\\"skippedByLength\\\":7,\\\"totalFound\\\":0,\\\"stoppedEarly\\\":false,\\\"collect_ms\\\":1.9,\\\"processing_ms\\\":1.6,\\\"total_ms\\\":2,\\\"chunks\\\":1}\"}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ },
+ {
+  "method": "POST",
+  "url": "https://analytics.tiktok.com/api/v2/monitor",
+  "postData": "{\"metric_name\":\"custom_info\",\"pixel_code\":\"C8BRNTOR5MNQBSHP68O0\",\"platform\":0,\"app_name\":\"external\",\"net_type\":\"4g\",\"placement\":\"non\",\"lib\":{\"lib_version\":\"2.2.1\",\"ttq_name\":\"ttq\"},\"in_iframe\":1,\"time_to_last_start\":4392,\"time_to_navigation_start\":5783,\"latency\":0,\"page_url\":\"https://mattamyhomes.com/search?community=Brightmore+at+Wellen+Park&country=USA&hideMap=true&homeType=All&metro=Sarasota-Bradenton&productType=plan\",\"att_status\":3,\"pageview_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2-hJpPT.0.0\",\"session_id\":\"7b173e6e-7669-11f1-aee7-b83fd2e1f3b2::EJbGnl_hjMn58JOoKJD9\",\"variation_id\":\"traffic_3::default\",\"vids\":\"76066547\",\"load_id\":\"7b173087-7669-11f1-aee7-b83fd2e1f3b2\",\"ad_id\":\"undefined\",\"creative_id\":\"undefined\",\"user_agent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/149.0.7827.55 Safari/537.36\",\"pixel_monitor_version\":\"v2\",\"custom_name\":\"text_tree_walker_plugin\",\"custom_enum\":\"results_log\",\"partner\":\"non\",\"ext_json\":{\"performance\":[],\"pixel_list\":\"C8BRNTOR5MNQBSHP68O0\",\"pixel_api_conflict_flag\":false,\"message\":\"[{\\\"pattern\\\":\\\"email\\\",\\\"hits\\\":0,\\\"unique\\\":0,\\\"resultDomDetails\\\":[]}]\"}}",
+  "status": 200,
+  "type": "",
+  "bytes": 0
+ }
+]

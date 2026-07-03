@@ -1,0 +1,42 @@
+{
+ "homeStatus": 200,
+ "seaireLinks": [],
+ "sitemapUrls": [
+  "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida",
+  "https://www.drbhomes.com/drbhomes/find-your-home/home-plans/florida",
+  "https://www.drbhomes.com/drbhomes/find-your-home/quick-move-in-homes/florida",
+  "https://www.drbhomes.com/drbelevate/find-your-home/communities/florida",
+  "https://www.drbhomes.com/drbelevate/find-your-home/home-plans/florida",
+  "https://www.drbhomes.com/drbelevate/find-your-home/quick-move-in-homes/florida",
+  "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/jacksonville",
+  "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/orlando",
+  "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/palm-coast",
+  "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/sarasota",
+  "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa",
+  "https://www.drbhomes.com/drbhomes/find-your-home/home-plans/florida/jacksonville",
+  "https://www.drbhomes.com/drbhomes/find-your-home/home-plans/florida/orlando",
+  "https://www.drbhomes.com/drbhomes/find-your-home/home-plans/florida/sarasota",
+  "https://www.drbhomes.com/drbhomes/find-your-home/home-plans/florida/tampa",
+  "https://www.drbhomes.com/drbhomes/find-your-home/quick-move-in-homes/florida/jacksonville",
+  "https://www.drbhomes.com/drbhomes/find-your-home/quick-move-in-homes/florida/orlando",
+  "https://www.drbhomes.com/drbhomes/find-your-home/quick-move-in-homes/florida/palm-coast",
+  "https://www.drbhomes.com/drbhomes/find-your-home/quick-move-in-homes/florida/sarasota",
+  "https://www.drbhomes.com/drbhomes/find-your-home/quick-move-in-homes/florida/tampa"
+ ],
+ "target": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview",
+ "targetStatus": 200,
+ "state": {
+  "bytes": 34457,
+  "hasNextData": false,
+  "hasNuxt": false,
+  "hasApollo": false,
+  "hasInitialState": false,
+  "jsonScripts": [
+   {
+    "attrs": "type=\"application/ld+json\"",
+    "bytes": 191
+   }
+  ],
+  "apiUrls": []
+ }
+}

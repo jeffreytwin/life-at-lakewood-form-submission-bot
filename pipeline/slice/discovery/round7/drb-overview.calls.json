@@ -1,0 +1,10 @@
+[
+ {
+  "method": "GET",
+  "url": "https://api.drbhomes.com/api/v1/public/division",
+  "postData": null,
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 91262
+ }
+]

@@ -1,0 +1,25 @@
+[
+ {
+  "url": "https://www.youtube.com/iframe_api",
+  "status": 200,
+  "type": "text/javascript; charset=utf-8"
+ },
+ {
+  "url": "https://www.youtube.com/s/player/4918c89a/www-widgetapi.vflset/www-widgetapi.js",
+  "status": 200,
+  "type": "text/javascript"
+ },
+ {
+  "url": "https://cdn.acsbapp.com/config/drbhomes.com/config.json",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 274
+ },
+ {
+  "url": "https://api.drbhomes.com/api/v1/public/division",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 91262,
+  "savedAs": "drb-seaire-floorplans.capture-0.pruned.json"
+ }
+]

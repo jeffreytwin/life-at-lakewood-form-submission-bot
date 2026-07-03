@@ -1,0 +1,113 @@
+[
+ {
+  "url": "https://lwhomes.com/wp-content/uploads/2022/11/Button-LearnMore.json",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 3999
+ },
+ {
+  "url": "https://www.youtube.com/iframe_api",
+  "status": 200,
+  "type": "text/javascript; charset=utf-8"
+ },
+ {
+  "url": "https://lwhomes.com/wp-content/uploads/2022/11/Button-LearnMore.json",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 3999
+ },
+ {
+  "url": "https://lwhomes.com/wp-content/uploads/2022/11/Button-LearnMore-white-1.json",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 3705
+ },
+ {
+  "url": "https://lwhomes.com/wp-admin/admin-ajax.php",
+  "status": 200,
+  "type": "application/json; charset=UTF-8",
+  "bytes": 16
+ },
+ {
+  "url": "https://fd-api.cleantalk.org/api3.0/frontend_data",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 245
+ },
+ {
+  "url": "https://www.youtube.com/s/player/4918c89a/www-widgetapi.vflset/www-widgetapi.js",
+  "status": 200,
+  "type": "text/javascript"
+ },
+ {
+  "url": "https://salesiq.zohopublic.com/visitor/v2/channels/website?widgetcode=siq0e2f73cc60b55744a0aea0bd087c89346bd18bbb7bf591bd7fc78cec2dabab2f&pagetitle=Custom+Luxury+Home+Builders+Sarasota-Lakewood+Ranch&current_domain=https",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 32471
+ },
+ {
+  "url": "https://lwhomes.com/wp-admin/admin-ajax.php",
+  "status": 200,
+  "type": "application/json; charset=UTF-8",
+  "bytes": 16
+ },
+ {
+  "url": "https://www.youtube.com/embed/oxibnAIEXHY?controls=1&rel=0&playsinline=0&cc_load_policy=0&autoplay=0&enablejsapi=1&origin=https%3A%2F%2Flwhomes.com&widgetid=1&forigin=https%3A%2F%2Flwhomes.com%2F&aoriginsup=1&vf=1",
+  "status": 200,
+  "type": "text/html; charset=utf-8"
+ },
+ {
+  "url": "https://insight.adsrvr.org/track/realtimeconversion",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 36
+ },
+ {
+  "url": "https://salesiq.zohopublic.com/visitor/v2/ashleyberg/livevisitors/ed5e1eba-bb65-4cc9-9358-d3bf6ea1aa36/triggers",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 2202
+ },
+ {
+  "url": "https://salesiq.zohopublic.com/visitor/v2/ashleyberg/livevisitors/ed5e1eba-bb65-4cc9-9358-d3bf6ea1aa36/triggers",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 910
+ },
+ {
+  "url": "https://salesiq.zohopublic.com/ashleyberg/logdebuginfo.ls",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 0
+ },
+ {
+  "url": "https://salesiq.zohopublic.com/visitor/v2/ashleyberg/conversations?app_id=siq39da464a08d04f4f3ce12b45920fbaaa6fea83eeb4a3c778df048d32091faaa3&avuid=ed5e1eba-bb65-4cc9-9358-d3bf6ea1aa36",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 100
+ },
+ {
+  "url": "https://www.youtube.com/youtubei/v1/log_event?alt=json",
+  "status": 200,
+  "type": "application/json; charset=UTF-8",
+  "bytes": 28
+ },
+ {
+  "url": "https://fd-api.cleantalk.org/api3.0/frontend_data",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 245
+ },
+ {
+  "url": "https://fd-api.cleantalk.org/api3.0/frontend_data",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 245
+ },
+ {
+  "url": "https://fd-api.cleantalk.org/api3.0/frontend_data",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 245
+ }
+]

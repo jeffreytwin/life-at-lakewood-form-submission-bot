@@ -1,0 +1,49 @@
+[
+ {
+  "url": "https://www.taylormorrison.com/layouts/system/VisitorIdentification.js",
+  "status": 200,
+  "type": "application/javascript"
+ },
+ {
+  "url": "https://www.taylormorrison.com/",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 74
+ },
+ {
+  "url": "https://chat.taylormorrison.com/api/conversations/latest?visitor_id=c4adb587-223b-474e-aed9-bb10b400d5a6",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 17
+ },
+ {
+  "url": "https://taylormorrisoninc.us-7.evergage.com/api2/event/production?event=eyJpdGVtQWN0aW9uIjpudWxsLCJzb3VyY2UiOnsicGFnZVR5cGUiOiJHbG9iYWwgTGlzdGVuZXIiLCJjb250ZW50Wm9uZXMiOltdLCJ1cmwiOiJodHRwczovL3d3dy50YXlsb3Jtb3JyaXNvbi5j",
+  "status": 200,
+  "type": "application/json;charset=UTF-8",
+  "bytes": 70
+ },
+ {
+  "url": "https://cm.teads.tv/v2/advertiser?referer=https%3A%2F%2Fwww.taylormorrison.com%2Ffl%2Ftampa%2Fparrish%2Ffirethorn%2Ffloor-plans&tag_version=8.13.1_82f6d88&buyer_pixel_id=5605&gtm_consent=false&has_consent=true&cht=timeou",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 141
+ },
+ {
+  "url": "https://cdn.acsbapp.com/config/taylormorrison.com/config.json",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 20287
+ },
+ {
+  "url": "https://m.stripe.com/6",
+  "status": 200,
+  "type": "application/json;charset=utf-8",
+  "bytes": 156
+ },
+ {
+  "url": "https://insight.adsrvr.org/track/realtimeconversion",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 36
+ }
+]

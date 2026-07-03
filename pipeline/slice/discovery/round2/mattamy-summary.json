@@ -1,0 +1,38 @@
+[
+ {
+  "url": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/brightmore",
+  "status": 200,
+  "bytes": 277540,
+  "hasNextData": false,
+  "hasNuxt": false,
+  "hasApollo": true,
+  "hasInitialState": false,
+  "jsonScripts": [
+   {
+    "attrs": "type=\"application/json\" id=\"__JSS_STATE__\"",
+    "bytes": 275076
+   }
+  ],
+  "apiUrls": [],
+  "blocks": 1,
+  "nextData": false
+ },
+ {
+  "url": "https://mattamyhomes.com/florida/sarasota-bradenton/venice/wellen-park/lakespur",
+  "status": 200,
+  "bytes": 231991,
+  "hasNextData": false,
+  "hasNuxt": false,
+  "hasApollo": true,
+  "hasInitialState": false,
+  "jsonScripts": [
+   {
+    "attrs": "type=\"application/json\" id=\"__JSS_STATE__\"",
+    "bytes": 229527
+   }
+  ],
+  "apiUrls": [],
+  "blocks": 1,
+  "nextData": false
+ }
+]

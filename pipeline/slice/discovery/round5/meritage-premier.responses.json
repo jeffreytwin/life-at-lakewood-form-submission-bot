@@ -1,0 +1,147 @@
+[
+ {
+  "url": "https://www.meritagehomes.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fmeritagehom2db1-corporate8ff8-production6a37-b3e6%2Fmedia%2FProject%2FMeritage-Homes%2FBase%2FCorporate%2FRealtor-Portal%2FSocial%2Flink",
+  "status": 200,
+  "type": "image/webp"
+ },
+ {
+  "url": "https://www.meritagehomes.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fmeritagehom2db1-corporate8ff8-production6a37-b3e6%2Fmedia%2FProject%2FMeritage-Homes%2FBase%2FCorporate%2FRealtor-Portal%2FLegal-2.svg%3",
+  "status": 200,
+  "type": "image/svg+xml"
+ },
+ {
+  "url": "https://www.meritagehomes.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fmeritagehom2db1-corporate8ff8-production6a37-b3e6%2Fmedia%2FProject%2FMeritage-Homes%2FBase%2FCorporate%2FPublic-Website%2FIcons%2F32-x-",
+  "status": 200,
+  "type": "image/webp"
+ },
+ {
+  "url": "https://www.meritagehomes.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fmeritagehom2db1-corporate8ff8-production6a37-b3e6%2Fmedia%2FProject%2FMeritage-Homes%2FBase%2FCorporate%2FRealtor-Portal%2FSocial%2Finst",
+  "status": 200,
+  "type": "image/webp"
+ },
+ {
+  "url": "https://www.meritagehomes.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fmeritagehom2db1-corporate8ff8-production6a37-b3e6%2Fmedia%2FProject%2FMeritage-Homes%2FBase%2FCorporate%2FRealtor-Portal%2FSocial%2Fpint",
+  "status": 200,
+  "type": "image/webp"
+ },
+ {
+  "url": "https://www.meritagehomes.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fmeritagehom2db1-corporate8ff8-production6a37-b3e6%2Fmedia%2FProject%2FMeritage-Homes%2FBase%2FCorporate%2FRealtor-Portal%2FLegal-1.svg%3",
+  "status": 200,
+  "type": "image/svg+xml"
+ },
+ {
+  "url": "https://www.meritagehomes.com/_next/image?url=https%3A%2F%2Fedge.sitecorecloud.io%2Fmeritagehom2db1-corporate8ff8-production6a37-b3e6%2Fmedia%2FProject%2FMeritage-Homes%2FBase%2FCorporate%2FRealtor-Portal%2FFooter-Logo.s",
+  "status": 200,
+  "type": "image/svg+xml"
+ },
+ {
+  "url": "https://www.meritagehomes.com/api/auth/session",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 2
+ },
+ {
+  "url": "https://edge-platform.sitecorecloud.io/v1/events/v1.2/browser/create.json?sitecoreContextId=4lzu8G3cmtC9XSQRn46Azl&client_key=",
+  "status": 201,
+  "type": "application/json"
+ },
+ {
+  "url": "https://edge-platform.sitecorecloud.io/v1/events/v1.2/events?sitecoreContextId=4lzu8G3cmtC9XSQRn46Azl&siteId=Public%20Website",
+  "status": 201,
+  "type": "application/json"
+ },
+ {
+  "url": "https://discover.sitecorecloud.io/discover/v2/173266879",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 34972,
+  "savedAs": "meritage-premier.capture-0.pruned.json"
+ },
+ {
+  "url": "https://conversions.flowcode.com/pixel-tracker/meritage__data__layer__trigger-1691ebb7-e9c8-4caf-bafa-8c6e037ed531.js",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 82498,
+  "savedAs": "meritage-premier.capture-1.pruned.json"
+ },
+ {
+  "url": "https://apim-int-wus3-prod.azure-api.net/cache/sf/web-lots?externalId=externalId&lotIds=a0C8a00000uVHeuEAG,a0C8a00000uVHxXEAW,a0C8a00000uVHTsEAO",
+  "status": 200,
+  "type": "application/json; charset=utf-8",
+  "bytes": 4539,
+  "savedAs": "meritage-premier.capture-2.pruned.json"
+ },
+ {
+  "url": "https://bundlepixels.replit.app/api/p.js",
+  "status": 200,
+  "type": "application/javascript; charset=utf-8"
+ },
+ {
+  "url": "https://www.youtube.com/iframe_api",
+  "status": 200,
+  "type": "text/javascript; charset=utf-8"
+ },
+ {
+  "url": "https://www.youtube.com/s/player/4918c89a/www-widgetapi.vflset/www-widgetapi.js",
+  "status": 200,
+  "type": "text/javascript"
+ },
+ {
+  "url": "https://conversions.flowcode.com/pixel-tracker/v1/collector",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 2
+ },
+ {
+  "url": "https://px.ads.linkedin.com/attribution_trigger?pid=5174516&time=1783031620788&url=https%3A%2F%2Fwww.meritagehomes.com%2Fstate%2Ffl%2Ftampa%2Fsalt-meadows-premier-series&tm=gtmv2",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 2
+ },
+ {
+  "url": "https://obs.segreencolumn.com/ct",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 6273
+ },
+ {
+  "url": "https://pnapi.invoca.net/1777/na.json",
+  "status": 200,
+  "type": "text/html;charset=utf-8"
+ },
+ {
+  "url": "https://obs.segreencolumn.com/mon",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 504
+ },
+ {
+  "url": "https://obs.segreencolumn.com/mon",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 0
+ },
+ {
+  "url": "https://pnapi.invoca.net/1777/na.json",
+  "status": 200,
+  "type": "text/html;charset=utf-8"
+ },
+ {
+  "url": "https://obs.segreencolumn.com/mon",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 0
+ },
+ {
+  "url": "https://conversions.flowcode.com/pixel-tracker/v1/collector",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 2
+ },
+ {
+  "url": "https://obs.segreencolumn.com/mon",
+  "status": 200,
+  "type": "application/json",
+  "bytes": 0
+ }
+]

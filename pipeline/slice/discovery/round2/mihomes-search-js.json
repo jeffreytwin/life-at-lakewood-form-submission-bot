@@ -1,0 +1,8 @@
+{
+ "bytes": 154436,
+ "endpoints": [
+  "/api/v1/community/hometypes/",
+  "/sitecore/api/ssc/MIHomes-Feature-Website-Api-Controllers/MortgageCalculatorSettingsApi/",
+  "/new-homes"
+ ]
+}

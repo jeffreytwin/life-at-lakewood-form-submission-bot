@@ -1,0 +1,46 @@
+{
+ "inventoryPagesScanned": 19,
+ "seaireCommunityIds": {
+  "205": 1,
+  "280": 3,
+  "281": 3
+ },
+ "idProbes": [
+  {
+   "url": "1/public/community/205",
+   "status": 0,
+   "bytes": 0,
+   "error": "The operation was aborted due to timeout"
+  },
+  {
+   "url": "1/public/inventory?limit=5&page=1&communityIds=205",
+   "status": 200,
+   "bytes": 205467
+  },
+  {
+   "url": "1/public/community/280",
+   "status": 200,
+   "bytes": 27629
+  },
+  {
+   "url": "1/public/inventory?limit=5&page=1&communityIds=280",
+   "status": 200,
+   "bytes": 205467
+  },
+  {
+   "url": "1/public/community/281",
+   "status": 0,
+   "bytes": 0,
+   "error": "The operation was aborted due to timeout"
+  },
+  {
+   "url": "1/public/inventory?limit=5&page=1&communityIds=281",
+   "status": 200,
+   "bytes": 205467
+  }
+ ],
+ "planIdsProbe": {
+  "status": 200,
+  "bytes": 159855
+ }
+}

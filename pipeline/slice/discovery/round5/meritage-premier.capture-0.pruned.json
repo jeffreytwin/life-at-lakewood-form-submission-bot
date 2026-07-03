@@ -1,0 +1,734 @@
+{
+ "url": "https://discover.sitecorecloud.io/discover/v2/173266879",
+ "data": {
+  "widgets": [
+   {
+    "rfk_id": "rfkid_195",
+    "type": "preview_search",
+    "used_in": "common_across_pages",
+    "entity": "home",
+    "content": [
+     {
+      "address": "1711 EAGLE RIVER AV",
+      "bedrooms": 3,
+      "city": "Manteca",
+      "community_description": null,
+      "community_id": "a078a00001FXrNwAAL",
+      "community_sheet_id": "a1C8a00000TzWB9EAN",
+      "community_sheet_name": "Alder Grove",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1781740800,
+      "completion_estimated": 1781740800,
+      "construction_stage": "Construction Complete",
+      "crg_exception": false,
+      "description": null,
+      "floorplan_description": "The kitchen overlooks the dining and great room, making it easy to plan meals or tidy up while keeping an eye on the kids. The primary suite is separated from the other bedrooms by the main living area, making it your ow…(240)",
+      "floorplan_name": "Residence 1",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a000018uIJqEAM",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/258ac34a7bb0484b8ac2429a375a75a7?v=3fc67c18",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/258ac34a7bb0484b8ac2429a375a75a7?v=3fc67c18",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7fabfc09cf7441d594dc40ceb5d1f122?v=b04b6ea8",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b2d6d9de0afa499c9541531eede0df31?v=aae79cc9",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/d4476bbe096a410b920c8dfd3402f8f4?v=671bdd1b",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/a7b18c896dce4abab822222612936847?v=b3f22b95",
+       "…(11 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/0db7d6e18c384a1a9fb7bb83cb78240a?v=81759628",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteOverview/newisp?siteID=3100",
+      "location": "37.77809067930149, -121.26683854232905",
+      "metro_area": [
+       "Bay Area"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0GMAW"
+      ],
+      "mhdc_last_price_change": "2026-06-02",
+      "mhdc_price_change_amount": 2000,
+      "mls_number": null,
+      "monthly_payment": 4307,
+      "movein_timeframe": -14,
+      "previous_mhdc_price": 618500,
+      "price": 620500,
+      "price_change_show": true,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a000018uIJqEAM",
+      "snipe": "Homesite 170",
+      "source_id": "1152540",
+      "sqft": 1733,
+      "state": "CA",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/ca/bay-area/1711-eagle-river-av",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=F48mBTnm",
+      "zipcode": "95337"
+     },
+     {
+      "address": "1708 EAGLE RIVER AV",
+      "bedrooms": 5,
+      "city": "Manteca",
+      "community_description": null,
+      "community_id": "a078a00001FXrNwAAL",
+      "community_sheet_id": "a1C8a00000TzWB9EAN",
+      "community_sheet_name": "Alder Grove",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": null,
+      "completion_estimated": 1783382400,
+      "construction_stage": "Flooring Complete",
+      "crg_exception": false,
+      "description": null,
+      "floorplan_description": "This spacious five-bedroom residence features a first-floor flex space perfect for working or schooling from home. Enjoy movie and game nights in the upstairs loft or utilize the space as a reading area the whole family …(230)",
+      "floorplan_name": "Residence 5",
+      "full_bathrooms": 3,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a000014FcaMEAS",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/329db861ac7b4bf28c412fbe47d689f9?v=0f0ed64a",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/329db861ac7b4bf28c412fbe47d689f9?v=0f0ed64a",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/72ce1ec21bb8459791512bf661310a84?v=03d8d485",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/629d7be033c7431698625c36555f48c9?v=0c909974",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/75d291cf4d424e3aa84adf30e3c1385f?v=9d47b0c4",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/8f4604e1a7364bbeb38c8a1d74903683?v=4ef3fb4f",
+       "…(14 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/9a9943f38a7548079ed2fdd1c69c9f7f?v=011b6ad0",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteOverview/newisp?siteID=3100",
+      "location": "37.777906091751504, -121.26643418943726",
+      "metro_area": [
+       "Bay Area"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0GMAW"
+      ],
+      "mhdc_last_price_change": "2026-06-02",
+      "mhdc_price_change_amount": 2000,
+      "mls_number": null,
+      "monthly_payment": 5020,
+      "movein_timeframe": 5,
+      "previous_mhdc_price": 721200,
+      "price": 723200,
+      "price_change_show": true,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a000014FcaMEAS",
+      "snipe": "Homesite 144",
+      "source_id": "1152540",
+      "sqft": 2940,
+      "state": "CA",
+      "status": "Inventory",
+      "stories": 2,
+      "url": "https://www.meritagehomes.com/state/ca/bay-area/1708-eagle-river-av",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=FDjNqgBT",
+      "zipcode": "95337"
+     },
+     {
+      "address": "1768 EAGLE RIVER AV",
+      "bedrooms": 4,
+      "city": "Manteca",
+      "community_description": null,
+      "community_id": "a078a00001FXrNwAAL",
+      "community_sheet_id": "a1C8a00000TzWB9EAN",
+      "community_sheet_name": "Alder Grove",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1768867200,
+      "completion_estimated": 1768780800,
+      "construction_stage": "Construction Complete",
+      "crg_exception": false,
+      "description": null,
+      "floorplan_description": "There is room for everyone in this four-bedroom residence, with a spacious upstairs loft and primary suite with huge walk-in closet. Use the first-floor flex space as an office or turn it into a hobby or music room.",
+      "floorplan_name": "Residence 4",
+      "full_bathrooms": 3,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a000014Fcb5EAC",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/222b2589f8804dc6a8116d3deab7ac3f?v=d67922ec",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/222b2589f8804dc6a8116d3deab7ac3f?v=d67922ec",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/3899d832807346d6bfc84e230d709232?v=28234b0f",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/766b1231555b4216a0bbf827b81b7161?v=ecf848c9",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/363f4e122eb2462c89915a143ee51ad7?v=acf30ffd",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/ba46dc22426f4b64a2005db04d4011e9?v=b6905f2a",
+       "…(24 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/efc3ccd8fcc14ff8b898930701469a07?v=c3dc2fb2",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteOverview/newisp?siteID=3100",
+      "location": "37.77657870110638, -121.26619256113536",
+      "metro_area": [
+       "Bay Area"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0GMAW"
+      ],
+      "mhdc_last_price_change": "2026-06-02",
+      "mhdc_price_change_amount": -4000,
+      "mls_number": "226047861",
+      "monthly_payment": 4686,
+      "movein_timeframe": -164,
+      "previous_mhdc_price": 679000,
+      "price": 675000,
+      "price_change_show": true,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a000014Fcb5EAC",
+      "snipe": "Homesite 153",
+      "source_id": "1152540",
+      "sqft": 2765,
+      "state": "CA",
+      "status": "Inventory",
+      "stories": 2,
+      "url": "https://www.meritagehomes.com/state/ca/bay-area/1768-eagle-river-av",
+      "virtual_tour_url": "https://my.matterport.com/show/?m=gfLaankKV7F",
+      "zipcode": "95337"
+     },
+     {
+      "address": "1732 EAGLE RIVER AV",
+      "bedrooms": 4,
+      "city": "Manteca",
+      "community_description": null,
+      "community_id": "a078a00001FXrNwAAL",
+      "community_sheet_id": "a1C8a00000TzWB9EAN",
+      "community_sheet_name": "Alder Grove",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1780531200,
+      "completion_estimated": 1780012800,
+      "construction_stage": "Construction Complete",
+      "crg_exception": false,
+      "description": null,
+      "floorplan_description": "There is room for everyone in this four-bedroom residence, with a spacious upstairs loft and primary suite with huge walk-in closet. Use the first-floor flex space as an office or turn it into a hobby or music room.",
+      "floorplan_name": "Residence 4",
+      "full_bathrooms": 3,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a000014FcagEAC",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7866ff5623d34bf69105452fa6389f1c?v=e418dbd9",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7866ff5623d34bf69105452fa6389f1c?v=e418dbd9",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/884f97fb78f94eb388b64bebbd04d3f0?v=4d03fc75",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/37d5cecd59e54c508a1f95448f81ad14?v=a119eb0e",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b1a348675c994101afcde4702fdba141?v=41b6cd8d",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/92dd7c7a1f0348d4acfd65153758caa4?v=933ecfc5",
+       "…(13 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/efc3ccd8fcc14ff8b898930701469a07?v=c3dc2fb2",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteOverview/newisp?siteID=3100",
+      "location": "37.77736805304376, -121.26634529128546",
+      "metro_area": [
+       "Bay Area"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0GMAW"
+      ],
+      "mhdc_last_price_change": "2026-06-29",
+      "mhdc_price_change_amount": -23700,
+      "mls_number": null,
+      "monthly_payment": 4686,
+      "movein_timeframe": -34,
+      "previous_mhdc_price": 698700,
+      "price": 675000,
+      "price_change_show": true,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a000014FcagEAC",
+      "snipe": "Homesite 148",
+      "source_id": "1152540",
+      "sqft": 2765,
+      "state": "CA",
+      "status": "Inventory",
+      "stories": 2,
+      "url": "https://www.meritagehomes.com/state/ca/bay-area/1732-eagle-river-av",
+      "virtual_tour_url": "https://my.matterport.com/show/?m=gfLaankKV7F",
+      "zipcode": "95337"
+     },
+     {
+      "address": "2231 HEWINS ST",
+      "bedrooms": 4,
+      "city": "Manteca",
+      "community_description": null,
+      "community_id": "a078a00001XrZF6AAN",
+      "community_sheet_id": "a1C8a00000UN73uEAD",
+      "community_sheet_name": "Aspen at Villa Ticino",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": 1751500800,
+      "completion_estimated": 1751414400,
+      "construction_stage": "Construction Complete",
+      "crg_exception": null,
+      "description": "Use the spacious first-floor bedroom and adjacent bathroom to host overnight guests. Upstairs, the walk-in laundry room boasts extra storage space, and the oversized loft is ideal for movie or game nights.",
+      "floorplan_description": "Use the spacious first-floor bedroom and adjacent bathroom to host overnight guests. Upstairs, the walk-in laundry room boasts extra storage space, and the oversized loft is ideal for movie or game nights.",
+      "floorplan_name": "Residence 3",
+      "full_bathrooms": 3,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0Ccw00000XWdudEAD",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/29ed67e712584e768d7a4872984dbd9f?v=b46583ce",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/29ed67e712584e768d7a4872984dbd9f?v=b46583ce",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/d0bc9436443e4e3f995997a552846c17?v=7cc2483b",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/9607a3529b88420faa5971a520f15218?v=24761cbc",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/c1281a1b522a4559bf66fb1163d9934d?v=4f295d36",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/5a5601149d5246269184fb1de6ce040e?v=deb89ec0",
+       "…(23 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b8eee013a3c14589bdcfdfc397deb49c?v=18932fad",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteOverview/newisp?siteID=3365",
+      "location": "37.8017185, -121.255586",
+      "metro_area": [
+       "Bay Area"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0GMAW"
+      ],
+      "mhdc_last_price_change": "20260519T000000:639147456000000000Z",
+      "mhdc_price_change_amount": -26900,
+      "mls_number": "226026013",
+      "monthly_payment": 4652,
+      "movein_timeframe": -365,
+      "previous_mhdc_price": 696900,
+      "price": 670000,
+      "price_change_show": true,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0Ccw00000XWdudEAD",
+      "snipe": "Homesite 531",
+      "source_id": "1152540",
+      "sqft": 2484,
+      "state": "CA",
+      "status": "Inventory",
+      "stories": 2,
+      "url": "https://www.meritagehomes.com/state/ca/bay-area/2231-hewins-st",
+      "virtual_tour_url": null,
+      "zipcode": "95337"
+     }
+    ],
+    "total_item": 39,
+    "limit": 5,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   },
+   {
+    "rfk_id": "rfkid_196",
+    "type": "preview_search",
+    "used_in": "common_across_pages",
+    "entity": "popularsearch",
+    "content": [
+     {
+      "bedrooms": 3,
+      "full_bathrooms": 0,
+      "id": "06beb009-4b4f-4d1e-b7e8-219903f7b63d",
+      "location": "37.8272,-122.2913",
+      "name": "3 bedroom homes",
+      "source_id": "1152617"
+     },
+     {
+      "bedrooms": 4,
+      "full_bathrooms": 0,
+      "id": "8ec21038-f54b-4818-8a28-289a66e3aa42",
+      "location": "37.8272,-122.2913",
+      "name": "4 bedroom homes",
+      "source_id": "1152617"
+     },
+     {
+      "bedrooms": 5,
+      "full_bathrooms": 0,
+      "id": "7c615e2f-3aa8-433b-b417-315bd401859c",
+      "location": "37.8272,-122.2913",
+      "name": "5 bedroom homes",
+      "source_id": "1152617"
+     }
+    ],
+    "total_item": 3,
+    "limit": 3,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   },
+   {
+    "rfk_id": "rfkid_196",
+    "type": "preview_search",
+    "used_in": "common_across_pages",
+    "entity": "popularsearch",
+    "content": [
+     {
+      "bedrooms": 3,
+      "full_bathrooms": 0,
+      "id": "06beb009-4b4f-4d1e-b7e8-219903f7b63d",
+      "location": "37.8272,-122.2913",
+      "name": "3 bedroom homes",
+      "source_id": "1152617"
+     },
+     {
+      "bedrooms": 4,
+      "full_bathrooms": 0,
+      "id": "8ec21038-f54b-4818-8a28-289a66e3aa42",
+      "location": "37.8272,-122.2913",
+      "name": "4 bedroom homes",
+      "source_id": "1152617"
+     },
+     {
+      "bedrooms": 5,
+      "full_bathrooms": 0,
+      "id": "7c615e2f-3aa8-433b-b417-315bd401859c",
+      "location": "37.8272,-122.2913",
+      "name": "5 bedroom homes",
+      "source_id": "1152617"
+     }
+    ],
+    "total_item": 3,
+    "limit": 3,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   },
+   {
+    "rfk_id": "rfkid_503",
+    "type": "content_grid",
+    "used_in": "common_across_pages",
+    "entity": "home",
+    "facet": [
+     {
+      "name": "bedrooms",
+      "label": "Bedrooms",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJiZWRyb29tcyIsInZhbHVlIjo0fSx7InR5cGUiOiJsdCIsIm5hbWUiOiJiZWRyb29tcyIsInZhbHVlIjo1fV19",
+        "text": "4 - 5",
+        "count": 3,
+        "min": 4,
+        "max": 5
+       }
+      ]
+     },
+     {
+      "name": "full_bathrooms",
+      "label": "Full Bathrooms",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJmdWxsX2JhdGhyb29tcyIsInZhbHVlIjoyfSx7InR5cGUiOiJsdCIsIm5hbWUiOiJmdWxsX2JhdGhyb29tcyIsInZhbHVlIjozfV19",
+        "text": "2 - 3",
+        "count": 3,
+        "min": 2,
+        "max": 3
+       }
+      ]
+     },
+     {
+      "name": "garages",
+      "label": "Garages",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJnYXJhZ2VzIiwidmFsdWUiOjJ9LHsidHlwZSI6Imx0IiwibmFtZSI6ImdhcmFnZXMiLCJ2YWx1ZSI6M31dfQ==",
+        "text": "2 - 3",
+        "count": 3,
+        "min": 2,
+        "max": 3
+       }
+      ]
+     },
+     {
+      "name": "half_bathrooms",
+      "label": "Half Bathrooms",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiZXEiLCJuYW1lIjoiaGFsZl9iYXRocm9vbXMiLCJ2YWx1ZSI6MH0=",
+        "text": "0 - 0",
+        "count": 2,
+        "min": 0,
+        "max": 0
+       },
+       {
+        "id": "facetid_eyJ0eXBlIjoiZXEiLCJuYW1lIjoiaGFsZl9iYXRocm9vbXMiLCJ2YWx1ZSI6MX0=",
+        "text": "1 - 1",
+        "count": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     },
+     {
+      "name": "price",
+      "label": "Price",
+      "value": [
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJwcmljZSIsInZhbHVlIjozMDAwMDB9LHsidHlwZSI6Imx0IiwibmFtZSI6InByaWNlIiwidmFsdWUiOjM1MDAwMH1dfQ==",
+        "text": "300000 - 350000",
+        "count": 2,
+        "min": 300000,
+        "max": 350000
+       },
+       {
+        "id": "facetid_eyJ0eXBlIjoiYW5kIiwiZmlsdGVycyI6W3sidHlwZSI6Imd0ZSIsIm5hbWUiOiJwcmljZSIsInZhbHVlIjozNTAwMDB9LHsidHlwZSI6Imx0IiwibmFtZSI6InByaWNlIiwidmFsdWUiOjQwMDAwMH1dfQ==",
+        "text": "350000 - 400000",
+        "count": 1,
+        "min": 350000,
+        "max": 400000
+       }
+      ]
+     },
+     "…(7 items total)"
+    ],
+    "content": [
+     {
+      "address": "7938 Lake Powell PL",
+      "bedrooms": 4,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcGAAQ",
+      "community_sheet_id": "a1C8a00000TLMEVEA5",
+      "community_sheet_name": "Salt Meadows - Premier Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": null,
+      "completion_estimated": 1785369600,
+      "construction_stage": "Countertops Complete",
+      "crg_exception": true,
+      "description": "The Acadia makes entertaining easy with an open kitchen, dining area, and great room. The primary suite is tucked in the rear of the home offering plenty of privacy and features a spacious walk-in closet and shower.",
+      "floorplan_description": "The Olympic floorplan offers an open-concept plan with 4 bedrooms, 3 bathrooms, and a 2-car garage. Entertain guests with ease in the open kitchen, dining, and great room that flow to the patio.",
+      "floorplan_name": "Olympic",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHeuEAG",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/bd4241f4f5744601accb5c742f6c5b5e?v=e7df2a00",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/bd4241f4f5744601accb5c742f6c5b5e?v=e7df2a00",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/cd8050442ff74135857f83e9d8bf763e?v=df455a84",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f97923e95e3c415ca43be53a236d8bac?v=c374856f",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/763647a58b154ee5a040fb5d8dbde177?v=8effd829",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/25c797fb7a8644e8abce745516f1fec5?v=b257ebb2",
+       "…(13 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/c86b35495c6e4ff186753fce0cdd787a?v=517c2537",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2951&communityID=30250",
+      "location": "27.58663514026472, -82.40320729141982",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-05-14",
+      "mhdc_price_change_amount": -15000,
+      "mls_number": "TB8505153",
+      "monthly_payment": 2498,
+      "movein_timeframe": 28,
+      "previous_mhdc_price": 350440,
+      "price": 335440,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHeuEAG",
+      "snipe": null,
+      "source_id": "1152540",
+      "sqft": 1687,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7938-lake-powell-pl",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=npGAF7fE",
+      "zipcode": "34219"
+     },
+     {
+      "address": "7817 Gilchrist Springs DR",
+      "bedrooms": 4,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcGAAQ",
+      "community_sheet_id": "a1C8a00000TLMEVEA5",
+      "community_sheet_name": "Salt Meadows - Premier Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": null,
+      "completion_estimated": 1783987200000,
+      "construction_stage": "Flooring Complete",
+      "crg_exception": true,
+      "description": "The open Olympic floorplan creates a unified living space with a large great room that overlooks the kitchen and dining area. The primary suite features a spacious walk-in closet and shower perfect for getting ready.",
+      "floorplan_description": "The Olympic floorplan offers an open-concept plan with 4 bedrooms, 3 bathrooms, and a 2-car garage. Entertain guests with ease in the open kitchen, dining, and great room that flow to the patio.",
+      "floorplan_name": "Olympic",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 0,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHxXEAW",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/cce11eb8b2ac46f6a6c5351659628e64?v=6d5480d2",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/cce11eb8b2ac46f6a6c5351659628e64?v=6d5480d2",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/cd8050442ff74135857f83e9d8bf763e?v=df455a84",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f97923e95e3c415ca43be53a236d8bac?v=c374856f",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/763647a58b154ee5a040fb5d8dbde177?v=8effd829",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/25c797fb7a8644e8abce745516f1fec5?v=b257ebb2",
+       "…(13 items total)"
+      ],
+      "incentive_available": "true",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/c86b35495c6e4ff186753fce0cdd787a?v=517c2537",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2951&communityID=30250",
+      "location": "27.585938151972563,-82.39804387773478",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "1780272000000",
+      "mhdc_price_change_amount": 3890,
+      "mls_number": "TB8504675",
+      "monthly_payment": 2571,
+      "movein_timeframe": 12,
+      "previous_mhdc_price": 341440,
+      "price": 345330,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": [
+       "b62b7795-6b5a-4d6c-3272-ead9770e39bd-1095446"
+      ],
+      "sfid": "a0C8a00000uVHxXEAW",
+      "snipe": null,
+      "source_id": "1152540",
+      "sqft": 1687,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 1,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7817-gilchrist-springs-dr",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=npGAF7fE",
+      "zipcode": "34219"
+     },
+     {
+      "address": "7930 Lake Powell PL",
+      "bedrooms": 4,
+      "city": "Parrish",
+      "community_description": null,
+      "community_id": "a078a0000115gcGAAQ",
+      "community_sheet_id": "a1C8a00000TLMEVEA5",
+      "community_sheet_name": "Salt Meadows - Premier Series",
+      "community_sheet_status": "QMI Only",
+      "community_status": "Active",
+      "completion_actual": null,
+      "completion_estimated": 1785801600,
+      "construction_stage": "Cabinets Complete",
+      "crg_exception": true,
+      "description": "The Yellowstone floorplan features a spacious open-concept design with 4 bedrooms, 2.5 bathrooms, and a 2-car garage. Enjoy the convenience of a first-floor primary suite, while the upstairs loft offers the perfect space…(244)",
+      "floorplan_description": "The Yellowstone floorplan offers an open-concept floorplan with 4 bedrooms, 2.5 bathrooms, and a 2-car garage. This home offers a first floor primary suite. Entertain and relax in the upstairs loft.",
+      "floorplan_name": "Yellowstone",
+      "full_bathrooms": 2,
+      "garages": 2,
+      "half_bathrooms": 1,
+      "hide_monthly_payment": true,
+      "id": "a0C8a00000uVHTsEAO",
+      "image_url": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/8b315f05e2a64a51aee834464e2548fc?v=edf8b35f",
+      "image_urls": [
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/8b315f05e2a64a51aee834464e2548fc?v=edf8b35f",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/05f92b402ddf44ec8c058cf4e1d79cbc?v=c9f772f2",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/c6f6f1bbb82b46ac8c8a32d4793131b6?v=8868b26e",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/2cd6b16c0902479696e2b3b4cfc2d64e?v=6c65a2b4",
+       "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/4a8cdc4389d44c44ae33b4b75867647b?v=04656288",
+       "…(18 items total)"
+      ],
+      "incentive_available": "false",
+      "interactive_floorplan_image": "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/36af6a148de04d909c067e51020471c4?v=b94107b5",
+      "interactive_map_link": "https://salesarchitect.zondavirtual.com/SiteMapPreview/newisp?siteID=2951&communityID=30250",
+      "location": "27.586347877022124, -82.4031991355969",
+      "metro_area": [
+       "Tampa"
+      ],
+      "metro_area_id": [
+       "a1IC0000002KG0SMAW"
+      ],
+      "mhdc_last_price_change": "2026-05-14",
+      "mhdc_price_change_amount": -20000,
+      "mls_number": "TB8505164",
+      "monthly_payment": 2817,
+      "movein_timeframe": 33,
+      "previous_mhdc_price": 398510,
+      "price": 378510,
+      "price_change_show": false,
+      "price_increase_decrease_show": false,
+      "promotions": null,
+      "sfid": "a0C8a00000uVHTsEAO",
+      "snipe": null,
+      "source_id": "1152540",
+      "sqft": 2168,
+      "state": "FL",
+      "status": "Inventory",
+      "stories": 2,
+      "url": "https://www.meritagehomes.com/state/fl/tampa/7930-lake-powell-pl",
+      "virtual_tour_url": "https://3dtours.elevatedplans.com/embed.html?key=NTA4ocAu",
+      "zipcode": "34219"
+     }
+    ],
+    "sort": {
+     "choices": [
+      {
+       "name": "incentive_descending",
+       "label": "Incentive Descending"
+      },
+      {
+       "name": "location_ascending",
+       "label": "Location Ascending"
+      },
+      {
+       "name": "market_ascending",
+       "label": "Days on Market Ascending"
+      },
+      {
+       "name": "market_descending",
+       "label": "Days on Market Descending"
+      },
+      {
+       "name": "price_ascending",
+       "label": "Price Ascending"
+      },
+      "…(10 items total)"
+     ]
+    },
+    "total_item": 3,
+    "limit": 3,
+    "offset": 0,
+    "errors": [
+     {
+      "message": "page not found for uri",
+      "type": "uri_not_found",
+      "severity": "high"
+     }
+    ]
+   }
+  ],
+  "dt": 15,
+  "ts": 1783031618732
+ }
+}

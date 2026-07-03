@@ -1,0 +1,29 @@
+[
+ {
+  "url": "https://leewetherington.com/",
+  "status": 200,
+  "finalUrl": "https://leewetherington.com/",
+  "bytes": 114,
+  "head": "<!DOCTYPE html><html><head><script>window.onload=function(){window.location.href=\"/lander\"}</script></head></html>",
+  "redirectsTo": "https://leewetherington.com/lander",
+  "followStatus": 200,
+  "followText": {
+   "chars": 0,
+   "prices": 0,
+   "sqfts": 0
+  }
+ },
+ {
+  "url": "https://www.leewetheringtonhomes.com/",
+  "status": 200,
+  "finalUrl": "https://lwhomes.com/",
+  "bytes": 159014,
+  "head": "<!DOCTYPE html>\n<html lang=\"en-US\">\n<head>\n\t<meta charset=\"UTF-8\">\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\t<link rel=\"profile\" href=\"https://gmpg.org/xfn/11\">\n\t<meta name=\"robots\" content=\"index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1\">\n\n            <script data-no-defer=\"1\" data-ezscrex=\"false\" data-cfasync=\"false\" data-pagespeed-no-defer data-cookieconsent=\"ignore\">\n                var ctPublicFunctions = {\"_ajax_nonce\":\"9ee2fb4bcc\",\"_rest_nonce\":\"719b274092\",\"_ajax_url\":\"\\/wp-admin\\/admin-ajax.php\",\"_rest_url\":\"https:\\/\\/lwhomes.com\\/wp-json\\/\",\"data__cookies_type\":\"none\",\"data__ajax_type\":\"admin_ajax\",\"bot_detector_enabled\":true,\"data__frontend_data_log_enabled\":1,\"cookiePrefix\":\"\",\"wprocket_detected\":false,\"host_url\":\"lwhomes.com\",\"text__ee_click_to_select\":\"Click to select the whole data\",\"text__ee_original_email\":\"The complete one is\",\"text__ee_got_it\":\"Got it\",\"text__ee_blocked\":\"Blocked\",\"text__ee_cannot_connect\":\"Cannot connect\",\"text__ee_cannot_decode\":\"Can not decode email. Unknown reason\",\"text__ee_email_decoder\":\"CleanTalk email decoder\",\"text__ee_wait_for_decoding\":\"The magic is on the way!\",\"text__ee_deco"
+ },
+ {
+  "url": "https://lwhomes.net/",
+  "status": 404,
+  "finalUrl": "https://www.lwhomes.net/",
+  "bytes": 3312
+ }
+]

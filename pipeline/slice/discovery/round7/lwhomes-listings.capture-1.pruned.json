@@ -1,0 +1,88 @@
+{
+ "url": "https://salesiq.zohopublic.com/visitor/v2/ashleyberg/livevisitors/2a31eaa5-de73-46c8-b429-dfb566a0d196/triggers",
+ "postData": "{\"brand_id\":\"siq39da464a08d04f4f3ce12b45920fbaaa6fea83eeb4a3c778df048d32091faaa3\",\"action_type\":\"access_any_page_on_website\",\"current_page_title\":\"Listings Archive - Lee Wetherington Homes, Sarasota\",\"current_page_url\":\"https://lwhomes.com/listings/\",\"language\":\"en\",\"referer\":\"\"}",
+ "data": {
+  "url": "/visitor/v2/ashleyberg/livevisitors/2a31eaa5-de73-46c8-b429-dfb566a0d196/triggers",
+  "object": "triggers",
+  "data": {
+   "delay": 1000,
+   "matched_rule_id": "1070025000000021003",
+   "type": "send_chat_invite",
+   "encrypted_visitor_info": "2547266f32c8451ef97f461785b263bdd032e0ee1e8d00e503ac5601673ef0ca9ad28fe37c4bf7b0c023c8023757b2ce29a2e5488292f198dc1deefe81450f9485aba3c056ce606f4deeb11b368b5b8dfd2169688d6252d3b619d74981c44db460b1e1d8914e15b0d6766032a31d0d40512403d000434dd5a62697288074be6e8b5c…(864)",
+   "visitorinfo": {
+    "browser": "Google Chrome",
+    "ccode": "us",
+    "state": "Virginia ",
+    "os": "Linux",
+    "region": "US",
+    "city": "Boydton ",
+    "ip": "4.236.159.225"
+   },
+   "params": {
+    "msg_list": [
+     {
+      "msgid": "1783033096938",
+      "time": "1783033096938",
+      "meta": {
+       "action_id": "1070025000000021001",
+       "version": 1,
+       "hide_custom_message": true,
+       "typing_delay": 2,
+       "disable_commands": [
+        "rollback",
+        "restart"
+       ],
+       "behaviour": "wait_for_user_input"
+      },
+      "msg": "Welcome to Lee Wetherington Homes! I&#39;m Leland, here to answer your questions and connect you with our team.",
+      "mtype": 12
+     },
+     {
+      "msgid": "1783033096939",
+      "time": "1783033096939",
+      "meta": {
+       "suggestions": [
+        {
+         "text": "Tour a model home",
+         "id": "p9uuvmui6x"
+        },
+        {
+         "text": "Begin my home-building journey",
+         "id": "p4rvp98fy4"
+        },
+        {
+         "text": "Connect with a team member",
+         "id": "t4ncsn3kuw"
+        }
+       ],
+       "action_id": "1756141835657",
+       "version": 1,
+       "hide_custom_message": true,
+       "typing_delay": 2,
+       "disable_commands": [
+        "rollback",
+        "restart"
+       ],
+       "behaviour": "wait_for_user_input"
+      },
+      "msg": "How would you like to get started today?",
+      "mtype": 12
+     }
+    ],
+    "department": "-1",
+    "typing_delay": "2",
+    "attender": {
+     "aboutme": "",
+     "sender": "LD_894825102_b1070025000000021001",
+     "attender_imagefkey": "1_1070025000000021001",
+     "isBot": true,
+     "dname": "AskLeland",
+     "attender": "1070025000000021001"
+    },
+    "departments": [
+     "1070025000000002022"
+    ]
+   }
+  }
+ }
+}

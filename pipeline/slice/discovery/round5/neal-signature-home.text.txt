@@ -1,0 +1,10 @@
+prices=0 sqfts=0 chars=274
+
+www.nealsignaturehomes.com
+Performing security verification
+
+This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.
+
+Ray ID: a1511f2029f3bffc
+Performance and Security by Cloudflare
+Privacy

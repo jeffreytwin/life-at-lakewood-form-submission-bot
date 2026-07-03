@@ -1,0 +1,110 @@
+[
+ {
+  "resource": "division",
+  "status": 200,
+  "json": true,
+  "bytes": 91262
+ },
+ {
+  "resource": "community",
+  "status": 0,
+  "json": false,
+  "bytes": 0
+ },
+ {
+  "resource": "communities",
+  "status": 404,
+  "json": true,
+  "bytes": 143
+ },
+ {
+  "resource": "neighborhood",
+  "status": 404,
+  "json": true,
+  "bytes": 145
+ },
+ {
+  "resource": "neighborhoods",
+  "status": 404,
+  "json": true,
+  "bytes": 147
+ },
+ {
+  "resource": "floorplan",
+  "status": 404,
+  "json": true,
+  "bytes": 139
+ },
+ {
+  "resource": "floorplans",
+  "status": 404,
+  "json": true,
+  "bytes": 141
+ },
+ {
+  "resource": "homesite",
+  "status": 400,
+  "json": true,
+  "bytes": 129
+ },
+ {
+  "resource": "homesites",
+  "status": 404,
+  "json": true,
+  "bytes": 139
+ },
+ {
+  "resource": "home",
+  "status": 404,
+  "json": true,
+  "bytes": 129
+ },
+ {
+  "resource": "homes",
+  "status": 404,
+  "json": true,
+  "bytes": 131
+ },
+ {
+  "resource": "inventory",
+  "status": 200,
+  "json": true,
+  "bytes": 349257
+ },
+ {
+  "resource": "model",
+  "status": 404,
+  "json": true,
+  "bytes": 131
+ },
+ {
+  "resource": "models",
+  "status": 404,
+  "json": true,
+  "bytes": 133
+ },
+ {
+  "resource": "lot",
+  "status": 404,
+  "json": true,
+  "bytes": 127
+ },
+ {
+  "resource": "lots",
+  "status": 404,
+  "json": true,
+  "bytes": 129
+ },
+ {
+  "resource": "plan",
+  "status": 200,
+  "json": true,
+  "bytes": 227586
+ },
+ {
+  "resource": "plans",
+  "status": 404,
+  "json": true,
+  "bytes": 131
+ }
+]

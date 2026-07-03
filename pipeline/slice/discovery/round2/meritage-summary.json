@@ -1,0 +1,199 @@
+{
+ "pages": [
+  {
+   "slug": "salt-meadows-main",
+   "url": "https://www.meritagehomes.com/state/fl/tampa/meritage-homes-salt-meadows",
+   "status": 200,
+   "bytes": 198169,
+   "hasNextData": true,
+   "hasNuxt": false,
+   "hasApollo": false,
+   "hasInitialState": false,
+   "jsonScripts": [
+    {
+     "attrs": "id=\"__NEXT_DATA__\" type=\"application/json\"",
+     "bytes": 118413
+    }
+   ],
+   "apiUrls": [
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/6225243/thumbnail",
+    "https://www.meritagehomes.com/search",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/5298413/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/5346983/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/6194304/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8810660/thumbnail",
+    "https://localhost/presentation/partial-designs/common/header-search-bar",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/87ab653e0a5644d98073d2032f2bffdc?v=f0f565a8",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b8d8db4832614ab39d08a8cf22844032?v=74393c55",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b82d902566d64fe7b17852cb437b1cb5?v=96daa366",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f38bb4b15f2f463ba3bf2b2d1c98d0ee?v=482e4d3a",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/a7af04b50f8b4dd9a4592a3551cd3ff4?v=dbfe88b0",
+    "https://agents.meritagehomes.com/favorites/search"
+   ],
+   "blocks": 1,
+   "nextData": true
+  },
+  {
+   "slug": "salt-meadows-classic",
+   "url": "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series",
+   "status": 200,
+   "bytes": 259899,
+   "hasNextData": true,
+   "hasNuxt": false,
+   "hasApollo": false,
+   "hasInitialState": false,
+   "jsonScripts": [
+    {
+     "attrs": "id=\"__NEXT_DATA__\" type=\"application/json\"",
+     "bytes": 135118
+    }
+   ],
+   "apiUrls": [
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/6225243/thumbnail",
+    "https://www.meritagehomes.com/search",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/dc3f0699c2d74e53b0647b907d0d1f48?v=0b11a728",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8729077/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8729082/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/9574872/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/9391942/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8810660/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/87ab653e0a5644d98073d2032f2bffdc?v=f0f565a8",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/3265b12d626045f4b9e6e49d7be1e2be?v=8bf241fd",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/70afaa3f69dc4f8da67469610f8e3677?v=e4fcda9e",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/217172082d1b4836b96947065cf0d4e8?v=fae3b299",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/a7af04b50f8b4dd9a4592a3551cd3ff4?v=dbfe88b0",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/eccf32559e214c6182279dca1c739f65?v=958a22ec",
+    "https://agents.meritagehomes.com/favorites/search",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/135be60510ab43418550f6f40eb5651a?v=b81f1f94",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/4d4fb124317949fc9a8ada0fbe6bfe02?v=269279b7",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7839985ce3ad4233b9e7103b50c57ba4?v=67280c9c",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b45e98a6660040cdade7e646a66f07e6?v=cced8a89",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/49ed133c77494430bd2bf68726063fb3?v=86e8580a",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b7bef64c9c3548ca8a42c0dcaf4cd9c6?v=01787fd8",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f0358c8705554130a9f71cdf8cb12593?v=493d7da2",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/34b5cafa17054b278b68e82cf687d299?v=11a9fc18",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/2febc8d3280048108cfc666ac264678c?v=30df7d86",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f7061bfc46cd44e3b4dbb5f15c1cb2dd?v=1911e7c1",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/16dc5deeb5ce48c7b65dcf4b967e0309?v=5edc5142",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/df75f85b1d274ceb8bffce7c812b40cb?v=3d8982fe",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/aee1569b788a4eeea82c79cd51669dfd?v=9b30b8c6",
+    "/sitecore/content/Galleries/7/6/4/9/7649395"
+   ],
+   "blocks": 1,
+   "nextData": true
+  },
+  {
+   "slug": "salt-meadows-premier",
+   "url": "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series",
+   "status": 200,
+   "bytes": 260479,
+   "hasNextData": true,
+   "hasNuxt": false,
+   "hasApollo": false,
+   "hasInitialState": false,
+   "jsonScripts": [
+    {
+     "attrs": "id=\"__NEXT_DATA__\" type=\"application/json\"",
+     "bytes": 135478
+    }
+   ],
+   "apiUrls": [
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/6225243/thumbnail",
+    "https://www.meritagehomes.com/search",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b8d8db4832614ab39d08a8cf22844032?v=c448d24b",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8729077/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8729082/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/9574872/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/9391942/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8810660/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/87ab653e0a5644d98073d2032f2bffdc?v=f0f565a8",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/3265b12d626045f4b9e6e49d7be1e2be?v=8bf241fd",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/70afaa3f69dc4f8da67469610f8e3677?v=e4fcda9e",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/217172082d1b4836b96947065cf0d4e8?v=fae3b299",
+    "https://agents.meritagehomes.com/favorites/search",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/eccf32559e214c6182279dca1c739f65?v=958a22ec",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/a7af04b50f8b4dd9a4592a3551cd3ff4?v=dbfe88b0",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/aee1569b788a4eeea82c79cd51669dfd?v=9b30b8c6",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/a56f6942b4bc4c0d9ebf397d84a3c060?v=b8cef195",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/4585c704440247b2bfca0fe690165e5e?v=4cf0c1e3",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/53ccf7ec8e2043fda6498ca5ccc4863b?v=1762c981",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/67e844ec00cb4c68b5519d0f54abbc84?v=c12a4809",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/1603dde1c1aa4c1087874bf2d097061f?v=a5c1a4c9",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b7bef64c9c3548ca8a42c0dcaf4cd9c6?v=01787fd8",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f0358c8705554130a9f71cdf8cb12593?v=493d7da2",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/df75f85b1d274ceb8bffce7c812b40cb?v=3d8982fe",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/34b5cafa17054b278b68e82cf687d299?v=11a9fc18",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/16dc5deeb5ce48c7b65dcf4b967e0309?v=5edc5142",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/2febc8d3280048108cfc666ac264678c?v=30df7d86",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f7061bfc46cd44e3b4dbb5f15c1cb2dd?v=1911e7c1",
+    "/sitecore/content/Galleries/8/1/2/5/8125111"
+   ],
+   "blocks": 1,
+   "nextData": true
+  },
+  {
+   "slug": "salt-meadows-plan-bluebell",
+   "url": "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series/bluebell-4l05",
+   "status": 200,
+   "bytes": 259899,
+   "hasNextData": true,
+   "hasNuxt": false,
+   "hasApollo": false,
+   "hasInitialState": false,
+   "jsonScripts": [
+    {
+     "attrs": "id=\"__NEXT_DATA__\" type=\"application/json\"",
+     "bytes": 135118
+    }
+   ],
+   "apiUrls": [
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/6225243/thumbnail",
+    "https://www.meritagehomes.com/search",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/dc3f0699c2d74e53b0647b907d0d1f48?v=0b11a728",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8729077/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8729082/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/9574872/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/9391942/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/gateway/8810660/thumbnail",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/87ab653e0a5644d98073d2032f2bffdc?v=f0f565a8",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/3265b12d626045f4b9e6e49d7be1e2be?v=8bf241fd",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/70afaa3f69dc4f8da67469610f8e3677?v=e4fcda9e",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/217172082d1b4836b96947065cf0d4e8?v=fae3b299",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/a7af04b50f8b4dd9a4592a3551cd3ff4?v=dbfe88b0",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/eccf32559e214c6182279dca1c739f65?v=958a22ec",
+    "https://agents.meritagehomes.com/favorites/search",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/135be60510ab43418550f6f40eb5651a?v=b81f1f94",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/4d4fb124317949fc9a8ada0fbe6bfe02?v=269279b7",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/7839985ce3ad4233b9e7103b50c57ba4?v=67280c9c",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b45e98a6660040cdade7e646a66f07e6?v=cced8a89",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/49ed133c77494430bd2bf68726063fb3?v=86e8580a",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/b7bef64c9c3548ca8a42c0dcaf4cd9c6?v=01787fd8",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f0358c8705554130a9f71cdf8cb12593?v=493d7da2",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/34b5cafa17054b278b68e82cf687d299?v=11a9fc18",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/2febc8d3280048108cfc666ac264678c?v=30df7d86",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/f7061bfc46cd44e3b4dbb5f15c1cb2dd?v=1911e7c1",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/16dc5deeb5ce48c7b65dcf4b967e0309?v=5edc5142",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/df75f85b1d274ceb8bffce7c812b40cb?v=3d8982fe",
+    "https://mhc-p-001.sitecorecontenthub.cloud/api/public/content/aee1569b788a4eeea82c79cd51669dfd?v=9b30b8c6",
+    "/sitecore/content/Galleries/7/6/4/9/7649395"
+   ],
+   "blocks": 1,
+   "nextData": true
+  }
+ ],
+ "sitemapUrls": [
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series",
+  "https://www.meritagehomes.com/state/fl/tampa/meritage-homes-salt-meadows",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series/bluebell-4l05",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series/daphne-4l10",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series/foxglove-4l15",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series/hibiscus-4l20",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-classic-series/marigold-4l60",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series/denali-3l05",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series/everglade-3l10",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series/olympic-3l15",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series/redwood-3l60",
+  "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series/yellowstone-3l65"
+ ]
+}

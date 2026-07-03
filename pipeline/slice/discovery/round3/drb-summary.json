@@ -1,0 +1,50 @@
+[
+ {
+  "tab": "overview",
+  "status": 200,
+  "finalUrl": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview",
+  "prices": 0,
+  "sqfts": 0,
+  "chars": 33
+ },
+ {
+  "tab": "floorplans",
+  "status": 200,
+  "finalUrl": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/floorplans",
+  "prices": 0,
+  "sqfts": 0,
+  "chars": 33
+ },
+ {
+  "tab": "floor-plans",
+  "status": 200,
+  "finalUrl": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/floor-plans",
+  "prices": 0,
+  "sqfts": 0,
+  "chars": 33
+ },
+ {
+  "tab": "homes",
+  "status": 200,
+  "finalUrl": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/homes",
+  "prices": 0,
+  "sqfts": 0,
+  "chars": 33
+ },
+ {
+  "tab": "quick-move-ins",
+  "status": 200,
+  "finalUrl": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/quick-move-ins",
+  "prices": 0,
+  "sqfts": 0,
+  "chars": 33
+ },
+ {
+  "tab": "available-homes",
+  "status": 200,
+  "finalUrl": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/available-homes",
+  "prices": 0,
+  "sqfts": 0,
+  "chars": 33
+ }
+]

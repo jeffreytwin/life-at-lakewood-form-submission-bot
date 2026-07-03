@@ -1,0 +1,72 @@
+{
+ "attempts": [
+  {
+   "profile": "chrome-full",
+   "status": 403,
+   "finalUrl": "https://www.nealsignaturehomes.com/",
+   "head": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"content-security-policy\" content=\"default-src &#39;none&#39;; script-src &#39"
+  },
+  {
+   "profile": "firefox",
+   "status": 403,
+   "finalUrl": "https://www.nealsignaturehomes.com/",
+   "head": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"content-security-policy\" content=\"default-src &#39;none&#39;; script-src &#39"
+  },
+  {
+   "profile": "googlebot",
+   "status": 403,
+   "finalUrl": "https://www.nealsignaturehomes.com/",
+   "head": "<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"><meta name=\"robots\" content=\"noindex,nofollow\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"content-security-policy\" content=\"default-src &#39;none&#39;; script-src &#39"
+  }
+ ],
+ "nealCommunitiesUrls": [
+  "https://nealcommunities.com/neal-communities-and-neal-signature-homes-receive-multiple-awards-from-the-manatee-sarasota-building-industry-association/",
+  "https://nealcommunities.com/neal-communities-and-neal-signature-homes-employees-paint-playhouses-for-habitat-for-humanity-south-sarasota-countys-cottages-for-kids-program/",
+  "https://nealcommunities.com/neal-communities-and-neal-signature-homes-win-multiple-awards-at-the-parade-of-homes-awards-gala/",
+  "https://nealcommunities.com/neal-communities-and-neal-signature-homes-employees-build-and-decorate-playhouses-for-cottages-for-kids-program/"
+ ],
+ "pages": [
+  {
+   "url": "https://nealcommunities.com/neal-communities-and-neal-signature-homes-receive-multiple-awards-from-the-manatee-sarasota-building-industry-association/",
+   "status": 200,
+   "state": {
+    "bytes": 284872,
+    "hasNextData": false,
+    "hasNuxt": false,
+    "hasApollo": false,
+    "hasInitialState": false,
+    "jsonScripts": [
+     {
+      "attrs": "type=\"application/ld+json\"",
+      "bytes": 4229
+     }
+    ],
+    "apiUrls": [
+     "https://nealcommunities.com/wp-content/themes/neal-communities/blocks/search/view.js?ver=1.1.1",
+     "https://nealcommunities.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.5"
+    ]
+   }
+  },
+  {
+   "url": "https://nealcommunities.com/neal-communities-and-neal-signature-homes-employees-paint-playhouses-for-habitat-for-humanity-south-sarasota-countys-cottages-for-kids-program/",
+   "status": 200,
+   "state": {
+    "bytes": 286458,
+    "hasNextData": false,
+    "hasNuxt": false,
+    "hasApollo": false,
+    "hasInitialState": false,
+    "jsonScripts": [
+     {
+      "attrs": "type=\"application/ld+json\"",
+      "bytes": 4392
+     }
+    ],
+    "apiUrls": [
+     "https://nealcommunities.com/wp-content/themes/neal-communities/blocks/search/view.js?ver=1.1.1",
+     "https://nealcommunities.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.5"
+    ]
+   }
+  }
+ ]
+}
