@@ -1,5 +1,16 @@
 # Extractor discovery notes — remaining builders
 
+**MPC-aggregator breakthrough (Jeff's suggestion):** the master-planned-
+community sites are a different origin than the builder WAFs, so they bypass
+the blocks. **wellenpark.com** server-renders every builder's homes as
+<article data-comp=property …> cards (builder/neighborhood/price/beds/baths/
+sqft + address/plan + image), reachable by plain Node fetch → runs on Vercel.
+`extractors/mpc-aggregator.ts` parses+filters by builder slug + neighborhood.
+Live-verified: **ICI Homes @ Oakbend = 8 homes, M/I Homes @ Palmera = 27
+homes**. This closes ICI entirely (Oakbend + Palmera are both Wellen Park)
+and M/I's Palmera. Still on Lakewood Ranch (client-rendered, source TBD):
+M/I Sweetwater/Nautique and Neal Signature Waterbury Park/The Alcove.
+
 Working notes from the slice discovery rounds (`discover-round*.mjs`, output
 in `discovery/round*/`). Updated as rounds complete. Goal: close out the 8
 builders not yet runnable, in the order Meritage → render_claude five →
@@ -81,14 +92,45 @@ ICI/Neal Signature → (done) Toll QMIs.
   (200, 339 KB). Round 7 dumps the full object → json_api extractor that
   regex-extracts the inline JSON. No Playwright needed.
 
-## M/I Homes — still blocked for Node fetch
+## M/I Homes — Palmera DONE via Wellen Park; Sweetwater/Nautique pending (Lakewood Ranch)
+
+- **Palmera**: sourced from wellenpark.com via the MPC aggregator
+  (extractor_params default source=wellenpark). Live-verified: 27 homes.
+- **Sweetwater / Nautique**: Lakewood Ranch communities. LWR renders its
+  home-finder client-side — mpc4/mpc5 found no server-rendered
+  <article data-comp=property> cards on any path (/home-finder/, /our-homes/*,
+  /homes/, …) and no reachable data feed; admin-ajax action-name guesses all
+  400 (needs the real action + nonce). NEXT STEP: a Playwright run that
+  triggers the LWR search widget and captures the exact admin-ajax action/
+  params; the response likely carries the same card structure Wellen Park
+  renders, so the mpc-aggregator extractor would handle it with
+  source=lakewoodranch.
+- The M/I builder-DIRECT path stays blocked (JA3 TLS fingerprinting, rounds
+  9–10) — irrelevant now that Wellen Park covers Palmera; the LWR aggregator
+  is the path for the other two communities.
+
+### M/I builder-direct findings (superseded by the MPC source)
 
 - The SSC Search API (`/sitecore/api/ssc/MIHomes-Project-Website-Api/Search`,
-  `searchtype=plans|inventory`) returns 500 KB+ in a real browser but
-  **hangs until timeout for Node fetch** (rounds 6–7; Cloudflare holds
-  non-browser TLS connections on the API path while page HTML is served
-  fine). Options: Playwright-in-Actions engine, or a TLS-impersonation
-  fetch. Parked behind the others.
+  `searchtype=plans|inventory`) returns 500 KB+ to **real Chrome from the
+  same GitHub-runner IPs** (round-5 Playwright capture) but is unreachable
+  from Node. Rounds 9–10 tried every transport from a runner:
+  - `fetch` (undici), `node:https` (default + Chrome cipher order),
+    `http2` (default ciphers), and `curl` → all **hang to timeout**.
+  - `http2` + Chrome cipher order → occasional **429 in ~200ms** (request
+    accepted, rate-limited) but **never a 200**, even retrying through the
+    429 with backoff and a full Chrome h2 header set (round 10).
+- Verdict: the block is JA3/JA4 TLS fingerprinting that Node's TLS stack
+  can't reliably impersonate. **M/I requires a real-browser engine**
+  (Playwright renders the plans/QMI pages — round-5 confirmed) run in
+  Actions, with results committed back for Vercel to read — the same
+  render-engine infrastructure a `render_claude` builder would need. This
+  is a build-a-render-path decision, not a config tweak; parked until the
+  ICI/Neal egress question is resolved (same "non-standard transport"
+  bucket).
+- If M/I is prioritized: the Search API response shape is already captured
+  (`round5/mihomes-plans.capture-1.pruned.json` — communities[] with
+  hometypes) so the mapping is ready the moment a transport delivers it.
 
 ### Original findings
 
@@ -152,20 +194,24 @@ landed). Interpretation:
   small extractor over the Search API (shapes in `round7/mihomes-*` and
   round-5 captures); timeout/error → Playwright-in-Actions path.
 
-## ICI Homes (`Oakbend`, `Palmera`) — blocked at the IP level
+## ICI Homes (`Oakbend`, `Palmera`) — DONE via Wellen Park
 
-- Hard 403 to GitHub runners on every header profile AND with real Chrome
-  (Playwright, round 5) — the block is on the runner IP ranges, not the
-  client fingerprint. Next option: probe from Vercel serverless egress
-  (branch-guarded prebuild in `scripts/`); if that also 403s, this builder
-  needs a residential-egress decision from Jeff before it can be automated.
+- Both communities are in Wellen Park, sourced via the MPC aggregator
+  (default source=wellenpark). Live-verified: Oakbend = 8 homes (Costa Mesa
+  $754,900, Davenport $743,900, …) with full specs + static.wellenpark.com
+  images. Builder-direct ICI site is IP-blocked (403 to runners incl. real
+  Chrome) — moot now that the aggregator covers it.
 
-## Neal Signature Homes (`Waterbury Park`, `The Alcove`) — blocked at the IP level
+## Neal Signature Homes (`Waterbury Park`, `The Alcove`) — pending (Lakewood Ranch)
 
-- Same picture as ICI: 403 for headers, wp-json, and real Chrome; only
-  `robots.txt` passes. Same Vercel-egress next step.
-- Parent `nealcommunities.com` (WordPress) works from runners but its
-  sitemap carries **no Signature community pages** — only news posts.
+- Both communities are in Lakewood Ranch, so Neal Signature rides on the
+  same LWR data-source work as M/I Sweetwater/Nautique (see M/I section).
+  Its builder-direct site 403s at the IP level (real Chrome included), and
+  parent nealcommunities.com carries no Signature community pages — so the
+  MPC aggregator (source=lakewoodranch) is the path once LWR is cracked.
+- Note: Wellen Park lists "neal-communities" (the parent brand), not
+  "neal-signature-homes" — a distinct builder slug; confirm LWR's slug when
+  its cards are captured.
 
 ## Toll Brothers QMI subpages — done (no scrape needed)
 

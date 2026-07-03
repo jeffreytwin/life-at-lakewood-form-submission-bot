@@ -19,6 +19,7 @@ import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morrison";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
+import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -45,6 +46,15 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Mattamy Homes": extractMattamy,
   "DRB Homes": extractDrb,
   "Lee Wetherington": extractLeeWetherington,
+  // Builders that block their own sites — sourced from the master-planned-
+  // community aggregators instead (a different origin, so the blocks don't
+  // apply). Wellen Park (default) is server-rendered and covers ICI (Oakbend
+  // + Palmera) and M/I (Palmera). Communities that live in Lakewood Ranch
+  // (M/I Sweetwater/Nautique, Neal Signature) need extractor_params.source =
+  // "lakewoodranch" once that site's client-rendered list is reachable.
+  "M/I Homes": extractMpcAggregator,
+  "ICI Homes": extractMpcAggregator,
+  "Neal Signature Homes": extractMpcAggregator,
 };
 
 const METHOD_EXTRACTORS: Record<string, Extractor> = {
@@ -54,7 +64,10 @@ const METHOD_EXTRACTORS: Record<string, Extractor> = {
 // Builders whose extractor works from API ids rather than a page URL —
 // URL auto-discovery is skipped (their pages block non-browser fetches,
 // which would fail discovery's verification step and abort the run).
-const URLLESS_BUILDERS = new Set(["Meritage Homes", "DRB Homes", "Lee Wetherington"]);
+const URLLESS_BUILDERS = new Set([
+  "Meritage Homes", "DRB Homes", "Lee Wetherington",
+  "M/I Homes", "ICI Homes", "Neal Signature Homes",
+]);
 
 function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
@@ -231,7 +244,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const runId = `manual-${Date.now()}`;
   let plans: NormalizedPlan[];
   try {
-    plans = await extractor({ ...params, communityName: community.name });
+    plans = await extractor({ ...params, communityName: community.name, builderName: builder.name });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     await setRunStatus(conn.id, `error: ${detail}`, null, true);

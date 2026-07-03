@@ -1,0 +1,22 @@
+https://nrpc.olark.com/nrpc/p?j=olark-11783042109090&&c=pollevents&q=9945.9090.1&i=olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO&s=1108-972-10-9315&v=8vnJkQ7bfZsD09Zo5V9LZ0P02obn7Kat&g=undefined&cb=hbl.client.callbacks.pollevents&after=1783042104924&nex
+
+/**/try{hbl.client.callbacks.pollevents(
+{
+    "capacity": true,
+    "conversation_has_slot": false,
+    "conversation_id": "olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO",
+    "in_active_conversation": false,
+    "ipaddress": "68.220.58.5",
+    "is_popup": false,
+    "last_index": 1783042104924.0,
+    "machine": "nrpc-http-cf6f5ddd4-zcq89",
+    "new_events": [],
+    "operator_composing_state": "active",
+    "operator_has_sent_message": false,
+    "operator_nickname": null,
+    "resend_nickname": true,
+    "resend_status": true,
+    "site_is_online": true,
+    "status_state": "available"
+}
+);}catch(e){}try{if(document.getElementById('olark-11783042109090')) hbl.util.remove_element('olark-11783042109090');}catch(e){}

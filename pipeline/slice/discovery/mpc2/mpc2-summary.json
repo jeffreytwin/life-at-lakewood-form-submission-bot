@@ -1,0 +1,130 @@
+{
+  "wellenpark": {
+    "status": 200,
+    "bytes": 1963284,
+    "records": 385,
+    "byBuilder": {
+      "Mattamy Homes": 94,
+      "M/I Homes": 36,
+      "Taylor Morrison": 53,
+      "Pulte Homes": 11,
+      "Lennar": 31,
+      "Neal Communities": 82,
+      "D.R. Horton": 18,
+      "Homes by WestBay": 14,
+      "ICI Homes": 15,
+      "David Weekley Homes": 11,
+      "Homes by Towne": 6,
+      "Toll Brothers": 14
+    },
+    "troubleSample": [
+      {
+        "price": "$859,990",
+        "neighborhood": "Palmera At Wellen Park",
+        "builder": "M/I Homes",
+        "beds": "4",
+        "baths": "3",
+        "sqft": "3,861"
+      },
+      {
+        "price": "$434,990",
+        "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+        "builder": "Neal Communities",
+        "beds": "3",
+        "baths": "2",
+        "sqft": "2,064"
+      },
+      {
+        "price": "$493,992",
+        "neighborhood": "Boca Royale Golf and Country Club",
+        "builder": "Neal Communities",
+        "beds": "3",
+        "baths": "2",
+        "sqft": "2,207"
+      },
+      {
+        "price": "$449,990",
+        "neighborhood": "Boca Royale Golf and Country Club",
+        "builder": "Neal Communities",
+        "beds": "2",
+        "baths": "2",
+        "sqft": "1,632"
+      },
+      {
+        "price": "$676,990",
+        "neighborhood": "Avelina",
+        "builder": "Neal Communities",
+        "beds": "4",
+        "baths": "3",
+        "sqft": "2,762"
+      },
+      {
+        "price": "$616,990",
+        "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+        "builder": "Neal Communities",
+        "beds": "4",
+        "baths": "3",
+        "sqft": "2,908"
+      },
+      {
+        "price": "$802,990",
+        "neighborhood": "Boca Royale Golf and Country Club",
+        "builder": "Neal Communities",
+        "beds": "3",
+        "baths": "2",
+        "sqft": "2,379"
+      },
+      {
+        "price": "$804,900",
+        "neighborhood": "Oakbend - Wellen Park",
+        "builder": "ICI Homes",
+        "beds": "4",
+        "baths": "3",
+        "sqft": "2,881"
+      },
+      {
+        "price": "$706,990",
+        "neighborhood": "Avelina",
+        "builder": "Neal Communities",
+        "beds": "3",
+        "baths": "2",
+        "sqft": "2,327"
+      },
+      {
+        "price": "$499,990",
+        "neighborhood": "Palmera At Wellen Park",
+        "builder": "M/I Homes",
+        "beds": "4",
+        "baths": "3",
+        "sqft": "2,813"
+      },
+      {
+        "price": "$754,900",
+        "neighborhood": "Oakbend - Wellen Park",
+        "builder": "ICI Homes",
+        "beds": "4",
+        "baths": "3",
+        "sqft": "2,565"
+      },
+      {
+        "price": "$575,990",
+        "neighborhood": "Boca Royale Golf and Country Club",
+        "builder": "Neal Communities",
+        "beds": "3",
+        "baths": "3",
+        "sqft": "2,698"
+      }
+    ]
+  },
+  "lakewoodranch": {
+    "pages": [
+      {
+        "url": "https://www.lakewoodranch.com/home-finder/",
+        "status": 200
+      }
+    ],
+    "jsonCalls": 18,
+    "saved": 4,
+    "textChars": 2386
+  }
+}

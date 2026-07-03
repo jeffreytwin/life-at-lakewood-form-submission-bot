@@ -1,0 +1,53 @@
+{
+  "wellenpark": {
+    "url": "https://wellenpark.com/find-a-home/",
+    "status": 200,
+    "bytes": 1963274,
+    "cards": 324,
+    "byBuilder": {
+      "homes-by-towne": 10,
+      "mattamy-homes": 65,
+      "lennar": 31,
+      "david-weekley-homes": 14,
+      "toll-brothers": 10,
+      "lee-wetherington-homes": 9,
+      "neal-communities": 62,
+      "taylor-morrison": 39,
+      "pulte-homes": 9,
+      "homes-by-westbay": 15,
+      "mi-homes": 27,
+      "ici-homes": 16,
+      "dr-horton": 10,
+      "john-cannon-homes": 7
+    },
+    "availability": {
+      "move-in-ready": 77,
+      "(blank)": 185,
+      "quick-move-in": 62
+    },
+    "neighborhoods": [
+      "",
+      "ashcombe",
+      "avelina",
+      "boca-royale",
+      "brightmore",
+      "esplanade",
+      "everly",
+      "grand-palm",
+      "lakespur",
+      "oakbend",
+      "palmera",
+      "sunstone",
+      "wellen-park-golf-country-club"
+    ]
+  },
+  "lakewoodranch": {
+    "url": "https://lakewoodranch.com/home-finder/",
+    "status": 200,
+    "bytes": 157465,
+    "cards": 0,
+    "byBuilder": {},
+    "availability": {},
+    "neighborhoods": []
+  }
+}

@@ -47,3 +47,29 @@ join fp_builders b on b.name = v.builder
 join fp_communities c on c.name = v.community
 where bc.builder_id = b.id and bc.community_id = c.id
   and (bc.extractor_params is null or bc.extractor_params = '{}'::jsonb);
+
+
+-- MPC-aggregator builders (dispatch is by builder name in sync.ts →
+-- extractMpcAggregator; labels below are cosmetic for Settings display).
+update fp_builders set
+  extraction_method = 'json_api',
+  audit_notes = 'Sourced from the MPC aggregator (wellenpark.com) — different origin than the IP-blocked ICI site. mpc-aggregator.ts parses server-rendered <article data-comp=property> cards, filtered to ici-homes + the community neighborhood slug. Oakbend + Palmera both live on Wellen Park. No URL needed.'
+where name = 'ICI Homes';
+
+update fp_builders set
+  extraction_method = 'json_api',
+  audit_notes = 'MPC aggregator. Palmera → wellenpark.com (default, live-verified 27 homes). Sweetwater/Nautique → Lakewood Ranch (set extractor_params.source=lakewoodranch once LWR client-rendered list is captured). Builder-direct M/I site is JA3-blocked. No URL needed.'
+where name = 'M/I Homes';
+
+update fp_builders set
+  extraction_method = 'json_api',
+  audit_notes = 'MPC aggregator, source=lakewoodranch (Waterbury Park + The Alcove are LWR communities). Pending: LWR renders home-finder client-side; needs a Playwright capture of its admin-ajax home-search action before this works. Builder-direct site is IP-blocked.'
+where name = 'Neal Signature Homes';
+
+-- The Lakewood Ranch connections should carry source=lakewoodranch so they
+-- are ready when that data source is cracked (they fail cleanly until then):
+-- update fp_builder_communities bc set extractor_params = jsonb_build_object('source','lakewoodranch')
+-- from fp_builders b, fp_communities c
+-- where bc.builder_id=b.id and bc.community_id=c.id
+--   and ((b.name='M/I Homes' and c.name in ('Sweetwater','Nautique'))
+--     or (b.name='Neal Signature Homes'));
