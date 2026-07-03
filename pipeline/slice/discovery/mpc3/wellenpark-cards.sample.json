@@ -1,0 +1,306 @@
+[
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3018132",
+      "neighborhood": "palmera",
+      "builder-name": "homes-by-towne",
+      "garage": "3",
+      "price": "1269.9",
+      "type": "single-family",
+      "beds": "3",
+      "amenity": "pool,playground,views,trails,lake,pond,waterfrontlots,basketball,clubhouse,communitycenter,",
+      "sqft": "2867",
+      "availability": "move-in-ready",
+      "baths": "3",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "18045 Foxtail Loop",
+    "h4": "$1,269,900",
+    "detail": "https://wellenpark.com/home/3018132/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/Homes93097/86562388-241125.jpg",
+    "neighborhoodText": [
+      "MOVE-IN READY",
+      "Palmera at Wellen Park by Homes by Towne"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3005202",
+      "neighborhood": "sunstone",
+      "builder-name": "mattamy-homes",
+      "garage": "3",
+      "price": "684.69",
+      "type": "single-family",
+      "beds": "4",
+      "amenity": "lake,pond,waterfrontlots,clubhouse,communitycenter,beach,pool,playground,views,trails,",
+      "sqft": "2601",
+      "availability": "move-in-ready",
+      "baths": "3",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "18429 VISTA PARK TER",
+    "h4": "$684,690",
+    "detail": "https://wellenpark.com/home/3005202/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/MattamyCorp/108956995-260526.jpg",
+    "neighborhoodText": [
+      "MOVE-IN READY",
+      "Sunstone Lakeside at Wellen Park"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "1941552",
+      "neighborhood": "sunstone",
+      "builder-name": "mattamy-homes",
+      "garage": "2",
+      "price": "429.99",
+      "type": "single-family",
+      "beds": "2",
+      "amenity": "pool,playground,views,park,trails,lake,pond,waterfrontlots,clubhouse,communitycenter,beach,",
+      "sqft": "1787",
+      "availability": "",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "Pelican",
+    "h4": "FROM $429,990",
+    "detail": "https://wellenpark.com/home/1941552/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/MattamyCorp/108958161-260526.jpg",
+    "neighborhoodText": [
+      "Sunstone at Wellen Park"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "2383347",
+      "neighborhood": "wellen-park-golf-country-club",
+      "builder-name": "lennar",
+      "garage": "0",
+      "price": "270.999",
+      "type": "multi-family",
+      "beds": "2",
+      "amenity": "golfcourse,tennis,pool,clubhouse,",
+      "sqft": "1154",
+      "availability": "",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "Birkdale",
+    "h4": "FROM $270,999",
+    "detail": "https://wellenpark.com/home/2383347/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/Lennar2025/101386906-251030.jpg",
+    "neighborhoodText": [
+      "Wellen Park Golf & Country Club - Terrace Condominiums"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3119196",
+      "neighborhood": "palmera",
+      "builder-name": "david-weekley-homes",
+      "garage": "3",
+      "price": "654.99",
+      "type": "single-family",
+      "beds": "4",
+      "amenity": "golfcourse,pool,playground,greenbelt,park,trails,clubhouse,",
+      "sqft": "2697",
+      "availability": "",
+      "baths": "3",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "Wagoner",
+    "h4": "FROM $654,990",
+    "detail": "https://wellenpark.com/home/3119196/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/DavidWeekleyHom/109397834-260609.jpg",
+    "neighborhoodText": [
+      "Palmera Wellen Park - Classic Series"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3615166",
+      "neighborhood": "oakbend",
+      "builder-name": "toll-brothers",
+      "garage": "2",
+      "price": "566.995",
+      "type": "single-family",
+      "beds": "3",
+      "amenity": "pool,playground,clubhouse,",
+      "sqft": "2500",
+      "availability": "",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "Sandbar",
+    "h4": "FROM $566,995",
+    "detail": "https://wellenpark.com/home/3615166/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/Toll/103791808-260112.jpg",
+    "neighborhoodText": [
+      "Oakbend Wellen Park"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3159254",
+      "neighborhood": "boca-royale",
+      "builder-name": "neal-communities",
+      "garage": "2",
+      "price": "543.99",
+      "type": "single-family",
+      "beds": "3",
+      "amenity": "golfcourse,tennis,clubhouse,",
+      "sqft": "2064",
+      "availability": "move-in-ready",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "11417 Spring Hill Terrace",
+    "h4": "$543,990",
+    "detail": "https://wellenpark.com/home/3159254/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/NealC9425/82260337-240809.jpg",
+    "neighborhoodText": [
+      "MOVE-IN READY",
+      "Boca Royale Golf and Country Club at Wellen Park"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3504287",
+      "neighborhood": "palmera",
+      "builder-name": "neal-communities",
+      "garage": "2",
+      "price": "414.99",
+      "type": "single-family",
+      "beds": "3",
+      "amenity": "pool,playground,park,trails,clubhouse,communitycenter,",
+      "sqft": "1533",
+      "availability": "",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "Liberty 4",
+    "h4": "FROM $414,990",
+    "detail": "https://wellenpark.com/home/3504287/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/NealC9425/80774270-240625.jpg",
+    "neighborhoodText": [
+      "Palmera"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "2375451",
+      "neighborhood": "",
+      "builder-name": "neal-communities",
+      "garage": "2",
+      "price": "397.99",
+      "type": "single-family",
+      "beds": "3",
+      "amenity": "pool,park,clubhouse,",
+      "sqft": "1533",
+      "availability": "",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "Liberty 4",
+    "h4": "FROM $397,990",
+    "detail": "https://wellenpark.com/home/2375451/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/NealC9425/82154302-240807.jpg",
+    "neighborhoodText": [
+      "Wysteria"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "2884702",
+      "neighborhood": "",
+      "builder-name": "neal-communities",
+      "garage": "2",
+      "price": "399.99",
+      "type": "multi-family",
+      "beds": "2",
+      "amenity": "pool,park,clubhouse,",
+      "sqft": "1530",
+      "availability": "move-in-ready",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "18137 Franklin Park Ct",
+    "h4": "",
+    "detail": "https://wellenpark.com/home/2884702/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/NealC9425/82154354-240807.jpg",
+    "neighborhoodText": [
+      "Wysteria"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3246556",
+      "neighborhood": "avelina",
+      "builder-name": "neal-communities",
+      "garage": "3",
+      "price": "706.99",
+      "type": "single-family",
+      "beds": "3",
+      "amenity": "",
+      "sqft": "2327",
+      "availability": "quick-move-in",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "18819 Toulon Court",
+    "h4": "$706,990",
+    "detail": "https://wellenpark.com/home/3246556/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/NealC9425/80775150-240625.jpg",
+    "neighborhoodText": [
+      "QUICK MOVE-IN",
+      "Avelina"
+    ]
+  },
+  {
+    "attrs": {
+      "comp": "property",
+      "home_id": "3756756",
+      "neighborhood": "boca-royale",
+      "builder-name": "neal-communities",
+      "garage": "3",
+      "price": "503.99",
+      "type": "single-family",
+      "beds": "3",
+      "amenity": "golfcourse,tennis,clubhouse,",
+      "sqft": "2379",
+      "availability": "",
+      "baths": "2",
+      "stories": "1",
+      "is55": "false"
+    },
+    "h3": "Sea Star",
+    "h4": "FROM $503,990",
+    "detail": "https://wellenpark.com/home/3756756/detail/",
+    "img": "https://static.wellenpark.com/Images/Homes/NealC9425/80771884-240625.jpg",
+    "neighborhoodText": [
+      "Boca Royale Golf and Country Club at Wellen Park"
+    ]
+  }
+]
