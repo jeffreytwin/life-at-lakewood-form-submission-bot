@@ -1,0 +1,43 @@
+[
+ {
+  "transport": "fetch",
+  "status": 0,
+  "bytes": 0,
+  "ms": 20004,
+  "error": "The operation was aborted due to timeout"
+ },
+ {
+  "transport": "https-default",
+  "status": 0,
+  "bytes": 0,
+  "ms": 20052,
+  "error": "timeout"
+ },
+ {
+  "transport": "https-chrome-ciphers",
+  "status": 0,
+  "bytes": 0,
+  "ms": 20042,
+  "error": "timeout"
+ },
+ {
+  "transport": "http2-default",
+  "status": 0,
+  "bytes": 0,
+  "ms": 20023,
+  "error": "timeout"
+ },
+ {
+  "transport": "http2-chrome-ciphers",
+  "status": 429,
+  "bytes": 0,
+  "ms": 226
+ },
+ {
+  "transport": "curl",
+  "status": 0,
+  "bytes": 0,
+  "ms": 20016,
+  "error": "Command failed: curl -sS --max-time 20 -A Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 -H accept: application/json, text/plain, */* -"
+ }
+]
