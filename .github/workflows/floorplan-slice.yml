@@ -36,6 +36,9 @@ jobs:
       - name: Live extractor verification
         run: FP_LIVE=1 npx vitest run __tests__/integration/floorplans-live.test.ts
 
+      - name: Run slice discovery
+        run: node pipeline/slice/discover-mpc.mjs
+
       - name: Commit results back to branch
         run: |
           git config user.name "floorplan-audit-bot"
