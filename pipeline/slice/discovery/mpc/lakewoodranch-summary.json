@@ -1,0 +1,498 @@
+{
+ "origin": "https://www.lakewoodranch.com",
+ "seeds": {
+  "/": {
+   "status": 200,
+   "bytes": 154987,
+   "finalUrl": "https://lakewoodranch.com/"
+  },
+  "/homes": {
+   "status": 200,
+   "bytes": 133669,
+   "finalUrl": "https://lakewoodranch.com/homes/"
+  },
+  "/homes-for-sale": {
+   "status": 404,
+   "bytes": 121005,
+   "finalUrl": "https://lakewoodranch.com/homes-for-sale"
+  },
+  "/find-your-home": {
+   "status": 404,
+   "bytes": 121007,
+   "finalUrl": "https://lakewoodranch.com/find-your-home"
+  },
+  "/new-homes": {
+   "status": 200,
+   "bytes": 127394,
+   "finalUrl": "https://lakewoodranch.com/event/new-homes-in-bloom-at-cresswind-lakewood-ranch/"
+  },
+  "/floor-plans": {
+   "status": 404,
+   "bytes": 120989,
+   "finalUrl": "https://lakewoodranch.com/floor-plans"
+  },
+  "/quick-move-in": {
+   "status": 404,
+   "bytes": 121001,
+   "finalUrl": "https://lakewoodranch.com/quick-move-in"
+  },
+  "/builders": {
+   "status": 200,
+   "bytes": 178612,
+   "finalUrl": "https://lakewoodranch.com/our-homes/builders/"
+  },
+  "/neighborhoods": {
+   "status": 404,
+   "bytes": 120995,
+   "finalUrl": "https://lakewoodranch.com/neighborhoods"
+  },
+  "/homefinder": {
+   "status": 404,
+   "bytes": 120989,
+   "finalUrl": "https://lakewoodranch.com/homefinder"
+  },
+  "/home-finder": {
+   "status": 200,
+   "bytes": 157462,
+   "finalUrl": "https://lakewoodranch.com/home-finder/"
+  },
+  "/available-homes": {
+   "status": 404,
+   "bytes": 121011,
+   "finalUrl": "https://lakewoodranch.com/available-homes"
+  }
+ },
+ "sitemap": {
+  "maps": [
+   "https://lakewoodranch.com/sitemap_index.xml"
+  ],
+  "matches": [
+   "https://lakewoodranch.com/lakewood-ranch-ranks-no-1-again-in-new-home-sales/",
+   "https://lakewoodranch.com/ranch-road-home-magazine-2020/",
+   "https://lakewoodranch.com/lakewood-ranch-unveils-ranch-road-home/",
+   "https://lakewoodranch.com/local-16-year-old-raises-30000-for-homeless-veterans-by-making-wooden-handcrafted-american-flags/",
+   "https://lakewoodranch.com/ill-see-your-hot-housing-market-and-raise-you-sarasota-a-look-at-why-home-buyers-are-choosing-sarasota-over-other-florida-markets/",
+   "https://lakewoodranch.com/lakewood-ranch-accounts-for-a-quarter-of-all-new-home-construction-in-sarasota-manatee/",
+   "https://lakewoodranch.com/the-wellness-way-invites-the-public-into-its-new-home-in-lakewood-ranch/",
+   "https://lakewoodranch.com/wild-blue-adds-luxury-homes-to-waterside-at-lakewood-ranch/",
+   "https://lakewoodranch.com/army-veteran-receives-mortgage-free-home-in-lakewood-ranch/",
+   "https://lakewoodranch.com/need-a-break-here-are-some-lakewood-ranch-spots-for-a-quick-respite/",
+   "https://lakewoodranch.com/lakewood-ranch-community-fund-launches-its-builders-give-back-program/",
+   "https://lakewoodranch.com/john-cannon-homes-opens-the-model-experience-sales-center-at-waterside-in-lakewood-ranch/",
+   "https://lakewoodranch.com/lakewood-ranch-builders-join-community-fund-project/",
+   "https://lakewoodranch.com/built-to-honor-programs-gives-suncoast-veteran-home-in-lakewood-ranch/",
+   "https://lakewoodranch.com/rex-jensen-honored-with-the-2023-legend-award-by-builder/",
+   "https://lakewoodranch.com/dream-finders-homes-announces-new-home-community-of-bungalow-walk-at-waterside-in-lakewood-ranch-florida/",
+   "https://lakewoodranch.com/lakewood-ranch-community-foundation-welcomes-neal-communities-and-neal-signature-homes-to-its-builders-give-back-program/",
+   "https://lakewoodranch.com/lee-wetherington-homes-selected-among-preferred-builders-for-shellstone-at-waterside/",
+   "https://lakewoodranch.com/lakewood-ranch-community-foundation-welcomes-m-i-homes-of-sarasota-to-its-builders-give-back-program/",
+   "https://lakewoodranch.com/m-i-homes-at-sweetwater-in-lakewood-ranch-supports-cancer-research-with-140000-donation/",
+   "https://lakewoodranch.com/ryan-homes-announces-new-community-amber-creek-in-lakewood-ranch/",
+   "https://lakewoodranch.com/the-winners-of-the-2025-parade-of-homes-for-the-suncoast-builders-association/",
+   "https://lakewoodranch.com/dream-finders-homes-wins-the-2025-builder-of-the-year-award/",
+   "https://lakewoodranch.com/john-cannon-homes-welcomes-award-winning-architect-wayne-visbeen-to-the-team/",
+   "https://lakewoodranch.com/forestar-introduces-perry-homes-to-star-farms-at-lakewood-ranch-and-growth-of-luxury-builder-program/",
+   "https://lakewoodranch.com/lakewood-ranch-community-foundations-builders-give-back-program-celebrates-118800-raised-to-date/",
+   "https://lakewoodranch.com/m-i-homes-raises-141000-for-cancer-research-through-sweetwater-at-lakewood-ranch-benefit-home/",
+   "https://lakewoodranch.com/m-i-homes-donates-141000-toward-cancer-research/",
+   "https://lakewoodranch.com/lakewood-ranch-neighborhood-recycles-old-items-into-community-grants/",
+   "https://lakewoodranch.com/acclaimed-builder-continues-to-put-his-stamp-on-lakewood-ranch/",
+   "https://lakewoodranch.com/lakewood-ranch-nonprofit-quick-to-respond-in-an-emergency/",
+   "https://lakewoodranch.com/home-page/",
+   "https://lakewoodranch.com/our-homes/",
+   "https://lakewoodranch.com/parade-of-homes/",
+   "https://lakewoodranch.com/featured-builder-incentives/",
+   "https://lakewoodranch.com/quick-subscribe/",
+   "https://lakewoodranch.com/home-2025/",
+   "https://lakewoodranch.com/featured-sweetwater-villas/",
+   "https://lakewoodranch.com/home-finder-test/",
+   "https://lakewoodranch.com/featured-the-alcove/",
+   "https://lakewoodranch.com/featured-nautique/",
+   "https://lakewoodranch.com/our-homes/villages-beta/",
+   "https://lakewoodranch.com/featured-john-cannon-homes/",
+   "https://lakewoodranch.com/home-finder/",
+   "https://lakewoodranch.com/our-homes/builders/",
+   "https://lakewoodranch.com/our-homes/villages/",
+   "https://lakewoodranch.com/our-homes/rentals/",
+   "https://lakewoodranch.com/our-homes/continuing-care/",
+   "https://lakewoodranch.com/our-villages/waterbury-park/",
+   "https://lakewoodranch.com/our-villages/sweetwater/",
+   "https://lakewoodranch.com/builders/",
+   "https://lakewoodranch.com/builders/dream-finders-homes/",
+   "https://lakewoodranch.com/builders/del-webb/",
+   "https://lakewoodranch.com/builders/d-r-horton/",
+   "https://lakewoodranch.com/builders/arthur-rutenberg/",
+   "https://lakewoodranch.com/builders/homes-by-towne/",
+   "https://lakewoodranch.com/builders/anchor-builders/",
+   "https://lakewoodranch.com/builders/homes-by-west-bay/",
+   "https://lakewoodranch.com/builders/david-weekley-homes/",
+   "https://lakewoodranch.com/builders/lennar-homes/",
+   "https://lakewoodranch.com/builders/perry-homes/",
+   "https://lakewoodranch.com/builders/neal-signature-homes/",
+   "https://lakewoodranch.com/builders/lee-wetherington/",
+   "https://lakewoodranch.com/builders/john-cannon-homes/",
+   "https://lakewoodranch.com/builders/kolter-homes/",
+   "https://lakewoodranch.com/builders/m-i-homes/",
+   "https://lakewoodranch.com/builders/neal-communities/",
+   "https://lakewoodranch.com/builders/stock-signature-homes/",
+   "https://lakewoodranch.com/builders/ryan-homes/",
+   "https://lakewoodranch.com/builders/taylor-morrison/",
+   "https://lakewoodranch.com/builders/toll-brothers/",
+   "https://lakewoodranch.com/event/summer-tours-in-sweetwater/",
+   "https://lakewoodranch.com/event/la-dolce-vita-model-home-grand-opening/",
+   "https://lakewoodranch.com/event/holiday-of-homes-tour-save-weekends-with-m-i-homes/",
+   "https://lakewoodranch.com/event/sip-tour-home-showcase-at-cresswind-lakewood-ranch/",
+   "https://lakewoodranch.com/event/holiday-info-center-pop-up-waterside-builder-meet-greet/",
+   "https://lakewoodranch.com/event/meet-the-builders-at-music-on-main/",
+   "https://lakewoodranch.com/event/xoxo-bloom-bar-at-sweetwater/",
+   "https://lakewoodranch.com/event/new-home-center-pop-up/",
+   "https://lakewoodranch.com/event/new-homes-in-bloom-at-cresswind-lakewood-ranch/",
+   "https://lakewoodranch.com/event/mothers-day-in-sweetwater-at-lakewood-ranch/",
+   "https://lakewoodranch.com/event/dream-big-weekend-final-opportunity-at-sweetwater-villas/",
+   "https://lakewoodranch.com/event/homes-by-westbay-saddlestone-grand-opening-event/",
+   "https://lakewoodranch.com/hometypes/",
+   "https://lakewoodranch.com/hometypes/single-family-home/",
+   "https://lakewoodranch.com/hometypes/townhome/",
+   "https://lakewoodranch.com/hometypes/attached-villa/",
+   "https://lakewoodranch.com/hometypes/condominium/",
+   "https://lakewoodranch.com/hometypes/custom/",
+   "https://lakewoodranch.com/hometypes/maintenance-free/",
+   "https://lakewoodranch.com/hometypes/age-restricted/",
+   "https://lakewoodranch.com/hometypes/model/",
+   "https://lakewoodranch.com/hometypes/move-in-ready/",
+   "https://lakewoodranch.com/hometypes/dual-master-br/",
+   "https://lakewoodranch.com/homes/",
+   "https://lakewoodranch.com/homes/cay-2/",
+   "https://lakewoodranch.com/homes/islander-1-2/",
+   "https://lakewoodranch.com/homes/tideland-2/",
+   "https://lakewoodranch.com/homes/islander-1/",
+   "https://lakewoodranch.com/homes/windermere/",
+   "https://lakewoodranch.com/homes/hillcrest/",
+   "https://lakewoodranch.com/homes/outrigger-2/",
+   "https://lakewoodranch.com/homes/portside-at-shellstone/",
+   "https://lakewoodranch.com/homes/the-coastline/",
+   "https://lakewoodranch.com/homes/akarra-ii/",
+   "https://lakewoodranch.com/homes/the-adelaide/",
+   "https://lakewoodranch.com/homes/the-adelaide-2/",
+   "https://lakewoodranch.com/homes/the-adelaide-3/",
+   "https://lakewoodranch.com/homes/the-akarra-iii/",
+   "https://lakewoodranch.com/homes/the-korina-2/",
+   "https://lakewoodranch.com/homes/the-korina-4/",
+   "https://lakewoodranch.com/homes/the-kylie/",
+   "https://lakewoodranch.com/homes/the-kylie-2/",
+   "https://lakewoodranch.com/homes/the-milina-3/",
+   "https://lakewoodranch.com/homes/the-milina-4/",
+   "https://lakewoodranch.com/homes/the-newcastle/",
+   "https://lakewoodranch.com/homes/the-newcastle-2/",
+   "https://lakewoodranch.com/homes/the-newcastle-3/",
+   "https://lakewoodranch.com/homes/the-victoria-3/",
+   "https://lakewoodranch.com/homes/the-victoria-2/"
+  ]
+ },
+ "discoveredLinks": [
+  "https://www.lakewoodranch.com/our-homes/villages/",
+  "https://www.lakewoodranch.com/home-finder/"
+ ],
+ "reports": {
+  "_": {
+   "status": 200,
+   "bytes": 154987,
+   "textChars": 5505,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1215
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "m/i": 89
+   },
+   "builderMentions": {
+    "m/i": 89
+   },
+   "url": "https://lakewoodranch.com/"
+  },
+  "_homes": {
+   "status": 200,
+   "bytes": 133669,
+   "textChars": 4141,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1174
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "m/i": 79
+   },
+   "builderMentions": {
+    "m/i": 79,
+    "toll": 4,
+    "lennar": 2,
+    "pulte": 4
+   },
+   "url": "https://lakewoodranch.com/homes/"
+  },
+  "_new-homes": {
+   "status": 200,
+   "bytes": 127394,
+   "textChars": 3786,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1618
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "m/i": 80
+   },
+   "builderMentions": {
+    "m/i": 80
+   },
+   "url": "https://lakewoodranch.com/event/new-homes-in-bloom-at-cresswind-lakewood-ranch/"
+  },
+  "_builders": {
+   "status": 200,
+   "bytes": 178612,
+   "textChars": 9993,
+   "prices": 26,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1692
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "sweetwater": 5,
+    "waterbury": 5,
+    "m/i": 209,
+    "ici": 4,
+    "neal signature": 4
+   },
+   "builderMentions": {
+    "m/i": 209,
+    "ici": 4,
+    "neal": 13,
+    "toll": 3,
+    "taylor morrison": 2,
+    "lennar": 11,
+    "pulte": 1,
+    "homes by westbay": 4,
+    "dream finders": 4,
+    "stock": 6,
+    "lee wetherington": 6
+   },
+   "url": "https://lakewoodranch.com/our-homes/builders/"
+  },
+  "_home-finder": {
+   "status": 200,
+   "bytes": 157462,
+   "textChars": 4655,
+   "prices": 5,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1560
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "sweetwater": 2,
+    "waterbury": 2,
+    "m/i": 91,
+    "neal signature": 2
+   },
+   "builderMentions": {
+    "m/i": 91,
+    "neal": 4,
+    "toll": 2,
+    "taylor morrison": 2,
+    "lennar": 2,
+    "homes by westbay": 2,
+    "dream finders": 2,
+    "stock": 2,
+    "lee wetherington": 2
+   },
+   "url": "https://lakewoodranch.com/home-finder/"
+  },
+  "sm_lakewood-ranch-ranks-no-1-agai": {
+   "status": 200,
+   "bytes": 125925,
+   "textChars": 3045,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 3008
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "m/i": 82
+   },
+   "builderMentions": {
+    "m/i": 82
+   },
+   "url": "https://lakewoodranch.com/lakewood-ranch-ranks-no-1-again-in-new-home-sales/"
+  },
+  "sm_ranch-road-home-magazine-2020": {
+   "status": 200,
+   "bytes": 125471,
+   "textChars": 3015,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 2807
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "m/i": 79
+   },
+   "builderMentions": {
+    "m/i": 79
+   },
+   "url": "https://lakewoodranch.com/ranch-road-home-magazine-2020/"
+  },
+  "sm_lakewood-ranch-unveils-ranch-r": {
+   "status": 200,
+   "bytes": 130697,
+   "textChars": 6954,
+   "prices": 1,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 2888
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "m/i": 91,
+    "ici": 4
+   },
+   "builderMentions": {
+    "m/i": 91,
+    "ici": 4
+   },
+   "url": "https://lakewoodranch.com/lakewood-ranch-unveils-ranch-road-home/"
+  },
+  "sm_local-16-year-old-raises-30000": {
+   "status": 200,
+   "bytes": 127063,
+   "textChars": 3144,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3"
+   ],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 3529
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 249
+    }
+   ],
+   "troubleHits": {
+    "m/i": 78
+   },
+   "builderMentions": {
+    "m/i": 78
+   },
+   "url": "https://lakewoodranch.com/local-16-year-old-raises-30000-for-homeless-veterans-by-making-wooden-handcrafted-american-flags/"
+  }
+ }
+}

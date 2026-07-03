@@ -1,0 +1,554 @@
+{
+ "origin": "https://www.wellenpark.com",
+ "seeds": {
+  "/": {
+   "status": 200,
+   "bytes": 429021,
+   "finalUrl": "https://wellenpark.com/"
+  },
+  "/homes": {
+   "status": 200,
+   "bytes": 1133580,
+   "finalUrl": "https://wellenpark.com/builder/homes-by-towne/"
+  },
+  "/homes-for-sale": {
+   "status": 404,
+   "bytes": 103912,
+   "finalUrl": "https://wellenpark.com/homes-for-sale"
+  },
+  "/find-your-home": {
+   "status": 404,
+   "bytes": 103912,
+   "finalUrl": "https://wellenpark.com/find-your-home"
+  },
+  "/new-homes": {
+   "status": 404,
+   "bytes": 103907,
+   "finalUrl": "https://wellenpark.com/new-homes"
+  },
+  "/floor-plans": {
+   "status": 404,
+   "bytes": 103909,
+   "finalUrl": "https://wellenpark.com/floor-plans"
+  },
+  "/quick-move-in": {
+   "status": 200,
+   "bytes": 1752880,
+   "finalUrl": "https://wellenpark.com/quick-move-in/"
+  },
+  "/builders": {
+   "status": 404,
+   "bytes": 103901,
+   "finalUrl": "https://wellenpark.com/404"
+  },
+  "/neighborhoods": {
+   "status": 200,
+   "bytes": 398259,
+   "finalUrl": "https://wellenpark.com/neighborhoods/"
+  },
+  "/homefinder": {
+   "status": 404,
+   "bytes": 103908,
+   "finalUrl": "https://wellenpark.com/homefinder"
+  },
+  "/home-finder": {
+   "status": 404,
+   "bytes": 103909,
+   "finalUrl": "https://wellenpark.com/home-finder"
+  },
+  "/available-homes": {
+   "status": 200,
+   "bytes": 1963274,
+   "finalUrl": "https://wellenpark.com/find-a-home/"
+  },
+  "/find-a-home": {
+   "status": 200,
+   "bytes": 1963266,
+   "finalUrl": "https://wellenpark.com/find-a-home/"
+  }
+ },
+ "sitemap": {
+  "maps": [
+   "https://wellenpark.com/sitemap_index.xml"
+  ],
+  "matches": [
+   "https://wellenpark.com/blog/unleash-your-creativity-turn-your-west-villages-home-into-an-arts-studio/",
+   "https://wellenpark.com/blog/heres-some-homework-to-help-handle-the-new-demands-of-remote-learning/",
+   "https://wellenpark.com/blog/snack-time-no-time-like-the-present-to-try-homemade-fresh-and-healthy-snacks/",
+   "https://wellenpark.com/blog/how-to-work-from-your-west-villages-home-while-youre-at-home-with-the-kids/",
+   "https://wellenpark.com/blog/childproof-your-new-home-as-you-start-your-family-in-west-villages/",
+   "https://wellenpark.com/blog/organize-your-west-villages-homes-largest-storage-space-your-garage/",
+   "https://wellenpark.com/blog/enjoy-a-home-team-advantage-for-your-own-action-packed-super-bowl-party/",
+   "https://wellenpark.com/blog/builders-designs-3-home-trends-gaining-momentum/",
+   "https://wellenpark.com/blog/home-is-where-the-heart-is/",
+   "https://wellenpark.com/blog/breakwater-home-fashions-spotlight/",
+   "https://wellenpark.com/blog/model-home-showcase/",
+   "https://wellenpark.com/blog/model-home-showcase-builders/",
+   "https://wellenpark.com/blog/explore-luxury-homes-in-wellen-parks-everly-neighborhood/",
+   "https://wellenpark.com/blog/meet-wellen-parks-everly-home-builders/",
+   "https://wellenpark.com/blog/2024-model-home-showcase-tour-book/",
+   "https://wellenpark.com/blog/wellen-park-hosts-its-second-annual-model-home-showcase/",
+   "https://wellenpark.com/blog/four-florida-friendly-features-in-the-haven-model-home-in-wellen-parks-everly-neighborhood/",
+   "https://wellenpark.com/blog/discover-wellen-park-apartments-and-homes-for-rent-flexible-living-in-venice-fl/",
+   "https://wellenpark.com/blog/living-the-dream-4-irresistible-features-in-wellen-park-homes/",
+   "https://wellenpark.com/blog/2025-home-decor-trends-experts-say-these-5-trends-are-ones-to-watch/",
+   "https://wellenpark.com/blog/exploring-the-best-neighborhoods-in-venice-fl-a-closer-look-at-wellen-parks-neighborhoods/",
+   "https://wellenpark.com/blog/your-guide-to-wellen-park-home-styles-find-the-perfect-fit-for-your-lifestyle/",
+   "https://wellenpark.com/blog/choose-your-wellen-park-neighborhood/",
+   "https://wellenpark.com/blog/what-to-expect-at-wellen-parks-parade-of-homes/",
+   "https://wellenpark.com/find-a-home-menu/",
+   "https://wellenpark.com/neighborhoods/overview/",
+   "https://wellenpark.com/neighborhoods/site-plan/",
+   "https://wellenpark.com/neighborhoods/amenities/",
+   "https://wellenpark.com/neighborhoods/gallery/",
+   "https://wellenpark.com/neighborhoods/available-homes/",
+   "https://wellenpark.com/buildermodelhomeshowcase/",
+   "https://wellenpark.com/neighborhoods/builders/",
+   "https://wellenpark.com/modelhomeshowcase/",
+   "https://wellenpark.com/quick-move-in/",
+   "https://wellenpark.com/find-a-home/",
+   "https://wellenpark.com/home-details/",
+   "https://wellenpark.com/parade-of-homes/",
+   "https://wellenpark.com/homebuilders/",
+   "https://wellenpark.com/neighborhoods/",
+   "https://wellenpark.com/contact/builder-sales-centers/",
+   "https://wellenpark.com/news/wellen-park-introduces-single-family-rental-homes-with-stillwell-at-wellen-park-by-coastal-ridge-real-estate/",
+   "https://wellenpark.com/news/sales-begin-in-wellen-parks-playmore-district-neighborhoods/",
+   "https://wellenpark.com/news/wellen-parks-new-playmore-district-features-a-range-of-neighborhood-and-home-options/",
+   "https://wellenpark.com/news/wellen-park-wins-best-community-welcome-center-in-the-united-states-from-the-national-association-of-home-builders/",
+   "https://wellenpark.com/news/neal-communities-announces-grand-opening-of-wysteria-a-new-neighborhood-with-single-family-and-paired-villa-homes-in-wellen-parks-playmore-district/",
+   "https://wellenpark.com/news/wellen-parks-playmore-district-neighborhoods-offer-a-variety-of-quick-move-in-homes/",
+   "https://wellenpark.com/news/sam-rodgers-homes-unveils-three-luxury-model-homes-in-gran-place-at-wellen-park/",
+   "https://wellenpark.com/news/model-homes-sales-center-open-at-solstice-in-wellen-park/",
+   "https://wellenpark.com/news/tour-thoughtfully-designed-model-homes-during-wellen-parks-first-ever-model-home-showcase-feb-12/",
+   "https://wellenpark.com/news/wellen-park-announces-mattamy-homes-new-55-neighborhood-brightmore/",
+   "https://wellenpark.com/news/wellen-park-announces-everly-a-new-neighborhood-of-upscale-custom-homes/",
+   "https://wellenpark.com/news/four-single-family-model-homes-golf-course-now-open-in-wellen-park-golf-country-club/",
+   "https://wellenpark.com/news/wellen-park-introduces-multi-generational-lakespur-neighborhood/",
+   "https://wellenpark.com/news/homes-by-westbay-debuts-upscale-model-homes-during-dec-16-grand-opening-in-everly-at-wellen-park/",
+   "https://wellenpark.com/news/tour-34-exquisite-model-homes-during-wellen-parks-2nd-annual-model-home-showcase-feb-10/",
+   "https://wellenpark.com/news/seven-furnished-villa-and-single-family-model-homes-open-in-brightmore-at-wellen-park/",
+   "https://wellenpark.com/news/single-family-rental-homes-now-available-in-stillwell-at-wellen-park/",
+   "https://wellenpark.com/news/second-annual-model-home-showcase-introduces-new-wellen-park-neighborhoods-lifestyles/",
+   "https://wellenpark.com/news/private-neighborhood-amenities-in-sunstone-at-wellen-park-officially-open-to-residents/",
+   "https://wellenpark.com/news/new-upscale-model-homes-now-open-in-wellen-parks-everly-neighborhood/",
+   "https://wellenpark.com/news/private-neighborhood-amenities-completed-at-lakespur-in-wellen-park/",
+   "https://wellenpark.com/news/wellen-park-announces-palmera-new-single-family-home-neighborhood/",
+   "https://wellenpark.com/news/limited-tickets-available-for-inaugural-wellen-park-wine-festival-nov-15-16/",
+   "https://wellenpark.com/news/wellen-park-homebuilders-donate-12-cottages-for-kids-playhouses-to-local-families-through-the-salvation-army/",
+   "https://wellenpark.com/news/mattamy-homes-debuts-four-coach-home-models-in-lakespur-at-wellen-park/",
+   "https://wellenpark.com/news/model-homes-open-in-palmera-wellen-parks-newest-gated-neighborhood/",
+   "https://wellenpark.com/news/wellen-park-celebrates-24-award-winning-models-in-the-2025-suncoast-builders-association-parade-of-homes/",
+   "https://wellenpark.com/news/veteran-family-who-lost-rotonda-west-home-to-ian-will-receive-a-new-house-in-wellen-park/",
+   "https://wellenpark.com/news/wellen-park-unveils-new-oakbend-neighborhood-a-gated-enclave-of-luxury-living/",
+   "https://wellenpark.com/news/wellen-park-showcases-23-models-in-2026-parade-of-homes/",
+   "https://wellenpark.com/news/mattamy-homes-celebrates-grand-opening-of-brightmores-spectacular-amenity-center-at-wellen-park-florida/",
+   "https://wellenpark.com/store/breakwater-home-fashions/",
+   "https://wellenpark.com/store/mattamy-homes-design-studio/",
+   "https://wellenpark.com/neighborhood/solstice/",
+   "https://wellenpark.com/neighborhood/boca-royale/",
+   "https://wellenpark.com/neighborhood/esplanade/",
+   "https://wellenpark.com/neighborhood/avelina/",
+   "https://wellenpark.com/neighborhood/grand-palm/",
+   "https://wellenpark.com/neighborhood/oakbend/",
+   "https://wellenpark.com/neighborhood/everly/",
+   "https://wellenpark.com/neighborhood/palmera/",
+   "https://wellenpark.com/neighborhood/wellen-park-golf-country-club/",
+   "https://wellenpark.com/neighborhood/ashcombe/",
+   "https://wellenpark.com/neighborhood/lakespur/",
+   "https://wellenpark.com/neighborhood/sunstone-lakeside/",
+   "https://wellenpark.com/neighborhood/brightmore/",
+   "https://wellenpark.com/neighborhood/sunstone/",
+   "https://wellenpark.com/neighborhood/madera/"
+  ]
+ },
+ "discoveredLinks": [],
+ "reports": {
+  "_": {
+   "status": 200,
+   "bytes": 429021,
+   "textChars": 19076,
+   "prices": 22,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1189
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 29,
+    "oakbend": 27,
+    "m/i": 73,
+    "ici": 12,
+    "neal signature": 3
+   },
+   "builderMentions": {
+    "m/i": 73,
+    "ici": 12,
+    "neal": 25,
+    "toll": 16,
+    "mattamy": 31,
+    "taylor morrison": 6,
+    "lennar": 8,
+    "pulte": 8,
+    "homes by westbay": 4,
+    "stock": 3,
+    "lee wetherington": 5
+   },
+   "url": "https://wellenpark.com/"
+  },
+  "_homes": {
+   "status": 200,
+   "bytes": 1133580,
+   "textChars": 7722,
+   "prices": 9,
+   "sqfts": 9,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1895
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 170,
+    "oakbend": 28,
+    "m/i": 585,
+    "ici": 379
+   },
+   "builderMentions": {
+    "m/i": 585,
+    "ici": 379,
+    "neal": 1168,
+    "toll": 70,
+    "mattamy": 780,
+    "taylor morrison": 39,
+    "lennar": 509,
+    "pulte": 250,
+    "homes by westbay": 17,
+    "lee wetherington": 16
+   },
+   "url": "https://wellenpark.com/builder/homes-by-towne/"
+  },
+  "_quick-move-in": {
+   "status": 200,
+   "bytes": 1752880,
+   "textChars": 66185,
+   "prices": 385,
+   "sqfts": 440,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1197
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 414,
+    "oakbend": 95,
+    "m/i": 1176,
+    "ici": 452
+   },
+   "builderMentions": {
+    "m/i": 1176,
+    "ici": 452,
+    "neal": 1503,
+    "toll": 127,
+    "mattamy": 1130,
+    "taylor morrison": 169,
+    "lennar": 638,
+    "pulte": 297,
+    "homes by westbay": 51,
+    "lee wetherington": 36
+   },
+   "url": "https://wellenpark.com/quick-move-in/"
+  },
+  "_neighborhoods": {
+   "status": 200,
+   "bytes": 398259,
+   "textChars": 16685,
+   "prices": 22,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1311
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 29,
+    "oakbend": 27,
+    "m/i": 65,
+    "ici": 11,
+    "neal signature": 3
+   },
+   "builderMentions": {
+    "m/i": 65,
+    "ici": 11,
+    "neal": 25,
+    "toll": 17,
+    "mattamy": 30,
+    "taylor morrison": 6,
+    "lennar": 8,
+    "pulte": 7,
+    "homes by westbay": 4,
+    "stock": 3,
+    "lee wetherington": 5
+   },
+   "url": "https://wellenpark.com/neighborhoods/"
+  },
+  "_available-homes": {
+   "status": 200,
+   "bytes": 1963274,
+   "textChars": 73959,
+   "prices": 385,
+   "sqfts": 440,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1366
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 429,
+    "oakbend": 111,
+    "m/i": 1135,
+    "ici": 458,
+    "neal signature": 1
+   },
+   "builderMentions": {
+    "m/i": 1135,
+    "ici": 458,
+    "neal": 1519,
+    "toll": 136,
+    "mattamy": 1145,
+    "taylor morrison": 173,
+    "lennar": 644,
+    "pulte": 302,
+    "homes by westbay": 53,
+    "stock": 3,
+    "lee wetherington": 39
+   },
+   "url": "https://wellenpark.com/find-a-home/"
+  },
+  "_find-a-home": {
+   "status": 200,
+   "bytes": 1963266,
+   "textChars": 73959,
+   "prices": 385,
+   "sqfts": 440,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 1366
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 429,
+    "oakbend": 111,
+    "m/i": 1135,
+    "ici": 458,
+    "neal signature": 1
+   },
+   "builderMentions": {
+    "m/i": 1135,
+    "ici": 458,
+    "neal": 1518,
+    "toll": 136,
+    "mattamy": 1144,
+    "taylor morrison": 173,
+    "lennar": 644,
+    "pulte": 303,
+    "homes by westbay": 54,
+    "stock": 3,
+    "lee wetherington": 39
+   },
+   "url": "https://wellenpark.com/find-a-home/"
+  },
+  "sm_unleash-your-creativity-turn-y": {
+   "status": 200,
+   "bytes": 183250,
+   "textChars": 9222,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 4390
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 10,
+    "oakbend": 6,
+    "m/i": 128,
+    "ici": 2
+   },
+   "builderMentions": {
+    "m/i": 128,
+    "ici": 2,
+    "toll": 4,
+    "mattamy": 7
+   },
+   "url": "https://wellenpark.com/blog/unleash-your-creativity-turn-your-west-villages-home-into-an-arts-studio/"
+  },
+  "sm_heres-some-homework-to-help-ha": {
+   "status": 200,
+   "bytes": 180332,
+   "textChars": 9449,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 3283
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 10,
+    "oakbend": 6,
+    "m/i": 126,
+    "ici": 4
+   },
+   "builderMentions": {
+    "m/i": 126,
+    "ici": 4,
+    "toll": 4,
+    "mattamy": 7
+   },
+   "url": "https://wellenpark.com/blog/heres-some-homework-to-help-handle-the-new-demands-of-remote-learning/"
+  },
+  "sm_snack-time-no-time-like-the-pr": {
+   "status": 200,
+   "bytes": 183043,
+   "textChars": 9195,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 4264
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 10,
+    "oakbend": 6,
+    "m/i": 127,
+    "ici": 3
+   },
+   "builderMentions": {
+    "m/i": 127,
+    "ici": 3,
+    "toll": 4,
+    "mattamy": 7,
+    "stock": 2
+   },
+   "url": "https://wellenpark.com/blog/snack-time-no-time-like-the-present-to-try-homemade-fresh-and-healthy-snacks/"
+  },
+  "sm_how-to-work-from-your-west-vil": {
+   "status": 200,
+   "bytes": 182585,
+   "textChars": 9089,
+   "prices": 0,
+   "sqfts": 0,
+   "hasNextData": false,
+   "hasApollo": false,
+   "hasNuxt": false,
+   "apiUrls": [],
+   "jsonScripts": [
+    {
+     "attrs": "type=\"application/ld+json\" class=\"yoast-schema-graph\"",
+     "bytes": 4216
+    },
+    {
+     "attrs": "id=\"wp-emoji-settings\" type=\"application/json\"",
+     "bytes": 246
+    }
+   ],
+   "troubleHits": {
+    "palmera": 10,
+    "oakbend": 6,
+    "m/i": 130,
+    "ici": 4
+   },
+   "builderMentions": {
+    "m/i": 130,
+    "ici": 4,
+    "toll": 4,
+    "mattamy": 7,
+    "stock": 3
+   },
+   "url": "https://wellenpark.com/blog/how-to-work-from-your-west-villages-home-while-youre-at-home-with-the-kids/"
+  }
+ }
+}
