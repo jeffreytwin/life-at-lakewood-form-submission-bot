@@ -1,0 +1,127 @@
+{
+  "page": {
+    "status": 200,
+    "bytes": 157465,
+    "url": "https://lakewoodranch.com/home-finder/"
+  },
+  "endpoints": [
+    "https://lakewoodranch.com/home-finder/",
+    "https://lakewoodranch.com/feed/",
+    "https://lakewoodranch.com/comments/feed/",
+    "https://lakewoodranch.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flakewoodranch.com%2Fhome-finder%2F",
+    "https://lakewoodranch.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flakewoodranch.com%2Fhome-finder%2F&#038;format=xml",
+    "https://fonts.googleapis.com",
+    "https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    "https://lakewoodranch.com/our-homes/rentals/",
+    "https://lakewoodranch.com/our-homes/continuing-care/",
+    "https://lakewoodranch.com/our-homes/builders/",
+    "https://lakewoodranch.com/our-homes/villages/",
+    "https://lakewoodranch.com/wp-content/plugins/gravityforms/js/jquery.json.min.js?ver=2.10.3",
+    "/home-finder/"
+  ],
+  "embeddedDataHints": [
+    {
+      "head": "s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"va",
+      "bytes": 1441
+    },
+    {
+      "head": "dearpdfWPGlobal = [];</script>      <meta name=\"onesignal\" content=\"wordpress-pl",
+      "bytes": 22137
+    },
+    {
+      "head": "attributeFilter: [ 'style', 'class' ],            });        } else {           ",
+      "bytes": 28713
+    },
+    {
+      "head": "styles=[]&amp;hash=e8f221d0248dd1269d2688c9bbae7a34' />\n            <input type=",
+      "bytes": 6285
+    }
+  ],
+  "jsonScripts": [],
+  "probes": [
+    {
+      "url": "https://lakewoodranch.com/home-finder/",
+      "status": 200,
+      "json": false,
+      "bytes": 157465
+    },
+    {
+      "url": "https://lakewoodranch.com/feed/",
+      "status": 200,
+      "json": false,
+      "bytes": 37819
+    },
+    {
+      "url": "https://lakewoodranch.com/comments/feed/",
+      "status": 200,
+      "json": false,
+      "bytes": 882
+    },
+    {
+      "url": "https://lakewoodranch.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flakewoodranch.com%2Fhome-finder%2F",
+      "status": 200,
+      "json": true,
+      "bytes": 2367
+    },
+    {
+      "url": "https://lakewoodranch.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Flakewoodranch.com%2Fhome-finder%2F&#038;format=xml",
+      "status": 200,
+      "json": true,
+      "bytes": 2367
+    },
+    {
+      "url": "https://fonts.googleapis.com",
+      "status": 404,
+      "json": false,
+      "bytes": 1617
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..9",
+      "status": 200,
+      "json": false,
+      "bytes": 5567
+    },
+    {
+      "url": "https://lakewoodranch.com/our-homes/rentals/",
+      "status": 200,
+      "json": false,
+      "bytes": 223761
+    },
+    {
+      "url": "https://lakewoodranch.com/our-homes/continuing-care/",
+      "status": 200,
+      "json": false,
+      "bytes": 158839
+    },
+    {
+      "url": "https://lakewoodranch.com/our-homes/builders/",
+      "status": 200,
+      "json": false,
+      "bytes": 178610
+    },
+    {
+      "url": "https://lakewoodranch.com/our-homes/villages/",
+      "status": 200,
+      "json": false,
+      "bytes": 175412
+    },
+    {
+      "url": "https://www.lakewoodranch.com/home-finder/",
+      "status": 200,
+      "json": false,
+      "bytes": 157465
+    },
+    {
+      "url": "https://www.lakewoodranch.com/wp-json/",
+      "status": 200,
+      "json": true,
+      "bytes": 356961
+    },
+    {
+      "url": "https://www.lakewoodranch.com/wp-json/wp/v2/types",
+      "status": 200,
+      "json": true,
+      "bytes": 48377
+    }
+  ]
+}
