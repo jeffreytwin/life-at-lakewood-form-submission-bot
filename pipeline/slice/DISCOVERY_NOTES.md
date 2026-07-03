@@ -1,5 +1,16 @@
 # Extractor discovery notes — remaining builders
 
+**MPC-aggregator breakthrough (Jeff's suggestion):** the master-planned-
+community sites are a different origin than the builder WAFs, so they bypass
+the blocks. **wellenpark.com** server-renders every builder's homes as
+<article data-comp=property …> cards (builder/neighborhood/price/beds/baths/
+sqft + address/plan + image), reachable by plain Node fetch → runs on Vercel.
+`extractors/mpc-aggregator.ts` parses+filters by builder slug + neighborhood.
+Live-verified: **ICI Homes @ Oakbend = 8 homes, M/I Homes @ Palmera = 27
+homes**. This closes ICI entirely (Oakbend + Palmera are both Wellen Park)
+and M/I's Palmera. Still on Lakewood Ranch (client-rendered, source TBD):
+M/I Sweetwater/Nautique and Neal Signature Waterbury Park/The Alcove.
+
 Working notes from the slice discovery rounds (`discover-round*.mjs`, output
 in `discovery/round*/`). Updated as rounds complete. Goal: close out the 8
 builders not yet runnable, in the order Meritage → render_claude five →
