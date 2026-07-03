@@ -1,0 +1,55 @@
+{
+  "url": "https://nrpc.olark.com/nrpc/c?c=create&s=1108-972-10-9315&v=8vnJkQ7bfZsD09Zo5V9LZ0P02obn7Kat&i=olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO&g=ALL&q=precache023895243722975446&j=o0&version=loader-precache&xhttp=1&u=https%3A%2F%2Flakewoodranch.com%2Fhome",
+  "data": {
+    "conversation_history": [
+      [
+        1783042104924,
+        {
+          "type": "geolocation",
+          "geolocation": {
+            "country": "United States",
+            "ipaddress": "68.220.58.5",
+            "city": "San Jose",
+            "state": "CA",
+            "country_code": "US",
+            "lat": 37.33874,
+            "long": -121.885252
+          },
+          "unique_id": "efd0a8c6-e4a6-405f-9622-4b7f4ef2fc5a",
+          "timestamp": 1783042104924.577
+        }
+      ]
+    ],
+    "capacity": true,
+    "site_is_online": true,
+    "status_state": "available",
+    "conversation_has_slot": false,
+    "has_free_chats": true,
+    "site_config_changed": false,
+    "assets_config_md5": "eb16b0e5e0e57ec9f10be29b09ac7fac",
+    "ipaddress": "68.220.58.5",
+    "geolocation_data": {
+      "country": "United States",
+      "ipaddress": "68.220.58.5",
+      "city": "San Jose",
+      "state": "CA",
+      "country_code": "US",
+      "lat": 37.33874,
+      "long": -121.885252
+    },
+    "operator_composing_state": "active",
+    "operator_nickname": null,
+    "in_active_conversation": false,
+    "operator_has_sent_message": false,
+    "ssl": true,
+    "is_premium": true,
+    "is_popup": false,
+    "visitor_id": "8vnJkQ7bfZsD09Zo5V9LZ0P02obn7Kat",
+    "dormant": false,
+    "conversation_id": "olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO",
+    "site_idstring": "1108-972-10-9315",
+    "resend_nickname": true,
+    "resend_status": true,
+    "machine": "nrpc-http-cf6f5ddd4-f7hkc"
+  }
+}

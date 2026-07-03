@@ -1,0 +1,146 @@
+[
+  {
+    "url": "https://www.lakewoodranch.com/home-finder/",
+    "status": 301,
+    "type": "text/html; charset=UTF-8",
+    "bytes": 0
+  },
+  {
+    "url": "https://lakewoodranch.com/home-finder/",
+    "status": 200,
+    "type": "text/html; charset=UTF-8",
+    "bytes": 157465
+  },
+  {
+    "url": "https://pixel-config.reddit.com/pixels/a2_i0ely6za87te/config",
+    "status": 200,
+    "type": "application/json",
+    "bytes": 54
+  },
+  {
+    "url": "https://nrpc.olark.com/nrpc/c?c=create&s=1108-972-10-9315&v=8vnJkQ7bfZsD09Zo5V9LZ0P02obn7Kat&i=olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO&g=ALL&q=precache023895243722975446&j=o0&version=loader-precache&xhttp=1&u=https%3A%2F%2Flakewoodranch.com%2Fhome",
+    "status": 200,
+    "type": "text/javascript; charset=UTF-8",
+    "bytes": 1172
+  },
+  {
+    "url": "https://api.userway.org/api/v1/tunings/tYlV5rPCWC",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 984
+  },
+  {
+    "url": "https://api.olark.com/2.0/sites/1108-972-10-9315/visits?_callback=_olark_callback_89a71614_e99d_425c_a447_ebabad644a4e&_method=POST&_data=%7B%22conversation_id%22%3A%22olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO%22%2C%22cache%22%3A%220.860458457506814",
+    "status": 200,
+    "type": "application/javascript",
+    "bytes": 112
+  },
+  {
+    "url": "https://ads.nextdoor.com/v2/api/conversions/settings?id=6b7f3683-02e9-4638-86f2-02e207d95068",
+    "status": 200,
+    "type": "application/json",
+    "bytes": 36
+  },
+  {
+    "url": "https://cdn.userway.org/widgetapp/2026-06-09-08-22-25/locales/en-US.json",
+    "status": 200,
+    "type": "application/json",
+    "bytes": 673
+  },
+  {
+    "url": "https://cdn.userway.org/remediations/consolidated/4138360/ZjszpEhNEvh8MLnv.json",
+    "status": 200,
+    "type": "application/json",
+    "bytes": 11477
+  },
+  {
+    "url": "https://cdn.userway.org/remediations/consolidated/4138360/ZjszpEhNEvh8MLnv.json",
+    "status": 200,
+    "type": "application/json",
+    "bytes": 11477
+  },
+  {
+    "url": "https://insight.adsrvr.org/track/realtimeconversion",
+    "status": 200,
+    "type": "application/json",
+    "bytes": 36
+  },
+  {
+    "url": "https://cdn77.api.userway.org/api/img-dscr/v2/tYlV5rPCWC/4138360/1o4j6bLgH727vQXd/alts.json?dto=%7B%22sorted%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Flakewoodranch.com%2Fwp-content%2Fuploads%2F2026%2F04%2FLWR_HORIZONTAL_FLA_RED-lg-1024x170.p",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 275
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/links/4138360",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 152
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/pdf-links",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 16
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/links/4138360",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 152
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/pdf-links",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 16
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/links/4138360",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 152
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/links/4138360",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 152
+  },
+  {
+    "url": "https://nrpc.olark.com/nrpc/p?j=olark-11783042109090&&c=pollevents&q=9945.9090.1&i=olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO&s=1108-972-10-9315&v=8vnJkQ7bfZsD09Zo5V9LZ0P02obn7Kat&g=undefined&cb=hbl.client.callbacks.pollevents&after=1783042104924&nex",
+    "status": 200,
+    "type": "text/javascript; charset=UTF-8",
+    "bytes": 712
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/links/4138360",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 152
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/pdf-links",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 28
+  },
+  {
+    "url": "https://api.userway.org/api/a11y-data/v0/page/https%3A%2F%2Flakewoodranch.com%2Fhome-finder%2F/DESKTOP/WIDGET_ON/status",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 77
+  },
+  {
+    "url": "https://api.userway.org/api/br-links/v0/contribute/4138360",
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "bytes": 51
+  },
+  {
+    "url": "https://nrpc.olark.com/nrpc/p?j=olark-21783042113181&&c=pollevents&q=5233.13181.2&i=olxx3vV6o17R1Itc5V9LZ0P0DatzbrnO&s=1108-972-10-9315&v=8vnJkQ7bfZsD09Zo5V9LZ0P02obn7Kat&g=undefined&cb=hbl.client.callbacks.pollevents&after=1783042104924&ne",
+    "status": 200,
+    "type": "text/javascript; charset=UTF-8",
+    "bytes": 712
+  }
+]

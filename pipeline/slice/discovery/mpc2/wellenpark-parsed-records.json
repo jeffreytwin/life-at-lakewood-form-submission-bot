@@ -1,0 +1,3082 @@
+[
+  {
+    "price": "$477,362",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,904"
+  },
+  {
+    "price": "$859,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,861"
+  },
+  {
+    "price": "$324,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,662"
+  },
+  {
+    "price": "$457,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Coach Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,741"
+  },
+  {
+    "price": "$434,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,064"
+  },
+  {
+    "price": "$639,249",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,843"
+  },
+  {
+    "price": "$493,992",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,207"
+  },
+  {
+    "price": "$316,998",
+    "neighborhood": "Wellen Park Golf & Country Club - Terrace Condominiums",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,301"
+  },
+  {
+    "price": "$263,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$449,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,632"
+  },
+  {
+    "price": "$594,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Executive Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,247"
+  },
+  {
+    "price": "$499,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,209"
+  },
+  {
+    "price": "$804,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "4",
+    "baths": "4",
+    "sqft": "3,138"
+  },
+  {
+    "price": "$428,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,427"
+  },
+  {
+    "price": "$449,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,316"
+  },
+  {
+    "price": "$329,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,406"
+  },
+  {
+    "price": "$408,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,904"
+  },
+  {
+    "price": "$299,997",
+    "neighborhood": "Wellen Park Golf & Country Club - Terrace Condominiums",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,301"
+  },
+  {
+    "price": "$676,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,762"
+  },
+  {
+    "price": "$834,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "5",
+    "baths": "4",
+    "sqft": "3,550"
+  },
+  {
+    "price": "$375,898",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$616,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,908"
+  },
+  {
+    "price": "$629,129",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,843"
+  },
+  {
+    "price": "$660,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Estate Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,395"
+  },
+  {
+    "price": "$802,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,379"
+  },
+  {
+    "price": "$349,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$804,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,881"
+  },
+  {
+    "price": "$702,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,867"
+  },
+  {
+    "price": "$706,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,327"
+  },
+  {
+    "price": "$381,812",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$499,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,813"
+  },
+  {
+    "price": "$605,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,628"
+  },
+  {
+    "price": "$359,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Carriage Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,848"
+  },
+  {
+    "price": "$420,000",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "4",
+    "baths": "2",
+    "sqft": "1,850"
+  },
+  {
+    "price": "$448,990",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "2,080"
+  },
+  {
+    "price": "$754,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,565"
+  },
+  {
+    "price": "$857,990",
+    "neighborhood": "Palmera Wellen Park – Executive Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,253"
+  },
+  {
+    "price": "$799,900",
+    "neighborhood": "Palmera at Wellen Park by Homes by Towne",
+    "builder": "Homes by Towne",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,675"
+  },
+  {
+    "price": "$575,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,698"
+  },
+  {
+    "price": "$939,900",
+    "neighborhood": "Palmera at Wellen Park by Homes by Towne",
+    "builder": "Homes by Towne",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "3,426"
+  },
+  {
+    "price": "$494,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,632"
+  },
+  {
+    "price": "$405,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,601"
+  },
+  {
+    "price": "$472,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,778"
+  },
+  {
+    "price": "$549,665",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,349"
+  },
+  {
+    "price": "$644,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,903"
+  },
+  {
+    "price": "$878,990",
+    "neighborhood": "Palmera Wellen Park – Executive Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,327"
+  },
+  {
+    "price": "$850,900",
+    "neighborhood": "Palmera - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,624"
+  },
+  {
+    "price": "$373,003",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,553"
+  },
+  {
+    "price": "$684,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,475"
+  },
+  {
+    "price": "$478,787",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,735"
+  },
+  {
+    "price": "$268,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$474,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,687"
+  },
+  {
+    "price": "$849,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "4",
+    "baths": "4",
+    "sqft": "3,618"
+  },
+  {
+    "price": "$507,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,894"
+  },
+  {
+    "price": "$954,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "4",
+    "sqft": "4,643"
+  },
+  {
+    "price": "$612,441",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,209"
+  },
+  {
+    "price": "$284,000",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,341"
+  },
+  {
+    "price": "$719,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,235"
+  },
+  {
+    "price": "$369,603",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$620,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,385"
+  },
+  {
+    "price": "$429,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$725,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,057"
+  },
+  {
+    "price": "$538,335",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,209"
+  },
+  {
+    "price": "$627,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "2",
+    "sqft": "2,429"
+  },
+  {
+    "price": "$274,000",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,463"
+  },
+  {
+    "price": "$479,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,601"
+  },
+  {
+    "price": "$397,990",
+    "neighborhood": "Wysteria",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$427,095",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,662"
+  },
+  {
+    "price": "$533,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,813"
+  },
+  {
+    "price": "$689,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Estate Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,650"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,706"
+  },
+  {
+    "price": "$273,997",
+    "neighborhood": "Wellen Park Golf & Country Club - Terrace Condominiums",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,154"
+  },
+  {
+    "price": "$654,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,697"
+  },
+  {
+    "price": "$383,148",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$299,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Carriage Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,487"
+  },
+  {
+    "price": "$900,900",
+    "neighborhood": "Palmera - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,003"
+  },
+  {
+    "price": "$559,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "2,269"
+  },
+  {
+    "price": "$635,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,478"
+  },
+  {
+    "price": "$360,998",
+    "neighborhood": "Wellen Park Golf & Country Club - Carriage Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,848"
+  },
+  {
+    "price": "$507,468",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$415,990",
+    "neighborhood": "Wysteria",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,682"
+  },
+  {
+    "price": "$599,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,346"
+  },
+  {
+    "price": "$492,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Executive Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,850"
+  },
+  {
+    "price": "$565,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,306"
+  },
+  {
+    "price": "$421,990",
+    "neighborhood": "Wysteria",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,778"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,904"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,506"
+  },
+  {
+    "price": "$779,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,021"
+  },
+  {
+    "price": "$833,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,500"
+  },
+  {
+    "price": "$548,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,209"
+  },
+  {
+    "price": "$339,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,406"
+  },
+  {
+    "price": "$262,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Terrace Condominiums",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,120"
+  },
+  {
+    "price": "$690,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,573"
+  },
+  {
+    "price": "$525,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,085"
+  },
+  {
+    "price": "$739,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,880"
+  },
+  {
+    "price": "$359,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,721"
+  },
+  {
+    "price": "$472,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$387,502",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$292,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Terrace Condominiums",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,301"
+  },
+  {
+    "price": "$389,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,765"
+  },
+  {
+    "price": "$408,380",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,765"
+  },
+  {
+    "price": "$414,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,677"
+  },
+  {
+    "price": "$771,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,938"
+  },
+  {
+    "price": "$514,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Executive Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,246"
+  },
+  {
+    "price": "$531,995",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,156"
+  },
+  {
+    "price": "$789,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,692"
+  },
+  {
+    "price": "$667,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,962"
+  },
+  {
+    "price": "$398,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,754"
+  },
+  {
+    "price": "$346,000",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,721"
+  },
+  {
+    "price": "$684,690",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,601"
+  },
+  {
+    "price": "$794,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,309"
+  },
+  {
+    "price": "$707,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,562"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$434,075",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,574"
+  },
+  {
+    "price": "$420,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,709"
+  },
+  {
+    "price": "$423,990",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,889"
+  },
+  {
+    "price": "$374,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,702"
+  },
+  {
+    "price": "$268,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$829,900",
+    "neighborhood": "Palmera at Wellen Park by Homes by Towne",
+    "builder": "Homes by Towne",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "3,023"
+  },
+  {
+    "price": "$431,990",
+    "neighborhood": "Wysteria",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,860"
+  },
+  {
+    "price": "$429,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$674,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,962"
+  },
+  {
+    "price": "$314,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,341"
+  },
+  {
+    "price": "$371,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,848"
+  },
+  {
+    "price": "$409,990",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "4",
+    "baths": "2",
+    "sqft": "1,850"
+  },
+  {
+    "price": "$380,812",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$503,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,379"
+  },
+  {
+    "price": "$537,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,962"
+  },
+  {
+    "price": "$425,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,638"
+  },
+  {
+    "price": "$373,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,706"
+  },
+  {
+    "price": "$685,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "5",
+    "baths": "4",
+    "sqft": "3,677"
+  },
+  {
+    "price": "$412,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Coach Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,741"
+  },
+  {
+    "price": "$694,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,535"
+  },
+  {
+    "price": "$534,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Executive Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,247"
+  },
+  {
+    "price": "$546,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,682"
+  },
+  {
+    "price": "$541,996",
+    "neighborhood": "Wellen Park Golf & Country Club - Executive Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "2,061"
+  },
+  {
+    "price": "$467,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,316"
+  },
+  {
+    "price": "$669,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,378"
+  },
+  {
+    "price": "$478,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,916"
+  },
+  {
+    "price": "$383,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,860"
+  },
+  {
+    "price": "$634,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,506"
+  },
+  {
+    "price": "$374,005",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$546,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,559"
+  },
+  {
+    "price": "$274,000",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,463"
+  },
+  {
+    "price": "$382,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,702"
+  },
+  {
+    "price": "$451,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,235"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,859"
+  },
+  {
+    "price": "$473,099",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,709"
+  },
+  {
+    "price": "$432,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,682"
+  },
+  {
+    "price": "$498,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,309"
+  },
+  {
+    "price": "$319,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Carriage Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,710"
+  },
+  {
+    "price": "$831,224",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,085"
+  },
+  {
+    "price": "$378,253",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$419,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,735"
+  },
+  {
+    "price": "$743,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,537"
+  },
+  {
+    "price": "$654,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,291"
+  },
+  {
+    "price": "$714,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,833"
+  },
+  {
+    "price": "$746,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,871"
+  },
+  {
+    "price": "$371,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,702"
+  },
+  {
+    "price": "$496,000",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,904"
+  },
+  {
+    "price": "$489,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,005"
+  },
+  {
+    "price": "$899,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,665"
+  },
+  {
+    "price": "$824,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "4",
+    "baths": "4",
+    "sqft": "3,339"
+  },
+  {
+    "price": "$821,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "4",
+    "baths": "4",
+    "sqft": "3,460"
+  },
+  {
+    "price": "$513,545",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,916"
+  },
+  {
+    "price": "$795,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,520"
+  },
+  {
+    "price": "$606,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,868"
+  },
+  {
+    "price": "$353,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$699,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,026"
+  },
+  {
+    "price": "$549,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,813"
+  },
+  {
+    "price": "$399,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,483"
+  },
+  {
+    "price": "$909,900",
+    "neighborhood": "Palmera - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,086"
+  },
+  {
+    "price": "$508,968",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$276,998",
+    "neighborhood": "Wellen Park Golf & Country Club - Terrace Condominiums",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,120"
+  },
+  {
+    "price": "$549,995",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,257"
+  },
+  {
+    "price": "$904,900",
+    "neighborhood": "Palmera - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "3,045"
+  },
+  {
+    "price": "$590,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,156"
+  },
+  {
+    "price": "$569,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,991"
+  },
+  {
+    "price": "$509,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Executive Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "2,061"
+  },
+  {
+    "price": "$329,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,544"
+  },
+  {
+    "price": "$751,036",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,057"
+  },
+  {
+    "price": "$568,694",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,005"
+  },
+  {
+    "price": "$439,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,908"
+  },
+  {
+    "price": "$649,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,500"
+  },
+  {
+    "price": "$352,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,638"
+  },
+  {
+    "price": "$829,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,697"
+  },
+  {
+    "price": "$459,695",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,908"
+  },
+  {
+    "price": "$999,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,868"
+  },
+  {
+    "price": "$448,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,860"
+  },
+  {
+    "price": "$501,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "2",
+    "sqft": "2,429"
+  },
+  {
+    "price": "$502,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,843"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$299,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,544"
+  },
+  {
+    "price": "$345,148",
+    "neighborhood": "Wellen Park Golf & Country Club - Carriage Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,835"
+  },
+  {
+    "price": "$618,026",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "2,193"
+  },
+  {
+    "price": "$769,900",
+    "neighborhood": "Palmera at Wellen Park by Homes by Towne",
+    "builder": "Homes by Towne",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,375"
+  },
+  {
+    "price": "$839,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,506"
+  },
+  {
+    "price": "$943,900",
+    "neighborhood": "Palmera - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,078"
+  },
+  {
+    "price": "$576,990",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,870"
+  },
+  {
+    "price": "$429,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,787"
+  },
+  {
+    "price": "$399,969",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,483"
+  },
+  {
+    "price": "$435,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Coach Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,741"
+  },
+  {
+    "price": "$557,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Executive Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,246"
+  },
+  {
+    "price": "$489,990",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "5",
+    "baths": "3",
+    "sqft": "2,615"
+  },
+  {
+    "price": "$461,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Coach Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,110"
+  },
+  {
+    "price": "$839,900",
+    "neighborhood": "Palmera at Wellen Park by Homes by Towne",
+    "builder": "Homes by Towne",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "3,148"
+  },
+  {
+    "price": "$393,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,859"
+  },
+  {
+    "price": "$520,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,005"
+  },
+  {
+    "price": "$684,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,850"
+  },
+  {
+    "price": "$577,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,860"
+  },
+  {
+    "price": "$724,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,598"
+  },
+  {
+    "price": "$433,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Coach Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,110"
+  },
+  {
+    "price": "$458,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,316"
+  },
+  {
+    "price": "$382,048",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$270,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Terrace Condominiums",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,154"
+  },
+  {
+    "price": "$375,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,778"
+  },
+  {
+    "price": "$448,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,611"
+  },
+  {
+    "price": "$629,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,282"
+  },
+  {
+    "price": "$449,879",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,677"
+  },
+  {
+    "price": "$479,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,894"
+  },
+  {
+    "price": "$858,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,234"
+  },
+  {
+    "price": "$626,995",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,143"
+  },
+  {
+    "price": "$821,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,688"
+  },
+  {
+    "price": "$566,995",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,500"
+  },
+  {
+    "price": "$375,898",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$763,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Estate Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,799"
+  },
+  {
+    "price": "$556,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,909"
+  },
+  {
+    "price": "$498,995",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,872"
+  },
+  {
+    "price": "$814,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "4",
+    "baths": "4",
+    "sqft": "3,745"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,702"
+  },
+  {
+    "price": "$974,900",
+    "neighborhood": "Palmera - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "5",
+    "baths": "3",
+    "sqft": "3,610"
+  },
+  {
+    "price": "$739,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,520"
+  },
+  {
+    "price": "$414,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$372,083",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$444,626",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,601"
+  },
+  {
+    "price": "$500,999",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,843"
+  },
+  {
+    "price": "$860,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,698"
+  },
+  {
+    "price": "$377,748",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$512,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,427"
+  },
+  {
+    "price": "$619,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,300"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$984,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,698"
+  },
+  {
+    "price": "$710,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,756"
+  },
+  {
+    "price": "$370,753",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$849,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,035"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$374,053",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$694,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,529"
+  },
+  {
+    "price": "$263,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,463"
+  },
+  {
+    "price": "$377,348",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$429,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,014"
+  },
+  {
+    "price": "$851,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,636"
+  },
+  {
+    "price": "$388,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,574"
+  },
+  {
+    "price": "$506,990",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "4",
+    "baths": "2",
+    "sqft": "2,894"
+  },
+  {
+    "price": "$367,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,682"
+  },
+  {
+    "price": "$724,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,661"
+  },
+  {
+    "price": "$439,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,110"
+  },
+  {
+    "price": "$346,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Carriage Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,835"
+  },
+  {
+    "price": "$676,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Estate Homes",
+    "builder": "Lennar",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,553"
+  },
+  {
+    "price": "$462,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,332"
+  },
+  {
+    "price": "$784,990",
+    "neighborhood": "Wellen Park",
+    "builder": "Homes by WestBay",
+    "beds": "4",
+    "baths": "4",
+    "sqft": "3,144"
+  },
+  {
+    "price": "$789,900",
+    "neighborhood": "Palmera at Wellen Park by Homes by Towne",
+    "builder": "Homes by Towne",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,791"
+  },
+  {
+    "price": "$530,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "5",
+    "baths": "4",
+    "sqft": "3,019"
+  },
+  {
+    "price": "$801,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "3,067"
+  },
+  {
+    "price": "$458,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,687"
+  },
+  {
+    "price": "$568,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,860"
+  },
+  {
+    "price": "$689,990",
+    "neighborhood": "Palmera Wellen Park - Classic Series",
+    "builder": "David Weekley Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,882"
+  },
+  {
+    "price": "$592,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "2,193"
+  },
+  {
+    "price": "$482,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,638"
+  },
+  {
+    "price": "$543,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,064"
+  },
+  {
+    "price": "$312,147",
+    "neighborhood": "Wellen Park Golf & Country Club - Carriage Homes",
+    "builder": "Lennar",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,487"
+  },
+  {
+    "price": "$995,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,654"
+  },
+  {
+    "price": "$483,999",
+    "neighborhood": "Wellen Park Golf & Country Club - Coach Homes",
+    "builder": "Lennar",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,110"
+  },
+  {
+    "price": "$659,990",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,600"
+  },
+  {
+    "price": "$840,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,156"
+  },
+  {
+    "price": "$412,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,812"
+  },
+  {
+    "price": "$579,445",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,005"
+  },
+  {
+    "price": "$588,995",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,920"
+  },
+  {
+    "price": "$519,990",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,349"
+  },
+  {
+    "price": "$880,900",
+    "neighborhood": "Palmera - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,995"
+  },
+  {
+    "price": "$704,615",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,601"
+  },
+  {
+    "price": "$477,362",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,904"
+  },
+  {
+    "price": "$639,249",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,843"
+  },
+  {
+    "price": "$449,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,632"
+  },
+  {
+    "price": "$449,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,316"
+  },
+  {
+    "price": "$676,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,762"
+  },
+  {
+    "price": "$437,279",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,706"
+  },
+  {
+    "price": "$375,898",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$629,129",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,843"
+  },
+  {
+    "price": "$802,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,379"
+  },
+  {
+    "price": "$706,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,327"
+  },
+  {
+    "price": "$381,812",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$499,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,813"
+  },
+  {
+    "price": "$420,000",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "4",
+    "baths": "2",
+    "sqft": "1,850"
+  },
+  {
+    "price": "$494,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,632"
+  },
+  {
+    "price": "$986,568",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,085"
+  },
+  {
+    "price": "$472,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,778"
+  },
+  {
+    "price": "$549,665",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,349"
+  },
+  {
+    "price": "$373,003",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,553"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Wysteria",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,530"
+  },
+  {
+    "price": "$478,787",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,735"
+  },
+  {
+    "price": "$268,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$474,990",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,687"
+  },
+  {
+    "price": "$612,441",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,209"
+  },
+  {
+    "price": "$284,000",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,341"
+  },
+  {
+    "price": "$719,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,235"
+  },
+  {
+    "price": "$369,603",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$429,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$538,335",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,209"
+  },
+  {
+    "price": "$627,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "2",
+    "sqft": "2,429"
+  },
+  {
+    "price": "$274,000",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,463"
+  },
+  {
+    "price": "$427,095",
+    "neighborhood": "Lakespur Wellen Park",
+    "builder": "Pulte Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,662"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,706"
+  },
+  {
+    "price": "$383,148",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$507,468",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,904"
+  },
+  {
+    "price": "$833,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,500"
+  },
+  {
+    "price": "$339,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,406"
+  },
+  {
+    "price": "$387,502",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$408,380",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,765"
+  },
+  {
+    "price": "$667,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,962"
+  },
+  {
+    "price": "$346,000",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,721"
+  },
+  {
+    "price": "$684,690",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,601"
+  },
+  {
+    "price": "$794,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,309"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$434,075",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,574"
+  },
+  {
+    "price": "$374,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,702"
+  },
+  {
+    "price": "$268,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$429,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$674,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,962"
+  },
+  {
+    "price": "$380,812",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$425,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,638"
+  },
+  {
+    "price": "$546,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,682"
+  },
+  {
+    "price": "$467,990",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,316"
+  },
+  {
+    "price": "$669,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,378"
+  },
+  {
+    "price": "$374,005",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,501"
+  },
+  {
+    "price": "$274,000",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,463"
+  },
+  {
+    "price": "$382,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,702"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,859"
+  },
+  {
+    "price": "$473,099",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,709"
+  },
+  {
+    "price": "$422,704",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$831,224",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,085"
+  },
+  {
+    "price": "$378,253",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$496,000",
+    "neighborhood": "Palmera at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,904"
+  },
+  {
+    "price": "$899,900",
+    "neighborhood": "Oakbend - Wellen Park",
+    "builder": "ICI Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,665"
+  },
+  {
+    "price": "$513,545",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,916"
+  },
+  {
+    "price": "$795,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,520"
+  },
+  {
+    "price": "$887,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,762"
+  },
+  {
+    "price": "$549,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,813"
+  },
+  {
+    "price": "$508,968",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$751,036",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "3,057"
+  },
+  {
+    "price": "$568,694",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,005"
+  },
+  {
+    "price": "$649,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,500"
+  },
+  {
+    "price": "$459,695",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,908"
+  },
+  {
+    "price": "$999,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,868"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$299,990",
+    "neighborhood": "Lakespur at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,544"
+  },
+  {
+    "price": "$618,026",
+    "neighborhood": "Brightmore at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "2,193"
+  },
+  {
+    "price": "$399,969",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,483"
+  },
+  {
+    "price": "$577,990",
+    "neighborhood": "Palmera",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,860"
+  },
+  {
+    "price": "$382,048",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$629,000",
+    "neighborhood": "Oakbend Wellen Park",
+    "builder": "Toll Brothers",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,282"
+  },
+  {
+    "price": "$449,879",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,677"
+  },
+  {
+    "price": "$550,689",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,425"
+  },
+  {
+    "price": "$821,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,688"
+  },
+  {
+    "price": "$375,898",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$399,990",
+    "neighborhood": "Palmera At Wellen Park",
+    "builder": "M/I Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,702"
+  },
+  {
+    "price": "$739,990",
+    "neighborhood": "Avelina",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,520"
+  },
+  {
+    "price": "$372,083",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$444,626",
+    "neighborhood": "Sunstone at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,601"
+  },
+  {
+    "price": "$860,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,698"
+  },
+  {
+    "price": "$377,748",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$984,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,698"
+  },
+  {
+    "price": "$370,753",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$266,990",
+    "neighborhood": "Ashcombe Wellen Park",
+    "builder": "D.R. Horton",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "1,464"
+  },
+  {
+    "price": "$374,053",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$377,348",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,533"
+  },
+  {
+    "price": "$482,990",
+    "neighborhood": "Grand Palm",
+    "builder": "Neal Communities",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,638"
+  },
+  {
+    "price": "$543,990",
+    "neighborhood": "Boca Royale Golf and Country Club at Wellen Park",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,064"
+  },
+  {
+    "price": "$995,990",
+    "neighborhood": "Boca Royale Golf and Country Club",
+    "builder": "Neal Communities",
+    "beds": "3",
+    "baths": "3",
+    "sqft": "2,654"
+  },
+  {
+    "price": "$605,409",
+    "neighborhood": "Esplanade at Wellen Park",
+    "builder": "Taylor Morrison",
+    "beds": "2",
+    "baths": "2",
+    "sqft": "1,677"
+  },
+  {
+    "price": "$579,445",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "3",
+    "baths": "2",
+    "sqft": "2,005"
+  },
+  {
+    "price": "$704,615",
+    "neighborhood": "Sunstone Lakeside at Wellen Park",
+    "builder": "Mattamy Homes",
+    "beds": "4",
+    "baths": "3",
+    "sqft": "2,601"
+  }
+]
