@@ -1,0 +1,186 @@
+{
+  "pages": {
+    "/our-homes/": {
+      "status": 200,
+      "finalUrl": "https://lakewoodranch.com/home-finder/",
+      "bytes": 157412,
+      "cards": 0,
+      "hits": {
+        "sweetwater": 1,
+        "waterbury": 1
+      }
+    },
+    "/our-homes/homes/": {
+      "status": 200,
+      "finalUrl": "https://lakewoodranch.com/builders/homes-by-towne/",
+      "bytes": 123738,
+      "cards": 0,
+      "hits": {}
+    },
+    "/our-homes/quick-move-in/": {
+      "status": 404,
+      "finalUrl": "https://lakewoodranch.com/our-homes/quick-move-in/",
+      "bytes": 121043,
+      "cards": 0,
+      "hits": {}
+    },
+    "/our-homes/homes-for-sale/": {
+      "status": 404,
+      "finalUrl": "https://lakewoodranch.com/our-homes/homes-for-sale/",
+      "bytes": 121055,
+      "cards": 0,
+      "hits": {}
+    },
+    "/homes/": {
+      "status": 200,
+      "finalUrl": "https://lakewoodranch.com/homes/",
+      "bytes": 133669,
+      "cards": 0,
+      "hits": {}
+    },
+    "/homes-for-sale/": {
+      "status": 404,
+      "finalUrl": "https://lakewoodranch.com/homes-for-sale/",
+      "bytes": 121002,
+      "cards": 0,
+      "hits": {}
+    },
+    "/quick-move-in-homes/": {
+      "status": 404,
+      "finalUrl": "https://lakewoodranch.com/quick-move-in-homes/",
+      "bytes": 121028,
+      "cards": 0,
+      "hits": {}
+    },
+    "/available-homes/": {
+      "status": 404,
+      "finalUrl": "https://lakewoodranch.com/available-homes/",
+      "bytes": 121017,
+      "cards": 0,
+      "hits": {}
+    },
+    "/find-a-home/": {
+      "status": 404,
+      "finalUrl": "https://lakewoodranch.com/find-a-home/",
+      "bytes": 120999,
+      "cards": 0,
+      "hits": {}
+    },
+    "/our-homes/villages/": {
+      "status": 200,
+      "finalUrl": "https://lakewoodranch.com/our-homes/villages/",
+      "bytes": 175412,
+      "cards": 0,
+      "hits": {
+        "sweetwater": 5,
+        "waterbury": 5
+      }
+    },
+    "/our-homes/builders/": {
+      "status": 200,
+      "finalUrl": "https://lakewoodranch.com/our-homes/builders/",
+      "bytes": 178610,
+      "cards": 0,
+      "hits": {
+        "sweetwater": 3,
+        "waterbury": 3
+      }
+    },
+    "/new-homes/": {
+      "status": 200,
+      "finalUrl": "https://lakewoodranch.com/event/new-homes-in-bloom-at-cresswind-lakewood-ranch/",
+      "bytes": 127394,
+      "cards": 0,
+      "hits": {}
+    },
+    "/homefinder/": {
+      "status": 404,
+      "finalUrl": "https://lakewoodranch.com/homefinder/",
+      "bytes": 120997,
+      "cards": 0,
+      "hits": {}
+    }
+  },
+  "ajax": {
+    "GET get_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST get_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "GET home_search": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST home_search": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "GET homefinder": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST homefinder": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "GET filter_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST filter_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "GET load_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST load_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "GET property_search": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST property_search": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "GET homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "GET search_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    },
+    "POST search_homes": {
+      "status": 400,
+      "bytes": 1,
+      "isData": false
+    }
+  }
+}
