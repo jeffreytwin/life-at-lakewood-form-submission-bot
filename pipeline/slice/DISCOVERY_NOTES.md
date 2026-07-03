@@ -81,14 +81,28 @@ ICI/Neal Signature → (done) Toll QMIs.
   (200, 339 KB). Round 7 dumps the full object → json_api extractor that
   regex-extracts the inline JSON. No Playwright needed.
 
-## M/I Homes — still blocked for Node fetch
+## M/I Homes — needs Playwright (Node transports exhausted)
 
 - The SSC Search API (`/sitecore/api/ssc/MIHomes-Project-Website-Api/Search`,
-  `searchtype=plans|inventory`) returns 500 KB+ in a real browser but
-  **hangs until timeout for Node fetch** (rounds 6–7; Cloudflare holds
-  non-browser TLS connections on the API path while page HTML is served
-  fine). Options: Playwright-in-Actions engine, or a TLS-impersonation
-  fetch. Parked behind the others.
+  `searchtype=plans|inventory`) returns 500 KB+ to **real Chrome from the
+  same GitHub-runner IPs** (round-5 Playwright capture) but is unreachable
+  from Node. Rounds 9–10 tried every transport from a runner:
+  - `fetch` (undici), `node:https` (default + Chrome cipher order),
+    `http2` (default ciphers), and `curl` → all **hang to timeout**.
+  - `http2` + Chrome cipher order → occasional **429 in ~200ms** (request
+    accepted, rate-limited) but **never a 200**, even retrying through the
+    429 with backoff and a full Chrome h2 header set (round 10).
+- Verdict: the block is JA3/JA4 TLS fingerprinting that Node's TLS stack
+  can't reliably impersonate. **M/I requires a real-browser engine**
+  (Playwright renders the plans/QMI pages — round-5 confirmed) run in
+  Actions, with results committed back for Vercel to read — the same
+  render-engine infrastructure a `render_claude` builder would need. This
+  is a build-a-render-path decision, not a config tweak; parked until the
+  ICI/Neal egress question is resolved (same "non-standard transport"
+  bucket).
+- If M/I is prioritized: the Search API response shape is already captured
+  (`round5/mihomes-plans.capture-1.pruned.json` — communities[] with
+  hometypes) so the mapping is ready the moment a transport delivers it.
 
 ### Original findings
 
