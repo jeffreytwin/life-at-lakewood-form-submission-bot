@@ -1,0 +1,83 @@
+{
+ "plans": {
+  "attempts": [
+   {
+    "attempt": 1,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 2,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 3,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 4,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 5,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 6,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   }
+  ],
+  "ok": false
+ },
+ "inventory": {
+  "attempts": [
+   {
+    "attempt": 1,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 2,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 3,
+    "status": 429,
+    "bytes": 0
+   },
+   {
+    "attempt": 4,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 5,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   },
+   {
+    "attempt": 6,
+    "status": 0,
+    "bytes": 0,
+    "error": "timeout"
+   }
+  ],
+  "ok": false
+ }
+}
