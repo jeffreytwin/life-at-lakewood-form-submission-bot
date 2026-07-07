@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
 import { onLeadEvent } from "@/lib/lead-events";
 import { getActiveCharacter, ensureScheduleLoaded } from "@/lib/bot-characters";
 
 const CHAR_DELAY = 35; // ms per character — SNES typewriter speed
 const DISPLAY_DURATION = 6000; // ms to show after fully typed
 
-export default function SpeechBubble() {
+export interface SpeechBubbleHandle {
+  /** Replay the welcome line + codec sound, same as on page load. */
+  playWelcome: () => void;
+}
+
+const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props, ref) {
   const [visible, setVisible] = useState(false);
   const [displayText, setDisplayText] = useState("");
   const fullText = useRef("");
@@ -51,6 +56,8 @@ export default function SpeechBubble() {
     audio.play().catch(() => {});
   }, [showMessage]);
 
+  useImperativeHandle(ref, () => ({ playWelcome }), [playWelcome]);
+
   // Welcome message on mount — waits for the schedule to load so we use
   // today's actual character and not the default fallback.
   useEffect(() => {
@@ -92,4 +99,6 @@ export default function SpeechBubble() {
       <span className="speech-bubble-cursor">_</span>
     </div>
   );
-}
+});
+
+export default SpeechBubble;
