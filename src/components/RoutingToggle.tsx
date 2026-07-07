@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import SpeechBubble from "./SpeechBubble";
+import SpeechBubble, { type SpeechBubbleHandle } from "./SpeechBubble";
 import { onLeadEvent } from "@/lib/lead-events";
 import { type BotCharacterGifs } from "@/lib/bot-characters";
 import { useActiveCharacter } from "@/lib/bot-characters/use-active-character";
@@ -77,6 +77,7 @@ export default function RoutingToggle() {
   const [nightActive, setNightActive] = useState(false);
   const [hidden, setHidden] = useState(false);
   const celebrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speechBubble = useRef<SpeechBubbleHandle>(null);
   const preCharacter = useRef<CharacterState>("standing-there");
   // Active character resolves from the schedule (cached + subscribed); the
   // component re-renders when the schedule loads or when the user saves a
@@ -271,12 +272,12 @@ export default function RoutingToggle() {
         const size = Math.round(baseSize * scale);
         return (
           <div className="routing-character" style={{ position: "relative", marginBottom: -2, display: "flex", alignItems: "flex-start" }}>
-            <SpeechBubble />
+            <SpeechBubble ref={speechBubble} />
             <img
               src={src}
               alt="Character"
               onClick={() => {
-                playCelebration.current();
+                speechBubble.current?.playWelcome();
               }}
               style={{
                 width: size,
