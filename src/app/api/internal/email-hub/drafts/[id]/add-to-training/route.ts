@@ -1,29 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
+import { stripQuotedText } from "@/lib/gmail/quote";
 import { logger } from "@/lib/shared/logger";
-
-/**
- * Strip quoted reply text from a sent email body.
- * Removes "On ... wrote:" blocks, lines starting with ">", and common separators.
- */
-function stripQuotedText(text: string): string {
-  const lines = text.split("\n");
-  const result: string[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    // Stop at "On <date> <person> wrote:" pattern
-    if (/^On .+ wrote:\s*$/.test(line.trim())) break;
-    // Stop at common separators
-    if (/^-{3,}\s*(Original Message|Forwarded message)/i.test(line.trim())) break;
-    if (/^_{3,}/.test(line.trim())) break;
-    // Skip lines starting with ">"
-    if (line.trim().startsWith(">")) continue;
-    result.push(line);
-  }
-
-  return result.join("\n").trim();
-}
 
 /**
  * Strip email signature block from the end of the body.

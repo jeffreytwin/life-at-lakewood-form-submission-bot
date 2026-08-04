@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { generateDraft } from "@/lib/ai/draft-generator";
+import { stripQuotedText } from "@/lib/gmail/quote";
 import { logger } from "@/lib/shared/logger";
 
 /**
@@ -62,7 +63,13 @@ export async function POST(
         conversationThread = messages
           .map((m: { direction: string; from_email: string | null; body_text: string | null }) => {
             const dir = m.direction === "inbound" ? "From" : "To";
-            return `${dir}: ${m.from_email}\n${m.body_text ?? ""}`;
+            // Our own sent replies carry a quoted-history trailer; strip it
+            // so the prompt doesn't repeat every earlier message.
+            const body =
+              m.direction === "outbound"
+                ? stripQuotedText(m.body_text ?? "")
+                : (m.body_text ?? "");
+            return `${dir}: ${m.from_email}\n${body}`;
           })
           .join("\n---\n");
       }

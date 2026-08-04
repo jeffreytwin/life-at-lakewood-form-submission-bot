@@ -14,6 +14,7 @@ import {
   getProfile,
 } from "./client";
 import { triggerAgentHandoff } from "./trigger-handoff";
+import { stripQuotedText } from "./quote";
 import {
   updateDraftLeadStatus,
   senderAlreadyHasLeadStatus,
@@ -169,7 +170,11 @@ async function processSentMessage(
 
   const draft = drafts[0];
   const originalDraftText = draft.body_text ?? "";
-  const wasChanged = normalizeForComparison(sentBodyText) !== normalizeForComparison(originalDraftText);
+  // Sent bodies include the quoted-history trailer the draft body never
+  // has — strip it so only real edits count as changes.
+  const wasChanged =
+    normalizeForComparison(stripQuotedText(sentBodyText)) !==
+    normalizeForComparison(originalDraftText);
 
   // Update draft with sent info
   await supabase
