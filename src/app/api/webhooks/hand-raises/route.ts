@@ -101,22 +101,23 @@ export async function POST(request: NextRequest) {
       const [month, year] = etMonth.split("/");
       const yearMonth = `${year}-${month}`;
 
-      // Delete existing snapshot for this month, then insert fresh data
-      await supabase
-        .from("hand_raise_snapshots")
-        .delete()
-        .eq("type", "monthly_by_agent")
-        .eq("year_month", yearMonth);
+      // Upsert rather than delete-then-insert: on-demand refreshes fired
+      // after ownership transfers can overlap the scheduled 30-minute sync,
+      // and two interleaved wholesale replaces would corrupt the snapshot.
+      const uniqueAgents = [
+        ...new Map(agents.map((a) => [a.salesforce_user_id, a])).values(),
+      ];
 
-      const { error } = await supabase.from("hand_raise_snapshots").insert(
-        agents.map((a) => ({
+      const { error } = await supabase.from("hand_raise_snapshots").upsert(
+        uniqueAgents.map((a) => ({
           type: "monthly_by_agent",
           year_month: yearMonth,
           agent_name: a.name,
           salesforce_user_id: a.salesforce_user_id,
           count: a.count,
           synced_at: syncedAt,
-        }))
+        })),
+        { onConflict: "type,year_month,salesforce_user_id" }
       );
 
       if (error) {
@@ -127,6 +128,22 @@ export async function POST(request: NextRequest) {
           { error: "Database error", details: error.message },
           { status: 500 }
         );
+      }
+
+      // Remove agents that dropped out of the report (e.g. leads re-marked
+      // 'Bad Data'). Rows written by a concurrent newer sync survive the
+      // synced_at filter.
+      const { error: cleanupError } = await supabase
+        .from("hand_raise_snapshots")
+        .delete()
+        .eq("type", "monthly_by_agent")
+        .eq("year_month", yearMonth)
+        .lt("synced_at", syncedAt);
+
+      if (cleanupError) {
+        logger.error("Failed to remove stale monthly hand raise rows", {
+          error: cleanupError.message,
+        });
       }
 
       logger.info("Hand raises (monthly by agent) synced", {
@@ -156,33 +173,45 @@ export async function POST(request: NextRequest) {
           // Get unique dates in this batch
           const dates = [...new Set(dailyEntries.map((d) => d.date))];
 
-          // Delete existing daily snapshots for these dates
-          for (const date of dates) {
-            await supabase
-              .from("hand_raise_snapshots")
-              .delete()
-              .eq("type", "daily_by_agent")
-              .eq("year_month", date);
-          }
+          const uniqueDaily = [
+            ...new Map(
+              dailyEntries.map((d) => [`${d.date}|${d.salesforce_user_id}`, d])
+            ).values(),
+          ];
 
           const { error: dailyError } = await supabase
             .from("hand_raise_snapshots")
-            .insert(
-              dailyEntries.map((d) => ({
+            .upsert(
+              uniqueDaily.map((d) => ({
                 type: "daily_by_agent",
                 year_month: d.date,
                 agent_name: null,
                 salesforce_user_id: d.salesforce_user_id,
                 count: d.count,
                 synced_at: syncedAt,
-              }))
+              })),
+              { onConflict: "type,year_month,salesforce_user_id" }
             );
 
           if (dailyError) {
-            logger.error("Failed to insert daily agent data", {
+            logger.error("Failed to upsert daily agent data", {
               error: dailyError.message,
             });
           } else {
+            // Drop rows for agents no longer in these dates' report data
+            const { error: dailyCleanupError } = await supabase
+              .from("hand_raise_snapshots")
+              .delete()
+              .eq("type", "daily_by_agent")
+              .in("year_month", dates)
+              .lt("synced_at", syncedAt);
+
+            if (dailyCleanupError) {
+              logger.error("Failed to remove stale daily hand raise rows", {
+                error: dailyCleanupError.message,
+              });
+            }
+
             dailySynced = dailyEntries.length;
             logger.info("Daily lead counts synced from Salesforce", {
               dates,
@@ -211,15 +240,14 @@ export async function POST(request: NextRequest) {
         synced_at: syncedAt,
       }));
 
-      // Delete existing yearly snapshot, then insert fresh data
-      await supabase
-        .from("hand_raise_snapshots")
-        .delete()
-        .eq("type", "yearly_by_month");
+      // Dedupe post-normalization ("March 2026" and "2026-03" collide)
+      const uniqueRows = [
+        ...new Map(rows.map((r) => [r.year_month, r])).values(),
+      ];
 
       const { error } = await supabase
         .from("hand_raise_snapshots")
-        .insert(rows);
+        .upsert(uniqueRows, { onConflict: "type,year_month,salesforce_user_id" });
 
       if (error) {
         logger.error("Failed to upsert hand raise monthly data", {
@@ -229,6 +257,19 @@ export async function POST(request: NextRequest) {
           { error: "Database error", details: error.message },
           { status: 500 }
         );
+      }
+
+      // Drop months that fell out of the report window
+      const { error: cleanupError } = await supabase
+        .from("hand_raise_snapshots")
+        .delete()
+        .eq("type", "yearly_by_month")
+        .lt("synced_at", syncedAt);
+
+      if (cleanupError) {
+        logger.error("Failed to remove stale yearly hand raise rows", {
+          error: cleanupError.message,
+        });
       }
 
       logger.info("Hand raises (yearly by month) synced", {
