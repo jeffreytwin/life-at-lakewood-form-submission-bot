@@ -60,10 +60,14 @@ export async function pushDraftToGmail(
       const lastMsg = messages[0];
       replyToEmail = lastMsg.from_email;
 
-      // Quote the message being replied to, like Gmail's own compose does.
-      // Its body carries the thread's earlier quote chain, so recipients
-      // CC'd for the first time (agent handoffs) see the full context.
-      if (lastMsg.from_email && lastMsg.body_text) {
+      // Quote the message being replied to, like Gmail's own compose does —
+      // but only on handoff drafts (an agent CC'd in). The agent's mailbox
+      // has none of the earlier messages, so the body is their only source
+      // of context; plain replies to the lead are left untouched. Dashboard
+      // CC edits re-push the draft, so the quote follows the CC list. Known
+      // gap (accepted): a CC added directly in Gmail at send time goes out
+      // without the quote.
+      if (draft.cc_emails?.length && lastMsg.from_email && lastMsg.body_text) {
         const senderName =
           thread?.sender_email &&
           thread.sender_email.toLowerCase() === lastMsg.from_email.toLowerCase()
