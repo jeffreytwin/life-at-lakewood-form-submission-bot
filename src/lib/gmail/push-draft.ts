@@ -14,6 +14,7 @@ import {
   getSignature,
   buildRawMessage,
 } from "./client";
+import { buildQuotedText, buildQuotedHtml, stripQuotedText } from "./quote";
 import type { EmailAccount, EmailDraft, GmailCredentials } from "@/lib/supabase/types";
 
 /**
@@ -32,12 +33,13 @@ export async function pushDraftToGmail(
   let references: string | null = null;
   let replyToEmail: string | null = null;
   let providerThreadId: string | null = null;
+  let quote: { text: string; html: string } | undefined;
 
   if (draft.thread_id) {
     // Get provider_thread_id for Gmail threading
     const { data: thread } = await supabase
       .from("email_threads")
-      .select("provider_thread_id")
+      .select("provider_thread_id, sender_name, sender_email")
       .eq("id", draft.thread_id)
       .single();
 
@@ -57,6 +59,28 @@ export async function pushDraftToGmail(
     if (messages && messages.length > 0) {
       const lastMsg = messages[0];
       replyToEmail = lastMsg.from_email;
+
+      // Quote the message being replied to, like Gmail's own compose does.
+      // Its body carries the thread's earlier quote chain, so recipients
+      // CC'd for the first time (agent handoffs) see the full context.
+      if (lastMsg.from_email && lastMsg.body_text) {
+        const senderName =
+          thread?.sender_email &&
+          thread.sender_email.toLowerCase() === lastMsg.from_email.toLowerCase()
+            ? thread.sender_name
+            : null;
+        const source = {
+          receivedAt: lastMsg.received_at ?? lastMsg.created_at,
+          senderName,
+          senderEmail: lastMsg.from_email,
+          bodyText: lastMsg.body_text,
+          bodyHtml: lastMsg.body_html,
+        };
+        quote = {
+          text: buildQuotedText(source),
+          html: buildQuotedHtml(source),
+        };
+      }
 
       // Get the Gmail message to extract Message-ID header
       if (lastMsg.provider_message_id) {
@@ -92,6 +116,7 @@ export async function pushDraftToGmail(
     inReplyTo: inReplyTo ?? undefined,
     references: references ?? undefined,
     signatureHtml,
+    quote,
   });
 
   let gmailDraftId: string;
@@ -240,8 +265,10 @@ export async function reconcileDeletedDrafts(): Promise<{ discarded: number; sen
         if (outbound) {
           const sentAt = outbound.received_at ?? new Date().toISOString();
           const sentBody = outbound.body_text ?? "";
+          // Sent bodies include the quoted-history trailer the draft body
+          // never has — strip it so only real edits count as changes.
           const wasChanged =
-            sentBody.replace(/\s+/g, " ").trim() !==
+            stripQuotedText(sentBody).replace(/\s+/g, " ").trim() !==
             (draft.body_text ?? "").replace(/\s+/g, " ").trim();
           await supabase
             .from("email_drafts")

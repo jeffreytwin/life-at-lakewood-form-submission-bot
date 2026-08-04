@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { emitLeadEvent } from "@/lib/lead-events";
+import { stripQuotedText } from "@/lib/gmail/quote";
 import { formatDateET } from "@/lib/shared/format-date";
 
 type EmailDraftStatus = "drafted" | "approved" | "sent" | "discarded";
@@ -247,23 +248,6 @@ function formatRelativeDate(dateStr: string): string {
 function truncate(text: string, maxLen: number): string {
   if (text.length <= maxLen) return text;
   return text.slice(0, maxLen) + "...";
-}
-
-/**
- * Strip quoted reply text from a sent email body for display.
- */
-function stripQuotedText(text: string): string {
-  const lines = text.split("\n");
-  const result: string[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (/^On .+ wrote:\s*$/.test(line.trim())) break;
-    if (/^-{3,}\s*(Original Message|Forwarded message)/i.test(line.trim())) break;
-    if (/^_{3,}/.test(line.trim())) break;
-    if (line.trim().startsWith(">")) continue;
-    result.push(line);
-  }
-  return result.join("\n").trim();
 }
 
 function EmailDraftsPageInner() {

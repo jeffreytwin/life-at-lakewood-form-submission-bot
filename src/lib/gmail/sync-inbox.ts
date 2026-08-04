@@ -28,6 +28,7 @@ import {
   type ReconcilerAgent,
 } from "@/lib/ai/handoff-reconciler";
 import { selectHandoffAgent } from "@/lib/routing/select-handoff-agent";
+import { stripQuotedText } from "./quote";
 import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
 
@@ -490,7 +491,13 @@ export async function generateAndStoreDraft(
     const conversationThread = messages
       .map((m) => {
         const dir = m.direction === "inbound" ? "From" : "To";
-        return `${dir}: ${m.from_email}\n${m.body_text ?? ""}`;
+        // Our own sent replies carry a quoted-history trailer; strip it so
+        // the prompt doesn't repeat every earlier message.
+        const body =
+          m.direction === "outbound"
+            ? stripQuotedText(m.body_text ?? "")
+            : (m.body_text ?? "");
+        return `${dir}: ${m.from_email}\n${body}`;
       })
       .join("\n---\n");
 

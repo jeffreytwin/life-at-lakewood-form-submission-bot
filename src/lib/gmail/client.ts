@@ -446,6 +446,8 @@ export function buildRawMessage(opts: {
   references?: string;
   threadId?: string;
   signatureHtml?: string;
+  /** Gmail-style quoted history, appended after the body (and signature). */
+  quote?: { text: string; html: string };
 }): string {
   // Clean non-breaking spaces and other Unicode whitespace from subject
   const cleanSubject = opts.subject.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, " ");
@@ -466,19 +468,29 @@ export function buildRawMessage(opts: {
 
   let body: string;
 
-  if (opts.signatureHtml) {
+  // Quoted history goes after the signature, matching Gmail's default
+  // "insert signature before quoted text" reply layout.
+  const textBody = opts.quote
+    ? `${opts.bodyText}\n\n${opts.quote.text}`
+    : opts.bodyText;
+
+  if (opts.signatureHtml || opts.quote) {
     // Build multipart/alternative with text and HTML
     const boundary = `boundary_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
 
-    const htmlBody = `<div dir="ltr">${opts.bodyText.replace(/\n/g, "<br>")}</div><br><div class="gmail_signature">${opts.signatureHtml}</div>`;
-    const textWithSig = opts.bodyText;
+    const htmlBody =
+      `<div dir="ltr">${opts.bodyText.replace(/\n/g, "<br>")}</div>` +
+      (opts.signatureHtml
+        ? `<br><div class="gmail_signature">${opts.signatureHtml}</div>`
+        : "") +
+      (opts.quote ? opts.quote.html : "");
 
     body = [
       `--${boundary}`,
       "Content-Type: text/plain; charset=utf-8",
       "",
-      textWithSig,
+      textBody,
       `--${boundary}`,
       "Content-Type: text/html; charset=utf-8",
       "",
@@ -487,7 +499,7 @@ export function buildRawMessage(opts: {
     ].join("\r\n");
   } else {
     headers.push("Content-Type: text/plain; charset=utf-8");
-    body = opts.bodyText;
+    body = textBody;
   }
 
   const raw = headers.join("\r\n") + "\r\n\r\n" + body;
