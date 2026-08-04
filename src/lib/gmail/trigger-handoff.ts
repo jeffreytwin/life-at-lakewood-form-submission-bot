@@ -71,7 +71,7 @@ export async function triggerAgentHandoff(
 
   const { data: agentInfo } = await supabase
     .from("agents")
-    .select("id, name, email, phone, salesforce_user_id")
+    .select("id, name, email, phone, salesforce_user_id, is_preferred")
     .eq("id", resolvedAgentId)
     .single();
 
@@ -160,6 +160,21 @@ export async function triggerAgentHandoff(
       agent_handoff_transferred_at: new Date().toISOString(),
     })
     .eq("id", draftId);
+
+  // Clear preference flag now that this agent has received a handoff
+  if (agentInfo.is_preferred) {
+    const { error: prefError } = await supabase
+      .from("agents")
+      .update({ is_preferred: false })
+      .eq("id", agentInfo.id);
+    if (prefError) {
+      logger.error("Failed to clear preference flag after handoff (non-blocking)", {
+        draftId,
+        agentId: agentInfo.id,
+        error: prefError.message,
+      });
+    }
+  }
 
   try {
     const yearMonth = new Date().toISOString().slice(0, 7);
