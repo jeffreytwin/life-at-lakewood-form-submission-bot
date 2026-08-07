@@ -34,6 +34,34 @@ export async function updateRoutingAttemptStatus(
   return data;
 }
 
+/**
+ * Atomically transition a routing attempt's status, but only if it is still in
+ * one of `fromStatuses`. Returns the updated attempt, or null if the attempt
+ * was concurrently resolved by another handler (e.g. an acceptance webhook
+ * racing the timeout cron) — in which case nothing was written.
+ */
+export async function claimRoutingAttemptTransition(
+  id: string,
+  fromStatuses: RoutingAttemptStatus[],
+  toStatus: RoutingAttemptStatus,
+  updates?: {
+    expires_at?: string | null;
+    agent_response?: string;
+    twilio_message_sid?: string;
+  }
+): Promise<RoutingAttempt | null> {
+  const { data, error } = await supabase
+    .from("routing_attempts")
+    .update({ status: toStatus, ...updates })
+    .eq("id", id)
+    .in("status", fromStatuses)
+    .select()
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function getExpiredAttempts(): Promise<RoutingAttempt[]> {
   const { data, error } = await supabase
     .from("routing_attempts")

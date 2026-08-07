@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getExpiredAttempts } from "@/lib/supabase/queries/routing-attempts";
+import {
+  claimRoutingAttemptTransition,
+  getExpiredAttempts,
+} from "@/lib/supabase/queries/routing-attempts";
 import { getLeadById } from "@/lib/supabase/queries/leads";
 import { supabase } from "@/lib/supabase/client";
 import { handleFirstTimeout, handleSecondTimeout } from "@/lib/routing/state-machine";
@@ -24,6 +27,7 @@ export async function GET(request: NextRequest) {
     });
 
     let processed = 0;
+    let skipped = 0;
 
     for (const attempt of expiredAttempts) {
       try {
@@ -33,6 +37,25 @@ export async function GET(request: NextRequest) {
             attemptId: attempt.id,
             leadId: attempt.lead_id,
           });
+          continue;
+        }
+
+        // If the lead was resolved after this attempt was fetched (e.g. an
+        // acceptance landed moments ago), park the stale attempt instead of
+        // sending follow-ups / escalating a settled lead.
+        if (lead.routing_status === "accepted" || lead.routing_status === "manual") {
+          await claimRoutingAttemptTransition(
+            attempt.id,
+            ["sms_sent", "followup_sent"],
+            "timed_out",
+            { expires_at: null }
+          );
+          logger.warn("Skipped expired attempt — lead already resolved", {
+            attemptId: attempt.id,
+            leadId: lead.id,
+            leadStatus: lead.routing_status,
+          });
+          skipped++;
           continue;
         }
 
@@ -64,7 +87,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ processed });
+    return NextResponse.json({ processed, skipped });
   } catch (error) {
     logger.error("Cron check-timeouts error", {
       error: error instanceof Error ? error.message : String(error),
