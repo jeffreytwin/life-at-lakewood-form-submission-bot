@@ -1,5 +1,5 @@
 import {
-  updateRoutingAttemptStatus,
+  claimRoutingAttemptTransition,
   createRoutingAttempt,
   getMaxAttemptNumber,
 } from "@/lib/supabase/queries/routing-attempts";
@@ -144,11 +144,23 @@ export async function handleAcceptance(
   const agent = await getAgentById(attempt.agent_id);
   if (!agent) return;
 
-  // Update routing attempt
-  await updateRoutingAttemptStatus(attempt.id, "accepted", {
-    agent_response: responseText,
-    expires_at: null,
-  });
+  // Claim the attempt atomically; if the timeout cron already resolved it
+  // (moved on / escalated), drop the late acceptance instead of clobbering
+  // a lead that is now being offered to someone else.
+  const claimed = await claimRoutingAttemptTransition(
+    attempt.id,
+    ["sms_sent", "followup_sent"],
+    "accepted",
+    { agent_response: responseText, expires_at: null }
+  );
+  if (!claimed) {
+    logger.warn("Acceptance ignored — attempt was already resolved", {
+      leadId: lead.id,
+      attemptId: attempt.id,
+      agentName: agent.name,
+    });
+    return;
+  }
 
   // Update lead status
   await updateLeadStatus(lead.id, "accepted", agent.id);
@@ -224,11 +236,22 @@ export async function handleDecline(
   const agent = await getAgentById(attempt.agent_id);
   if (!agent) return;
 
-  // Update routing attempt
-  await updateRoutingAttemptStatus(attempt.id, "declined", {
-    agent_response: responseText,
-    expires_at: null,
-  });
+  // Claim the attempt atomically; if the timeout cron already resolved it,
+  // it has moved on / escalated for us — don't escalate a second time.
+  const claimed = await claimRoutingAttemptTransition(
+    attempt.id,
+    ["sms_sent", "followup_sent"],
+    "declined",
+    { agent_response: responseText, expires_at: null }
+  );
+  if (!claimed) {
+    logger.warn("Decline ignored — attempt was already resolved", {
+      leadId: lead.id,
+      attemptId: attempt.id,
+      agentName: agent.name,
+    });
+    return;
+  }
 
   // Send acknowledgment
   await sendDeclineAck(agent.phone);
@@ -298,10 +321,26 @@ export async function handleFirstTimeout(
   const agent = await getAgentById(attempt.agent_id);
   if (!agent) return;
 
+  // Claim the transition before texting: if the agent responded between the
+  // cron's fetch and now, the attempt is already resolved — do nothing.
+  const claimed = await claimRoutingAttemptTransition(
+    attempt.id,
+    ["sms_sent"],
+    "followup_sent",
+    { expires_at: getExpiresAt() }
+  );
+  if (!claimed) {
+    logger.info("Skipping follow-up — attempt was already resolved", {
+      leadId: attempt.lead_id,
+      attemptId: attempt.id,
+    });
+    return;
+  }
+
   const messageSid = await sendFollowUp(agent.phone);
 
-  await updateRoutingAttemptStatus(attempt.id, "followup_sent", {
-    expires_at: getExpiresAt(),
+  // Record the sid without clobbering a response that may have just landed.
+  await claimRoutingAttemptTransition(attempt.id, ["followup_sent"], "followup_sent", {
     twilio_message_sid: messageSid,
   });
 
@@ -328,11 +367,23 @@ export async function handleSecondTimeout(
   const agent = await getAgentById(attempt.agent_id);
   if (!agent) return;
 
-  await sendMovedOn(agent.phone);
+  // Claim the transition before texting or escalating: if the agent responded
+  // between the cron's fetch and now, the attempt is already resolved.
+  const claimed = await claimRoutingAttemptTransition(
+    attempt.id,
+    ["followup_sent"],
+    "timed_out",
+    { expires_at: null }
+  );
+  if (!claimed) {
+    logger.info("Skipping escalation — attempt was already resolved", {
+      leadId: lead.id,
+      attemptId: attempt.id,
+    });
+    return;
+  }
 
-  await updateRoutingAttemptStatus(attempt.id, "timed_out", {
-    expires_at: null,
-  });
+  await sendMovedOn(agent.phone);
 
   await logAuditEvent("escalated", {
     leadId: lead.id,
