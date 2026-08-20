@@ -1,5 +1,4 @@
 import { supabase } from "../client";
-import { isOnActiveRoster } from "./agents";
 import type { Lead, RoutingStatus } from "../types";
 
 export async function createLead(
@@ -85,13 +84,10 @@ export async function checkDuplicateLead(
  * manual and failed never had one, and a manual retry clears it before
  * re-routing, so those leads stay re-routable.
  *
- * Only the most recent assignment is considered, and only if its agent is
- * still on the active roster. An assignment held by a departed agent is not
- * ownership anyone can act on — notifying them would text a phone that no
- * longer reaches the company — and frontlines holding a lead (via the
- * dashboard "Done" button) means it sits with the pool rather than with a
- * sales agent. Either way the record is released for a fresh auction rather
- * than reaching further back for an older owner.
+ * Only the most recent assignment is considered — an earlier owner does not
+ * get the lead back if a later one no longer holds it. Whether that agent
+ * still counts as an owner is the router's call (see standingOf), since the
+ * answer differs for an active agent, frontlines, and someone off the roster.
  */
 export async function findAssignedLeadForRecord(
   salesforceRecordId: string
@@ -106,7 +102,5 @@ export async function findAssignedLeadForRecord(
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) return null;
-
-  return (await isOnActiveRoster(data.final_agent_id as string)) ? data : null;
+  return data;
 }

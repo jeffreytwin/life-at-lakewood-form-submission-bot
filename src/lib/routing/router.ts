@@ -11,7 +11,11 @@ import {
   getAgentById,
 } from "@/lib/supabase/queries/agents";
 import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
-import { sendOwnedByNotification, sendExistingOwnerNotification } from "@/lib/twilio/send-sms";
+import {
+  sendOwnedByNotification,
+  sendExistingOwnerNotification,
+  sendUnavailableOwnerNotification,
+} from "@/lib/twilio/send-sms";
 import { getQuietHoursSettings, isInQuietHours, getEffectiveQuietHoursEnd } from "./quiet-hours";
 import { startRouting } from "./state-machine";
 import { logger } from "@/lib/shared/logger";
@@ -104,7 +108,20 @@ export async function routeLead(payload: ZapierPayload): Promise<{
 
   // If the checkbox is unchecked, the lead is owned by a non-frontlines agent
   if (!payload.is_master_agent_owned) {
-    return await handleOwnedByOther(lead, locationName, "salesforce");
+    const owner = payload.salesforce_owner_id
+      ? await getAgentBySalesforceUserId(payload.salesforce_owner_id)
+      : null;
+
+    switch (standingOf(owner)) {
+      case "active":
+        return await handleOwnedByOther(lead, locationName, "salesforce", owner);
+      case "unavailable":
+        return await handleUnavailableOwner(lead, locationName, owner, "salesforce");
+      case "frontlines":
+        // Frontlines is the pool rather than a sales agent, so the lead is
+        // free to auction. Falls through to the checks below.
+        break;
+    }
   }
 
   // Salesforce says nobody owns this lead yet — but we may have assigned it
@@ -122,8 +139,19 @@ export async function routeLead(payload: ZapierPayload): Promise<{
         priorLeadId: assigned.id,
         ownerAgentId: assigned.final_agent_id,
         ownerAgentName: owner?.name,
+        ownerStanding: standingOf(owner),
       });
-      return await handleOwnedByOther(lead, locationName, "prior_assignment", owner);
+
+      switch (standingOf(owner)) {
+        case "active":
+          return await handleOwnedByOther(lead, locationName, "prior_assignment", owner);
+        case "unavailable":
+          return await handleUnavailableOwner(lead, locationName, owner, "prior_assignment");
+        case "frontlines":
+          // Frontlines picked this up from the dashboard rather than owning
+          // the relationship, so a new submission is free to auction.
+          break;
+      }
     }
   }
 
@@ -160,6 +188,80 @@ export async function routeLead(payload: ZapierPayload): Promise<{
  * lead earlier and Salesforce has not caught up yet. In the latter case the
  * owning agent is already resolved and passed in as `knownOwner`.
  */
+type OwnerStanding = "active" | "frontlines" | "unavailable";
+
+/**
+ * Where an owning agent stands relative to the active roster.
+ *
+ * Frontlines holding a lead means it sits with the pool rather than with a
+ * sales agent, so the lead is free to auction. An agent who has left the
+ * company — or a Salesforce owner we cannot resolve to anyone at all — still
+ * holds the relationship, but nobody here can act on it, so the lead goes to
+ * frontlines to decide rather than to a new agent.
+ */
+function standingOf(agent: Agent | null): OwnerStanding {
+  if (!agent) return "unavailable";
+  if (agent.is_frontlines) return "frontlines";
+  return agent.is_active ? "active" : "unavailable";
+}
+
+/**
+ * Handle a lead whose owner is off the active roster.
+ *
+ * The relationship is real, so the lead is never auctioned out from under it.
+ * It lands in the frontlines manual queue, where the dashboard offers the
+ * three ways this can go: notify the former owner, release it to the auction
+ * ("Retry"), or close it out ("Done").
+ *
+ * No SMS goes to the owner here. They are off the roster, so reaching them is
+ * a decision frontlines makes deliberately, not something routing does on its
+ * own.
+ */
+async function handleUnavailableOwner(
+  lead: Lead,
+  locationName: string,
+  ownerAgent: Agent | null,
+  source: "salesforce" | "prior_assignment"
+): Promise<{ status: string; leadId: string }> {
+  const frontlinesAgent = await getFrontlinesAgent();
+  const frontlinesPhone = frontlinesAgent?.phone ?? process.env.FRONTLINES_AGENT_PHONE;
+
+  if (frontlinesPhone) {
+    await sendUnavailableOwnerNotification(
+      frontlinesPhone,
+      lead,
+      locationName,
+      ownerAgent?.name ?? null
+    );
+  }
+
+  // Record the owner when we can name one, so the dashboard can offer to
+  // notify them. A Salesforce owner we could not resolve leaves this null:
+  // there is nobody to name and no phone to reach.
+  await updateLeadStatus(lead.id, "manual", ownerAgent?.id);
+
+  await logAuditEvent("manual_fallback", {
+    leadId: lead.id,
+    details: {
+      reason: "owner_off_active_roster",
+      ownership_source: source,
+      salesforce_owner_id: lead.salesforce_owner_id,
+      owner_agent_id: ownerAgent?.id ?? null,
+      owner_agent_name: ownerAgent?.name ?? null,
+    },
+  });
+
+  logger.warn("Lead owner is off the active roster — sent to frontlines", {
+    leadId: lead.id,
+    ownershipSource: source,
+    salesforce_owner_id: lead.salesforce_owner_id,
+    ownerAgentId: ownerAgent?.id ?? null,
+    ownerAgentName: ownerAgent?.name ?? null,
+  });
+
+  return { status: "unavailable_owner", leadId: lead.id };
+}
+
 async function handleOwnedByOther(
   lead: Lead,
   locationName: string,

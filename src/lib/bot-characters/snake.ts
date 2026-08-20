@@ -26,6 +26,10 @@ function getMessage(event: LeadEvent): string {
       return `Didn't work out. Re-routing ${event.leadName} to ${event.agentName ?? "another agent"} now.`;
     case "owned_by_other":
       return `Colonel! This one's already assigned to ${event.agentName ?? "an agent"}. I'll ping ${pronoun(g, "object")} now.`;
+    case "unavailable_owner":
+      return event.agentName
+        ? `Colonel! ${event.leadName} is ${event.agentName}'s contact, but ${pronoun(g, "subject")}'s off the roster. I'm holding position — your call.`
+        : `Colonel! ${event.leadName} is already spoken for, but I can't ID the owner. Holding position — your call.`;
     case "done":
       return "I never doubted you for a second Colonel!";
     case "text_me":

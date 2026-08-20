@@ -243,6 +243,45 @@ export async function sendManualFallbackNotification(
   return message.sid;
 }
 
+/**
+ * Tell frontlines a lead came in for someone whose owner is off the active
+ * roster. Distinct from the manual fallback message, which means the auction
+ * ran and nobody took it — here no auction happened at all, on purpose.
+ */
+export async function sendUnavailableOwnerNotification(
+  frontlinesPhone: string,
+  lead: Lead,
+  locationName: string,
+  ownerName: string | null
+): Promise<string> {
+  const details = buildLeadDetailsBlock(lead, locationName);
+  const ownerLabel = ownerName
+    ? `${ownerName}, who is no longer on the active roster`
+    : "an owner we can't identify";
+
+  const body = [
+    `Heads up! This lead is owned by ${ownerLabel}, so it wasn't sent out to agents.`,
+    "Take a look in the dashboard to decide what to do with it.",
+    "",
+    details,
+  ].join("\n");
+
+  const message = await getTwilioClient().messages.create({
+    to: frontlinesPhone,
+    from: getTwilioPhoneNumber(),
+    body,
+  });
+
+  logger.info("Unavailable-owner notification sent to frontlines", {
+    to: frontlinesPhone,
+    messageSid: message.sid,
+    leadId: lead.id,
+    ownerName,
+  });
+
+  return message.sid;
+}
+
 export async function sendFrontlinesLeadDetails(
   frontlinesPhone: string,
   lead: Lead,

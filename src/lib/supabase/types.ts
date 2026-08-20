@@ -259,7 +259,8 @@ export type AuditEventType =
   | "text_me_sent"
   | "lead_done_manually"
   | "lead_marked_bad_data"
-  | "manual_retry";
+  | "manual_retry"
+  | "owner_notified";
 
 export interface AuditLogEntry {
   id: string;
