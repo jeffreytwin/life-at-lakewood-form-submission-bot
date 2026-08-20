@@ -163,10 +163,10 @@ export async function routeLead(payload: ZapierPayload): Promise<{
   // relationship never existed. Checked after our own assignments: an active
   // agent who took the lead since the offboarding genuinely owns it now.
   if (payload.previous_agent_offboarded) {
-    const resolved =
-      (payload.previous_agent_offboarded_id
-        ? await getAgentBySalesforceUserId(payload.previous_agent_offboarded_id)
-        : null) ?? (await getAgentByName(payload.previous_agent_offboarded));
+    // Salesforce records only the name here, so matching it against the
+    // roster is the one way to find a phone for the dashboard's Notify
+    // button. A miss is not fatal: the lead still reaches frontlines by name.
+    const resolved = await getAgentByName(payload.previous_agent_offboarded);
 
     // The marker says a former agent owns this. If the name still maps to
     // someone active, the two disagree — trust the marker and send it to
@@ -183,11 +183,21 @@ export async function routeLead(payload: ZapierPayload): Promise<{
       });
     }
 
-    logger.info("Lead belongs to an offboarded agent", {
-      leadId: lead.id,
-      previousAgentOffboarded: payload.previous_agent_offboarded,
-      resolvedAgentId: formerOwner?.id ?? null,
-    });
+    if (formerOwner) {
+      logger.info("Lead belongs to an offboarded agent", {
+        leadId: lead.id,
+        previousAgentOffboarded: payload.previous_agent_offboarded,
+        resolvedAgentId: formerOwner.id,
+      });
+    } else {
+      // Worth noticing: the lead is handled either way, but frontlines loses
+      // the option to text this agent, and a spelling drift between
+      // Salesforce and the roster is the usual cause.
+      logger.warn("Offboarded agent's name matched nobody on the roster", {
+        leadId: lead.id,
+        previousAgentOffboarded: payload.previous_agent_offboarded,
+      });
+    }
 
     return await handleUnavailableOwner(
       lead,

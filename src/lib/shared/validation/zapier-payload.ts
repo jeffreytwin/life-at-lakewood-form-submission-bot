@@ -29,12 +29,12 @@ export const zapierPayloadSchema = z.object({
   builder: z.string().optional().nullable(),
   timeline: z.string().optional().nullable(),
   message: z.string().optional().nullable(),
-  // Salesforce Previous_Agent_Offboarded__c. Set when an offboarded agent's
-  // leads were moved to the frontlines account, so a lead that looks unowned
-  // is really a former agent's. Zapier sends "" rather than omitting an empty
-  // Salesforce field, so fold blanks down to null.
+  // Salesforce Previous_Agent_Offboarded__c: the former agent's name, set
+  // when their leads were moved to the frontlines account, so a lead that
+  // looks unowned is really theirs. The Salesforce lead record holds no user
+  // ID for them, only this name. Zapier sends "" rather than omitting an
+  // empty Salesforce field, so fold blanks down to null.
   previous_agent_offboarded: blankToNull,
-  previous_agent_offboarded_id: blankToNull,
 });
 
 export type ZapierPayload = z.infer<typeof zapierPayloadSchema>;

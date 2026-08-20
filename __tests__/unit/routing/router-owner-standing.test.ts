@@ -263,19 +263,9 @@ describe("routeLead — an owner who is off the active roster", () => {
       expect(updateLeadStatus).toHaveBeenCalledWith("lead-new", "manual", undefined);
     });
 
-    it("prefers the Salesforce user ID over the name when both are sent", async () => {
-      vi.mocked(getAgentBySalesforceUserId).mockResolvedValue(departedAgent);
-
-      await routeLead(
-        payload({ ...offboarded, previous_agent_offboarded_id: "005SOMEUSERID" })
-      );
-
-      expect(getAgentBySalesforceUserId).toHaveBeenCalledWith("005SOMEUSERID");
-      expect(getAgentByName).not.toHaveBeenCalled();
-      expect(updateLeadStatus).toHaveBeenCalledWith("lead-new", "manual", departedAgent.id);
-    });
-
-    it("falls back to the name when no user ID is sent", async () => {
+    it("matches the name against the roster to find the former agent", async () => {
+      // Salesforce carries no user ID for them, so the name is the only way
+      // to reach a phone number for the dashboard's Notify button.
       vi.mocked(getAgentByName).mockResolvedValue(departedAgent);
 
       await routeLead(payload(offboarded));
