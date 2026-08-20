@@ -2,32 +2,39 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Lead } from "@/lib/supabase/types";
 
 /**
- * Rows the fake client hands back, set per test. `leads` is returned
- * newest-first, matching the real query's ordering; `roster` is the subset of
- * agent IDs that survive the active-roster filter.
+ * Rows the fake client hands back, set per test. `leads` is newest-first,
+ * matching the real query's ordering; `roster` holds the agent IDs that pass
+ * the active-roster predicate.
  */
-const rows: { leads: Partial<Lead>[]; roster: { id: string }[] } = {
+const rows: { leads: Partial<Lead>[]; roster: string[] } = {
   leads: [],
   roster: [],
 };
 
 vi.mock("@/lib/supabase/client", () => {
-  // Every builder method returns the chain, and the chain is thenable, so it
-  // resolves whether the query ends on .limit() or on a trailing .eq().
-  const chain = (getData: () => unknown[]) => {
+  // Both queries end on .maybeSingle(): the leads lookup takes the newest
+  // assignment, the agents lookup asks whether one agent is on the roster.
+  const chain = (getRow: () => unknown) => {
     const c: Record<string, unknown> = {};
-    for (const m of ["select", "eq", "in", "not", "order", "limit"]) {
+    for (const m of ["select", "eq", "not", "order", "limit"]) {
       c[m] = vi.fn(() => c);
     }
-    c.then = (resolve: (v: unknown) => unknown) =>
-      resolve({ data: getData(), error: null });
+    c.maybeSingle = vi.fn(async () => ({ data: getRow(), error: null }));
     return c;
   };
   return {
     supabase: {
-      from: vi.fn((table: string) =>
-        chain(() => (table === "leads" ? rows.leads : rows.roster))
-      ),
+      from: vi.fn((table: string) => {
+        if (table === "leads") return chain(() => rows.leads[0] ?? null);
+        // The agents query filters by id AND the roster predicate, so it
+        // returns a row only when that agent is on the roster.
+        return chain(() => {
+          const ownerId = rows.leads[0]?.final_agent_id;
+          return ownerId && rows.roster.includes(ownerId as string)
+            ? { id: ownerId }
+            : null;
+        });
+      }),
     },
   };
 });
@@ -44,7 +51,7 @@ beforeEach(() => {
 describe("findAssignedLeadForRecord — who counts as an owner", () => {
   it("returns the assignment when the owner is on the active roster", async () => {
     rows.leads = [{ id: "lead-1", final_agent_id: "agent-chris" }];
-    rows.roster = [{ id: "agent-chris" }];
+    rows.roster = ["agent-chris"];
 
     const found = await findAssignedLeadForRecord(SF_RECORD);
 
@@ -69,21 +76,22 @@ describe("findAssignedLeadForRecord — who counts as an owner", () => {
     expect(await findAssignedLeadForRecord(SF_RECORD)).toBeNull();
   });
 
-  it("falls back to an older assignment when the newest owner has left", async () => {
+  it("releases the record without reaching back to an earlier owner", async () => {
+    // The newest assignment belongs to a departed agent while an older one
+    // belongs to an active agent. The record is released rather than quietly
+    // reverting to the earlier owner.
     rows.leads = [
       { id: "lead-newer", final_agent_id: "agent-departed" },
       { id: "lead-older", final_agent_id: "agent-chris" },
     ];
-    rows.roster = [{ id: "agent-chris" }];
+    rows.roster = ["agent-chris"];
 
-    const found = await findAssignedLeadForRecord(SF_RECORD);
-
-    expect(found?.id).toBe("lead-older");
+    expect(await findAssignedLeadForRecord(SF_RECORD)).toBeNull();
   });
 
   it("returns null when the record has no assignments at all", async () => {
     rows.leads = [];
-    rows.roster = [{ id: "agent-chris" }];
+    rows.roster = ["agent-chris"];
 
     expect(await findAssignedLeadForRecord(SF_RECORD)).toBeNull();
   });
