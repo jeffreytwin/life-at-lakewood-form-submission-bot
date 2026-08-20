@@ -35,5 +35,4 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_one_active_per_sf_record
 CREATE INDEX IF NOT EXISTS idx_leads_assigned_by_sf_record
   ON leads (salesforce_record_id, created_at DESC)
   WHERE salesforce_record_id IS NOT NULL
-    AND final_agent_id IS NOT NULL
-    AND routing_status IN ('accepted', 'owned_by_other');
+    AND final_agent_id IS NOT NULL;
