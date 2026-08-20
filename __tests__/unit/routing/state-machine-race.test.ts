@@ -118,6 +118,7 @@ const lead: Lead = {
   message: null,
   salesforce_owner_id: null,
   is_master_agent_owned: true,
+  previous_agent_offboarded: null,
   raw_payload: null,
   arrived_during_quiet_hours: false,
   routing_status: "routing",

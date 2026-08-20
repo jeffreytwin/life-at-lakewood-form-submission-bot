@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("email_drafts")
-      .select("*, agents:agent_handoff_id(id, name, email), email_threads:thread_id(salesforce_owner_id, salesforce_owner_name, is_master_agent_owned, sender_name, sender_email, email_account_id), email_accounts:email_account_id(id, email_address, display_name)")
+      .select("*, agents:agent_handoff_id(id, name, email), email_threads:thread_id(salesforce_owner_id, salesforce_owner_name, is_master_agent_owned, previous_agent_offboarded, sender_name, sender_email, email_account_id), email_accounts:email_account_id(id, email_address, display_name)")
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -112,6 +112,7 @@ export async function GET(request: NextRequest) {
       email_threads: {
         salesforce_owner_id: string | null;
         salesforce_owner_name: string | null;
+        previous_agent_offboarded: string | null;
         is_master_agent_owned: boolean | null;
         sender_name: string | null;
         sender_email: string | null;
@@ -141,6 +142,7 @@ export async function GET(request: NextRequest) {
         ...d,
         added_to_training: trainingDraftIds.has(d.id),
         salesforce_owner_name: resolvedOwnerName,
+        previous_agent_offboarded: thread?.previous_agent_offboarded ?? null,
         is_master_agent_owned: thread?.is_master_agent_owned ?? null,
         sender_name: thread?.sender_name ?? null,
         sender_email: thread?.sender_email ?? null,

@@ -20,6 +20,13 @@ function parseBool(value: unknown): boolean | null {
   return null;
 }
 
+/** Salesforce sends "" for an empty text field; treat that as absent. */
+function blankToNull(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
 /**
  * Check whether any email in the given list belongs to an active agent.
  */
@@ -112,6 +119,9 @@ export async function POST(request: NextRequest) {
         salesforce_owner_id: contact.salesforce_owner_id ? String(contact.salesforce_owner_id) : null,
         salesforce_owner_name: contact.salesforce_owner_name ? String(contact.salesforce_owner_name) : null,
         is_master_agent_owned: parseBool(contact.is_master_agent_owned),
+        // Salesforce moves an offboarded agent's contacts to the frontlines
+        // account, so ownership alone would read as unowned from here on.
+        previous_agent_offboarded: blankToNull(contact.previous_agent_offboarded),
         is_active: parseBool(contact.is_active) !== false,
         synced_at: new Date().toISOString(),
       };
@@ -153,6 +163,7 @@ export async function POST(request: NextRequest) {
         salesforce_owner_id: row.salesforce_owner_id,
         salesforce_owner_name: row.salesforce_owner_name,
         is_master_agent_owned: row.is_master_agent_owned,
+        previous_agent_offboarded: row.previous_agent_offboarded,
       }, scopedThreadId);
       draftsGenerated += generated;
     }

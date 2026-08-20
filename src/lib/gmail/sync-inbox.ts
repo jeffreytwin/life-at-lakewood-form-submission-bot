@@ -46,6 +46,7 @@ export interface MatchedContact {
   location_name: string | null;
   salesforce_owner_id: string | null;
   salesforce_owner_name: string | null;
+  previous_agent_offboarded?: string | null;
   is_master_agent_owned: boolean | null;
 }
 
@@ -198,7 +199,7 @@ async function hasAgentRecipient(recipientEmails: string[]): Promise<boolean> {
 async function matchSenderToContact(senderEmail: string): Promise<MatchedContact | null> {
   const { data: contacts } = await supabase
     .from("salesforce_contacts")
-    .select("id, salesforce_id, email, first_name, last_name, phone, budget, timeline, property_interest, lead_status, location_name, salesforce_owner_id, salesforce_owner_name, is_master_agent_owned")
+    .select("id, salesforce_id, email, first_name, last_name, phone, budget, timeline, property_interest, lead_status, location_name, salesforce_owner_id, salesforce_owner_name, is_master_agent_owned, previous_agent_offboarded")
     .ilike("email", senderEmail)
     .eq("is_active", true)
     .order("synced_at", { ascending: false })
@@ -383,6 +384,7 @@ async function upsertThread(
       updates.salesforce_owner_id = contact.salesforce_owner_id ?? null;
       updates.salesforce_owner_name = contact.salesforce_owner_name ?? null;
       updates.is_master_agent_owned = contact.is_master_agent_owned ?? null;
+      updates.previous_agent_offboarded = contact.previous_agent_offboarded ?? null;
     }
     if (Object.keys(updates).length > 0) {
       await supabase
@@ -421,6 +423,7 @@ async function upsertThread(
       salesforce_owner_id: contact?.salesforce_owner_id ?? null,
       salesforce_owner_name: contact?.salesforce_owner_name ?? null,
       is_master_agent_owned: contact?.is_master_agent_owned ?? null,
+      previous_agent_offboarded: contact?.previous_agent_offboarded ?? null,
       location_id: account.location_id,
       last_message_at: new Date().toISOString(),
       is_active: true,

@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/** Treat empty and whitespace-only strings as absent. */
+const blankToNull = z.preprocess(
+  (val) => (typeof val === "string" && val.trim() === "" ? null : val),
+  z.string().optional().nullable()
+);
+
 export const zapierPayloadSchema = z.object({
   webhook_secret: z.string(),
   location: z.string(),
@@ -23,6 +29,12 @@ export const zapierPayloadSchema = z.object({
   builder: z.string().optional().nullable(),
   timeline: z.string().optional().nullable(),
   message: z.string().optional().nullable(),
+  // Salesforce Previous_Agent_Offboarded__c. Set when an offboarded agent's
+  // leads were moved to the frontlines account, so a lead that looks unowned
+  // is really a former agent's. Zapier sends "" rather than omitting an empty
+  // Salesforce field, so fold blanks down to null.
+  previous_agent_offboarded: blankToNull,
+  previous_agent_offboarded_id: blankToNull,
 });
 
 export type ZapierPayload = z.infer<typeof zapierPayloadSchema>;

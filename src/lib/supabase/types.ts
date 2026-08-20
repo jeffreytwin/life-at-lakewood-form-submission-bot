@@ -191,6 +191,7 @@ export interface Lead {
   message: string | null;
   salesforce_owner_id: string | null;
   is_master_agent_owned: boolean;
+  previous_agent_offboarded: string | null;
   raw_payload: Record<string, unknown> | null;
   arrived_during_quiet_hours: boolean;
   routing_status: RoutingStatus;

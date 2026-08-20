@@ -9,6 +9,7 @@ import {
   getFrontlinesAgent,
   getAgentBySalesforceUserId,
   getAgentById,
+  getAgentByName,
 } from "@/lib/supabase/queries/agents";
 import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
 import {
@@ -80,6 +81,7 @@ export async function routeLead(payload: ZapierPayload): Promise<{
       message: payload.message ?? null,
       salesforce_owner_id: payload.salesforce_owner_id ?? null,
       is_master_agent_owned: payload.is_master_agent_owned ?? false,
+      previous_agent_offboarded: payload.previous_agent_offboarded ?? null,
       raw_payload: payload as unknown as Record<string, unknown>,
       arrived_during_quiet_hours: arrivedDuringQuietHours,
       routing_status: "pending",
@@ -155,6 +157,47 @@ export async function routeLead(payload: ZapierPayload): Promise<{
     }
   }
 
+  // Offboarding moves a former agent's leads onto the frontlines account and
+  // records their name on the Salesforce record. Ownership then reads as
+  // nobody's, so without this the lead would be auctioned as though the
+  // relationship never existed. Checked after our own assignments: an active
+  // agent who took the lead since the offboarding genuinely owns it now.
+  if (payload.previous_agent_offboarded) {
+    const resolved =
+      (payload.previous_agent_offboarded_id
+        ? await getAgentBySalesforceUserId(payload.previous_agent_offboarded_id)
+        : null) ?? (await getAgentByName(payload.previous_agent_offboarded));
+
+    // The marker says a former agent owns this. If the name still maps to
+    // someone active, the two disagree — trust the marker and send it to
+    // frontlines, but don't record an active agent as the owner or the next
+    // submission would text them as though they had accepted it.
+    const formerOwner =
+      resolved && standingOf(resolved) === "unavailable" ? resolved : null;
+
+    if (resolved && !formerOwner) {
+      logger.warn("Offboarded marker names an agent who is still on the roster", {
+        leadId: lead.id,
+        previousAgentOffboarded: payload.previous_agent_offboarded,
+        agentId: resolved.id,
+      });
+    }
+
+    logger.info("Lead belongs to an offboarded agent", {
+      leadId: lead.id,
+      previousAgentOffboarded: payload.previous_agent_offboarded,
+      resolvedAgentId: formerOwner?.id ?? null,
+    });
+
+    return await handleUnavailableOwner(
+      lead,
+      locationName,
+      formerOwner,
+      "offboarded",
+      payload.previous_agent_offboarded
+    );
+  }
+
   // Check if routing is paused system-wide
   const { data: settings } = await supabase
     .from("system_settings")
@@ -221,8 +264,12 @@ async function handleUnavailableOwner(
   lead: Lead,
   locationName: string,
   ownerAgent: Agent | null,
-  source: "salesforce" | "prior_assignment"
+  source: "salesforce" | "prior_assignment" | "offboarded",
+  ownerNameFallback?: string | null
 ): Promise<{ status: string; leadId: string }> {
+  // Offboarding gives us a name even when it matches nobody in the roster.
+  // Frontlines can act on a name alone, so pass it along.
+  const ownerName = ownerAgent?.name ?? ownerNameFallback ?? null;
   const frontlinesAgent = await getFrontlinesAgent();
   const frontlinesPhone = frontlinesAgent?.phone ?? process.env.FRONTLINES_AGENT_PHONE;
 
@@ -231,7 +278,7 @@ async function handleUnavailableOwner(
       frontlinesPhone,
       lead,
       locationName,
-      ownerAgent?.name ?? null
+      ownerName
     );
   }
 
@@ -247,7 +294,7 @@ async function handleUnavailableOwner(
       ownership_source: source,
       salesforce_owner_id: lead.salesforce_owner_id,
       owner_agent_id: ownerAgent?.id ?? null,
-      owner_agent_name: ownerAgent?.name ?? null,
+      owner_agent_name: ownerName,
     },
   });
 
@@ -256,7 +303,7 @@ async function handleUnavailableOwner(
     ownershipSource: source,
     salesforce_owner_id: lead.salesforce_owner_id,
     ownerAgentId: ownerAgent?.id ?? null,
-    ownerAgentName: ownerAgent?.name ?? null,
+    ownerAgentName: ownerName,
   });
 
   return { status: "unavailable_owner", leadId: lead.id };

@@ -11,6 +11,7 @@ vi.mock("@/lib/supabase/queries/agents", () => ({
   getFrontlinesAgent: vi.fn(),
   getAgentBySalesforceUserId: vi.fn().mockResolvedValue(null),
   getAgentById: vi.fn(),
+  getAgentByName: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("@/lib/supabase/queries/audit-log", () => ({
   logAuditEvent: vi.fn(),
@@ -54,6 +55,7 @@ import {
 import {
   getAgentById,
   getAgentBySalesforceUserId,
+  getAgentByName,
   getFrontlinesAgent,
 } from "@/lib/supabase/queries/agents";
 import {
@@ -133,6 +135,7 @@ beforeEach(() => {
   vi.mocked(findAssignedLeadForRecord).mockResolvedValue(null);
   vi.mocked(getFrontlinesAgent).mockResolvedValue(frontlines);
   vi.mocked(getAgentBySalesforceUserId).mockResolvedValue(null);
+  vi.mocked(getAgentByName).mockResolvedValue(null);
 });
 
 describe("routeLead — an owner who is off the active roster", () => {
@@ -230,6 +233,86 @@ describe("routeLead — an owner who is off the active roster", () => {
       expect(startRouting).toHaveBeenCalled();
       expect(sendUnavailableOwnerNotification).not.toHaveBeenCalled();
       expect(sendOwnedByNotification).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when Salesforce marks the owner as offboarded", () => {
+    // Offboarding hands the leads to frontlines, so is_master_agent_owned
+    // stays true and only the marker says the relationship was someone's.
+    const offboarded = { previous_agent_offboarded: "Kathryn W. Plosica" };
+
+    it("does not auction a lead a former agent was working", async () => {
+      const result = await routeLead(payload(offboarded));
+
+      expect(startRouting).not.toHaveBeenCalled();
+      expect(result.status).toBe("unavailable_owner");
+    });
+
+    it("names the former agent to frontlines even when unresolvable", async () => {
+      // Nobody by that name is in the roster — frontlines can still act on it.
+      vi.mocked(getAgentByName).mockResolvedValue(null);
+
+      await routeLead(payload(offboarded));
+
+      expect(sendUnavailableOwnerNotification).toHaveBeenCalledWith(
+        frontlines.phone,
+        expect.anything(),
+        "Life At Lakewood",
+        "Kathryn W. Plosica"
+      );
+      expect(updateLeadStatus).toHaveBeenCalledWith("lead-new", "manual", undefined);
+    });
+
+    it("prefers the Salesforce user ID over the name when both are sent", async () => {
+      vi.mocked(getAgentBySalesforceUserId).mockResolvedValue(departedAgent);
+
+      await routeLead(
+        payload({ ...offboarded, previous_agent_offboarded_id: "005SOMEUSERID" })
+      );
+
+      expect(getAgentBySalesforceUserId).toHaveBeenCalledWith("005SOMEUSERID");
+      expect(getAgentByName).not.toHaveBeenCalled();
+      expect(updateLeadStatus).toHaveBeenCalledWith("lead-new", "manual", departedAgent.id);
+    });
+
+    it("falls back to the name when no user ID is sent", async () => {
+      vi.mocked(getAgentByName).mockResolvedValue(departedAgent);
+
+      await routeLead(payload(offboarded));
+
+      expect(getAgentByName).toHaveBeenCalledWith("Kathryn W. Plosica");
+      expect(updateLeadStatus).toHaveBeenCalledWith("lead-new", "manual", departedAgent.id);
+    });
+
+    it("does not record an owner when the marker names someone still active", async () => {
+      // The two signals disagree. Trust the marker and send it to frontlines,
+      // but don't record an active agent as owner or the next submission
+      // would text them as though they had accepted it.
+      vi.mocked(getAgentByName).mockResolvedValue(activeAgent);
+
+      const result = await routeLead(payload(offboarded));
+
+      expect(result.status).toBe("unavailable_owner");
+      expect(updateLeadStatus).toHaveBeenCalledWith("lead-new", "manual", undefined);
+    });
+
+    it("auctions normally when the marker is blank", async () => {
+      await routeLead(payload({ previous_agent_offboarded: "" }));
+
+      expect(startRouting).toHaveBeenCalled();
+      expect(sendUnavailableOwnerNotification).not.toHaveBeenCalled();
+    });
+
+    it("leaves the lead with an active agent who took it after the offboarding", async () => {
+      // Chris accepted a submission for this record since the offboarding, so
+      // the relationship is his now — the stale marker must not undo that.
+      priorAssignmentBy(activeAgent);
+
+      const result = await routeLead(payload(offboarded));
+
+      expect(result.status).toBe("owned_by_other");
+      expect(sendExistingOwnerNotification).toHaveBeenCalled();
+      expect(sendUnavailableOwnerNotification).not.toHaveBeenCalled();
     });
   });
 });
