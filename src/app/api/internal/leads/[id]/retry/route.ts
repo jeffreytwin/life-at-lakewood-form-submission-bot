@@ -4,6 +4,7 @@ import { logAuditEvent } from "@/lib/supabase/queries/audit-log";
 import { startRouting } from "@/lib/routing/state-machine";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { isUniqueViolation } from "@/lib/shared/errors";
 
 /**
  * POST /api/internal/leads/:id/retry
@@ -55,6 +56,18 @@ export async function POST(
       .eq("id", id);
 
     if (resetError) {
+      // Losing the partial unique index on active leads per Salesforce record
+      // means another submission for the same record is already routing —
+      // retrying here would put the lead in front of a second agent.
+      if (isUniqueViolation(resetError)) {
+        return NextResponse.json(
+          {
+            error:
+              "Another submission for this Salesforce record is already routing. Resolve that lead first.",
+          },
+          { status: 409 }
+        );
+      }
       throw new Error(`Failed to reset lead state: ${resetError.message}`);
     }
 

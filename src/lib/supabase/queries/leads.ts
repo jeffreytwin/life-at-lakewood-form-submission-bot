@@ -65,3 +65,34 @@ export async function checkDuplicateLead(
   if (error) throw error;
   return (data?.length ?? 0) > 0;
 }
+
+/**
+ * Find a prior lead for the same Salesforce record that this bot has already
+ * assigned to an agent.
+ *
+ * Salesforce ownership is written back asynchronously (acceptance -> Zapier ->
+ * Salesforce), so for a window after an agent accepts, a fresh submission for
+ * the same record still arrives flagged as master-agent-owned with the old
+ * owner ID. During that gap our own assignment is the only accurate record of
+ * who holds the lead — without it a second submission gets auctioned off to a
+ * different agent and two agents end up believing they own the same person.
+ *
+ * Only leads that reached an owned state with an agent attached count; leads
+ * that ended failed/manual/bad_data have no owner and remain re-routable.
+ */
+export async function findAssignedLeadForRecord(
+  salesforceRecordId: string
+): Promise<Lead | null> {
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("salesforce_record_id", salesforceRecordId)
+    .in("routing_status", ["accepted", "owned_by_other"])
+    .not("final_agent_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
