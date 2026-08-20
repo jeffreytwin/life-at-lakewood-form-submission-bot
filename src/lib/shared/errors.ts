@@ -43,3 +43,17 @@ export class NoAgentsAvailableError extends AppError {
     );
   }
 }
+
+/**
+ * True for a Postgres unique-constraint violation surfaced through PostgREST.
+ * Used to turn a lost race against a partial unique index into a normal
+ * "someone else got there first" outcome rather than a 500.
+ */
+export function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "23505"
+  );
+}
