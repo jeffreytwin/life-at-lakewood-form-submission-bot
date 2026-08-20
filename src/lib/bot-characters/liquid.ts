@@ -26,6 +26,10 @@ function getMessage(event: LeadEvent): string {
       return `That one slipped away, Colonel. Rotating — ${event.agentName ?? "another agent"} is next. The fittest survive.`;
     case "owned_by_other":
       return `Colonel — this one's already in ${event.agentName ?? "an agent"}'s grip. I'll let ${pronoun(g, "object")} know.`;
+    case "unavailable_owner":
+      return event.agentName
+        ? `Colonel — ${event.leadName} is ${event.agentName}'s, and ${pronoun(g, "subject")}'s gone from the ranks. I've sent it to no one. You decide.`
+        : `Colonel — ${event.leadName} is claimed, but by a ghost. I've sent it to no one. You decide.`;
     case "done":
       return "A finishing blow, Colonel. Cleanly done.";
     case "text_me":

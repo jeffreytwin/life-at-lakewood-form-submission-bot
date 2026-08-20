@@ -18,6 +18,7 @@ vi.mock("@/lib/supabase/queries/audit-log", () => ({
 vi.mock("@/lib/twilio/send-sms", () => ({
   sendOwnedByNotification: vi.fn(),
   sendExistingOwnerNotification: vi.fn(),
+  sendUnavailableOwnerNotification: vi.fn(),
 }));
 vi.mock("@/lib/routing/quiet-hours", () => ({
   getQuietHoursSettings: vi.fn().mockResolvedValue({ quiet_hours_enabled: false }),
@@ -51,7 +52,11 @@ import {
   updateLeadStatus,
   findAssignedLeadForRecord,
 } from "@/lib/supabase/queries/leads";
-import { getAgentById, getFrontlinesAgent } from "@/lib/supabase/queries/agents";
+import {
+  getAgentById,
+  getAgentBySalesforceUserId,
+  getFrontlinesAgent,
+} from "@/lib/supabase/queries/agents";
 import {
   sendExistingOwnerNotification,
   sendOwnedByNotification,
@@ -64,12 +69,16 @@ const frontlines: Agent = {
   id: "agent-frontlines",
   name: "Frontlines",
   phone: "+15550000009",
+  is_active: true,
+  is_frontlines: true,
 } as Agent;
 
 const chrisKern: Agent = {
   id: "agent-chris",
   name: "Chris Kern",
   phone: "+15550000001",
+  is_active: true,
+  is_frontlines: false,
 } as Agent;
 
 function payload(formName: string) {
@@ -107,6 +116,7 @@ beforeEach(() => {
   vi.mocked(findAssignedLeadForRecord).mockResolvedValue(null);
   vi.mocked(getAgentById).mockResolvedValue(chrisKern);
   vi.mocked(getFrontlinesAgent).mockResolvedValue(frontlines);
+  vi.mocked(getAgentBySalesforceUserId).mockResolvedValue(chrisKern);
 });
 
 describe("routeLead — repeat submissions for an already-assigned lead", () => {
@@ -175,8 +185,8 @@ describe("routeLead — repeat submissions for an already-assigned lead", () => 
   });
 
   it("routes to the Salesforce owner without consulting prior leads", async () => {
-    // Salesforce naming an owner wins outright — this path runs before the
-    // prior-assignment lookup, whatever the earlier leads look like.
+    // Salesforce naming an active owner wins outright — this path runs before
+    // the prior-assignment lookup, whatever the earlier leads look like.
     const result = await routeLead({
       ...(payload("Lot Availability (Build)") as object),
       is_master_agent_owned: false,

@@ -8,7 +8,13 @@ interface LeadSnapshot {
   routing_status: string;
   first_name: string | null;
   last_name: string | null;
-  final_agent?: { id: string; name: string; gender?: "male" | "female" | null } | null;
+  final_agent?: {
+    id: string;
+    name: string;
+    gender?: "male" | "female" | null;
+    is_active?: boolean;
+    is_frontlines?: boolean;
+  } | null;
   routing_attempts: Array<{
     attempt_number: number;
     status: string;
@@ -70,7 +76,24 @@ function playSound(src: string) {
   });
 }
 
-type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "followup" | "reroute" | "done" | "text_me" | "bad_data";
+type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "unavailable_owner" | "followup" | "reroute" | "done" | "text_me" | "bad_data";
+
+/**
+ * A lead sits in "manual" for two very different reasons: the auction ran and
+ * nobody took it, or it was never auctioned because its owner is off the
+ * active roster. Only the second names an agent worth reporting.
+ */
+function isUnavailableOwner(lead: LeadSnapshot): boolean {
+  const owner = lead.final_agent;
+  return !!owner && !owner.is_frontlines && owner.is_active === false;
+}
+
+/** The manual sound covers both, but the bubble should say which happened. */
+function manualEventType(lead: LeadSnapshot, status: string): EventType {
+  return status === "manual" && isUnavailableOwner(lead)
+    ? "unavailable_owner"
+    : (status as EventType);
+}
 
 interface ScheduledEvent {
   sound: string;
@@ -162,16 +185,27 @@ export default function StatusSoundMonitor() {
 
           // If it already resolved (e.g. owned_by_other is instant), queue a
           // delayed celebration so the "new" bubble plays first.
-          if (curr.status === "owned_by_other" || curr.status === "accepted") {
+          if (
+            curr.status === "owned_by_other" ||
+            curr.status === "accepted" ||
+            curr.status === "manual" ||
+            curr.status === "failed"
+          ) {
             delayedEvents.push({
               sound: STATUS_SOUNDS[curr.status],
               event: {
-                type: curr.status as EventType,
+                type: manualEventType(lead, curr.status),
                 leadName: name,
                 agentName: lead.final_agent?.name ?? undefined,
                 agentGender: lead.final_agent?.gender ?? undefined,
               },
             });
+          }
+
+          // Leads that arrive already needing attention still belong in the
+          // badge count; only the status-change path used to add them.
+          if (curr.status === "failed" || curr.status === "manual") {
+            incrementFailed();
           }
         } else if (prev.status !== curr.status) {
           // Status changed
@@ -197,7 +231,12 @@ export default function StatusSoundMonitor() {
 
             immediateEvents.push({
               sound,
-              event: { type: curr.status as EventType, leadName: name, agentName, agentGender },
+              event: {
+                type: manualEventType(lead, curr.status),
+                leadName: name,
+                agentName,
+                agentGender,
+              },
             });
           }
 
@@ -238,7 +277,7 @@ export default function StatusSoundMonitor() {
       // Play the highest priority immediate event
       if (immediateEvents.length > 0) {
         // Priority: accepted > owned_by_other > failed > manual > routing > new
-        const priorityOrder: EventType[] = ["accepted", "owned_by_other", "failed", "bad_data", "manual", "reroute", "followup", "routing", "new"];
+        const priorityOrder: EventType[] = ["accepted", "owned_by_other", "failed", "bad_data", "unavailable_owner", "manual", "reroute", "followup", "routing", "new"];
         const best = immediateEvents.sort((a, b) => {
           const ai = priorityOrder.indexOf(a.event.type);
           const bi = priorityOrder.indexOf(b.event.type);

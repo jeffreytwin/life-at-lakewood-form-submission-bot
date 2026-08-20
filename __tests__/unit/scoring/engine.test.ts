@@ -34,6 +34,7 @@ const defaultContext: ScoringContext = {
   lead: {
     id: "lead-1",
     salesforce_record_id: null,
+    previous_agent_offboarded: null,
     location_id: null,
     form_name: "Floor Plan",
     first_name: "John",

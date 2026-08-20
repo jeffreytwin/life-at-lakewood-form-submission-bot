@@ -38,6 +38,7 @@ function makeLead(overrides: Partial<Lead> = {}): Lead {
   return {
     id: "lead-1",
     salesforce_record_id: "sf-lead-1",
+    previous_agent_offboarded: null,
     location_id: "loc-1",
     form_name: "Floor Plan",
     first_name: "John",

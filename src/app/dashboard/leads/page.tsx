@@ -25,7 +25,13 @@ interface Lead {
   url: string | null;
   routing_status: string;
   created_at: string;
-  final_agent: { id: string; name: string } | null;
+  final_agent: {
+    id: string;
+    name: string;
+    phone?: string | null;
+    is_active?: boolean;
+    is_frontlines?: boolean;
+  } | null;
   location: { id: string; name: string } | null;
   routing_attempts: Array<{
     id: string;
@@ -152,6 +158,8 @@ export default function LeadsPage() {
   const [textedIds, setTextedIds] = useState<Set<string>>(new Set());
   const [doningId, setDoningId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [notifyingId, setNotifyingId] = useState<string | null>(null);
+  const [notifiedIds, setNotifiedIds] = useState<Set<string>>(new Set());
 
   // Debounce search input
   useEffect(() => {
@@ -299,6 +307,30 @@ export default function LeadsPage() {
       alert("Network error retrying routing");
     } finally {
       setRetryingId(null);
+    }
+  }
+
+  /**
+   * Text the lead's owner when that owner is off the active roster. Routing
+   * skips them on purpose, so this is a deliberate reach-out. The lead stays
+   * in "manual" either way — Retry and Done remain available afterwards.
+   */
+  async function handleNotifyOwner(leadId: string) {
+    setNotifyingId(leadId);
+    try {
+      const r = await fetch(`/api/internal/leads/${leadId}/notify-owner`, {
+        method: "POST",
+      });
+      const data = await r.json();
+      if (data.error) {
+        alert(`Failed to notify: ${data.error}`);
+      } else {
+        setNotifiedIds((prev) => new Set(prev).add(leadId));
+      }
+    } catch {
+      alert("Network error notifying owner");
+    } finally {
+      setNotifyingId(null);
     }
   }
 
@@ -524,6 +556,26 @@ export default function LeadsPage() {
                                     ? "Text Again"
                                     : "Text Me"}
                               </button>
+                              {lead.final_agent &&
+                                lead.final_agent.is_active === false &&
+                                !lead.final_agent.is_frontlines &&
+                                lead.final_agent.phone && (
+                                  <button
+                                    className="btn btn-secondary btn-sm"
+                                    disabled={notifyingId === lead.id}
+                                    title={`${lead.final_agent.name} is no longer on the active roster. Routing did not text them.`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleNotifyOwner(lead.id);
+                                    }}
+                                  >
+                                    {notifyingId === lead.id
+                                      ? "..."
+                                      : notifiedIds.has(lead.id)
+                                        ? `Notify ${lead.final_agent.name} Again`
+                                        : `Notify ${lead.final_agent.name}`}
+                                  </button>
+                                )}
                               <button
                                 className="btn btn-secondary btn-sm"
                                 disabled={retryingId === lead.id}

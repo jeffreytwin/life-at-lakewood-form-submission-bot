@@ -12,26 +12,6 @@ export async function getActiveAgents(): Promise<Agent[]> {
   return data;
 }
 
-/**
- * Whether an agent is on the active roster.
- *
- * Same predicate as getActiveAgents — active and not frontlines — so the set
- * that counts as owning a lead is exactly the set the router auctions to and
- * the Agents dashboard lists as active. Frontlines is excluded because it is
- * the pool rather than a sales agent.
- */
-export async function isOnActiveRoster(agentId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("agents")
-    .select("id")
-    .eq("id", agentId)
-    .eq("is_active", true)
-    .eq("is_frontlines", false)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data !== null;
-}
 
 export async function getFrontlinesAgent(): Promise<Agent | null> {
   const { data, error } = await supabase
@@ -71,6 +51,25 @@ export async function getAgentBySalesforceUserId(
     .from("agents")
     .select("*")
     .eq("salesforce_user_id", salesforceUserId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Look an agent up by display name, case-insensitively.
+ *
+ * Used for Salesforce's offboarding marker, which records a former agent's
+ * name rather than their user ID. Only as reliable as the two spellings
+ * matching, so callers must handle a miss.
+ */
+export async function getAgentByName(name: string): Promise<Agent | null> {
+  const { data, error } = await supabase
+    .from("agents")
+    .select("*")
+    .ilike("name", name.trim())
     .limit(1)
     .maybeSingle();
 

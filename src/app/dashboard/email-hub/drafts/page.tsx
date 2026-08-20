@@ -48,6 +48,7 @@ interface EmailDraft {
   added_to_training: boolean;
   lead_status_update: string | null;
   salesforce_owner_name: string | null;
+  previous_agent_offboarded: string | null;
   is_master_agent_owned: boolean | null;
   sender_name: string | null;
   sender_email: string | null;
@@ -1216,8 +1217,7 @@ function EmailDraftsPageInner() {
 
                             {/* Ownership badge */}
                             {!draft.agent_handoff_transferred &&
-                              draft.salesforce_owner_name &&
-                              draft.is_master_agent_owned === false && (
+                              threadOwnerName(draft) && (
                               <span
                                 style={{
                                   padding: "1px 7px",
@@ -1230,7 +1230,7 @@ function EmailDraftsPageInner() {
                                   flexShrink: 0,
                                 }}
                               >
-                                Owned by {draft.salesforce_owner_name}
+                                Owned by {threadOwnerName(draft)}
                               </span>
                             )}
 
@@ -1835,11 +1835,9 @@ function EmailDraftsPageInner() {
                       {/* Agent Handoff Transfer — only visible on the Sent tab */}
                       {isSent && !draft.agent_handoff_transferred && (() => {
                         // Non-frontlines owned: show disabled "Already Owned" button
-                        const isNonFrontlinesOwned =
-                          draft.salesforce_owner_name &&
-                          draft.is_master_agent_owned === false;
+                        const ownerName = threadOwnerName(draft);
 
-                        if (isNonFrontlinesOwned) {
+                        if (ownerName) {
                           return (
                             <span
                               style={{
@@ -1855,9 +1853,13 @@ function EmailDraftsPageInner() {
                                 border: "1px solid #fbbf2444",
                                 cursor: "default",
                               }}
-                              title="This lead is already owned by an agent in Salesforce"
+                              title={
+                                draft.previous_agent_offboarded
+                                  ? `${ownerName} was offboarded; this lead moved to frontlines but the relationship is still theirs.`
+                                  : "This lead is already owned by an agent in Salesforce"
+                              }
                             >
-                              Already Owned by {draft.salesforce_owner_name}
+                              Already Owned by {ownerName}
                             </span>
                           );
                         }
@@ -2206,6 +2208,26 @@ function EmailDraftsPageInner() {
       )}
     </>
   );
+}
+
+/**
+ * The agent who still owns this thread's lead, if anyone does.
+ *
+ * Salesforce moves an offboarded agent's leads onto the frontlines account,
+ * so ownership alone reads as unowned from that point on. The offboarding
+ * marker is what still says the relationship belongs to someone. Either
+ * signal means the thread is not ours to hand to a new agent.
+ */
+function threadOwnerName(draft: {
+  salesforce_owner_name: string | null;
+  previous_agent_offboarded: string | null;
+  is_master_agent_owned?: boolean | null;
+}): string | null {
+  if (draft.previous_agent_offboarded) return draft.previous_agent_offboarded;
+  if (draft.salesforce_owner_name && draft.is_master_agent_owned === false) {
+    return draft.salesforce_owner_name;
+  }
+  return null;
 }
 
 export default function EmailDraftsPage() {
