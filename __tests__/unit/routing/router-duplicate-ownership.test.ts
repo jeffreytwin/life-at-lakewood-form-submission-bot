@@ -160,8 +160,35 @@ describe("routeLead — repeat submissions for an already-assigned lead", () => 
     expect(result.status).toBe("routing");
   });
 
+  it("keeps the owner when Salesforce later marked the lead bad_data", async () => {
+    // The bad_data webhook flips routing_status without clearing
+    // final_agent_id, so the agent who accepted still owns the person.
+    vi.mocked(findAssignedLeadForRecord).mockResolvedValue(
+      leadRow({ id: "lead-first", routing_status: "bad_data", final_agent_id: "agent-chris" })
+    );
+
+    const result = await routeLead(payload("Lot Availability (Build)"));
+
+    expect(startRouting).not.toHaveBeenCalled();
+    expect(result.status).toBe("owned_by_other");
+    expect(updateLeadStatus).toHaveBeenCalledWith("lead-new", "owned_by_other", "agent-chris");
+  });
+
+  it("routes to the Salesforce owner without consulting prior leads", async () => {
+    // Salesforce naming an owner wins outright — this path runs before the
+    // prior-assignment lookup, whatever the earlier leads look like.
+    const result = await routeLead({
+      ...(payload("Lot Availability (Build)") as object),
+      is_master_agent_owned: false,
+    } as never);
+
+    expect(findAssignedLeadForRecord).not.toHaveBeenCalled();
+    expect(startRouting).not.toHaveBeenCalled();
+    expect(result.status).toBe("owned_by_other");
+  });
+
   it("re-routes a record whose prior lead ended unowned", async () => {
-    // failed / manual / bad_data leads have no owner, so a fresh submission
+    // manual / failed leads carry no final_agent_id, so a fresh submission
     // is a legitimate re-route rather than a second auction.
     vi.mocked(findAssignedLeadForRecord).mockResolvedValue(null);
 

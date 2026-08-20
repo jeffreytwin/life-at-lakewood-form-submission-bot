@@ -1,4 +1,5 @@
 import { supabase } from "../client";
+import { isOnActiveRoster } from "./agents";
 import type { Lead, RoutingStatus } from "../types";
 
 export async function createLead(
@@ -77,8 +78,20 @@ export async function checkDuplicateLead(
  * who holds the lead — without it a second submission gets auctioned off to a
  * different agent and two agents end up believing they own the same person.
  *
- * Only leads that reached an owned state with an agent attached count; leads
- * that ended failed/manual/bad_data have no owner and remain re-routable.
+ * Keyed on final_agent_id rather than routing_status, because status alone
+ * does not say whether anyone owns the lead. A lead Salesforce later marks
+ * bad_data keeps the agent who accepted it, and that agent still owns the
+ * person. Statuses that genuinely have no owner carry no final_agent_id:
+ * manual and failed never had one, and a manual retry clears it before
+ * re-routing, so those leads stay re-routable.
+ *
+ * Only the most recent assignment is considered, and only if its agent is
+ * still on the active roster. An assignment held by a departed agent is not
+ * ownership anyone can act on — notifying them would text a phone that no
+ * longer reaches the company — and frontlines holding a lead (via the
+ * dashboard "Done" button) means it sits with the pool rather than with a
+ * sales agent. Either way the record is released for a fresh auction rather
+ * than reaching further back for an older owner.
  */
 export async function findAssignedLeadForRecord(
   salesforceRecordId: string
@@ -87,12 +100,13 @@ export async function findAssignedLeadForRecord(
     .from("leads")
     .select("*")
     .eq("salesforce_record_id", salesforceRecordId)
-    .in("routing_status", ["accepted", "owned_by_other"])
     .not("final_agent_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) return null;
+
+  return (await isOnActiveRoster(data.final_agent_id as string)) ? data : null;
 }
