@@ -1,5 +1,13 @@
 import { supabase } from "../client";
+import { filterToActiveRoster } from "./agents";
 import type { Lead, RoutingStatus } from "../types";
+
+/**
+ * How many prior assignments to inspect for a single Salesforce record when
+ * deciding whether it still has an owner. One record accumulates a handful of
+ * submissions at most, so this only bounds a pathological case.
+ */
+const ASSIGNMENT_LOOKBACK = 20;
 
 export async function createLead(
   lead: Omit<Lead, "id" | "created_at" | "updated_at">
@@ -83,6 +91,13 @@ export async function checkDuplicateLead(
  * person. Statuses that genuinely have no owner carry no final_agent_id:
  * manual and failed never had one, and a manual retry clears it before
  * re-routing, so those leads stay re-routable.
+ *
+ * Only an agent on the active roster counts as an owner. An assignment held
+ * by a departed agent is not ownership anyone can act on — notifying them
+ * would text a phone that no longer reaches the company — and frontlines
+ * holding a lead (via the dashboard "Done" button) means it sits with the
+ * pool rather than with a sales agent. Both are treated as unowned so the
+ * lead can be auctioned again.
  */
 export async function findAssignedLeadForRecord(
   salesforceRecordId: string
@@ -93,9 +108,19 @@ export async function findAssignedLeadForRecord(
     .eq("salesforce_record_id", salesforceRecordId)
     .not("final_agent_id", "is", null)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(ASSIGNMENT_LOOKBACK);
 
   if (error) throw error;
-  return data;
+  if (!data?.length) return null;
+
+  // Narrow the assignments to those held by an agent still on the roster.
+  const onRoster = await filterToActiveRoster(
+    Array.from(new Set(data.map((lead) => lead.final_agent_id as string)))
+  );
+
+  // data is newest-first, so this is the most recent assignment that still
+  // has a real owner behind it.
+  return (
+    data.find((lead) => onRoster.has(lead.final_agent_id as string)) ?? null
+  );
 }

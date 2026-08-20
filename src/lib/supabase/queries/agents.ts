@@ -12,6 +12,30 @@ export async function getActiveAgents(): Promise<Agent[]> {
   return data;
 }
 
+/**
+ * Narrow a set of agent IDs to those on the active roster.
+ *
+ * Same predicate as getActiveAgents — active and not frontlines — so
+ * "counts as an owner" means exactly the roster the router auctions to and
+ * the Agents dashboard lists as active. Frontlines is excluded because it is
+ * the pool rather than a sales agent.
+ */
+export async function filterToActiveRoster(
+  agentIds: string[]
+): Promise<Set<string>> {
+  if (agentIds.length === 0) return new Set();
+
+  const { data, error } = await supabase
+    .from("agents")
+    .select("id")
+    .in("id", agentIds)
+    .eq("is_active", true)
+    .eq("is_frontlines", false);
+
+  if (error) throw error;
+  return new Set((data ?? []).map((agent) => agent.id));
+}
+
 export async function getFrontlinesAgent(): Promise<Agent | null> {
   const { data, error } = await supabase
     .from("agents")
