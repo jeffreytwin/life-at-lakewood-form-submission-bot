@@ -28,6 +28,7 @@ import {
   type ReconcilerAgent,
 } from "@/lib/ai/handoff-reconciler";
 import { selectHandoffAgent } from "@/lib/routing/select-handoff-agent";
+import { threadOwnerName } from "@/lib/email/thread-owner";
 import { stripQuotedText } from "./quote";
 import { getTwilioClient, getTwilioPhoneNumber } from "@/lib/twilio/client";
 import type { EmailAccount, GmailCredentials } from "@/lib/supabase/types";
@@ -524,8 +525,22 @@ export async function generateAndStoreDraft(
     // and only to mention them if the lead is ready for a handoff.
     // Post-generation we decide whether to actually CC by checking if the
     // model used the agent's name.
+    // A lead that already belongs to someone is not ours to hand to a new
+    // agent: sending a handoff rewrites the Salesforce owner, which is how one
+    // lead ends up with two agents believing it is theirs. Withholding the
+    // candidate keeps the "Available Agent for Handoff" block out of the
+    // prompt entirely, so the model never drafts an introduction we would
+    // then have to refuse to CC.
+    const ownerName = threadOwnerName(contact);
+    if (ownerName) {
+      logger.info("Lead is already owned — offering no handoff candidate", {
+        threadId,
+        ownerName,
+      });
+    }
+
     let candidateHandoff: DraftHandoffAgent | null = handoffAgent ?? null;
-    if (!candidateHandoff) {
+    if (!candidateHandoff && !ownerName) {
       const best = await selectHandoffAgent({
         locationId: account.location_id,
         locationName,
@@ -614,6 +629,18 @@ export async function generateAndStoreDraft(
           }
         }
       }
+    }
+
+    // Belt and braces: an explicit handoffAgent argument skips the selection
+    // above, so re-check before anything is persisted. Storing agent_handoff_id
+    // is what makes sending the reply rewrite the Salesforce owner.
+    if (resolvedHandoff && ownerName) {
+      logger.warn("Refusing to attach a handoff to a lead that is already owned", {
+        threadId,
+        ownerName,
+        wouldHaveHandedTo: resolvedHandoff.agentName,
+      });
+      resolvedHandoff = null;
     }
 
     if (resolvedHandoff) {
