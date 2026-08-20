@@ -694,7 +694,7 @@ export async function generateAndStoreDraft(
 
     // Auto-approve if the global setting is enabled
     if (insertedDraft?.id) {
-      await maybeAutoApproveDraft(insertedDraft.id, locationName, contactName);
+      await maybeAutoApproveDraft(insertedDraft.id, locationName, contactName, ownerName);
     }
 
     return true;
@@ -710,11 +710,16 @@ export async function generateAndStoreDraft(
 /**
  * If the global auto_approve_drafts setting is enabled, immediately approve
  * the draft and send SMS to eligible agents with a warning message.
+ *
+ * When the lead already belongs to someone (`ownerName`), the SMS carries a
+ * heads-up naming that agent so the reviewer knows the relationship is
+ * spoken for before sending.
  */
 async function maybeAutoApproveDraft(
   draftId: string,
   locationName: string,
-  leadName?: string
+  leadName?: string,
+  ownerName?: string | null
 ): Promise<void> {
   try {
     // Check the global setting
@@ -751,8 +756,11 @@ async function maybeAutoApproveDraft(
 
     const prefix = locationName && locationName !== "General" ? `${locationName} ` : "";
     const leadSuffix = leadName ? ` (${leadName})` : "";
+    const ownerNote = ownerName
+      ? `\n\nHeads up: this lead is already owned by ${ownerName} in Salesforce`
+      : "";
     const smsBody =
-      `${prefix}Draft Ready${leadSuffix}\n\nJeff is likely sleeping - please review the draft carefully before sending`;
+      `${prefix}Draft Ready${leadSuffix}\n\nJeff is likely sleeping - please review the draft carefully before sending${ownerNote}`;
 
     for (const agent of eligible) {
       try {
