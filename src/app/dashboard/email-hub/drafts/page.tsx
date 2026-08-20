@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
+import { threadOwnerName } from "@/lib/email/thread-owner";
 import { useSearchParams } from "next/navigation";
 import { emitLeadEvent } from "@/lib/lead-events";
 import { stripQuotedText } from "@/lib/gmail/quote";
@@ -2210,25 +2211,6 @@ function EmailDraftsPageInner() {
   );
 }
 
-/**
- * The agent who still owns this thread's lead, if anyone does.
- *
- * Salesforce moves an offboarded agent's leads onto the frontlines account,
- * so ownership alone reads as unowned from that point on. The offboarding
- * marker is what still says the relationship belongs to someone. Either
- * signal means the thread is not ours to hand to a new agent.
- */
-function threadOwnerName(draft: {
-  salesforce_owner_name: string | null;
-  previous_agent_offboarded: string | null;
-  is_master_agent_owned?: boolean | null;
-}): string | null {
-  if (draft.previous_agent_offboarded) return draft.previous_agent_offboarded;
-  if (draft.salesforce_owner_name && draft.is_master_agent_owned === false) {
-    return draft.salesforce_owner_name;
-  }
-  return null;
-}
 
 export default function EmailDraftsPage() {
   return (
