@@ -393,12 +393,10 @@ export default function LeadsPage() {
           type: "bad_data",
           leadName: [marked?.first_name, marked?.last_name].filter(Boolean).join(" ") || "Unknown",
         });
-        // Optimistic update — attempts are erased server-side too
+        // Optimistic update — swap status locally, then background-refresh
         setLeads((prev) =>
           prev.map((l) =>
-            l.id === leadId
-              ? { ...l, routing_status: "bad_data", routing_attempts: [] }
-              : l
+            l.id === leadId ? { ...l, routing_status: "bad_data" } : l
           )
         );
         fetchLeads(false);
@@ -639,7 +637,7 @@ export default function LeadsPage() {
                                 {doningId === lead.id ? "..." : "Done"}
                               </button>
                               <button
-                                className="btn btn-danger btn-sm"
+                                className="btn btn-secondary btn-sm"
                                 disabled={badDataId === lead.id}
                                 onClick={(e) => {
                                   e.stopPropagation();
