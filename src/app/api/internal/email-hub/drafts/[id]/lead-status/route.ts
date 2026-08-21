@@ -8,7 +8,7 @@ import { updateDraftLeadStatus } from "@/lib/email/update-lead-status";
  * Sends a Zapier webhook to update the Salesforce lead status
  * and records which status was set on the draft.
  *
- * Body: { status: "nurture_active" | "disqualified" }
+ * Body: { status: "nurture_active" | "disqualified" | "bad_data" }
  */
 export async function POST(
   request: NextRequest,
@@ -19,9 +19,9 @@ export async function POST(
     const body = await request.json();
     const { status } = body;
 
-    if (!status || !["nurture_active", "disqualified"].includes(status)) {
+    if (!status || !["nurture_active", "disqualified", "bad_data"].includes(status)) {
       return NextResponse.json(
-        { error: "status must be 'nurture_active' or 'disqualified'" },
+        { error: "status must be 'nurture_active', 'disqualified' or 'bad_data'" },
         { status: 400 }
       );
     }
