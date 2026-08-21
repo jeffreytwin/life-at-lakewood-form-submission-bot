@@ -664,8 +664,11 @@ function EmailDraftsPageInner() {
     }
   }
 
-  async function updateLeadStatus(draftId: string, status: "nurture_active" | "disqualified") {
-    const label = status === "nurture_active" ? "Nurture Active" : "Disqualified";
+  async function updateLeadStatus(draftId: string, status: "nurture_active" | "disqualified" | "bad_data") {
+    const label =
+      status === "nurture_active" ? "Nurture Active"
+      : status === "disqualified" ? "Disqualified"
+      : "Bad Data";
     if (!confirm(`Update this lead to ${label} in Salesforce?`)) return;
     setLeadStatusUpdatingId(draftId);
     try {
@@ -678,9 +681,10 @@ function EmailDraftsPageInner() {
       if (!res.ok) {
         throw new Error(data.error ?? "Update failed");
       }
-      playSound(status === "nurture_active"
-        ? "/sounds/nurture-active-sound.mp3"
-        : "/sounds/update-to-disqualified.mp3");
+      playSound(
+        status === "nurture_active" ? "/sounds/nurture-active-sound.mp3"
+        : status === "disqualified" ? "/sounds/update-to-disqualified.mp3"
+        : "/sounds/metal-gear-alert.mp3");
       fetchDrafts();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Lead status update failed");
@@ -1304,6 +1308,22 @@ function EmailDraftsPageInner() {
                                 Disqualified
                               </span>
                             )}
+                            {draft.lead_status_update === "bad_data" && (
+                              <span
+                                style={{
+                                  padding: "1px 7px",
+                                  borderRadius: 10,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  background: "#f472b622",
+                                  color: "#f472b6",
+                                  border: "1px solid #f472b644",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                Bad Data
+                              </span>
+                            )}
 
                             {/* Handoff badge (last in label group) */}
                             {isSent && draft.agent_handoff_transferred && (
@@ -1748,10 +1768,13 @@ function EmailDraftsPageInner() {
 
                       {/* Lead status update buttons */}
                       {(() => {
-                        // Determine effective lead status: per-draft update takes priority, then Salesforce
+                        // Determine effective lead status: per-draft update takes priority, then Salesforce.
+                        // Salesforce sends mixed spellings ("Nurture_Active", "Bad Data") — normalize both.
+                        const sfStatus = draft.salesforce_lead_status?.toLowerCase().replace(/\s+/g, "_") ?? null;
                         const effectiveStatus = draft.lead_status_update
-                          ?? (draft.salesforce_lead_status?.toLowerCase() === "nurture_active" ? "nurture_active" : null)
-                          ?? (draft.salesforce_lead_status?.toLowerCase() === "disqualified" ? "disqualified" : null);
+                          ?? (sfStatus === "nurture_active" ? "nurture_active" : null)
+                          ?? (sfStatus === "disqualified" ? "disqualified" : null)
+                          ?? (sfStatus === "bad_data" ? "bad_data" : null);
 
                         if (effectiveStatus === "nurture_active") {
                           return (
@@ -1797,6 +1820,28 @@ function EmailDraftsPageInner() {
                           );
                         }
 
+                        if (effectiveStatus === "bad_data") {
+                          return (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                padding: "6px 14px",
+                                borderRadius: 6,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                background: "#f472b622",
+                                color: "#f472b6",
+                                border: "1px solid #f472b644",
+                              }}
+                            >
+                              <span style={{ fontSize: 16 }}>&#10003;</span>
+                              {draft.lead_status_update === "bad_data" ? "Updated to Bad Data" : "Bad Data"}
+                            </span>
+                          );
+                        }
+
                         if (isEditing) return null;
 
                         return (
@@ -1828,6 +1873,20 @@ function EmailDraftsPageInner() {
                               }}
                             >
                               {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateLeadStatus(draft.id, "bad_data");
+                              }}
+                              disabled={leadStatusUpdatingId === draft.id}
+                              style={{
+                                color: "#f472b6",
+                                borderColor: "#f472b644",
+                              }}
+                            >
+                              {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Bad Data"}
                             </button>
                           </>
                         );

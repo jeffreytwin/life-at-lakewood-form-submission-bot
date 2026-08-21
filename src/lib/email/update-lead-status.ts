@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 
-export type LeadStatusUpdate = "nurture_active" | "disqualified";
+export type LeadStatusUpdate = "nurture_active" | "disqualified" | "bad_data";
 
 export interface UpdateLeadStatusResult {
   success: boolean;
@@ -45,15 +45,22 @@ export async function updateDraftLeadStatus(
     salesforce_lead_id: string | null;
   } | null;
 
-  const zapierUrl =
-    status === "nurture_active"
-      ? process.env.ZAPIER_NURTURE_ACTIVE_HOOK
-      : process.env.ZAPIER_DISQUALIFIED_HOOK;
+  const hookEnvNames: Record<LeadStatusUpdate, string> = {
+    nurture_active: "ZAPIER_NURTURE_ACTIVE_HOOK",
+    disqualified: "ZAPIER_DISQUALIFIED_HOOK",
+    bad_data: "ZAPIER_BAD_DATA_HOOK",
+  };
+  const hooks: Record<LeadStatusUpdate, string | undefined> = {
+    nurture_active: process.env.ZAPIER_NURTURE_ACTIVE_HOOK,
+    disqualified: process.env.ZAPIER_DISQUALIFIED_HOOK,
+    bad_data: process.env.ZAPIER_BAD_DATA_HOOK,
+  };
+  const zapierUrl = hooks[status];
 
   if (!zapierUrl) {
     return {
       success: false,
-      error: `ZAPIER_${status === "nurture_active" ? "NURTURE_ACTIVE" : "DISQUALIFIED"}_HOOK not configured`,
+      error: `${hookEnvNames[status]} not configured`,
     };
   }
 
@@ -64,8 +71,20 @@ export async function updateDraftLeadStatus(
     sender_name: thread?.sender_name ?? null,
     salesforce_lead_id: thread?.salesforce_lead_id ?? null,
     subject: draft.subject,
-    new_status: status,
+    new_status: status === "bad_data" ? "Bad Data" : status,
     updated_at: new Date().toISOString(),
+    // The bad-data zap is shared with the Form Submissions button, which
+    // sends these keys — include them so the zap's field mapping works
+    // whichever flow fired it.
+    ...(status === "bad_data"
+      ? {
+          salesforce_record_id: thread?.salesforce_lead_id ?? null,
+          lead_name: thread?.sender_name ?? "",
+          email: thread?.sender_email ?? null,
+          bad_data_disqualified: "Bogus Lead",
+          marked_at: new Date().toISOString(),
+        }
+      : {}),
   };
 
   let zapRes: Response;
