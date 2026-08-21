@@ -157,6 +157,7 @@ export default function LeadsPage() {
   const [textingId, setTextingId] = useState<string | null>(null);
   const [textedIds, setTextedIds] = useState<Set<string>>(new Set());
   const [doningId, setDoningId] = useState<string | null>(null);
+  const [badDataId, setBadDataId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [notifyingId, setNotifyingId] = useState<string | null>(null);
   const [notifiedIds, setNotifiedIds] = useState<Set<string>>(new Set());
@@ -365,6 +366,47 @@ export default function LeadsPage() {
       alert("Network error marking done");
     } finally {
       setDoningId(null);
+    }
+  }
+
+  async function handleBadData(leadId: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to update this lead to 'Bad Data'? It will mark the lead as bogus, erase the handraise data and will no longer be counted toward the agent's daily or monthly counts."
+    );
+    if (!confirmed) return;
+
+    setBadDataId(leadId);
+    try {
+      const r = await fetch(`/api/internal/leads/${leadId}/bad-data`, {
+        method: "POST",
+      });
+      const data = await r.json();
+      if (data.error) {
+        alert(`Failed to mark bad data: ${data.error}`);
+      } else {
+        suppressNextSoundForLead(leadId);
+        const audio = new Audio("/sounds/metal-gear-alert.mp3");
+        audio.volume = 0.6;
+        audio.play().catch(() => {});
+        const marked = leads.find((l) => l.id === leadId);
+        emitLeadEvent({
+          type: "bad_data",
+          leadName: [marked?.first_name, marked?.last_name].filter(Boolean).join(" ") || "Unknown",
+        });
+        // Optimistic update — attempts are erased server-side too
+        setLeads((prev) =>
+          prev.map((l) =>
+            l.id === leadId
+              ? { ...l, routing_status: "bad_data", routing_attempts: [] }
+              : l
+          )
+        );
+        fetchLeads(false);
+      }
+    } catch {
+      alert("Network error marking lead as bad data");
+    } finally {
+      setBadDataId(null);
     }
   }
 
@@ -595,6 +637,16 @@ export default function LeadsPage() {
                                 }}
                               >
                                 {doningId === lead.id ? "..." : "Done"}
+                              </button>
+                              <button
+                                className="btn btn-danger btn-sm"
+                                disabled={badDataId === lead.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleBadData(lead.id);
+                                }}
+                              >
+                                {badDataId === lead.id ? "..." : "Bad Data"}
                               </button>
                             </>
                           )}
