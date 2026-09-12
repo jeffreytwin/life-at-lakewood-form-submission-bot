@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { emitLeadEvent, incrementFailed } from "@/lib/lead-events";
+import { attemptsNewestFirst } from "@/lib/shared/attempt-order";
 
 interface LeadSnapshot {
   id: string;
@@ -18,6 +19,7 @@ interface LeadSnapshot {
   routing_attempts: Array<{
     attempt_number: number;
     status: string;
+    created_at?: string;
     agent?: { id: string; name: string; gender?: "male" | "female" | null } | null;
   }>;
 }
@@ -115,9 +117,7 @@ interface LeadState {
 }
 
 function getLeadState(lead: LeadSnapshot): LeadState {
-  const sorted = [...(lead.routing_attempts ?? [])].sort(
-    (a, b) => b.attempt_number - a.attempt_number
-  );
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
   return {
     status: lead.routing_status,
     attemptCount: lead.routing_attempts?.length ?? 0,
@@ -130,16 +130,12 @@ function getLeadName(lead: LeadSnapshot): string {
 }
 
 function getLatestAgentName(lead: LeadSnapshot): string | undefined {
-  const sorted = [...(lead.routing_attempts ?? [])].sort(
-    (a, b) => b.attempt_number - a.attempt_number
-  );
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
   return sorted[0]?.agent?.name ?? undefined;
 }
 
 function getLatestAgentGender(lead: LeadSnapshot): "male" | "female" | null | undefined {
-  const sorted = [...(lead.routing_attempts ?? [])].sort(
-    (a, b) => b.attempt_number - a.attempt_number
-  );
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
   return sorted[0]?.agent?.gender ?? undefined;
 }
 
@@ -149,9 +145,7 @@ function getLatestAgentGender(lead: LeadSnapshot): "male" | "female" | null | un
  * attempt is the fresh hand and this one is who timed out or declined.
  */
 function getPreviousAgentName(lead: LeadSnapshot): string | undefined {
-  const sorted = [...(lead.routing_attempts ?? [])].sort(
-    (a, b) => b.attempt_number - a.attempt_number
-  );
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
   return sorted[1]?.agent?.name ?? undefined;
 }
 
