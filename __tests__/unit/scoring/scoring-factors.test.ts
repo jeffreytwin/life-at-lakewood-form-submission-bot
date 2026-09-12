@@ -28,6 +28,9 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     price_ranges: null,
     is_preferred: false,
     photo_url: null,
+    photo_thumb_url: null,
+    send_draft_success_texts: false,
+    draft_success_phone: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -197,12 +200,16 @@ describe("priceToBucket", () => {
 });
 
 describe("scoreCloseRate", () => {
-  it("returns default 0.5 for agents with no data", () => {
+  it("scores 0 for agents with no close-rate data, so missing data never helps", () => {
+    // A zero trailing rate means Salesforce has nothing for this agent yet.
+    // The scorer gives that 0 on purpose rather than a neutral default:
+    // real rates run 2 to 6% against the 30% ceiling, so any neutral value
+    // would rank an agent with no history above everyone with a track record.
     const agent = makeAgent({
       close_rate_trailing_12m: 0,
       close_rate_all_time: 0,
     });
-    expect(scoreCloseRate(agent)).toBe(0.5);
+    expect(scoreCloseRate(agent)).toBe(0);
   });
 
   it("calculates normalized rate correctly", () => {
