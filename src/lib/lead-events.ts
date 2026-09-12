@@ -8,8 +8,18 @@ export type LeadEventType = "accepted" | "failed" | "manual" | "new" | "routing"
 export interface LeadEvent {
   type: LeadEventType;
   leadName: string;
+  /**
+   * The agent the event is about. For "routing", "followup" and "reroute"
+   * that is the agent who holds the lead now — on a re-route, the one the
+   * lead is going TO. The agent who let it go is `previousAgentName`.
+   */
   agentName?: string;
   agentGender?: "male" | "female" | null;
+  /**
+   * "reroute" only: the agent the lead just moved away from, because they
+   * timed out or declined. Absent when the monitor cannot tell who that was.
+   */
+  previousAgentName?: string;
 }
 
 type LeadEventListener = (event: LeadEvent) => void;

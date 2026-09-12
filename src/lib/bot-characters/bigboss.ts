@@ -23,7 +23,10 @@ function getMessage(event: LeadEvent): string {
     case "followup":
       return `${event.agentName ?? "The agent"} hasn't checked in yet. I'll signal again, Colonel — sometimes you've gotta wait out the brush.`;
     case "reroute":
-      return `${event.agentName ?? "The agent"} didn't bite, Colonel. Switching to a fresh hand. Plenty of wildlife out here.`;
+      // agentName is the agent the lead is moving TO; the one who let it go
+      // is previousAgentName. Naming them the other way round had Big Boss
+      // blaming the fresh hand for the last one's silence.
+      return `${event.previousAgentName ?? "The last operator"} didn't bite, Colonel. Switching to ${event.agentName ?? "a fresh hand"}. Plenty of wildlife out here.`;
     case "owned_by_other":
       return `${event.agentName ?? "An agent"} already has eyes on this one, Colonel. I'll let ${pronoun(g, "object")} know we noticed.`;
     case "unavailable_owner":

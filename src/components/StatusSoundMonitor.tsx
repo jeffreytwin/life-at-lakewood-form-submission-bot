@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { emitLeadEvent, incrementFailed } from "@/lib/lead-events";
+import { attemptsNewestFirst } from "@/lib/shared/attempt-order";
 
 interface LeadSnapshot {
   id: string;
@@ -18,6 +19,7 @@ interface LeadSnapshot {
   routing_attempts: Array<{
     attempt_number: number;
     status: string;
+    created_at?: string;
     agent?: { id: string; name: string; gender?: "male" | "female" | null } | null;
   }>;
 }
@@ -97,7 +99,13 @@ function manualEventType(lead: LeadSnapshot, status: string): EventType {
 
 interface ScheduledEvent {
   sound: string;
-  event: { type: EventType; leadName: string; agentName?: string; agentGender?: "male" | "female" | null };
+  event: {
+    type: EventType;
+    leadName: string;
+    agentName?: string;
+    agentGender?: "male" | "female" | null;
+    previousAgentName?: string;
+  };
 }
 
 /** Info we track per lead between poll cycles */
@@ -109,9 +117,7 @@ interface LeadState {
 }
 
 function getLeadState(lead: LeadSnapshot): LeadState {
-  const sorted = [...(lead.routing_attempts ?? [])].sort(
-    (a, b) => b.attempt_number - a.attempt_number
-  );
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
   return {
     status: lead.routing_status,
     attemptCount: lead.routing_attempts?.length ?? 0,
@@ -124,17 +130,23 @@ function getLeadName(lead: LeadSnapshot): string {
 }
 
 function getLatestAgentName(lead: LeadSnapshot): string | undefined {
-  const sorted = [...(lead.routing_attempts ?? [])].sort(
-    (a, b) => b.attempt_number - a.attempt_number
-  );
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
   return sorted[0]?.agent?.name ?? undefined;
 }
 
 function getLatestAgentGender(lead: LeadSnapshot): "male" | "female" | null | undefined {
-  const sorted = [...(lead.routing_attempts ?? [])].sort(
-    (a, b) => b.attempt_number - a.attempt_number
-  );
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
   return sorted[0]?.agent?.gender ?? undefined;
+}
+
+/**
+ * The agent the lead just moved away from: whoever held the attempt before
+ * the newest one. Only meaningful right after a re-route, where the newest
+ * attempt is the fresh hand and this one is who timed out or declined.
+ */
+function getPreviousAgentName(lead: LeadSnapshot): string | undefined {
+  const sorted = attemptsNewestFirst(lead.routing_attempts);
+  return sorted[1]?.agent?.name ?? undefined;
 }
 
 export default function StatusSoundMonitor() {
@@ -246,7 +258,8 @@ export default function StatusSoundMonitor() {
         } else if (curr.status === "routing") {
           // Status is still "routing" — check for follow-up or re-route
           if (curr.attemptCount > prev.attemptCount) {
-            // New routing attempt = re-routed to another agent
+            // New routing attempt = re-routed to another agent. agentName is
+            // the agent it went TO; previousAgentName is who let it go.
             immediateEvents.push({
               sound: STATUS_SOUNDS.routing,
               event: {
@@ -254,6 +267,7 @@ export default function StatusSoundMonitor() {
                 leadName: name,
                 agentName: getLatestAgentName(lead),
                 agentGender: getLatestAgentGender(lead),
+                previousAgentName: getPreviousAgentName(lead),
               },
             });
           } else if (
