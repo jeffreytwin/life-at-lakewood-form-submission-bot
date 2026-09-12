@@ -97,7 +97,13 @@ function manualEventType(lead: LeadSnapshot, status: string): EventType {
 
 interface ScheduledEvent {
   sound: string;
-  event: { type: EventType; leadName: string; agentName?: string; agentGender?: "male" | "female" | null };
+  event: {
+    type: EventType;
+    leadName: string;
+    agentName?: string;
+    agentGender?: "male" | "female" | null;
+    previousAgentName?: string;
+  };
 }
 
 /** Info we track per lead between poll cycles */
@@ -135,6 +141,18 @@ function getLatestAgentGender(lead: LeadSnapshot): "male" | "female" | null | un
     (a, b) => b.attempt_number - a.attempt_number
   );
   return sorted[0]?.agent?.gender ?? undefined;
+}
+
+/**
+ * The agent the lead just moved away from: whoever held the attempt before
+ * the newest one. Only meaningful right after a re-route, where the newest
+ * attempt is the fresh hand and this one is who timed out or declined.
+ */
+function getPreviousAgentName(lead: LeadSnapshot): string | undefined {
+  const sorted = [...(lead.routing_attempts ?? [])].sort(
+    (a, b) => b.attempt_number - a.attempt_number
+  );
+  return sorted[1]?.agent?.name ?? undefined;
 }
 
 export default function StatusSoundMonitor() {
@@ -246,7 +264,8 @@ export default function StatusSoundMonitor() {
         } else if (curr.status === "routing") {
           // Status is still "routing" — check for follow-up or re-route
           if (curr.attemptCount > prev.attemptCount) {
-            // New routing attempt = re-routed to another agent
+            // New routing attempt = re-routed to another agent. agentName is
+            // the agent it went TO; previousAgentName is who let it go.
             immediateEvents.push({
               sound: STATUS_SOUNDS.routing,
               event: {
@@ -254,6 +273,7 @@ export default function StatusSoundMonitor() {
                 leadName: name,
                 agentName: getLatestAgentName(lead),
                 agentGender: getLatestAgentGender(lead),
+                previousAgentName: getPreviousAgentName(lead),
               },
             });
           } else if (
