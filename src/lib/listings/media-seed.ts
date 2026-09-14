@@ -12,7 +12,7 @@ import { queryAllItems } from "@/lib/wix/client";
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
 import { mediaPathKey, wixFileId } from "@/lib/listings/normalize";
-import { chunk, mediaKey } from "@/lib/listings/db";
+import { chunk, mediaKey, selectAll } from "@/lib/listings/db";
 import type { LsSite } from "@/lib/listings/types";
 
 export interface MediaSeedResult {
@@ -95,9 +95,11 @@ export async function seedSiteMediaFromLive(site: LsSite): Promise<MediaSeedResu
   const listingIds = [...new Set(media.map((m) => m.listing_id))];
   const siteMedia: Array<Record<string, unknown>> = [];
   for (const part of chunk(listingIds, 200)) {
-    const { data, error } = await supabase.from("ls_listing_media").select("id, listing_id, path_key").in("listing_id", part);
-    if (error) throw new Error(`load seeded media: ${errorMessage(error)}`);
-    for (const row of (data ?? []) as { id: string; listing_id: string; path_key: string }[]) {
+    // A couple of hundred galleries is thousands of rows: page, never trust one response.
+    const rows = await selectAll<{ id: string; listing_id: string; path_key: string }>("load seeded media", (from, to) =>
+      supabase.from("ls_listing_media").select("id, listing_id, path_key").in("listing_id", part).order("id").range(from, to)
+    );
+    for (const row of rows) {
       const hit = uris.get(mediaKey(row.listing_id, row.path_key));
       if (!hit) continue;
       siteMedia.push({ site_id: site.id, media_id: row.id, wix_file_id: hit.fileId, wix_image_uri: hit.uri, origin: "seeded" });

@@ -29,6 +29,29 @@ function fail(context: string, error: unknown): never {
   throw new Error(`${context}: ${errorMessage(error)}`);
 }
 
+/** PostgREST answers at most this many rows a request, whatever the query asks for. */
+const PAGE = 1000;
+
+/**
+ * Pages a query with a stable order until it runs dry. Every select that can
+ * exceed a thousand rows goes through here: a site's inventory, or the
+ * photos of a couple of hundred listings, are both bigger than one page,
+ * and a capped result silently drops the rest.
+ */
+export async function selectAll<T>(
+  context: string,
+  page: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await page(from, from + PAGE - 1);
+    if (error) fail(context, error);
+    const rows = (data ?? []) as T[];
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
+}
+
 export async function loadActiveSites(siteIds?: string[]): Promise<LsSite[]> {
   let query = supabase.from("ls_sites").select("*").eq("active", true).order("domain");
   if (siteIds?.length) query = query.in("id", siteIds);
@@ -38,14 +61,15 @@ export async function loadActiveSites(siteIds?: string[]): Promise<LsSite[]> {
 }
 
 export async function loadVillagesWithTerms(siteId: string): Promise<VillageWithTerms[]> {
-  const [{ data: villages, error: e1 }, { data: terms, error: e2 }] = await Promise.all([
+  const [{ data: villages, error: e1 }, terms] = await Promise.all([
     supabase.from("ls_villages").select("*").eq("site_id", siteId).order("name"),
-    supabase.from("ls_village_terms").select("village_id, term, street_term").eq("site_id", siteId),
+    selectAll<{ village_id: string; term: string; street_term: string | null }>("load village terms", (from, to) =>
+      supabase.from("ls_village_terms").select("village_id, term, street_term").eq("site_id", siteId).order("id").range(from, to)
+    ),
   ]);
   if (e1) fail("load villages", e1);
-  if (e2) fail("load village terms", e2);
   const byVillage = new Map<string, { term: string; street_term: string | null }[]>();
-  for (const t of (terms ?? []) as { village_id: string; term: string; street_term: string | null }[]) {
+  for (const t of terms) {
     const list = byVillage.get(t.village_id) ?? [];
     list.push({ term: t.term, street_term: t.street_term });
     byVillage.set(t.village_id, list);
@@ -110,9 +134,10 @@ export async function replaceListingMedia(media: LsListingMediaInput[], listingI
   const incoming = new Set(media.map((m) => mediaKey(m.listing_id, m.path_key)));
   const stale: string[] = [];
   for (const part of chunk(listingIds, IN_CHUNK)) {
-    const { data, error } = await supabase.from("ls_listing_media").select("id, listing_id, path_key").in("listing_id", part);
-    if (error) fail("load listing media", error);
-    for (const row of (data ?? []) as { id: string; listing_id: string; path_key: string }[]) {
+    const rows = await selectAll<{ id: string; listing_id: string; path_key: string }>("load listing media", (from, to) =>
+      supabase.from("ls_listing_media").select("id, listing_id, path_key").in("listing_id", part).order("id").range(from, to)
+    );
+    for (const row of rows) {
       if (!incoming.has(mediaKey(row.listing_id, row.path_key))) stale.push(row.id);
     }
   }
@@ -127,11 +152,12 @@ export async function loadSiteListings(siteId: string, listingIds?: string[]): P
   const out = new Map<string, LsSiteListing>();
   const parts: Array<string[] | null> = listingIds ? chunk(listingIds, IN_CHUNK) : [null];
   for (const part of parts) {
-    let query = supabase.from("ls_site_listings").select("*").eq("site_id", siteId);
-    if (part) query = query.in("listing_id", part);
-    const { data, error } = await query;
-    if (error) fail("load site listings", error);
-    for (const row of (data ?? []) as LsSiteListing[]) out.set(row.listing_id, row);
+    const rows = await selectAll<LsSiteListing>("load site listings", (from, to) => {
+      let query = supabase.from("ls_site_listings").select("*").eq("site_id", siteId);
+      if (part) query = query.in("listing_id", part);
+      return query.order("id").range(from, to);
+    });
+    for (const row of rows) out.set(row.listing_id, row);
   }
   return out;
 }
@@ -170,26 +196,29 @@ export async function updateSiteListing(id: string, patch: Record<string, unknow
 
 /** Site listings due for a write: flagged, never written, or written too long ago. */
 export async function loadWritableSiteListings(siteId: string, refreshBefore: Date): Promise<LsSiteListing[]> {
-  const { data, error } = await supabase
-    .from("ls_site_listings")
-    .select("*")
-    .eq("site_id", siteId)
-    .in("state", ["staged", "live"])
-    .or(`needs_write.eq.true,written_at.is.null,written_at.lt.${refreshBefore.toISOString()}`)
-    .order("listing_id");
-  if (error) fail("load writable site listings", error);
-  return (data ?? []) as LsSiteListing[];
+  return selectAll<LsSiteListing>("load writable site listings", (from, to) =>
+    supabase
+      .from("ls_site_listings")
+      .select("*")
+      .eq("site_id", siteId)
+      .in("state", ["staged", "live"])
+      .or(`needs_write.eq.true,written_at.is.null,written_at.lt.${refreshBefore.toISOString()}`)
+      .order("listing_id")
+      .range(from, to)
+  );
 }
 
 export async function loadPendingRemovals(siteId: string): Promise<LsSiteListing[]> {
-  const { data, error } = await supabase
-    .from("ls_site_listings")
-    .select("*")
-    .eq("site_id", siteId)
-    .eq("state", "removed")
-    .eq("needs_write", true);
-  if (error) fail("load pending removals", error);
-  return (data ?? []) as LsSiteListing[];
+  return selectAll<LsSiteListing>("load pending removals", (from, to) =>
+    supabase
+      .from("ls_site_listings")
+      .select("*")
+      .eq("site_id", siteId)
+      .eq("state", "removed")
+      .eq("needs_write", true)
+      .order("listing_id")
+      .range(from, to)
+  );
 }
 
 export async function countLiveSiteListings(siteId: string): Promise<number> {
@@ -217,26 +246,20 @@ export async function loadSiteGalleries(siteId: string, listingIds: string[]): P
   const mediaIds: string[] = [];
   const photos: Array<SiteGalleryPhoto & { listingId: string }> = [];
   for (const part of chunk(listingIds, IN_CHUNK)) {
-    const { data, error } = await supabase
-      .from("ls_listing_media")
-      .select("id, listing_id, position, path_key, title")
-      .in("listing_id", part)
-      .order("position");
-    if (error) fail("load galleries", error);
-    for (const row of (data ?? []) as { id: string; listing_id: string; position: number; path_key: string; title: string | null }[]) {
+    const rows = await selectAll<{ id: string; listing_id: string; position: number; path_key: string; title: string | null }>("load galleries", (from, to) =>
+      supabase.from("ls_listing_media").select("id, listing_id, position, path_key, title").in("listing_id", part).order("id").range(from, to)
+    );
+    for (const row of rows) {
       photos.push({ mediaId: row.id, listingId: row.listing_id, position: row.position, pathKey: row.path_key, title: row.title, src: null });
       mediaIds.push(row.id);
     }
   }
   const uris = new Map<string, string>();
   for (const part of chunk(mediaIds, IN_CHUNK)) {
-    const { data, error } = await supabase
-      .from("ls_site_media")
-      .select("media_id, wix_image_uri")
-      .eq("site_id", siteId)
-      .in("media_id", part);
-    if (error) fail("load site media", error);
-    for (const row of (data ?? []) as { media_id: string; wix_image_uri: string }[]) uris.set(row.media_id, row.wix_image_uri);
+    const rows = await selectAll<{ media_id: string; wix_image_uri: string }>("load site media", (from, to) =>
+      supabase.from("ls_site_media").select("media_id, wix_image_uri").eq("site_id", siteId).in("media_id", part).order("id").range(from, to)
+    );
+    for (const row of rows) uris.set(row.media_id, row.wix_image_uri);
   }
   for (const photo of photos) {
     const list = out.get(photo.listingId) ?? [];
@@ -248,14 +271,15 @@ export async function loadSiteGalleries(siteId: string, listingIds: string[]): P
 }
 
 export async function refreshVillageCounts(siteId: string): Promise<{ changed: number }> {
-  const [{ data: villages, error: e1 }, { data: live, error: e2 }] = await Promise.all([
+  const [{ data: villages, error: e1 }, live] = await Promise.all([
     supabase.from("ls_villages").select("id, active_listing_count, zero_since").eq("site_id", siteId),
-    supabase.from("ls_site_listings").select("village_id").eq("site_id", siteId).eq("state", "live"),
+    selectAll<{ village_id: string | null }>("load live site listings", (from, to) =>
+      supabase.from("ls_site_listings").select("village_id").eq("site_id", siteId).eq("state", "live").order("id").range(from, to)
+    ),
   ]);
   if (e1) fail("load village counts", e1);
-  if (e2) fail("load live site listings", e2);
   const counts = new Map<string, number>();
-  for (const row of (live ?? []) as { village_id: string | null }[]) {
+  for (const row of live) {
     if (row.village_id) counts.set(row.village_id, (counts.get(row.village_id) ?? 0) + 1);
   }
   let changed = 0;

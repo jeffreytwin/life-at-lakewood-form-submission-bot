@@ -11,7 +11,7 @@
 // (site listing states, newest runs, newest warn/error events).
 
 import { supabase } from "@/lib/supabase/client";
-import { loadActiveSites } from "@/lib/listings/db";
+import { loadActiveSites, selectAll } from "@/lib/listings/db";
 import { importVillagesFromWix } from "@/lib/listings/villages";
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { runReconcile, type ReconcileResult } from "@/lib/listings/reconcile";
@@ -194,10 +194,11 @@ async function main(): Promise<void> {
 
   // ---- 6. engine snapshot ----
   await step("engine snapshot", async () => {
-    const { data: states, error } = await supabase.from("ls_site_listings").select("state, gallery_ready, needs_write").eq("site_id", site.id);
-    if (error) throw new Error(errorMessage(error));
+    const states = await selectAll<{ state: string; gallery_ready: boolean; needs_write: boolean }>("load site listing states", (from, to) =>
+      supabase.from("ls_site_listings").select("state, gallery_ready, needs_write").eq("site_id", site.id).order("id").range(from, to)
+    );
     const counts: Record<string, number> = {};
-    for (const row of (states ?? []) as { state: string; gallery_ready: boolean; needs_write: boolean }[]) {
+    for (const row of states) {
       counts[row.state] = (counts[row.state] ?? 0) + 1;
       if (row.state !== "removed" && !row.gallery_ready) counts.galleryPending = (counts.galleryPending ?? 0) + 1;
       if (row.needs_write) counts.needsWrite = (counts.needsWrite ?? 0) + 1;

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { errorMessage } from "@/lib/shared/errors";
 import { authorizeEngineRequest } from "@/lib/listings/auth";
+import { selectAll } from "@/lib/listings/db";
 
 export const dynamic = "force-dynamic";
 
@@ -17,15 +18,17 @@ export async function GET(request: NextRequest) {
   const denied = authorizeEngineRequest(request);
   if (denied) return denied;
   try {
-    const [{ data: settings }, { data: sites }, { data: runs }, { data: events }, { data: stateRows }] = await Promise.all([
+    const [{ data: settings }, { data: sites }, { data: runs }, { data: events }, stateRows] = await Promise.all([
       supabase.from("system_settings").select("ls_engine_enabled, ls_engine_state").eq("id", 1).single(),
       supabase.from("ls_sites").select("*").order("domain"),
       supabase.from("ls_sync_runs").select("*").order("started_at", { ascending: false }).limit(24),
       supabase.from("ls_sync_events").select("*").neq("level", "info").order("at", { ascending: false }).limit(50),
-      supabase.from("ls_site_listings").select("site_id, state, gallery_ready, needs_write"),
+      selectAll<{ site_id: string; state: string; gallery_ready: boolean; needs_write: boolean }>("load site listing states", (from, to) =>
+        supabase.from("ls_site_listings").select("site_id, state, gallery_ready, needs_write").order("id").range(from, to)
+      ),
     ]);
     const perSite = new Map<string, Record<string, number>>();
-    for (const row of (stateRows ?? []) as { site_id: string; state: string; gallery_ready: boolean; needs_write: boolean }[]) {
+    for (const row of stateRows) {
       const c = perSite.get(row.site_id) ?? { staged: 0, live: 0, removed: 0, galleryPending: 0, needsWrite: 0 };
       c[row.state] = (c[row.state] ?? 0) + 1;
       if (row.state !== "removed" && !row.gallery_ready) c.galleryPending += 1;
