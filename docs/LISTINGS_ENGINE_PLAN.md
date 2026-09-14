@@ -18,7 +18,8 @@ deliberately.
    that decides what a listing is, whether a site shows it, and what changed
    moves here. A site is a row in `ls_sites` plus the account-level Wix API key.
 2. **Shadow collection per site, cutover is a one-row edit.** The engine writes
-   to `HousesforSale_Engine` (same fields, admin-only) until it has proven
+   to a shadow collection with the live collection's fields (`HousesforSale2`
+   on Longboat Key, created 2026-09-14; admin-only) until it has proven
    itself. `ls_sites.target_collection_id` and `ls_sites.write_mode`
    (`shadow` | `live` | `paused`) are the switch. Rollback is the same edit
    the other way. Same pattern as floor plans' "new private collection, cutover
@@ -162,7 +163,7 @@ Longboat Key repo `README.md` → Monitoring.
 ## Sequence and gates
 
 1. **Verify foundations** (Longboat Key): site ID + account; API-key writes to
-   `HousesforSale_Engine` render on a hidden dynamic page; media import from
+   `HousesforSale2` render on a hidden dynamic page; media import from
    Supabase Storage returns a gallery-usable ID; bulk write limits measured;
    MLSGrid licence answered. *Gate: a listing written by API is visible on a
    Longboat Key page.*
@@ -184,8 +185,8 @@ Longboat Key repo `README.md` → Monitoring.
 ## Open items on Jeff
 
 - Longboat Key `wix-site-id`; confirm same Wix account as the other sites.
-- Create `HousesforSale_Engine` on Longboat Key (duplicate without data,
-  admin-only permissions).
+- ~~Create the shadow collection on Longboat Key (duplicate without data,
+  admin-only permissions).~~ Done 2026-09-14 as `HousesforSale2`.
 - MLSGrid licence + rate question, in writing.
 
 ## Kickoff prompt for the build session
@@ -198,3 +199,38 @@ Longboat Key repo `README.md` → Monitoring.
 > site's Media Manager, and reports timings and any rate-limit responses.
 > Then draft migration 040 for the `ls_` tables. Open a draft PR; do not
 > touch live collections.
+
+## Phase 1 findings (2026-09-14)
+
+Recorded from the build session (PR #280) so the numbers outlive the chat.
+
+- **Shadow collection.** Created on Longboat Key as `HousesforSale2`, not the
+  `HousesforSale_Engine` this document assumed. `ls_sites.target_collection_id`
+  defaults to it; the probe reports whether its fields match the live
+  collection.
+- **Wix side.** The Wix Data bulk endpoints take up to 1000 items per call
+  and honour a caller-supplied `_id`, so a full reconcile is one request
+  rather than ~330; Wix documents 200 requests/minute per app instance.
+  `src/lib/wix/client.ts` has the bulk methods; `scripts/listings-wix-phase1.mjs`
+  measures them from the Vercel build log once `WIX_SITE_ID_LONGBOAT` (or
+  `WIX_ACCOUNT_ID`) is in the preview env. The preview build already confirms
+  `WIX_API_KEY` is present there.
+- **MLSGrid subscription** (usage dashboard, 2026-09-14): Stellar MLS, IDX,
+  5 active licences, API access active and "in good standing". The numeric
+  caps are not shown on the dashboard; the written answer on one puller
+  feeding several display sites is still open.
+- **MLSGrid usage today** (Longboat Key's Velo pipeline, one site):
+  - last 24 h: 83 requests, 308 MB, average max 1.5 requests/s, peak 3;
+  - a daytime hour is 3-6 requests and 10-27 MB: the hourly incremental pulls
+    every Stellar record modified in the window, MLS-wide (PostalCity is not
+    filterable server-side), 200 per page with Media expanded;
+  - the nightly full at 23:00 ET is 7 requests and 36 MB: ~330 ids verified
+    at 50 per request.
+- **What that means for the engine.** One puller for every site costs the same
+  incremental as today's single site, because that pull is already MLS-wide.
+  Only the nightly verify-by-id grows with total inventory (one request per
+  50 listings across all sites), and photo downloads go to the media host,
+  not the API. Keep page fetches sequential so the engine stays at 1-2
+  requests/s like the current pipeline, and keep `mlsgrid_request_count`
+  on every run so the Hub can show usage against whatever caps MLSGrid
+  confirms.

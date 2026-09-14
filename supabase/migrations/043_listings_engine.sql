@@ -6,7 +6,8 @@
 -- Wix collections (HousesforSale, the village pages, the dynamic pages); the
 -- engine decides what a listing is, whether a site shows it, and what
 -- changed, and writes the result to the site's target collection. Until a
--- site is cut over that target is a shadow collection (HousesforSale_Engine).
+-- site is cut over that target is a shadow collection with the live
+-- collection's fields (HousesforSale2 on Longboat Key, created 2026-09-14).
 -- Nothing reads these tables yet; the engine core (phase 2) does.
 
 -- Shared updated_at trigger from 001, redeclared so this file stands alone.
@@ -22,7 +23,7 @@ $$ LANGUAGE plpgsql;
 -- SITES
 -- One row per Wix site. The account-level WIX_API_KEY covers every site;
 -- wix_site_id selects one. write_mode + target_collection_id are the
--- cutover switch (plan decision 2): shadow writes to HousesforSale_Engine,
+-- cutover switch (plan decision 2): shadow writes to the shadow collection,
 -- live writes to the collection the site renders, paused writes nothing.
 -- Rollback is the same edit the other way.
 -- ============================================================
@@ -31,7 +32,7 @@ CREATE TABLE ls_sites (
   name TEXT NOT NULL,
   domain TEXT NOT NULL,
   wix_site_id TEXT,                              -- NULL until known; must be in the account the API key belongs to
-  target_collection_id TEXT NOT NULL DEFAULT 'HousesforSale_Engine',        -- where the engine writes listings
+  target_collection_id TEXT NOT NULL DEFAULT 'HousesforSale2',              -- where the engine writes listings
   live_collection_id TEXT NOT NULL DEFAULT 'HousesforSale',                 -- what the site renders today; read-only until cutover
   villages_collection_id TEXT NOT NULL DEFAULT 'HousesforSale-DynamicPages', -- village pages; receives active counts
   write_mode TEXT NOT NULL DEFAULT 'shadow'

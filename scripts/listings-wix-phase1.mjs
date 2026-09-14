@@ -3,8 +3,9 @@
 // and gates", step 1). From one Vercel build log it answers:
 //
 //   - Is the Longboat Key site reachable with the account-level API key
-//     (site ID + account membership), and does HousesforSale_Engine exist
-//     with the same fields as the live HousesforSale?
+//     (site ID + account membership), and does the shadow collection
+//     (HousesforSale2, created 2026-09-14) exist with the same fields as
+//     the live HousesforSale?
 //   - Does an insert keyed by a fake ListingId keep that _id, and does a
 //     full-item update round-trip? (plan decision 6: Wix _id = ListingId)
 //   - What does a bulk insert / update / save / remove of N realistic rows
@@ -17,7 +18,7 @@
 // WIX_API_KEY plus the Supabase service key), guarded to this branch so
 // production and other preview builds skip it; LS_PHASE1_RUN=1 runs it
 // anywhere the env is present. The live HousesforSale collection is only
-// read (its schema and its item count). Writes: rows in HousesforSale_Engine,
+// read (its schema and its item count). Writes: rows in HousesforSale2,
 // one image import into the site's Media Manager, one probe JPEG in the
 // Supabase `photos` bucket. Every row this script writes has an _id starting
 // with MFRENGINE; all are removed afterwards except the keyed one
@@ -29,13 +30,14 @@
 // the Site List API, which needs WIX_ACCOUNT_ID), NEXT_PUBLIC_SUPABASE_URL +
 // SUPABASE_SERVICE_ROLE_KEY (for the image; LS_PHASE1_IMAGE_URL overrides),
 // LS_PHASE1_BULK_SIZE (default 50; the Longboat inventory is ~330),
-// LS_PHASE1_SERIAL_WRITES (default 10), LS_PHASE1_BURST (default 20).
+// LS_PHASE1_SERIAL_WRITES (default 10), LS_PHASE1_BURST (default 20),
+// LS_PHASE1_ENGINE_COLLECTION (default HousesforSale2).
 // WIX_API_BASE points the script at a mock server for a local dry run.
 
 const WIX_BASE = process.env.WIX_API_BASE || 'https://www.wixapis.com';
 const PROBE_BRANCH = 'claude/listings-engine-phase1-longboat-tzysk9';
 const LIVE_COLLECTION = 'HousesforSale';
-const ENGINE_COLLECTION = process.env.LS_PHASE1_ENGINE_COLLECTION || 'HousesforSale_Engine';
+const ENGINE_COLLECTION = process.env.LS_PHASE1_ENGINE_COLLECTION || 'HousesforSale2';
 const OTHER_COLLECTIONS = ['Villages', 'HousesforSale-DynamicPages', 'Stagging', 'SyncRuns', 'SyncEvents'];
 const TEST_ID = 'MFRENGINEPROBE001';
 const TEST_ID_PREFIX = 'MFRENGINE';
