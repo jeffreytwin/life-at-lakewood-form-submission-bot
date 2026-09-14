@@ -184,7 +184,8 @@ Longboat Key repo `README.md` → Monitoring.
 
 ## Open items on Jeff
 
-- Longboat Key `wix-site-id`; confirm same Wix account as the other sites.
+- ~~Longboat Key `wix-site-id`~~ `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab` (dashboard URL,
+  2026-09-14); the probe confirms the account key reaches it.
 - ~~Create the shadow collection on Longboat Key (duplicate without data,
   admin-only permissions).~~ Done 2026-09-14 as `HousesforSale2`.
 - MLSGrid licence + rate question, in writing.
@@ -204,6 +205,9 @@ Longboat Key repo `README.md` → Monitoring.
 
 Recorded from the build session (PR #280) so the numbers outlive the chat.
 
+- **Site id.** `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab`, the UUID in the site's
+  manage.wix.com dashboard URL; built into the probe as its default and
+  seeded into `ls_sites`.
 - **Shadow collection.** Created on Longboat Key as `HousesforSale2`, not the
   `HousesforSale_Engine` this document assumed. `ls_sites.target_collection_id`
   defaults to it; the probe reports whether its fields match the live

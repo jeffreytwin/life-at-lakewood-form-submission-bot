@@ -31,7 +31,7 @@ CREATE TABLE ls_sites (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   domain TEXT NOT NULL,
-  wix_site_id TEXT,                              -- NULL until known; must be in the account the API key belongs to
+  wix_site_id TEXT,                              -- meta site id (the UUID in the dashboard URL); must be in the account the API key belongs to
   target_collection_id TEXT NOT NULL DEFAULT 'HousesforSale2',              -- where the engine writes listings
   live_collection_id TEXT NOT NULL DEFAULT 'HousesforSale',                 -- what the site renders today; read-only until cutover
   villages_collection_id TEXT NOT NULL DEFAULT 'HousesforSale-DynamicPages', -- village pages; receives active counts
@@ -352,9 +352,9 @@ ALTER TABLE ls_sync_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ls_sync_events ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
--- SEED: Longboat Key, in shadow mode. wix_site_id is filled in once Jeff
--- confirms the site ID and that it is in the same Wix account
--- (scripts/listings-wix-phase1.mjs verifies both).
+-- SEED: Longboat Key, in shadow mode. The site id is the UUID in the site's
+-- manage.wix.com dashboard URL (2026-09-14); scripts/listings-wix-phase1.mjs
+-- verifies the account key reaches it.
 -- ============================================================
-INSERT INTO ls_sites (name, domain, market_cities, write_mode)
-VALUES ('Life in Longboat Key', 'lifeinlongboatkey.com', ARRAY['Longboat Key'], 'shadow');
+INSERT INTO ls_sites (name, domain, wix_site_id, market_cities, write_mode)
+VALUES ('Life in Longboat Key', 'lifeinlongboatkey.com', '8b20e921-5b70-4428-8fcd-8c8ef3bad3ab', ARRAY['Longboat Key'], 'shadow');

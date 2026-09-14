@@ -11,6 +11,7 @@ for the standardized schema, and the per-site field maps.
 | lifeatlakewood.com | `4fbabb96-2d6c-4f20-a240-9223153498b5` | `FloorPlans` ("Floor Plans", 48 fields) | 445 |
 | lifeinwellenpark.com | `1a8c2755-823e-4882-ae32-e6c108a30e39` | `FloorPlans` ("Floor Plans", 32 fields) | 329 |
 | lifeatparrish.com | `a704cfe5-dd9b-44ff-a017-9d637d8c6fdc` | `FloorPlans` ("Floor Plans", 38 fields) | 829 |
+| lifeinlongboatkey.com | `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab` | none (listings engine site; see `LISTINGS_ENGINE_PLAN.md`) | |
 
 All three sites also carry `Builders` and a villages/neighborhoods collection
 (`HousesforSale-DynamicPages`: "Dynamic Village Pages" on Lakewood,

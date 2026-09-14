@@ -27,7 +27,8 @@
 // Always exits 0.
 //
 // Env: WIX_API_KEY (required), WIX_SITE_ID_LONGBOAT (else discovered via
-// the Site List API, which needs WIX_ACCOUNT_ID), NEXT_PUBLIC_SUPABASE_URL +
+// the Site List API when WIX_ACCOUNT_ID is set, else the built-in default
+// below), NEXT_PUBLIC_SUPABASE_URL +
 // SUPABASE_SERVICE_ROLE_KEY (for the image; LS_PHASE1_IMAGE_URL overrides),
 // LS_PHASE1_BULK_SIZE (default 50; the Longboat inventory is ~330),
 // LS_PHASE1_SERIAL_WRITES (default 10), LS_PHASE1_BURST (default 20),
@@ -36,6 +37,9 @@
 
 const WIX_BASE = process.env.WIX_API_BASE || 'https://www.wixapis.com';
 const PROBE_BRANCH = 'claude/listings-engine-phase1-longboat-tzysk9';
+// Longboat Key's meta site id: the UUID in its manage.wix.com dashboard URL
+// (2026-09-14). Not a secret; the other sites' ids live in docs/WIX_COLLECTIONS.md.
+const DEFAULT_LONGBOAT_SITE_ID = '8b20e921-5b70-4428-8fcd-8c8ef3bad3ab';
 const LIVE_COLLECTION = 'HousesforSale';
 const ENGINE_COLLECTION = process.env.LS_PHASE1_ENGINE_COLLECTION || 'HousesforSale2';
 const OTHER_COLLECTIONS = ['Villages', 'HousesforSale-DynamicPages', 'Stagging', 'SyncRuns', 'SyncEvents'];
@@ -268,16 +272,16 @@ async function resolveSiteId() {
   }
   const accountId = process.env.WIX_ACCOUNT_ID;
   if (!accountId) {
-    log('no WIX_SITE_ID_LONGBOAT; set it, or set WIX_ACCOUNT_ID so the account\'s sites can be listed');
-    return null;
+    log(`no WIX_SITE_ID_LONGBOAT and no WIX_ACCOUNT_ID; using the built-in id ${DEFAULT_LONGBOAT_SITE_ID}`);
+    return { siteId: DEFAULT_LONGBOAT_SITE_ID, how: 'built-in default from the dashboard URL' };
   }
   const res = await wix('site-list', 'POST', '/site-list/v2/sites/query', {
     headers: { 'wix-account-id': accountId },
     body: { query: { cursorPaging: { limit: 100 } } },
   });
   if (res.status !== 200) {
-    log(`site list -> ${short(res)} (needs an account-level key with Site List permission)`);
-    return null;
+    log(`site list -> ${short(res)} (needs an account-level key with Site List permission); using the built-in id`);
+    return { siteId: DEFAULT_LONGBOAT_SITE_ID, how: 'built-in default (site list unavailable)' };
   }
   const sites = res.json?.sites ?? [];
   log(`account has ${sites.length} site(s):`);
@@ -285,10 +289,12 @@ async function resolveSiteId() {
     log(`  ${s.id}  ${s.displayName ?? s.name ?? ''}  ${s.viewUrl ?? ''}  published=${s.published} domainConnected=${s.domainConnected}`);
   }
   const hit = sites.find((s) => /longboat/i.test(`${s.displayName ?? ''} ${s.name ?? ''} ${s.viewUrl ?? ''}`));
+  verdicts.default_site_id_in_account = sites.some((s) => s.id === DEFAULT_LONGBOAT_SITE_ID);
   if (!hit) {
-    log('no site matching "longboat" in this account: Longboat Key is in another Wix account, or named differently (set WIX_SITE_ID_LONGBOAT)');
-    return null;
+    log(`no site matching "longboat" in this account (built-in id ${verdicts.default_site_id_in_account ? 'is' : 'is not'} listed); using the built-in id`);
+    return { siteId: DEFAULT_LONGBOAT_SITE_ID, how: 'built-in default (no name match in the site list)' };
   }
+  if (hit.id !== DEFAULT_LONGBOAT_SITE_ID) log(`site list says Longboat Key is ${hit.id}, not the built-in ${DEFAULT_LONGBOAT_SITE_ID}; using the site list`);
   return { siteId: hit.id, how: `site list match "${hit.displayName ?? hit.name}"` };
 }
 
