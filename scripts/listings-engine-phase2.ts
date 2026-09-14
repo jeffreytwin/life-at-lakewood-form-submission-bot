@@ -103,7 +103,7 @@ function report(result: ReconcileResult): void {
 }
 
 async function main(): Promise<void> {
-  log(`starting (branch ${process.env.VERCEL_GIT_COMMIT_REF ?? "(none)"}, MLSGRID_API_KEY ${process.env.MLSGRID_API_KEY ? "present" : "missing"})`);
+  log(`starting (branch ${process.env.VERCEL_GIT_COMMIT_REF ?? "(none)"}, Vercel env ${process.env.VERCEL_ENV ?? "(local)"}, MLSGRID_API_KEY ${process.env.MLSGRID_API_KEY ? "present" : "missing"})`);
   const domain = process.env.LS_PHASE2_SITE_DOMAIN || "lifeinlongboatkey.com";
   const site = (await loadActiveSites()).find((s) => s.domain === domain);
   if (!site) {
