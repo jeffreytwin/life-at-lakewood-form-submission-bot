@@ -1,6 +1,8 @@
 -- Listings engine: schema foundation (phase 1 draft).
 -- See docs/LISTINGS_ENGINE_PLAN.md. The plan numbered this 040; 040-042
 -- landed for lead routing in the meantime, so it is 043.
+-- (Applied to production 2026-09-14 via the Supabase MCP; the engine core in
+-- src/lib/listings reads and writes these tables from phase 2 on.)
 --
 -- Postgres is the system of record. Each site keeps rendering from its own
 -- Wix collections (HousesforSale, the village pages, the dynamic pages); the
