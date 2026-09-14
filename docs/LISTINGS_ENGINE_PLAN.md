@@ -219,18 +219,31 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
   5 active licences, API access active and "in good standing". The numeric
   caps are not shown on the dashboard; the written answer on one puller
   feeding several display sites is still open.
-- **MLSGrid usage today** (Longboat Key's Velo pipeline, one site):
-  - last 24 h: 83 requests, 308 MB, average max 1.5 requests/s, peak 3;
+- **MLSGrid usage today** (Longboat Key's Velo pipeline, one site, hourly
+  log 2026-09-11 to 09-14, times ET):
+  - steady state, last 24 h: 83 requests, 308 MB, average max 1.5 requests/s,
+    peak 3;
   - a daytime hour is 3-6 requests and 10-27 MB: the hourly incremental pulls
     every Stellar record modified in the window, MLS-wide (PostalCity is not
-    filterable server-side), 200 per page with Media expanded;
+    filterable server-side), 200 per page with Media expanded, about 5 MB and
+    25 KB per listing a page;
   - the nightly full at 23:00 ET is 7 requests and 36 MB: ~330 ids verified
-    at 50 per request.
-- **What that means for the engine.** One puller for every site costs the same
-  incremental as today's single site, because that pull is already MLS-wide.
-  Only the nightly verify-by-id grows with total inventory (one request per
-  50 listings across all sites), and photo downloads go to the media host,
-  not the API. Keep page fetches sequential so the engine stays at 1-2
-  requests/s like the current pipeline, and keep `mlsgrid_request_count`
-  on every run so the Hub can show usage against whatever caps MLSGrid
-  confirms.
+    at 50 per request;
+  - 09-11 19:00 to 09-12 06:00 had seven hours of 20-29 requests and 100-130 MB
+    each: pulls of roughly 5,000 MLS-wide records, i.e. an incremental whose
+    window had grown past an hour (or a manual full), around 1 GB that day;
+  - the dashboard colours a max of 4 requests/s amber (3 stayed green), so the
+    comfortable ceiling is 3 requests/s or less; the 4 came from parallel
+    hydrate calls during a drain.
+- **What that means for the engine.**
+  - One puller for every site costs the same incremental as today's single
+    site, because that pull is already MLS-wide. Only the nightly verify-by-id
+    grows with total inventory (one request per 50 listings across all sites),
+    and photo downloads go to the media host, not the API.
+  - One MLSGrid request in flight at a time, pages fetched sequentially with a
+    short gap, so the engine never exceeds 2 requests/s; no parallel hydrates.
+  - Bound the incremental window. When the last ok pull is old, page the
+    modified set with a hard cap and fall back to verify-by-id for the sites'
+    inventory instead of re-pulling thousands of MLS-wide records every hour.
+  - Keep `mlsgrid_request_count` and `mlsgrid_bytes` on every run so the Hub
+    can show usage against whatever caps MLSGrid confirms in writing.

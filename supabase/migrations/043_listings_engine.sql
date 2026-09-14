@@ -281,6 +281,7 @@ CREATE TABLE ls_sync_runs (
   mlsgrid_request_count INTEGER NOT NULL DEFAULT 0,
   mlsgrid_listing_count INTEGER NOT NULL DEFAULT 0,  -- records MLSGrid said it had (MLS-wide for incremental runs)
   mlsgrid_items_fetched INTEGER NOT NULL DEFAULT 0,  -- records actually received
+  mlsgrid_bytes BIGINT NOT NULL DEFAULT 0,           -- response bytes, to set against MLSGrid's usage dashboard
   fetch_window_minutes INTEGER,
   wix_requests INTEGER NOT NULL DEFAULT 0,
   wix_rate_limited INTEGER NOT NULL DEFAULT 0,   -- 429 responses seen
