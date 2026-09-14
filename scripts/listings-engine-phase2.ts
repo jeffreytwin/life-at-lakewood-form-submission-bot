@@ -104,6 +104,11 @@ function report(result: ReconcileResult): void {
 
 async function main(): Promise<void> {
   log(`starting (branch ${process.env.VERCEL_GIT_COMMIT_REF ?? "(none)"}, Vercel env ${process.env.VERCEL_ENV ?? "(local)"}, MLSGRID_API_KEY ${process.env.MLSGRID_API_KEY ? "present" : "missing"})`);
+  if (!process.env.MLSGRID_API_KEY) {
+    // Names only, never values: shows whether the key exists under another spelling.
+    const similar = Object.keys(process.env).filter((k) => /mls/i.test(k));
+    log(`  env names containing "mls": ${similar.length ? similar.join(", ") : "none"}`);
+  }
   const domain = process.env.LS_PHASE2_SITE_DOMAIN || "lifeinlongboatkey.com";
   const site = (await loadActiveSites()).find((s) => s.domain === domain);
   if (!site) {
