@@ -19,6 +19,7 @@ import { MlsGridClient, MlsGridError, type MlsGridStats } from "@/lib/listings/m
 import { normalizeListing } from "@/lib/listings/normalize";
 import { classifyListing } from "@/lib/listings/classify";
 import { buildListingRecord, recordFingerprint } from "@/lib/listings/transform";
+import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import * as db from "@/lib/listings/db";
 import {
   lastCompleteIncrementalStartedAt,
@@ -198,9 +199,29 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       }
     }
 
-    stage = "fetch";
+    stage = "seed";
     await run.checkpoint(stage);
     const sites = await db.loadActiveSites(opts.siteIds);
+    for (const site of sites) {
+      // While a site is in shadow mode its live galleries are still the Velo
+      // pipeline's, which re-uploads and trashes files as it goes: re-read them
+      // so the shadow write carries the URIs the site serves right now, and so
+      // a listing new on the site has a placeholder for this run to verify.
+      if (site.write_mode !== "shadow" || !site.wix_site_id || site.target_collection_id === site.live_collection_id) continue;
+      try {
+        const seeded = await seedSiteMediaFromLive(site);
+        if (seeded.placeholders || seeded.siteMediaRows || seeded.refreshed) {
+          run.event("info", "seed", `${site.domain}: live galleries re-read: ${seeded.placeholders} new listing(s), ${seeded.siteMediaRows} photo(s) recorded, ${seeded.refreshed} URI(s) refreshed`, {
+            siteId: site.id, details: seeded,
+          });
+        }
+      } catch (error) {
+        run.event("warn", "seed_failed", `${site.domain}: could not re-read the live galleries (${errorMessage(error)}); writing with the photos already recorded`, { siteId: site.id });
+      }
+    }
+
+    stage = "fetch";
+    await run.checkpoint(stage);
     const client = opts.client ?? new MlsGridClient();
     const fetchDeadline = opts.deadline - FETCH_RESERVE_MS;
 

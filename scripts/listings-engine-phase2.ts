@@ -166,7 +166,7 @@ async function main(): Promise<void> {
   // ---- 3. media seed from the live galleries (read-only on Wix) ----
   await step("media seed", async () => {
     const r = await seedSiteMediaFromLive(site);
-    log(`  ${r.liveItems} live items, ${r.galleryItems} gallery items (${r.unkeyed} unkeyed), ${r.placeholders} placeholder listing(s), ${r.mediaRows} media row(s), ${r.siteMediaRows} site media row(s) added`);
+    log(`  ${r.liveItems} live items, ${r.galleryItems} gallery items (${r.unkeyed} unkeyed), ${r.placeholders} placeholder listing(s), ${r.mediaRows} media row(s), ${r.siteMediaRows} site media row(s) added, ${r.refreshed} URI(s) refreshed`);
   });
 
   // ---- 4. runs ----

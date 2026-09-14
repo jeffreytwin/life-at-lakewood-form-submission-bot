@@ -7,6 +7,11 @@
 // 'seeded'). Listings unknown to the engine get a placeholder ls_listings
 // row that the next pull overwrites; a full run verifies each of them
 // against MLSGrid.
+//
+// Idempotent and repeatable: while the Velo pipeline still owns the live
+// collection it re-uploads galleries and trashes the replaced files, so a
+// seeded row follows the live gallery's current URI on every run. A row the
+// engine imported itself (origin 'imported') is never touched here.
 
 import { queryAllItems } from "@/lib/wix/client";
 import { supabase } from "@/lib/supabase/client";
@@ -22,7 +27,10 @@ export interface MediaSeedResult {
   unkeyed: number;
   placeholders: number;
   mediaRows: number;
+  /** ls_site_media rows added. */
   siteMediaRows: number;
+  /** Seeded rows whose Media Manager URI changed since the last seed. */
+  refreshed: number;
 }
 
 interface LiveGalleryItem {
@@ -34,7 +42,7 @@ interface LiveGalleryItem {
 export async function seedSiteMediaFromLive(site: LsSite): Promise<MediaSeedResult> {
   if (!site.wix_site_id) throw new Error(`site ${site.domain} has no wix_site_id`);
   const items = await queryAllItems(site.wix_site_id, site.live_collection_id);
-  const result: MediaSeedResult = { liveItems: items.length, galleryItems: 0, unkeyed: 0, placeholders: 0, mediaRows: 0, siteMediaRows: 0 };
+  const result: MediaSeedResult = { liveItems: items.length, galleryItems: 0, unkeyed: 0, placeholders: 0, mediaRows: 0, siteMediaRows: 0, refreshed: 0 };
 
   const placeholders: Array<Record<string, unknown>> = [];
   const media: Array<{ listing_id: string; position: number; path_key: string; title: string | null }> = [];
@@ -91,9 +99,9 @@ export async function seedSiteMediaFromLive(site: LsSite): Promise<MediaSeedResu
     result.mediaRows += (data ?? []).length;
   }
 
-  // Resolve media ids for every seeded photo, then record the site's URI.
+  // Resolve media ids for every seeded photo.
   const listingIds = [...new Set(media.map((m) => m.listing_id))];
-  const siteMedia: Array<Record<string, unknown>> = [];
+  const wanted: Array<{ mediaId: string; uri: string; fileId: string | null }> = [];
   for (const part of chunk(listingIds, 200)) {
     // A couple of hundred galleries is thousands of rows: page, never trust one response.
     const rows = await selectAll<{ id: string; listing_id: string; path_key: string }>("load seeded media", (from, to) =>
@@ -101,17 +109,33 @@ export async function seedSiteMediaFromLive(site: LsSite): Promise<MediaSeedResu
     );
     for (const row of rows) {
       const hit = uris.get(mediaKey(row.listing_id, row.path_key));
-      if (!hit) continue;
-      siteMedia.push({ site_id: site.id, media_id: row.id, wix_file_id: hit.fileId, wix_image_uri: hit.uri, origin: "seeded" });
+      if (hit) wanted.push({ mediaId: row.id, uri: hit.uri, fileId: hit.fileId });
     }
   }
-  for (const part of chunk(siteMedia, 500)) {
-    const { data, error } = await supabase
-      .from("ls_site_media")
-      .upsert(part, { onConflict: "site_id,media_id", ignoreDuplicates: true })
-      .select("id");
+
+  // Record the site's URI: new rows are added, seeded rows follow the live
+  // gallery, rows the engine imported itself are left alone.
+  const existing = new Map<string, { origin: string; wix_image_uri: string }>();
+  for (const part of chunk(wanted.map((w) => w.mediaId), 200)) {
+    const rows = await selectAll<{ media_id: string; origin: string; wix_image_uri: string }>("load site media", (from, to) =>
+      supabase.from("ls_site_media").select("media_id, origin, wix_image_uri").eq("site_id", site.id).in("media_id", part).order("id").range(from, to)
+    );
+    for (const row of rows) existing.set(row.media_id, row);
+  }
+  const upserts: Array<Record<string, unknown>> = [];
+  for (const w of wanted) {
+    const prior = existing.get(w.mediaId);
+    if (prior) {
+      if (prior.origin !== "seeded" || prior.wix_image_uri === w.uri) continue;
+      result.refreshed += 1;
+    } else {
+      result.siteMediaRows += 1;
+    }
+    upserts.push({ site_id: site.id, media_id: w.mediaId, wix_file_id: w.fileId, wix_image_uri: w.uri, origin: "seeded" });
+  }
+  for (const part of chunk(upserts, 500)) {
+    const { error } = await supabase.from("ls_site_media").upsert(part, { onConflict: "site_id,media_id" });
     if (error) throw new Error(`seed site media: ${errorMessage(error)}`);
-    result.siteMediaRows += (data ?? []).length;
   }
   return result;
 }

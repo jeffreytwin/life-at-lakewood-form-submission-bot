@@ -35,6 +35,9 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
     lastCompleteIncrementalStartedAt: vi.fn(),
   };
 });
+vi.mock("@/lib/listings/media-seed", () => ({
+  seedSiteMediaFromLive: vi.fn(),
+}));
 vi.mock("@/lib/wix/client", () => ({
   WixApiError: class WixApiError extends Error {
     rateLimited = false;
@@ -45,6 +48,7 @@ vi.mock("@/lib/wix/client", () => ({
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, lastCompleteIncrementalStartedAt, previousRunStartedAt, startRun, type RunHandle } from "@/lib/listings/runs";
+import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { bulkRemoveItems, bulkSaveItems, type WixItemData } from "@/lib/wix/client";
 import { normalizeListing } from "@/lib/listings/normalize";
 import { runReconcile } from "@/lib/listings/reconcile";
@@ -186,6 +190,7 @@ beforeEach(() => {
   vi.mocked(db.loadKnownListingIds).mockResolvedValue([]);
   vi.mocked(previousRunStartedAt).mockResolvedValue(null);
   vi.mocked(lastCompleteIncrementalStartedAt).mockResolvedValue(new Date(NOW.getTime() - HOUR));
+  vi.mocked(seedSiteMediaFromLive).mockResolvedValue({ liveItems: 202, galleryItems: 0, unkeyed: 0, placeholders: 0, mediaRows: 0, siteMediaRows: 0, refreshed: 3 });
   vi.mocked(bulkSaveItems).mockImplementation(okBulk("INSERT"));
   vi.mocked(bulkRemoveItems).mockImplementation(okBulk("DELETE"));
 });
@@ -220,6 +225,10 @@ describe("runReconcile (incremental)", () => {
 
     expect(result).toMatchObject({ status: "ok", stage: "done", truncated: false, fetched: 3, relevant: 2, missing: 0 });
     expect(handle.counts.gap_minutes).toBe(180);
+
+    // Shadow mode re-reads the live galleries before anything else.
+    expect(seedSiteMediaFromLive).toHaveBeenCalledWith(site);
+    expect(events.find((e) => e.kind === "seed")?.message).toContain("3 URI(s) refreshed");
     expect(events.find((e) => e.kind === "gap")?.level).toBe("warn");
 
     // The watermark minus the two-minute overlap.
@@ -275,6 +284,7 @@ describe("runReconcile (incremental)", () => {
     const result = await runReconcile({ mode: "incremental", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ modified: [raw] }) });
     expect(result.sites[0].skipped).toMatch(/live collection/);
     expect(events.some((e) => e.kind === "write_failed" && e.level === "error")).toBe(true);
+    expect(seedSiteMediaFromLive).not.toHaveBeenCalled();
     expect(bulkSaveItems).not.toHaveBeenCalled();
     expect(bulkRemoveItems).not.toHaveBeenCalled();
   });

@@ -382,10 +382,13 @@ while porting `runSync`.
 - **Photos in phase 2.** No downloads from MLSGrid yet. `media-seed.ts` keys
   every live gallery item by its MLS path and records the site's existing
   `wix:image://` URI, so a listing already on the site is written to the
-  shadow collection with the photos the site has. A listing with no photo the
-  site holds stays `staged` (reported as `waitingForPhotos`); a partial
-  gallery is written and the row keeps `gallery_ready = false` for the phase 3
-  photo job.
+  shadow collection with the photos the site has. Because the Velo pipeline
+  re-uploads galleries and trashes the replaced files, every run of a
+  shadow-mode site re-reads the live galleries first and a seeded URI follows
+  the live one (rows the engine imports itself, from phase 3, are never
+  touched). A listing with no photo the site holds stays `staged` (reported
+  as `waitingForPhotos`); a partial gallery is written and the row keeps
+  `gallery_ready = false` for the phase 3 photo job.
 - **State meaning and cutover.** `ls_site_listings.state = live` means
   "written to the site's target collection", shadow or live. Cutover is the
   `ls_sites` edit the plan describes plus nulling `written_at` /
