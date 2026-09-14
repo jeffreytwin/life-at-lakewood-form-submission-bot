@@ -57,3 +57,38 @@ export function isUniqueViolation(error: unknown): boolean {
     (error as { code?: unknown }).code === "23505"
   );
 }
+
+/**
+ * A readable message for anything that was thrown.
+ *
+ * Supabase reports a failed query as a plain `{ message, code, details }`
+ * object, not an Error, so the usual `error instanceof Error ? error.message :
+ * String(error)` prints "[object Object]" and hides what actually went wrong.
+ * That is how a Gateway Timeout that stranded a lead mid-escalation showed up
+ * in the logs as nothing at all.
+ */
+export function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+
+  if (typeof error === "object" && error !== null) {
+    const { message, code, details } = error as {
+      message?: unknown;
+      code?: unknown;
+      details?: unknown;
+    };
+    if (typeof message === "string" && message.length > 0) {
+      const extras = [code, details].filter(
+        (part): part is string => typeof part === "string" && part.length > 0
+      );
+      return extras.length > 0 ? `${message} (${extras.join("; ")})` : message;
+    }
+    try {
+      return JSON.stringify(error);
+    } catch {
+      // Circular or otherwise unserializable — fall through to String().
+    }
+  }
+
+  return String(error);
+}

@@ -35,7 +35,12 @@ function getExpiresAt(): string {
 }
 
 /**
- * Start routing a lead to the best available agent.
+ * Offer the lead to the best agent still eligible for it, or hand it to
+ * frontlines when nobody is left.
+ *
+ * This is the one place a lead moves on to a new agent: the first offer after
+ * intake, the hand-off after a decline or a double timeout, a dashboard retry,
+ * and the timeout cron resuming a lead whose hand-off was interrupted.
  */
 export async function startRouting(
   lead: Lead,
@@ -267,13 +272,10 @@ export async function handleDecline(
     agentName: agent.name,
   });
 
-  // Immediately select next agent
-  const nextAgent = await selectNextAgent(lead, locationName);
-  if (nextAgent) {
-    await sendToAgent(lead, nextAgent, locationName);
-  } else {
-    await handleManualFallback(lead);
-  }
+  // The attempt above is now terminal. If anything below fails, the lead is
+  // left with no live attempt; the timeout cron's stranded-lead sweep picks
+  // it up from here and calls startRouting again.
+  await startRouting(lead, locationName);
 }
 
 /**
@@ -396,13 +398,10 @@ export async function handleSecondTimeout(
     agentName: agent.name,
   });
 
-  // Select next agent
-  const nextAgent = await selectNextAgent(lead, locationName);
-  if (nextAgent) {
-    await sendToAgent(lead, nextAgent, locationName);
-  } else {
-    await handleManualFallback(lead);
-  }
+  // The attempt above is now terminal. If anything below fails, the lead is
+  // left with no live attempt; the timeout cron's stranded-lead sweep picks
+  // it up from here and calls startRouting again.
+  await startRouting(lead, locationName);
 }
 
 /**

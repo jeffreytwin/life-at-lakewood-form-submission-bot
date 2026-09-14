@@ -33,6 +33,20 @@ export async function updateLeadStatus(
   return data;
 }
 
+/**
+ * Leads the auction has not finished with: waiting for a first offer or out
+ * with an agent. Used by the timeout cron to spot leads it has lost track of.
+ */
+export async function getLeadsInAuction(): Promise<Lead[]> {
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .in("routing_status", ["pending", "routing"]);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getLeadById(id: string): Promise<Lead | null> {
   const { data, error } = await supabase
     .from("leads")
