@@ -18,7 +18,13 @@ All three sites also carry `Builders` and a villages/neighborhoods collection
 "Neighborhoods" on Wellen/Parrish) that the Floorplans reference fields point at.
 
 Key API facts confirmed:
-- One account-level API key + `wix-site-id` header works across all three sites.
+- One account-level API key + `wix-site-id` header works across all four sites
+  (Longboat Key verified 2026-09-14 by `scripts/listings-wix-phase1.mjs`).
+- A write that supplies its own `_id` must also send `dataItem.id` with the
+  same value, or Wix answers WDE0080 "dataItem id and data._id fields must
+  match". The bulk endpoints (`/wix-data/v2/bulk/items/{insert,update,save,
+  remove}`) take up to 1000 items per call, keep caller ids, and on Longboat
+  Key wrote 50 realistic listing rows in about 0.2 to 0.3 s per call.
 - Every FloorPlans collection exposes `_publishStatus`, `_publishDate`,
   `_draftDate` system fields — the CMS draft/published state the draft-first
   insert flow relies on (Parrish currently has 152 DRAFT / 829 PUBLISHED items).

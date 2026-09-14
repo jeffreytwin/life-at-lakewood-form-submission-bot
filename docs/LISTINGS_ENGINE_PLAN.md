@@ -229,8 +229,27 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
     after 3.4 s, file id `d0be81_...~mv2.jpg`, gallery URI built;
   - a keyed write must send `dataItem.id` equal to `data._id`, otherwise
     Wix answers WDE0080 "dataItem id and data._id fields must match". The
-    client and the probe now send both; the item and bulk timings come from
-    the next run.
+    client and the probe send both.
+- **Second real run** (preview build, 2026-09-14 21:34 UTC; 56 Wix calls,
+  no 429, no 5xx):
+  - insert keyed by `MFRENGINEPROBE001`: 96 ms, the `_id` comes back
+    unchanged; read 57 ms with the 20-item gallery and `listingPrimaryImage`
+    carrying the imported `wix:image://` URI; full update 93 ms and the
+    re-read shows the new price and a new `_updatedDate`;
+  - DATETIME values sent as `{ "$date": iso }` are accepted and read back as
+    `{ "$date": ... }`, so that is the form the engine uses;
+  - one-at-a-time inserts: 10 of 10, median 87 ms, max 106 ms, so a 330-row
+    reconcile that way is about 30 s and 330 requests;
+  - bulk, 50 realistic rows (453 KB per call): insert 204 ms, update 248 ms,
+    save of 50 existing + 5 new 313 ms (50 UPDATE, 5 INSERT, ids kept),
+    remove of 65 172 ms; a query sees all 50 straight after the insert;
+  - 20 parallel reads: all 200, 108 ms wall, median 75 ms;
+  - `HousesforSale2` and the live collection both carry the PUBLISH plugin
+    (default status PUBLISHED) and the EDITABLE_PAGE_LINK plugin; both read
+    ANYONE, insert/update SITE_MEMBER, remove ADMIN.
+  - Gate 1 of the sequence is now Jeff's check: bind a hidden dynamic page
+    to `HousesforSale2` and open `MFRENGINEPROBE001`, which the probe leaves
+    in place.
 - **MLSGrid subscription** (usage dashboard, 2026-09-14): Stellar MLS, IDX,
   5 active licences, API access active and "in good standing". The numeric
   caps are not shown on the dashboard; the written answer on one puller

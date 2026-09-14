@@ -19,8 +19,8 @@
 // production and other preview builds skip it; LS_PHASE1_RUN=1 runs it
 // anywhere the env is present. The live HousesforSale collection is only
 // read (its schema and its item count). Writes: rows in HousesforSale2,
-// one image import into the site's Media Manager, one probe JPEG in the
-// Supabase `photos` bucket. Every row this script writes has an _id starting
+// one image import into the site's Media Manager (earlier probe images
+// go to its trash bin), one probe JPEG in the Supabase `photos` bucket. Every row this script writes has an _id starting
 // with MFRENGINE; all are removed afterwards except the keyed one
 // (MFRENGINEPROBE001), left so a hidden dynamic page bound to the shadow
 // collection can be checked. LS_PHASE1_CLEANUP=1 removes it too.
@@ -463,6 +463,28 @@ async function main() {
       timings.media_ready_after = Date.now() - started;
       log(`media file ${file.id}: operationStatus=${status} after ${timings.media_ready_after}ms; gallery uri ${imageUri}`);
       verdicts.media_ready = status === 'READY' || status === undefined;
+
+      // Keep one probe image in the Media Manager: earlier copies with the
+      // same display name go to its trash bin (restorable, not deleted).
+      await step('media tidy-up', async () => {
+        const found = await wix('media-search', 'POST', '/site-media/v1/files/search', {
+          siteId,
+          body: { search: MEDIA_DISPLAY_NAME, rootFolder: 'MEDIA_ROOT', mediaTypes: ['IMAGE'], paging: { limit: 50 } },
+        });
+        if (found.status !== 200) {
+          log(`media search -> ${short(found)}; earlier probe files left in place`);
+          return;
+        }
+        const older = (found.json?.files ?? [])
+          .filter((f) => f.displayName === MEDIA_DISPLAY_NAME && f.id !== file.id)
+          .map((f) => f.id);
+        if (!older.length) {
+          log('no earlier probe files in the Media Manager');
+          return;
+        }
+        const del = await wix('media-trash-older', 'POST', '/site-media/v1/bulk/files/delete', { siteId, body: { fileIds: older } });
+        log(`moved ${older.length} earlier probe file(s) to the Media Manager trash -> ${del.status}${del.status !== 200 ? ' ' + short(del) : ''}`);
+      });
     }
   }
 
