@@ -409,6 +409,34 @@ async function main() {
   log(`${LIVE_COLLECTION}: ${inventory ?? '?'} items (${liveCount.ms}ms)`);
   timings.query_live_count = liveCount.ms;
 
+  // Read-only: what do the live galleries' MLS source URLs look like? Since
+  // 2026-09-08 MLSGrid signs media URLs (token, expiry, single download), and
+  // the engine keys photos by the stable tail images/<ListingId>/<uuid>.
+  // Seeding from the live galleries only works if older URLs share it.
+  await step('live gallery peek', async () => {
+    const sample = await wix('peek-live-gallery', 'POST', '/wix-data/v2/items/query', {
+      siteId,
+      body: { dataCollectionId: LIVE_COLLECTION, query: { paging: { limit: 5 } } },
+    });
+    const hosts = {};
+    const shapes = [];
+    for (const item of sample.json?.dataItems ?? []) {
+      for (const g of item.data?.listingImageGallery ?? []) {
+        const url = typeof g?.mlsSourceUrl === 'string' ? g.mlsSourceUrl : null;
+        if (!url) continue;
+        let host = '?';
+        try { host = new URL(url).host; } catch { /* keep ? */ }
+        hosts[host] = (hosts[host] ?? 0) + 1;
+        if (shapes.length < 3 && !shapes.some((sh) => sh.host === host)) {
+          shapes.push({ host, url: url.replace(/token=[^&/]*/, 'token=<redacted>').replace(/expires=\d+/, 'expires=<redacted>').slice(0, 200), tail: url.match(/\/images\/.*$/)?.[0] ?? '(no /images/ tail)' });
+        }
+      }
+    }
+    verdicts.live_gallery_hosts = hosts;
+    log(`live gallery mlsSourceUrl hosts across ${(sample.json?.dataItems ?? []).length} items: ${js(hosts)}`);
+    for (const sh of shapes) log(`  ${sh.host}: ${sh.url}  tail=${sh.tail}`);
+  });
+
   for (const id of OTHER_COLLECTIONS) {
     const c = await describeCollection(siteId, id);
     log(`${id}: ${c.exists ? `${c.fields.length} fields` : `missing (${c.status})`}`);

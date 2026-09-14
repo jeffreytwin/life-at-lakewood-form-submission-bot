@@ -188,7 +188,9 @@ Longboat Key repo `README.md` → Monitoring.
   2026-09-14); the probe confirms the account key reaches it.
 - ~~Create the shadow collection on Longboat Key (duplicate without data,
   admin-only permissions).~~ Done 2026-09-14 as `HousesforSale2`.
-- MLSGrid licence + rate question, in writing.
+- ~~MLSGrid rate question~~ answered by their documentation (2/s, 7,200/hour,
+  4 GB/hour, 40,000/day; see Phase 1 findings). The licence question, one
+  puller feeding several display sites, still needs the written answer.
 
 ## Kickoff prompt for the build session
 
@@ -251,9 +253,49 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
     to `HousesforSale2` and open `MFRENGINEPROBE001`, which the probe leaves
     in place.
 - **MLSGrid subscription** (usage dashboard, 2026-09-14): Stellar MLS, IDX,
-  5 active licences, API access active and "in good standing". The numeric
-  caps are not shown on the dashboard; the written answer on one puller
-  feeding several display sites is still open.
+  5 active licences, API access active and "in good standing". The written
+  answer on one puller feeding several display sites is still open.
+- **MLSGrid caps** (their documentation, "Rate Limits"): no more than
+  2 requests per second at any time, 7,200 requests per hour, 4 GB
+  downloaded per hour, 40,000 requests per 24 hours. Exceeding them in under
+  an hour suspends the token (every request answers 429 until usage falls
+  back inside the caps); warnings go to the primary contact's email. The
+  Velo pipeline's spikes to 3 and 4 requests/s were over the first cap.
+- **MLSGrid media regime** (their documentation, effective 2026-09-08):
+  Media is served from `media.mlsgrid.com` as
+  `https://media.mlsgrid.com/token=...&expires=...&id=.../images/<ListingId>/<uuid>.jpeg`.
+  Each URL is signed, expires one hour after the record was retrieved, and
+  allows one download; a second download, or a fresh URL for the same media
+  inside that hour, answers 429. Consumers must keep their own copy of every
+  file and must never serve or store MLS URLs. Consequences:
+  - decision 4 is not optional: download each photo once from MLSGrid, store
+    it in Supabase Storage, and let every Wix site import from the stored
+    copy (exactly the path phase 1 verified). Wix can never import straight
+    from an MLS URL, since Wix's fetch would spend the single download;
+  - `ls_listing_media.path_key` is the stable tail `images/<ListingId>/<uuid>.<ext>`;
+    the signed URL is kept only until the download succeeds and never
+    longer than its hour;
+  - a failed download cannot be retried inside the hour; `retry_after` on
+    the media row holds the next allowed attempt;
+  - fetch media URLs just in time: the photo job re-reads listings in
+    batches sized to what it can download within the hour at 2 requests/s
+    (about 50 listings, 1,500 photos, 12 minutes), instead of pulling every
+    URL up front and letting most expire;
+  - an initial seed for a large site (Lakewood Ranch at ~1,000 listings and
+    ~30,000 photos, ~9 GB) paces at the caps to roughly 7,000 photos an hour
+    over half a day, which is why seeding `ls_site_media` from the live
+    galleries first matters;
+  - the Velo pipeline keys photos by MLS URL (`mlsPhotoKey` in `diff.jsw`),
+    so since 2026-09-08 every pull presents every photo as reissued; check
+    `SyncEvents` for "photo URLs reissued by MLS" update messages, because
+    that is re-uploading whole galleries on each change and burning the
+    single downloads.
+- **MLSGrid record semantics** (their documentation): `ModificationTimestamp`
+  is the time the Grid converted the record and is the incremental
+  watermark; `OriginatingSystemModificationTimestamp` is the MLS's own
+  time (stored too, for display). All data dictionary dates are UTC.
+  `MlgCanView` false means remove the record; records carry only the fields
+  their source MLS filled. Replication only; no real-time queries.
 - **MLSGrid usage today** (Longboat Key's Velo pipeline, one site, hourly
   log 2026-09-11 to 09-14, times ET):
   - steady state, last 24 h: 83 requests, 308 MB, average max 1.5 requests/s,
@@ -281,4 +323,5 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
     modified set with a hard cap and fall back to verify-by-id for the sites'
     inventory instead of re-pulling thousands of MLS-wide records every hour.
   - Keep `mlsgrid_request_count` and `mlsgrid_bytes` on every run so the Hub
-    can show usage against whatever caps MLSGrid confirms in writing.
+    can show usage against the documented caps (2/s, 7,200/hour, 4 GB/hour,
+    40,000/day).

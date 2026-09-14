@@ -137,7 +137,8 @@ CREATE TABLE ls_listings (
   longitude NUMERIC,
   photo_count INTEGER NOT NULL DEFAULT 0,
   mlg_can_view BOOLEAN,                          -- false = MLSGrid revoked display rights (classify: mls_revoked)
-  modification_timestamp TIMESTAMPTZ,            -- MLSGrid ModificationTimestamp; the incremental watermark is the newest ok run
+  modification_timestamp TIMESTAMPTZ,            -- MLSGrid ModificationTimestamp (Grid conversion time, UTC); the incremental watermark
+  originating_system_modification_timestamp TIMESTAMPTZ, -- the MLS's own modification time, for display
   raw JSONB NOT NULL,                            -- the MLSGrid record as received, Media included
   in_feed BOOLEAN NOT NULL DEFAULT true,         -- false once a full run finds MLSGrid no longer returns it (classify: not_in_feed)
   first_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -157,18 +158,22 @@ CREATE TRIGGER ls_listings_updated_at
 -- ============================================================
 -- LISTING MEDIA
 -- One row per MLS photo. Downloaded from MLSGrid once, stored once in
--- Supabase Storage, imported per site (plan decision 4). The MLS URL
--- carries a rotating access token; the path after the token is stable, so
--- path_key is the photo's identity and source_url is only the latest way to
--- fetch it.
+-- Supabase Storage, imported per site (plan decision 4). Since 2026-09-08
+-- an MLSGrid MediaURL is signed, expires an hour after the record was
+-- retrieved, and allows one download (a repeat inside the hour answers
+-- 429); consumers must keep their own copy and never store or serve the
+-- URL. So path_key, the stable tail images/<ListingId>/<uuid>.<ext>, is the
+-- photo's identity, and source_url is held only until the download
+-- succeeds.
 -- ============================================================
 CREATE TABLE ls_listing_media (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   listing_id TEXT NOT NULL REFERENCES ls_listings(listing_id) ON DELETE CASCADE,
   position INTEGER NOT NULL,                     -- MLSGrid Media.Order
   media_key TEXT,                                -- MLSGrid MediaKey when present
-  source_url TEXT NOT NULL,                      -- MediaURL as last received
-  path_key TEXT NOT NULL,                        -- MediaURL path after the token
+  path_key TEXT NOT NULL,                        -- images/<ListingId>/<uuid>.<ext>, the part of MediaURL after the signature
+  source_url TEXT,                               -- signed MediaURL as last received; cleared once downloaded, useless after an hour
+  source_url_received_at TIMESTAMPTZ,            -- when that URL was retrieved; the download must happen within the hour
   title TEXT,
   media_modification_timestamp TIMESTAMPTZ,      -- a new stamp on the same path_key means the photo was retouched
   content_hash TEXT,                             -- sha256 of the bytes, set when downloaded
@@ -176,13 +181,14 @@ CREATE TABLE ls_listing_media (
   storage_path TEXT,                             -- Supabase Storage object path once stored; NULL = not yet downloaded
   download_attempts INTEGER NOT NULL DEFAULT 0,
   last_attempt_at TIMESTAMPTZ,
+  retry_after TIMESTAMPTZ,                       -- MLSGrid allows one download per media per hour; no attempt before this
   last_error TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE UNIQUE INDEX idx_ls_listing_media_key ON ls_listing_media (listing_id, path_key);
-CREATE INDEX idx_ls_listing_media_pending ON ls_listing_media (listing_id) WHERE storage_path IS NULL;
+CREATE INDEX idx_ls_listing_media_pending ON ls_listing_media (COALESCE(retry_after, 'epoch'::timestamptz)) WHERE storage_path IS NULL;
 CREATE INDEX idx_ls_listing_media_hash ON ls_listing_media (content_hash) WHERE content_hash IS NOT NULL;
 
 CREATE TRIGGER ls_listing_media_updated_at
