@@ -411,6 +411,8 @@ while porting `runSync`.
   job (the verification script has the comparison), writing village counts to
   the Wix village pages (Postgres only until a site is live), and the photo
   pipeline.
-- **Needs from Jeff.** `MLSGRID_API_KEY` in the Vercel environment (Preview
-  and Production); it lives in Wix Secrets on the Longboat Key site today.
+- **Needs from Jeff.** ~~`MLSGRID_API_KEY` in the Vercel environment (Preview
+  and Production); it lives in Wix Secrets on the Longboat Key site today.~~
+  Added 2026-09-14; from then on the verification build runs the full and
+  incremental pulls against the shadow collection on every push.
 
