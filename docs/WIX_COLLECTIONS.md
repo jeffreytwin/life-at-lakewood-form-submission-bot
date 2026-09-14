@@ -11,13 +11,20 @@ for the standardized schema, and the per-site field maps.
 | lifeatlakewood.com | `4fbabb96-2d6c-4f20-a240-9223153498b5` | `FloorPlans` ("Floor Plans", 48 fields) | 445 |
 | lifeinwellenpark.com | `1a8c2755-823e-4882-ae32-e6c108a30e39` | `FloorPlans` ("Floor Plans", 32 fields) | 329 |
 | lifeatparrish.com | `a704cfe5-dd9b-44ff-a017-9d637d8c6fdc` | `FloorPlans` ("Floor Plans", 38 fields) | 829 |
+| lifeinlongboatkey.com | `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab` | none (listings engine site; see `LISTINGS_ENGINE_PLAN.md`) | |
 
 All three sites also carry `Builders` and a villages/neighborhoods collection
 (`HousesforSale-DynamicPages`: "Dynamic Village Pages" on Lakewood,
 "Neighborhoods" on Wellen/Parrish) that the Floorplans reference fields point at.
 
 Key API facts confirmed:
-- One account-level API key + `wix-site-id` header works across all three sites.
+- One account-level API key + `wix-site-id` header works across all four sites
+  (Longboat Key verified 2026-09-14 by `scripts/listings-wix-phase1.mjs`).
+- A write that supplies its own `_id` must also send `dataItem.id` with the
+  same value, or Wix answers WDE0080 "dataItem id and data._id fields must
+  match". The bulk endpoints (`/wix-data/v2/bulk/items/{insert,update,save,
+  remove}`) take up to 1000 items per call, keep caller ids, and on Longboat
+  Key wrote 50 realistic listing rows in about 0.2 to 0.3 s per call.
 - Every FloorPlans collection exposes `_publishStatus`, `_publishDate`,
   `_draftDate` system fields — the CMS draft/published state the draft-first
   insert flow relies on (Parrish currently has 152 DRAFT / 829 PUBLISHED items).

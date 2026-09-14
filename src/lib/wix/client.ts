@@ -22,14 +22,25 @@ export interface WixDataItem {
   data: WixItemData;
 }
 
-class WixApiError extends Error {
+export class WixApiError extends Error {
+  /** Seconds Wix asked us to wait (from a Retry-After header), if it said. */
+  readonly retryAfterSeconds: number | null;
+
   constructor(
     public readonly status: number,
     public readonly body: string,
-    context: string
+    context: string,
+    retryAfter?: string | null
   ) {
     super(`Wix API ${context}: ${status} ${body.slice(0, 300)}`);
     this.name = "WixApiError";
+    const seconds = retryAfter ? Number(retryAfter) : NaN;
+    this.retryAfterSeconds = Number.isFinite(seconds) ? seconds : null;
+  }
+
+  /** Wix throttled the call (documented at 200 requests/minute per app instance). */
+  get rateLimited(): boolean {
+    return this.status === 429;
   }
 }
 
@@ -57,13 +68,15 @@ async function wixRequest<T>(
   });
   const text = await res.text();
   if (!res.ok) {
+    const retryAfter = res.headers.get("retry-after");
     logger.error("Wix API request failed", {
       method,
       path,
       status: res.status,
+      retryAfter,
       body: text.slice(0, 500),
     });
-    throw new WixApiError(res.status, text, `${method} ${path}`);
+    throw new WixApiError(res.status, text, `${method} ${path}`, retryAfter);
   }
   return (text ? JSON.parse(text) : null) as T;
 }
@@ -136,8 +149,18 @@ export async function getItem(
 }
 
 /**
+ * Wraps item data for a write. When the caller supplies _id, Wix requires
+ * dataItem.id to carry the same value (WDE0080 "dataItem id and data._id
+ * fields must match" otherwise; verified on Longboat Key 2026-09-14).
+ */
+function toDataItem(data: WixItemData): { id?: string; data: WixItemData } {
+  return data._id ? { id: data._id, data } : { data };
+}
+
+/**
  * Inserts an item. With asDraft, the item lands as a CMS draft: invisible
- * to the live site until a human publishes it in the Wix CMS UI.
+ * to the live site until a human publishes it in the Wix CMS UI. A
+ * caller-supplied _id is kept.
  */
 export async function insertItem(
   siteId: string,
@@ -151,7 +174,7 @@ export async function insertItem(
     "/wix-data/v2/items",
     {
       dataCollectionId: collectionId,
-      dataItem: { data: asDraft ? { ...data, _publishStatus: "DRAFT" } : data },
+      dataItem: toDataItem(asDraft ? { ...data, _publishStatus: "DRAFT" } : data),
     }
   );
   return res.dataItem;
@@ -208,4 +231,183 @@ export async function importMediaFromUrl(
     displayName,
   });
   return res.file;
+}
+
+// ---------------------------------------------------------------------------
+// Bulk writes (listings engine). One call carries up to 1000 items and
+// reports a per-item outcome instead of failing the whole call, so a
+// 330-row reconcile is one request rather than 330 (Wix documents 200
+// requests/minute per app instance). Endpoint shapes are from the Wix REST
+// reference: POST /wix-data/v2/bulk/items/{insert|update|save|remove}.
+// Verified against Longboat Key by scripts/listings-wix-phase1.mjs.
+// ---------------------------------------------------------------------------
+
+/** Items per bulk call accepted by the Wix Data API. Larger batches are chunked. */
+export const WIX_BULK_LIMIT = 1000;
+
+export interface WixBulkItemError {
+  code?: string;
+  description?: string;
+  data?: Record<string, unknown>;
+}
+
+export interface WixBulkItemResult {
+  /** Index into the array the caller passed in (chunking is invisible). */
+  originalIndex: number;
+  /** Item id Wix reports; a caller-supplied _id comes back unchanged. */
+  id: string | null;
+  success: boolean;
+  /** What Wix did: INSERT, UPDATE or DELETE (save reports which one it chose). */
+  action?: string;
+  error?: WixBulkItemError;
+  /** Present only when returnEntity was requested. */
+  item?: WixDataItem;
+}
+
+export interface WixBulkResult {
+  results: WixBulkItemResult[];
+  totalSuccesses: number;
+  totalFailures: number;
+  /** Failures Wix could not attribute to a specific item. */
+  undetailedFailures: number;
+  /** API calls made (ceil(items / WIX_BULK_LIMIT)). */
+  requests: number;
+}
+
+export interface BulkWriteOptions {
+  /** Return the written items in results[].item (bigger responses). */
+  returnEntity?: boolean;
+  /**
+   * Touch draft items too (collections with the publish plugin). Off by
+   * default: the listings collections have no publish plugin.
+   */
+  includeDrafts?: boolean;
+}
+
+interface RawBulkResponse {
+  results?: Array<{
+    action?: string;
+    itemMetadata?: {
+      id?: string;
+      originalIndex?: number;
+      success?: boolean;
+      error?: WixBulkItemError;
+    };
+    dataItem?: WixDataItem;
+  }>;
+  bulkActionMetadata?: {
+    totalSuccesses?: number;
+    totalFailures?: number;
+    undetailedFailures?: number;
+  };
+}
+
+function bulkRequestBody(
+  collectionId: string,
+  { returnEntity, includeDrafts }: BulkWriteOptions
+): Record<string, unknown> {
+  return {
+    dataCollectionId: collectionId,
+    ...(returnEntity ? { returnEntity: true } : {}),
+    ...(includeDrafts ? { publishPluginOptions: { includeDraftItems: true } } : {}),
+  };
+}
+
+async function bulkWrite(
+  siteId: string,
+  operation: "insert" | "update" | "save" | "remove",
+  body: Record<string, unknown>,
+  entriesKey: "dataItems" | "dataItemIds",
+  entries: unknown[]
+): Promise<WixBulkResult> {
+  const merged: WixBulkResult = {
+    results: [],
+    totalSuccesses: 0,
+    totalFailures: 0,
+    undetailedFailures: 0,
+    requests: 0,
+  };
+  for (let start = 0; start < entries.length; start += WIX_BULK_LIMIT) {
+    const chunk = entries.slice(start, start + WIX_BULK_LIMIT);
+    const res = await wixRequest<RawBulkResponse>(
+      siteId,
+      "POST",
+      `/wix-data/v2/bulk/items/${operation}`,
+      { ...body, [entriesKey]: chunk }
+    );
+    merged.requests += 1;
+    for (const result of res.results ?? []) {
+      const meta = result.itemMetadata ?? {};
+      merged.results.push({
+        originalIndex: start + (meta.originalIndex ?? 0),
+        id: meta.id ?? null,
+        success: meta.success ?? false,
+        action: result.action,
+        error: meta.error,
+        item: result.dataItem,
+      });
+    }
+    const totals = res.bulkActionMetadata ?? {};
+    merged.totalSuccesses += totals.totalSuccesses ?? 0;
+    merged.totalFailures += totals.totalFailures ?? 0;
+    merged.undetailedFailures += totals.undetailedFailures ?? 0;
+  }
+  merged.results.sort((a, b) => a.originalIndex - b.originalIndex);
+  return merged;
+}
+
+/**
+ * Inserts many items. A caller-supplied _id is kept (the engine keys listings
+ * by MLS ListingId); an _id that already exists fails that item only.
+ */
+export async function bulkInsertItems(
+  siteId: string,
+  collectionId: string,
+  items: WixItemData[],
+  { asDraft = false, ...options }: BulkWriteOptions & { asDraft?: boolean } = {}
+): Promise<WixBulkResult> {
+  const dataItems = items.map((data) =>
+    toDataItem(asDraft ? { ...data, _publishStatus: "DRAFT" } : data)
+  );
+  return bulkWrite(siteId, "insert", bulkRequestBody(collectionId, options), "dataItems", dataItems);
+}
+
+/**
+ * Full-item update of many items (same PUT semantics as updateItem: each item
+ * ends up with exactly the fields sent). An _id not in the collection fails
+ * that item only.
+ */
+export async function bulkUpdateItems(
+  siteId: string,
+  collectionId: string,
+  items: Array<WixItemData & { _id: string }>,
+  options: BulkWriteOptions = {}
+): Promise<WixBulkResult> {
+  const dataItems = items.map(toDataItem);
+  return bulkWrite(siteId, "update", bulkRequestBody(collectionId, options), "dataItems", dataItems);
+}
+
+/**
+ * Upsert: an item whose _id exists is replaced, any other is inserted (with
+ * its _id when given). This is the reconcile write: the first live run is
+ * an upsert over ids the site already has, not an insert flood.
+ */
+export async function bulkSaveItems(
+  siteId: string,
+  collectionId: string,
+  items: WixItemData[],
+  options: BulkWriteOptions = {}
+): Promise<WixBulkResult> {
+  const dataItems = items.map(toDataItem);
+  return bulkWrite(siteId, "save", bulkRequestBody(collectionId, options), "dataItems", dataItems);
+}
+
+/** Removes many items by id; an unknown id fails that item only. */
+export async function bulkRemoveItems(
+  siteId: string,
+  collectionId: string,
+  itemIds: string[],
+  options: Pick<BulkWriteOptions, "includeDrafts"> = {}
+): Promise<WixBulkResult> {
+  return bulkWrite(siteId, "remove", bulkRequestBody(collectionId, options), "dataItemIds", itemIds);
 }
