@@ -252,6 +252,13 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
   - Gate 1 of the sequence is now Jeff's check: bind a hidden dynamic page
     to `HousesforSale2` and open `MFRENGINEPROBE001`, which the probe leaves
     in place.
+- **Live galleries** (read-only peek, 2026-09-14 21:47 UTC): across five
+  sampled live listings, all 316 gallery items carry an `mlsSourceUrl` on
+  `media.mlsgrid.com` in the signed form, and every one ends in
+  `/images/<ListingId>/<uuid>.jpeg`. So seeding `ls_site_media` from the live
+  galleries is a parse of that tail, and the sampled galleries had all been
+  re-uploaded since 2026-09-08, which is the churn described above. The
+  stored URLs themselves are long expired; the engine keeps only the tail.
 - **MLSGrid subscription** (usage dashboard, 2026-09-14): Stellar MLS, IDX,
   5 active licences, API access active and "in good standing". The written
   answer on one puller feeding several display sites is still open.
