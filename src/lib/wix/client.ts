@@ -149,8 +149,18 @@ export async function getItem(
 }
 
 /**
+ * Wraps item data for a write. When the caller supplies _id, Wix requires
+ * dataItem.id to carry the same value (WDE0080 "dataItem id and data._id
+ * fields must match" otherwise; verified on Longboat Key 2026-09-14).
+ */
+function toDataItem(data: WixItemData): { id?: string; data: WixItemData } {
+  return data._id ? { id: data._id, data } : { data };
+}
+
+/**
  * Inserts an item. With asDraft, the item lands as a CMS draft: invisible
- * to the live site until a human publishes it in the Wix CMS UI.
+ * to the live site until a human publishes it in the Wix CMS UI. A
+ * caller-supplied _id is kept.
  */
 export async function insertItem(
   siteId: string,
@@ -164,7 +174,7 @@ export async function insertItem(
     "/wix-data/v2/items",
     {
       dataCollectionId: collectionId,
-      dataItem: { data: asDraft ? { ...data, _publishStatus: "DRAFT" } : data },
+      dataItem: toDataItem(asDraft ? { ...data, _publishStatus: "DRAFT" } : data),
     }
   );
   return res.dataItem;
@@ -356,9 +366,9 @@ export async function bulkInsertItems(
   items: WixItemData[],
   { asDraft = false, ...options }: BulkWriteOptions & { asDraft?: boolean } = {}
 ): Promise<WixBulkResult> {
-  const dataItems = items.map((data) => ({
-    data: asDraft ? { ...data, _publishStatus: "DRAFT" } : data,
-  }));
+  const dataItems = items.map((data) =>
+    toDataItem(asDraft ? { ...data, _publishStatus: "DRAFT" } : data)
+  );
   return bulkWrite(siteId, "insert", bulkRequestBody(collectionId, options), "dataItems", dataItems);
 }
 
@@ -373,7 +383,7 @@ export async function bulkUpdateItems(
   items: Array<WixItemData & { _id: string }>,
   options: BulkWriteOptions = {}
 ): Promise<WixBulkResult> {
-  const dataItems = items.map((data) => ({ id: data._id, data }));
+  const dataItems = items.map(toDataItem);
   return bulkWrite(siteId, "update", bulkRequestBody(collectionId, options), "dataItems", dataItems);
 }
 
@@ -388,7 +398,7 @@ export async function bulkSaveItems(
   items: WixItemData[],
   options: BulkWriteOptions = {}
 ): Promise<WixBulkResult> {
-  const dataItems = items.map((data) => (data._id ? { id: data._id, data } : { data }));
+  const dataItems = items.map(toDataItem);
   return bulkWrite(siteId, "save", bulkRequestBody(collectionId, options), "dataItems", dataItems);
 }
 

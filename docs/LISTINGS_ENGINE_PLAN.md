@@ -214,11 +214,23 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
   collection.
 - **Wix side.** The Wix Data bulk endpoints take up to 1000 items per call
   and honour a caller-supplied `_id`, so a full reconcile is one request
-  rather than ~330; Wix documents 200 requests/minute per app instance.
-  `src/lib/wix/client.ts` has the bulk methods; `scripts/listings-wix-phase1.mjs`
-  measures them from the Vercel build log once `WIX_SITE_ID_LONGBOAT` (or
-  `WIX_ACCOUNT_ID`) is in the preview env. The preview build already confirms
-  `WIX_API_KEY` is present there.
+  rather than one per row; Wix documents 200 requests/minute per app
+  instance. `src/lib/wix/client.ts` has the bulk methods;
+  `scripts/listings-wix-phase1.mjs` measures them from the Vercel build log
+  on every push to its branch.
+- **First real run** (preview build, 2026-09-14 21:30 UTC):
+  - the account key reaches the site; live `HousesforSale` ("Houses for
+    Sale") has 38 fields and 202 items, permissions read ANYONE,
+    insert/update SITE_MEMBER, remove ADMIN;
+  - `HousesforSale2` matches it field for field and carries the PUBLISH
+    plugin (default status PUBLISHED); a query with
+    `publishPluginOptions.includeDraftItems` is accepted;
+  - media import from a Supabase Storage URL: accepted in 0.6 s, READY
+    after 3.4 s, file id `d0be81_...~mv2.jpg`, gallery URI built;
+  - a keyed write must send `dataItem.id` equal to `data._id`, otherwise
+    Wix answers WDE0080 "dataItem id and data._id fields must match". The
+    client and the probe now send both; the item and bulk timings come from
+    the next run.
 - **MLSGrid subscription** (usage dashboard, 2026-09-14): Stellar MLS, IDX,
   5 active licences, API access active and "in good standing". The numeric
   caps are not shown on the dashboard; the written answer on one puller

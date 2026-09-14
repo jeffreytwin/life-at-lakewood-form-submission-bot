@@ -6,6 +6,7 @@ import {
   bulkRemoveItems,
   bulkSaveItems,
   bulkUpdateItems,
+  insertItem,
 } from "@/lib/wix/client";
 
 interface RecordedCall {
@@ -77,8 +78,9 @@ describe("wix client bulk writes", () => {
     expect(calls[0].body.publishPluginOptions).toBeUndefined();
     expect(calls[0].body.dataItems).toHaveLength(WIX_BULK_LIMIT);
     expect(calls[1].body.dataItems).toHaveLength(5);
+    // A caller-supplied _id rides as dataItem.id too (Wix rejects a mismatch).
     expect(calls[0].body.dataItems).toEqual(
-      expect.arrayContaining([{ data: { _id: "MFR0", price: 0 } }])
+      expect.arrayContaining([{ id: "MFR0", data: { _id: "MFR0", price: 0 } }])
     );
 
     expect(result.requests).toBe(2);
@@ -103,6 +105,22 @@ describe("wix client bulk writes", () => {
     expect(calls[0].body.returnEntity).toBe(true);
     expect(calls[0].body.dataItems).toEqual([{ data: { name: "a", _publishStatus: "DRAFT" } }]);
     expect(result.results[0].id).toBe("generated-0");
+  });
+
+  it("single insert sends dataItem.id only when the caller supplied an _id", async () => {
+    respond = (body) => {
+      const item = body.dataItem as { id?: string; data: Record<string, unknown> };
+      return jsonResponse({ dataItem: { id: item.id ?? "generated", dataCollectionId: "col", data: item.data } });
+    };
+
+    const keyedItem = await insertItem("site-1", "col", { _id: "MFRA1", price: 1 });
+    const generated = await insertItem("site-1", "col", { price: 2 });
+
+    expect(calls[0].url).toBe("https://www.wixapis.com/wix-data/v2/items");
+    expect(calls[0].body.dataItem).toEqual({ id: "MFRA1", data: { _id: "MFRA1", price: 1 } });
+    expect(calls[1].body.dataItem).toEqual({ data: { price: 2 } });
+    expect(keyedItem.id).toBe("MFRA1");
+    expect(generated.id).toBe("generated");
   });
 
   it("bulk update sends the id beside the data and can include drafts", async () => {

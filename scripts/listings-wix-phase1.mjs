@@ -72,6 +72,18 @@ const BURST = clampInt(process.env.LS_PHASE1_BURST, 20, 0, 100);
 
 const log = (...a) => console.log('LS1', ...a);
 const short = (r) => `${r.status} ${JSON.stringify(r.json ?? r.text ?? r.error ?? '').slice(0, 400)}`;
+const js = (v) => JSON.stringify(v) ?? 'undefined';
+// One failing step must not hide the others: each logs its error and the
+// run carries on (the final cleanup runs regardless).
+async function step(name, fn) {
+  try {
+    return await fn();
+  } catch (err) {
+    log(`${name} threw: ${err?.stack ?? err?.message ?? err}`);
+    verdicts[`${name.replace(/\W+/g, '_')}_threw`] = true;
+    return null;
+  }
+}
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const pad = (n, w) => String(n).padStart(w, '0');
 const formatPrice = (n) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
@@ -317,6 +329,11 @@ async function describeCollection(siteId, id) {
 
 const dataFields = (fields) => fields.filter((f) => !SYSTEM_FIELDS.has(f.key) && f.type !== 'PAGE_LINK' && !String(f.key).startsWith('link-'));
 
+// Wix REST rejects an insert whose data._id has no matching dataItem.id
+// (WDE0080 "dataItem id and data._id fields must match"), so every keyed
+// write sends both.
+const keyed = (data) => ({ id: data._id, data });
+
 // ---- Step 3: an image in Supabase Storage ----
 async function pickSourceImage() {
   if (process.env.LS_PHASE1_IMAGE_URL) return { url: process.env.LS_PHASE1_IMAGE_URL, how: 'LS_PHASE1_IMAGE_URL' };
@@ -383,7 +400,7 @@ async function main() {
     return;
   }
   verdicts.site_reachable = true;
-  log(`${LIVE_COLLECTION}: "${live.displayName}" ${live.fields.length} fields, permissions=${JSON.stringify(live.permissions)} (${live.ms}ms)`);
+  log(`${LIVE_COLLECTION}: "${live.displayName}" ${live.fields.length} fields, permissions=${js(live.permissions)} plugins=${js(live.plugins).slice(0, 200)} (${live.ms}ms)`);
   const liveCount = await wix('count-live', 'POST', '/wix-data/v2/items/query', {
     siteId,
     body: { dataCollectionId: LIVE_COLLECTION, query: { paging: { limit: 1 } }, returnTotalCount: true },
@@ -465,7 +482,7 @@ async function main() {
     siteId,
     body: { dataCollectionId: ENGINE_COLLECTION, query: { paging: { limit: 1 } }, publishPluginOptions: { includeDraftItems: true } },
   });
-  log(`query with publishPluginOptions.includeDraftItems (collection has no publish plugin?) -> ${drafts.status}${drafts.status !== 200 ? ' ' + short(drafts) : ''}`);
+  log(`query with publishPluginOptions.includeDraftItems -> ${drafts.status}${drafts.status !== 200 ? ' ' + short(drafts) : ''}`);
   verdicts.publish_plugin_options_accepted = drafts.status === 200;
 
   const leftovers = await queryIds(siteId, { _id: { $startsWith: TEST_ID_PREFIX } });
@@ -473,147 +490,162 @@ async function main() {
   await removeIds(siteId, leftovers, 'pre-clean-remove');
 
   // ---- Step 5: one item keyed by a fake ListingId ----
-  let record = fakeListing(TEST_ID, 0, imageUri, source?.url);
-  let ins = await wix('insert-keyed', 'POST', '/wix-data/v2/items', {
-    siteId,
-    body: { dataCollectionId: ENGINE_COLLECTION, dataItem: { data: record } },
-  });
-  if (ins.status === 400) {
-    log(`insert with { $date } values -> ${short(ins)}; retrying with ISO strings`);
-    dateForm = 'iso';
+  let record = null;
+  let keyedData = {};
+  await step('keyed item', async () => {
     record = fakeListing(TEST_ID, 0, imageUri, source?.url);
-    ins = await wix('insert-keyed-iso', 'POST', '/wix-data/v2/items', {
+    let ins = await wix('insert-keyed', 'POST', '/wix-data/v2/items', {
       siteId,
-      body: { dataCollectionId: ENGINE_COLLECTION, dataItem: { data: record } },
+      body: { dataCollectionId: ENGINE_COLLECTION, dataItem: keyed(record) },
     });
-  }
-  verdicts.date_form = dateForm;
-  timings.insert_keyed = ins.ms;
-  const insertedId = ins.json?.dataItem?.id;
-  verdicts.keyed_id_preserved = insertedId === TEST_ID;
-  log(`insert ${TEST_ID} -> ${ins.status} in ${ins.ms}ms id=${insertedId} idPreserved=${verdicts.keyed_id_preserved}${ins.status !== 200 ? ' ' + short(ins) : ''}`);
+    if (ins.status === 400 && /date/i.test(ins.text)) {
+      log(`insert with { $date } values -> ${short(ins)}; retrying with ISO strings`);
+      dateForm = 'iso';
+      record = fakeListing(TEST_ID, 0, imageUri, source?.url);
+      ins = await wix('insert-keyed-iso', 'POST', '/wix-data/v2/items', {
+        siteId,
+        body: { dataCollectionId: ENGINE_COLLECTION, dataItem: keyed(record) },
+      });
+    }
+    verdicts.date_form = ins.status === 200 ? dateForm : 'undetermined';
+    timings.insert_keyed = ins.ms;
+    const insertedId = ins.json?.dataItem?.id;
+    verdicts.keyed_id_preserved = insertedId === TEST_ID;
+    log(`insert ${TEST_ID} -> ${ins.status} in ${ins.ms}ms id=${insertedId} idPreserved=${verdicts.keyed_id_preserved}${ins.status !== 200 ? ' ' + short(ins) : ''}`);
 
-  const got = await wix('get-keyed', 'GET', `/wix-data/v2/items/${TEST_ID}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId });
-  timings.get_keyed = got.ms;
-  const data = got.json?.dataItem?.data ?? {};
-  log(`get ${TEST_ID} -> ${got.status} in ${got.ms}ms price=${data.listingPricePure} gallery=${Array.isArray(data.listingImageGallery) ? data.listingImageGallery.length : 'n/a'} primaryImage=${JSON.stringify(data.listingPrimaryImage)} pull=${JSON.stringify(data.dateOfMlsPull)}`);
-  verdicts.gallery_uri_accepted = imageUri
-    ? Array.isArray(data.listingImageGallery) && data.listingImageGallery[0]?.src === imageUri
-    : null; // null = media probe did not run
-  if (imageUri) log(`gallery[0].src round-trips as the imported file: ${verdicts.gallery_uri_accepted}${verdicts.gallery_uri_accepted ? '' : ` (${JSON.stringify(data.listingImageGallery?.[0]).slice(0, 300)})`}`);
+    const got = await wix('get-keyed', 'GET', `/wix-data/v2/items/${TEST_ID}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId });
+    timings.get_keyed = got.ms;
+    keyedData = got.json?.dataItem?.data ?? {};
+    const pull = keyedData.dateOfMlsPull;
+    verdicts.date_readback = pull && typeof pull === 'object' ? '$date object' : typeof pull;
+    log(`get ${TEST_ID} -> ${got.status} in ${got.ms}ms price=${keyedData.listingPricePure} gallery=${Array.isArray(keyedData.listingImageGallery) ? keyedData.listingImageGallery.length : 'n/a'} primaryImage=${js(keyedData.listingPrimaryImage)} pull=${js(pull)}`);
+    verdicts.gallery_uri_accepted = imageUri
+      ? Array.isArray(keyedData.listingImageGallery) && keyedData.listingImageGallery[0]?.src === imageUri
+      : null; // null = media probe did not run
+    if (imageUri) log(`gallery[0].src round-trips as the imported file: ${verdicts.gallery_uri_accepted}${verdicts.gallery_uri_accepted ? '' : ` (${js(keyedData.listingImageGallery?.[0]).slice(0, 300)})`}`);
+    if (got.status !== 200) return;
 
-  const updated = { ...record, listingPrice: '$1,299,000', listingPricePure: 1299000, dateOfMlsPull: wixDate(new Date()) };
-  const upd = await wix('update-keyed', 'PUT', `/wix-data/v2/items/${TEST_ID}`, {
-    siteId,
-    body: { dataCollectionId: ENGINE_COLLECTION, dataItem: { data: { ...updated, _id: TEST_ID } } },
+    const updated = { ...record, listingPrice: '$1,299,000', listingPricePure: 1299000, dateOfMlsPull: wixDate(new Date()) };
+    const upd = await wix('update-keyed', 'PUT', `/wix-data/v2/items/${TEST_ID}`, {
+      siteId,
+      body: { dataCollectionId: ENGINE_COLLECTION, dataItem: keyed({ ...updated, _id: TEST_ID }) },
+    });
+    timings.update_keyed = upd.ms;
+    log(`update ${TEST_ID} -> ${upd.status} in ${upd.ms}ms${upd.status !== 200 ? ' ' + short(upd) : ''}`);
+    const got2 = await wix('get-keyed-2', 'GET', `/wix-data/v2/items/${TEST_ID}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId });
+    const data2 = got2.json?.dataItem?.data ?? {};
+    verdicts.update_roundtrip = data2.listingPricePure === 1299000 && js(data2._updatedDate) !== js(keyedData._updatedDate);
+    log(`re-read ${TEST_ID}: price=${data2.listingPricePure} updatedDate ${js(keyedData._updatedDate)} -> ${js(data2._updatedDate)} roundTrip=${verdicts.update_roundtrip}`);
   });
-  timings.update_keyed = upd.ms;
-  log(`update ${TEST_ID} -> ${upd.status} in ${upd.ms}ms${upd.status !== 200 ? ' ' + short(upd) : ''}`);
-  const got2 = await wix('get-keyed-2', 'GET', `/wix-data/v2/items/${TEST_ID}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId });
-  const data2 = got2.json?.dataItem?.data ?? {};
-  verdicts.update_roundtrip = data2.listingPricePure === 1299000 && data2._updatedDate !== data._updatedDate;
-  log(`re-read ${TEST_ID}: price=${data2.listingPricePure} updatedDate ${JSON.stringify(data._updatedDate)} -> ${JSON.stringify(data2._updatedDate)} roundTrip=${verdicts.update_roundtrip}`);
 
   // ---- Step 6: one-item-at-a-time inserts, for comparison ----
   const serialIds = [];
-  const serialMs = [];
-  for (let i = 1; i <= SERIAL_WRITES; i++) {
-    const id = `${TEST_ID_PREFIX}SERIAL${pad(i, 4)}`;
-    const r = await wix(`serial-insert-${i}`, 'POST', '/wix-data/v2/items', {
-      siteId,
-      body: { dataCollectionId: ENGINE_COLLECTION, dataItem: { data: fakeListing(id, i, imageUri, source?.url) } },
-    });
-    if (r.status === 200) serialIds.push(id);
-    serialMs.push(r.ms);
-    if (r.status !== 200) log(`serial insert ${id} -> ${short(r)}`);
-  }
-  if (SERIAL_WRITES) {
-    timings.serial_insert_p50 = percentile(serialMs, 0.5);
-    timings.serial_insert_max = Math.max(...serialMs);
-    timings.serial_insert_total = serialMs.reduce((a, b) => a + b, 0);
-    log(`serial inserts: ${serialIds.length}/${SERIAL_WRITES} ok, p50=${timings.serial_insert_p50}ms max=${timings.serial_insert_max}ms total=${timings.serial_insert_total}ms`);
-  }
+  await step('serial inserts', async () => {
+    const serialMs = [];
+    for (let i = 1; i <= SERIAL_WRITES; i++) {
+      const id = `${TEST_ID_PREFIX}SERIAL${pad(i, 4)}`;
+      const r = await wix(`serial-insert-${i}`, 'POST', '/wix-data/v2/items', {
+        siteId,
+        body: { dataCollectionId: ENGINE_COLLECTION, dataItem: keyed(fakeListing(id, i, imageUri, source?.url)) },
+      });
+      if (r.status === 200) serialIds.push(id);
+      serialMs.push(r.ms);
+      if (r.status !== 200) log(`serial insert ${id} -> ${short(r)}`);
+    }
+    if (SERIAL_WRITES) {
+      timings.serial_insert_p50 = percentile(serialMs, 0.5);
+      timings.serial_insert_max = Math.max(...serialMs);
+      timings.serial_insert_total = serialMs.reduce((a, b) => a + b, 0);
+      log(`serial inserts: ${serialIds.length}/${SERIAL_WRITES} ok, p50=${timings.serial_insert_p50}ms max=${timings.serial_insert_max}ms total=${timings.serial_insert_total}ms`);
+    }
+  });
 
   // ---- Step 7: bulk insert / update / save / remove ----
   const bulkIds = Array.from({ length: BULK_SIZE }, (_, i) => `${TEST_ID_PREFIX}BULK${pad(i + 1, 4)}`);
-  const rows = bulkIds.map((id, i) => fakeListing(id, i + 1, imageUri, source?.url));
-
-  const bi = await wix('bulk-insert', 'POST', '/wix-data/v2/bulk/items/insert', {
-    siteId,
-    body: { dataCollectionId: ENGINE_COLLECTION, dataItems: rows.map((data) => ({ data })) },
-  });
-  timings.bulk_insert = bi.ms;
-  const insOut = bulkOutcome(`bulk insert (${BULK_SIZE})`, bi, bulkIds);
-  verdicts.bulk_insert_ok = insOut.ok;
-  verdicts.bulk_ids_preserved = insOut.idsPreserved;
-
-  const afterInsert = await wix('count-after-insert', 'POST', '/wix-data/v2/items/query', {
-    siteId,
-    body: { dataCollectionId: ENGINE_COLLECTION, query: { filter: { _id: { $startsWith: `${TEST_ID_PREFIX}BULK` } }, paging: { limit: 1 } }, returnTotalCount: true },
-  });
-  log(`bulk rows visible to a query: ${afterInsert.json?.pagingMetadata?.total ?? '?'} of ${BULK_SIZE} (${afterInsert.ms}ms)`);
-
-  const bu = await wix('bulk-update', 'POST', '/wix-data/v2/bulk/items/update', {
-    siteId,
-    body: {
-      dataCollectionId: ENGINE_COLLECTION,
-      dataItems: rows.map((data) => ({ id: data._id, data: { ...data, listingPrice: '$1,111,000', listingPricePure: 1111000 } })),
-    },
-  });
-  timings.bulk_update = bu.ms;
-  verdicts.bulk_update_ok = bulkOutcome(`bulk update (${BULK_SIZE})`, bu, bulkIds).ok;
-
   const saveNewIds = Array.from({ length: 5 }, (_, i) => `${TEST_ID_PREFIX}SAVE${pad(i + 1, 4)}`);
-  const saveRows = [
-    ...rows.map((data) => ({ ...data, listingPrice: '$1,222,000', listingPricePure: 1222000 })),
-    ...saveNewIds.map((id, i) => fakeListing(id, 900 + i, imageUri, source?.url)),
-  ];
-  const bs = await wix('bulk-save', 'POST', '/wix-data/v2/bulk/items/save', {
-    siteId,
-    body: { dataCollectionId: ENGINE_COLLECTION, dataItems: saveRows.map((data) => ({ id: data._id, data })) },
-  });
-  timings.bulk_save = bs.ms;
-  const saveOut = bulkOutcome(`bulk save (${BULK_SIZE} existing + ${saveNewIds.length} new)`, bs, [...bulkIds, ...saveNewIds]);
-  verdicts.bulk_save_ok = saveOut.ok;
-  verdicts.bulk_save_upserts = (saveOut.actions.UPDATE ?? 0) === BULK_SIZE && (saveOut.actions.INSERT ?? 0) === saveNewIds.length;
+  await step('bulk writes', async () => {
+    const rows = bulkIds.map((id, i) => fakeListing(id, i + 1, imageUri, source?.url));
 
-  const sample = await wix('get-bulk-sample', 'GET', `/wix-data/v2/items/${bulkIds[0]}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId });
-  const samplePrice = sample.json?.dataItem?.data?.listingPricePure;
-  verdicts.bulk_writes_applied = samplePrice === 1222000;
-  log(`${bulkIds[0]} after update+save: price=${samplePrice} (expected 1222000) applied=${verdicts.bulk_writes_applied}`);
+    const bi = await wix('bulk-insert', 'POST', '/wix-data/v2/bulk/items/insert', {
+      siteId,
+      body: { dataCollectionId: ENGINE_COLLECTION, dataItems: rows.map(keyed) },
+    });
+    timings.bulk_insert = bi.ms;
+    const insOut = bulkOutcome(`bulk insert (${BULK_SIZE})`, bi, bulkIds);
+    verdicts.bulk_insert_ok = insOut.ok;
+    verdicts.bulk_ids_preserved = insOut.idsPreserved;
 
-  const removeAll = [...bulkIds, ...saveNewIds, ...serialIds];
-  const br = await wix('bulk-remove', 'POST', '/wix-data/v2/bulk/items/remove', {
-    siteId,
-    body: { dataCollectionId: ENGINE_COLLECTION, dataItemIds: removeAll },
+    const afterInsert = await wix('count-after-insert', 'POST', '/wix-data/v2/items/query', {
+      siteId,
+      body: { dataCollectionId: ENGINE_COLLECTION, query: { filter: { _id: { $startsWith: `${TEST_ID_PREFIX}BULK` } }, paging: { limit: 1 } }, returnTotalCount: true },
+    });
+    log(`bulk rows visible to a query: ${afterInsert.json?.pagingMetadata?.total ?? '?'} of ${BULK_SIZE} (${afterInsert.ms}ms)`);
+
+    const bu = await wix('bulk-update', 'POST', '/wix-data/v2/bulk/items/update', {
+      siteId,
+      body: {
+        dataCollectionId: ENGINE_COLLECTION,
+        dataItems: rows.map((data) => keyed({ ...data, listingPrice: '$1,111,000', listingPricePure: 1111000 })),
+      },
+    });
+    timings.bulk_update = bu.ms;
+    verdicts.bulk_update_ok = bulkOutcome(`bulk update (${BULK_SIZE})`, bu, bulkIds).ok;
+
+    const saveRows = [
+      ...rows.map((data) => ({ ...data, listingPrice: '$1,222,000', listingPricePure: 1222000 })),
+      ...saveNewIds.map((id, i) => fakeListing(id, 900 + i, imageUri, source?.url)),
+    ];
+    const bs = await wix('bulk-save', 'POST', '/wix-data/v2/bulk/items/save', {
+      siteId,
+      body: { dataCollectionId: ENGINE_COLLECTION, dataItems: saveRows.map(keyed) },
+    });
+    timings.bulk_save = bs.ms;
+    const saveOut = bulkOutcome(`bulk save (${BULK_SIZE} existing + ${saveNewIds.length} new)`, bs, [...bulkIds, ...saveNewIds]);
+    verdicts.bulk_save_ok = saveOut.ok;
+    verdicts.bulk_save_upserts = (saveOut.actions.UPDATE ?? 0) === BULK_SIZE && (saveOut.actions.INSERT ?? 0) === saveNewIds.length;
+
+    const sample = await wix('get-bulk-sample', 'GET', `/wix-data/v2/items/${bulkIds[0]}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId });
+    const samplePrice = sample.json?.dataItem?.data?.listingPricePure;
+    verdicts.bulk_writes_applied = samplePrice === 1222000;
+    log(`${bulkIds[0]} after update+save: price=${samplePrice} (expected 1222000) applied=${verdicts.bulk_writes_applied}`);
+
+    const removeAll = [...bulkIds, ...saveNewIds, ...serialIds];
+    const br = await wix('bulk-remove', 'POST', '/wix-data/v2/bulk/items/remove', {
+      siteId,
+      body: { dataCollectionId: ENGINE_COLLECTION, dataItemIds: removeAll },
+    });
+    timings.bulk_remove = br.ms;
+    verdicts.bulk_remove_ok = bulkOutcome(`bulk remove (${removeAll.length})`, br, removeAll).ok;
   });
-  timings.bulk_remove = br.ms;
-  verdicts.bulk_remove_ok = bulkOutcome(`bulk remove (${removeAll.length})`, br, removeAll).ok;
 
   // ---- Step 8: parallel read burst ----
   if (BURST) {
-    const started = Date.now();
-    const burst = await Promise.all(
-      Array.from({ length: BURST }, (_, i) =>
-        wix(`burst-${i}`, 'GET', `/wix-data/v2/items/${TEST_ID}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId })
-      )
-    );
-    const statuses = {};
-    for (const r of burst) statuses[r.status] = (statuses[r.status] ?? 0) + 1;
-    const ms = burst.map((r) => r.ms);
-    timings.burst_wall = Date.now() - started;
-    timings.burst_p50 = percentile(ms, 0.5);
-    timings.burst_max = Math.max(...ms);
-    log(`burst of ${BURST} parallel reads: statuses=${JSON.stringify(statuses)} wall=${timings.burst_wall}ms p50=${timings.burst_p50}ms max=${timings.burst_max}ms`);
+    await step('read burst', async () => {
+      const started = Date.now();
+      const burst = await Promise.all(
+        Array.from({ length: BURST }, (_, i) =>
+          wix(`burst-${i}`, 'GET', `/wix-data/v2/items/${TEST_ID}?dataCollectionId=${ENGINE_COLLECTION}`, { siteId })
+        )
+      );
+      const statuses = {};
+      for (const r of burst) statuses[r.status] = (statuses[r.status] ?? 0) + 1;
+      const ms = burst.map((r) => r.ms);
+      timings.burst_wall = Date.now() - started;
+      timings.burst_p50 = percentile(ms, 0.5);
+      timings.burst_max = Math.max(...ms);
+      log(`burst of ${BURST} parallel reads: statuses=${js(statuses)} wall=${timings.burst_wall}ms p50=${timings.burst_p50}ms max=${timings.burst_max}ms`);
+    });
   }
 
   // ---- Step 9: cleanup ----
-  const remaining = await queryIds(siteId, { _id: { $startsWith: TEST_ID_PREFIX } });
-  const toRemove = process.env.LS_PHASE1_CLEANUP === '1' ? remaining : remaining.filter((id) => id !== TEST_ID);
-  await removeIds(siteId, toRemove, 'cleanup-remove');
-  const kept = remaining.filter((id) => !toRemove.includes(id));
-  log(`cleanup: removed ${toRemove.length}, kept ${JSON.stringify(kept)}${kept.includes(TEST_ID) ? ` (bind a hidden dynamic page to ${ENGINE_COLLECTION} and open ${TEST_ID}; LS_PHASE1_CLEANUP=1 removes it)` : ''}`);
-  verdicts.cleanup_left_only_keyed = kept.every((id) => id === TEST_ID);
+  await step('cleanup', async () => {
+    const remaining = await queryIds(siteId, { _id: { $startsWith: TEST_ID_PREFIX } });
+    const toRemove = process.env.LS_PHASE1_CLEANUP === '1' ? remaining : remaining.filter((id) => id !== TEST_ID);
+    await removeIds(siteId, toRemove, 'cleanup-remove');
+    const kept = remaining.filter((id) => !toRemove.includes(id));
+    log(`cleanup: removed ${toRemove.length}, kept ${js(kept)}${kept.includes(TEST_ID) ? ` (bind a hidden dynamic page to ${ENGINE_COLLECTION} and open ${TEST_ID}; LS_PHASE1_CLEANUP=1 removes it)` : ''}`);
+    verdicts.cleanup_left_only_keyed = kept.every((id) => id === TEST_ID);
+  });
   timings.inventory = inventory;
 }
 
