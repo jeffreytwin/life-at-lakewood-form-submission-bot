@@ -102,6 +102,20 @@ export async function getAttemptsByLeadId(
   return data;
 }
 
+export async function getAttemptsForLeads(
+  leadIds: string[]
+): Promise<RoutingAttempt[]> {
+  if (leadIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("routing_attempts")
+    .select("*")
+    .in("lead_id", leadIds);
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getActiveAttemptByAgentPhone(
   agentId: string
 ): Promise<(RoutingAttempt & { lead_id: string }) | null> {

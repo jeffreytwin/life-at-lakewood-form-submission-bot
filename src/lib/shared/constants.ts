@@ -2,6 +2,12 @@
 export const ROUTING_TIMEOUT_MS = 90 * 1000; // 90 seconds (cron adds ~30s avg lag)
 export const MAX_ESCALATION_ATTEMPTS = 5;
 
+// How long a lead may sit with no live routing attempt before the timeout cron
+// treats its hand-off as lost and resumes the auction. A healthy hand-off
+// (resolve the old attempt, pick the next agent, text them) takes seconds, so
+// this only has to be long enough that a slow one is never run twice.
+export const STRANDED_LEAD_GRACE_MS = 3 * 60 * 1000;
+
 // Scoring defaults
 export const DEFAULT_CLOSE_RATE = 0.5; // For agents with no data
 export const MAX_EXPECTED_CLOSE_RATE = 0.30; // Normalization ceiling

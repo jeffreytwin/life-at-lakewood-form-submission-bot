@@ -4,8 +4,10 @@ import {
   getExpiredAttempts,
 } from "@/lib/supabase/queries/routing-attempts";
 import { getLeadById } from "@/lib/supabase/queries/leads";
-import { supabase } from "@/lib/supabase/client";
+import { getLocationName } from "@/lib/supabase/queries/locations";
 import { handleFirstTimeout, handleSecondTimeout } from "@/lib/routing/state-machine";
+import { recoverStrandedLeads } from "@/lib/routing/recover-stranded";
+import { errorMessage } from "@/lib/shared/errors";
 import { logger } from "@/lib/shared/logger";
 
 export async function GET(request: NextRequest) {
@@ -18,16 +20,14 @@ export async function GET(request: NextRequest) {
   try {
     const expiredAttempts = await getExpiredAttempts();
 
-    if (expiredAttempts.length === 0) {
-      return NextResponse.json({ processed: 0 });
-    }
-
-    logger.info("Processing expired routing attempts", {
-      count: expiredAttempts.length,
-    });
-
     let processed = 0;
     let skipped = 0;
+
+    if (expiredAttempts.length > 0) {
+      logger.info("Processing expired routing attempts", {
+        count: expiredAttempts.length,
+      });
+    }
 
     for (const attempt of expiredAttempts) {
       try {
@@ -59,16 +59,8 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        // Resolve location name
-        let locationName = "Life At Lakewood";
-        if (lead.location_id) {
-          const { data: location } = await supabase
-            .from("locations")
-            .select("name")
-            .eq("id", lead.location_id)
-            .single();
-          if (location) locationName = location.name;
-        }
+        const locationName =
+          (await getLocationName(lead.location_id)) ?? "Life At Lakewood";
 
         if (attempt.status === "sms_sent") {
           // First timeout -> send follow-up
@@ -82,16 +74,25 @@ export async function GET(request: NextRequest) {
       } catch (error) {
         logger.error("Error processing expired attempt", {
           attemptId: attempt.id,
-          error: error instanceof Error ? error.message : String(error),
+          leadId: attempt.lead_id,
+          error: errorMessage(error),
         });
       }
     }
 
-    return NextResponse.json({ processed, skipped });
+    // A hand-off that fails after the old attempt is resolved but before the
+    // next agent is texted leaves nothing above for this cron to find. Sweep
+    // for those leads and put them back in the auction.
+    let recovered = 0;
+    try {
+      recovered = await recoverStrandedLeads();
+    } catch (error) {
+      logger.error("Stranded lead sweep failed", { error: errorMessage(error) });
+    }
+
+    return NextResponse.json({ processed, skipped, recovered });
   } catch (error) {
-    logger.error("Cron check-timeouts error", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+    logger.error("Cron check-timeouts error", { error: errorMessage(error) });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
