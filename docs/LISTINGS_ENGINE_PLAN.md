@@ -81,8 +81,8 @@ Hub reads runs, events and alerts from the same tables. No health feed.
 - Bulk write behaviour and rate limits of the Wix Data API on a 330-row
   full reconcile. The client today is one-item-at-a-time; add bulk
   insert/update (up to 1000 per call) and measure.
-- MLSGrid licence: one puller feeding multiple display sites, and the
-  request rate allowed. Jeff is asking MLSGrid in writing.
+- ~~MLSGrid licence: one puller feeding multiple display sites, and the
+  request rate allowed.~~ Both answered; see Phase 1 findings.
 
 ## Data model (`ls_` prefix, same Supabase project)
 
@@ -189,8 +189,9 @@ Longboat Key repo `README.md` → Monitoring.
 - ~~Create the shadow collection on Longboat Key (duplicate without data,
   admin-only permissions).~~ Done 2026-09-14 as `HousesforSale2`.
 - ~~MLSGrid rate question~~ answered by their documentation (2/s, 7,200/hour,
-  4 GB/hour, 40,000/day; see Phase 1 findings). The licence question, one
-  puller feeding several display sites, still needs the written answer.
+  4 GB/hour, 40,000/day; see Phase 1 findings). ~~Licence question~~ Jeff
+  confirmed 2026-09-14 that one puller may feed several display sites, and
+  already does.
 
 ## Kickoff prompt for the build session
 
@@ -260,8 +261,9 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
   re-uploaded since 2026-09-08, which is the churn described above. The
   stored URLs themselves are long expired; the engine keeps only the tail.
 - **MLSGrid subscription** (usage dashboard, 2026-09-14): Stellar MLS, IDX,
-  5 active licences, API access active and "in good standing". The written
-  answer on one puller feeding several display sites is still open.
+  5 active licences, API access active and "in good standing". One puller
+  feeding several display sites is allowed and is how the account already
+  runs (Jeff, 2026-09-14).
 - **MLSGrid caps** (their documentation, "Rate Limits"): no more than
   2 requests per second at any time, 7,200 requests per hour, 4 GB
   downloaded per hour, 40,000 requests per 24 hours. Exceeding them in under
