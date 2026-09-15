@@ -25,7 +25,8 @@ const clean = (v: unknown): string | null => {
 
 const text = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 
-function slugOf(url: string | null): string | null {
+/** The page slug a neighborhood URL ends in: what the import records as wix_slug. */
+export function slugOf(url: string | null): string | null {
   if (!url) return null;
   try {
     const parts = new URL(url).pathname.split("/").filter(Boolean);

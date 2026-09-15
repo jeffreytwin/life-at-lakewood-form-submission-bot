@@ -5,7 +5,7 @@ import { listEvents } from "@/lib/listings/hub";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/internal/listings/events?siteId=&level=&kind=&listingId=&runKey=&limit=
+ * GET /api/internal/listings/events?siteId=&level=&kind=&listingId=&runKey=&before=&limit=
  *
  * Newest first. listingId matches as a substring, so a lookup by MLS id
  * works with or without the MFR prefix.
@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       kind: q.get("kind") ?? undefined,
       listingId: q.get("listingId") ?? undefined,
       runKey: q.get("runKey") ?? undefined,
+      before: q.get("before") ?? undefined,
       limit: Number.isFinite(limit) ? limit : undefined,
     });
     return NextResponse.json(events);

@@ -211,12 +211,12 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       try {
         const seeded = await seedSiteMediaFromLive(site);
         if (seeded.placeholders || seeded.siteMediaRows || seeded.refreshed) {
-          run.event("info", "seed", `${site.domain}: live galleries re-read: ${seeded.placeholders} new listing(s), ${seeded.siteMediaRows} photo(s) recorded, ${seeded.refreshed} URI(s) refreshed`, {
+          run.event("info", "seed", `${site.name}: live galleries re-read: ${seeded.placeholders} new listing(s), ${seeded.siteMediaRows} photo(s) recorded, ${seeded.refreshed} URI(s) refreshed`, {
             siteId: site.id, details: seeded,
           });
         }
       } catch (error) {
-        run.event("warn", "seed_failed", `${site.domain}: could not re-read the live galleries (${errorMessage(error)}); writing with the photos already recorded`, { siteId: site.id });
+        run.event("warn", "seed_failed", `${site.name}: could not re-read the live galleries (${errorMessage(error)}); writing with the photos already recorded`, { siteId: site.id });
       }
     }
 
@@ -387,7 +387,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
   if (site.write_mode !== "live" && site.target_collection_id === site.live_collection_id) {
     // The database check forbids this; belt and braces before touching Wix.
     summary.skipped = "shadow mode pointed at the live collection";
-    run.event("error", "write_failed", `${site.domain}: refused to write, shadow mode targets the live collection ${site.live_collection_id}`, { siteId: site.id });
+    run.event("error", "write_failed", `${site.name}: refused to write, shadow mode targets the live collection ${site.live_collection_id}`, { siteId: site.id });
     return;
   }
   const target = site.target_collection_id;
@@ -436,7 +436,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
 
   for (const part of db.chunk(planned, WRITE_CHUNK)) {
     if (Date.now() > opts.deadline) {
-      run.event("warn", "budget", `${site.domain}: out of time with ${planned.length - summary.inserted - summary.updated - summary.failed} listing(s) still to write; the next run continues`, { siteId: site.id });
+      run.event("warn", "budget", `${site.name}: out of time with ${planned.length - summary.inserted - summary.updated - summary.failed} listing(s) still to write; the next run continues`, { siteId: site.id });
       break;
     }
     let outcome;
@@ -447,7 +447,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
       if (error instanceof WixApiError && error.rateLimited) run.counts.wix_rate_limited += 1;
       run.counts.writes_failed += part.length;
       summary.failed += part.length;
-      run.event("error", "write_failed", `${site.domain}: bulk save of ${part.length} listing(s) to ${target} failed: ${errorMessage(error)}`, { siteId: site.id });
+      run.event("error", "write_failed", `${site.name}: bulk save of ${part.length} listing(s) failed: ${errorMessage(error)}`, { siteId: site.id });
       continue;
     }
     const patches: Array<Record<string, unknown>> = [];
@@ -470,16 +470,16 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
         if (p.insert) {
           summary.inserted += 1;
           run.counts.inserted += 1;
-          run.event(p.galleryReady ? "info" : "warn", "insert", `Written to ${target}: ${describeRecord(p.record)}${p.galleryReady ? "" : " (gallery incomplete, photos pending)"}`, fields);
+          run.event(p.galleryReady ? "info" : "warn", "insert", `Written to ${site.name}: ${describeRecord(p.record)}${p.galleryReady ? "" : " (gallery incomplete, photos pending)"}`, fields);
         } else {
           summary.updated += 1;
           run.counts.updated += 1;
-          if (p.contentChanged) run.event("info", "update", `Rewritten in ${target}: ${describeRecord(p.record)}`, fields);
+          if (p.contentChanged) run.event("info", "update", `Rewritten on ${site.name}: ${describeRecord(p.record)}`, fields);
         }
       } else {
         summary.failed += 1;
         run.counts.writes_failed += 1;
-        run.event("error", "write_failed", `${target} rejected ${p.sl.listing_id}: ${r.error?.description ?? r.error?.code ?? "unknown error"}`, {
+        run.event("error", "write_failed", `${site.name} rejected ${p.sl.listing_id}: ${r.error?.description ?? r.error?.code ?? "unknown error"}`, {
           siteId: site.id, listingId: p.sl.listing_id, details: r.error,
         });
       }
@@ -509,14 +509,14 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
       run.counts.deletes_skipped += held.length;
       const byReason: Record<string, number> = {};
       for (const h of held) byReason[h.reason_code ?? "unspecified"] = (byReason[h.reason_code ?? "unspecified"] ?? 0) + 1;
-      run.event("error", "mass_delete_guard", `${site.domain}: ${opts.mode} run wanted to remove ${held.length} of ${liveCount} live listings from ${target} (guard threshold ${threshold}); nothing was removed. Review the candidates and re-run with allowMassDelete if they are genuine`, {
+      run.event("error", "mass_delete_guard", `${site.name}: ${opts.mode === "incremental" ? "hourly" : opts.mode} run wanted to remove ${held.length} of ${liveCount} live listings (guard threshold ${threshold}); nothing was removed. Review the candidates and re-run with allowMassDelete if they are genuine`, {
         siteId: site.id,
         details: { candidates: held.length, threshold, live: liveCount, byReason, sample: held.slice(0, 100).map((h) => ({ id: h.listing_id, reasonCode: h.reason_code, reason: h.reason_detail })) },
       });
     }
     for (const part of db.chunk(apply, WRITE_CHUNK)) {
       if (Date.now() > opts.deadline) {
-        run.event("warn", "budget", `${site.domain}: out of time before removing ${apply.length - summary.deleted} listing(s); the next run continues`, { siteId: site.id });
+        run.event("warn", "budget", `${site.name}: out of time before removing ${apply.length - summary.deleted} listing(s); the next run continues`, { siteId: site.id });
         break;
       }
       let outcome;
@@ -527,7 +527,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
         if (error instanceof WixApiError && error.rateLimited) run.counts.wix_rate_limited += 1;
         run.counts.writes_failed += part.length;
         summary.failed += part.length;
-        run.event("error", "write_failed", `${site.domain}: bulk remove of ${part.length} listing(s) from ${target} failed: ${errorMessage(error)}`, { siteId: site.id });
+        run.event("error", "write_failed", `${site.name}: bulk remove of ${part.length} listing(s) failed: ${errorMessage(error)}`, { siteId: site.id });
         continue;
       }
       const patches: Array<Record<string, unknown>> = [];
@@ -539,13 +539,13 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
           patches.push({ site_id: site.id, listing_id: p.listing_id, wix_item_id: null, needs_write: false });
           summary.deleted += 1;
           run.counts.deleted += 1;
-          run.event(deleteLevel(p.reason_code), "delete", `Removed from ${target}: ${p.reason_detail ?? p.reason_code ?? "no reason"}`, {
+          run.event(deleteLevel(p.reason_code), "delete", `Removed from ${site.name}: ${p.reason_detail ?? p.reason_code ?? "no reason"}`, {
             siteId: site.id, listingId: p.listing_id, details: { reasonCode: p.reason_code, alreadyGone: notFound },
           });
         } else {
           summary.failed += 1;
           run.counts.writes_failed += 1;
-          run.event("error", "write_failed", `${target} refused to remove ${p.listing_id}: ${r.error?.description ?? r.error?.code ?? "unknown error"}`, {
+          run.event("error", "write_failed", `${site.name} refused to remove ${p.listing_id}: ${r.error?.description ?? r.error?.code ?? "unknown error"}`, {
             siteId: site.id, listingId: p.listing_id, details: r.error,
           });
         }
@@ -560,7 +560,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
     summary.villagesChanged = changed;
     run.counts.stats_refreshed = true;
   } catch (error) {
-    run.event("error", "stats_failed", `${site.domain}: village counts not refreshed: ${errorMessage(error)}`, { siteId: site.id });
+    run.event("error", "stats_failed", `${site.name}: neighborhood counts not refreshed: ${errorMessage(error)}`, { siteId: site.id });
   }
 }
 

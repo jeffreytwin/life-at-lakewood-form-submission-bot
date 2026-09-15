@@ -479,6 +479,16 @@ while porting `runSync`.
   section per location, all collapsed to start (the overview's per-location
   link opens that one), loading a location's neighborhoods when it opens,
   without the Deactivate and Re-import from Wix buttons.
+- **Hub Listings section, fifth pass (2026-09-15).** With a level, kind,
+  location or listing filter the Change Log shows only the matching entries,
+  grouped under their runs (`GET /api/internal/listings/events?before=` pages
+  them, `GET /api/internal/listings/runs?runKeys=` fetches the run headers).
+  Run entries name the location (`Written to Life in Longboat Key`), never
+  the collection id, and the Hub maps older entries' domains and collection
+  ids to the location name on display. A neighborhood's Wix slug is derived
+  from its page URL on create and update (the form no longer asks for it).
+  The overview's "Listings in feed" counts what the locations carry (live
+  plus in progress) and notes how many pulled listings are not eligible.
 - **Deferred to the next phases.** The nightly shadow-vs-live comparison as
   a job (the verification script has the comparison), writing village counts
   to the Wix village pages (Postgres only until a site is live), and the

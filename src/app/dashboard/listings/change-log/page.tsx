@@ -5,7 +5,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ListingsTabs from "../tabs";
 import RunTags from "../run-tags";
-import { duration, fmtDateTime, levelBadge, megabytes, modeLabel, responseError, runOutcome, siteColors, triggerLabel } from "../format";
+import { duration, fmtDateTime, humanizeMessage, levelBadge, megabytes, modeLabel, responseError, runOutcome, siteColors, triggerLabel } from "../format";
 
 interface Run {
   id: string;
@@ -50,6 +50,8 @@ interface SiteOption {
   id: string;
   name: string;
   domain: string;
+  target_collection_id: string;
+  live_collection_id: string;
 }
 
 const KINDS = [
@@ -71,7 +73,8 @@ const KINDS = [
 const RUNS_PAGE = 20;
 /** A run stores at most 1,500 entries (the engine's buffer cap), so one page holds a whole run. */
 const RUN_EVENTS_LIMIT = 2000;
-const LISTING_EVENTS_LIMIT = 500;
+/** Filtered mode pages entries, newest first. */
+const ENTRIES_PAGE = 300;
 
 interface Filters {
   siteId: string;
@@ -115,6 +118,28 @@ function describeRunKey(runKey: string): { mode: string; startedAt: string | nul
   return i === -1 ? { mode: runKey, startedAt: null } : { mode: runKey.slice(0, i), startedAt: runKey.slice(i + 1) };
 }
 
+/** The runs behind a set of entries, by key; a run the retention purge already dropped is simply absent. */
+async function runsByKey(keys: string[]): Promise<Record<string, Run>> {
+  const out: Record<string, Run> = {};
+  for (let i = 0; i < keys.length; i += 100) {
+    const part = keys.slice(i, i + 100);
+    const runs = await getJson<Run[]>(`/api/internal/listings/runs?limit=100&runKeys=${encodeURIComponent(part.join(","))}`);
+    for (const r of Array.isArray(runs) ? runs : []) out[r.run_key] = r;
+  }
+  return out;
+}
+
+const runKeysOf = (events: EngineEvent[], except?: Record<string, Run>) =>
+  [...new Set(events.map((e) => e.run_key).filter((k): k is string => !!k && !(except && k in except)))];
+
+/** Filtered mode: the matching entries, the runs they belong to, and whether older ones remain. */
+interface Entries {
+  key: string;
+  events: EngineEvent[];
+  runs: Record<string, Run>;
+  exhausted: boolean;
+}
+
 function ChangeLogView() {
   const searchParams = useSearchParams();
   // From the overview: a run to open, an entry to highlight, or a listing to look up.
@@ -128,16 +153,20 @@ function ChangeLogView() {
   const [exhausted, setExhausted] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(focusRunKey ? [focusRunKey] : []));
-  // A run's entries, keyed by run key and the filter combination they were fetched with.
+  // An open run's entries, keyed by run key and the filter combination they were fetched with.
   const [eventCache, setEventCache] = useState<Record<string, EngineEvent[]>>({});
   const requested = useRef(new Set<string>());
-  const [listingResult, setListingResult] = useState<{ listingId: string; events: EngineEvent[] } | null>(null);
+  const [entries, setEntries] = useState<Entries | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getJson<{ sites?: SiteOption[] }>("/api/internal/listings/status")
       .then((data) => {
-        if (Array.isArray(data?.sites)) setSites(data.sites.map((s) => ({ id: s.id, name: s.name, domain: s.domain })));
+        if (Array.isArray(data?.sites)) {
+          setSites(
+            data.sites.map((s) => ({ id: s.id, name: s.name, domain: s.domain, target_collection_id: s.target_collection_id, live_collection_id: s.live_collection_id }))
+          );
+        }
       })
       .catch(() => {});
   }, []);
@@ -160,6 +189,10 @@ function ChangeLogView() {
     },
     [filters.siteId, filters.level, filters.kind]
   );
+
+  // With a filter set (and no single run in focus) the page shows only what matches, under the runs it belongs to.
+  const filtered = !focusRunKey && !!(filters.siteId || filters.level || filters.kind || listingId);
+  const entriesKey = `${filterKey}|${listingId}`;
 
   const loadRuns = useCallback(
     (before?: string) => {
@@ -185,10 +218,10 @@ function ChangeLogView() {
   );
 
   useEffect(() => {
-    loadRuns();
-  }, [loadRuns]);
+    if (!filtered) loadRuns();
+  }, [filtered, loadRuns]);
 
-  function loadMore() {
+  function loadMoreRuns() {
     const oldest = runs?.[runs.length - 1];
     if (!oldest || loadingMore) return;
     setLoadingMore(true);
@@ -197,6 +230,7 @@ function ChangeLogView() {
 
   // Each open run's entries, fetched once per filter combination.
   useEffect(() => {
+    if (filtered) return;
     for (const runKey of expanded) {
       const key = `${runKey}|${filterKey}`;
       if (requested.current.has(key)) continue;
@@ -208,15 +242,21 @@ function ChangeLogView() {
           setError(e.message);
         });
     }
-  }, [expanded, filterKey, eventsUrl]);
+  }, [filtered, expanded, filterKey, eventsUrl]);
 
-  // The listing lookup: everything that happened to one listing, under its runs.
+  // Filtered mode: the newest matching entries and the runs behind them.
   useEffect(() => {
-    if (!listingId) return;
+    if (!filtered) return;
     let cancelled = false;
-    getJson<EngineEvent[]>(eventsUrl({ listingId, limit: String(LISTING_EVENTS_LIMIT) }))
-      .then((data) => {
-        if (!cancelled) setListingResult({ listingId, events: Array.isArray(data) ? data : [] });
+    const extra: Record<string, string> = { limit: String(ENTRIES_PAGE) };
+    if (listingId) extra.listingId = listingId;
+    getJson<EngineEvent[]>(eventsUrl(extra))
+      .then(async (data) => {
+        const events = Array.isArray(data) ? data : [];
+        const byKey = await runsByKey(runKeysOf(events));
+        if (cancelled) return;
+        setEntries({ key: entriesKey, events, runs: byKey, exhausted: events.length < ENTRIES_PAGE });
+        setError(null);
       })
       .catch((e) => {
         if (!cancelled) setError(e.message);
@@ -224,7 +264,34 @@ function ChangeLogView() {
     return () => {
       cancelled = true;
     };
-  }, [listingId, eventsUrl]);
+  }, [filtered, entriesKey, listingId, eventsUrl]);
+
+  function loadMoreEntries() {
+    if (!entries || entries.key !== entriesKey || entries.exhausted || loadingMore) return;
+    const oldest = entries.events[entries.events.length - 1];
+    if (!oldest) return;
+    const key = entries.key;
+    setLoadingMore(true);
+    const extra: Record<string, string> = { limit: String(ENTRIES_PAGE), before: oldest.at };
+    if (listingId) extra.listingId = listingId;
+    getJson<EngineEvent[]>(eventsUrl(extra))
+      .then(async (data) => {
+        const page = Array.isArray(data) ? data : [];
+        const more = await runsByKey(runKeysOf(page, entries.runs));
+        setEntries((current) =>
+          current && current.key === key
+            ? {
+                key,
+                events: [...current.events, ...page.filter((p) => !current.events.some((c) => c.id === p.id))],
+                runs: { ...current.runs, ...more },
+                exhausted: page.length < ENTRIES_PAGE,
+              }
+            : current
+        );
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoadingMore(false));
+  }
 
   function toggle(runKey: string) {
     setExpanded((prev) => {
@@ -238,9 +305,9 @@ function ChangeLogView() {
   const siteName = (id: string | null) => sites.find((s) => s.id === id)?.name ?? "";
   const colors = siteColors(sites.find((s) => s.id === filters.siteId)?.domain);
   const showSite = !filters.siteId && sites.length > 1;
-  const listingMode = !!listingId;
-  const listingEvents = listingMode && listingResult?.listingId === listingId ? listingResult.events : null;
   const anyFilter = filters.siteId || filters.level || filters.kind || listingInput;
+  const current = filtered && entries?.key === entriesKey ? entries : null;
+  const entryProps: EntriesProps = { sites, siteName, showSite, highlightId, onListing: setListingInput };
 
   return (
     <div>
@@ -249,7 +316,7 @@ function ChangeLogView() {
           <h2>Change Log</h2>
           <p className="text-muted">
             Every run, newest first, with what it did underneath: inserts, rewrites, removals and why, guard holds and problems.
-            Open a run to see its entries, or look a listing up to see everything that happened to it.
+            Open a run to see its entries; set a filter or look a listing up to see only what matches, under the runs it happened in.
           </p>
         </div>
       </div>
@@ -315,30 +382,39 @@ function ChangeLogView() {
         )}
       </div>
 
-      {focusRunKey && !listingMode && (
+      {focusRunKey && (
         <div className="card" style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <span className="text-sm">Showing one run.</span>
+          <span className="text-sm">Showing one run; the filters apply to its entries.</span>
           <Link href="/dashboard/listings/change-log" className="btn btn-secondary btn-sm">
             Show all runs
           </Link>
         </div>
       )}
 
-      {listingMode ? (
-        listingEvents === null ? (
+      {filtered ? (
+        current === null ? (
           <div className="empty-state">Loading…</div>
-        ) : listingEvents.length === 0 ? (
+        ) : current.events.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">✓</div>
-            No entries for a listing matching &quot;{listingId}&quot;.
+            No entries match.
           </div>
         ) : (
           <>
-            {groupByRun(listingEvents).map(([runKey, events]) => (
-              <ListingRunGroup key={runKey || "(no run)"} runKey={runKey} events={events} siteName={siteName} showSite={showSite} highlightId={highlightId} />
-            ))}
-            {listingEvents.length >= LISTING_EVENTS_LIMIT && (
-              <p className="text-muted text-sm">Showing the newest {LISTING_EVENTS_LIMIT} entries for this listing.</p>
+            {groupByRun(current.events).map(([runKey, events]) => {
+              const run = current.runs[runKey];
+              return run ? (
+                <RunCard key={runKey} run={run} open events={events} {...entryProps} />
+              ) : (
+                <RunKeyGroup key={runKey || "(no run)"} runKey={runKey} events={events} {...entryProps} />
+              );
+            })}
+            {!current.exhausted && (
+              <div style={{ textAlign: "center", marginTop: 8 }}>
+                <button className="btn btn-secondary" disabled={loadingMore} onClick={loadMoreEntries}>
+                  {loadingMore ? "Loading…" : "Load older entries"}
+                </button>
+              </div>
             )}
           </>
         )
@@ -358,15 +434,12 @@ function ChangeLogView() {
               open={expanded.has(run.run_key)}
               onToggle={() => toggle(run.run_key)}
               events={eventCache[`${run.run_key}|${filterKey}`]}
-              siteName={siteName}
-              showSite={showSite}
-              highlightId={highlightId}
-              onListing={setListingInput}
+              {...entryProps}
             />
           ))}
           {!exhausted && (
             <div style={{ textAlign: "center", marginTop: 8 }}>
-              <button className="btn btn-secondary" disabled={loadingMore} onClick={loadMore}>
+              <button className="btn btn-secondary" disabled={loadingMore} onClick={loadMoreRuns}>
                 {loadingMore ? "Loading…" : `Load ${RUNS_PAGE} older runs`}
               </button>
             </div>
@@ -378,71 +451,77 @@ function ChangeLogView() {
 }
 
 interface EntriesProps {
+  sites: SiteOption[];
   siteName: (id: string | null) => string;
   showSite: boolean;
   highlightId: string;
   onListing?: (listingId: string) => void;
 }
 
-function RunCard({ run, open, onToggle, events, ...entries }: { run: Run; open: boolean; onToggle: () => void; events: EngineEvent[] | undefined } & EntriesProps) {
+const headerStyle = {
+  width: "100%",
+  background: "none",
+  border: "none",
+  color: "inherit",
+  font: "inherit",
+  textAlign: "left" as const,
+  padding: "12px 16px",
+  display: "flex",
+  flexWrap: "wrap" as const,
+  gap: 14,
+  alignItems: "center",
+};
+
+function RunCard({ run, open, onToggle, events, ...entries }: { run: Run; open: boolean; onToggle?: () => void; events: EngineEvent[] | undefined } & EntriesProps) {
   const outcome = runOutcome(run);
   const trigger = triggerLabel(run.trigger);
+  const header = (
+    <>
+      {onToggle && <span style={{ width: 12, color: "var(--text-muted)" }}>{open ? "▾" : "▸"}</span>}
+      <span style={{ minWidth: 200 }}>
+        <strong>{fmtDateTime(run.started_at)}</strong>
+        <span className="text-muted text-sm" title={trigger.title}>
+          {" "}
+          · {trigger.label}
+        </span>
+      </span>
+      <span className="badge badge-muted" style={{ textTransform: "none" }}>
+        {modeLabel(run.mode)}
+      </span>
+      <span className={outcome.cls} title={outcome.title}>
+        {outcome.label}
+      </span>
+      <span className="text-sm text-muted">{duration(run.duration_ms)}</span>
+      <span className="text-sm" title="New / updated / removed">
+        +{run.inserted} / ~{run.updated} / −{run.deleted}
+        {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
+      </span>
+      {run.deletes_skipped > 0 && (
+        <span className="text-sm" title="Removals the guard held back">
+          held {run.deletes_skipped}
+        </span>
+      )}
+      {run.writes_failed > 0 && (
+        <span className="text-sm" style={{ color: "var(--danger)" }} title="Writes Wix rejected; retried on the next run">
+          failed {run.writes_failed}
+        </span>
+      )}
+      <span className="text-sm text-muted" title="MLSGrid and Wix requests">
+        MLSGrid {run.mlsgrid_request_count} req · {megabytes(run.mlsgrid_bytes)} · Wix {run.wix_requests} req
+      </span>
+      <span style={{ flex: 1 }} />
+      <RunTags warnings={run.warnings} errors={run.errors} />
+    </>
+  );
   return (
     <div className="card" style={{ marginBottom: 10, padding: 0 }}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        style={{
-          width: "100%",
-          background: "none",
-          border: "none",
-          color: "inherit",
-          font: "inherit",
-          textAlign: "left",
-          cursor: "pointer",
-          padding: "12px 16px",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 14,
-          alignItems: "center",
-        }}
-      >
-        <span style={{ width: 12, color: "var(--text-muted)" }}>{open ? "▾" : "▸"}</span>
-        <span style={{ minWidth: 200 }}>
-          <strong>{fmtDateTime(run.started_at)}</strong>
-          <span className="text-muted text-sm" title={trigger.title}>
-            {" "}
-            · {trigger.label}
-          </span>
-        </span>
-        <span className="badge badge-muted" style={{ textTransform: "none" }}>
-          {modeLabel(run.mode)}
-        </span>
-        <span className={outcome.cls} title={outcome.title}>
-          {outcome.label}
-        </span>
-        <span className="text-sm text-muted">{duration(run.duration_ms)}</span>
-        <span className="text-sm" title="New / updated / removed">
-          +{run.inserted} / ~{run.updated} / −{run.deleted}
-          {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
-        </span>
-        {run.deletes_skipped > 0 && (
-          <span className="text-sm" title="Removals the guard held back">
-            held {run.deletes_skipped}
-          </span>
-        )}
-        {run.writes_failed > 0 && (
-          <span className="text-sm" style={{ color: "var(--danger)" }} title="Writes Wix rejected; retried on the next run">
-            failed {run.writes_failed}
-          </span>
-        )}
-        <span className="text-sm text-muted" title="MLSGrid and Wix requests">
-          MLSGrid {run.mlsgrid_request_count} req · {megabytes(run.mlsgrid_bytes)} · Wix {run.wix_requests} req
-        </span>
-        <span style={{ flex: 1 }} />
-        <RunTags warnings={run.warnings} errors={run.errors} />
-      </button>
+      {onToggle ? (
+        <button type="button" onClick={onToggle} aria-expanded={open} style={{ ...headerStyle, cursor: "pointer" }}>
+          {header}
+        </button>
+      ) : (
+        <div style={headerStyle}>{header}</div>
+      )}
       {open && (
         <div style={{ padding: "0 16px 14px" }}>
           {run.error_message && (
@@ -468,7 +547,8 @@ function RunCard({ run, open, onToggle, events, ...entries }: { run: Run; open: 
   );
 }
 
-function ListingRunGroup({ runKey, events, ...entries }: { runKey: string; events: EngineEvent[] } & EntriesProps) {
+/** Entries whose run row is gone (purged) or missing: a header from the key alone. */
+function RunKeyGroup({ runKey, events, ...entries }: { runKey: string; events: EngineEvent[] } & EntriesProps) {
   const { mode, startedAt } = describeRunKey(runKey);
   return (
     <div className="card" style={{ marginBottom: 10 }}>
@@ -481,18 +561,14 @@ function ListingRunGroup({ runKey, events, ...entries }: { runKey: string; event
             </span>
           )}
         </div>
-        {runKey && (
-          <Link href={`/dashboard/listings/change-log?runKey=${encodeURIComponent(runKey)}`} className="btn btn-secondary btn-sm">
-            Open run
-          </Link>
-        )}
+        {runKey && <span className="text-muted text-sm">run no longer in the log</span>}
       </div>
       <EntriesTable events={events} {...entries} />
     </div>
   );
 }
 
-function EntriesTable({ events, siteName, showSite, highlightId, onListing }: { events: EngineEvent[] } & EntriesProps) {
+function EntriesTable({ events, sites, siteName, showSite, highlightId, onListing }: { events: EngineEvent[] } & EntriesProps) {
   return (
     <div className="table-wrapper">
       <table>
@@ -542,7 +618,7 @@ function EntriesTable({ events, siteName, showSite, highlightId, onListing }: { 
                 {e.village && <div className="text-muted">{e.village}</div>}
               </td>
               <td className="text-sm">
-                {e.message}
+                {humanizeMessage(e.message, sites)}
                 {e.details != null && (
                   <details style={{ marginTop: 4 }}>
                     <summary className="text-muted">details</summary>

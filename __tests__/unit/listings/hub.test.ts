@@ -36,7 +36,9 @@ vi.mock("@/lib/supabase/client", () => ({
 import {
   HubError,
   addTerm,
+  createVillage,
   deleteVillage,
+  listEvents,
   dismissErrors,
   listOpenErrors,
   listRuns,
@@ -233,5 +235,28 @@ describe("runs and open errors", () => {
     enqueue("ls_sync_events", { data: [{ id: "e1" }, { id: "e2" }] });
     await expect(dismissErrors({ all: true })).resolves.toEqual({ dismissed: 2 });
     expect(calls[1].ops.some((op) => op.startsWith("in("))).toBe(false);
+  });
+});
+
+describe("neighborhood slugs and change-log paging", () => {
+  it("derives the Wix slug from the page URL when none is given", async () => {
+    enqueue("ls_villages", { data: { id: "v1", name: "Bay Isles" } });
+    await createVillage({ siteId: "s1", name: "Bay Isles", page_url: " https://www.lifeinlongboatkey.com/villages/bay-isles " });
+    expect(calls[0].ops[0]).toBe('insert({"site_id":"s1","name":"Bay Isles","wix_slug":"bay-isles","page_url":"https://www.lifeinlongboatkey.com/villages/bay-isles","wix_item_id":null})');
+  });
+
+  it("leaves the slug empty without a page URL", async () => {
+    enqueue("ls_villages", { data: { id: "v1", name: "Bay Isles" } });
+    await createVillage({ siteId: "s1", name: "Bay Isles" });
+    expect(calls[0].ops[0]).toContain('"wix_slug":null');
+  });
+
+  it("pages entries back from a timestamp and looks runs up by key", async () => {
+    enqueue("ls_sync_events", { data: [] });
+    await listEvents({ level: "error", before: "2026-09-15T12:00:00.000Z" });
+    expect(calls[0].ops).toContain('lt("at","2026-09-15T12:00:00.000Z")');
+    enqueue("ls_sync_runs", { data: [] });
+    await listRuns({ runKeys: ["full:a", "incremental:b"] });
+    expect(calls[1].ops).toContain('in("run_key",["full:a","incremental:b"])');
   });
 });

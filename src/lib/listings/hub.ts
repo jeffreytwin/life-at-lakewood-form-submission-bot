@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import { errorMessage, isUniqueViolation } from "@/lib/shared/errors";
 import { loadListings, loadSiteGalleries, selectAll } from "@/lib/listings/db";
 import { titleCase } from "@/lib/listings/transform";
+import { slugOf } from "@/lib/listings/villages";
 import type { LsSite, LsVillage, VillageTerm, WriteMode } from "@/lib/listings/types";
 
 export class HubError extends Error {
@@ -85,6 +86,8 @@ export interface EventFilters {
   kind?: string;
   listingId?: string;
   runKey?: string;
+  /** ISO timestamp: only entries before it, the cursor for "load older". */
+  before?: string;
   limit?: number;
 }
 
@@ -99,6 +102,7 @@ export async function listEvents(filters: EventFilters) {
   if (filters.kind) query = query.eq("kind", filters.kind.trim());
   if (filters.listingId) query = query.ilike("listing_id", `%${filters.listingId.trim().replace(/[%_]/g, "")}%`);
   if (filters.runKey) query = query.eq("run_key", filters.runKey.trim());
+  if (filters.before && !Number.isNaN(Date.parse(filters.before))) query = query.lt("at", new Date(filters.before).toISOString());
   const { data, error } = await query;
   if (error) throw new HubError(`load events: ${errorMessage(error)}`, 500);
   return data ?? [];
@@ -141,11 +145,13 @@ async function loadVillage(id: string): Promise<LsVillage> {
 
 export async function createVillage(input: { siteId: unknown; name: unknown; wix_slug?: unknown; page_url?: unknown; wix_item_id?: unknown }): Promise<LsVillage> {
   if (typeof input.siteId !== "string" || !input.siteId) throw new HubError("siteId is required");
+  const page_url = optionalText(input.page_url, "Page URL") ?? null;
   const row = {
     site_id: input.siteId,
     name: validateVillageName(input.name),
-    wix_slug: optionalText(input.wix_slug, "Wix slug", 200) ?? null,
-    page_url: optionalText(input.page_url, "Page URL") ?? null,
+    // The slug is the page URL's last segment, as the import records it; a caller may still send its own.
+    wix_slug: optionalText(input.wix_slug, "Wix slug", 200) ?? slugOf(page_url),
+    page_url,
     wix_item_id: optionalText(input.wix_item_id, "Wix item id", 200) ?? null,
   };
   const { data, error } = await supabase.from("ls_villages").insert(row).select("*").single();
@@ -162,7 +168,10 @@ export async function updateVillage(id: string, patch: { name?: unknown; wix_slu
   const slug = optionalText(patch.wix_slug, "Wix slug", 200);
   if (slug !== undefined) updates.wix_slug = slug;
   const pageUrl = optionalText(patch.page_url, "Page URL");
-  if (pageUrl !== undefined) updates.page_url = pageUrl;
+  if (pageUrl !== undefined) {
+    updates.page_url = pageUrl;
+    if (slug === undefined) updates.wix_slug = slugOf(pageUrl);
+  }
   const itemId = optionalText(patch.wix_item_id, "Wix item id", 200);
   if (itemId !== undefined) updates.wix_item_id = itemId;
   if (patch.active !== undefined) {
@@ -333,13 +342,16 @@ export interface RunFilters {
   /** ISO started_at: only runs that started before it, the cursor for "load older". */
   before?: string;
   runKey?: string;
+  /** Up to 100 keys: the runs behind a set of entries. */
+  runKeys?: string[];
 }
 
-/** Runs newest first, a page at a time; `runKey` fetches one run. */
+/** Runs newest first, a page at a time; `runKey` fetches one run, `runKeys` a known set. */
 export async function listRuns(filters: RunFilters): Promise<Record<string, unknown>[]> {
   const limit = Math.min(Math.max(filters.limit ?? 20, 1), 100);
   let query = supabase.from("ls_sync_runs").select("*").order("started_at", { ascending: false }).limit(limit);
   if (filters.runKey) query = query.eq("run_key", filters.runKey.trim());
+  if (filters.runKeys?.length) query = query.in("run_key", filters.runKeys.slice(0, 100));
   if (filters.before && !Number.isNaN(Date.parse(filters.before))) query = query.lt("started_at", new Date(filters.before).toISOString());
   const { data, error } = await query;
   if (error) throw new HubError(`load runs: ${errorMessage(error)}`, 500);
