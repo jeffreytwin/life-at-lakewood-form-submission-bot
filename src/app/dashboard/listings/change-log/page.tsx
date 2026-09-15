@@ -51,7 +51,7 @@ interface Filters {
 
 const NO_FILTERS: Filters = { siteId: "", level: "", kind: "", listingId: "", runKey: "" };
 
-export default function ListingsEventsPage() {
+export default function ListingsChangeLogPage() {
   // useSearchParams needs a Suspense boundary on a statically rendered page.
   return (
     <Suspense fallback={<div className="empty-state">Loading…</div>}>
@@ -122,7 +122,7 @@ function EventsView() {
     <div>
       <div className="page-header">
         <div>
-          <h2>Listings Events</h2>
+          <h2>Change Log</h2>
           <p className="text-muted">
             One row per notable thing a run did: inserts, rewrites, removals and why, guard holds, and run problems. Filter by a
             listing id to see everything that happened to one listing.
