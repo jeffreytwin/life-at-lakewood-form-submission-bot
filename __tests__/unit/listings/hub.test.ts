@@ -1,0 +1,123 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// A tiny stand-in for the supabase query builder: every chained call returns
+// the builder, awaiting it yields the next queued result for that table.
+type Result = { data?: unknown; error?: unknown; count?: number | null };
+const queues = new Map<string, Result[]>();
+const calls: Array<{ table: string; ops: string[] }> = [];
+
+function enqueue(table: string, ...results: Result[]) {
+  queues.set(table, [...(queues.get(table) ?? []), ...results]);
+}
+
+function builder(table: string) {
+  const ops: string[] = [];
+  calls.push({ table, ops });
+  const chain: Record<string, unknown> = {};
+  const methods = ["select", "insert", "update", "delete", "upsert", "eq", "neq", "in", "is", "ilike", "order", "limit", "range", "single", "maybeSingle"];
+  for (const m of methods) {
+    chain[m] = (...args: unknown[]) => {
+      ops.push(`${m}(${args.map((a) => JSON.stringify(a)).join(",")})`);
+      return chain;
+    };
+  }
+  chain.then = (resolve: (r: Result) => unknown, reject?: (e: unknown) => unknown) => {
+    const queue = queues.get(table) ?? [];
+    const next = queue.shift() ?? { data: null, error: null, count: null };
+    return Promise.resolve(next).then(resolve, reject);
+  };
+  return chain;
+}
+
+vi.mock("@/lib/supabase/client", () => ({
+  supabase: { from: (table: string) => builder(table) },
+}));
+
+import { HubError, addTerm, deleteVillage, normalizeTerm, optionalText, setSiteWriteMode, siteCounts, validateVillageName } from "@/lib/listings/hub";
+
+beforeEach(() => {
+  queues.clear();
+  calls.length = 0;
+});
+
+describe("term and name validation", () => {
+  it("normalises a term the way the classifier compares it", () => {
+    expect(normalizeTerm("  Bay   Isles ")).toBe("bay isles");
+    expect(normalizeTerm("")).toBeNull();
+    expect(normalizeTerm(undefined)).toBeNull();
+    expect(() => normalizeTerm("x".repeat(81))).toThrow(HubError);
+  });
+
+  it("requires a village name and trims it", () => {
+    expect(validateVillageName("  Bay Isles  Harbor ")).toBe("Bay Isles Harbor");
+    expect(() => validateVillageName("   ")).toThrow("needs a name");
+    expect(() => validateVillageName(42)).toThrow(HubError);
+  });
+
+  it("treats blank optional text as null and leaves undefined alone", () => {
+    expect(optionalText(undefined, "x")).toBeUndefined();
+    expect(optionalText("  ", "x")).toBeNull();
+    expect(optionalText(" slug ", "x")).toBe("slug");
+    expect(() => optionalText(5, "Wix slug")).toThrow("Wix slug must be text");
+  });
+});
+
+describe("siteCounts", () => {
+  it("counts states, incomplete galleries, pending writes and removals still on the site", async () => {
+    enqueue("ls_site_listings", {
+      data: [
+        { site_id: "s1", state: "live", gallery_ready: true, needs_write: false, wix_item_id: "A" },
+        { site_id: "s1", state: "live", gallery_ready: false, needs_write: true, wix_item_id: "B" },
+        { site_id: "s1", state: "staged", gallery_ready: false, needs_write: true, wix_item_id: null },
+        { site_id: "s1", state: "removed", gallery_ready: true, needs_write: true, wix_item_id: "C" },
+        { site_id: "s1", state: "removed", gallery_ready: true, needs_write: false, wix_item_id: null },
+        { site_id: "s2", state: "live", gallery_ready: true, needs_write: false, wix_item_id: "D" },
+      ],
+    });
+    const counts = await siteCounts();
+    expect(counts.get("s1")).toEqual({ staged: 1, live: 2, removed: 2, galleryPending: 2, needsWrite: 3, pendingRemovals: 1 });
+    expect(counts.get("s2")).toEqual({ staged: 0, live: 1, removed: 0, galleryPending: 0, needsWrite: 0, pendingRemovals: 0 });
+  });
+});
+
+describe("guards", () => {
+  it("refuses to delete a village that still has listings", async () => {
+    enqueue("ls_site_listings", { count: 3, error: null });
+    await expect(deleteVillage("v1")).rejects.toMatchObject({ status: 409, message: expect.stringContaining("3 listing(s)") });
+  });
+
+  it("deletes a village nothing points at", async () => {
+    enqueue("ls_site_listings", { count: 0, error: null });
+    enqueue("ls_villages", { error: null });
+    await expect(deleteVillage("v1")).resolves.toBeUndefined();
+    expect(calls.map((c) => c.table)).toEqual(["ls_site_listings", "ls_villages"]);
+  });
+
+  it("names the owner when a term already belongs to another village", async () => {
+    enqueue("ls_villages", { data: { id: "v1", site_id: "s1", name: "The Bayou" } });
+    enqueue("ls_village_terms", { error: { code: "23505", message: "duplicate key" } });
+    enqueue("ls_village_terms", { data: { ls_villages: { name: "Bay Isles - Harbor Section" } } });
+    await expect(addTerm("v1", { term: " Bay Isles " })).rejects.toMatchObject({
+      status: 409,
+      message: '"bay isles" already belongs to Bay Isles - Harbor Section',
+    });
+  });
+
+  it("adds a normalised term to its village's site", async () => {
+    enqueue("ls_villages", { data: { id: "v1", site_id: "s1", name: "The Bayou" } });
+    enqueue("ls_village_terms", { data: { id: "t1", term: "bay isles", street_term: "bayou" } });
+    const term = await addTerm("v1", { term: "Bay Isles", street_term: " Bayou " });
+    expect(term).toEqual({ id: "t1", term: "bay isles", street_term: "bayou" });
+    const insert = calls.find((c) => c.table === "ls_village_terms")!;
+    expect(insert.ops[0]).toBe('insert({"site_id":"s1","village_id":"v1","term":"bay isles","street_term":"bayou"})');
+  });
+
+  it("only pauses or resumes a site, and never a live one", async () => {
+    await expect(setSiteWriteMode("s1", "live")).rejects.toThrow("paused or shadow");
+    enqueue("ls_sites", { data: { id: "s1", write_mode: "live" } });
+    await expect(setSiteWriteMode("s1", "paused")).rejects.toMatchObject({ status: 409 });
+    enqueue("ls_sites", { data: { id: "s1", write_mode: "shadow" } });
+    enqueue("ls_sites", { data: { id: "s1", write_mode: "paused" } });
+    await expect(setSiteWriteMode("s1", "paused")).resolves.toMatchObject({ write_mode: "paused" });
+  });
+});
