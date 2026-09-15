@@ -334,3 +334,105 @@ Recorded from the build session (PR #280) so the numbers outlive the chat.
   - Keep `mlsgrid_request_count` and `mlsgrid_bytes` on every run so the Hub
     can show usage against the documented caps (2/s, 7,200/hour, 4 GB/hour,
     40,000/day).
+
+## Phase 2 build notes (2026-09-14)
+
+What landed with the engine core (PR after #280), and the decisions taken
+while porting `runSync`.
+
+- **Where it lives.** `src/lib/listings/`: `mlsgrid.ts` (OData client, one
+  request in flight, 600 ms spacing, 429 stops the run), `normalize.ts`
+  (record → `ls_listings` row + photo identities by path key, signed URLs
+  stripped from the stored raw record), `classify.ts`, `transform.ts` (the
+  `HousesforSale` record and its fingerprint), `villages.ts` (import from the
+  Wix `Villages` collection), `media-seed.ts` (read the live galleries once,
+  reuse their Media Manager URIs), `runs.ts` (runs + events), `reconcile.ts`
+  (the run), `tick.ts` (the cron decision). Routes: `GET /api/cron/listings-tick`
+  every 15 minutes (`vercel.json`), `POST /api/internal/listings/run`,
+  `.../villages/import`, `.../media/seed`, `GET .../status`. The internal
+  routes accept the dashboard session, `ADMIN_API_KEY` or `CRON_SECRET`.
+- **Off by default.** `system_settings.ls_engine_enabled` is false, so the
+  cron tick does nothing until it is switched on; the run route works
+  regardless (it is the "run now" button). Longboat Key's `ls_sites` row is
+  `write_mode = shadow`, target `HousesforSale2`; the engine refuses to write
+  when a non-live site's target is its live collection (the database check
+  forbids that row too).
+- **Which records are stored.** The hourly pull is MLS-wide, so a record is
+  kept only when it is in some site's `market_cities` or the engine already
+  holds it (a held listing that moves city, changes status or loses
+  `MlgCanView` still reaches the site showing it). Everything else is
+  dropped unread; `fetched` and `relevant` are both reported.
+- **Watermark and windows.** An incremental run pulls from the newest
+  incremental run that finished complete (`stage = done`), minus two minutes
+  of overlap; a truncated run (page cap or deadline) leaves the watermark
+  where it was. The window is clamped to 24 hours with a `gap` warning; the
+  nightly full run (after 03:00 UTC) verifies every held id at 50 a request
+  and marks what MLSGrid no longer returns `not_in_feed`. After a run fails
+  the tick waits 30 minutes before trying again, so a suspended MLSGrid token
+  is not hammered.
+- **Writes.** A site's rows are written with `bulkSaveItems` in chunks of 200
+  keyed by `_id = ListingId`; live rows are rewritten only when the record's
+  fingerprint changes or `dateOfMlsPull` is older than 12 hours. Removals go
+  through the mass-delete guard: a full run that wants to remove max(10, 10 %)
+  of the site's live rows removes nothing and records the candidates
+  (`mass_delete_guard` error event); an hourly run holds back only the
+  data-driven reasons (city, village, display rights, feed) at that
+  threshold. `POST /api/internal/listings/run` with `allowMassDelete: true`
+  applies a reviewed batch.
+- **Photos in phase 2.** No downloads from MLSGrid yet. `media-seed.ts` keys
+  every live gallery item by its MLS path and records the site's existing
+  `wix:image://` URI, so a listing already on the site is written to the
+  shadow collection with the photos the site has. Because the Velo pipeline
+  re-uploads galleries and trashes the replaced files, every run of a
+  shadow-mode site re-reads the live galleries first and a seeded URI follows
+  the live one (rows the engine imports itself, from phase 3, are never
+  touched). A listing with no photo the site holds stays `staged` (reported
+  as `waitingForPhotos`); a partial gallery is written and the row keeps
+  `gallery_ready = false` for the phase 3 photo job.
+- **State meaning and cutover.** `ls_site_listings.state = live` means
+  "written to the site's target collection", shadow or live. Cutover is the
+  `ls_sites` edit the plan describes plus nulling `written_at` /
+  `written_fingerprint` on the site's rows, so the first live run rewrites
+  every listing into `HousesforSale`.
+- **Verification.** `scripts/listings-engine-phase2.mjs` runs on every push
+  of the engine branch as a prebuild step (or anywhere with `LS_PHASE2_RUN=1`)
+  and drives `scripts/listings-engine-phase2.ts` under `tsx`: census of the
+  live and shadow collections, village import, media seed, a full run and a
+  bounded incremental run (skipped unless `MLSGRID_API_KEY` is enabled for
+  the Vercel Preview environment, since the build on the engine branch is a
+  preview build), a shadow-vs-live comparison by `_id`, and a snapshot of the
+  engine's rows, runs and warn/error events. `LS_PHASE2_RESET_SHADOW=1` empties
+  the shadow collection first (never the live one).
+- **No row transfer needed.** The shadow collection does not need the live
+  rows copied in: the media seed reads the live galleries and the first full
+  run verifies every seeded id against MLSGrid and writes the eligible ones
+  to `HousesforSale2` itself.
+- **First runs against the shadow collection** (preview builds, 2026-09-15
+  00:58 to 01:03 UTC, `MLSGRID_API_KEY` enabled for Preview):
+  - village import: 105 villages, 111 terms, no conflicts; media seed: 202
+    live listings, 10,178 gallery photos, all keyed by their MLS path;
+  - full run: 203 held ids verified in 5 MLSGrid requests (7.0 MB), 202
+    eligible, 200 written to `HousesforSale2` in 5 Wix requests with no
+    failures, 21 s end to end. The first attempt had failed its 200-item bulk
+    save with WDE0109 "Payload is too large" (about 5 MB of galleries), so
+    the bulk writer now chunks by bytes (800 KB) and halves a chunk Wix
+    still refuses;
+  - incremental runs: a 2-hour window was 752 MLS-wide records in 4 requests
+    (19.8 MB, about 26 KB a record); a 6-minute window was 299 records in 2
+    requests (6.3 MB). Neither held a Longboat Key record, so nothing was
+    stored from them. The 40-page cap bounds a run at 8,000 records;
+  - shadow vs live: 203 items in the shadow collection (202 plus the phase 1
+    probe item), and all 202 live listings identical on address, village,
+    price, status, bedrooms, bathrooms, primary image and gallery length.
+    Gate 2's comparison is therefore green on day one; the seven clean
+    nights need the engine switched on after the merge.
+- **Deferred to the next phases.** The Hub Listings section (health cards,
+  runs, events, villages editor), the nightly shadow-vs-live comparison as a
+  job (the verification script has the comparison), writing village counts to
+  the Wix village pages (Postgres only until a site is live), and the photo
+  pipeline.
+- **Needs from Jeff.** ~~`MLSGRID_API_KEY` in the Vercel environment (Preview
+  and Production); it lives in Wix Secrets on the Longboat Key site today.~~
+  Added 2026-09-14; from then on the verification build runs the full and
+  incremental pulls against the shadow collection on every push.
+

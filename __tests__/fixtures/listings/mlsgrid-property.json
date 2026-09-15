@@ -1,0 +1,60 @@
+{
+  "ListingId": "MFRA4670555",
+  "ListingKey": "MFR783588094",
+  "OriginatingSystemName": "mfrmls",
+  "StandardStatus": "Active",
+  "PropertyType": "Residential",
+  "PropertySubType": "Condominium",
+  "City": "Longboat Key",
+  "PostalCity": "",
+  "PostalCode": "34228",
+  "StateOrProvince": "FL",
+  "Country": "US",
+  "SubdivisionName": "BAY ISLES HARBOR SECTION",
+  "StreetNumber": "3040",
+  "StreetName": "GRAND BAY",
+  "StreetSuffix": "BOULEVARD",
+  "UnitNumber": "215",
+  "Latitude": 27.3814,
+  "Longitude": -82.6376,
+  "ListPrice": 1395000,
+  "BedroomsTotal": 3,
+  "BathroomsTotalInteger": 3,
+  "GarageSpaces": 1,
+  "LivingArea": 2143,
+  "LotSizeAcres": 0,
+  "LotSizeSquareFeet": 0,
+  "PublicRemarks": "Bayfront residence with water views from every room.",
+  "ListAgentFullName": "Jane Agent",
+  "ListAgentMlsId": "281500001",
+  "ListAgentDirectPhone": "941-555-0100",
+  "ListOfficeName": "Example Realty",
+  "MFR_AttributionContact": "941-555-0100",
+  "VirtualTourURLUnbranded": "https://tours.example/MFRA4670555",
+  "ModificationTimestamp": "2026-09-14T15:02:11.000Z",
+  "OriginatingSystemModificationTimestamp": "2026-09-14T14:58:40.000Z",
+  "MlgCanView": true,
+  "Media": [
+    {
+      "MediaKey": "MFR783588094-2",
+      "MediaURL": "https://media.mlsgrid.com/token=abc&expires=1789425000&id=612a7e88/images/MFR783588094/22222222-2222-4222-8222-222222222222.jpeg",
+      "Order": 2,
+      "LongDescription": "Kitchen",
+      "MediaModificationTimestamp": "2026-09-10T12:00:00.000Z"
+    },
+    {
+      "MediaKey": "MFR783588094-1",
+      "MediaURL": "https://media.mlsgrid.com/token=abc&expires=1789425000&id=612a7e88/images/MFR783588094/11111111-1111-4111-8111-111111111111.jpeg",
+      "Order": 1,
+      "LongDescription": "Front",
+      "MediaModificationTimestamp": "2026-09-10T12:00:00.000Z"
+    },
+    {
+      "MediaKey": "MFR783588094-3",
+      "MediaURL": "https://media.mlsgrid.com/token=abc&expires=1789425000&id=612a7e88/images/MFR783588094/33333333-3333-4333-8333-333333333333.jpeg",
+      "Order": 3,
+      "LongDescription": "",
+      "MediaModificationTimestamp": "2026-09-12T09:30:00.000Z"
+    }
+  ]
+}

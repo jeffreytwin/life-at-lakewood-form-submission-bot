@@ -15,9 +15,8 @@
 //     Media Manager return an ID a gallery field accepts?
 //
 // Runs as a prebuild step on Vercel (the only environment holding
-// WIX_API_KEY plus the Supabase service key), guarded to this branch so
-// production and other preview builds skip it; LS_PHASE1_RUN=1 runs it
-// anywhere the env is present. The live HousesforSale collection is only
+// WIX_API_KEY plus the Supabase service key) when LS_PHASE1_RUN=1 is set;
+// otherwise every build skips it in one line. The live HousesforSale collection is only
 // read (its schema and its item count). Writes: rows in HousesforSale2,
 // one image import into the site's Media Manager (earlier probe images
 // go to its trash bin), one probe JPEG in the Supabase `photos` bucket. Every row this script writes has an _id starting
@@ -36,7 +35,6 @@
 // WIX_API_BASE points the script at a mock server for a local dry run.
 
 const WIX_BASE = process.env.WIX_API_BASE || 'https://www.wixapis.com';
-const PROBE_BRANCH = 'claude/listings-engine-phase1-longboat-tzysk9';
 // Longboat Key's meta site id: the UUID in its manage.wix.com dashboard URL
 // (2026-09-14). Not a secret; the other sites' ids live in docs/WIX_COLLECTIONS.md.
 const DEFAULT_LONGBOAT_SITE_ID = '8b20e921-5b70-4428-8fcd-8c8ef3bad3ab';
@@ -49,9 +47,10 @@ const STORAGE_BUCKET = 'photos';
 const MEDIA_DISPLAY_NAME = 'listings-engine-probe.jpg';
 const SYSTEM_FIELDS = new Set(['_id', '_owner', '_createdDate', '_updatedDate', '_publishStatus', '_publishDate', '_draftDate']);
 
-const branch = process.env.VERCEL_GIT_COMMIT_REF;
-if (process.env.LS_PHASE1_RUN !== '1' && branch !== PROBE_BRANCH) {
-  console.log(`LS1: branch ${branch ?? '(none)'} is not ${PROBE_BRANCH}; skipping.`);
+// Phase 1 is verified (see the plan's findings), so the probe no longer
+// runs on every push of its branch: set LS_PHASE1_RUN=1 to run it again.
+if (process.env.LS_PHASE1_RUN !== '1') {
+  console.log(`LS1: LS_PHASE1_RUN is not set; skipping (branch ${process.env.VERCEL_GIT_COMMIT_REF ?? '(none)'}).`);
   process.exit(0);
 }
 const wixKey = process.env.WIX_API_KEY;
