@@ -10,6 +10,7 @@ const navItems = [
   { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2630" },
   { href: "/dashboard/email-hub/drafts", label: "Email", icon: "\u2709" },
   { href: "/dashboard/floor-plans", label: "Floor Plans", icon: "\u25A6" },
+  { href: "/dashboard/listings", label: "Listings", icon: "\u2616" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
 ];
 

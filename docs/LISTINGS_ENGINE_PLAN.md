@@ -426,11 +426,23 @@ while porting `runSync`.
     price, status, bedrooms, bathrooms, primary image and gallery length.
     Gate 2's comparison is therefore green on day one; the seven clean
     nights need the engine switched on after the merge.
-- **Deferred to the next phases.** The Hub Listings section (health cards,
-  runs, events, villages editor), the nightly shadow-vs-live comparison as a
-  job (the verification script has the comparison), writing village counts to
-  the Wix village pages (Postgres only until a site is live), and the photo
-  pipeline.
+- **Hub Listings section** (built right after the phase 2 merge): the
+  sidebar's Listings entry opens three pages. Overview: the engine switch,
+  run-now buttons (incremental, full verify), a card per site with its write
+  mode, target collection and counts by state, pause/resume writes, an
+  "apply held removals" button that appears when the guard has held a
+  batch, the newest 24 runs and the newest 50 warnings and errors. Events:
+  every event, filterable by site, level, kind, run and listing id (the
+  listing lookup). Villages: per site, each village with its terms as chips,
+  add/remove a term (street qualifier optional; a clash names the owning
+  village), add/edit/deactivate/delete a village (delete only when nothing
+  points at it), and a re-import from the site's Wix Villages collection.
+  Every edit applies on the next run. Cutover to live is not in the UI: it
+  stays an `ls_sites` edit gated to Jeff.
+- **Deferred to the next phases.** The nightly shadow-vs-live comparison as
+  a job (the verification script has the comparison), writing village counts
+  to the Wix village pages (Postgres only until a site is live), and the
+  photo pipeline.
 - **Needs from Jeff.** ~~`MLSGRID_API_KEY` in the Vercel environment (Preview
   and Production); it lives in Wix Secrets on the Longboat Key site today.~~
   Added 2026-09-14; from then on the verification build runs the full and
