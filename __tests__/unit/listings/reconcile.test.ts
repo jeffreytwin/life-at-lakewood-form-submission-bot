@@ -38,6 +38,9 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 vi.mock("@/lib/listings/media-seed", () => ({
   seedSiteMediaFromLive: vi.fn(),
 }));
+vi.mock("@/lib/listings/village-stats", () => ({
+  refreshVillageStatsOnWix: vi.fn(async () => ({ villages: 0, changed: 0, written: 0, failed: 0, zeroInventory: 0, remaining: false, requests: 0 })),
+}));
 vi.mock("@/lib/listings/photos", () => ({
   runPhotoJob: vi.fn(async () => ({ listings: 0, refreshed: 0, downloaded: 0, reused: 0, imported: 0, failed: 0, truncated: false })),
 }));

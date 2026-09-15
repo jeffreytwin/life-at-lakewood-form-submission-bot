@@ -362,3 +362,42 @@ export async function upsertSiteMedia(
     if (error) fail("upsert site media", error);
   }
 }
+
+// ---- neighborhood stats ----
+
+/** One of a site's live listings with what the neighborhood stats need, keyed to its neighborhood's Wix item. */
+export interface LiveListingStatsRow {
+  wix_item_id: string | null;
+  list_price: number | null;
+  living_area: number | null;
+  bedrooms: number | null;
+  garage_spaces: number | null;
+}
+
+export async function loadLiveListingStats(siteId: string): Promise<LiveListingStatsRow[]> {
+  const [{ data: villages, error: villagesError }, rows] = await Promise.all([
+    supabase.from("ls_villages").select("id, wix_item_id").eq("site_id", siteId),
+    selectAll<{ village_id: string | null; ls_listings: { list_price: number | null; living_area: number | null; bedrooms: number | null; garage_spaces: unknown } | null }>(
+      "load live listing stats",
+      (from, to) =>
+        supabase
+          .from("ls_site_listings")
+          .select("village_id, ls_listings(list_price, living_area, bedrooms, garage_spaces:raw->GarageSpaces)")
+          .eq("site_id", siteId)
+          .eq("state", "live")
+          .not("village_id", "is", null)
+          .order("id")
+          .range(from, to)
+    ),
+  ]);
+  if (villagesError) fail("load villages", villagesError);
+  const wixIds = new Map(((villages ?? []) as { id: string; wix_item_id: string | null }[]).map((v) => [v.id, v.wix_item_id]));
+  const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : null);
+  return rows.map((r) => ({
+    wix_item_id: r.village_id ? (wixIds.get(r.village_id) ?? null) : null,
+    list_price: num(r.ls_listings?.list_price),
+    living_area: num(r.ls_listings?.living_area),
+    bedrooms: num(r.ls_listings?.bedrooms),
+    garage_spaces: num(r.ls_listings?.garage_spaces),
+  }));
+}

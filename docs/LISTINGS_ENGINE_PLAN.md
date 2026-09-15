@@ -539,6 +539,77 @@ while porting `runSync`.
   seeded rows stay (never touched by the job), and the backlog reports
   what is still missing; when `ls_photo_backlog` returns nothing the gate
   holds.
+- **Neighborhood stats (2026-09-15, for cutover).** `village-stats.ts`
+  ports `village-stats.jsw`: from the engine's live rows it recomputes
+  each neighborhood row's `priceRangeActive`, `squareFeetActive`,
+  `bedroomRangeActive`, `garageSizeRangeActive`, `activeListingCount` and
+  `zeroSince` on the site's neighborhoods collection, widens the
+  hand-curated `priceRange` / `squareFeet` / `bedroomRange` /
+  `garageSizeRange` outward, and bulk-updates only the rows that changed.
+  It runs at the end of every write for a **live** site (in shadow mode
+  the Velo pipeline still maintains these), so the neighborhood pages and
+  the Google Ads inventory feed (`GET /_functions/adsInventoryFeed`, which
+  reads `activeListingCount` / `zeroSince`) keep working after cutover.
+
+## Cutover runbook: Longboat Key (step 4)
+
+Read with the "State meaning and cutover" note above. Order matters: the
+Velo jobs stop first, the database flips second, the first live run comes
+last; MLSGrid allows one download per photo per hour, so two pipelines
+must never fetch at once.
+
+1. **Pick the moment.** Just after the top of an hour (:05 to :20): the
+   Velo hourly runs at :00 and its photo drain at :30; the engine's hourly
+   currently starts at :30. Nothing is mid-flight at :05.
+2. **Stop the Velo jobs** (lifeinlongboatkey.com, Wix editor, Dev Mode,
+   Code Files → Backend → `jobs.config`): replace the file's contents with
+   `{ "jobs": [] }` and **Publish**. That ends `hourlyIncremental`,
+   `nightlyFull`, `nightlyPurge` and `processMediaStep`. Delete nothing
+   else: `backend/sync/*` stays idle for the rollback week, and
+   `http-functions.js` keeps serving the ads feed and the health endpoints
+   on demand.
+3. **Flip the site** (Supabase SQL editor; the check constraint requires
+   the target and the mode to change together):
+
+   ```sql
+   begin;
+   update ls_sites
+      set write_mode = 'live', target_collection_id = live_collection_id, updated_at = now()
+    where domain = 'lifeinlongboatkey.com';
+   update ls_site_listings
+      set written_at = null, written_fingerprint = null, needs_write = true
+    where site_id = (select id from ls_sites where domain = 'lifeinlongboatkey.com')
+      and state = 'live';
+   commit;
+   ```
+
+   Nulling `written_at` / `written_fingerprint` makes the first live run
+   rewrite every listing into `HousesforSale` (an upsert keyed by
+   `ListingId`, so the site's rows are replaced in place; the galleries
+   carry the Media Manager URIs the site already serves, so no photo
+   moves). From this edit on the media seed stops (nothing else writes
+   the live collection), the photo job fetches at once (no shadow grace),
+   and the neighborhood stats are the engine's.
+4. **Run it**: Hub → Listings → Run Full (or wait for the :30 hourly).
+   Expect one run: about 200 rewritten, 0 failed, 0 removed; then
+   `photos` entries only for whatever the site lacked; then the stats.
+5. **Verify** within the hour: the Change Log run reads ok; the Errors
+   panel is empty; a listing page, a neighborhood page and a gallery
+   render; `GET /_functions/adsInventoryFeed` still answers with counts;
+   the overview's Live box equals the site's inventory.
+6. **Rollback** (any time in the first week): the reverse edit
+   (`write_mode = 'shadow'`, `target_collection_id = 'HousesforSale2'`,
+   the same nulling of `written_at` / `written_fingerprint`), restore
+   `backend/jobs.config` from git and Publish. The engine goes back to the
+   shadow collection on its next run; Velo's next hourly re-adopts
+   `HousesforSale` (it keys photos by MLS URL, so its first run re-uploads
+   galleries as it did before the engine existed).
+7. **A week later, if quiet:** delete `backend/sync/*`, `backend/Fetch.jsw`
+   and the Property Management page's backend calls from the Wix site,
+   the `Stagging`, `SyncRuns` and `SyncEvents` collections, the
+   `HousesforSale2` shadow collection, and the MLSGrid key from Wix
+   Secrets. Step 6 (the ads feed from the engine, archiving the Longboat
+   Key repo) follows.
 - **Needs from Jeff.** ~~`MLSGRID_API_KEY` in the Vercel environment (Preview
   and Production); it lives in Wix Secrets on the Longboat Key site today.~~
   Added 2026-09-14; from then on the verification build runs the full and
