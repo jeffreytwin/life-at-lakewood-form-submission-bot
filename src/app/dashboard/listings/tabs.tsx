@@ -5,9 +5,8 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/dashboard/listings", label: "Overview" },
-  { href: "/dashboard/listings/staging", label: "Staging" },
-  { href: "/dashboard/listings/events", label: "Events" },
   { href: "/dashboard/listings/neighborhoods", label: "Neighborhoods" },
+  { href: "/dashboard/listings/change-log", label: "Change Log" },
 ];
 
 export default function ListingsTabs() {

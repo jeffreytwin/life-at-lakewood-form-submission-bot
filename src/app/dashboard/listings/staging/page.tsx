@@ -51,7 +51,7 @@ export default function ListingsStagingPage() {
 function StagingView() {
   const searchParams = useSearchParams();
   const [sites, setSites] = useState<SiteOption[]>([]);
-  // A site id in the URL (from the overview's Staged box) picks the site; else the first one.
+  // A site id in the URL (from the overview's In Progress box) picks the site; else the first one.
   const [siteId, setSiteId] = useState(searchParams.get("siteId") ?? "");
   const [rows, setRows] = useState<StagedListing[]>([]);
   // The site whose rows are on screen; loading is derived from it so no effect sets state.
@@ -128,7 +128,7 @@ function StagingView() {
     <div>
       <div className="page-header">
         <div>
-          <h2>Staging</h2>
+          <h2>In Progress</h2>
           <p className="text-muted">
             Listings that qualify for a site but are not in its target collection yet. Each one waits on its MLS record, a
             neighborhood match, its first imported photo, or just the next run&apos;s write.
@@ -229,7 +229,7 @@ function StagingView() {
                   <th>Neighborhood</th>
                   <th>Price</th>
                   <th>Photos</th>
-                  <th>Staged</th>
+                  <th>Since</th>
                   <th>Waiting on</th>
                 </tr>
               </thead>
@@ -237,7 +237,7 @@ function StagingView() {
                 {visible.map((r) => (
                   <tr key={r.listing_id}>
                     <td className="text-sm" style={{ whiteSpace: "nowrap" }}>
-                      <Link href={`/dashboard/listings/events?listingId=${encodeURIComponent(r.listing_id)}`} title="Show every event for this listing">
+                      <Link href={`/dashboard/listings/change-log?listingId=${encodeURIComponent(r.listing_id)}`} title="Show every change-log entry for this listing">
                         {r.listing_id}
                       </Link>
                     </td>

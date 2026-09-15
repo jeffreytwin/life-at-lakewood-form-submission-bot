@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const [{ data: settings }, { data: sites }, { data: runs }, { data: events }, perSite, villages] = await Promise.all([
       supabase.from("system_settings").select("ls_engine_enabled, ls_engine_state").eq("id", 1).single(),
       supabase.from("ls_sites").select("*").order("domain"),
-      supabase.from("ls_sync_runs").select("*").order("started_at", { ascending: false }).limit(24),
+      supabase.from("ls_sync_runs").select("*").order("started_at", { ascending: false }).limit(10),
       supabase.from("ls_sync_events").select("*").neq("level", "info").order("at", { ascending: false }).limit(50),
       siteCounts(),
       selectAll<{ site_id: string; active: boolean }>("load villages", (from, to) =>

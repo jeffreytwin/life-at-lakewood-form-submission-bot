@@ -446,15 +446,18 @@ while porting `runSync`.
   name (Life in Longboat Key) and carry the Email Hub's colour (yellow
   Longboat Key, green Wellen Park, purple Lakewood, teal Parrish). The
   engine switch and each site's pause are "Listing Updates" toggles, blue
-  while on and red while paused; the run-now buttons are gone (a manual run
-  is still `POST /api/internal/listings/run` with the admin key, and the
-  "apply held removals" button still starts one). The overview stats are
+  while on and red while paused, next to the Run Incremental and Run Full
+  buttons. The overview stats are
   listings in feed, in staging, last run. A site's Live box opens its target
   collection in the Wix CMS (`manage.wix.com/dashboard/<site id>/database/
   data/<collection>`); its Staged box opens the Staging page, which lists
   each staged listing with what it waits on (MLS data, a neighborhood, a
   first imported photo, or just the next run), from
-  `GET /api/internal/listings/staging?siteId=`.
+  `GET /api/internal/listings/staging?siteId=`. Later that day: the tabs
+  are Overview, Neighborhoods, Change Log (the events page, now at
+  `/dashboard/listings/change-log`); a site card shows only its Live and
+  In Progress boxes (In Progress opens the staging page, which has no tab);
+  the run list shows the newest 10.
 - **Deferred to the next phases.** The nightly shadow-vs-live comparison as
   a job (the verification script has the comparison), writing village counts
   to the Wix village pages (Postgres only until a site is live), and the

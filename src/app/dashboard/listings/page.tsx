@@ -108,7 +108,7 @@ function summarize(r: RunSummary, siteName: (domain: string) => string): string 
   return parts.join(" · ");
 }
 
-/** One of a site's count boxes; the Live and Staged ones lead to where those listings are. */
+/** One of a site's count boxes; Live leads to the Wix collection, In Progress to the staging page. */
 function SiteStat({ label, value, sub, href, external, title }: { label: string; value: number; sub: string; href?: string | null; external?: boolean; title?: string }) {
   const body = (
     <>
@@ -201,6 +201,13 @@ export default function ListingsOverviewPage() {
     call("engine", "/api/internal/listings/engine", { method: "POST", body: JSON.stringify({ enabled }) });
   }
 
+  function runNow(mode: "incremental" | "full") {
+    if (!confirm(mode === "full" ? "Run a full verify of every held listing now?" : "Run an incremental pull now?")) return;
+    call(`run:${mode}`, "/api/internal/listings/run", { method: "POST", body: JSON.stringify({ mode }) }, (body) =>
+      setLastResult(summarize(body as RunSummary, siteName))
+    );
+  }
+
   function applyHeldRemovals() {
     if (!confirm("Apply the removals the guard held back? They are deleted from the target collection.")) return;
     call("held", "/api/internal/listings/run", { method: "POST", body: JSON.stringify({ mode: "incremental", allowMassDelete: true }) }, (body) =>
@@ -230,10 +237,7 @@ export default function ListingsOverviewPage() {
       <div className="page-header">
         <div>
           <h2>Listings</h2>
-          <p className="text-muted">
-            MLSGrid listings, classified per site and written to each site&apos;s target collection. In shadow mode a site&apos;s
-            live collection is untouched; the Velo pipeline keeps serving it until cutover.
-          </p>
+          <p className="text-muted">This area manages the MLS listings of our various sites.</p>
         </div>
       </div>
       <ListingsTabs />
@@ -260,13 +264,20 @@ export default function ListingsOverviewPage() {
               <span className="text-muted text-sm">
                 {updatesOn
                   ? "Incremental every hour, full verify daily after 03:00 UTC."
-                  : "Listing updates are off: the hourly pull and the daily verify are skipped."}
+                  : "Listing updates are off: the hourly pull and the daily verify are skipped; runs happen only from the buttons here."}
               </span>
               <span className="text-muted text-sm">
                 Last run {ago(state.lastRunAt)}
                 {state.lastMode ? ` (${state.lastMode}, ${state.lastStatus ?? "?"})` : ""}
                 {state.lastFullDate ? ` · last full ${state.lastFullDate}` : ""}
               </span>
+              <span style={{ flex: 1 }} />
+              <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("incremental")}>
+                {busy === "run:incremental" ? "Running…" : "Run Incremental"}
+              </button>
+              <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("full")}>
+                {busy === "run:full" ? "Running…" : "Run Full"}
+              </button>
             </div>
             {lastResult && (
               <p className="text-sm" style={{ marginTop: 12, marginBottom: 0 }}>
@@ -279,7 +290,7 @@ export default function ListingsOverviewPage() {
             <div className="stat-card">
               <div className="stat-label">Listings in feed</div>
               <div className="stat-value">{status.listingsInFeed}</div>
-              <div className="stat-sub">held by the engine, across all sites</div>
+              <div className="stat-sub">live active listings across all sites</div>
             </div>
             <Link className="stat-card" href="/dashboard/listings/staging" title="See what is in the staging area">
               <div className="stat-label">In Staging</div>
@@ -320,9 +331,7 @@ export default function ListingsOverviewPage() {
                     <strong style={colors ? { color: colors.solid } : undefined}>{site.name}</strong> <span className={mode.cls}>{mode.label}</span>
                     {!site.wix_site_id && <span className="badge badge-danger" style={{ marginLeft: 6 }}>no Wix site id</span>}
                     <div className="text-muted text-sm">
-                      writes {site.target_collection_id}
-                      {!live ? ` (live collection ${site.live_collection_id} untouched)` : ""} · market {site.market_cities.join(", ") || "—"} ·{" "}
-                      {site.activeVillages} of {site.villages} neighborhoods active
+                      market {site.market_cities.join(", ") || "—"} · {site.activeVillages} of {site.villages} neighborhoods active
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -354,20 +363,18 @@ export default function ListingsOverviewPage() {
                   <SiteStat
                     label="Live"
                     value={site.counts.live}
-                    sub={`in ${site.target_collection_id}`}
+                    sub={liveUrl ? "see this live data in Wix" : "no Wix site id to link to"}
                     href={liveUrl}
                     external
                     title={liveUrl ? `Open ${site.target_collection_id} in the Wix CMS` : undefined}
                   />
                   <SiteStat
-                    label="Staged"
+                    label="In Progress"
                     value={site.counts.staged}
                     sub="in the staging area"
                     href={`/dashboard/listings/staging?siteId=${encodeURIComponent(site.id)}`}
-                    title="See what each staged listing is waiting on"
+                    title="See what each in-progress listing is waiting on"
                   />
-                  <SiteStat label="Removed" value={site.counts.removed} sub={`${site.counts.pendingRemovals} still to delete`} />
-                  <SiteStat label="Needs write" value={site.counts.needsWrite} sub={`${site.counts.galleryPending} galleries incomplete`} />
                 </div>
               </div>
             );
@@ -376,8 +383,8 @@ export default function ListingsOverviewPage() {
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-header">
               <h3>Recent runs</h3>
-              <Link href="/dashboard/listings/events" className="text-sm">
-                All events →
+              <Link href="/dashboard/listings/change-log" className="text-sm">
+                Change log →
               </Link>
             </div>
             {status.runs.length === 0 ? (
@@ -391,7 +398,7 @@ export default function ListingsOverviewPage() {
                       <th>Mode</th>
                       <th>Result</th>
                       <th>Took</th>
-                      <th>Writes</th>
+                      <th>New/Updated/Removed</th>
                       <th>Held</th>
                       <th>Failed</th>
                       <th>MLSGrid</th>
@@ -465,7 +472,7 @@ export default function ListingsOverviewPage() {
                         <td className="text-sm">{e.kind}</td>
                         <td className="text-sm">
                           {e.listing_id ? (
-                            <Link href={`/dashboard/listings/events?listingId=${encodeURIComponent(e.listing_id)}`}>{e.listing_id}</Link>
+                            <Link href={`/dashboard/listings/change-log?listingId=${encodeURIComponent(e.listing_id)}`}>{e.listing_id}</Link>
                           ) : (
                             "—"
                           )}
