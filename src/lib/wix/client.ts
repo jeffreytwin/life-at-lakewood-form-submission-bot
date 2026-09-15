@@ -244,6 +244,13 @@ export async function importMediaFromUrl(
 
 /** Items per bulk call accepted by the Wix Data API. Larger batches are chunked. */
 export const WIX_BULK_LIMIT = 1000;
+/**
+ * Wix also caps the request body: 200 listings with 50-photo galleries
+ * (about 5 MB) came back WDE0109 "Payload is too large", while 50 rows at
+ * 453 KB went through in phase 1. Chunks stay under this many bytes of
+ * JSON, and a chunk Wix still refuses is split in half and retried.
+ */
+export const WIX_BULK_MAX_BYTES = 800_000;
 
 export interface WixBulkItemError {
   code?: string;
@@ -313,6 +320,34 @@ function bulkRequestBody(
   };
 }
 
+interface BulkChunk {
+  /** Index of the chunk's first entry in the caller's array. */
+  start: number;
+  entries: unknown[];
+}
+
+/** Splits entries by count and by serialized size (exported for tests). */
+export function chunkBulkEntries(entries: unknown[], maxItems = WIX_BULK_LIMIT, maxBytes = WIX_BULK_MAX_BYTES): BulkChunk[] {
+  const chunks: BulkChunk[] = [];
+  let current: BulkChunk = { start: 0, entries: [] };
+  let bytes = 0;
+  entries.forEach((entry, index) => {
+    const size = Buffer.byteLength(JSON.stringify(entry) ?? "");
+    if (current.entries.length && (current.entries.length >= maxItems || bytes + size > maxBytes)) {
+      chunks.push(current);
+      current = { start: index, entries: [] };
+      bytes = 0;
+    }
+    current.entries.push(entry);
+    bytes += size;
+  });
+  if (current.entries.length) chunks.push(current);
+  return chunks;
+}
+
+const isPayloadTooLarge = (error: unknown): error is WixApiError =>
+  error instanceof WixApiError && error.status === 400 && /WDE0109|too large/i.test(error.body);
+
 async function bulkWrite(
   siteId: string,
   operation: "insert" | "update" | "save" | "remove",
@@ -327,14 +362,36 @@ async function bulkWrite(
     undetailedFailures: 0,
     requests: 0,
   };
-  for (let start = 0; start < entries.length; start += WIX_BULK_LIMIT) {
-    const chunk = entries.slice(start, start + WIX_BULK_LIMIT);
-    const res = await wixRequest<RawBulkResponse>(
-      siteId,
-      "POST",
-      `/wix-data/v2/bulk/items/${operation}`,
-      { ...body, [entriesKey]: chunk }
-    );
+  const queue = chunkBulkEntries(entries);
+  while (queue.length) {
+    const { start, entries: chunk } = queue.shift()!;
+    let res: RawBulkResponse;
+    try {
+      res = await wixRequest<RawBulkResponse>(
+        siteId,
+        "POST",
+        `/wix-data/v2/bulk/items/${operation}`,
+        { ...body, [entriesKey]: chunk }
+      );
+    } catch (error) {
+      if (!isPayloadTooLarge(error)) throw error;
+      merged.requests += 1;
+      if (chunk.length > 1) {
+        // Wix's limit is not documented: halve the chunk and try again.
+        const half = Math.ceil(chunk.length / 2);
+        queue.unshift({ start, entries: chunk.slice(0, half) }, { start: start + half, entries: chunk.slice(half) });
+        continue;
+      }
+      // One entry Wix will not take at any size: that entry's failure, not the run's.
+      merged.results.push({
+        originalIndex: start,
+        id: null,
+        success: false,
+        error: { code: "WDE0109", description: "Payload is too large (single item)" },
+      });
+      merged.totalFailures += 1;
+      continue;
+    }
     merged.requests += 1;
     for (const result of res.results ?? []) {
       const meta = result.itemMetadata ?? {};

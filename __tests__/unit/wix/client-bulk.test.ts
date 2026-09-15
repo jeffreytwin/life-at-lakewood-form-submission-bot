@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   WIX_BULK_LIMIT,
+  WIX_BULK_MAX_BYTES,
   WixApiError,
   bulkInsertItems,
   bulkRemoveItems,
   bulkSaveItems,
   bulkUpdateItems,
+  chunkBulkEntries,
   insertItem,
 } from "@/lib/wix/client";
 
@@ -203,6 +205,51 @@ describe("wix client bulk writes", () => {
       success: false,
       error: { code: "ITEM_ALREADY_EXISTS" },
     });
+  });
+
+  it("chunks by serialized size as well as by count", () => {
+    const big = { _id: "x", description: "y".repeat(300_000) };
+    const chunks = chunkBulkEntries([big, big, big, { _id: "small" }]);
+    expect(chunks.map((c) => [c.start, c.entries.length])).toEqual([[0, 2], [2, 2]]);
+    expect(chunks.every((c) => Buffer.byteLength(JSON.stringify(c.entries)) < WIX_BULK_MAX_BYTES + 100)).toBe(true);
+    expect(chunkBulkEntries([], 10, 10)).toEqual([]);
+  });
+
+  it("halves a chunk Wix calls too large and keeps the caller's indexes", async () => {
+    const ok = echoBulk(() => "UPDATE");
+    respond = (body) => {
+      const entries = (body.dataItems ?? []) as unknown[];
+      if (entries.length > 2) {
+        return jsonResponse({ message: "WDE0109: Payload is too large.", details: { applicationError: { code: "WDE0109" } } }, 400);
+      }
+      return ok(body);
+    };
+    const items = Array.from({ length: 7 }, (_, i) => ({ _id: `MFR${i}` }));
+
+    const result = await bulkSaveItems("site-1", "col", items);
+
+    // 7 -> refused; 4 + 3 -> refused; 2 + 2 + 2 + 1 -> accepted: 3 refusals and 4 writes.
+    expect(result.requests).toBe(7);
+    expect(result.totalSuccesses).toBe(7);
+    expect(result.totalFailures).toBe(0);
+    expect(result.results.map((r) => [r.originalIndex, r.id])).toEqual(items.map((item, i) => [i, item._id]));
+  });
+
+  it("reports a single item Wix refuses as that item's failure", async () => {
+    respond = (body) => {
+      const entries = (body.dataItems ?? []) as Array<{ id?: string }>;
+      if (entries.some((e) => e.id === "MFRHUGE")) {
+        return jsonResponse({ message: "WDE0109: Payload is too large." }, 400);
+      }
+      return echoBulk(() => "INSERT")(body);
+    };
+
+    const result = await bulkInsertItems("site-1", "col", [{ _id: "MFRA1" }, { _id: "MFRHUGE" }, { _id: "MFRA3" }]);
+
+    expect(result.totalSuccesses).toBe(2);
+    expect(result.totalFailures).toBe(1);
+    expect(result.results.map((r) => [r.originalIndex, r.success])).toEqual([[0, true], [1, false], [2, true]]);
+    expect(result.results[1].error?.code).toBe("WDE0109");
   });
 
   it("throws a WixApiError carrying the retry-after on a 429", async () => {
