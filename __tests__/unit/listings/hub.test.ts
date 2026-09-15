@@ -14,7 +14,7 @@ function builder(table: string) {
   const ops: string[] = [];
   calls.push({ table, ops });
   const chain: Record<string, unknown> = {};
-  const methods = ["select", "insert", "update", "delete", "upsert", "eq", "neq", "in", "is", "ilike", "order", "limit", "range", "single", "maybeSingle"];
+  const methods = ["select", "insert", "update", "delete", "upsert", "eq", "neq", "in", "is", "lt", "ilike", "order", "limit", "range", "single", "maybeSingle"];
   for (const m of methods) {
     chain[m] = (...args: unknown[]) => {
       ops.push(`${m}(${args.map((a) => JSON.stringify(a)).join(",")})`);
@@ -33,7 +33,20 @@ vi.mock("@/lib/supabase/client", () => ({
   supabase: { from: (table: string) => builder(table) },
 }));
 
-import { HubError, addTerm, deleteVillage, listStagedListings, normalizeTerm, optionalText, setSiteWriteMode, siteCounts, validateVillageName } from "@/lib/listings/hub";
+import {
+  HubError,
+  addTerm,
+  deleteVillage,
+  dismissErrors,
+  listOpenErrors,
+  listRuns,
+  listStagedListings,
+  normalizeTerm,
+  optionalText,
+  setSiteWriteMode,
+  siteCounts,
+  validateVillageName,
+} from "@/lib/listings/hub";
 
 beforeEach(() => {
   queues.clear();
@@ -171,5 +184,54 @@ describe("listStagedListings", () => {
     enqueue("ls_site_listings", { data: [] });
     await expect(listStagedListings("s1")).resolves.toEqual([]);
     expect(calls.map((c) => c.table)).toEqual(["ls_site_listings"]);
+  });
+});
+
+describe("runs and open errors", () => {
+  it("lists runs newest first and pages back from a started_at cursor", async () => {
+    enqueue("ls_sync_runs", { data: [{ id: "r1" }] });
+    await expect(listRuns({ before: "2026-09-15T00:00:00.000Z", limit: 500 })).resolves.toEqual([{ id: "r1" }]);
+    const ops = calls.find((c) => c.table === "ls_sync_runs")!.ops;
+    expect(ops).toContain('order("started_at",{"ascending":false})');
+    expect(ops).toContain("limit(100)");
+    expect(ops).toContain('lt("started_at","2026-09-15T00:00:00.000Z")');
+  });
+
+  it("looks one run up by its key", async () => {
+    enqueue("ls_sync_runs", { data: [{ id: "r1", run_key: "full:x" }] });
+    await listRuns({ runKey: " full:x " });
+    expect(calls[0].ops).toContain('eq("run_key","full:x")');
+    expect(calls[0].ops).toContain("limit(20)");
+  });
+
+  it("counts open errors without fetching rows when only the count is wanted", async () => {
+    enqueue("ls_sync_events", { count: 3, data: null });
+    await expect(listOpenErrors(0)).resolves.toEqual({ count: 3, errors: [] });
+    const ops = calls[0].ops;
+    expect(ops[0]).toBe('select("id",{"count":"exact","head":true})');
+    expect(ops).toContain('eq("level","error")');
+    expect(ops).toContain('is("dismissed_at",null)');
+  });
+
+  it("lists open errors newest first with their total", async () => {
+    enqueue("ls_sync_events", { count: 2, data: [{ id: "e1" }, { id: "e2" }] });
+    await expect(listOpenErrors(50)).resolves.toEqual({ count: 2, errors: [{ id: "e1" }, { id: "e2" }] });
+    expect(calls[0].ops).toContain('order("at",{"ascending":false})');
+    expect(calls[0].ops).toContain("limit(50)");
+  });
+
+  it("dismisses the given open errors, or all of them, and nothing else", async () => {
+    await expect(dismissErrors({})).rejects.toThrow("ids");
+    expect(calls).toHaveLength(0);
+    enqueue("ls_sync_events", { data: [{ id: "e1" }] });
+    await expect(dismissErrors({ ids: ["e1", 5, ""] })).resolves.toEqual({ dismissed: 1 });
+    const ops = calls[0].ops;
+    expect(ops[0]).toMatch(/^update\(\{"dismissed_at":"/);
+    expect(ops).toContain('eq("level","error")');
+    expect(ops).toContain('is("dismissed_at",null)');
+    expect(ops).toContain('in("id",["e1"])');
+    enqueue("ls_sync_events", { data: [{ id: "e1" }, { id: "e2" }] });
+    await expect(dismissErrors({ all: true })).resolves.toEqual({ dismissed: 2 });
+    expect(calls[1].ops.some((op) => op.startsWith("in("))).toBe(false);
   });
 });

@@ -1,13 +1,39 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ListingsTabs from "../tabs";
-import { fmtDateTime, levelBadge, responseError, siteColors } from "../format";
+import RunTags from "../run-tags";
+import { duration, fmtDateTime, levelBadge, megabytes, responseError, runOutcome, siteColors, triggerLabel } from "../format";
+
+interface Run {
+  id: string;
+  run_key: string;
+  mode: string;
+  trigger: string;
+  status: string;
+  stage: string | null;
+  started_at: string;
+  duration_ms: number | null;
+  inserted: number;
+  updated: number;
+  deleted: number;
+  unstaged: number;
+  deletes_skipped: number;
+  writes_failed: number;
+  warnings: number;
+  errors: number;
+  mlsgrid_request_count: number;
+  mlsgrid_bytes: number;
+  wix_requests: number;
+  error_stage: string | null;
+  error_message: string | null;
+}
 
 interface EngineEvent {
   id: string;
-  run_key: string;
+  run_key: string | null;
   site_id: string | null;
   listing_id: string | null;
   at: string;
@@ -17,6 +43,7 @@ interface EngineEvent {
   address: string | null;
   village: string | null;
   details: unknown;
+  dismissed_at: string | null;
 }
 
 interface SiteOption {
@@ -41,82 +68,179 @@ const KINDS = [
   "events_dropped",
 ];
 
+const RUNS_PAGE = 20;
+/** A run stores at most 1,500 entries (the engine's buffer cap), so one page holds a whole run. */
+const RUN_EVENTS_LIMIT = 2000;
+const LISTING_EVENTS_LIMIT = 500;
+
 interface Filters {
   siteId: string;
   level: string;
   kind: string;
-  listingId: string;
-  runKey: string;
 }
 
-const NO_FILTERS: Filters = { siteId: "", level: "", kind: "", listingId: "", runKey: "" };
+const NO_FILTERS: Filters = { siteId: "", level: "", kind: "" };
 
 export default function ListingsChangeLogPage() {
   // useSearchParams needs a Suspense boundary on a statically rendered page.
   return (
     <Suspense fallback={<div className="empty-state">Loading…</div>}>
-      <EventsView />
+      <ChangeLogView />
     </Suspense>
   );
 }
 
-function EventsView() {
+async function getJson<T>(url: string): Promise<T> {
+  const r = await fetch(url);
+  const err = await responseError(r);
+  if (err) throw new Error(err);
+  return r.json();
+}
+
+/** Entries grouped under their run key, keeping the newest-first order they arrived in. */
+function groupByRun(events: EngineEvent[]): Array<[string, EngineEvent[]]> {
+  const groups = new Map<string, EngineEvent[]>();
+  for (const e of events) {
+    const key = e.run_key ?? "";
+    const list = groups.get(key);
+    if (list) list.push(e);
+    else groups.set(key, [e]);
+  }
+  return [...groups.entries()];
+}
+
+/** A run key is "<mode>:<started_at ISO>". */
+function describeRunKey(runKey: string): { mode: string; startedAt: string | null } {
+  const i = runKey.indexOf(":");
+  return i === -1 ? { mode: runKey, startedAt: null } : { mode: runKey.slice(0, i), startedAt: runKey.slice(i + 1) };
+}
+
+function ChangeLogView() {
   const searchParams = useSearchParams();
-  // A listing id or run key in the URL (from the overview's links) is the lookup.
-  const initial = (): Filters => ({
-    ...NO_FILTERS,
-    listingId: searchParams.get("listingId") ?? "",
-    runKey: searchParams.get("runKey") ?? "",
-  });
+  // From the overview: a run to open, an entry to highlight, or a listing to look up.
+  const focusRunKey = searchParams.get("runKey") ?? "";
+  const highlightId = searchParams.get("eventId") ?? "";
   const [sites, setSites] = useState<SiteOption[]>([]);
-  const [filters, setFilters] = useState<Filters>(initial);
-  const [applied, setApplied] = useState<Filters>(initial);
-  const [events, setEvents] = useState<EngineEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const [listingInput, setListingInput] = useState(searchParams.get("listingId") ?? "");
+  const [listingId, setListingId] = useState(searchParams.get("listingId") ?? "");
+  const [runs, setRuns] = useState<Run[] | null>(null);
+  const [exhausted, setExhausted] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(focusRunKey ? [focusRunKey] : []));
+  // A run's entries, keyed by run key and the filter combination they were fetched with.
+  const [eventCache, setEventCache] = useState<Record<string, EngineEvent[]>>({});
+  const requested = useRef(new Set<string>());
+  const [listingResult, setListingResult] = useState<{ listingId: string; events: EngineEvent[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/internal/listings/status")
-      .then((r) => r.json())
+    getJson<{ sites?: SiteOption[] }>("/api/internal/listings/status")
       .then((data) => {
-        if (Array.isArray(data?.sites)) setSites(data.sites.map((s: SiteOption) => ({ id: s.id, name: s.name, domain: s.domain })));
+        if (Array.isArray(data?.sites)) setSites(data.sites.map((s) => ({ id: s.id, name: s.name, domain: s.domain })));
       })
       .catch(() => {});
   }, []);
 
-  // Text filters apply after a short pause; selects apply at once.
+  // The listing lookup applies after a short pause; the selects apply at once.
   useEffect(() => {
-    const timer = setTimeout(() => setApplied(filters), 350);
+    const timer = setTimeout(() => setListingId(listingInput.trim()), 350);
     return () => clearTimeout(timer);
-  }, [filters]);
+  }, [listingInput]);
 
-  const fetchEvents = useCallback(() => {
-    const q = new URLSearchParams();
-    for (const [key, value] of Object.entries(applied)) if (value) q.set(key, value);
-    q.set("limit", "300");
-    fetch(`/api/internal/listings/events?${q.toString()}`)
-      .then(async (r) => {
-        const err = await responseError(r);
-        if (err) throw new Error(err);
-        return r.json();
-      })
+  const filterKey = `${filters.siteId}|${filters.level}|${filters.kind}`;
+  const eventsUrl = useCallback(
+    (extra: Record<string, string>) => {
+      const q = new URLSearchParams();
+      if (filters.siteId) q.set("siteId", filters.siteId);
+      if (filters.level) q.set("level", filters.level);
+      if (filters.kind) q.set("kind", filters.kind);
+      for (const [k, v] of Object.entries(extra)) q.set(k, v);
+      return `/api/internal/listings/events?${q.toString()}`;
+    },
+    [filters.siteId, filters.level, filters.kind]
+  );
+
+  const loadRuns = useCallback(
+    (before?: string) => {
+      const q = new URLSearchParams();
+      if (focusRunKey) q.set("runKey", focusRunKey);
+      else {
+        q.set("limit", String(RUNS_PAGE));
+        if (before) q.set("before", before);
+      }
+      return getJson<Run[]>(`/api/internal/listings/runs?${q.toString()}`)
+        .then((data) => {
+          const page = Array.isArray(data) ? data : [];
+          setRuns((current) => (before && current ? [...current, ...page.filter((p) => !current.some((c) => c.id === p.id))] : page));
+          setExhausted(!!focusRunKey || page.length < RUNS_PAGE);
+          setError(null);
+        })
+        .catch((e) => {
+          setError(e.message);
+          setRuns((current) => current ?? []);
+        });
+    },
+    [focusRunKey]
+  );
+
+  useEffect(() => {
+    loadRuns();
+  }, [loadRuns]);
+
+  function loadMore() {
+    const oldest = runs?.[runs.length - 1];
+    if (!oldest || loadingMore) return;
+    setLoadingMore(true);
+    loadRuns(oldest.started_at).finally(() => setLoadingMore(false));
+  }
+
+  // Each open run's entries, fetched once per filter combination.
+  useEffect(() => {
+    for (const runKey of expanded) {
+      const key = `${runKey}|${filterKey}`;
+      if (requested.current.has(key)) continue;
+      requested.current.add(key);
+      getJson<EngineEvent[]>(eventsUrl({ runKey, limit: String(RUN_EVENTS_LIMIT) }))
+        .then((data) => setEventCache((c) => ({ ...c, [key]: Array.isArray(data) ? data : [] })))
+        .catch((e) => {
+          requested.current.delete(key);
+          setError(e.message);
+        });
+    }
+  }, [expanded, filterKey, eventsUrl]);
+
+  // The listing lookup: everything that happened to one listing, under its runs.
+  useEffect(() => {
+    if (!listingId) return;
+    let cancelled = false;
+    getJson<EngineEvent[]>(eventsUrl({ listingId, limit: String(LISTING_EVENTS_LIMIT) }))
       .then((data) => {
-        setEvents(Array.isArray(data) ? data : []);
-        setError(null);
-        setLoading(false);
+        if (!cancelled) setListingResult({ listingId, events: Array.isArray(data) ? data : [] });
       })
       .catch((e) => {
-        setError(e.message);
-        setLoading(false);
+        if (!cancelled) setError(e.message);
       });
-  }, [applied]);
+    return () => {
+      cancelled = true;
+    };
+  }, [listingId, eventsUrl]);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+  function toggle(runKey: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(runKey)) next.delete(runKey);
+      else next.add(runKey);
+      return next;
+    });
+  }
 
   const siteName = (id: string | null) => sites.find((s) => s.id === id)?.name ?? "";
   const colors = siteColors(sites.find((s) => s.id === filters.siteId)?.domain);
+  const showSite = !filters.siteId && sites.length > 1;
+  const listingMode = !!listingId;
+  const listingEvents = listingMode && listingResult?.listingId === listingId ? listingResult.events : null;
+  const anyFilter = filters.siteId || filters.level || filters.kind || listingInput;
 
   return (
     <div>
@@ -124,12 +248,18 @@ function EventsView() {
         <div>
           <h2>Change Log</h2>
           <p className="text-muted">
-            One row per notable thing a run did: inserts, rewrites, removals and why, guard holds, and run problems. Filter by a
-            listing id to see everything that happened to one listing.
+            Every run, newest first, with what it did underneath: inserts, rewrites, removals and why, guard holds and problems.
+            Open a run to see its entries, or look a listing up to see everything that happened to it.
           </p>
         </div>
       </div>
       <ListingsTabs />
+
+      {error && (
+        <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid var(--danger)" }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
 
       <div
         className="card"
@@ -168,106 +298,264 @@ function EventsView() {
             className="form-input"
             style={{ width: 170, display: "inline-block" }}
             placeholder="MFRA4670555"
-            value={filters.listingId}
-            onChange={(e) => setFilters((f) => ({ ...f, listingId: e.target.value }))}
+            value={listingInput}
+            onChange={(e) => setListingInput(e.target.value)}
           />
         </label>
-        <label>
-          Run{" "}
-          <input
-            className="form-input"
-            style={{ width: 260, display: "inline-block" }}
-            placeholder="full:2026-09-15T01:02:35.641Z"
-            value={filters.runKey}
-            onChange={(e) => setFilters((f) => ({ ...f, runKey: e.target.value }))}
-          />
-        </label>
-        {(filters.siteId || filters.level || filters.kind || filters.listingId || filters.runKey) && (
-          <button className="btn btn-secondary btn-sm" onClick={() => setFilters(NO_FILTERS)}>
+        {anyFilter && (
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              setFilters(NO_FILTERS);
+              setListingInput("");
+            }}
+          >
             Clear
           </button>
         )}
       </div>
 
-      {error ? (
-        <div className="empty-state">{error}</div>
-      ) : loading && events.length === 0 ? (
-        <div className="empty-state">Loading…</div>
-      ) : events.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">✓</div>
-          No events match.
-        </div>
-      ) : (
-        <div className="card">
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>When</th>
-                  <th>Level</th>
-                  <th>Kind</th>
-                  <th>Listing</th>
-                  <th>Message</th>
-                  <th>Run</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((e) => (
-                  <tr key={e.id}>
-                    <td className="text-sm" style={{ whiteSpace: "nowrap" }}>
-                      {fmtDateTime(e.at)}
-                      {e.site_id && <div className="text-muted">{siteName(e.site_id)}</div>}
-                    </td>
-                    <td>
-                      <span className={levelBadge(e.level)}>{e.level}</span>
-                    </td>
-                    <td className="text-sm">{e.kind}</td>
-                    <td className="text-sm">
-                      {e.listing_id ? (
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          style={{ padding: "1px 8px" }}
-                          onClick={() => setFilters({ ...NO_FILTERS, listingId: e.listing_id ?? "" })}
-                          title="Show every event for this listing"
-                        >
-                          {e.listing_id}
-                        </button>
-                      ) : (
-                        "—"
-                      )}
-                      {e.address && <div className="text-muted">{e.address}</div>}
-                      {e.village && <div className="text-muted">{e.village}</div>}
-                    </td>
-                    <td className="text-sm">
-                      {e.message}
-                      {e.details != null && (
-                        <details style={{ marginTop: 4 }}>
-                          <summary className="text-muted">details</summary>
-                          <pre className="font-mono text-sm" style={{ whiteSpace: "pre-wrap", margin: "4px 0 0" }}>
-                            {JSON.stringify(e.details, null, 2)}
-                          </pre>
-                        </details>
-                      )}
-                    </td>
-                    <td className="text-sm">
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        style={{ padding: "1px 8px" }}
-                        onClick={() => setFilters({ ...NO_FILTERS, runKey: e.run_key })}
-                        title="Show every event of this run"
-                      >
-                        {e.run_key.split(":")[0]}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {events.length >= 300 && <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>Showing the newest 300; narrow the filters for older events.</p>}
+      {focusRunKey && !listingMode && (
+        <div className="card" style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <span className="text-sm">Showing one run.</span>
+          <Link href="/dashboard/listings/change-log" className="btn btn-secondary btn-sm">
+            Show all runs
+          </Link>
         </div>
       )}
+
+      {listingMode ? (
+        listingEvents === null ? (
+          <div className="empty-state">Loading…</div>
+        ) : listingEvents.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">✓</div>
+            No entries for a listing matching &quot;{listingId}&quot;.
+          </div>
+        ) : (
+          <>
+            {groupByRun(listingEvents).map(([runKey, events]) => (
+              <ListingRunGroup key={runKey || "(no run)"} runKey={runKey} events={events} siteName={siteName} showSite={showSite} highlightId={highlightId} />
+            ))}
+            {listingEvents.length >= LISTING_EVENTS_LIMIT && (
+              <p className="text-muted text-sm">Showing the newest {LISTING_EVENTS_LIMIT} entries for this listing.</p>
+            )}
+          </>
+        )
+      ) : runs === null ? (
+        <div className="empty-state">Loading…</div>
+      ) : runs.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">✓</div>
+          {focusRunKey ? "That run is no longer in the log." : "No runs yet."}
+        </div>
+      ) : (
+        <>
+          {runs.map((run) => (
+            <RunCard
+              key={run.id}
+              run={run}
+              open={expanded.has(run.run_key)}
+              onToggle={() => toggle(run.run_key)}
+              events={eventCache[`${run.run_key}|${filterKey}`]}
+              siteName={siteName}
+              showSite={showSite}
+              highlightId={highlightId}
+              onListing={setListingInput}
+            />
+          ))}
+          {!exhausted && (
+            <div style={{ textAlign: "center", marginTop: 8 }}>
+              <button className="btn btn-secondary" disabled={loadingMore} onClick={loadMore}>
+                {loadingMore ? "Loading…" : `Load ${RUNS_PAGE} older runs`}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+interface EntriesProps {
+  siteName: (id: string | null) => string;
+  showSite: boolean;
+  highlightId: string;
+  onListing?: (listingId: string) => void;
+}
+
+function RunCard({ run, open, onToggle, events, ...entries }: { run: Run; open: boolean; onToggle: () => void; events: EngineEvent[] | undefined } & EntriesProps) {
+  const outcome = runOutcome(run);
+  const trigger = triggerLabel(run.trigger);
+  return (
+    <div className="card" style={{ marginBottom: 10, padding: 0 }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        style={{
+          width: "100%",
+          background: "none",
+          border: "none",
+          color: "inherit",
+          font: "inherit",
+          textAlign: "left",
+          cursor: "pointer",
+          padding: "12px 16px",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 14,
+          alignItems: "center",
+        }}
+      >
+        <span style={{ width: 12, color: "var(--text-muted)" }}>{open ? "▾" : "▸"}</span>
+        <span style={{ minWidth: 200 }}>
+          <strong>{fmtDateTime(run.started_at)}</strong>
+          <span className="text-muted text-sm" title={trigger.title}>
+            {" "}
+            · {trigger.label}
+          </span>
+        </span>
+        <span className="badge badge-muted" style={{ textTransform: "none" }}>
+          {run.mode}
+        </span>
+        <span className={outcome.cls} title={outcome.title}>
+          {outcome.label}
+        </span>
+        <span className="text-sm text-muted">{duration(run.duration_ms)}</span>
+        <span className="text-sm" title="New / updated / removed">
+          +{run.inserted} / ~{run.updated} / −{run.deleted}
+          {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
+        </span>
+        {run.deletes_skipped > 0 && (
+          <span className="text-sm" title="Removals the guard held back">
+            held {run.deletes_skipped}
+          </span>
+        )}
+        {run.writes_failed > 0 && (
+          <span className="text-sm" style={{ color: "var(--danger)" }} title="Writes Wix rejected; retried on the next run">
+            failed {run.writes_failed}
+          </span>
+        )}
+        <span className="text-sm text-muted" title="MLSGrid and Wix requests">
+          MLSGrid {run.mlsgrid_request_count} req · {megabytes(run.mlsgrid_bytes)} · Wix {run.wix_requests} req
+        </span>
+        <span style={{ flex: 1 }} />
+        <RunTags warnings={run.warnings} errors={run.errors} />
+      </button>
+      {open && (
+        <div style={{ padding: "0 16px 14px" }}>
+          {run.error_message && (
+            <div className="text-sm" style={{ color: "var(--danger)", marginBottom: 8 }}>
+              Stopped at {run.error_stage ?? run.stage ?? "?"}: {run.error_message}
+            </div>
+          )}
+          {events === undefined ? (
+            <p className="text-muted text-sm" style={{ margin: 0 }}>Loading…</p>
+          ) : events.length === 0 ? (
+            <p className="text-muted text-sm" style={{ margin: 0 }}>No entries match for this run.</p>
+          ) : (
+            <>
+              <EntriesTable events={events} {...entries} />
+              {events.length >= RUN_EVENTS_LIMIT && (
+                <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>Showing the first {RUN_EVENTS_LIMIT} entries.</p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ListingRunGroup({ runKey, events, ...entries }: { runKey: string; events: EngineEvent[] } & EntriesProps) {
+  const { mode, startedAt } = describeRunKey(runKey);
+  return (
+    <div className="card" style={{ marginBottom: 10 }}>
+      <div className="card-header" style={{ flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+        <div>
+          <strong>{startedAt ? fmtDateTime(startedAt) : runKey || "No run"}</strong>
+          {runKey && (
+            <span className="badge badge-muted" style={{ textTransform: "none", marginLeft: 8 }}>
+              {mode}
+            </span>
+          )}
+        </div>
+        {runKey && (
+          <Link href={`/dashboard/listings/change-log?runKey=${encodeURIComponent(runKey)}`} className="btn btn-secondary btn-sm">
+            Open run
+          </Link>
+        )}
+      </div>
+      <EntriesTable events={events} {...entries} />
+    </div>
+  );
+}
+
+function EntriesTable({ events, siteName, showSite, highlightId, onListing }: { events: EngineEvent[] } & EntriesProps) {
+  return (
+    <div className="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Level</th>
+            <th>Kind</th>
+            <th>Listing</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map((e) => (
+            <tr key={e.id} style={e.id === highlightId ? { background: "rgba(248, 113, 113, 0.08)" } : undefined}>
+              <td className="text-sm" style={{ whiteSpace: "nowrap" }}>
+                {fmtDateTime(e.at)}
+                {showSite && e.site_id && <div className="text-muted">{siteName(e.site_id)}</div>}
+              </td>
+              <td>
+                <span className={levelBadge(e.level)}>{e.level}</span>
+                {e.dismissed_at && (
+                  <div className="text-muted text-sm" title={`Dismissed ${fmtDateTime(e.dismissed_at)}`}>
+                    dismissed
+                  </div>
+                )}
+              </td>
+              <td className="text-sm">{e.kind}</td>
+              <td className="text-sm">
+                {e.listing_id ? (
+                  onListing ? (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ padding: "1px 8px" }}
+                      onClick={() => onListing(e.listing_id ?? "")}
+                      title="Show everything that happened to this listing"
+                    >
+                      {e.listing_id}
+                    </button>
+                  ) : (
+                    e.listing_id
+                  )
+                ) : (
+                  "—"
+                )}
+                {e.address && <div className="text-muted">{e.address}</div>}
+                {e.village && <div className="text-muted">{e.village}</div>}
+              </td>
+              <td className="text-sm">
+                {e.message}
+                {e.details != null && (
+                  <details style={{ marginTop: 4 }}>
+                    <summary className="text-muted">details</summary>
+                    <pre className="font-mono text-sm" style={{ whiteSpace: "pre-wrap", margin: "4px 0 0" }}>
+                      {JSON.stringify(e.details, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
