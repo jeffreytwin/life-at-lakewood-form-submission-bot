@@ -119,6 +119,7 @@ export interface RunOutcomeInput {
   writes_failed: number;
   errors: number;
   warnings: number;
+  images_failed?: number;
   error_message?: string | null;
 }
 
@@ -131,9 +132,11 @@ export function runOutcome(run: RunOutcomeInput): { label: string; cls: string; 
   if (run.status === "error") {
     return { label: "failed", cls: "badge badge-danger", title: run.error_message ? `Stopped: ${run.error_message}` : "The run stopped before finishing its pass" };
   }
-  if (run.writes_failed > 0 || run.errors > 0) {
+  const imagesFailed = run.images_failed ?? 0;
+  if (run.writes_failed > 0 || run.errors > 0 || imagesFailed > 0) {
     const why: string[] = [];
     if (run.writes_failed > 0) why.push(`${run.writes_failed} write(s) failed and are retried on the next run`);
+    if (imagesFailed > 0) why.push(`${imagesFailed} photo download(s) or import(s) failed and are retried later`);
     if (run.errors > 0) why.push(`${run.errors} error(s) recorded`);
     return { label: "partial", cls: "badge badge-warning", title: `The run finished its pass, but ${why.join("; ")}` };
   }

@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { INCREMENTAL_EVERY_MINUTES, runReconcile, type ReconcileResult } from "@/lib/listings/reconcile";
 import { lastOkRunStartedAt, purgeOldRuns, runningRun } from "@/lib/listings/runs";
+import { runStandalonePhotoJob, type StandalonePhotoResult } from "@/lib/listings/photos";
 import type { RunTrigger } from "@/lib/listings/types";
 
 export const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
@@ -17,6 +18,8 @@ export const FULL_RUN_HOUR_UTC = 3;
 export const RUN_STALE_AFTER_MS = 10 * 60_000;
 /** After a failed run the tick waits this long before trying again (a suspended MLSGrid token is hourly). */
 export const RETRY_AFTER_ERROR_MINUTES = 30;
+/** After a run, the photo backlog gets the rest of the tick only when at least this much is left. */
+export const PHOTOS_MIN_REMAINING_MS = 45_000;
 
 export interface EngineState {
   lastFullDate?: string;
@@ -69,14 +72,19 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
   const inFlight = await runningRun(RUN_STALE_AFTER_MS);
   if (inFlight) return { skipped: `run ${inFlight.id} in progress since ${inFlight.started_at}` };
 
+  const deadline = now.getTime() + TICK_BUDGET_MS;
   const mode = opts.force ?? decideMode({ now, state, lastOkIncremental: await lastOkRunStartedAt("incremental") });
-  if (!mode) return { skipped: "not due", lastRunAt: state.lastRunAt ?? null };
+  if (!mode) {
+    // Nothing due: the tick works the photo backlog instead, as its own run when there is one.
+    const photos = await runStandalonePhotoJob({ trigger, deadline });
+    return { skipped: "not due", lastRunAt: state.lastRunAt ?? null, photos: photos.status === "skipped" ? null : photos };
+  }
 
   logger.info("Listings engine run starting", { mode, trigger });
   const result: ReconcileResult = await runReconcile({
     mode,
     trigger,
-    deadline: now.getTime() + TICK_BUDGET_MS,
+    deadline,
     allowMassDelete: opts.allowMassDelete,
   });
 
@@ -98,7 +106,18 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
     }
   }
   await supabase.from("system_settings").update({ ls_engine_state: nextState }).eq("id", 1);
-  return { mode, ...summarize(result), purged };
+
+  // The run's own photo step is capped; with time left the tick keeps draining the backlog.
+  let photosAfter: StandalonePhotoResult | null = null;
+  if (Date.now() < deadline - PHOTOS_MIN_REMAINING_MS) {
+    try {
+      const after = await runStandalonePhotoJob({ trigger, deadline });
+      if (after.status !== "skipped") photosAfter = after;
+    } catch (photoError) {
+      logger.warn("Listings photo backlog pass failed", { error: String(photoError) });
+    }
+  }
+  return { mode, ...summarize(result), purged, photosAfter };
 }
 
 export function summarize(result: ReconcileResult): Record<string, unknown> {
@@ -123,6 +142,7 @@ export function summarize(result: ReconcileResult): Record<string, unknown> {
       errors: result.counts.errors,
       wixRequests: result.counts.wix_requests,
     },
+    photos: result.photos ?? null,
     error: result.error ?? null,
   };
 }

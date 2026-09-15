@@ -20,6 +20,7 @@ import { normalizeListing } from "@/lib/listings/normalize";
 import { classifyListing } from "@/lib/listings/classify";
 import { buildListingRecord, recordFingerprint } from "@/lib/listings/transform";
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
+import { runPhotoJob, type PhotoDeps, type PhotoSummary } from "@/lib/listings/photos";
 import * as db from "@/lib/listings/db";
 import {
   lastCompleteIncrementalStartedAt,
@@ -58,6 +59,10 @@ const WRITE_CHUNK = 200;
 const FETCH_RESERVE_MS = 90_000;
 const DATA_DRIVEN_REASONS: ReadonlySet<ReasonCode> = new Set(["city_change", "no_village", "mls_revoked", "not_in_feed"]);
 
+/** The photo step inside a run gets at most this long, and always leaves the writes this much. */
+export const PHOTOS_BUDGET_MS = 90_000;
+export const WRITE_RESERVE_MS = 60_000;
+
 export interface ReconcileOptions {
   mode: "incremental" | "full";
   trigger: RunTrigger;
@@ -69,6 +74,8 @@ export interface ReconcileOptions {
   since?: Date;
   siteIds?: string[];
   client?: MlsGridClient;
+  /** The photo step's IO, injectable for tests. */
+  photoDeps?: Partial<PhotoDeps>;
 }
 
 export interface SiteWriteSummary {
@@ -107,6 +114,8 @@ export interface ReconcileResult {
   counts: RunCounts;
   mlsgrid: MlsGridStats;
   sites: SiteWriteSummary[];
+  /** What the photo step did, when it ran. */
+  photos?: PhotoSummary;
   error?: string;
 }
 
@@ -349,6 +358,21 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
         });
       }
       await db.upsertSiteListings(rows);
+    }
+
+    // ---- photos: what the sites still lack, on a budget that leaves the writes their time ----
+    stage = "photos";
+    await run.checkpoint(stage);
+    const photoDeadline = Math.min(opts.deadline - WRITE_RESERVE_MS, Date.now() + PHOTOS_BUDGET_MS);
+    if (photoDeadline > Date.now()) {
+      try {
+        result.photos = await runPhotoJob({ run, deadline: photoDeadline, sites, client, deps: opts.photoDeps });
+      } catch (error) {
+        run.event("warn", "photos_failed", `Photo step failed: ${errorMessage(error)}; writing with the photos already imported`);
+      }
+      run.counts.mlsgrid_request_count = client.stats.requests;
+      run.counts.mlsgrid_bytes = client.stats.bytes;
+      result.mlsgrid = { ...client.stats };
     }
 
     stage = "write";

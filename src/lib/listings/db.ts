@@ -294,3 +294,71 @@ export async function refreshVillageCounts(siteId: string): Promise<{ changed: n
   }
   return { changed };
 }
+
+// ---- the photo job ----
+
+/** One photo of a listing some site still lacks, from ls_photo_backlog (migration 045). */
+export interface PhotoBacklogRow {
+  listing_id: string;
+  media_id: string;
+  position: number;
+  path_key: string;
+  title: string | null;
+  source_url: string | null;
+  source_url_received_at: string | null;
+  storage_path: string | null;
+  content_hash: string | null;
+  retry_after: string | null;
+  download_attempts: number;
+  /** Active, unpaused sites showing (or about to show) the listing that do not have this photo yet. */
+  site_ids: string[];
+}
+
+/**
+ * Every photo of up to `maxListings` listings with photo work pending,
+ * longest-waiting listing first. On a shadow-mode site a photo counts as
+ * lacking only after `shadowGraceMinutes`, so the engine does not race the
+ * Velo pipeline for MLSGrid's one download per photo per hour.
+ */
+export async function loadPhotoBacklog(maxListings: number, shadowGraceMinutes = 90): Promise<PhotoBacklogRow[]> {
+  const { data, error } = await supabase.rpc("ls_photo_backlog", { max_listings: maxListings, shadow_grace_minutes: shadowGraceMinutes });
+  if (error) fail("load photo backlog", error);
+  return ((data ?? []) as PhotoBacklogRow[]).map((r) => ({ ...r, site_ids: r.site_ids ?? [] }));
+}
+
+export async function updateListingMedia(id: string, patch: Record<string, unknown>): Promise<void> {
+  const { error } = await supabase.from("ls_listing_media").update(patch).eq("id", id);
+  if (error) fail("update listing media", error);
+}
+
+/** Puts a listing's undownloaded photos on hold until `until`. */
+export async function coolDownListingMedia(listingId: string, until: Date, reason: string): Promise<void> {
+  const { error } = await supabase
+    .from("ls_listing_media")
+    .update({ retry_after: until.toISOString(), last_error: reason })
+    .eq("listing_id", listingId)
+    .is("storage_path", null);
+  if (error) fail("cool down listing media", error);
+}
+
+/** The stored copy of these exact bytes, if another photo already carries them (the same image under two listings). */
+export async function findStoredByHash(hash: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("ls_listing_media")
+    .select("storage_path")
+    .eq("content_hash", hash)
+    .not("storage_path", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (error) fail("find stored media by hash", error);
+  return (data as { storage_path: string | null } | null)?.storage_path ?? null;
+}
+
+export async function upsertSiteMedia(
+  rows: Array<{ site_id: string; media_id: string; wix_file_id: string | null; wix_image_uri: string; origin: "seeded" | "imported" }>
+): Promise<void> {
+  for (const part of chunk(rows, MEDIA_UPSERT_CHUNK)) {
+    const { error } = await supabase.from("ls_site_media").upsert(part, { onConflict: "site_id,media_id" });
+    if (error) fail("upsert site media", error);
+  }
+}

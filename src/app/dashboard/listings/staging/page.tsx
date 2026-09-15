@@ -33,7 +33,7 @@ interface StagedListing {
 
 const WAITING: Record<WaitingOn, { label: string; cls: string; help: string }> = {
   write: { label: "next run", cls: "badge badge-success", help: "Ready: the next run writes it to the target collection." },
-  photos: { label: "photos", cls: "badge badge-info", help: "None of its photos is in the site's Media Manager yet; the photo job imports them." },
+  photos: { label: "photos", cls: "badge badge-info", help: "None of its photos is in the site's Media Manager yet; the next run downloads them from MLSGrid and imports them." },
   neighborhood: { label: "neighborhood", cls: "badge badge-warning", help: "No active neighborhood term matches its subdivision; add one on the Neighborhoods tab." },
   data: { label: "MLS data", cls: "badge badge-muted", help: "Seeded from the site before the pull reached it; the next pull fills it in." },
 };
@@ -131,7 +131,7 @@ function StagingView() {
           <h2>In Progress</h2>
           <p className="text-muted">
             Listings that qualify for a site but are not in its target collection yet. Each one waits on its MLS record, a
-            neighborhood match, its first imported photo, or just the next run&apos;s write.
+            neighborhood match, its first photo (downloaded from MLSGrid and imported by the next run), or just the next run&apos;s write.
           </p>
         </div>
       </div>

@@ -72,11 +72,13 @@ export interface RunHandle {
   finish(status: "ok" | "error", error?: { stage: string; message: string; stack?: string }): Promise<void>;
 }
 
+/** The newest reconcile run (photo runs do not count: the gap check is about the pulls). */
 export async function previousRunStartedAt(): Promise<Date | null> {
   const { data } = await supabase
     .from("ls_sync_runs")
     .select("started_at")
     .is("site_id", null)
+    .neq("mode", "photos")
     .order("started_at", { ascending: false })
     .limit(1)
     .maybeSingle();

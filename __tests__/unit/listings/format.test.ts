@@ -22,6 +22,7 @@ describe("run labels", () => {
   it("is ok only when nothing the run tried failed", () => {
     expect(runOutcome({ status: "ok", writes_failed: 0, errors: 0, warnings: 2 }).label).toBe("ok");
     expect(runOutcome({ status: "ok", writes_failed: 200, errors: 1, warnings: 0 })).toMatchObject({ label: "partial", cls: "badge badge-warning" });
+    expect(runOutcome({ status: "ok", writes_failed: 0, errors: 0, warnings: 0, images_failed: 3 })).toMatchObject({ label: "partial" });
     expect(runOutcome({ status: "error", writes_failed: 0, errors: 1, warnings: 0, error_message: "boom" })).toMatchObject({ label: "failed", title: "Stopped: boom" });
     expect(runOutcome({ status: "running", writes_failed: 0, errors: 0, warnings: 0 }).label).toBe("running");
   });
