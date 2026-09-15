@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import ListingsTabs from "./tabs";
 import Toggle from "./toggle";
 import RunTags from "./run-tags";
-import { ago, duration, fmtDateTime, megabytes, responseError, runOutcome, siteColors, triggerLabel, wixCollectionUrl, writeModeBadge } from "./format";
+import { ago, duration, fmtDateTime, megabytes, modeLabel, responseError, runOutcome, siteColors, triggerLabel, wixCollectionUrl, writeModeBadge } from "./format";
 
 interface SiteCounts {
   staged: number;
@@ -102,7 +102,7 @@ interface RunSummary {
 
 function summarize(r: RunSummary, siteName: (domain: string) => string): string {
   const parts = [
-    `${r.mode} run ${r.status}${r.stage ? ` at ${r.stage}` : ""}${r.truncated ? " (truncated)" : ""}`,
+    `${modeLabel(r.mode)} run ${r.status}${r.stage ? ` at ${r.stage}` : ""}${r.truncated ? " (truncated)" : ""}`,
     `fetched ${r.fetched}, relevant ${r.relevant}, missing ${r.missing}`,
     `inserted ${r.counts.inserted}, updated ${r.counts.updated}, deleted ${r.counts.deleted}, unstaged ${r.counts.unstaged}, held ${r.counts.deletesSkipped}, failed ${r.counts.writesFailed}`,
     `MLSGrid ${r.mlsgrid.requests} req (${megabytes(r.mlsgrid.bytes)}), Wix ${r.counts.wixRequests} req`,
@@ -212,7 +212,7 @@ export default function ListingsOverviewPage() {
   function toggleEngine(enabled: boolean) {
     if (
       enabled &&
-      !confirm("Turn listing updates on? The cron then runs an incremental pull every hour and a full verify once a day, writing each site's target collection.")
+      !confirm("Turn listing updates on? Listings then update every hour, with a full verify once a day, writing each location's target collection.")
     ) {
       return;
     }
@@ -220,7 +220,7 @@ export default function ListingsOverviewPage() {
   }
 
   function runNow(mode: "incremental" | "full") {
-    if (!confirm(mode === "full" ? "Run a full verify of every held listing now?" : "Run an incremental pull now?")) return;
+    if (!confirm(mode === "full" ? "Run a full verify of every held listing now?" : "Run the hourly update now?")) return;
     call(`run:${mode}`, "/api/internal/listings/run", { method: "POST", body: JSON.stringify({ mode }) }, (body) =>
       setLastResult(summarize(body as RunSummary, siteName))
     );
@@ -354,17 +354,17 @@ export default function ListingsOverviewPage() {
               />
               <span className="text-muted text-sm">
                 {updatesOn
-                  ? "Incremental every hour, full verify daily after 03:00 UTC."
+                  ? "Updated every hour."
                   : "Listing updates are off: the hourly pull and the daily verify are skipped; runs happen only from the buttons here."}
               </span>
               <span className="text-muted text-sm">
                 Last run {ago(state.lastRunAt)}
-                {state.lastMode ? ` (${state.lastMode}, ${state.lastStatus ?? "?"})` : ""}
+                {state.lastMode ? ` (${modeLabel(state.lastMode)}, ${state.lastStatus ?? "?"})` : ""}
                 {state.lastFullDate ? ` · last full ${state.lastFullDate}` : ""}
               </span>
               <span style={{ flex: 1 }} />
               <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("incremental")}>
-                {busy === "run:incremental" ? "Running…" : "Run Incremental"}
+                {busy === "run:incremental" ? "Running…" : "Run Hourly"}
               </button>
               <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("full")}>
                 {busy === "run:full" ? "Running…" : "Run Full"}
@@ -381,12 +381,12 @@ export default function ListingsOverviewPage() {
             <div className="stat-card">
               <div className="stat-label">Listings in feed</div>
               <div className="stat-value">{status.listingsInFeed}</div>
-              <div className="stat-sub">live active listings across all sites</div>
+              <div className="stat-sub">live active listings across all locations</div>
             </div>
             <Link className="stat-card" href="/dashboard/listings/staging" title="See what is in the staging area">
               <div className="stat-label">In Staging</div>
               <div className="stat-value">{totals.staged}</div>
-              <div className="stat-sub">waiting in the staging area, across all sites →</div>
+              <div className="stat-sub">waiting in the staging area, across all locations →</div>
             </Link>
             <div className="stat-card">
               <div className="stat-label">Last run</div>
@@ -400,7 +400,7 @@ export default function ListingsOverviewPage() {
                 )}
               </div>
               <div className="stat-sub">
-                {lastRun ? `${lastRun.mode} · ${ago(lastRun.started_at)} · ${lastRun.warnings} warnings, ${lastRun.errors} errors` : "no runs yet"}
+                {lastRun ? `${modeLabel(lastRun.mode)} · ${ago(lastRun.started_at)} · ${lastRun.warnings} warnings, ${lastRun.errors} errors` : "no runs yet"}
               </div>
             </div>
           </div>
@@ -512,7 +512,7 @@ export default function ListingsOverviewPage() {
                               {trigger.label}
                             </div>
                           </td>
-                          <td>{run.mode}</td>
+                          <td>{modeLabel(run.mode)}</td>
                           <td>
                             <span className={outcome.cls} title={outcome.title}>
                               {outcome.label}

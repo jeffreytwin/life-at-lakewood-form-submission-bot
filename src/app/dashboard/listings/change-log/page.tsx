@@ -5,7 +5,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ListingsTabs from "../tabs";
 import RunTags from "../run-tags";
-import { duration, fmtDateTime, levelBadge, megabytes, responseError, runOutcome, siteColors, triggerLabel } from "../format";
+import { duration, fmtDateTime, levelBadge, megabytes, modeLabel, responseError, runOutcome, siteColors, triggerLabel } from "../format";
 
 interface Run {
   id: string;
@@ -266,9 +266,9 @@ function ChangeLogView() {
         style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", ...(colors ? { background: colors.tint, borderLeft: `3px solid ${colors.accent}` } : {}) }}
       >
         <label>
-          Site{" "}
+          Location{" "}
           <select value={filters.siteId} onChange={(e) => setFilters((f) => ({ ...f, siteId: e.target.value }))} className="form-input" style={{ width: "auto", display: "inline-block" }}>
-            <option value="">All sites</option>
+            <option value="">All locations</option>
             {sites.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
@@ -417,7 +417,7 @@ function RunCard({ run, open, onToggle, events, ...entries }: { run: Run; open: 
           </span>
         </span>
         <span className="badge badge-muted" style={{ textTransform: "none" }}>
-          {run.mode}
+          {modeLabel(run.mode)}
         </span>
         <span className={outcome.cls} title={outcome.title}>
           {outcome.label}
@@ -477,7 +477,7 @@ function ListingRunGroup({ runKey, events, ...entries }: { runKey: string; event
           <strong>{startedAt ? fmtDateTime(startedAt) : runKey || "No run"}</strong>
           {runKey && (
             <span className="badge badge-muted" style={{ textTransform: "none", marginLeft: 8 }}>
-              {mode}
+              {modeLabel(mode)}
             </span>
           )}
         </div>

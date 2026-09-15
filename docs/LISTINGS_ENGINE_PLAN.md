@@ -472,6 +472,13 @@ while porting `runSync`.
   Details opens the run with the entry highlighted, and the sidebar badge
   carries the open count. Retention stays 30 days of events / 90 days of
   runs, purged after each full run.
+- **Hub Listings section, fourth pass (2026-09-15).** Timestamps are
+  Eastern (the Hub's shared formatter); the incremental mode reads "hourly"
+  (Run Hourly, "Updated every hour"); the toggles are green while on; sites
+  are "locations" in the labels; the Neighborhoods page is one collapsible
+  section per location, all collapsed to start (the overview's per-location
+  link opens that one), loading a location's neighborhoods when it opens,
+  without the Deactivate and Re-import from Wix buttons.
 - **Deferred to the next phases.** The nightly shadow-vs-live comparison as
   a job (the verification script has the comparison), writing village counts
   to the Wix village pages (Postgres only until a site is live), and the

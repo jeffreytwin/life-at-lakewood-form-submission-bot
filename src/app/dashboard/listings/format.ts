@@ -1,9 +1,18 @@
 // Small display helpers shared by the Listings pages.
 
+import { formatDateTimeET } from "@/lib/shared/format-date";
+
+/** Eastern time, like the rest of the Hub. */
 export function fmtDateTime(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
+  return Number.isNaN(d.getTime()) ? iso : formatDateTimeET(d.toISOString());
+}
+
+/** A run mode in the Hub's words: the hourly update, or the full verify (stored as incremental / full). */
+export function modeLabel(mode: string | null | undefined): string {
+  if (!mode) return "?";
+  return mode === "incremental" ? "hourly" : mode;
 }
 
 export function ago(iso: string | null | undefined): string {
@@ -93,9 +102,9 @@ export function fmtPrice(value: number | string | null | undefined): string {
 export function triggerLabel(trigger: string): { label: string; title: string } {
   switch (trigger) {
     case "cron":
-      return { label: "auto", title: "Started by the schedule: an incremental pull every hour, a full verify once a day" };
+      return { label: "auto", title: "Started by the schedule: an hourly update, and a full verify once a day" };
     case "hub":
-      return { label: "manual", title: "Started from this Hub: Run Incremental, Run Full, or Apply held removals" };
+      return { label: "manual", title: "Started from this Hub: Run Hourly, Run Full, or Apply held removals" };
     case "manual":
       return { label: "build check", title: "Started by the verification script that runs during a Vercel build of the engine branch" };
     case "http":

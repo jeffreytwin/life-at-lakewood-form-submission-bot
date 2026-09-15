@@ -148,7 +148,7 @@ function StagingView() {
         style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", ...(colors ? { background: colors.tint, borderLeft: `3px solid ${colors.accent}` } : {}) }}
       >
         <label>
-          Site{" "}
+          Location{" "}
           <select value={siteId} onChange={(e) => setSiteId(e.target.value)} className="form-input" style={{ width: "auto", display: "inline-block" }}>
             {sites.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
