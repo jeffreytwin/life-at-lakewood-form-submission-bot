@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import ListingsTabs from "./tabs";
 import Toggle from "./toggle";
 import RunTags from "./run-tags";
-import { ago, duration, fmtDateTime, megabytes, modeLabel, responseError, runOutcome, siteColors, triggerLabel, wixCollectionUrl, writeModeBadge } from "./format";
+import { ago, duration, fmtDateTime, humanizeMessage, megabytes, modeLabel, responseError, runOutcome, siteColors, triggerLabel, wixCollectionUrl, writeModeBadge } from "./format";
 
 interface SiteCounts {
   staged: number;
@@ -212,7 +212,7 @@ export default function ListingsOverviewPage() {
   function toggleEngine(enabled: boolean) {
     if (
       enabled &&
-      !confirm("Turn listing updates on? Listings then update every hour, with a full verify once a day, writing each location's target collection.")
+      !confirm("Turn listing updates on? Listings then update every hour, with a full verify once a day, writing each location's listings to Wix.")
     ) {
       return;
     }
@@ -235,8 +235,8 @@ export default function ListingsOverviewPage() {
 
   function toggleSiteUpdates(site: Site, on: boolean) {
     const what = on
-      ? `Resume listing updates for ${site.name}? The next run writes everything due to ${site.target_collection_id}.`
-      : `Pause listing updates for ${site.name}? Runs keep pulling and classifying for it, but nothing is written to ${site.target_collection_id} until updates are resumed.`;
+      ? `Resume listing updates for ${site.name}? The next run writes everything due for it.`
+      : `Pause listing updates for ${site.name}? Runs keep pulling and classifying for it, but nothing is written to Wix for it until updates are resumed.`;
     if (!confirm(what)) return;
     call(`site:${site.id}`, `/api/internal/listings/sites/${site.id}`, { method: "PATCH", body: JSON.stringify({ write_mode: on ? "shadow" : "paused" }) });
   }
@@ -250,9 +250,11 @@ export default function ListingsOverviewPage() {
   const updatesOn = !!engine?.ls_engine_enabled;
   const state = engine?.ls_engine_state ?? {};
   const totals = (status?.sites ?? []).reduce(
-    (acc, s) => ({ staged: acc.staged + s.counts.staged, galleryPending: acc.galleryPending + s.counts.galleryPending }),
-    { staged: 0, galleryPending: 0 }
+    (acc, s) => ({ live: acc.live + s.counts.live, staged: acc.staged + s.counts.staged, galleryPending: acc.galleryPending + s.counts.galleryPending }),
+    { live: 0, staged: 0, galleryPending: 0 }
   );
+  // The feed holds every listing pulled for our markets; the sites carry only the eligible ones.
+  const notEligible = Math.max(0, (status?.listingsInFeed ?? 0) - totals.live - totals.staged);
   const lastRun = status?.runs[0];
   const lastOutcome = lastRun ? runOutcome(lastRun) : null;
 
@@ -321,7 +323,7 @@ export default function ListingsOverviewPage() {
                           )}
                           {e.address && <div className="text-muted">{e.address}</div>}
                         </td>
-                        <td className="text-sm">{e.message}</td>
+                        <td className="text-sm">{humanizeMessage(e.message, status.sites)}</td>
                         <td style={{ whiteSpace: "nowrap" }}>
                           <Link href={errorHref(e)} className="btn btn-secondary btn-sm" style={{ marginRight: 6 }}>
                             Details
@@ -380,8 +382,11 @@ export default function ListingsOverviewPage() {
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-label">Listings in feed</div>
-              <div className="stat-value">{status.listingsInFeed}</div>
-              <div className="stat-sub">live active listings across all locations</div>
+              <div className="stat-value">{totals.live + totals.staged}</div>
+              <div className="stat-sub">
+                live and in progress across all locations
+                {notEligible > 0 ? ` · ${notEligible} more in the MLS feed are not eligible (sold, pending, withdrawn or rentals)` : ""}
+              </div>
             </div>
             <Link className="stat-card" href="/dashboard/listings/staging" title="See what is in the staging area">
               <div className="stat-label">In Staging</div>
@@ -457,7 +462,7 @@ export default function ListingsOverviewPage() {
                     sub={liveUrl ? "see this live data in Wix" : "no Wix site id to link to"}
                     href={liveUrl}
                     external
-                    title={liveUrl ? `Open ${site.target_collection_id} in the Wix CMS` : undefined}
+                    title={liveUrl ? `Open ${site.name}'s listings in the Wix CMS` : undefined}
                   />
                   <SiteStat
                     label="In Progress"

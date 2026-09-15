@@ -173,8 +173,8 @@ function StagingView() {
         />
         <span style={{ flex: 1 }} />
         {site && liveUrl && (
-          <a className="btn btn-secondary btn-sm" href={liveUrl} target="_blank" rel="noreferrer" title={`Open ${site.target_collection_id} in the Wix CMS`}>
-            Open {site.target_collection_id} in Wix ↗
+          <a className="btn btn-secondary btn-sm" href={liveUrl} target="_blank" rel="noreferrer" title={`Open ${site.name}'s listings in the Wix CMS`}>
+            Open {site.name} in Wix ↗
           </a>
         )}
       </div>
@@ -215,7 +215,7 @@ function StagingView() {
         <div className="empty-state">
           <div className="empty-icon">✓</div>
           {rows.length === 0
-            ? `The staging area is empty${site ? `: everything eligible for ${site.name} is in ${site.target_collection_id}` : ""}.`
+            ? `The staging area is empty${site ? `: everything eligible for ${site.name} is live in Wix` : ""}.`
             : "No staged listing matches."}
         </div>
       ) : (

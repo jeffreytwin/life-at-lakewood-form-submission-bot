@@ -35,12 +35,11 @@ interface Neighborhood {
 
 interface NeighborhoodForm {
   name: string;
-  wix_slug: string;
   page_url: string;
   wix_item_id: string;
 }
 
-const emptyForm = (): NeighborhoodForm => ({ name: "", wix_slug: "", page_url: "", wix_item_id: "" });
+const emptyForm = (): NeighborhoodForm => ({ name: "", page_url: "", wix_item_id: "" });
 
 export default function ListingsNeighborhoodsPage() {
   // useSearchParams needs a Suspense boundary on a statically rendered page.
@@ -272,7 +271,8 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
               <h3 style={{ marginBottom: 12 }}>New neighborhood</h3>
               <p className="text-muted text-sm">
                 The neighborhood page must already exist on the Wix site. The name is what listings show; the page URL is what they
-                link to; the Wix item id is the neighborhood&apos;s row id in the site&apos;s dynamic-pages collection (the reference field).
+                link to (its last part is the page slug); the Wix item id is the neighborhood&apos;s row id in the site&apos;s
+                dynamic-pages collection (the reference field).
               </p>
               <NeighborhoodFields form={form} onChange={setForm} />
               <div className="modal-actions">
@@ -372,7 +372,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                               onClick={() =>
                                 setEditing({
                                   id: v.id,
-                                  form: { name: v.name, wix_slug: v.wix_slug ?? "", page_url: v.page_url ?? "", wix_item_id: v.wix_item_id ?? "" },
+                                  form: { name: v.name, page_url: v.page_url ?? "", wix_item_id: v.wix_item_id ?? "" },
                                 })
                               }
                             >
@@ -425,7 +425,6 @@ function NeighborhoodFields({ form, onChange }: { form: NeighborhoodForm; onChan
       {(
         [
           ["name", "Name (as shown on listings)"],
-          ["wix_slug", "Wix page slug"],
           ["page_url", "Neighborhood page URL"],
           ["wix_item_id", "Wix item id (neighborhood row in the dynamic-pages collection)"],
         ] as const

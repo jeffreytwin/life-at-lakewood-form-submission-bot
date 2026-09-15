@@ -139,3 +139,27 @@ export function runOutcome(run: RunOutcomeInput): { label: string; cls: string; 
   }
   return { label: "ok", cls: "badge badge-success", title: run.warnings > 0 ? `${run.warnings} warning(s), nothing failed` : "Everything the run tried succeeded" };
 }
+
+export interface SiteNames {
+  name: string;
+  domain: string;
+  target_collection_id?: string | null;
+  live_collection_id?: string | null;
+}
+
+/**
+ * Entries written before 2026-09-15 name a location by its domain or a Wix
+ * collection id; show the location name instead. Whole tokens only, longest
+ * first, so HousesforSale never eats HousesforSale2.
+ */
+export function humanizeMessage(message: string, sites: SiteNames[]): string {
+  const tokens = sites
+    .flatMap((s) => [s.target_collection_id, s.live_collection_id, s.domain].filter((t): t is string => !!t).map((t) => ({ token: t, name: s.name })))
+    .sort((a, b) => b.token.length - a.token.length);
+  let out = message;
+  for (const { token, name } of tokens) {
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    out = out.replace(new RegExp(`(?<![\\w-])${escaped}(?![\\w-])`, "g"), name);
+  }
+  return out;
+}
