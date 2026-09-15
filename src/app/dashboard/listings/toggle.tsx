@@ -3,8 +3,8 @@
 import type { CSSProperties } from "react";
 
 // The on/off switch the Email Hub uses for Auto-Approve, in the Listings
-// section's colours: blue while updates flow, red while they are paused.
-const ON = { color: "#4f8ff7", rgb: "79, 143, 247" };
+// section's colours: green while updates flow, red while they are paused.
+const ON = { color: "#34d399", rgb: "52, 211, 153" };
 const OFF = { color: "#f87171", rgb: "248, 113, 113" };
 
 interface ToggleProps {
