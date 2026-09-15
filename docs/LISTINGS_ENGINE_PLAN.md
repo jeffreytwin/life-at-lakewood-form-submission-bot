@@ -493,6 +493,52 @@ while porting `runSync`.
   a job (the verification script has the comparison), writing village counts
   to the Wix village pages (Postgres only until a site is live), and the
   photo pipeline.
+
+## Phase 3 build notes (2026-09-15): the photo pipeline
+
+- **Where it lives.** `src/lib/listings/photos.ts` (`runPhotoJob`,
+  `runStandalonePhotoJob`), `db.loadPhotoBacklog` over migration 045's
+  `ls_photo_backlog(max_listings)` (applied via the Supabase MCP): the
+  photos of the longest-waiting listings a site shows or is about to show
+  that the site does not have yet, rows in a cooldown excluded. A seeded
+  photo the site already serves is never downloaded: the engine fetches
+  from MLSGrid only what some site lacks. On a shadow-mode site a photo
+  counts as lacking only after 90 minutes (`shadow_grace_minutes`), because
+  the Velo pipeline still fetches each new listing's photos and MLSGrid
+  allows one download per photo per hour: the seed step copies what the
+  live gallery got, and the engine fetches only what it never did. A
+  live-mode site has no other pipeline and no grace.
+- **The pass.** Listing by listing: (1) a listing whose pending downloads
+  have no URL under 50 minutes old is re-read from MLSGrid with the others
+  in its page (one verify-by-id request per 50 listings) and its media rows
+  refreshed; (2) each pending photo is downloaded once, paced at two a
+  second, hashed, stored in the public `photos` bucket as
+  `listings/<path_key>` (bytes already stored under another photo are
+  reused), and its signed URL dropped; (3) each stored photo a site lacks
+  is imported into that site's Media Manager from the bucket URL, paced
+  under Wix's 200/minute, recorded as `ls_site_media` origin `imported`,
+  and the listing is flagged `needs_write` so the write step (same run) or
+  the next run carries the new gallery. A failed download waits 65 minutes
+  (a day after six failures); a failed import 30 minutes; a listing MLSGrid
+  no longer returns waits six hours for the nightly verify.
+- **When it runs.** Inside every reconcile between classify and write, for
+  at most 90 s and always leaving the writes 60 s (`PHOTOS_BUDGET_MS`,
+  `WRITE_RESERVE_MS`), so a new listing's photos land and the record is
+  written in the same hourly run. Then, on the same tick, as its own run
+  (mode `photos`) with whatever budget is left, and on every idle tick, so
+  a backlog drains at roughly 480 photos a tick. `POST
+  /api/internal/listings/run` with `mode: "photos"` starts one by hand. The
+  photo run only exists when something is pending, so idle ticks stay
+  quiet.
+- **Counts and entries.** `images_downloaded`, `images_imported`,
+  `images_failed` on the run; a `photos` entry per listing and site, a
+  `photos_failed` warning per listing with failed downloads (error for a
+  failed import). The Hub shows photo runs as "n downloaded · n imported"
+  and treats failed images as a partial run.
+- **Gate 3.** Every live gallery has matching imported media ids: the
+  seeded rows stay (never touched by the job), and the backlog reports
+  what is still missing; when `ls_photo_backlog` returns nothing the gate
+  holds.
 - **Needs from Jeff.** ~~`MLSGRID_API_KEY` in the Vercel environment (Preview
   and Production); it lives in Wix Secrets on the Longboat Key site today.~~
   Added 2026-09-14; from then on the verification build runs the full and

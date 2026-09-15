@@ -27,6 +27,9 @@ interface Run {
   mlsgrid_request_count: number;
   mlsgrid_bytes: number;
   wix_requests: number;
+  images_downloaded: number;
+  images_imported: number;
+  images_failed: number;
   error_stage: string | null;
   error_message: string | null;
 }
@@ -65,6 +68,8 @@ const KINDS = [
   "budget",
   "seed",
   "seed_failed",
+  "photos",
+  "photos_failed",
   "stats_failed",
   "run_error",
   "events_dropped",
@@ -492,10 +497,17 @@ function RunCard({ run, open, onToggle, events, ...entries }: { run: Run; open: 
         {outcome.label}
       </span>
       <span className="text-sm text-muted">{duration(run.duration_ms)}</span>
-      <span className="text-sm" title="New / updated / removed">
-        +{run.inserted} / ~{run.updated} / −{run.deleted}
-        {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
-      </span>
+      {run.mode === "photos" ? (
+        <span className="text-sm" title="Photos downloaded from MLSGrid / imported into Wix">
+          {run.images_downloaded} downloaded · {run.images_imported} imported
+        </span>
+      ) : (
+        <span className="text-sm" title="New / updated / removed">
+          +{run.inserted} / ~{run.updated} / −{run.deleted}
+          {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
+          {run.images_imported ? ` · ${run.images_imported} photos` : ""}
+        </span>
+      )}
       {run.deletes_skipped > 0 && (
         <span className="text-sm" title="Removals the guard held back">
           held {run.deletes_skipped}
@@ -504,6 +516,11 @@ function RunCard({ run, open, onToggle, events, ...entries }: { run: Run; open: 
       {run.writes_failed > 0 && (
         <span className="text-sm" style={{ color: "var(--danger)" }} title="Writes Wix rejected; retried on the next run">
           failed {run.writes_failed}
+        </span>
+      )}
+      {run.images_failed > 0 && (
+        <span className="text-sm" style={{ color: "var(--danger)" }} title="Photo downloads or imports that failed; retried later">
+          {run.images_failed} photo{run.images_failed === 1 ? "" : "s"} failed
         </span>
       )}
       <span className="text-sm text-muted" title="MLSGrid and Wix requests">

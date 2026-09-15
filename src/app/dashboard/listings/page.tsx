@@ -52,6 +52,9 @@ interface Run {
   mlsgrid_request_count: number;
   mlsgrid_bytes: number;
   wix_requests: number;
+  images_downloaded: number;
+  images_imported: number;
+  images_failed: number;
   error_message: string | null;
 }
 
@@ -97,6 +100,7 @@ interface RunSummary {
   mlsgrid: { requests: number; bytes: number; rateLimited: number };
   sites: Array<{ domain: string; target: string; inserted: number; updated: number; unchanged: number; deleted: number; unstaged: number; held: number; failed: number; waitingForPhotos: number; skipped?: string }>;
   counts: { inserted: number; updated: number; deleted: number; unstaged: number; deletesSkipped: number; writesFailed: number; warnings: number; errors: number; wixRequests: number };
+  photos?: { listings: number; downloaded: number; imported: number; failed: number; truncated: boolean } | null;
   error: string | null;
 }
 
@@ -111,6 +115,7 @@ function summarize(r: RunSummary, siteName: (domain: string) => string): string 
     if (s.skipped) parts.push(`${siteName(s.domain)}: skipped (${s.skipped})`);
     else if (s.waitingForPhotos) parts.push(`${siteName(s.domain)}: ${s.waitingForPhotos} waiting for photos`);
   }
+  if (r.photos) parts.push(`photos: ${r.photos.downloaded} downloaded, ${r.photos.imported} imported, ${r.photos.failed} failed${r.photos.truncated ? " (more next run)" : ""}`);
   if (r.error) parts.push(`error: ${r.error}`);
   return parts.join(" · ");
 }
@@ -527,11 +532,22 @@ export default function ListingsOverviewPage() {
                           </td>
                           <td className="text-sm">{duration(run.duration_ms)}</td>
                           <td className="text-sm">
-                            +{run.inserted} / ~{run.updated} / −{run.deleted}
-                            {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
+                            {run.mode === "photos" ? (
+                              <span title="Photos downloaded from MLSGrid / imported into Wix">
+                                {run.images_downloaded} downloaded · {run.images_imported} imported
+                              </span>
+                            ) : (
+                              <>
+                                +{run.inserted} / ~{run.updated} / −{run.deleted}
+                                {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
+                                {run.images_imported ? ` · ${run.images_imported} photos` : ""}
+                              </>
+                            )}
                           </td>
                           <td className="text-sm">{run.deletes_skipped || ""}</td>
-                          <td className="text-sm" style={run.writes_failed ? { color: "var(--danger)" } : undefined}>{run.writes_failed || ""}</td>
+                          <td className="text-sm" style={run.writes_failed || run.images_failed ? { color: "var(--danger)" } : undefined}>
+                            {run.mode === "photos" ? run.images_failed || "" : run.writes_failed || ""}
+                          </td>
                           <td className="text-sm">
                             {run.mlsgrid_request_count} req · {megabytes(run.mlsgrid_bytes)}
                           </td>
