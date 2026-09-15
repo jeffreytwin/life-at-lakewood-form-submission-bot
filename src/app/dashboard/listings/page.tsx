@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import ListingsTabs from "./tabs";
 import Toggle from "./toggle";
-import { ago, duration, fmtDateTime, levelBadge, megabytes, responseError, siteColors, wixCollectionUrl, writeModeBadge } from "./format";
+import RunTags from "./run-tags";
+import { ago, duration, fmtDateTime, megabytes, responseError, runOutcome, siteColors, triggerLabel, wixCollectionUrl, writeModeBadge } from "./format";
 
 interface SiteCounts {
   staged: number;
@@ -55,6 +57,8 @@ interface Run {
 
 interface EngineEvent {
   id: string;
+  run_key: string | null;
+  site_id: string | null;
   at: string;
   level: string;
   kind: string;
@@ -76,7 +80,10 @@ interface Status {
   listingsInFeed: number;
   sites: Site[];
   runs: Run[];
-  events: EngineEvent[];
+  /** Error events nobody has dismissed, newest first (the newest 50). */
+  errors: EngineEvent[];
+  /** How many open errors there are in total. */
+  openErrors: number;
 }
 
 interface RunSummary {
@@ -141,7 +148,17 @@ function SiteStat({ label, value, sub, href, external, title }: { label: string;
   );
 }
 
+const runHref = (runKey: string) => `/dashboard/listings/change-log?runKey=${encodeURIComponent(runKey)}`;
+
+/** Where an error's details are: its run in the Change Log, with the entry highlighted. */
+function errorHref(e: EngineEvent): string {
+  if (e.run_key) return `${runHref(e.run_key)}&eventId=${encodeURIComponent(e.id)}`;
+  if (e.listing_id) return `/dashboard/listings/change-log?listingId=${encodeURIComponent(e.listing_id)}`;
+  return "/dashboard/listings/change-log";
+}
+
 export default function ListingsOverviewPage() {
+  const router = useRouter();
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -190,6 +207,7 @@ export default function ListingsOverviewPage() {
   }
 
   const siteName = (domain: string) => status?.sites.find((s) => s.domain === domain)?.name ?? domain;
+  const siteById = (id: string | null) => status?.sites.find((s) => s.id === id)?.name ?? "";
 
   function toggleEngine(enabled: boolean) {
     if (
@@ -223,6 +241,11 @@ export default function ListingsOverviewPage() {
     call(`site:${site.id}`, `/api/internal/listings/sites/${site.id}`, { method: "PATCH", body: JSON.stringify({ write_mode: on ? "shadow" : "paused" }) });
   }
 
+  function dismissErrors(body: { ids?: string[]; all?: boolean }) {
+    if (body.all && !confirm(`Dismiss all ${status?.openErrors ?? ""} open error(s)? They stay in the Change Log, marked dismissed.`)) return;
+    call(body.all ? "dismiss:all" : `dismiss:${body.ids?.[0] ?? ""}`, "/api/internal/listings/errors", { method: "POST", body: JSON.stringify(body) });
+  }
+
   const engine = status?.engine;
   const updatesOn = !!engine?.ls_engine_enabled;
   const state = engine?.ls_engine_state ?? {};
@@ -231,6 +254,7 @@ export default function ListingsOverviewPage() {
     { staged: 0, galleryPending: 0 }
   );
   const lastRun = status?.runs[0];
+  const lastOutcome = lastRun ? runOutcome(lastRun) : null;
 
   return (
     <div>
@@ -252,6 +276,73 @@ export default function ListingsOverviewPage() {
         <div className="empty-state">{error ? "" : "Loading…"}</div>
       ) : (
         <>
+          {status.errors.length > 0 && (
+            <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid var(--danger)" }}>
+              <div className="card-header" style={{ flexWrap: "wrap", gap: 12 }}>
+                <h3>
+                  Errors{" "}
+                  <span className="badge badge-danger" style={{ marginLeft: 4 }}>
+                    {status.openErrors}
+                  </span>
+                </h3>
+                <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => dismissErrors({ all: true })}>
+                  {busy === "dismiss:all" ? "Dismissing…" : "Dismiss all"}
+                </button>
+              </div>
+              <p className="text-muted text-sm" style={{ marginBottom: 12 }}>
+                Each error stays here until it is dismissed. Details opens its run in the Change Log, where the full history stays.
+              </p>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Kind</th>
+                      <th>Listing</th>
+                      <th>Message</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {status.errors.map((e) => (
+                      <tr key={e.id}>
+                        <td className="text-sm" style={{ whiteSpace: "nowrap" }}>
+                          {fmtDateTime(e.at)}
+                          {e.site_id && <div className="text-muted">{siteById(e.site_id)}</div>}
+                        </td>
+                        <td className="text-sm">{e.kind}</td>
+                        <td className="text-sm">
+                          {e.listing_id ? (
+                            <Link href={`/dashboard/listings/change-log?listingId=${encodeURIComponent(e.listing_id)}`} title="Everything that happened to this listing">
+                              {e.listing_id}
+                            </Link>
+                          ) : (
+                            "—"
+                          )}
+                          {e.address && <div className="text-muted">{e.address}</div>}
+                        </td>
+                        <td className="text-sm">{e.message}</td>
+                        <td style={{ whiteSpace: "nowrap" }}>
+                          <Link href={errorHref(e)} className="btn btn-secondary btn-sm" style={{ marginRight: 6 }}>
+                            Details
+                          </Link>
+                          <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => dismissErrors({ ids: [e.id] })}>
+                            {busy === `dismiss:${e.id}` ? "…" : "Dismiss"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {status.openErrors > status.errors.length && (
+                <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>
+                  Showing the newest {status.errors.length} of {status.openErrors} open errors.
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="card" style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center" }}>
               <Toggle
@@ -300,16 +391,16 @@ export default function ListingsOverviewPage() {
             <div className="stat-card">
               <div className="stat-label">Last run</div>
               <div className="stat-value" style={{ fontSize: 20 }}>
-                {lastRun ? (
-                  <span className={`badge ${lastRun.status === "ok" ? "badge-success" : lastRun.status === "running" ? "badge-info" : "badge-danger"}`}>
-                    {lastRun.status}
+                {lastRun && lastOutcome ? (
+                  <span className={lastOutcome.cls} title={lastOutcome.title}>
+                    {lastOutcome.label}
                   </span>
                 ) : (
                   "—"
                 )}
               </div>
               <div className="stat-sub">
-                {lastRun ? `${lastRun.mode} · ${ago(lastRun.started_at)} · ${lastRun.warnings} warn, ${lastRun.errors} err` : "no runs yet"}
+                {lastRun ? `${lastRun.mode} · ${ago(lastRun.started_at)} · ${lastRun.warnings} warnings, ${lastRun.errors} errors` : "no runs yet"}
               </div>
             </div>
           </div>
@@ -380,7 +471,7 @@ export default function ListingsOverviewPage() {
             );
           })}
 
-          <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card">
             <div className="card-header">
               <h3>Recent runs</h3>
               <Link href="/dashboard/listings/change-log" className="text-sm">
@@ -403,84 +494,49 @@ export default function ListingsOverviewPage() {
                       <th>Failed</th>
                       <th>MLSGrid</th>
                       <th>Wix</th>
-                      <th>Warn / err</th>
+                      <th>Warnings &amp; Errors</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {status.runs.map((run) => (
-                      <tr key={run.id}>
-                        <td className="text-sm" title={run.run_key}>
-                          {fmtDateTime(run.started_at)}
-                          <div className="text-muted">{run.trigger}</div>
-                        </td>
-                        <td>{run.mode}</td>
-                        <td>
-                          <span className={`badge ${run.status === "ok" ? "badge-success" : run.status === "running" ? "badge-info" : "badge-danger"}`}>
-                            {run.status}
-                          </span>
-                          <div className="text-muted text-sm">{run.stage ?? ""}</div>
-                          {run.error_message && <div className="text-sm" style={{ color: "var(--danger)" }}>{run.error_message}</div>}
-                        </td>
-                        <td className="text-sm">{duration(run.duration_ms)}</td>
-                        <td className="text-sm">
-                          +{run.inserted} / ~{run.updated} / −{run.deleted}
-                          {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
-                        </td>
-                        <td className="text-sm">{run.deletes_skipped || ""}</td>
-                        <td className="text-sm" style={run.writes_failed ? { color: "var(--danger)" } : undefined}>{run.writes_failed || ""}</td>
-                        <td className="text-sm">
-                          {run.mlsgrid_request_count} req · {megabytes(run.mlsgrid_bytes)}
-                        </td>
-                        <td className="text-sm">{run.wix_requests} req</td>
-                        <td className="text-sm">
-                          {run.warnings} / {run.errors}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <h3>Warnings and errors</h3>
-              <span className="text-muted text-sm">newest 50</span>
-            </div>
-            {status.events.length === 0 ? (
-              <p className="text-muted">Nothing to report.</p>
-            ) : (
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>When</th>
-                      <th>Level</th>
-                      <th>Kind</th>
-                      <th>Listing</th>
-                      <th>Message</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {status.events.map((e) => (
-                      <tr key={e.id}>
-                        <td className="text-sm">{fmtDateTime(e.at)}</td>
-                        <td>
-                          <span className={levelBadge(e.level)}>{e.level}</span>
-                        </td>
-                        <td className="text-sm">{e.kind}</td>
-                        <td className="text-sm">
-                          {e.listing_id ? (
-                            <Link href={`/dashboard/listings/change-log?listingId=${encodeURIComponent(e.listing_id)}`}>{e.listing_id}</Link>
-                          ) : (
-                            "—"
-                          )}
-                          {e.address && <div className="text-muted">{e.address}</div>}
-                        </td>
-                        <td className="text-sm">{e.message}</td>
-                      </tr>
-                    ))}
+                    {status.runs.map((run) => {
+                      const outcome = runOutcome(run);
+                      const trigger = triggerLabel(run.trigger);
+                      const href = runHref(run.run_key);
+                      return (
+                        <tr key={run.id} onClick={() => router.push(href)} style={{ cursor: "pointer" }} title="Open this run in the Change Log">
+                          <td className="text-sm">
+                            <Link href={href} onClick={(ev) => ev.stopPropagation()}>
+                              {fmtDateTime(run.started_at)}
+                            </Link>
+                            <div className="text-muted" title={trigger.title}>
+                              {trigger.label}
+                            </div>
+                          </td>
+                          <td>{run.mode}</td>
+                          <td>
+                            <span className={outcome.cls} title={outcome.title}>
+                              {outcome.label}
+                            </span>
+                            <div className="text-muted text-sm">{run.stage ?? ""}</div>
+                            {run.error_message && <div className="text-sm" style={{ color: "var(--danger)" }}>{run.error_message}</div>}
+                          </td>
+                          <td className="text-sm">{duration(run.duration_ms)}</td>
+                          <td className="text-sm">
+                            +{run.inserted} / ~{run.updated} / −{run.deleted}
+                            {run.unstaged ? ` / ${run.unstaged} unstaged` : ""}
+                          </td>
+                          <td className="text-sm">{run.deletes_skipped || ""}</td>
+                          <td className="text-sm" style={run.writes_failed ? { color: "var(--danger)" } : undefined}>{run.writes_failed || ""}</td>
+                          <td className="text-sm">
+                            {run.mlsgrid_request_count} req · {megabytes(run.mlsgrid_bytes)}
+                          </td>
+                          <td className="text-sm">{run.wix_requests} req</td>
+                          <td>
+                            <RunTags warnings={run.warnings} errors={run.errors} />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

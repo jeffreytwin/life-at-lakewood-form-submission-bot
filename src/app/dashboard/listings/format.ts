@@ -88,3 +88,45 @@ export function fmtPrice(value: number | string | null | undefined): string {
   if (n == null || !Number.isFinite(n)) return "—";
   return `$${Math.round(n).toLocaleString("en-US")}`;
 }
+
+/** How a run was started, in the Hub's words (the stored values stay cron / hub / manual / http). */
+export function triggerLabel(trigger: string): { label: string; title: string } {
+  switch (trigger) {
+    case "cron":
+      return { label: "auto", title: "Started by the schedule: an incremental pull every hour, a full verify once a day" };
+    case "hub":
+      return { label: "manual", title: "Started from this Hub: Run Incremental, Run Full, or Apply held removals" };
+    case "manual":
+      return { label: "build check", title: "Started by the verification script that runs during a Vercel build of the engine branch" };
+    case "http":
+      return { label: "API", title: "Started by an API call with the admin key" };
+    default:
+      return { label: trigger, title: "" };
+  }
+}
+
+export interface RunOutcomeInput {
+  status: string;
+  writes_failed: number;
+  errors: number;
+  warnings: number;
+  error_message?: string | null;
+}
+
+/**
+ * The badge a run gets. The stored status says whether the pass completed
+ * (the scheduler's concern); this says whether everything it tried worked.
+ */
+export function runOutcome(run: RunOutcomeInput): { label: string; cls: string; title: string } {
+  if (run.status === "running") return { label: "running", cls: "badge badge-info", title: "Still in progress" };
+  if (run.status === "error") {
+    return { label: "failed", cls: "badge badge-danger", title: run.error_message ? `Stopped: ${run.error_message}` : "The run stopped before finishing its pass" };
+  }
+  if (run.writes_failed > 0 || run.errors > 0) {
+    const why: string[] = [];
+    if (run.writes_failed > 0) why.push(`${run.writes_failed} write(s) failed and are retried on the next run`);
+    if (run.errors > 0) why.push(`${run.errors} error(s) recorded`);
+    return { label: "partial", cls: "badge badge-warning", title: `The run finished its pass, but ${why.join("; ")}` };
+  }
+  return { label: "ok", cls: "badge badge-success", title: run.warnings > 0 ? `${run.warnings} warning(s), nothing failed` : "Everything the run tried succeeded" };
+}

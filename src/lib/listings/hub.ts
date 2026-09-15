@@ -91,7 +91,8 @@ export interface EventFilters {
 export const EVENT_LEVELS = new Set(["info", "warn", "error"]);
 
 export async function listEvents(filters: EventFilters) {
-  const limit = Math.min(Math.max(filters.limit ?? 200, 1), 500);
+  // A run buffers at most 1,500 events (runs.ts), so a run-scoped read fits in one page.
+  const limit = Math.min(Math.max(filters.limit ?? 200, 1), 2000);
   let query = supabase.from("ls_sync_events").select("*").order("at", { ascending: false }).limit(limit);
   if (filters.siteId) query = query.eq("site_id", filters.siteId);
   if (filters.level && EVENT_LEVELS.has(filters.level)) query = query.eq("level", filters.level);
@@ -325,4 +326,51 @@ function streetAddress(raw: Record<string, unknown>): string | null {
   const street = [text("StreetNumber"), titleCase(raw.StreetName), titleCase(raw.StreetSuffix)].filter(Boolean).join(" ");
   const unit = text("UnitNumber");
   return (unit ? `${street} #${unit}` : street) || text("UnparsedAddress") || null;
+}
+
+export interface RunFilters {
+  limit?: number;
+  /** ISO started_at: only runs that started before it, the cursor for "load older". */
+  before?: string;
+  runKey?: string;
+}
+
+/** Runs newest first, a page at a time; `runKey` fetches one run. */
+export async function listRuns(filters: RunFilters): Promise<Record<string, unknown>[]> {
+  const limit = Math.min(Math.max(filters.limit ?? 20, 1), 100);
+  let query = supabase.from("ls_sync_runs").select("*").order("started_at", { ascending: false }).limit(limit);
+  if (filters.runKey) query = query.eq("run_key", filters.runKey.trim());
+  if (filters.before && !Number.isNaN(Date.parse(filters.before))) query = query.lt("started_at", new Date(filters.before).toISOString());
+  const { data, error } = await query;
+  if (error) throw new HubError(`load runs: ${errorMessage(error)}`, 500);
+  return (data ?? []) as Record<string, unknown>[];
+}
+
+/**
+ * Error events nobody has dismissed: the overview's Errors panel and the
+ * sidebar badge. A limit of 0 asks for the count alone.
+ */
+export async function listOpenErrors(limit = 50): Promise<{ count: number; errors: Record<string, unknown>[] }> {
+  const rows = Math.min(Math.max(limit, 0), 200);
+  const base = supabase.from("ls_sync_events");
+  const query = (rows === 0 ? base.select("id", { count: "exact", head: true }) : base.select("*", { count: "exact" }))
+    .eq("level", "error")
+    .is("dismissed_at", null)
+    .order("at", { ascending: false });
+  const { data, error, count } = await (rows === 0 ? query : query.limit(rows));
+  if (error) throw new HubError(`load open errors: ${errorMessage(error)}`, 500);
+  const errors = (data ?? []) as Record<string, unknown>[];
+  return { count: count ?? errors.length, errors };
+}
+
+/** Marks the given open errors dismissed, or every open error with `all: true`. */
+export async function dismissErrors(input: { ids?: unknown; all?: unknown }): Promise<{ dismissed: number }> {
+  const ids = Array.isArray(input.ids) ? input.ids.filter((id): id is string => typeof id === "string" && id.length > 0) : [];
+  if (input.all !== true && !ids.length) throw new HubError("ids (or all: true) is required");
+  if (ids.length > 500) throw new HubError("At most 500 ids per call");
+  let query = supabase.from("ls_sync_events").update({ dismissed_at: new Date().toISOString() }).eq("level", "error").is("dismissed_at", null);
+  if (input.all !== true) query = query.in("id", ids);
+  const { data, error } = await query.select("id");
+  if (error) throw new HubError(`dismiss errors: ${errorMessage(error)}`, 500);
+  return { dismissed: (data ?? []).length };
 }

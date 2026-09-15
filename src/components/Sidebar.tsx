@@ -26,6 +26,7 @@ export default function Sidebar({
   const [failedBadge, setFailedBadge] = useState(0);
   const [draftCount, setDraftCount] = useState(0);
   const [floorPlanCount, setFloorPlanCount] = useState(0);
+  const [listingErrorCount, setListingErrorCount] = useState(0);
 
   useEffect(() => {
     return onFailedCount(setFailedBadge);
@@ -65,6 +66,21 @@ export default function Sidebar({
     }
     fetchFloorPlanCount();
     const interval = setInterval(fetchFloorPlanCount, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll for listing errors nobody has dismissed yet
+  useEffect(() => {
+    function fetchListingErrorCount() {
+      fetch("/api/internal/listings/errors?limit=0")
+        .then((r) => r.json())
+        .then((data) => {
+          setListingErrorCount(typeof data?.count === "number" ? data.count : 0);
+        })
+        .catch(() => {});
+    }
+    fetchListingErrorCount();
+    const interval = setInterval(fetchListingErrorCount, 30_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -112,6 +128,9 @@ export default function Sidebar({
                 )}
                 {item.href === "/dashboard/floor-plans" && floorPlanCount > 0 && (
                   <span className="nav-badge">{floorPlanCount}</span>
+                )}
+                {item.href === "/dashboard/listings" && listingErrorCount > 0 && (
+                  <span className="nav-badge">{listingErrorCount}</span>
                 )}
               </Link>
             </li>

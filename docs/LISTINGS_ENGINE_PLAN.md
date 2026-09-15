@@ -458,6 +458,20 @@ while porting `runSync`.
   `/dashboard/listings/change-log`); a site card shows only its Live and
   In Progress boxes (In Progress opens the staging page, which has no tab);
   the run list shows the newest 10.
+- **Hub Listings section, third pass (2026-09-15).** Migration 044 (applied
+  via the Supabase MCP) adds `ls_sync_events.dismissed_at` and indexes on
+  `(run_key, at)`, `(at)` and open errors. The Change Log is runs first
+  (`GET /api/internal/listings/runs`, 20 a page, "load older"), each run
+  opening to its entries; a listing lookup groups its entries under their
+  runs. A run's badge is `ok` only when nothing it tried failed: `partial`
+  when writes failed or errors were recorded (the stored status stays ok,
+  since the scheduler only needs to know the pass completed), `failed` when
+  the run stopped. Triggers read auto (cron), manual (hub), build check
+  (the verification script). The overview's Errors panel lists error
+  events until they are dismissed (`POST /api/internal/listings/errors`),
+  Details opens the run with the entry highlighted, and the sidebar badge
+  carries the open count. Retention stays 30 days of events / 90 days of
+  runs, purged after each full run.
 - **Deferred to the next phases.** The nightly shadow-vs-live comparison as
   a job (the verification script has the comparison), writing village counts
   to the Wix village pages (Postgres only until a site is live), and the
