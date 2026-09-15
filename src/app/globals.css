@@ -1092,3 +1092,22 @@ select.form-input {
     height: 30px !important;
   }
 }
+
+/* A stat card that leads somewhere (Listings: the Live and Staged boxes) */
+a.stat-card,
+button.stat-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s;
+}
+
+a.stat-card:hover,
+button.stat-card:hover {
+  color: inherit;
+  border-color: var(--text-muted);
+}

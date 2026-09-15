@@ -5,7 +5,8 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage, isUniqueViolation } from "@/lib/shared/errors";
-import { selectAll } from "@/lib/listings/db";
+import { loadListings, loadSiteGalleries, selectAll } from "@/lib/listings/db";
+import { titleCase } from "@/lib/listings/transform";
 import type { LsSite, LsVillage, VillageTerm, WriteMode } from "@/lib/listings/types";
 
 export class HubError extends Error {
@@ -32,8 +33,8 @@ export function normalizeTerm(value: unknown): string | null {
 
 export function validateVillageName(value: unknown): string {
   const name = typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
-  if (!name) throw new HubError("A village needs a name");
-  if (name.length > MAX_NAME) throw new HubError(`A village name is at most ${MAX_NAME} characters`);
+  if (!name) throw new HubError("A neighborhood needs a name");
+  if (name.length > MAX_NAME) throw new HubError(`A neighborhood name is at most ${MAX_NAME} characters`);
   return name;
 }
 
@@ -133,7 +134,7 @@ export async function listVillages(siteId: string): Promise<VillageView[]> {
 async function loadVillage(id: string): Promise<LsVillage> {
   const { data, error } = await supabase.from("ls_villages").select("*").eq("id", id).maybeSingle();
   if (error) throw new HubError(`load village: ${errorMessage(error)}`, 500);
-  if (!data) throw new HubError("Village not found", 404);
+  if (!data) throw new HubError("Neighborhood not found", 404);
   return data as LsVillage;
 }
 
@@ -174,7 +175,7 @@ export async function updateVillage(id: string, patch: { name?: unknown; wix_slu
     if (isUniqueViolation(error)) throw new HubError(`"${String(updates.name)}" already exists on this site`, 409);
     throw new HubError(`update village: ${errorMessage(error)}`, 500);
   }
-  if (!data) throw new HubError("Village not found", 404);
+  if (!data) throw new HubError("Neighborhood not found", 404);
   return data as LsVillage;
 }
 
@@ -186,7 +187,7 @@ export async function deleteVillage(id: string): Promise<void> {
     .eq("village_id", id)
     .in("state", ["staged", "live"]);
   if (countError) throw new HubError(`count village listings: ${errorMessage(countError)}`, 500);
-  if (count) throw new HubError(`This village still has ${count} listing(s); deactivate it instead and let the next run move them`, 409);
+  if (count) throw new HubError(`This neighborhood still has ${count} listing(s); deactivate it instead and let the next run move them`, 409);
   const { error } = await supabase.from("ls_villages").delete().eq("id", id);
   if (error) throw new HubError(`delete village: ${errorMessage(error)}`, 500);
 }
@@ -204,7 +205,7 @@ export async function addTerm(villageId: string, input: { term: unknown; street_
   if (error) {
     if (isUniqueViolation(error)) {
       const owner = await termOwner(village.site_id, term, street_term);
-      throw new HubError(`"${term}"${street_term ? ` with street "${street_term}"` : ""} already belongs to ${owner ?? "another village"}`, 409);
+      throw new HubError(`"${term}"${street_term ? ` with street "${street_term}"` : ""} already belongs to ${owner ?? "another neighborhood"}`, 409);
     }
     throw new HubError(`add term: ${errorMessage(error)}`, 500);
   }
@@ -257,4 +258,71 @@ export async function setSiteWriteMode(id: string, mode: unknown): Promise<LsSit
     .single();
   if (error) throw new HubError(`update site: ${errorMessage(error)}`, 500);
   return data as LsSite;
+}
+
+export type StagedWaitingOn = "data" | "neighborhood" | "photos" | "write";
+
+export interface StagedListingView {
+  listing_id: string;
+  address: string | null;
+  city: string | null;
+  subdivision: string | null;
+  list_price: number | null;
+  standard_status: string | null;
+  neighborhood: string | null;
+  /** MLS photos the engine knows for the listing. */
+  photos: number;
+  /** Of those, the ones already in this site's Media Manager. */
+  photos_imported: number;
+  staged_at: string;
+  waiting_on: StagedWaitingOn;
+}
+
+/**
+ * A site's staging area: every staged row with what the next run still
+ * needs before it writes the listing, checked in the order reconcile
+ * checks them: the MLS record, a neighborhood, one imported photo, and
+ * then only the write itself.
+ */
+export async function listStagedListings(siteId: string): Promise<StagedListingView[]> {
+  const rows = await selectAll<{ listing_id: string; village_id: string | null; staged_at: string }>("load staged listings", (from, to) =>
+    supabase.from("ls_site_listings").select("listing_id, village_id, staged_at").eq("site_id", siteId).eq("state", "staged").order("listing_id").range(from, to)
+  );
+  if (!rows.length) return [];
+  const ids = rows.map((r) => r.listing_id);
+  const [listings, villages, galleries] = await Promise.all([
+    loadListings(ids),
+    selectAll<{ id: string; name: string }>("load villages", (from, to) => supabase.from("ls_villages").select("id, name").eq("site_id", siteId).order("id").range(from, to)),
+    loadSiteGalleries(siteId, ids),
+  ]);
+  const names = new Map(villages.map((v) => [v.id, v.name]));
+  return rows.map((row) => {
+    const listing = listings.get(row.listing_id);
+    const neighborhood = row.village_id ? (names.get(row.village_id) ?? null) : null;
+    const photos = galleries.get(row.listing_id) ?? [];
+    const imported = photos.filter((p) => p.src).length;
+    const hasRecord = !!listing && typeof listing.raw?.ListingId === "string";
+    const waiting_on: StagedWaitingOn = !hasRecord ? "data" : !neighborhood ? "neighborhood" : imported === 0 ? "photos" : "write";
+    return {
+      listing_id: row.listing_id,
+      address: hasRecord ? streetAddress(listing.raw) : null,
+      city: listing?.city ?? null,
+      subdivision: listing?.subdivision ?? null,
+      list_price: listing?.list_price == null ? null : Number(listing.list_price),
+      standard_status: listing?.standard_status ?? null,
+      neighborhood,
+      photos: photos.length,
+      photos_imported: imported,
+      staged_at: row.staged_at,
+      waiting_on,
+    };
+  });
+}
+
+/** "<number> <Name> <Suffix>[ #unit]" from the MLSGrid record, for display. */
+function streetAddress(raw: Record<string, unknown>): string | null {
+  const text = (key: string) => (typeof raw[key] === "string" ? (raw[key] as string).trim() : "");
+  const street = [text("StreetNumber"), titleCase(raw.StreetName), titleCase(raw.StreetSuffix)].filter(Boolean).join(" ");
+  const unit = text("UnitNumber");
+  return (unit ? `${street} #${unit}` : street) || text("UnparsedAddress") || null;
 }

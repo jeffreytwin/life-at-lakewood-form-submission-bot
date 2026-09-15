@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ListingsTabs from "../tabs";
-import { fmtDateTime, levelBadge, responseError } from "../format";
+import { fmtDateTime, levelBadge, responseError, siteColors } from "../format";
 
 interface EngineEvent {
   id: string;
@@ -21,6 +21,7 @@ interface EngineEvent {
 
 interface SiteOption {
   id: string;
+  name: string;
   domain: string;
 }
 
@@ -78,7 +79,7 @@ function EventsView() {
     fetch("/api/internal/listings/status")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data?.sites)) setSites(data.sites.map((s: SiteOption) => ({ id: s.id, domain: s.domain })));
+        if (Array.isArray(data?.sites)) setSites(data.sites.map((s: SiteOption) => ({ id: s.id, name: s.name, domain: s.domain })));
       })
       .catch(() => {});
   }, []);
@@ -114,7 +115,8 @@ function EventsView() {
     fetchEvents();
   }, [fetchEvents]);
 
-  const siteName = (id: string | null) => sites.find((s) => s.id === id)?.domain ?? "";
+  const siteName = (id: string | null) => sites.find((s) => s.id === id)?.name ?? "";
+  const colors = siteColors(sites.find((s) => s.id === filters.siteId)?.domain);
 
   return (
     <div>
@@ -129,13 +131,16 @@ function EventsView() {
       </div>
       <ListingsTabs />
 
-      <div className="card" style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+      <div
+        className="card"
+        style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", ...(colors ? { background: colors.tint, borderLeft: `3px solid ${colors.accent}` } : {}) }}
+      >
         <label>
           Site{" "}
           <select value={filters.siteId} onChange={(e) => setFilters((f) => ({ ...f, siteId: e.target.value }))} className="form-input" style={{ width: "auto", display: "inline-block" }}>
             <option value="">All sites</option>
             {sites.map((s) => (
-              <option key={s.id} value={s.id}>{s.domain}</option>
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </label>

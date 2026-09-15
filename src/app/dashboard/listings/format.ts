@@ -49,3 +49,42 @@ export async function responseError(res: Response): Promise<string | null> {
     return `Request failed (${res.status})`;
   }
 }
+
+/**
+ * The colour each site carries across the Hub: the tints the Email Hub
+ * gives the site's inbox (yellow Longboat Key, green Wellen Park, purple
+ * Lakewood, teal Parrish), keyed by the site's domain.
+ */
+const SITE_RGB: Record<string, string> = {
+  "lifeinlongboatkey.com": "250, 204, 21", // yellow
+  "lifeinwellenpark.com": "52, 211, 153", // green
+  "lifeatlakewood.com": "168, 130, 255", // purple
+  "lifeatparrish.com": "34, 211, 238", // teal
+};
+
+export interface SiteColors {
+  /** A very subtle background tint. */
+  tint: string;
+  /** The left-border accent. */
+  accent: string;
+  /** The full colour, for the site's name. */
+  solid: string;
+}
+
+export function siteColors(domain: string | null | undefined): SiteColors | null {
+  const rgb = domain ? SITE_RGB[domain.toLowerCase()] : undefined;
+  if (!rgb) return null;
+  return { tint: `rgba(${rgb}, 0.06)`, accent: `rgba(${rgb}, 0.35)`, solid: `rgb(${rgb})` };
+}
+
+/** The Wix CMS page for one of a site's collections; null until the site has a Wix site id. */
+export function wixCollectionUrl(wixSiteId: string | null | undefined, collectionId: string): string | null {
+  if (!wixSiteId) return null;
+  return `https://manage.wix.com/dashboard/${encodeURIComponent(wixSiteId)}/database/data/${encodeURIComponent(collectionId)}`;
+}
+
+export function fmtPrice(value: number | string | null | undefined): string {
+  const n = typeof value === "string" ? Number(value) : value;
+  if (n == null || !Number.isFinite(n)) return "—";
+  return `$${Math.round(n).toLocaleString("en-US")}`;
+}

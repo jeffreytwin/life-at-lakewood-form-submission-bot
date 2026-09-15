@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ListingsTabs from "../tabs";
-import { responseError } from "../format";
+import { responseError, siteColors } from "../format";
 
 interface SiteOption {
   id: string;
+  name: string;
   domain: string;
   villages_collection_id: string;
 }
@@ -16,7 +18,7 @@ interface Term {
   street_term: string | null;
 }
 
-interface Village {
+interface Neighborhood {
   id: string;
   name: string;
   wix_slug: string | null;
@@ -30,26 +32,37 @@ interface Village {
   stagedListings: number;
 }
 
-interface VillageForm {
+interface NeighborhoodForm {
   name: string;
   wix_slug: string;
   page_url: string;
   wix_item_id: string;
 }
 
-const emptyForm = (): VillageForm => ({ name: "", wix_slug: "", page_url: "", wix_item_id: "" });
+const emptyForm = (): NeighborhoodForm => ({ name: "", wix_slug: "", page_url: "", wix_item_id: "" });
 
-export default function ListingsVillagesPage() {
+export default function ListingsNeighborhoodsPage() {
+  // useSearchParams needs a Suspense boundary on a statically rendered page.
+  return (
+    <Suspense fallback={<div className="empty-state">Loading…</div>}>
+      <NeighborhoodsView />
+    </Suspense>
+  );
+}
+
+function NeighborhoodsView() {
+  const searchParams = useSearchParams();
   const [sites, setSites] = useState<SiteOption[]>([]);
-  const [siteId, setSiteId] = useState("");
-  const [villages, setVillages] = useState<Village[]>([]);
+  // A site id in the URL (from the overview's per-site link) picks the site; else the first one.
+  const [siteId, setSiteId] = useState(searchParams.get("siteId") ?? "");
+  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [termInputs, setTermInputs] = useState<Record<string, { term: string; street: string }>>({});
-  const [newVillage, setNewVillage] = useState<VillageForm>(emptyForm());
+  const [newNeighborhood, setNewNeighborhood] = useState<NeighborhoodForm>(emptyForm());
   const [showNew, setShowNew] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; form: VillageForm } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; form: NeighborhoodForm } | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -57,20 +70,19 @@ export default function ListingsVillagesPage() {
       .then((r) => r.json())
       .then((data) => {
         const list: SiteOption[] = Array.isArray(data?.sites)
-          ? data.sites.map((s: SiteOption) => ({ id: s.id, domain: s.domain, villages_collection_id: s.villages_collection_id }))
+          ? data.sites.map((s: SiteOption) => ({ id: s.id, name: s.name, domain: s.domain, villages_collection_id: s.villages_collection_id }))
           : [];
         setSites(list);
-        if (list[0] && !siteId) setSiteId(list[0].id);
+        setSiteId((current) => (current && list.some((s) => s.id === current) ? current : (list[0]?.id ?? "")));
         if (!list.length) setLoading(false);
       })
       .catch((e) => {
         setError(e.message);
         setLoading(false);
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchVillages = useCallback(() => {
+  const fetchNeighborhoods = useCallback(() => {
     if (!siteId) return;
     fetch(`/api/internal/listings/villages?siteId=${encodeURIComponent(siteId)}`)
       .then(async (r) => {
@@ -79,7 +91,7 @@ export default function ListingsVillagesPage() {
         return r.json();
       })
       .then((data) => {
-        setVillages(Array.isArray(data) ? data : []);
+        setNeighborhoods(Array.isArray(data) ? data : []);
         setError(null);
         setLoading(false);
       })
@@ -91,8 +103,8 @@ export default function ListingsVillagesPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetchVillages();
-  }, [fetchVillages]);
+    fetchNeighborhoods();
+  }, [fetchNeighborhoods]);
 
   async function call(key: string, url: string, init: RequestInit): Promise<boolean> {
     setBusy(key);
@@ -110,30 +122,30 @@ export default function ListingsVillagesPage() {
       return false;
     } finally {
       setBusy(null);
-      fetchVillages();
+      fetchNeighborhoods();
     }
   }
 
-  async function addTerm(village: Village) {
-    const input = termInputs[village.id] ?? { term: "", street: "" };
+  async function addTerm(neighborhood: Neighborhood) {
+    const input = termInputs[neighborhood.id] ?? { term: "", street: "" };
     if (!input.term.trim()) return;
-    const ok = await call(`term:${village.id}`, `/api/internal/listings/villages/${village.id}/terms`, {
+    const ok = await call(`term:${neighborhood.id}`, `/api/internal/listings/villages/${neighborhood.id}/terms`, {
       method: "POST",
       body: JSON.stringify({ term: input.term, street_term: input.street || null }),
     });
-    if (ok) setTermInputs((t) => ({ ...t, [village.id]: { term: "", street: "" } }));
+    if (ok) setTermInputs((t) => ({ ...t, [neighborhood.id]: { term: "", street: "" } }));
   }
 
-  function removeTerm(village: Village, term: Term) {
+  function removeTerm(neighborhood: Neighborhood, term: Term) {
     const label = `"${term.term}"${term.street_term ? ` with street "${term.street_term}"` : ""}`;
-    if (!confirm(`Remove ${label} from ${village.name}? Listings that only matched through it leave the village on the next run.`)) return;
-    call(`term:${term.id}`, `/api/internal/listings/villages/${village.id}/terms/${term.id}`, { method: "DELETE" });
+    if (!confirm(`Remove ${label} from ${neighborhood.name}? Listings that only matched through it leave the neighborhood on the next run.`)) return;
+    call(`term:${term.id}`, `/api/internal/listings/villages/${neighborhood.id}/terms/${term.id}`, { method: "DELETE" });
   }
 
-  async function createVillage() {
-    const ok = await call("new", "/api/internal/listings/villages", { method: "POST", body: JSON.stringify({ siteId, ...newVillage }) });
+  async function createNeighborhood() {
+    const ok = await call("new", "/api/internal/listings/villages", { method: "POST", body: JSON.stringify({ siteId, ...newNeighborhood }) });
     if (ok) {
-      setNewVillage(emptyForm());
+      setNewNeighborhood(emptyForm());
       setShowNew(false);
     }
   }
@@ -144,25 +156,25 @@ export default function ListingsVillagesPage() {
     if (ok) setEditing(null);
   }
 
-  function toggleActive(village: Village) {
-    const listings = village.liveListings + village.stagedListings;
-    const what = village.active
-      ? `Deactivate ${village.name}? Its ${village.terms.length} term(s) stop matching, and its ${listings} listing(s) are removed from the site on the next run unless another village's term matches them.`
-      : `Reactivate ${village.name}? Its terms match again from the next run.`;
+  function toggleActive(neighborhood: Neighborhood) {
+    const listings = neighborhood.liveListings + neighborhood.stagedListings;
+    const what = neighborhood.active
+      ? `Deactivate ${neighborhood.name}? Its ${neighborhood.terms.length} term(s) stop matching, and its ${listings} listing(s) are removed from the site on the next run unless another neighborhood's term matches them.`
+      : `Reactivate ${neighborhood.name}? Its terms match again from the next run.`;
     if (!confirm(what)) return;
-    call(`active:${village.id}`, `/api/internal/listings/villages/${village.id}`, { method: "PATCH", body: JSON.stringify({ active: !village.active }) });
+    call(`active:${neighborhood.id}`, `/api/internal/listings/villages/${neighborhood.id}`, { method: "PATCH", body: JSON.stringify({ active: !neighborhood.active }) });
   }
 
-  function deleteVillage(village: Village) {
-    if (!confirm(`Delete ${village.name} and its ${village.terms.length} term(s)? This cannot be undone.`)) return;
-    call(`delete:${village.id}`, `/api/internal/listings/villages/${village.id}`, { method: "DELETE" });
+  function deleteNeighborhood(neighborhood: Neighborhood) {
+    if (!confirm(`Delete ${neighborhood.name} and its ${neighborhood.terms.length} term(s)? This cannot be undone.`)) return;
+    call(`delete:${neighborhood.id}`, `/api/internal/listings/villages/${neighborhood.id}`, { method: "DELETE" });
   }
 
   function reimport() {
     const site = sites.find((s) => s.id === siteId);
     if (
       !confirm(
-        `Re-import villages from the site's ${site?.villages_collection_id ?? "Villages"} collection? Every village's term set is replaced by what Wix has; villages and terms added here that Wix does not know are dropped.`
+        `Re-import neighborhoods from the site's ${site?.villages_collection_id ?? "neighborhoods"} collection? Every neighborhood's term set is replaced by what Wix has; neighborhoods and terms added here that Wix does not know are dropped.`
       )
     ) {
       return;
@@ -172,17 +184,18 @@ export default function ListingsVillagesPage() {
 
   const needle = search.trim().toLowerCase();
   const visible = needle
-    ? villages.filter((v) => v.name.toLowerCase().includes(needle) || v.terms.some((t) => t.term.includes(needle) || (t.street_term ?? "").includes(needle)))
-    : villages;
+    ? neighborhoods.filter((v) => v.name.toLowerCase().includes(needle) || v.terms.some((t) => t.term.includes(needle) || (t.street_term ?? "").includes(needle)))
+    : neighborhoods;
+  const colors = siteColors(sites.find((s) => s.id === siteId)?.domain);
 
   return (
     <div>
       <div className="page-header">
         <div>
-          <h2>Villages</h2>
+          <h2>Neighborhoods</h2>
           <p className="text-muted">
-            A listing joins a village when its MLS subdivision contains one of the village&apos;s terms; the longest matching term wins,
-            and a street qualifier makes a term match only on that street. Changes apply on the next run.
+            A listing joins a neighborhood when its MLS subdivision contains one of the neighborhood&apos;s terms; the longest matching
+            term wins, and a street qualifier makes a term match only on that street. Changes apply on the next run.
           </p>
         </div>
       </div>
@@ -194,35 +207,38 @@ export default function ListingsVillagesPage() {
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+      <div
+        className="card"
+        style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", ...(colors ? { background: colors.tint, borderLeft: `3px solid ${colors.accent}` } : {}) }}
+      >
         <label>
           Site{" "}
           <select value={siteId} onChange={(e) => setSiteId(e.target.value)} className="form-input" style={{ width: "auto", display: "inline-block" }}>
             {sites.map((s) => (
-              <option key={s.id} value={s.id}>{s.domain}</option>
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </label>
-        <input className="form-input" style={{ width: 220, display: "inline-block" }} placeholder="Find a village or term" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input className="form-input" style={{ width: 240, display: "inline-block" }} placeholder="Find a neighborhood or term" value={search} onChange={(e) => setSearch(e.target.value)} />
         <span style={{ flex: 1 }} />
         <button className="btn btn-secondary" disabled={busy !== null || !siteId} onClick={reimport}>
           {busy === "import" ? "Importing…" : "Re-import from Wix"}
         </button>
         <button className="btn btn-primary" disabled={!siteId} onClick={() => setShowNew((v) => !v)}>
-          {showNew ? "Cancel" : "Add village"}
+          {showNew ? "Cancel" : "Add neighborhood"}
         </button>
       </div>
 
       {showNew && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <h3 style={{ marginBottom: 12 }}>New village</h3>
+          <h3 style={{ marginBottom: 12 }}>New neighborhood</h3>
           <p className="text-muted text-sm">
-            The village page must already exist on the Wix site. The name is what listings show; the page URL is what they link
-            to; the Wix item id is the village&apos;s row id in the site&apos;s dynamic-pages collection (the reference field).
+            The neighborhood page must already exist on the Wix site. The name is what listings show; the page URL is what they
+            link to; the Wix item id is the neighborhood&apos;s row id in the site&apos;s dynamic-pages collection (the reference field).
           </p>
-          <VillageFields form={newVillage} onChange={setNewVillage} />
+          <NeighborhoodFields form={newNeighborhood} onChange={setNewNeighborhood} />
           <div className="modal-actions">
-            <button className="btn btn-primary" disabled={busy !== null || !newVillage.name.trim()} onClick={createVillage}>
+            <button className="btn btn-primary" disabled={busy !== null || !newNeighborhood.name.trim()} onClick={createNeighborhood}>
               {busy === "new" ? "Saving…" : "Create"}
             </button>
           </div>
@@ -234,7 +250,7 @@ export default function ListingsVillagesPage() {
       ) : visible.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">⌂</div>
-          {villages.length === 0 ? "No villages yet. Re-import from Wix to start from the site's Villages collection." : "No village matches."}
+          {neighborhoods.length === 0 ? "No neighborhoods yet. Re-import from Wix to start from the site's neighborhoods collection." : "No neighborhood matches."}
         </div>
       ) : (
         <div className="card">
@@ -242,7 +258,7 @@ export default function ListingsVillagesPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Village</th>
+                  <th>Neighborhood</th>
                   <th>Listings</th>
                   <th>Terms</th>
                   <th></th>
@@ -262,7 +278,7 @@ export default function ListingsVillagesPage() {
                           ) : (
                             v.wix_slug ?? "no page"
                           )}
-                          {!v.wix_item_id && <span title="Listings written without the village reference"> · no Wix item id</span>}
+                          {!v.wix_item_id && <span title="Listings written without the neighborhood reference"> · no Wix item id</span>}
                         </div>
                       </td>
                       <td className="text-sm">
@@ -271,7 +287,7 @@ export default function ListingsVillagesPage() {
                       </td>
                       <td>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
-                          {v.terms.length === 0 && <span className="text-muted text-sm">no terms: nothing matches this village</span>}
+                          {v.terms.length === 0 && <span className="text-muted text-sm">no terms: nothing matches this neighborhood</span>}
                           {v.terms.map((t) => (
                             <span key={t.id} className="badge badge-info" style={{ textTransform: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
                               {t.term}
@@ -333,8 +349,8 @@ export default function ListingsVillagesPage() {
                           <button
                             className="btn btn-danger btn-sm"
                             disabled={busy !== null || v.liveListings + v.stagedListings > 0}
-                            title={v.liveListings + v.stagedListings > 0 ? "Deactivate first; a village with listings cannot be deleted" : "Delete this village"}
-                            onClick={() => deleteVillage(v)}
+                            title={v.liveListings + v.stagedListings > 0 ? "Deactivate first; a neighborhood with listings cannot be deleted" : "Delete this neighborhood"}
+                            onClick={() => deleteNeighborhood(v)}
                           >
                             Delete
                           </button>
@@ -352,9 +368,9 @@ export default function ListingsVillagesPage() {
       {editing && (
         <div className="modal-overlay" onClick={() => setEditing(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Edit village</h3>
-            <p className="text-muted text-sm">Renaming changes the village name every listing shows; the rows are rewritten on the next run.</p>
-            <VillageFields form={editing.form} onChange={(form) => setEditing({ id: editing.id, form })} />
+            <h3>Edit neighborhood</h3>
+            <p className="text-muted text-sm">Renaming changes the neighborhood name every listing shows; the rows are rewritten on the next run.</p>
+            <NeighborhoodFields form={editing.form} onChange={(form) => setEditing({ id: editing.id, form })} />
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setEditing(null)} disabled={busy !== null}>
                 Cancel
@@ -370,15 +386,15 @@ export default function ListingsVillagesPage() {
   );
 }
 
-function VillageFields({ form, onChange }: { form: VillageForm; onChange: (form: VillageForm) => void }) {
+function NeighborhoodFields({ form, onChange }: { form: NeighborhoodForm; onChange: (form: NeighborhoodForm) => void }) {
   return (
     <>
       {(
         [
           ["name", "Name (as shown on listings)"],
           ["wix_slug", "Wix page slug"],
-          ["page_url", "Village page URL"],
-          ["wix_item_id", "Wix item id (village row in the dynamic-pages collection)"],
+          ["page_url", "Neighborhood page URL"],
+          ["wix_item_id", "Wix item id (neighborhood row in the dynamic-pages collection)"],
         ] as const
       ).map(([field, label]) => (
         <div className="form-group" key={field}>

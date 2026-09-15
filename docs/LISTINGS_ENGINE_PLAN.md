@@ -439,6 +439,22 @@ while porting `runSync`.
   points at it), and a re-import from the site's Wix Villages collection.
   Every edit applies on the next run. Cutover to live is not in the UI: it
   stays an `ls_sites` edit gated to Jeff.
+- **Hub Listings section, second pass (2026-09-15).** The section is titled
+  Listings and has four pages: Overview, Staging, Events, Neighborhoods
+  ("village" is now "neighborhood" everywhere the Hub shows it; the tables,
+  API paths and event kinds keep the old name). Sites show their proper
+  name (Life in Longboat Key) and carry the Email Hub's colour (yellow
+  Longboat Key, green Wellen Park, purple Lakewood, teal Parrish). The
+  engine switch and each site's pause are "Listing Updates" toggles, blue
+  while on and red while paused; the run-now buttons are gone (a manual run
+  is still `POST /api/internal/listings/run` with the admin key, and the
+  "apply held removals" button still starts one). The overview stats are
+  listings in feed, in staging, last run. A site's Live box opens its target
+  collection in the Wix CMS (`manage.wix.com/dashboard/<site id>/database/
+  data/<collection>`); its Staged box opens the Staging page, which lists
+  each staged listing with what it waits on (MLS data, a neighborhood, a
+  first imported photo, or just the next run), from
+  `GET /api/internal/listings/staging?siteId=`.
 - **Deferred to the next phases.** The nightly shadow-vs-live comparison as
   a job (the verification script has the comparison), writing village counts
   to the Wix village pages (Postgres only until a site is live), and the
