@@ -407,6 +407,25 @@ while porting `runSync`.
   rows copied in: the media seed reads the live galleries and the first full
   run verifies every seeded id against MLSGrid and writes the eligible ones
   to `HousesforSale2` itself.
+- **First runs against the shadow collection** (preview builds, 2026-09-15
+  00:58 to 01:03 UTC, `MLSGRID_API_KEY` enabled for Preview):
+  - village import: 105 villages, 111 terms, no conflicts; media seed: 202
+    live listings, 10,178 gallery photos, all keyed by their MLS path;
+  - full run: 203 held ids verified in 5 MLSGrid requests (7.0 MB), 202
+    eligible, 200 written to `HousesforSale2` in 5 Wix requests with no
+    failures, 21 s end to end. The first attempt had failed its 200-item bulk
+    save with WDE0109 "Payload is too large" (about 5 MB of galleries), so
+    the bulk writer now chunks by bytes (800 KB) and halves a chunk Wix
+    still refuses;
+  - incremental runs: a 2-hour window was 752 MLS-wide records in 4 requests
+    (19.8 MB, about 26 KB a record); a 6-minute window was 299 records in 2
+    requests (6.3 MB). Neither held a Longboat Key record, so nothing was
+    stored from them. The 40-page cap bounds a run at 8,000 records;
+  - shadow vs live: 203 items in the shadow collection (202 plus the phase 1
+    probe item), and all 202 live listings identical on address, village,
+    price, status, bedrooms, bathrooms, primary image and gallery length.
+    Gate 2's comparison is therefore green on day one; the seven clean
+    nights need the engine switched on after the merge.
 - **Deferred to the next phases.** The Hub Listings section (health cards,
   runs, events, villages editor), the nightly shadow-vs-live comparison as a
   job (the verification script has the comparison), writing village counts to
