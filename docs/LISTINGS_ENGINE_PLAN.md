@@ -398,8 +398,9 @@ while porting `runSync`.
   of the engine branch as a prebuild step (or anywhere with `LS_PHASE2_RUN=1`)
   and drives `scripts/listings-engine-phase2.ts` under `tsx`: census of the
   live and shadow collections, village import, media seed, a full run and a
-  bounded incremental run (skipped until `MLSGRID_API_KEY` is in the Vercel
-  environment), a shadow-vs-live comparison by `_id`, and a snapshot of the
+  bounded incremental run (skipped unless `MLSGRID_API_KEY` is enabled for
+  the Vercel Preview environment, since the build on the engine branch is a
+  preview build), a shadow-vs-live comparison by `_id`, and a snapshot of the
   engine's rows, runs and warn/error events. `LS_PHASE2_RESET_SHADOW=1` empties
   the shadow collection first (never the live one).
 - **No row transfer needed.** The shadow collection does not need the live
