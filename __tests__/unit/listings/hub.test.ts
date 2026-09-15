@@ -33,7 +33,7 @@ vi.mock("@/lib/supabase/client", () => ({
   supabase: { from: (table: string) => builder(table) },
 }));
 
-import { HubError, addTerm, deleteVillage, normalizeTerm, optionalText, setSiteWriteMode, siteCounts, validateVillageName } from "@/lib/listings/hub";
+import { HubError, addTerm, deleteVillage, listStagedListings, normalizeTerm, optionalText, setSiteWriteMode, siteCounts, validateVillageName } from "@/lib/listings/hub";
 
 beforeEach(() => {
   queues.clear();
@@ -119,5 +119,57 @@ describe("guards", () => {
     enqueue("ls_sites", { data: { id: "s1", write_mode: "shadow" } });
     enqueue("ls_sites", { data: { id: "s1", write_mode: "paused" } });
     await expect(setSiteWriteMode("s1", "paused")).resolves.toMatchObject({ write_mode: "paused" });
+  });
+});
+
+describe("listStagedListings", () => {
+  it("names what each staged listing waits on, in the order reconcile checks", async () => {
+    const at = "2026-09-14T12:00:00.000Z";
+    enqueue("ls_site_listings", {
+      data: [
+        { listing_id: "MFR1", village_id: "v1", staged_at: at },
+        { listing_id: "MFR2", village_id: null, staged_at: at },
+        { listing_id: "MFR3", village_id: "v1", staged_at: at },
+        { listing_id: "MFR4", village_id: "v1", staged_at: at },
+      ],
+    });
+    const record = (id: string, extra: Record<string, unknown> = {}) => ({
+      listing_id: id,
+      city: "Longboat Key",
+      subdivision: "BAY ISLES",
+      list_price: 1250000,
+      standard_status: "Active",
+      raw: { ListingId: id, StreetNumber: "10", StreetName: "GULF OF MEXICO", StreetSuffix: "DR", ...extra },
+    });
+    enqueue("ls_listings", {
+      data: [record("MFR1", { UnitNumber: "4B" }), record("MFR2"), record("MFR3"), { listing_id: "MFR4", raw: {}, list_price: null }],
+    });
+    enqueue("ls_villages", { data: [{ id: "v1", name: "Bay Isles" }] });
+    enqueue("ls_listing_media", {
+      data: [
+        { id: "m1", listing_id: "MFR1", position: 1, path_key: "images/MFR1/a.jpg", title: null },
+        { id: "m2", listing_id: "MFR1", position: 2, path_key: "images/MFR1/b.jpg", title: null },
+        { id: "m3", listing_id: "MFR3", position: 1, path_key: "images/MFR3/a.jpg", title: null },
+      ],
+    });
+    enqueue("ls_site_media", { data: [{ media_id: "m1", wix_image_uri: "wix:image://v1/abc/a.jpg" }] });
+
+    const view = await listStagedListings("s1");
+    expect(view.map((v) => [v.listing_id, v.waiting_on, v.photos_imported, v.photos])).toEqual([
+      ["MFR1", "write", 1, 2],
+      ["MFR2", "neighborhood", 0, 0],
+      ["MFR3", "photos", 0, 1],
+      ["MFR4", "data", 0, 0],
+    ]);
+    expect(view[0]).toMatchObject({ address: "10 Gulf Of Mexico Dr #4B", neighborhood: "Bay Isles", list_price: 1250000, staged_at: at });
+    expect(view[3]).toMatchObject({ address: null, neighborhood: "Bay Isles", list_price: null });
+    const staged = calls.find((c) => c.table === "ls_site_listings")!;
+    expect(staged.ops).toContain('eq("state","staged")');
+  });
+
+  it("is empty without a second query when nothing is staged", async () => {
+    enqueue("ls_site_listings", { data: [] });
+    await expect(listStagedListings("s1")).resolves.toEqual([]);
+    expect(calls.map((c) => c.table)).toEqual(["ls_site_listings"]);
   });
 });
