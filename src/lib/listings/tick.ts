@@ -7,9 +7,13 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { errorMessage } from "@/lib/shared/errors";
 import { INCREMENTAL_EVERY_MINUTES, runReconcile, type ReconcileResult } from "@/lib/listings/reconcile";
 import { lastOkRunStartedAt, purgeOldRuns, runningRun } from "@/lib/listings/runs";
 import { runStandalonePhotoJob, type StandalonePhotoResult } from "@/lib/listings/photos";
+import { reimportBrokenPhotos } from "@/lib/listings/audit";
+import { loadActiveSites } from "@/lib/listings/db";
+import { startRun } from "@/lib/listings/runs";
 import type { RunTrigger } from "@/lib/listings/types";
 import type { DiscoverCursor } from "@/lib/listings/discover";
 
@@ -29,6 +33,8 @@ export interface EngineState {
   lastMode?: string;
   lastStatus?: string;
   lastPurgeAt?: string;
+  /** UTC date of the last sweep for photos Wix accepted but never fetched. */
+  lastPhotoCheckDate?: string;
   /** A discovery scan in progress (written by the discover run itself); the tick continues it when nothing else is due. */
   discoverCursor?: DiscoverCursor;
 }
@@ -79,7 +85,19 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
   const deadline = now.getTime() + TICK_BUDGET_MS;
   const mode = opts.force ?? decideMode({ now, state, lastOkIncremental: await lastOkRunStartedAt("incremental") });
   if (!mode) {
-    // Nothing due: the tick works the photo backlog instead, as its own run when there is one.
+    // Once a day, before the backlog: Wix's URL import can accept a photo and
+    // then fail to fetch it, leaving a file that renders as nothing. This gets
+    // an idle invocation of its own rather than the tail of the nightly run,
+    // which is the busiest of the day and may have no budget left by then.
+    if (state.lastPhotoCheckDate !== utcDate(now)) {
+      const photoCheck = await sweepBrokenPhotos(trigger, deadline);
+      await supabase
+        .from("system_settings")
+        .update({ ls_engine_state: { ...state, lastPhotoCheckDate: utcDate(now) } })
+        .eq("id", 1);
+      return { skipped: "not due", lastRunAt: state.lastRunAt ?? null, photoCheck };
+    }
+    // Otherwise the tick works the photo backlog, as its own run when there is one.
     const photos = await runStandalonePhotoJob({ trigger, deadline });
     return { skipped: "not due", lastRunAt: state.lastRunAt ?? null, photos: photos.status === "skipped" ? null : photos };
   }
@@ -124,6 +142,45 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
     }
   }
   return { mode, ...summarize(result), purged, photosAfter };
+}
+
+/**
+ * Asks Wix, per site, which of the engine's photos it holds no picture for,
+ * and clears those so the next photo pass fetches them again. Runs as its own
+ * run so the counts land in the Change Log. Never throws into the tick.
+ */
+export async function sweepBrokenPhotos(trigger: RunTrigger, deadline: number): Promise<Record<string, unknown>> {
+  const run = await startRun({ mode: "photos", trigger });
+  const summary: Record<string, unknown> = {};
+  try {
+    for (const site of await loadActiveSites()) {
+      if (!site.wix_site_id || site.write_mode === "paused") continue;
+      if (Date.now() > deadline) {
+        run.event("warn", "budget", "Out of time before every location was checked for photos Wix never fetched; the next day continues");
+        break;
+      }
+      try {
+        const repair = await reimportBrokenPhotos(site.id);
+        summary[site.domain] = repair;
+        if (repair.refused) {
+          run.event("error", "photos_broken", `${site.name}: ${repair.refused}`, { siteId: site.id });
+        } else if (repair.broken) {
+          run.event("warn", "photos_broken", `${site.name}: Wix holds no picture for ${repair.broken} photo(s); ${repair.cleared} cleared to be fetched again across ${repair.listings} listing(s)`, {
+            siteId: site.id,
+            details: repair,
+          });
+        }
+      } catch (error) {
+        summary[site.domain] = { error: errorMessage(error) };
+        run.event("warn", "photos_broken", `${site.name}: could not check for photos Wix never fetched (${errorMessage(error)}); the next day tries again`, { siteId: site.id });
+      }
+    }
+    await run.checkpoint("done");
+    await run.finish("ok");
+  } catch (error) {
+    await run.finish("error", { stage: "photos", message: errorMessage(error) });
+  }
+  return summary;
 }
 
 export function summarize(result: ReconcileResult): Record<string, unknown> {
