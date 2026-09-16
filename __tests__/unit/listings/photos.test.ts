@@ -41,6 +41,8 @@ const site: LsSite = {
   market_cities: ["Longboat Key"],
   active: true,
   timezone: "America/New_York",
+  media_folder_name: null,
+  media_folder_id: null,
 };
 
 interface RecordedEvent {
@@ -102,6 +104,8 @@ function fakeDeps(overrides: Partial<PhotoDeps> = {}): PhotoDeps {
     store: vi.fn(async () => {}),
     publicUrl: (path: string) => `https://cdn.test/${path}`,
     importToWix: vi.fn(async () => ({ id: `file-${++fileNo}` })),
+    findFolder: vi.fn(async () => null),
+    cacheFolder: vi.fn(async () => {}),
     ...overrides,
   };
 }
@@ -138,7 +142,7 @@ describe("runPhotoJob", () => {
       "m-MFR1-1",
       expect.objectContaining({ storage_path: "listings/images/MFR1/p1.jpeg", source_url: null, retry_after: null, download_attempts: 1, content_hash: expect.stringMatching(/^[0-9a-f]{64}$/) })
     );
-    expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/MFR1/p1.jpeg", "MFR1-1.jpeg");
+    expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/MFR1/p1.jpeg", "MFR1-1.jpeg", null);
     expect(db.upsertSiteMedia).toHaveBeenCalledWith([
       { site_id: site.id, media_id: "m-MFR1-1", wix_file_id: "file-1", wix_image_uri: "wix:image://v1/file-1/MFR1-1.jpeg", origin: "imported" },
     ]);
@@ -188,7 +192,7 @@ describe("runPhotoJob", () => {
     const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
 
     expect(deps.download).not.toHaveBeenCalled();
-    expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/MFR1/p1.jpeg", "MFR1-1.jpeg");
+    expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/MFR1/p1.jpeg", "MFR1-1.jpeg", null);
     expect(summary).toMatchObject({ downloaded: 0, imported: 1 });
   });
 
@@ -202,7 +206,7 @@ describe("runPhotoJob", () => {
 
     expect(deps.store).not.toHaveBeenCalled();
     expect(db.updateListingMedia).toHaveBeenCalledWith("m-MFR1-1", expect.objectContaining({ storage_path: "listings/images/OTHER/dup.jpeg" }));
-    expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/OTHER/dup.jpeg", "MFR1-1.jpeg");
+    expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/OTHER/dup.jpeg", "MFR1-1.jpeg", null);
     expect(summary).toMatchObject({ downloaded: 1, reused: 1, imported: 1 });
   });
 
@@ -260,5 +264,53 @@ describe("helpers", () => {
   it("names Media Manager files by listing and position", () => {
     expect(displayNameFor("MFRA4706116", 3, "images/MFRA4706116/abc.jpeg")).toBe("MFRA4706116-3.jpeg");
     expect(displayNameFor("MFR1", 1, "images/MFR1/noext")).toBe("MFR1-1.jpg");
+  });
+});
+
+describe("runPhotoJob: Media Manager folders", () => {
+  const folderSite: LsSite = { ...site, id: "site-par", name: "Life At Parrish", domain: "lifeatparrish.com", wix_site_id: "wix-par", media_folder_name: "ParrishListingPhotos" };
+
+  it("resolves a named folder once, caches it on the site row and imports into it", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { site_ids: ["site-par"] }), row("MFR1", 2, { site_ids: ["site-par"] })]);
+    const deps = fakeDeps({ findFolder: vi.fn(async () => "folder-9") });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [folderSite], deps });
+
+    expect(summary).toMatchObject({ imported: 2, failed: 0 });
+    expect(deps.findFolder).toHaveBeenCalledTimes(1);
+    expect(deps.findFolder).toHaveBeenCalledWith("wix-par", "ParrishListingPhotos");
+    expect(deps.cacheFolder).toHaveBeenCalledWith("site-par", "folder-9");
+    expect(deps.importToWix).toHaveBeenCalledWith("wix-par", "https://cdn.test/listings/images/MFR1/p1.jpeg", "MFR1-1.jpeg", "folder-9");
+    expect(deps.importToWix).toHaveBeenCalledWith("wix-par", "https://cdn.test/listings/images/MFR1/p2.jpeg", "MFR1-2.jpeg", "folder-9");
+    expect(events.filter((e) => e.level === "error")).toHaveLength(0);
+  });
+
+  it("uses a folder id already on the site row without looking it up", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { site_ids: ["site-par"] })]);
+    const deps = fakeDeps();
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [{ ...folderSite, media_folder_id: "folder-cached" }], deps });
+
+    expect(deps.findFolder).not.toHaveBeenCalled();
+    expect(deps.importToWix).toHaveBeenCalledWith("wix-par", expect.any(String), "MFR1-1.jpeg", "folder-cached");
+  });
+
+  it("holds a site's imports with one error when its named folder does not exist", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { site_ids: ["site-par"] }), row("MFR1", 2, { site_ids: ["site-par"] })]);
+    const deps = fakeDeps({ findFolder: vi.fn(async () => null) });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [folderSite], deps });
+
+    expect(summary).toMatchObject({ downloaded: 2, imported: 0 });
+    expect(deps.importToWix).not.toHaveBeenCalled();
+    expect(deps.cacheFolder).not.toHaveBeenCalled();
+    const errors = events.filter((e) => e.kind === "folder_missing");
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toContain("ParrishListingPhotos");
+    // The photos stay in the backlog for the next pass: nothing is written for the site.
+    expect(db.upsertSiteMedia).not.toHaveBeenCalled();
   });
 });

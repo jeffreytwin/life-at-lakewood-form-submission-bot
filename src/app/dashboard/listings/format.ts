@@ -9,10 +9,12 @@ export function fmtDateTime(iso: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? iso : formatDateTimeET(d.toISOString());
 }
 
-/** A run mode in the Hub's words: the hourly update, or the full verify (stored as incremental / full). */
+/** A run mode in the Hub's words: the hourly update, the full verify, or a discovery (stored as incremental / full / discover). */
 export function modeLabel(mode: string | null | undefined): string {
   if (!mode) return "?";
-  return mode === "incremental" ? "hourly" : mode;
+  if (mode === "incremental") return "hourly";
+  if (mode === "discover") return "discovery";
+  return mode;
 }
 
 export function ago(iso: string | null | undefined): string {
@@ -102,9 +104,9 @@ export function fmtPrice(value: number | string | null | undefined): string {
 export function triggerLabel(trigger: string): { label: string; title: string } {
   switch (trigger) {
     case "cron":
-      return { label: "auto", title: "Started by the schedule: an hourly update, and a full verify once a day" };
+      return { label: "auto", title: "Started by the schedule: an hourly update, a full verify once a day, and the rest of a discovery" };
     case "hub":
-      return { label: "manual", title: "Started from this Hub: Run Hourly, Run Full, or Apply held removals" };
+      return { label: "manual", title: "Started from this Hub: Run Hourly, Run Full, Run Discovery, or Apply held removals" };
     case "manual":
       return { label: "build check", title: "Started by the verification script that runs during a Vercel build of the engine branch" };
     case "http":

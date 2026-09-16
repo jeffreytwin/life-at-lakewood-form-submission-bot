@@ -218,19 +218,53 @@ export interface ImportedMediaFile {
   displayName: string;
 }
 
-/** Imports an external image URL into the site's Media Manager. */
+/** Imports an external image URL into the site's Media Manager, into a folder when one is given. */
 export async function importMediaFromUrl(
   siteId: string,
   sourceUrl: string,
-  displayName: string
+  displayName: string,
+  parentFolderId?: string | null
 ): Promise<ImportedMediaFile> {
   const res = await wixRequest<{
     file: { id: string; url: string; displayName: string };
   }>(siteId, "POST", "/site-media/v1/files/import", {
     url: sourceUrl,
     displayName,
+    ...(parentFolderId ? { parentFolderId } : {}),
   });
   return res.file;
+}
+
+export interface WixMediaFolder {
+  id: string;
+  displayName: string;
+  parentFolderId?: string;
+}
+
+/** The Media Manager's root folder id. */
+export const WIX_MEDIA_ROOT = "media-root";
+const FOLDER_PAGE = 100;
+
+/** The folders directly under a folder (the root by default). */
+export async function listMediaFolders(siteId: string, parentFolderId: string = WIX_MEDIA_ROOT): Promise<WixMediaFolder[]> {
+  const folders: WixMediaFolder[] = [];
+  for (let offset = 0; ; offset += FOLDER_PAGE) {
+    const res = await wixRequest<{ folders?: WixMediaFolder[] }>(
+      siteId,
+      "GET",
+      `/site-media/v1/folders?parentFolderId=${encodeURIComponent(parentFolderId)}&paging.limit=${FOLDER_PAGE}&paging.offset=${offset}`
+    );
+    const page = res?.folders ?? [];
+    folders.push(...page);
+    if (page.length < FOLDER_PAGE) return folders;
+  }
+}
+
+/** A root-level folder by display name (case-insensitive), or null. */
+export async function findMediaFolder(siteId: string, displayName: string): Promise<WixMediaFolder | null> {
+  const wanted = displayName.trim().toLowerCase();
+  const folders = await listMediaFolders(siteId);
+  return folders.find((f) => typeof f.displayName === "string" && f.displayName.trim().toLowerCase() === wanted) ?? null;
 }
 
 // ---------------------------------------------------------------------------

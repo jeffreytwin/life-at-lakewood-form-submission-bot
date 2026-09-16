@@ -11,6 +11,7 @@ import { INCREMENTAL_EVERY_MINUTES, runReconcile, type ReconcileResult } from "@
 import { lastOkRunStartedAt, purgeOldRuns, runningRun } from "@/lib/listings/runs";
 import { runStandalonePhotoJob, type StandalonePhotoResult } from "@/lib/listings/photos";
 import type { RunTrigger } from "@/lib/listings/types";
+import type { DiscoverCursor } from "@/lib/listings/discover";
 
 export const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
 export const FULL_RUN_HOUR_UTC = 3;
@@ -28,6 +29,8 @@ export interface EngineState {
   lastMode?: string;
   lastStatus?: string;
   lastPurgeAt?: string;
+  /** A discovery scan in progress (written by the discover run itself); the tick continues it when nothing else is due. */
+  discoverCursor?: DiscoverCursor;
 }
 
 export interface TickOptions {
@@ -45,7 +48,7 @@ export function decideMode(args: {
   now: Date;
   state: EngineState;
   lastOkIncremental: Date | null;
-}): "full" | "incremental" | null {
+}): "full" | "incremental" | "discover" | null {
   const { now, state, lastOkIncremental } = args;
   if (state.lastStatus === "error" && state.lastRunAt) {
     const sinceError = now.getTime() - new Date(state.lastRunAt).getTime();
@@ -54,6 +57,7 @@ export function decideMode(args: {
   if (now.getUTCHours() >= FULL_RUN_HOUR_UTC && state.lastFullDate !== utcDate(now)) return "full";
   const dueAfterMs = (INCREMENTAL_EVERY_MINUTES - 5) * 60_000;
   if (!lastOkIncremental || now.getTime() - lastOkIncremental.getTime() >= dueAfterMs) return "incremental";
+  if (state.discoverCursor?.nextLink) return "discover";
   return null;
 }
 
@@ -88,8 +92,10 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
     allowMassDelete: opts.allowMassDelete,
   });
 
+  // Re-read the state: a discover run stores or clears its cursor there while this tick holds the copy from before.
+  const { data: after } = await supabase.from("system_settings").select("ls_engine_state").eq("id", 1).single();
   const nextState: EngineState = {
-    ...state,
+    ...((after?.ls_engine_state as EngineState | null) ?? state),
     lastRunAt: now.toISOString(),
     lastRunKey: result.runKey,
     lastMode: mode,
@@ -143,6 +149,7 @@ export function summarize(result: ReconcileResult): Record<string, unknown> {
       wixRequests: result.counts.wix_requests,
     },
     photos: result.photos ?? null,
+    discover: result.discover ?? null,
     error: result.error ?? null,
   };
 }

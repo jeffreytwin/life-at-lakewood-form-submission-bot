@@ -101,6 +101,7 @@ interface RunSummary {
   sites: Array<{ domain: string; target: string; inserted: number; updated: number; unchanged: number; deleted: number; unstaged: number; held: number; failed: number; waitingForPhotos: number; skipped?: string }>;
   counts: { inserted: number; updated: number; deleted: number; unstaged: number; deletesSkipped: number; writesFailed: number; warnings: number; errors: number; wixRequests: number };
   photos?: { listings: number; downloaded: number; imported: number; failed: number; truncated: boolean } | null;
+  discover?: { scannedTotal: number; expectedCount: number | null; foundTotal: number; found: number; pulled: number; complete: boolean } | null;
   error: string | null;
 }
 
@@ -116,6 +117,10 @@ function summarize(r: RunSummary, siteName: (domain: string) => string): string 
     else if (s.waitingForPhotos) parts.push(`${siteName(s.domain)}: ${s.waitingForPhotos} waiting for photos`);
   }
   if (r.photos) parts.push(`photos: ${r.photos.downloaded} downloaded, ${r.photos.imported} imported, ${r.photos.failed} failed${r.photos.truncated ? " (more next run)" : ""}`);
+  if (r.discover) {
+    const d = r.discover;
+    parts.push(`discovery: scanned ${d.scannedTotal}${d.expectedCount ? ` of ${d.expectedCount}` : ""} Active listings, ${d.foundTotal} new in a location's market (${d.pulled} pulled with photos this run)${d.complete ? " · scan complete" : " · continues on the next tick"}`);
+  }
   if (r.error) parts.push(`error: ${r.error}`);
   return parts.join(" · ");
 }
@@ -224,8 +229,14 @@ export default function ListingsOverviewPage() {
     call("engine", "/api/internal/listings/engine", { method: "POST", body: JSON.stringify({ enabled }) });
   }
 
-  function runNow(mode: "incremental" | "full") {
-    if (!confirm(mode === "full" ? "Run a full verify of every held listing now?" : "Run the hourly update now?")) return;
+  function runNow(mode: "incremental" | "full" | "discover") {
+    const question =
+      mode === "full"
+        ? "Run a full verify of every held listing now?"
+        : mode === "discover"
+          ? "Scan every Active listing on the MLS for homes in a location's market that the engine does not hold yet? A scan the 4-minute budget cuts short continues on the next idle tick."
+          : "Run the hourly update now?";
+    if (!confirm(question)) return;
     call(`run:${mode}`, "/api/internal/listings/run", { method: "POST", body: JSON.stringify({ mode }) }, (body) =>
       setLastResult(summarize(body as RunSummary, siteName))
     );
@@ -375,6 +386,9 @@ export default function ListingsOverviewPage() {
               </button>
               <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("full")}>
                 {busy === "run:full" ? "Running…" : "Run Full"}
+              </button>
+              <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("discover")} title="Find Active listings in a location's market that the engine does not hold yet (a new location's starting inventory)">
+                {busy === "run:discover" ? "Running…" : "Run Discovery"}
               </button>
             </div>
             {lastResult && (

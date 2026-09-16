@@ -25,4 +25,16 @@ describe("decideMode", () => {
     const older = { ...recent, lastRunAt: new Date(now.getTime() - (RETRY_AFTER_ERROR_MINUTES + 1) * MINUTE).toISOString() };
     expect(decideMode({ now, state: older, lastOkIncremental: null })).toBe("full");
   });
+
+  it("continues a discovery scan only when nothing else is due", () => {
+    const now = at("2026-09-15T12:00:00Z");
+    const cursor = { nextLink: "https://api.mlsgrid.com/v2/Property?next=7", startedAt: "2026-09-15T11:00:00Z", scanned: 1200, found: 40, pages: 6, expectedCount: 55_000 };
+    const idle = { lastFullDate: "2026-09-15", discoverCursor: cursor };
+    expect(decideMode({ now, state: idle, lastOkIncremental: new Date(now.getTime() - 20 * MINUTE) })).toBe("discover");
+    // The hourly and the daily full still come first.
+    expect(decideMode({ now, state: idle, lastOkIncremental: new Date(now.getTime() - 56 * MINUTE) })).toBe("incremental");
+    expect(decideMode({ now: at("2026-09-15T03:05:00Z"), state: { ...idle, lastFullDate: "2026-09-14" }, lastOkIncremental: at("2026-09-15T02:50:00Z") })).toBe("full");
+    // No cursor: an idle tick stays idle.
+    expect(decideMode({ now, state: { lastFullDate: "2026-09-15" }, lastOkIncremental: new Date(now.getTime() - 20 * MINUTE) })).toBeNull();
+  });
 });
