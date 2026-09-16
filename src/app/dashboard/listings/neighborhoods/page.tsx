@@ -33,6 +33,24 @@ interface Neighborhood {
   stagedListings: number;
 }
 
+interface UnmatchedGroup {
+  subdivision: string;
+  count: number;
+  minPrice: number | null;
+  maxPrice: number | null;
+  sample: Array<{ listing_id: string; street: string | null; price: number | null; property_type: string | null; property_sub_type: string | null }>;
+}
+
+interface UnmatchedView {
+  generatedAt: string;
+  candidates: number;
+  unmatched: number;
+  groups: UnmatchedGroup[];
+}
+
+const titleCase = (s: string | null): string => (s ? s.replace(/\b\w/g, (c) => c.toUpperCase()) : "");
+const money = (n: number | null): string => (n == null ? "—" : `$${Math.round(n).toLocaleString("en-US")}`);
+
 interface NeighborhoodForm {
   name: string;
   page_url: string;
@@ -130,6 +148,24 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState<NeighborhoodForm>(emptyForm());
   const [editing, setEditing] = useState<{ id: string; form: NeighborhoodForm } | null>(null);
+  const [unmatched, setUnmatched] = useState<UnmatchedView | null>(null);
+  const [unmatchedError, setUnmatchedError] = useState<string | null>(null);
+  const [showUnmatched, setShowUnmatched] = useState(false);
+  const [attachTo, setAttachTo] = useState<Record<string, string>>({});
+
+  const loadUnmatched = useCallback(() => {
+    return fetch(`/api/internal/listings/villages/unmatched?siteId=${encodeURIComponent(site.id)}`)
+      .then(async (r) => {
+        const err = await responseError(r);
+        if (err) throw new Error(err);
+        return r.json();
+      })
+      .then((data: UnmatchedView) => {
+        setUnmatched(data);
+        setUnmatchedError(null);
+      })
+      .catch((e) => setUnmatchedError(e.message));
+  }, [site.id]);
 
   const load = useCallback(() => {
     return fetch(`/api/internal/listings/villages?siteId=${encodeURIComponent(site.id)}`)
@@ -148,10 +184,13 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
       });
   }, [site.id]);
 
-  // A location's neighborhoods load the first time its section opens.
+  // A location's neighborhoods load the first time its section opens; the unmatched listings with them.
   useEffect(() => {
-    if (open && neighborhoods === null) load();
-  }, [open, neighborhoods, load]);
+    if (open && neighborhoods === null) {
+      load();
+      loadUnmatched();
+    }
+  }, [open, neighborhoods, load, loadUnmatched]);
 
   async function call(key: string, url: string, init: RequestInit): Promise<boolean> {
     setBusy(key);
@@ -170,7 +209,21 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
     } finally {
       setBusy(null);
       load();
+      loadUnmatched();
     }
+  }
+
+  /** Adds a subdivision from the unmatched table as a term of the chosen neighborhood. */
+  async function attachSubdivision(group: UnmatchedGroup) {
+    const villageId = attachTo[group.subdivision];
+    if (!villageId || !group.subdivision) return;
+    const target = (neighborhoods ?? []).find((v) => v.id === villageId);
+    if (!target) return;
+    if (!confirm(`Add "${group.subdivision.toLowerCase()}" as a term of ${target.name}? Its ${group.count} listing(s) join the neighborhood on the next run.`)) return;
+    await call(`attach:${group.subdivision}`, `/api/internal/listings/villages/${villageId}/terms`, {
+      method: "POST",
+      body: JSON.stringify({ term: group.subdivision, street_term: null }),
+    });
   }
 
   async function addTerm(neighborhood: Neighborhood) {
@@ -395,6 +448,94 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
               </table>
             </div>
           )}
+
+          <div className="card" style={{ marginTop: 16, marginBottom: 0 }}>
+            <div className="card-header" style={{ flexWrap: "wrap", gap: 8 }}>
+              <div>
+                <h3 style={{ margin: 0 }}>
+                  Not shown: no neighborhood term
+                  {unmatched && (
+                    <span className="badge badge-muted" style={{ marginLeft: 8 }}>
+                      {unmatched.unmatched} of {unmatched.candidates} Active listings
+                    </span>
+                  )}
+                </h3>
+                <div className="text-muted text-sm">
+                  Active, for-sale listings in this location&apos;s market whose MLS subdivision matches none of the terms above. They stay off the site until a term matches; pick a neighborhood to add the subdivision as its term.
+                </div>
+              </div>
+              <span style={{ flex: 1 }} />
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowUnmatched((v) => !v)} disabled={unmatched === null && !unmatchedError}>
+                {unmatched === null && !unmatchedError ? "Loading…" : showUnmatched ? "Hide" : "Show"}
+              </button>
+            </div>
+            {unmatchedError && (
+              <div className="text-sm" style={{ color: "var(--danger)" }}>
+                {unmatchedError}
+              </div>
+            )}
+            {showUnmatched && unmatched && (
+              unmatched.groups.length === 0 ? (
+                <p className="text-muted text-sm" style={{ margin: 0 }}>Every Active, for-sale listing in the market matches a neighborhood.</p>
+              ) : (
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>MLS subdivision</th>
+                        <th>Listings</th>
+                        <th>Prices</th>
+                        <th>Add as a term of</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unmatched.groups.map((g) => (
+                        <tr key={g.subdivision || "(none)"}>
+                          <td style={{ minWidth: 220 }}>
+                            <strong>{g.subdivision || <span className="text-muted">(no subdivision on the MLS record)</span>}</strong>
+                            <div className="text-muted text-sm">
+                              {g.sample.map((s) => (
+                                <div key={s.listing_id}>
+                                  {titleCase(s.street) || s.listing_id} · {money(s.price)}
+                                  {s.property_type && s.property_type !== "Residential" ? ` · ${s.property_type}` : ""}
+                                  {s.property_sub_type ? ` · ${s.property_sub_type}` : ""}
+                                </div>
+                              ))}
+                              {g.count > g.sample.length && <div>…and {g.count - g.sample.length} more</div>}
+                            </div>
+                          </td>
+                          <td>{g.count}</td>
+                          <td className="text-sm">{g.minPrice === g.maxPrice ? money(g.minPrice) : `${money(g.minPrice)} – ${money(g.maxPrice)}`}</td>
+                          <td>
+                            {g.subdivision ? (
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                <select
+                                  className="form-input"
+                                  style={{ width: 220, display: "inline-block" }}
+                                  value={attachTo[g.subdivision] ?? ""}
+                                  onChange={(e) => setAttachTo((m) => ({ ...m, [g.subdivision]: e.target.value }))}
+                                >
+                                  <option value="">Choose a neighborhood…</option>
+                                  {(neighborhoods ?? []).filter((v) => v.active).map((v) => (
+                                    <option key={v.id} value={v.id}>{v.name}</option>
+                                  ))}
+                                </select>
+                                <button className="btn btn-secondary btn-sm" disabled={busy !== null || !attachTo[g.subdivision]} onClick={() => attachSubdivision(g)}>
+                                  {busy === `attach:${g.subdivision}` ? "…" : "Add term"}
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-muted text-sm">nothing to match on</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            )}
+          </div>
 
           {editing && (
             <div className="modal-overlay" onClick={() => setEditing(null)}>
