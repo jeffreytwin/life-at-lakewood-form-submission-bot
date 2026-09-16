@@ -60,6 +60,15 @@ export async function loadActiveSites(siteIds?: string[]): Promise<LsSite[]> {
   return (data ?? []) as LsSite[];
 }
 
+/** Caches the Media Manager folder id the photo job resolved from the site's folder name. */
+export async function setSiteMediaFolderId(siteId: string, folderId: string): Promise<void> {
+  const { error } = await supabase
+    .from("ls_sites")
+    .update({ media_folder_id: folderId, updated_at: new Date().toISOString() })
+    .eq("id", siteId);
+  if (error) fail("set site media folder", error);
+}
+
 export async function loadVillagesWithTerms(siteId: string): Promise<VillageWithTerms[]> {
   const [{ data: villages, error: e1 }, terms] = await Promise.all([
     supabase.from("ls_villages").select("*").eq("site_id", siteId).order("name"),

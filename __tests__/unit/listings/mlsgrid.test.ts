@@ -121,4 +121,46 @@ describe("MlsGridClient", () => {
     await expect(client.fetchOne("MFR1")).rejects.toMatchObject({ status: 400, rateLimited: false });
     expect(calls).toHaveLength(1);
   });
+
+  describe("fetchActive (discovery)", () => {
+    it("asks for Active listings MLS-wide without Media and follows nextLink to the end", async () => {
+      const { client, calls } = makeClient((call, n) =>
+        n === 1
+          ? page([{ ListingId: "MFR1" }, { ListingId: "MFR2" }], { "@odata.count": 3, "@odata.nextLink": "https://api.mlsgrid.com/v2/Property?next=2" })
+          : page([{ ListingId: "MFR3" }])
+      );
+      const result = await client.fetchActive();
+      expect(calls).toHaveLength(2);
+      const first = decodeURIComponent(calls[0].url);
+      expect(first).toContain("StandardStatus eq 'Active'");
+      expect(first).toContain("OriginatingSystemName eq 'mfrmls'");
+      expect(first).not.toContain("$expand");
+      expect(calls[1].url).toBe("https://api.mlsgrid.com/v2/Property?next=2");
+      expect(result).toMatchObject({ expectedCount: 3, pages: 2, requestCount: 2, truncated: false, cursor: null });
+      expect(result.items.map((i) => i.ListingId)).toEqual(["MFR1", "MFR2", "MFR3"]);
+    });
+
+    it("stops at maxPages and hands back the nextLink as the cursor to resume from", async () => {
+      const { client } = makeClient((call, n) => page([{ ListingId: `MFR${n}` }], { "@odata.nextLink": `https://api.mlsgrid.com/v2/Property?next=${n + 1}` }));
+      const first = await client.fetchActive({ maxPages: 2 });
+      expect(first).toMatchObject({ pages: 2, truncated: true, cursor: "https://api.mlsgrid.com/v2/Property?next=3" });
+
+      const { client: resumed, calls } = makeClient((call, n) => (n === 1 ? page([{ ListingId: "MFR3" }]) : page([])));
+      const rest = await resumed.fetchActive({ cursor: first.cursor });
+      expect(calls[0].url).toBe("https://api.mlsgrid.com/v2/Property?next=3");
+      expect(rest).toMatchObject({ pages: 1, truncated: false, cursor: null });
+      expect(rest.items.map((i) => i.ListingId)).toEqual(["MFR3"]);
+    });
+
+    it("stops at the deadline before requesting another page", async () => {
+      const { client, calls, tick } = makeClient((call, n) => {
+        tick(10_000);
+        return page([{ ListingId: `MFR${n}` }], { "@odata.nextLink": `https://api.mlsgrid.com/v2/Property?next=${n + 1}` });
+      });
+      const result = await client.fetchActive({ deadline: 1_000_000 + 15_000 });
+      expect(calls.length).toBeGreaterThanOrEqual(1);
+      expect(result.truncated).toBe(true);
+      expect(result.cursor).toBe(`https://api.mlsgrid.com/v2/Property?next=${calls.length + 1}`);
+    });
+  });
 });

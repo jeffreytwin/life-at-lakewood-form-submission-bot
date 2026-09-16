@@ -22,6 +22,7 @@ import { buildListingRecord, recordFingerprint } from "@/lib/listings/transform"
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { runPhotoJob, type PhotoDeps, type PhotoSummary } from "@/lib/listings/photos";
 import { refreshVillageStatsOnWix } from "@/lib/listings/village-stats";
+import { loadDiscoverCursor, nextCursor, saveDiscoverCursor, type DiscoverSummary } from "@/lib/listings/discover";
 import * as db from "@/lib/listings/db";
 import {
   lastCompleteIncrementalStartedAt,
@@ -64,12 +65,24 @@ const DATA_DRIVEN_REASONS: ReadonlySet<ReasonCode> = new Set(["city_change", "no
 export const PHOTOS_BUDGET_MS = 90_000;
 export const WRITE_RESERVE_MS = 60_000;
 
+/** What a run pulls: the hourly window, the full verify of every held id, or a discovery scan of every Active listing. */
+export type ReconcileMode = "incremental" | "full" | "discover";
+
+/** The mode word the Hub uses for a run. */
+export function modeWord(mode: ReconcileMode): string {
+  return mode === "incremental" ? "hourly" : mode === "discover" ? "discovery" : mode;
+}
+
+/** Removal and hold rules know two modes; a discovery run behaves like an hourly one (nothing is judged missing). */
+const classifyMode = (mode: ReconcileMode): "incremental" | "full" => (mode === "full" ? "full" : "incremental");
+
 export interface ReconcileOptions {
-  mode: "incremental" | "full";
+  mode: ReconcileMode;
   trigger: RunTrigger;
   /** Epoch ms; the run stops fetching 90 s before it and stops writing at it. */
   deadline: number;
   allowMassDelete?: boolean;
+  /** Incremental and discover: pages to read before stopping (the deadline stops earlier). */
   maxPages?: number;
   /** Incremental only: pull from this instant instead of the watermark. */
   since?: Date;
@@ -103,7 +116,7 @@ export interface SiteWriteSummary {
 export interface ReconcileResult {
   runId: string | null;
   runKey: string;
-  mode: "incremental" | "full";
+  mode: ReconcileMode;
   status: "ok" | "error";
   stage: string;
   truncated: boolean;
@@ -117,6 +130,8 @@ export interface ReconcileResult {
   sites: SiteWriteSummary[];
   /** What the photo step did, when it ran. */
   photos?: PhotoSummary;
+  /** What a discovery run scanned and found. */
+  discover?: DiscoverSummary;
   error?: string;
 }
 
@@ -263,6 +278,46 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       const marketCities = new Set(sites.flatMap((s) => (s.market_cities ?? []).map((c) => c.toLowerCase())));
       const known = new Set(await db.loadKnownListingIds());
       relevant = items.filter((raw) => isRelevant(raw, marketCities, known));
+    } else if (opts.mode === "discover") {
+      // Every Active listing MLS-wide, without Media; a scan the budget cuts
+      // short leaves a cursor and the next discover run continues it.
+      const prior = await loadDiscoverCursor();
+      const marketCities = new Set(sites.flatMap((s) => (s.market_cities ?? []).map((c) => c.toLowerCase())));
+      const known = new Set(await db.loadKnownListingIds());
+      const scan = await client.fetchActive({ cursor: prior?.nextLink ?? null, maxPages: opts.maxPages, deadline: fetchDeadline });
+      const nobody: ReadonlySet<string> = new Set();
+      const found = new Map<string, MlsGridProperty>();
+      for (const raw of scan.items) {
+        if (isRelevant(raw, marketCities, nobody) && !known.has(raw.ListingId)) found.set(raw.ListingId, raw);
+      }
+      // The finds with their Media, so their photos start now rather than
+      // after the nightly full run; whatever the deadline leaves unpulled is
+      // recorded without Media and the full run brings the rest.
+      const verify = found.size ? await client.fetchByIds([...found.keys()], { deadline: fetchDeadline }) : null;
+      const pulled = new Set((verify?.items ?? []).map((i) => i.ListingId));
+      const unpulled = [...found.values()].filter((raw) => !pulled.has(raw.ListingId));
+      if (unpulled.length) await db.upsertListings(unpulled.map((raw) => normalizeListing(raw, startedAt).listing));
+      items = scan.items;
+      relevant = verify?.items ?? [];
+      truncated = scan.truncated;
+      run.counts.mlsgrid_listing_count = prior?.expectedCount ?? scan.expectedCount ?? 0;
+      const cursor = nextCursor(prior, { nextLink: scan.cursor, scanned: scan.items.length, found: found.size, pages: scan.pages, expectedCount: scan.expectedCount, startedAt });
+      await saveDiscoverCursor(cursor);
+      const summary: DiscoverSummary = {
+        resumed: !!prior,
+        scanned: scan.items.length,
+        scannedTotal: (prior?.scanned ?? 0) + scan.items.length,
+        expectedCount: prior?.expectedCount ?? scan.expectedCount,
+        pages: scan.pages,
+        found: found.size,
+        foundTotal: (prior?.found ?? 0) + found.size,
+        pulled: pulled.size,
+        complete: !scan.truncated,
+      };
+      result.discover = summary;
+      run.event("info", "discover", `Discovery: scanned ${summary.scannedTotal}${summary.expectedCount ? ` of ${summary.expectedCount}` : ""} Active listings MLS-wide, ${summary.foundTotal} new in a market city${summary.complete ? "; scan complete" : "; the rest continues on the next run"}`, {
+        details: { ...summary, unpulled: unpulled.length },
+      });
     } else {
       const known = await db.loadKnownListingIds();
       const verify = await client.fetchByIds(known, { deadline: fetchDeadline });
@@ -318,7 +373,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
         summary.classified += 1;
         const prior = existing.get(listing.listing_id);
         const known = !!prior && prior.state !== "removed";
-        const outcome = classifyListing(listing, { marketCities: site.market_cities, villages, known, mode: opts.mode });
+        const outcome = classifyListing(listing, { marketCities: site.market_cities, villages, known, mode: classifyMode(opts.mode) });
         if (outcome.kind === "eligible") {
           summary.eligible += 1;
           rows.push({
@@ -528,13 +583,13 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
   const withWix = pending.filter((p) => p.wix_item_id);
   if (withWix.length) {
     const liveCount = await db.countLiveSiteListings(site.id);
-    const { apply, held, threshold } = planRemovals(withWix, { mode: opts.mode, liveCount, allowMassDelete: opts.allowMassDelete });
+    const { apply, held, threshold } = planRemovals(withWix, { mode: classifyMode(opts.mode), liveCount, allowMassDelete: opts.allowMassDelete });
     if (held.length) {
       summary.held += held.length;
       run.counts.deletes_skipped += held.length;
       const byReason: Record<string, number> = {};
       for (const h of held) byReason[h.reason_code ?? "unspecified"] = (byReason[h.reason_code ?? "unspecified"] ?? 0) + 1;
-      run.event("error", "mass_delete_guard", `${site.name}: ${opts.mode === "incremental" ? "hourly" : opts.mode} run wanted to remove ${held.length} of ${liveCount} live listings (guard threshold ${threshold}); nothing was removed. Review the candidates and re-run with allowMassDelete if they are genuine`, {
+      run.event("error", "mass_delete_guard", `${site.name}: ${modeWord(opts.mode)} run wanted to remove ${held.length} of ${liveCount} live listings (guard threshold ${threshold}); nothing was removed. Review the candidates and re-run with allowMassDelete if they are genuine`, {
         siteId: site.id,
         details: { candidates: held.length, threshold, live: liveCount, byReason, sample: held.slice(0, 100).map((h) => ({ id: h.listing_id, reasonCode: h.reason_code, reason: h.reason_detail })) },
       });

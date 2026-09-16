@@ -12,7 +12,7 @@
 import { createHash } from "node:crypto";
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
-import { importMediaFromUrl } from "@/lib/wix/client";
+import { findMediaFolder, importMediaFromUrl } from "@/lib/wix/client";
 import { MlsGridClient, MlsGridError } from "@/lib/listings/mlsgrid";
 import { normalizeMedia } from "@/lib/listings/normalize";
 import * as db from "@/lib/listings/db";
@@ -55,7 +55,11 @@ export interface PhotoDeps {
   download: (url: string) => Promise<DownloadResult>;
   store: (storagePath: string, bytes: Uint8Array, contentType: string) => Promise<void>;
   publicUrl: (storagePath: string) => string;
-  importToWix: (wixSiteId: string, url: string, displayName: string) => Promise<{ id: string }>;
+  importToWix: (wixSiteId: string, url: string, displayName: string, parentFolderId: string | null) => Promise<{ id: string }>;
+  /** The id of a site's root-level Media Manager folder by name, or null when there is none. */
+  findFolder: (wixSiteId: string, displayName: string) => Promise<string | null>;
+  /** Remembers a resolved folder id on the site row. */
+  cacheFolder: (siteId: string, folderId: string) => Promise<void>;
 }
 
 export interface PhotoSummary {
@@ -105,7 +109,9 @@ function defaultDeps(): PhotoDeps {
       if (error) throw new Error(`storage upload: ${error.message}`);
     },
     publicUrl: (storagePath) => supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(storagePath).data.publicUrl,
-    importToWix: (wixSiteId, url, displayName) => importMediaFromUrl(wixSiteId, url, displayName),
+    importToWix: (wixSiteId, url, displayName, parentFolderId) => importMediaFromUrl(wixSiteId, url, displayName, parentFolderId),
+    findFolder: async (wixSiteId, displayName) => (await findMediaFolder(wixSiteId, displayName))?.id ?? null,
+    cacheFolder: (siteId, folderId) => db.setSiteMediaFolderId(siteId, folderId),
   };
 }
 
@@ -208,6 +214,32 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
   const summary = emptyPhotoSummary();
   const sites = new Map((opts.sites ?? (await db.loadActiveSites())).map((s) => [s.id, s]));
   const handled = new Set<string>();
+  // Where a site's imports go: null = Wix's default location, a string = the
+  // folder named on the site row, resolved once per site and cached on the
+  // row. A named folder that cannot be found holds the site's imports (one
+  // error per pass) rather than scattering photos outside it.
+  const folderIds = new Map<string, string | null>();
+  const folderMissing = new Set<string>();
+  async function folderFor(site: LsSite): Promise<{ ok: true; id: string | null } | { ok: false }> {
+    if (!site.media_folder_name) return { ok: true, id: null };
+    if (site.media_folder_id) return { ok: true, id: site.media_folder_id };
+    const cached = folderIds.get(site.id);
+    if (cached) return { ok: true, id: cached };
+    if (folderMissing.has(site.id)) return { ok: false };
+    try {
+      const id = await deps.findFolder(site.wix_site_id!, site.media_folder_name);
+      if (id) {
+        folderIds.set(site.id, id);
+        await deps.cacheFolder(site.id, id);
+        return { ok: true, id };
+      }
+      run.event("error", "folder_missing", `${site.name}: Media Manager folder "${site.media_folder_name}" not found among the root folders; its photos wait until it exists`, { siteId: site.id });
+    } catch (error) {
+      run.event("error", "folder_missing", `${site.name}: could not look up Media Manager folder "${site.media_folder_name}" (${errorMessage(error)}); its photos wait`, { siteId: site.id });
+    }
+    folderMissing.add(site.id);
+    return { ok: false };
+  }
   let client: MlsGridClient | null = opts.client ?? null;
   const overdue = (): boolean => deps.now() > opts.deadline;
 
@@ -243,9 +275,11 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
             truncated = true;
             return truncated;
           }
+          const folder = await folderFor(site);
+          if (!folder.ok) continue;
           const name = displayNameFor(listingId, m.position, m.path_key);
           try {
-            const file = await deps.importToWix(site.wix_site_id, deps.publicUrl(m.storage_path), name);
+            const file = await deps.importToWix(site.wix_site_id, deps.publicUrl(m.storage_path), name, folder.id);
             const uri = `wix:image://v1/${file.id}/${encodeURIComponent(name)}`;
             await db.upsertSiteMedia([{ site_id: siteId, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported" }]);
             const done = importedMedia.get(siteId) ?? new Set<string>();

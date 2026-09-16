@@ -2,7 +2,7 @@
 // ls_ tables); MlsGridProperty is the RESO record as MLSGrid returns it.
 
 export type WriteMode = "shadow" | "live" | "paused";
-export type RunMode = "incremental" | "full" | "photos" | "manual";
+export type RunMode = "incremental" | "full" | "photos" | "manual" | "discover";
 export type RunTrigger = "cron" | "hub" | "http" | "manual";
 export type SiteListingState = "staged" | "live" | "removed";
 
@@ -27,6 +27,10 @@ export interface LsSite {
   market_cities: string[];
   active: boolean;
   timezone: string;
+  /** Media Manager folder the engine imports this site's photos into; null = Wix's default. */
+  media_folder_name: string | null;
+  /** The folder's id once resolved from its name (cached by the photo job). */
+  media_folder_id: string | null;
 }
 
 export interface LsVillage {

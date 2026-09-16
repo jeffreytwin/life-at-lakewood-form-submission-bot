@@ -72,6 +72,25 @@ export interface ModifiedSinceResult {
   truncated: boolean;
 }
 
+export interface ActiveScanOptions {
+  /** Resume from this @odata.nextLink instead of the first page. */
+  cursor?: string | null;
+  maxPages?: number;
+  /** Epoch ms; no new page is requested past it. */
+  deadline?: number;
+}
+
+export interface ActiveScanResult {
+  items: MlsGridProperty[];
+  /** MLSGrid's count for the filter, when the first page said. */
+  expectedCount: number | null;
+  requestCount: number;
+  pages: number;
+  /** The nextLink to resume from when maxPages or the deadline stopped the scan; null once the last page was read. */
+  cursor: string | null;
+  truncated: boolean;
+}
+
 export interface ByIdsResult {
   items: MlsGridProperty[];
   requestedIds: string[];
@@ -135,6 +154,40 @@ export class MlsGridClient {
       url = page["@odata.nextLink"] ?? null;
     }
     return { items, expectedCount, requestCount, pages, truncated };
+  }
+
+  /**
+   * Every Active listing MLS-wide, without Media: a discovery pass keeps the
+   * ids in a site's market and pulls those by id. StandardStatus is one of
+   * the fields MLSGrid accepts in a replication $filter (City is not).
+   */
+  async fetchActive(options: ActiveScanOptions = {}): Promise<ActiveScanResult> {
+    const filter = `OriginatingSystemName eq '${ORIGINATING_SYSTEM}' and StandardStatus eq 'Active'`;
+    let url: string | null = options.cursor || `${MLSGRID_BASE}?$filter=${encodeURIComponent(filter)}&$top=${PAGE_SIZE}&$count=true`;
+    const items: MlsGridProperty[] = [];
+    let expectedCount: number | null = null;
+    let requestCount = 0;
+    let pages = 0;
+    let truncated = false;
+    while (url) {
+      if (options.deadline && this.now() > options.deadline) {
+        truncated = true;
+        break;
+      }
+      if (options.maxPages && pages >= options.maxPages) {
+        truncated = true;
+        break;
+      }
+      const page: ODataPage = await this.request(url);
+      requestCount += 1;
+      pages += 1;
+      if (expectedCount === null && typeof page["@odata.count"] === "number") {
+        expectedCount = page["@odata.count"];
+      }
+      if (Array.isArray(page.value)) items.push(...page.value);
+      url = page["@odata.nextLink"] ?? null;
+    }
+    return { items, expectedCount, requestCount, pages, cursor: truncated ? url : null, truncated };
   }
 
   /** Verify-by-id: the current state of specific listings, 50 per request. */

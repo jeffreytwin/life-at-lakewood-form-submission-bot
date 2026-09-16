@@ -78,6 +78,8 @@ const site: LsSite = {
   market_cities: ["Longboat Key"],
   active: true,
   timezone: "America/New_York",
+  media_folder_name: null,
+  media_folder_id: null,
 };
 
 const village: VillageWithTerms = {

@@ -667,6 +667,87 @@ while porting `runSync`.
   the Google Ads inventory feed (`GET /_functions/adsInventoryFeed`, which
   reads `activeListingCount` / `zeroSince`) keep working after cutover.
 
+## Phase 4 build notes (2026-09-16): onboarding Life At Parrish
+
+Started the afternoon Longboat Key went live. Parrish is the first site
+that was never on the Velo sync: its listings were pushed by hand from a
+Wix dashboard page (a curated `MLS_id_list`, subdivision `search()` terms,
+`uploadImage` into the Media Manager) and that page stopped working on
+the 16th, so there is nothing to shadow against and nothing to keep in
+step with. Jeff's decisions: the Longboat Key rule applies (every Active
+listing in the market whose subdivision matches a term goes live, no
+hand-picked list); build discovery now; the Parrish neighborhood pages do
+not use `activeListingCount` and the site has no `adsInventoryFeed` yet;
+the Supabase project is on Pro (storage for fetched photos).
+
+**What Parrish needed that Longboat Key did not.**
+
+- **A starting inventory.** The hourly pull is MLS-wide but only over its
+  window, and the full run only re-verifies ids the engine holds;
+  Longboat Key's first 203 came from the media seed reading its live
+  galleries. Parrish's galleries carry no `mlsSourceUrl` (the manual
+  upload kept only `src`/`title`/`type`), so the seed records its listing
+  ids as placeholders but reuses no photo, which is exactly what Jeff asked
+  for: every Parrish photo is fetched afresh, so the old Media Manager
+  files can be deleted once the site is live. The **`discover` run mode**
+  (`src/lib/listings/discover.ts`, `MlsGridClient.fetchActive`) closes the
+  gap for listings the hand-run process never added: one pass over every
+  Active listing MLS-wide (`StandardStatus eq 'Active'`, no `$expand`),
+  keep the ids in a market city the engine does not know, pull those by
+  id with Media, then the normal classify / photos / write path. Stellar
+  has tens of thousands of Active listings (a few hundred pages), more
+  than one invocation's budget: a scan the deadline cuts short stores its
+  `@odata.nextLink` in `system_settings.ls_engine_state.discoverCursor`
+  and the next discover run continues it; the cron tick continues a
+  cursor whenever the hourly and the full are not due, so one click on
+  **Run Discovery** finishes on its own. Finds the deadline leaves
+  unpulled are recorded without Media and the nightly full brings the
+  rest. Whether MLSGrid accepts `StandardStatus` in a replication
+  `$filter` was not verifiable from the build session (docs egress-blocked);
+  a refusal surfaces as the run's error.
+- **A Media Manager folder.** `ls_sites.media_folder_name` /
+  `media_folder_id` (migration 046): the photo job resolves the name once
+  against the site's root folders (`GET /site-media/v1/folders`), caches
+  the id on the row and passes `parentFolderId` on every import. A named
+  folder that cannot be found holds that site's imports with one
+  `folder_missing` error per pass rather than scattering photos outside
+  it. Parrish: `ParrishListingPhotos` (Jeff created it). Longboat Key keeps
+  `NULL` = Wix's default location.
+- **Neighborhoods from code, not from Wix.** Parrish has no `Villages`
+  collection; `scripts/listings-parrish-villages.mjs` transcribes the
+  dashboard page's term list and the three tag-icon ternaries (evaluated
+  in order, first match wins, so `Del Webb At Bayview` gets pickleball,
+  never the 55+ icon its lower-case twin would) into 51 neighborhoods,
+  63 terms and per-neighborhood `display` JSON; migration 046 carries the
+  output. Same answers as the old if-chain: longest term wins gives
+  Kingsfield Lakes over Kingsfield, and the eight North River Ranch
+  aliases (Brightwood, Crescent Creek, Del Webb Explore, Highview,
+  Longmeadow, Riverfield, Wildleaf) fold into one. Two quirks kept as
+  they were, for the Hub to tune: `reach` alone matches Rivers Reach, and
+  Oakfield only matches with a `lakes` / `trails` suffix.
+- **Site row.** `Life At Parrish`, `lifeatparrish.com`, Wix site
+  `a704cfe5-dd9b-44ff-a017-9d637d8c6fdc`, `market_cities = ['Parrish']`,
+  shadow mode against `HousesforSale2` (Jeff created it 2026-09-16),
+  **inactive** in the migration so no photo lands outside the folder
+  before the code that reads `media_folder_*` is deployed.
+
+**Rollout, in order:** merge and deploy → apply migration 046 → set
+`active = true` on the Parrish row → Run Discovery from the Hub (the
+ticks finish the scan) → the seed's placeholders and the finds are
+verified, photos download into the `photos` bucket and import into
+`ParrishListingPhotos` (about 500 listings, 15–20k photos, a few hours at
+the caps), shadow writes to `HousesforSale2` → compare shadow with live →
+cutover by the Longboat Key runbook, minus the Velo step (nothing to
+stop). In live mode the engine will also write the neighborhood stats
+fields onto Parrish's `HousesforSale-DynamicPages`; harmless today,
+ready for when the pages and an ads feed use them.
+
+**Risks noted at build time.** The photo pipeline had imported nothing in
+production before this (all 10,382 Longboat Key photos were seeded), so
+Parrish in shadow mode is its first real run at scale. The 90-minute
+shadow grace still applies to Parrish (no pipeline to yield to, so it
+only delays each new listing's photos by 90 minutes while in shadow).
+
 ## Cutover runbook: Longboat Key (step 4)
 
 *Executed 2026-09-16, 15:45 to 15:52 UTC; the outcome is recorded under

@@ -11,14 +11,16 @@ export const maxDuration = 300;
 
 /**
  * POST /api/internal/listings/run
- * Body: { mode?: "incremental" | "full" | "photos", allowMassDelete?: boolean,
+ * Body: { mode?: "incremental" | "full" | "discover" | "photos", allowMassDelete?: boolean,
  *         since?: ISO string (incremental only), maxPages?: number,
  *         shadowGraceMinutes?: number (photos only; 0 fetches at once) }
  *
  * Runs the engine once, now, whether or not the cron is enabled. This is
  * the Hub's "run now" button and the operator path for applying a removal
  * batch the mass-delete guard held back. Mode photos works the photo
- * backlog alone, as its own run.
+ * backlog alone, as its own run. Mode discover scans MLS-wide Active
+ * listings for a site's starting inventory; a scan the budget cuts short
+ * continues on the next call, or on the next idle tick.
  */
 export async function POST(request: NextRequest) {
   const denied = authorizeEngineRequest(request);
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }
-  const mode = body.mode === "full" ? "full" : "incremental";
+  const mode = body.mode === "full" ? "full" : body.mode === "discover" ? "discover" : "incremental";
   const since = typeof body.since === "string" && !Number.isNaN(Date.parse(body.since)) ? new Date(body.since) : undefined;
   const maxPages = Number.isInteger(body.maxPages) && (body.maxPages as number) > 0 ? (body.maxPages as number) : undefined;
   try {
