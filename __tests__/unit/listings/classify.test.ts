@@ -112,4 +112,15 @@ describe("classifyListing", () => {
     expect(classifyListing(blank, { ...ctx, mode: "full" })).toMatchObject({ kind: "ineligible", reason: "city_change" });
     expect(classifyListing(blank, { ...ctx, known: false })).toMatchObject({ kind: "ineligible", reason: "city_change" });
   });
+
+  it("shows only the property types the site names: land on Longboat Key, not on a Residential-only site", () => {
+    const land = { ...active, property_type: "Land", property_sub_type: null, city: "LONGBOAT KEY" };
+    expect(classifyListing(land, { ...ctx, propertyTypes: ["Residential", "Land"] })).toMatchObject({ kind: "eligible" });
+    const out = classifyListing(land, { ...ctx, propertyTypes: ["Residential"] });
+    expect(out).toMatchObject({ kind: "ineligible", reason: "property_type" });
+    expect((out as { detail: string }).detail).toContain("the site shows residential");
+    // Case does not matter, and an empty list falls back to the default set.
+    expect(classifyListing(land, { ...ctx, propertyTypes: ["residential", "LAND"] })).toMatchObject({ kind: "eligible" });
+    expect(classifyListing(land, { ...ctx, propertyTypes: [] })).toMatchObject({ kind: "eligible" });
+  });
 });

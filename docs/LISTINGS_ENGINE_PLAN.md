@@ -749,6 +749,15 @@ Parrish's cutover order becomes: audit clean in shadow → flip → first live
 run → audit again, delete the stale rows from `HousesforSale` → Jeff purges
 the old folders after the rollback week.
 
+**Property types per site (Jeff, 2026-09-16).** Vacant land is shown on
+Life in Longboat Key only; every other site shows Residential alone for
+now. Migration 047 adds `ls_sites.property_types` (default
+`{Residential}`, Longboat Key `{Residential, Land}`) and classify reads it
+instead of the former global constant. The first discovery scan had found
+21 Parrish Land listings, which this keeps off the site; a Land listing a
+Residential-only site had already staged is unstaged on its next
+classification with reason `property_type`.
+
 **Rollout, in order:** merge and deploy → apply migration 046 → set
 `active = true` on the Parrish row → Run Discovery from the Hub (the
 ticks finish the scan) → the seed's placeholders and the finds are

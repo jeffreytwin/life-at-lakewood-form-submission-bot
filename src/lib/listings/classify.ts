@@ -15,7 +15,7 @@
 
 import type { ReasonCode, VillageWithTerms } from "@/lib/listings/types";
 
-/** RESO PropertyType values a site displays (lowercased). */
+/** RESO PropertyType values a site displays when its row names none (lowercased); ls_sites.property_types decides per site. */
 export const ALLOWED_PROPERTY_TYPES = new Set(["residential", "land"]);
 
 export interface ClassifyListing {
@@ -33,6 +33,8 @@ export interface ClassifyListing {
 export interface ClassifyContext {
   /** MLS City / PostalCity values that count as this site's market. */
   marketCities: string[];
+  /** RESO PropertyType values the site shows; ALLOWED_PROPERTY_TYPES when absent. */
+  propertyTypes?: string[];
   villages: VillageWithTerms[];
   /** Whether the site currently holds the listing (staged or live). */
   known: boolean;
@@ -110,11 +112,12 @@ export function classifyListing(listing: ClassifyListing, ctx: ClassifyContext):
   }
 
   const propertyType = (listing.property_type ?? "").toLowerCase();
-  if (!ALLOWED_PROPERTY_TYPES.has(propertyType)) {
+  const allowed = ctx.propertyTypes?.length ? new Set(ctx.propertyTypes.map((t) => t.toLowerCase())) : ALLOWED_PROPERTY_TYPES;
+  if (!allowed.has(propertyType)) {
     return {
       kind: "ineligible",
       reason: "property_type",
-      detail: `Property type is ${listing.property_type || "unknown"}${listing.property_sub_type ? ` / ${listing.property_sub_type}` : ""} (not shown on the site)`,
+      detail: `Property type is ${listing.property_type || "unknown"}${listing.property_sub_type ? ` / ${listing.property_sub_type}` : ""} (the site shows ${[...allowed].join(", ")})`,
     };
   }
 
