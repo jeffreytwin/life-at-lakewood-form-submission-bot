@@ -52,6 +52,7 @@ describe("normalizeListing", () => {
       living_area: 2143,
       photo_count: 3,
       mlg_can_view: true,
+      new_construction: null,
       modification_timestamp: "2026-09-14T15:02:11.000Z",
       originating_system_modification_timestamp: "2026-09-14T14:58:40.000Z",
       in_feed: true,
@@ -88,5 +89,6 @@ describe("normalizeListing", () => {
     expect(listing.list_price).toBeNull();
     expect(listing.street_text).toBeNull();
     expect(listing.mlg_can_view).toBeNull();
+    expect(listing.new_construction).toBeNull();
   });
 });

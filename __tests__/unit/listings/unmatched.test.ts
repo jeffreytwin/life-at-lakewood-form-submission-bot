@@ -37,6 +37,8 @@ describe("groupUnmatched", () => {
         listing("MFR6", null, 995_000, { property_type: "Land", property_sub_type: null }),
         listing("MFR7", "BAILEY-DOBSON", 650_000, { standard_status: "Pending" }),
         listing("MFR8", "BAILEY-DOBSON", 650_000, { city: "SARASOTA" }),
+        // Builder inventory is ruled out before the term match, so it is not a missing-term candidate.
+        listing("MFR9", "NORTH RIVER RANCH PH IV", 450_000, { new_construction: true }),
       ],
       ctx
     );

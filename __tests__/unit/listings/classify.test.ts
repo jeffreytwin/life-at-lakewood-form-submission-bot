@@ -33,6 +33,7 @@ const active: ClassifyListing = {
   subdivision: "BAY ISLES HARBOR SECTION",
   street_text: "3040 grand bay boulevard",
   mlg_can_view: true,
+  new_construction: false,
 };
 
 const ctx = { marketCities: ["Longboat Key"], villages, known: true, mode: "incremental" as const };
@@ -122,5 +123,18 @@ describe("classifyListing", () => {
     // Case does not matter, and an empty list falls back to the default set.
     expect(classifyListing(land, { ...ctx, propertyTypes: ["residential", "LAND"] })).toMatchObject({ kind: "eligible" });
     expect(classifyListing(land, { ...ctx, propertyTypes: [] })).toMatchObject({ kind: "eligible" });
+  });
+
+  it("rules out new construction unless the site shows it (Jeff, 2026-09-16: off everywhere)", () => {
+    const builder = { ...active, new_construction: true };
+    const out = classifyListing(builder, ctx);
+    expect(out).toMatchObject({ kind: "ineligible", reason: "new_construction" });
+    expect((out as { detail: string }).detail).toContain("resale listings only");
+    expect(classifyListing(builder, { ...ctx, showNewConstruction: true })).toMatchObject({ kind: "eligible" });
+    // A record that does not say, or says false, is a resale listing.
+    expect(classifyListing({ ...active, new_construction: null }, ctx)).toMatchObject({ kind: "eligible" });
+    expect(classifyListing({ ...active, new_construction: undefined }, ctx)).toMatchObject({ kind: "eligible" });
+    // Status and property type are decided first, so their reasons still win.
+    expect(classifyListing({ ...builder, standard_status: "Pending" }, ctx)).toMatchObject({ reason: "status_change" });
   });
 });

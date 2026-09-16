@@ -33,7 +33,7 @@ export interface UnmatchedGroup {
 export interface UnmatchedView {
   generatedAt: string;
   site: { id: string; name: string; domain: string };
-  /** Active listings of the site's property types in its market that the engine holds. */
+  /** Active listings of the site's property types in its market that the engine holds (new construction included; it is ruled out before the term match). */
   candidates: number;
   /** Of those, how many match no neighborhood term. */
   unmatched: number;
@@ -47,7 +47,7 @@ const SAMPLE = 3;
 /** Pure: the candidates that classify as no_village, grouped by subdivision, biggest groups first. */
 export function groupUnmatched(
   candidates: UnmatchedCandidate[],
-  ctx: { marketCities: string[]; propertyTypes: string[]; villages: VillageWithTerms[] }
+  ctx: { marketCities: string[]; propertyTypes: string[]; showNewConstruction?: boolean; villages: VillageWithTerms[] }
 ): { unmatched: number; groups: UnmatchedGroup[] } {
   const groups = new Map<string, UnmatchedGroup>();
   let unmatched = 0;
@@ -96,7 +96,7 @@ export async function listUnmatchedListings(siteId: string): Promise<UnmatchedVi
     selectAll<UnmatchedCandidate>("load unmatched candidates", (from, to) =>
       supabase
         .from("ls_listings")
-        .select("listing_id, standard_status, property_type, property_sub_type, city, postal_city, subdivision, street_text, mlg_can_view, list_price")
+        .select("listing_id, standard_status, property_type, property_sub_type, city, postal_city, subdivision, street_text, mlg_can_view, new_construction, list_price")
         .eq("in_feed", true)
         .eq("standard_status", "Active")
         .in("property_type", site.property_types ?? [])
@@ -105,7 +105,7 @@ export async function listUnmatchedListings(siteId: string): Promise<UnmatchedVi
         .range(from, to)
     ),
   ]);
-  const { unmatched, groups } = groupUnmatched(candidates, { marketCities: cities, propertyTypes: site.property_types ?? [], villages });
+  const { unmatched, groups } = groupUnmatched(candidates, { marketCities: cities, propertyTypes: site.property_types ?? [], showNewConstruction: site.show_new_construction, villages });
   return {
     generatedAt: new Date().toISOString(),
     site: { id: site.id, name: site.name, domain: site.domain },

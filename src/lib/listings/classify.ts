@@ -3,7 +3,8 @@
 //
 // Outcomes:
 //   eligible   - Active, an allowed property type, in the site's market,
-//                MLS display rights intact, and a village term matches.
+//                MLS display rights intact, not new construction (unless the
+//                site shows it), and a village term matches.
 //   ineligible - one of those failed; `reason` is the removal reason code the
 //                site listing carries if the site currently holds it. For a
 //                listing the site never held it simply means "do not add".
@@ -28,6 +29,8 @@ export interface ClassifyListing {
   subdivision: string | null;
   street_text: string | null;
   mlg_can_view: boolean | null;
+  /** RESO NewConstructionYN; null when the record does not say. */
+  new_construction?: boolean | null;
 }
 
 export interface ClassifyContext {
@@ -35,6 +38,8 @@ export interface ClassifyContext {
   marketCities: string[];
   /** RESO PropertyType values the site shows; ALLOWED_PROPERTY_TYPES when absent. */
   propertyTypes?: string[];
+  /** Builder listings (NewConstructionYN true) are excluded unless this is set; Jeff, 2026-09-16: off on every site. */
+  showNewConstruction?: boolean;
   villages: VillageWithTerms[];
   /** Whether the site currently holds the listing (staged or live). */
   known: boolean;
@@ -118,6 +123,14 @@ export function classifyListing(listing: ClassifyListing, ctx: ClassifyContext):
       kind: "ineligible",
       reason: "property_type",
       detail: `Property type is ${listing.property_type || "unknown"}${listing.property_sub_type ? ` / ${listing.property_sub_type}` : ""} (the site shows ${[...allowed].join(", ")})`,
+    };
+  }
+
+  if (listing.new_construction === true && !ctx.showNewConstruction) {
+    return {
+      kind: "ineligible",
+      reason: "new_construction",
+      detail: "New construction (the MLS flags it NewConstructionYN); the site shows resale listings only",
     };
   }
 

@@ -383,7 +383,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
         summary.classified += 1;
         const prior = existing.get(listing.listing_id);
         const known = !!prior && prior.state !== "removed";
-        const outcome = classifyListing(listing, { marketCities: site.market_cities, propertyTypes: site.property_types, villages, known, mode: classifyMode(opts.mode) });
+        const outcome = classifyListing(listing, { marketCities: site.market_cities, propertyTypes: site.property_types, showNewConstruction: site.show_new_construction, villages, known, mode: classifyMode(opts.mode) });
         if (outcome.kind === "eligible") {
           summary.eligible += 1;
           rows.push({

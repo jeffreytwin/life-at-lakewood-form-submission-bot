@@ -758,6 +758,25 @@ instead of the former global constant. The first discovery scan had found
 Residential-only site had already staged is unstaged on its next
 classification with reason `property_type`.
 
+**New construction off every site (Jeff, 2026-09-16).** The 696 Parrish
+listings the engine staged failed Jeff's smell test against the 267 the
+old Velo pipeline held. The data: 262 of the 697 were already in the old
+collection (the rest of the 267 were 6 no-longer-active listings and 2
+leases); of the 435 the engine added, 426 carry `NewConstructionYN = true`
+(D.R. Horton 109, Pulte 66, Mattamy 31, Meritage 30, Homes by WestBay
+27, …; 248 under construction, 160 completed, 18 pre-construction), and
+the old collection had none. The old `MLS_id_list` had simply never
+included builder inventory. Jeff's decision: exclude new construction on
+every site. Migration 048 adds `ls_listings.new_construction` (from
+`NewConstructionYN`, backfilled from `raw`), the reason code
+`new_construction`, and `ls_sites.show_new_construction` (default false
+everywhere; a per-site switch so Longboat Key's ten live builder
+listings, the St. Regis residences among them, can be restored with one
+update if wanted). Classify rules it out after status and property type
+and before the term match, so the non-neighborhood overlay never lists
+builder homes. Parrish goes from 697 staged to about 271; Longboat Key
+removes those ten on its next run.
+
 **What a site rules out (Jeff, 2026-09-16).** The rule stands: a listing
 whose subdivision matches no neighborhood term is not on the site. The
 first discovery scan showed what that costs (73 Longboat Key for-sale
