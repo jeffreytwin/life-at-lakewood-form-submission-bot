@@ -17,6 +17,28 @@ Written at the end of the session that built the Hub's Listings section,
 the photo pipeline and the cutover preparation, so the next session starts
 from the facts rather than the chat.
 
+**Cutover done (2026-09-16, 11:51 AM ET).** Longboat Key is live. The
+order was the runbook's: Jeff published `backend/jobs.config` as
+`{ "jobs": [] }` (~15:45 UTC), PR #289 was merged and its production
+deploy (`dpl_Ee62GniUwbYpV58KsY1tedWNF72c`, commit `703689d`) confirmed
+ready, then the step 3 SQL ran at 15:51:07 UTC (`write_mode = live`,
+target `HousesforSale`, the 203 live rows marked for rewrite). The first
+live run, `full:2026-09-16T15:52:14.284Z` (Run Full from the Hub),
+finished ok in 21 s: 0 inserted / 203 updated / 0 deleted, 0 failed
+writes, 0 errors, 0 warnings, 6 Wix requests, `stats_refreshed` true with
+no `stats_failed` or `budget` event, so the neighborhood stats reached
+`HousesforSale-DynamicPages`. Afterwards every live row carried a
+`written_at` from that run, `needs_write` was 0, `ls_villages` summed to
+203 across 105 neighborhoods (43 at zero with `zero_since`), and the photo
+backlog was empty with the shadow grace off. The Errors panel held only
+the pre-existing 2026-09-15 `warn/delete` for MFRA4697907. The site-side
+checks of runbook step 5 (a listing page, a neighborhood page, a gallery,
+the ads feed, the Live box against the inventory) were Jeff's in a
+browser: the cutover session's egress policy blocked lifeinlongboatkey.com.
+Rollback stays runbook step 6 through the 23rd; the step 7 cleanup follows
+if the week is quiet. The "State of Longboat Key" paragraph below
+describes the pre-cutover state.
+
 **State of Longboat Key (11:30 AM ET, 2026-09-16).** The engine has been on
 since 12:15 PM ET on the 15th. The site is still in **shadow mode**
 (`write_mode = shadow`, target `HousesforSale2`): 203 live rows, 0 in
@@ -646,6 +668,9 @@ while porting `runSync`.
   reads `activeListingCount` / `zeroSince`) keep working after cutover.
 
 ## Cutover runbook: Longboat Key (step 4)
+
+*Executed 2026-09-16, 15:45 to 15:52 UTC; the outcome is recorded under
+"Where things stand" at the top of this document.*
 
 Read with the "State meaning and cutover" note above. Order matters: the
 Velo jobs stop first, the database flips second, the first live run comes
