@@ -3,7 +3,7 @@ import { FETCH_BY_ID_BATCH, MIN_REQUEST_INTERVAL_MS, MlsGridClient, MlsGridError
 
 interface Call { url: string; headers: Record<string, string> }
 
-function page(items: Array<{ ListingId: string }>, extra: Record<string, unknown> = {}) {
+function page(items: Array<{ ListingId: string; ModificationTimestamp?: string }>, extra: Record<string, unknown> = {}) {
   return new Response(JSON.stringify({ value: items, ...extra }), { status: 200, headers: { "content-type": "application/json" } });
 }
 
@@ -123,33 +123,43 @@ describe("MlsGridClient", () => {
   });
 
   describe("fetchActive (discovery)", () => {
-    it("asks for Active listings MLS-wide without Media and follows nextLink to the end", async () => {
+    it("asks for Active listings MLS-wide without Media, follows nextLink to the end and reports the newest timestamp", async () => {
       const { client, calls } = makeClient((call, n) =>
         n === 1
-          ? page([{ ListingId: "MFR1" }, { ListingId: "MFR2" }], { "@odata.count": 3, "@odata.nextLink": "https://api.mlsgrid.com/v2/Property?next=2" })
-          : page([{ ListingId: "MFR3" }])
+          ? page([{ ListingId: "MFR1", ModificationTimestamp: "2026-09-16T10:00:00.000Z" }, { ListingId: "MFR2", ModificationTimestamp: "2026-09-16T10:05:00.000Z" }], { "@odata.count": 3, "@odata.nextLink": "https://api.mlsgrid.com/v2/Property?next=2" })
+          : page([{ ListingId: "MFR3", ModificationTimestamp: "2026-09-16T10:09:00.000Z" }])
       );
       const result = await client.fetchActive();
       expect(calls).toHaveLength(2);
       const first = decodeURIComponent(calls[0].url);
       expect(first).toContain("StandardStatus eq 'Active'");
       expect(first).toContain("OriginatingSystemName eq 'mfrmls'");
+      expect(first).not.toContain("ModificationTimestamp");
       expect(first).not.toContain("$expand");
       expect(calls[1].url).toBe("https://api.mlsgrid.com/v2/Property?next=2");
-      expect(result).toMatchObject({ expectedCount: 3, pages: 2, requestCount: 2, truncated: false, cursor: null });
+      expect(result).toMatchObject({ expectedCount: 3, pages: 2, requestCount: 2, truncated: false, ordered: true, lastModificationTimestamp: "2026-09-16T10:09:00.000Z" });
       expect(result.items.map((i) => i.ListingId)).toEqual(["MFR1", "MFR2", "MFR3"]);
     });
 
-    it("stops at maxPages and hands back the nextLink as the cursor to resume from", async () => {
-      const { client } = makeClient((call, n) => page([{ ListingId: `MFR${n}` }], { "@odata.nextLink": `https://api.mlsgrid.com/v2/Property?next=${n + 1}` }));
+    it("stops at maxPages, and a resumed scan asks for records modified after the last timestamp instead of using $skip", async () => {
+      const { client } = makeClient((call, n) => page([{ ListingId: `MFR${n}`, ModificationTimestamp: `2026-09-16T10:0${n}:00.000Z` }], { "@odata.nextLink": `https://api.mlsgrid.com/v2/Property?$skip=${n * 200}` }));
       const first = await client.fetchActive({ maxPages: 2 });
-      expect(first).toMatchObject({ pages: 2, truncated: true, cursor: "https://api.mlsgrid.com/v2/Property?next=3" });
+      expect(first).toMatchObject({ pages: 2, truncated: true, lastModificationTimestamp: "2026-09-16T10:02:00.000Z" });
 
-      const { client: resumed, calls } = makeClient((call, n) => (n === 1 ? page([{ ListingId: "MFR3" }]) : page([])));
-      const rest = await resumed.fetchActive({ cursor: first.cursor });
-      expect(calls[0].url).toBe("https://api.mlsgrid.com/v2/Property?next=3");
-      expect(rest).toMatchObject({ pages: 1, truncated: false, cursor: null });
+      const { client: resumed, calls } = makeClient((call, n) => (n === 1 ? page([{ ListingId: "MFR3", ModificationTimestamp: "2026-09-16T10:03:00.000Z" }]) : page([])));
+      const rest = await resumed.fetchActive({ since: new Date(first.lastModificationTimestamp!) });
+      const url = decodeURIComponent(calls[0].url);
+      expect(url).toContain("StandardStatus eq 'Active' and ModificationTimestamp gt 2026-09-16T10:02:00.000Z");
+      expect(url).not.toContain("$skip");
+      expect(rest).toMatchObject({ pages: 1, truncated: false });
       expect(rest.items.map((i) => i.ListingId)).toEqual(["MFR3"]);
+    });
+
+    it("flags a page that comes back out of timestamp order", async () => {
+      const { client } = makeClient(() => page([{ ListingId: "MFR1", ModificationTimestamp: "2026-09-16T10:05:00.000Z" }, { ListingId: "MFR2", ModificationTimestamp: "2026-09-16T10:01:00.000Z" }]));
+      const result = await client.fetchActive();
+      expect(result.ordered).toBe(false);
+      expect(result.lastModificationTimestamp).toBe("2026-09-16T10:05:00.000Z");
     });
 
     it("stops at the deadline before requesting another page", async () => {
@@ -160,7 +170,7 @@ describe("MlsGridClient", () => {
       const result = await client.fetchActive({ deadline: 1_000_000 + 15_000 });
       expect(calls.length).toBeGreaterThanOrEqual(1);
       expect(result.truncated).toBe(true);
-      expect(result.cursor).toBe(`https://api.mlsgrid.com/v2/Property?next=${calls.length + 1}`);
+      expect(result.pages).toBe(calls.length);
     });
   });
 });

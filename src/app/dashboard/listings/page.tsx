@@ -26,6 +26,7 @@ interface Site {
   live_collection_id: string;
   write_mode: "shadow" | "live" | "paused";
   market_cities: string[];
+  property_types?: string[];
   active: boolean;
   counts: SiteCounts;
   villages: number;
@@ -103,6 +104,44 @@ interface RunSummary {
   photos?: { listings: number; downloaded: number; imported: number; failed: number; truncated: boolean } | null;
   discover?: { scannedTotal: number; expectedCount: number | null; foundTotal: number; found: number; pulled: number; complete: boolean } | null;
   error: string | null;
+}
+
+interface AuditReport {
+  generatedAt: string;
+  clean: boolean;
+  site: { media_folder_name: string | null };
+  folder: {
+    configured: boolean;
+    resolved: boolean;
+    filesInFolder: number;
+    listingTruncated: boolean;
+    engineFiles: number;
+    engineFilesInFolder: number;
+    outsideFolder: string[];
+    outsideFolderCount: number;
+    unknownInFolder: number;
+  };
+  collections: Array<{
+    collectionId: string;
+    role: string;
+    deletable: boolean;
+    items: number;
+    owned: number;
+    stale: Array<{ id: string; address: string | null; status: string | null }>;
+    staleCount: number;
+    missing: number;
+    galleryItems: number;
+    galleryOutsideFolder: number | null;
+    galleryNotWixImage: number;
+  }>;
+}
+
+interface StaleDeleteResult {
+  collectionId: string;
+  requested: number;
+  deleted: number;
+  failed: number;
+  errors: string[];
 }
 
 function summarize(r: RunSummary, siteName: (domain: string) => string): string {
@@ -214,6 +253,29 @@ export default function ListingsOverviewPage() {
       setBusy(null);
       fetchStatus();
     }
+  }
+
+  const [audits, setAudits] = useState<Record<string, AuditReport>>({});
+  const [staleResults, setStaleResults] = useState<Record<string, string>>({});
+
+  function runAudit(site: Site) {
+    call(`audit:${site.id}`, `/api/internal/listings/sites/${encodeURIComponent(site.id)}/audit`, { method: "GET" }, (body) =>
+      setAudits((prev) => ({ ...prev, [site.id]: body as AuditReport }))
+    );
+  }
+
+  function deleteStale(site: Site, collectionId: string, count: number) {
+    if (!confirm(`Delete ${count} row(s) from ${collectionId} that the engine does not own? Their photos stay in the Media Manager for the folder purge.`)) return;
+    call(
+      `stale:${site.id}`,
+      `/api/internal/listings/sites/${encodeURIComponent(site.id)}/audit`,
+      { method: "POST", body: JSON.stringify({ deleteStale: true, collectionId }) },
+      (body) => {
+        const r = body as StaleDeleteResult;
+        setStaleResults((prev) => ({ ...prev, [site.id]: `${r.deleted} of ${r.requested} row(s) deleted from ${r.collectionId}${r.failed ? `, ${r.failed} failed: ${r.errors.join("; ")}` : ""}` }));
+        runAudit(site);
+      }
+    );
   }
 
   const siteName = (domain: string) => status?.sites.find((s) => s.domain === domain)?.name ?? domain;
@@ -446,7 +508,7 @@ export default function ListingsOverviewPage() {
                     <strong style={colors ? { color: colors.solid } : undefined}>{site.name}</strong> <span className={mode.cls}>{mode.label}</span>
                     {!site.wix_site_id && <span className="badge badge-danger" style={{ marginLeft: 6 }}>no Wix site id</span>}
                     <div className="text-muted text-sm">
-                      market {site.market_cities.join(", ") || "—"} · {site.activeVillages} of {site.villages} neighborhoods active
+                      market {site.market_cities.join(", ") || "—"} · shows {(site.property_types ?? ["Residential", "Land"]).join(" + ")} · {site.activeVillages} of {site.villages} neighborhoods active
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -472,6 +534,14 @@ export default function ListingsOverviewPage() {
                     <Link href={`/dashboard/listings/neighborhoods?siteId=${encodeURIComponent(site.id)}`} className="btn btn-secondary btn-sm">
                       Neighborhoods
                     </Link>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      disabled={busy !== null || !site.wix_site_id}
+                      onClick={() => runAudit(site)}
+                      title="Check that every photo the engine wrote is in the site's Media Manager folder, and list collection rows the engine does not own"
+                    >
+                      {busy === `audit:${site.id}` ? "Auditing…" : "Audit photos & rows"}
+                    </button>
                   </div>
                 </div>
                 <div className="stats-grid" style={{ marginBottom: 0 }}>
@@ -491,6 +561,51 @@ export default function ListingsOverviewPage() {
                     title="See what each in-progress listing is waiting on"
                   />
                 </div>
+                {audits[site.id] && (() => {
+                  const a = audits[site.id];
+                  const f = a.folder;
+                  return (
+                    <div className="text-sm" style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border, rgba(255,255,255,0.08))" }}>
+                      <div style={{ marginBottom: 6 }}>
+                        <strong>Audit</strong> {fmtDateTime(a.generatedAt)} ·{" "}
+                        {a.clean ? <span className="badge badge-success">clean</span> : <span className="badge badge-warning">needs attention</span>}
+                      </div>
+                      <div>
+                        Photo folder:{" "}
+                        {!f.configured
+                          ? "none configured (imports go to Wix's default location)"
+                          : !f.resolved
+                            ? `"${a.site.media_folder_name}" not resolved yet (no import has run for this location)`
+                            : `"${a.site.media_folder_name}" holds ${f.filesInFolder} file(s)${f.listingTruncated ? " (listing cut short)" : ""}; the engine holds ${f.engineFiles} photo(s), ${f.engineFilesInFolder} in the folder, ${f.outsideFolderCount} outside${f.outsideFolder.length ? ` (${f.outsideFolder.slice(0, 5).join(", ")}${f.outsideFolderCount > 5 ? ", …" : ""})` : ""}; ${f.unknownInFolder} file(s) in the folder are not the engine's`}
+                      </div>
+                      {a.collections.map((c) => (
+                        <div key={c.collectionId} style={{ marginTop: 6 }}>
+                          <code>{c.collectionId}</code> ({c.role}): {c.items} row(s), {c.owned} owned by the engine, <strong>{c.staleCount} stale</strong>
+                          {c.missing ? `, ${c.missing} engine row(s) missing from the collection` : ""}; galleries: {c.galleryItems} item(s),{" "}
+                          {c.galleryOutsideFolder === null ? "folder unresolved" : `${c.galleryOutsideFolder} outside the folder`}
+                          {c.galleryNotWixImage ? `, ${c.galleryNotWixImage} not Wix images` : ""}
+                          {c.staleCount > 0 && (
+                            <ul style={{ margin: "4px 0 0 18px" }}>
+                              {c.stale.map((s) => (
+                                <li key={s.id}>
+                                  <code>{s.id}</code> {s.address ?? ""} {s.status ? `(${s.status})` : ""}
+                                </li>
+                              ))}
+                              {c.staleCount > c.stale.length && <li>…and {c.staleCount - c.stale.length} more</li>}
+                            </ul>
+                          )}
+                          {c.staleCount > 0 && c.deletable && (
+                            <button className="btn btn-danger btn-sm" style={{ marginTop: 6 }} disabled={busy !== null} onClick={() => deleteStale(site, c.collectionId, c.staleCount)}>
+                              {busy === `stale:${site.id}` ? "Deleting…" : `Delete ${c.staleCount} stale row(s) from ${c.collectionId}`}
+                            </button>
+                          )}
+                          {c.staleCount > 0 && !c.deletable && <div className="text-muted">Stale rows in the live collection are deleted after cutover, when it is the target.</div>}
+                        </div>
+                      ))}
+                      {staleResults[site.id] && <div style={{ marginTop: 6 }}><strong>Deleted:</strong> {staleResults[site.id]}</div>}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

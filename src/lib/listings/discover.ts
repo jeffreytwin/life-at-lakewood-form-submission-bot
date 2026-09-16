@@ -6,19 +6,23 @@
 // the engine does not know, pull those by id with their Media, and hand
 // them to the normal classify / photos / write path.
 //
-// Stellar (mfrmls) has tens of thousands of Active listings, a few hundred
-// pages at MLSGrid's pace, more than one function invocation allows. A scan
-// the deadline cuts short leaves its @odata.nextLink here, in
+// Stellar (mfrmls) has 110,000 Active listings, some 550 pages at MLSGrid's
+// pace, more than one function invocation allows. A scan the deadline cuts
+// short leaves the newest ModificationTimestamp it read here, in
 // system_settings.ls_engine_state.discoverCursor, and the next discover run
-// (from the Hub, or the cron tick when nothing else is due) continues from
-// it. A completed scan clears the cursor.
+// (from the Hub, or the cron tick when nothing else is due) asks for Active
+// listings modified after it: MLSGrid returns replication results in
+// ModificationTimestamp order and refuses a stale @odata.nextLink ("$skip
+// value is very high", seen at $skip=84800 on 2026-09-16), so the timestamp
+// is the only cursor that survives across invocations. A completed scan
+// clears the cursor.
 
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
 
 export interface DiscoverCursor {
-  /** MLSGrid's continuation URL for the next page. */
-  nextLink: string;
+  /** The newest ModificationTimestamp the scan has read; the next run asks for records modified after it. */
+  sinceTimestamp: string;
   /** When the scan this cursor belongs to began. */
   startedAt: string;
   /** Records scanned and new market-city listings found so far, across the scan's runs. */
@@ -50,9 +54,9 @@ export interface DiscoverSummary {
 function asCursor(value: unknown): DiscoverCursor | null {
   if (!value || typeof value !== "object") return null;
   const c = value as Partial<DiscoverCursor>;
-  if (typeof c.nextLink !== "string" || !c.nextLink) return null;
+  if (typeof c.sinceTimestamp !== "string" || Number.isNaN(Date.parse(c.sinceTimestamp))) return null;
   return {
-    nextLink: c.nextLink,
+    sinceTimestamp: c.sinceTimestamp,
     startedAt: typeof c.startedAt === "string" ? c.startedAt : new Date(0).toISOString(),
     scanned: typeof c.scanned === "number" ? c.scanned : 0,
     found: typeof c.found === "number" ? c.found : 0,
@@ -79,14 +83,20 @@ export async function saveDiscoverCursor(cursor: DiscoverCursor | null): Promise
   if (error) throw new Error(`save discover cursor: ${errorMessage(error)}`);
 }
 
-/** The cursor a run leaves behind: the scan's running totals plus the new continuation, or null when the scan is complete. */
+/**
+ * The cursor a run leaves behind: the scan's running totals plus the resume
+ * point, or null when the scan is complete. A truncated run that read
+ * nothing keeps the prior resume point (it made no progress).
+ */
 export function nextCursor(
   prior: DiscoverCursor | null,
-  run: { nextLink: string | null; scanned: number; found: number; pages: number; expectedCount: number | null; startedAt: Date }
+  run: { truncated: boolean; lastModificationTimestamp: string | null; scanned: number; found: number; pages: number; expectedCount: number | null; startedAt: Date }
 ): DiscoverCursor | null {
-  if (!run.nextLink) return null;
+  if (!run.truncated) return null;
+  const since = run.lastModificationTimestamp ?? prior?.sinceTimestamp;
+  if (!since) return null;
   return {
-    nextLink: run.nextLink,
+    sinceTimestamp: since,
     startedAt: prior?.startedAt ?? run.startedAt.toISOString(),
     scanned: (prior?.scanned ?? 0) + run.scanned,
     found: (prior?.found ?? 0) + run.found,

@@ -39,6 +39,7 @@ const site: LsSite = {
   villages_collection_id: "HousesforSale-DynamicPages",
   write_mode: "shadow",
   market_cities: ["Longboat Key"],
+  property_types: ["Residential", "Land"],
   active: true,
   timezone: "America/New_York",
   media_folder_name: null,

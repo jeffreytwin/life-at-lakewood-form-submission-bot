@@ -28,7 +28,7 @@ describe("decideMode", () => {
 
   it("continues a discovery scan only when nothing else is due", () => {
     const now = at("2026-09-15T12:00:00Z");
-    const cursor = { nextLink: "https://api.mlsgrid.com/v2/Property?next=7", startedAt: "2026-09-15T11:00:00Z", scanned: 1200, found: 40, pages: 6, expectedCount: 55_000 };
+    const cursor = { sinceTimestamp: "2026-09-15T10:58:00.000Z", startedAt: "2026-09-15T11:00:00Z", scanned: 1200, found: 40, pages: 6, expectedCount: 55_000 };
     const idle = { lastFullDate: "2026-09-15", discoverCursor: cursor };
     expect(decideMode({ now, state: idle, lastOkIncremental: new Date(now.getTime() - 20 * MINUTE) })).toBe("discover");
     // The hourly and the daily full still come first.

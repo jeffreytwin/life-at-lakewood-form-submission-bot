@@ -731,6 +731,33 @@ the Supabase project is on Pro (storage for fetched photos).
   **inactive** in the migration so no photo lands outside the folder
   before the code that reads `media_folder_*` is deployed.
 
+**Cutover additions for Parrish (Jeff, 2026-09-16): purge the old photos by
+folder.** The site's Media Manager is full of listing photos the manual
+process never deleted; once the engine's set is live Jeff will trash the
+old upload folders himself. Two Hub additions make that safe. **Audit
+photos & rows** on the site card (`GET /api/internal/listings/sites/:id/audit`,
+`src/lib/listings/audit.ts`): lists the files in the site's folder and
+checks every Media Manager file id the engine holds for the site against
+them, checks every gallery `src` in the target collection (and the live
+one while in shadow) against the folder, and lists the collection rows the
+engine does not own (the 8 listings on lifeatparrish.com the engine did
+not adopt: 6 no longer Active, 2 rentals) with a **Delete stale rows**
+button that only ever acts on the site's *target* collection, so nothing
+leaves the live collection before the flip. "Clean" = every engine photo
+in the folder, no gallery pointing outside it, no stale row in the target.
+Parrish's cutover order becomes: audit clean in shadow → flip → first live
+run → audit again, delete the stale rows from `HousesforSale` → Jeff purges
+the old folders after the rollback week.
+
+**Property types per site (Jeff, 2026-09-16).** Vacant land is shown on
+Life in Longboat Key only; every other site shows Residential alone for
+now. Migration 047 adds `ls_sites.property_types` (default
+`{Residential}`, Longboat Key `{Residential, Land}`) and classify reads it
+instead of the former global constant. The first discovery scan had found
+21 Parrish Land listings, which this keeps off the site; a Land listing a
+Residential-only site had already staged is unstaged on its next
+classification with reason `property_type`.
+
 **Rollout, in order:** merge and deploy → apply migration 046 → set
 `active = true` on the Parrish row → Run Discovery from the Hub (the
 ticks finish the scan) → the seed's placeholders and the finds are

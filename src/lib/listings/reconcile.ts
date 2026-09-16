@@ -291,7 +291,10 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       const prior = await loadDiscoverCursor();
       const marketCities = new Set(sites.flatMap((s) => (s.market_cities ?? []).map((c) => c.toLowerCase())));
       const known = new Set(await db.loadKnownListingIds());
-      const scan = await client.fetchActive({ cursor: prior?.nextLink ?? null, maxPages: opts.maxPages, deadline: fetchDeadline - DISCOVER_PULL_RESERVE_MS });
+      const scan = await client.fetchActive({ since: prior ? new Date(prior.sinceTimestamp) : null, maxPages: opts.maxPages, deadline: fetchDeadline - DISCOVER_PULL_RESERVE_MS });
+      if (!scan.ordered) {
+        run.event("warn", "discover", "MLSGrid returned a page out of ModificationTimestamp order; a resumed scan may skip records modified before its resume point");
+      }
       const nobody: ReadonlySet<string> = new Set();
       const found = new Map<string, MlsGridProperty>();
       for (const raw of scan.items) {
@@ -308,7 +311,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       relevant = verify?.items ?? [];
       truncated = scan.truncated;
       run.counts.mlsgrid_listing_count = prior?.expectedCount ?? scan.expectedCount ?? 0;
-      const cursor = nextCursor(prior, { nextLink: scan.cursor, scanned: scan.items.length, found: found.size, pages: scan.pages, expectedCount: scan.expectedCount, startedAt });
+      const cursor = nextCursor(prior, { truncated: scan.truncated, lastModificationTimestamp: scan.lastModificationTimestamp, scanned: scan.items.length, found: found.size, pages: scan.pages, expectedCount: scan.expectedCount, startedAt });
       await saveDiscoverCursor(cursor);
       const summary: DiscoverSummary = {
         resumed: !!prior,
@@ -380,7 +383,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
         summary.classified += 1;
         const prior = existing.get(listing.listing_id);
         const known = !!prior && prior.state !== "removed";
-        const outcome = classifyListing(listing, { marketCities: site.market_cities, villages, known, mode: classifyMode(opts.mode) });
+        const outcome = classifyListing(listing, { marketCities: site.market_cities, propertyTypes: site.property_types, villages, known, mode: classifyMode(opts.mode) });
         if (outcome.kind === "eligible") {
           summary.eligible += 1;
           rows.push({
@@ -454,6 +457,15 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
     const message = errorMessage(error);
     const rateLimited = error instanceof MlsGridError && error.rateLimited;
     logger.error("Listings reconcile failed", { runKey: run.runKey, stage, message, rateLimited });
+    if (opts.mode === "discover" && error instanceof MlsGridError && error.status === 400) {
+      // A resume point MLSGrid will not accept would fail on every idle tick; drop it so discovery starts over on the next click.
+      try {
+        await saveDiscoverCursor(null);
+        run.event("warn", "discover", `MLSGrid refused the discovery request; the saved resume point was cleared and Run Discovery starts a fresh scan: ${message.slice(0, 200)}`);
+      } catch (clearError) {
+        logger.warn("Could not clear the discovery cursor", { error: errorMessage(clearError) });
+      }
+    }
     await run.finish("error", { stage, message, stack: error instanceof Error ? error.stack : undefined });
     result.status = "error";
     result.stage = stage;

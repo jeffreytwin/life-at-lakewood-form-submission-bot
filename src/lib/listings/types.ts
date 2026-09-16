@@ -25,6 +25,8 @@ export interface LsSite {
   villages_collection_id: string;
   write_mode: WriteMode;
   market_cities: string[];
+  /** RESO PropertyType values the site shows (Residential; Longboat Key also Land). */
+  property_types: string[];
   active: boolean;
   timezone: string;
   /** Media Manager folder the engine imports this site's photos into; null = Wix's default. */
