@@ -34,6 +34,7 @@ import {
 import { bulkRemoveItems, bulkSaveItems, WixApiError, type WixItemData } from "@/lib/wix/client";
 import { errorMessage } from "@/lib/shared/errors";
 import { logger } from "@/lib/shared/logger";
+import { isRenderableWixImage } from "@/lib/listings/types";
 import type {
   GalleryItem,
   LsListingRow,
@@ -514,7 +515,18 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
       continue;
     }
     const photos = galleries.get(sl.listing_id) ?? [];
-    const available = photos.filter((p) => p.src);
+    // A src Wix cannot render is worse than a missing photo: it takes the whole
+    // gallery down and the site shows its editor placeholder instead. Such a
+    // photo never reaches a record, and someone is told.
+    const held = photos.filter((p) => p.src && !isRenderableWixImage(p.src));
+    if (held.length) {
+      run.event("error", "gallery_unusable", `${site.name}: ${held.length} of ${photos.length} photo(s) for ${sl.listing_id} are not in a form Wix can show, so they were left out of the gallery`, {
+        siteId: site.id,
+        listingId: sl.listing_id,
+        details: { sample: held.slice(0, 3).map((p) => p.src) },
+      });
+    }
+    const available = photos.filter((p) => isRenderableWixImage(p.src));
     if (!available.length) {
       summary.waitingForPhotos += 1;
       continue;

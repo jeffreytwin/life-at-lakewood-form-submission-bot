@@ -49,6 +49,13 @@ describe("plainError", () => {
     expect(repeat.problem).toBe("Photos for listing MFR1 aren't uploading to Life At Parrish. This has happened several times.");
   });
 
+  it("explains an unusable gallery without naming a URI scheme", () => {
+    const e = plainError({ kind: "gallery_unusable", message: "Life in Longboat Key: 5 of 5 photo(s) for MFRA1 are not in a form Wix can show, so they were left out of the gallery", listing_id: "MFRA1" }, "Life in Longboat Key");
+    expect(e.problem).toBe("Some photos for listing MFRA1 can't be shown on Life in Longboat Key, so they were left off the listing.");
+    expect(e.nextStep).toMatch(/site admin/);
+    expect(e.problem).not.toMatch(/wix:image|URI|originWidth/);
+  });
+
   it("falls back to the message for a kind it does not know", () => {
     expect(plainError({ kind: "events_dropped", message: "Event buffer cap reached" }, null)).toEqual({ problem: "Event buffer cap reached", nextStep: "Open Details to see what happened." });
   });

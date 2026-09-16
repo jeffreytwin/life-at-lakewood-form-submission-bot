@@ -92,6 +92,8 @@ function row(listingId: string, position: number, patch: Partial<db.PhotoBacklog
     content_hash: null,
     retry_after: null,
     download_attempts: 0,
+    image_width: 1600,
+    image_height: 898,
     site_ids: [site.id],
     ...patch,
   };
@@ -146,7 +148,7 @@ describe("runPhotoJob", () => {
     );
     expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/MFR1/p1.jpeg", "MFR1-1.jpeg", null);
     expect(db.upsertSiteMedia).toHaveBeenCalledWith([
-      { site_id: site.id, media_id: "m-MFR1-1", wix_file_id: "file-1", wix_image_uri: "wix:image://v1/file-1/MFR1-1.jpeg", origin: "imported" },
+      { site_id: site.id, media_id: "m-MFR1-1", wix_file_id: "file-1", wix_image_uri: "wix:image://v1/file-1/MFR1-1.jpeg#originWidth=1600&originHeight=898", origin: "imported" },
     ]);
     expect(db.upsertSiteListings).toHaveBeenCalledWith([{ site_id: site.id, listing_id: "MFR1", needs_write: true }]);
     expect(handle.counts).toMatchObject({ images_downloaded: 2, images_imported: 2, images_failed: 0 });
@@ -479,5 +481,36 @@ describe("concurrent passes", () => {
     expect(findFolder).toHaveBeenCalledTimes(1);
     expect(deps.cacheFolder).toHaveBeenCalledTimes(1);
     for (const call of vi.mocked(deps.importToWix).mock.calls) expect(call[3]).toBe("folder-9");
+  });
+});
+
+describe("photos Wix cannot render", () => {
+  it("does not import a photo whose dimensions the MLS never gave, and says so", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([
+      row("MFR1", 1, { storage_path: "listings/images/MFR1/p1.jpeg", content_hash: "a", source_url: null, image_width: null, image_height: null }),
+      row("MFR1", 2, { storage_path: "listings/images/MFR1/p2.jpeg", content_hash: "b", source_url: null }),
+    ]);
+    const deps = fakeDeps();
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    // The second photo still goes; only the one with no dimensions is held back.
+    expect(summary).toMatchObject({ imported: 1 });
+    expect(deps.importToWix).toHaveBeenCalledTimes(1);
+    expect(db.coolDownListingMedia).toHaveBeenCalledWith("MFR1", expect.any(Date), expect.stringContaining("dimensions"));
+    expect(events).toContainEqual(expect.objectContaining({ level: "warn", kind: "import_failed", message: expect.stringContaining("no dimensions") }));
+  });
+
+  it("writes the imported photo with the dimensions Wix needs", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { storage_path: "listings/images/MFR1/p1.jpeg", content_hash: "a", source_url: null, image_width: 1024, image_height: 768 })]);
+    const deps = fakeDeps();
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(db.upsertSiteMedia).toHaveBeenCalledWith([
+      expect.objectContaining({ wix_image_uri: "wix:image://v1/file-1/MFR1-1.jpeg#originWidth=1024&originHeight=768" }),
+    ]);
   });
 });

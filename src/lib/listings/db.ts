@@ -319,6 +319,9 @@ export interface PhotoBacklogRow {
   content_hash: string | null;
   retry_after: string | null;
   download_attempts: number;
+  /** MLSGrid's dimensions for the photo; the Wix image URI is unusable without them. */
+  image_width: number | null;
+  image_height: number | null;
   /** Active, unpaused sites showing (or about to show) the listing that do not have this photo yet. */
   site_ids: string[];
 }

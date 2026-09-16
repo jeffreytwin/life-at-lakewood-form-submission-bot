@@ -30,8 +30,8 @@ const village: VillageWithTerms = {
 };
 
 const gallery: GalleryItem[] = [
-  { type: "Image", title: "Front", src: "wix:image://v1/d0be81_a~mv2.jpg/1.jpg", order: 1, mlsPathKey: "images/MFR783588094/1.jpeg" },
-  { type: "Image", title: "Kitchen", src: "wix:image://v1/d0be81_b~mv2.jpg/2.jpg", order: 2, mlsPathKey: "images/MFR783588094/2.jpeg" },
+  { type: "Image", title: "Front", src: "wix:image://v1/d0be81_a~mv2.jpg/1.jpg#originWidth=1600&originHeight=898", order: 1, mlsPathKey: "images/MFR783588094/1.jpeg" },
+  { type: "Image", title: "Kitchen", src: "wix:image://v1/d0be81_b~mv2.jpg/2.jpg#originWidth=1600&originHeight=898", order: 2, mlsPathKey: "images/MFR783588094/2.jpeg" },
 ];
 
 describe("formatting helpers", () => {
@@ -63,7 +63,7 @@ describe("buildListingRecord", () => {
     expect(record).toMatchObject({
       _id: "MFRA4670555",
       propertyAddress: "3040 Grand Bay Boulevard Unit 215, Longboat Key, FL 34228",
-      listingPrimaryImage: "wix:image://v1/d0be81_a~mv2.jpg/1.jpg",
+      listingPrimaryImage: "wix:image://v1/d0be81_a~mv2.jpg/1.jpg#originWidth=1600&originHeight=898",
       listingPrice: "$1,395,000",
       listingPricePure: 1395000,
       listingPriceSort: ["$1M - $2M"],

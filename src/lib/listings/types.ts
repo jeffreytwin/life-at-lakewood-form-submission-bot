@@ -64,6 +64,9 @@ export interface MlsGridMedia {
   MediaKey?: string;
   MediaURL?: string;
   Order?: number;
+  /** Wix image URIs need these as originWidth/originHeight or the gallery will not render. */
+  ImageWidth?: number;
+  ImageHeight?: number;
   LongDescription?: string;
   MediaModificationTimestamp?: string;
   ModificationTimestamp?: string;
@@ -154,6 +157,29 @@ export interface LsListingMediaInput {
   source_url_received_at: string | null;
   title: string | null;
   media_modification_timestamp: string | null;
+  image_width: number | null;
+  image_height: number | null;
+}
+
+/**
+ * A Wix image URI the CMS and the site can actually render. The origin
+ * dimensions are not decoration: without them Wix refuses the gallery, the
+ * CMS shows a warning and a broken primary image, and the site's gallery
+ * falls back to its editor placeholder.
+ */
+export const WIX_IMAGE_URI = /^wix:image:\/\/v1\/[^/]+\/[^#]*#originWidth=[1-9][0-9]*&originHeight=[1-9][0-9]*$/;
+
+export const isRenderableWixImage = (src: unknown): src is string =>
+  typeof src === "string" && WIX_IMAGE_URI.test(src);
+
+/**
+ * The URI for a photo the engine imported, or null when the dimensions are
+ * unknown — a URI without them is worse than none, because it writes a
+ * gallery nothing can show.
+ */
+export function wixImageUri(fileId: string, displayName: string, width: number | null, height: number | null): string | null {
+  if (!fileId || !width || !height || width < 1 || height < 1) return null;
+  return `wix:image://v1/${fileId}/${encodeURIComponent(displayName)}#originWidth=${Math.round(width)}&originHeight=${Math.round(height)}`;
 }
 
 /** One gallery entry as written to a HousesforSale-shaped collection. */

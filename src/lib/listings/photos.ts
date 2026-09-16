@@ -17,6 +17,7 @@ import { MlsGridClient, MlsGridError } from "@/lib/listings/mlsgrid";
 import { normalizeMedia } from "@/lib/listings/normalize";
 import * as db from "@/lib/listings/db";
 import { startRun, type RunHandle } from "@/lib/listings/runs";
+import { wixImageUri } from "@/lib/listings/types";
 import type { LsListingMediaInput, LsSite, RunTrigger } from "@/lib/listings/types";
 
 export const PHOTOS_BUCKET = "photos";
@@ -308,6 +309,7 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
   async function processListing(listingId: string, media: db.PhotoBacklogRow[], urls: Map<string, string> | undefined): Promise<boolean> {
     let truncated = false;
     const downloads = { failed: 0, exhausted: 0, lastError: "", retryAt: 0 };
+    const missingDimensions = new Set<string>();
     const importedMedia = new Map<string, Set<string>>();
     const importErrors = new Map<string, string>();
     try {
@@ -344,12 +346,22 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
         }
       }
       if (await pool(pendingImports, IMPORT_CONCURRENCY, overdue, async ({ m, site }) => {
+        // Without the MLS dimensions the URI would be one Wix cannot render, so the
+        // photo waits for a re-read rather than writing a gallery nothing can show.
+        if (!m.image_width || !m.image_height) {
+          missingDimensions.add(m.media_id);
+          return;
+        }
         const folder = await folderFor(site);
         if (!folder.ok) return;
         const name = displayNameFor(listingId, m.position, m.path_key);
         try {
           const file = await deps.importToWix(site.wix_site_id!, deps.publicUrl(m.storage_path!), name, folder.id);
-          const uri = `wix:image://v1/${file.id}/${encodeURIComponent(name)}`;
+          const uri = wixImageUri(file.id, name, m.image_width, m.image_height);
+          if (!uri) {
+            missingDimensions.add(m.media_id);
+            return;
+          }
           await db.upsertSiteMedia([{ site_id: site.id, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported" }]);
           // No await between these three, so the concurrent workers cannot lose one another's entries.
           const done = importedMedia.get(site.id) ?? new Set<string>();
@@ -390,6 +402,13 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
       }
       for (const [siteId, message] of importErrors) {
         run.event("warn", "import_failed", `${sites.get(siteId)?.name ?? siteId}: importing photos for ${listingId} failed: ${message}; retried in ${Math.round(IMPORT_RETRY_MS / 60_000)} min`, { siteId, listingId });
+      }
+      if (missingDimensions.size) {
+        await db.coolDownListingMedia(listingId, new Date(deps.now() + NOT_RETURNED_RETRY_MS), "MLSGrid did not give the photo's dimensions");
+        run.event("warn", "import_failed", `${listingId}: ${missingDimensions.size} photo(s) have no dimensions in the MLS record, so Wix could not be given a usable image; waiting for the next re-read`, {
+          listingId,
+          details: { mediaIds: [...missingDimensions].slice(0, 20) },
+        });
       }
       if (downloads.failed) {
         // A download that keeps failing is retried hourly on its own; only a photo that has used up

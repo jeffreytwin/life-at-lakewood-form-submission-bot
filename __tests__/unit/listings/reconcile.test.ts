@@ -224,7 +224,7 @@ describe("runReconcile (incremental)", () => {
     vi.mocked(db.loadWritableSiteListings).mockResolvedValue([siteListing(FIXTURE_ID)]);
     vi.mocked(db.loadListings).mockResolvedValue(new Map([[FIXTURE_ID, listing]]));
     vi.mocked(db.loadSiteGalleries).mockResolvedValue(
-      new Map([[FIXTURE_ID, media.map((m, i) => ({ mediaId: `m${i}`, position: m.position, pathKey: m.path_key, title: m.title, src: i === 0 ? "wix:image://v1/d0be81_seed~mv2.jpg/1.jpg" : null }))]])
+      new Map([[FIXTURE_ID, media.map((m, i) => ({ mediaId: `m${i}`, position: m.position, pathKey: m.path_key, title: m.title, src: i === 0 ? "wix:image://v1/d0be81_seed~mv2.jpg/1.jpg#originWidth=1600&originHeight=898" : null }))]])
     );
     vi.mocked(db.loadPendingRemovals).mockResolvedValue([
       siteListing("MFRKNOWN1", { state: "removed", wix_item_id: "MFRKNOWN1", reason_code: "city_change", reason_detail: 'City is "Sarasota", outside the site\'s market' }),
@@ -331,5 +331,58 @@ describe("runReconcile (full)", () => {
     const guard = events.find((e) => e.kind === "mass_delete_guard");
     expect(guard?.level).toBe("error");
     expect(guard?.message).toContain("10 of 20");
+  });
+});
+
+describe("galleries Wix cannot render", () => {
+  /**
+   * Jeff, 2026-09-16: five live Longboat Key listings showed one stock photo
+   * each. Their gallery entries had no origin dimensions, so Wix refused the
+   * field and the site fell back to its editor placeholder. Such a photo is
+   * now left out of the record and the Errors panel says so.
+   */
+  const good = "wix:image://v1/d0be81_good~mv2.jpeg/1.jpeg#originWidth=1600&originHeight=898";
+  const bad = "wix:image://v1/d0be81_bad~mv2.jpeg/2.jpeg";
+
+  function galleryOf(entries: Array<string | null>) {
+    return new Map([[FIXTURE_ID, entries.map((src, i) => ({ mediaId: `m${i}`, position: i + 1, pathKey: `images/x/${i}.jpeg`, title: null, src }))]]);
+  }
+
+  beforeEach(() => {
+    const { listing } = normalizeListing(raw, NOW);
+    vi.mocked(db.loadWritableSiteListings).mockResolvedValue([siteListing(FIXTURE_ID)]);
+    vi.mocked(db.loadListings).mockResolvedValue(new Map([[FIXTURE_ID, listing]]));
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue([]);
+    vi.mocked(db.loadSiteListings).mockResolvedValue(new Map());
+    vi.mocked(db.loadPendingRemovals).mockResolvedValue([]);
+  });
+
+  it("leaves an unrenderable photo out of the record and raises an error", async () => {
+    const { handle, events } = fakeRun("incremental");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadSiteGalleries).mockResolvedValue(galleryOf([good, bad]));
+
+    await runReconcile({ mode: "incremental", trigger: "hub", deadline: NOW.getTime() + 240_000, client: fakeClient({ modified: [raw] }) });
+
+    const written = vi.mocked(bulkSaveItems).mock.calls[0]?.[2] as Array<Record<string, unknown>> | undefined;
+    const gallery = written?.[0]?.listingImageGallery as Array<{ src: string }>;
+    expect(gallery).toHaveLength(1);
+    expect(gallery[0].src).toBe(good);
+    expect(written?.[0]?.listingPrimaryImage).toBe(good);
+    const alert = events.find((e) => e.kind === "gallery_unusable");
+    expect(alert?.level).toBe("error");
+    expect(alert?.message).toContain("1 of 2");
+  });
+
+  it("writes nothing at all when every photo is unusable", async () => {
+    const { handle, events } = fakeRun("incremental");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadSiteGalleries).mockResolvedValue(galleryOf([bad, bad]));
+
+    const result = await runReconcile({ mode: "incremental", trigger: "hub", deadline: NOW.getTime() + 240_000, client: fakeClient({ modified: [raw] }) });
+
+    expect(bulkSaveItems).not.toHaveBeenCalled();
+    expect(result.sites[0]).toMatchObject({ waitingForPhotos: 1 });
+    expect(events.find((e) => e.kind === "gallery_unusable")?.level).toBe("error");
   });
 });
