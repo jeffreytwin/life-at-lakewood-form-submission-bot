@@ -11,6 +11,100 @@ deliberately.
 
 ---
 
+## Where things stand, and the next session's kickoff (2026-09-16)
+
+Written at the end of the session that built the Hub's Listings section,
+the photo pipeline and the cutover preparation, so the next session starts
+from the facts rather than the chat.
+
+**State of Longboat Key (11:30 AM ET, 2026-09-16).** The engine has been on
+since 12:15 PM ET on the 15th. The site is still in **shadow mode**
+(`write_mode = shadow`, target `HousesforSale2`): 203 live rows, 0 in
+progress, 0 open errors. Every hourly run since the switch-on has finished
+ok (the last six: +0/~11/-1, +1/~1, +0/~0, +0/~1, +0/~1, +0/~0, no failed
+writes, no errors); the nightly full ran at 03:00 UTC on the 16th and the
+retention purge with it. The photo backlog is empty and no photo run has
+happened yet: in shadow mode the Velo pipeline still fetches each new
+listing's photos and the engine waits 90 minutes before fetching one
+itself, so far it has never had to.
+
+**Merged to the default branch** (`claude/automate-form-routing-22fSB`):
+PRs #283 to #288, the five Hub rounds (Neighborhoods, In Progress, Change
+Log runs-first, Errors panel with dismissals, Eastern time, location names)
+and step 3, the photo pipeline. Migrations 043, 044 and 045 are applied to
+production (via the Supabase MCP; each file's header says so).
+
+**Open:** PR #289 on `claude/intelligent-tesla-ba6jum` (neighborhood stats
+for live sites + this doc's cutover runbook): draft, green, no review
+threads. **It must be merged and deployed before the flip**, because the
+Velo hourly job also writes each neighborhood's `activeListingCount` /
+`zeroSince` and the four `*Active` ranges, which the neighborhood pages
+show and the Google Ads inventory feed reads; #289 makes the engine write
+them once the site is live. Once #289 is merged, restart the working
+branch from the default branch (the branch then carries only merged
+history).
+
+**Jeff's position at hand-off:** he has read the runbook and intends to
+proceed. He has **not** stopped the Velo jobs yet; he said he would
+shortly. Nothing about the database has been flipped. The Supabase MCP
+connection in the next session may need reconnecting (it dropped once in
+this one); the runbook's SQL can equally be run in the Supabase SQL editor.
+
+**The next session, in order:**
+
+1. Confirm #289 merged and the production deploy finished (Vercel). If
+   not merged, that is the first ask.
+2. Wait for Jeff's word that `backend/jobs.config` on lifeinlongboatkey.com
+   is `{ "jobs": [] }` and published (runbook step 2). Do not flip before:
+   MLSGrid allows one download per photo per hour, and two pipelines
+   fetching at once cost one of them its download.
+3. On his go, run runbook step 3 (the `ls_sites` flip plus the nulling of
+   `written_at` / `written_fingerprint`), then Run Full from the Hub or
+   wait for the :30 hourly. Expect about 203 rewritten, 0 failed, 0
+   removed, then the neighborhood stats step (no `stats_failed` entry).
+4. Verify (runbook step 5): the Change Log run reads ok, the Errors panel
+   is empty, a listing page, a neighborhood page and a gallery render on
+   the live site, `GET /_functions/adsInventoryFeed` still answers with
+   counts, the overview's Live box equals the site's inventory. Then
+   watch the first few hourly runs: from now on the photo job fetches new
+   listings' photos itself with no grace (expect `photos` entries and, on
+   idle ticks, runs of mode `photos` when something is pending).
+5. Rollback is runbook step 6; the week-later cleanup is step 7.
+
+**Follow-ups not yet done, in rough priority:**
+
+- Step 6 of the sequence: serve the ads inventory feed from the engine
+  (today it is `GET /_functions/adsInventoryFeed` on the Wix site, which
+  keeps working after cutover as long as the engine maintains the counts,
+  which #289 does).
+- The nightly shadow-vs-live comparison as a job: Jeff chose to run that
+  analysis separately; the verification script has the comparison.
+- `audit_log` entries for cutover and term edits (plan, "What the Hub
+  already provides"): not written today.
+- The Hub has no "Run Photos" button; `POST /api/internal/listings/run`
+  with `mode: "photos"` (optionally `shadowGraceMinutes: 0`) is the
+  manual path.
+- Onboarding the other three sites (step 5): rows in `ls_sites` plus the
+  neighborhoods import; no code.
+
+**Operational facts.** Supabase project `hwjnymwzibpfylmkccox`
+(form-submission-bot). Longboat Key `wix_site_id`
+`8b20e921-5b70-4428-8fcd-8c8ef3bad3ab`. The engine's cron is
+`/api/cron/listings-tick` every 15 minutes; the hourly currently starts at
+:30. Hub: `/dashboard/listings` (Overview, Neighborhoods, Change Log; In
+Progress from the site card). A check-in routine for PR #289
+(`trig_011qSatiUvgFU1qSCTNZCCYA`) still fires into the old session at
+16:32 UTC on the 16th; it is harmless and can be deleted.
+
+**Kickoff prompt for the next session:**
+
+> Read `docs/LISTINGS_ENGINE_PLAN.md`, starting with "Where things stand"
+> and the "Cutover runbook: Longboat Key". Confirm PR #289 is merged and
+> deployed. Then wait for my word that the Velo jobs are stopped, run the
+> runbook's step 3 SQL on my go, start the first live run, and verify it
+> per step 5. Keep the Hub's Errors panel and the Change Log in view for
+> the first hours.
+
 ## Decisions locked
 
 1. **Wix keeps rendering; the engine decides.** Each site keeps `HousesforSale`,
