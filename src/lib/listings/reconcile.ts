@@ -72,8 +72,6 @@ export const PHOTOS_BUDGET_MS = 90_000;
  * whole budget scanning and pulled none of its 211 finds.
  */
 export const DISCOVER_PULL_RESERVE_MS = 45_000;
-/** The nightly check for photos Wix failed to fetch needs at least this much of the budget left. */
-export const BROKEN_PHOTO_CHECK_MS = 60_000;
 export const WRITE_RESERVE_MS = 60_000;
 
 /** What a run pulls: the hourly window, the full verify of every held id, or a discovery scan of every Active listing. */
@@ -493,6 +491,27 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
     run.event("error", "write_failed", `${site.name}: refused to write, shadow mode targets the live collection ${site.live_collection_id}`, { siteId: site.id });
     return;
   }
+  // The nightly verify covers the photo library too. Wix's URL import is
+  // asynchronous: it can accept a photo, hand back a file id, and then fail to
+  // fetch the picture, leaving a blank in the gallery for ever. This runs before
+  // the site's writes rather than after them, so the busiest run of the day
+  // cannot spend its budget and leave the check undone.
+  if (opts.mode === "full") {
+    try {
+      const repair = await reimportBrokenPhotos(site.id);
+      if (repair.refused) {
+        run.event("error", "photos_broken", `${site.name}: ${repair.refused}`, { siteId: site.id });
+      } else if (repair.broken) {
+        run.event("warn", "photos_broken", `${site.name}: Wix holds no picture for ${repair.broken} photo(s); ${repair.cleared} cleared to be fetched again across ${repair.listings} listing(s)`, {
+          siteId: site.id,
+          details: repair,
+        });
+      }
+    } catch (error) {
+      run.event("warn", "photos_broken", `${site.name}: could not check for photos Wix never fetched (${errorMessage(error)}); the next nightly tries again`, { siteId: site.id });
+    }
+  }
+
   const target = site.target_collection_id;
   const nowIso = new Date().toISOString();
   const refreshBefore = new Date(Date.now() - PULL_DATE_REFRESH_HOURS * 3600_000);
@@ -696,27 +715,6 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
         run.counts.stats_refreshed = false;
         run.event("warn", "stats_failed", `${site.name}: neighborhood stats not written to Wix: ${errorMessage(error)}; retried next run`, { siteId: site.id });
       }
-    }
-  }
-
-  // Wix's URL import is asynchronous: it can accept a photo, hand back a file
-  // id, and then fail to fetch the picture. Nothing in the response says so,
-  // and the gallery renders a blank where that photo should be. Once a night
-  // the engine looks for those and clears them, so the next photo pass brings
-  // them in again.
-  if (opts.mode === "full" && site.media_folder_id && Date.now() < opts.deadline - BROKEN_PHOTO_CHECK_MS) {
-    try {
-      const repair = await reimportBrokenPhotos(site.id);
-      if (repair.refused) {
-        run.event("error", "photos_broken", `${site.name}: ${repair.refused}`, { siteId: site.id });
-      } else if (repair.broken) {
-        run.event("warn", "photos_broken", `${site.name}: Wix holds no picture for ${repair.broken} photo(s); ${repair.cleared} cleared for re-import across ${repair.listings} listing(s)`, {
-          siteId: site.id,
-          details: repair,
-        });
-      }
-    } catch (error) {
-      run.event("warn", "photos_broken", `${site.name}: could not check for photos Wix failed to fetch (${errorMessage(error)}); the next full run tries again`, { siteId: site.id });
     }
   }
 }

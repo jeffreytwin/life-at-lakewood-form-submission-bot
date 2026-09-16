@@ -38,6 +38,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 vi.mock("@/lib/listings/media-seed", () => ({
   seedSiteMediaFromLive: vi.fn(),
 }));
+vi.mock("@/lib/listings/audit", () => ({ reimportBrokenPhotos: vi.fn(async () => ({ broken: 0, cleared: 0, listings: 0, refused: null })) }));
 vi.mock("@/lib/listings/village-stats", () => ({
   refreshVillageStatsOnWix: vi.fn(async () => ({ villages: 0, changed: 0, written: 0, failed: 0, zeroInventory: 0, remaining: false, requests: 0 })),
 }));
@@ -55,6 +56,7 @@ vi.mock("@/lib/wix/client", () => ({
 import * as db from "@/lib/listings/db";
 import { emptyCounts, lastCompleteIncrementalStartedAt, previousRunStartedAt, startRun, type RunHandle } from "@/lib/listings/runs";
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
+import { reimportBrokenPhotos } from "@/lib/listings/audit";
 import { bulkRemoveItems, bulkSaveItems, type WixItemData } from "@/lib/wix/client";
 import { normalizeListing } from "@/lib/listings/normalize";
 import { runReconcile } from "@/lib/listings/reconcile";
@@ -385,5 +387,58 @@ describe("galleries Wix cannot render", () => {
     expect(bulkSaveItems).not.toHaveBeenCalled();
     expect(result.sites[0]).toMatchObject({ waitingForPhotos: 1 });
     expect(events.find((e) => e.kind === "gallery_unusable")?.level).toBe("error");
+  });
+});
+
+describe("the nightly photo check", () => {
+  /**
+   * Jeff, 2026-09-16: "Don't we already have a full run that happens once a
+   * day?" We do, so the check for photos Wix accepted but never fetched lives
+   * there — at the top of each site, before its writes, so the busiest run of
+   * the day cannot spend its budget and leave the check undone.
+   */
+  beforeEach(() => {
+    const { listing } = normalizeListing(raw, NOW);
+    vi.mocked(db.loadWritableSiteListings).mockResolvedValue([siteListing(FIXTURE_ID)]);
+    vi.mocked(db.loadListings).mockResolvedValue(new Map([[FIXTURE_ID, listing]]));
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue([]);
+    vi.mocked(db.loadSiteListings).mockResolvedValue(new Map());
+    vi.mocked(db.loadPendingRemovals).mockResolvedValue([]);
+    vi.mocked(db.loadSiteGalleries).mockResolvedValue(new Map());
+  });
+
+  it("runs on the full run and says what it cleared", async () => {
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(reimportBrokenPhotos).mockResolvedValue({ broken: 12, cleared: 12, listings: 3, refused: null });
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
+
+    expect(reimportBrokenPhotos).toHaveBeenCalledWith(site.id);
+    expect(events).toContainEqual(expect.objectContaining({ level: "warn", kind: "photos_broken", message: expect.stringContaining("12 photo(s)") }));
+  });
+
+  it("does not run on an hourly, and never fails the run", async () => {
+    const hourly = fakeRun("incremental");
+    vi.mocked(startRun).mockResolvedValue(hourly.handle);
+    await runReconcile({ mode: "incremental", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ modified: [] }) });
+    expect(reimportBrokenPhotos).not.toHaveBeenCalled();
+
+    const nightly = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(nightly.handle);
+    vi.mocked(reimportBrokenPhotos).mockRejectedValue(new Error("Wix API GET /site-media/v1/files: 503"));
+    const result = await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
+    expect(result.status).toBe("ok");
+    expect(nightly.events).toContainEqual(expect.objectContaining({ level: "warn", kind: "photos_broken", message: expect.stringContaining("next nightly") }));
+  });
+
+  it("raises the refusal as an error", async () => {
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(reimportBrokenPhotos).mockResolvedValue({ broken: 900, cleared: 0, listings: 0, refused: "900 of 2000 of this location's photos look broken to Wix, which is too many to act on; nothing was cleared" });
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
+
+    expect(events).toContainEqual(expect.objectContaining({ level: "error", kind: "photos_broken", message: expect.stringContaining("too many to act on") }));
   });
 });

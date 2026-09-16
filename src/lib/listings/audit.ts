@@ -11,7 +11,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
-import { bulkRemoveItems, listMediaFiles, mediaState, queryAllItems, type WixDataItem } from "@/lib/wix/client";
+import { bulkRemoveItems, listMediaFiles, mediaState, queryAllItems, WIX_MEDIA_ROOT, type WixDataItem } from "@/lib/wix/client";
 import { wixFileId } from "@/lib/listings/normalize";
 import { selectAll } from "@/lib/listings/db";
 import { HubError } from "@/lib/listings/hub";
@@ -308,9 +308,10 @@ export async function deleteStaleRows(siteId: string, collectionId: string): Pro
 export async function reimportBrokenPhotos(siteId: string): Promise<ReimportResult> {
   const site = await loadSite(siteId);
   if (!site.wix_site_id) throw new HubError(`${site.name} has no wix_site_id`, 409);
-  if (!site.media_folder_id) throw new HubError(`${site.name} has no resolved Media Manager folder to check`, 409);
+  // A site with no folder of its own imports into Wix's root, so that is where to look.
+  const folderId = site.media_folder_id ?? WIX_MEDIA_ROOT;
 
-  const listing = await listMediaFiles(site.wix_site_id, site.media_folder_id);
+  const listing = await listMediaFiles(site.wix_site_id, folderId);
   const engineIds = new Set(await loadEngineFileIds(site.id));
   const broken = listing.files.filter((f) => engineIds.has(f.id) && mediaState(f) === "broken").map((f) => f.id);
   const result: ReimportResult = { broken: broken.length, cleared: 0, listings: 0, refused: null };
