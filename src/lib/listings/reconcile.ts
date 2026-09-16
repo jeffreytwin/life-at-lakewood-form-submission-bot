@@ -63,6 +63,13 @@ const DATA_DRIVEN_REASONS: ReadonlySet<ReasonCode> = new Set(["city_change", "no
 
 /** The photo step inside a run gets at most this long, and always leaves the writes this much. */
 export const PHOTOS_BUDGET_MS = 90_000;
+/**
+ * A discovery scan stops this long before the fetch deadline so the finds
+ * can be pulled by id with their Media in the same run (50 ids a request:
+ * 45 s is a couple of thousand listings). The first Parrish scan spent the
+ * whole budget scanning and pulled none of its 211 finds.
+ */
+export const DISCOVER_PULL_RESERVE_MS = 45_000;
 export const WRITE_RESERVE_MS = 60_000;
 
 /** What a run pulls: the hourly window, the full verify of every held id, or a discovery scan of every Active listing. */
@@ -284,7 +291,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       const prior = await loadDiscoverCursor();
       const marketCities = new Set(sites.flatMap((s) => (s.market_cities ?? []).map((c) => c.toLowerCase())));
       const known = new Set(await db.loadKnownListingIds());
-      const scan = await client.fetchActive({ cursor: prior?.nextLink ?? null, maxPages: opts.maxPages, deadline: fetchDeadline });
+      const scan = await client.fetchActive({ cursor: prior?.nextLink ?? null, maxPages: opts.maxPages, deadline: fetchDeadline - DISCOVER_PULL_RESERVE_MS });
       const nobody: ReadonlySet<string> = new Set();
       const found = new Map<string, MlsGridProperty>();
       for (const raw of scan.items) {
@@ -315,7 +322,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
         complete: !scan.truncated,
       };
       result.discover = summary;
-      run.event("info", "discover", `Discovery: scanned ${summary.scannedTotal}${summary.expectedCount ? ` of ${summary.expectedCount}` : ""} Active listings MLS-wide, ${summary.foundTotal} new in a market city${summary.complete ? "; scan complete" : "; the rest continues on the next run"}`, {
+      run.event("info", "discover", `Discovery: scanned ${summary.scannedTotal}${summary.expectedCount ? ` of ${summary.expectedCount}` : ""} Active listings MLS-wide, ${summary.foundTotal} new in a market city${unpulled.length ? ` (${unpulled.length} recorded without photos; the next full run pulls them)` : ""}${summary.complete ? "; scan complete" : "; the rest continues on the next run"}`, {
         details: { ...summary, unpulled: unpulled.length },
       });
     } else {
