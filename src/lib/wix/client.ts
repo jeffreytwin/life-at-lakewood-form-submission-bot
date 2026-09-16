@@ -260,6 +260,32 @@ export async function listMediaFolders(siteId: string, parentFolderId: string = 
   }
 }
 
+export interface WixMediaFile {
+  id: string;
+  displayName?: string;
+  parentFolderId?: string;
+}
+
+const FILE_PAGE = 100;
+/** Offset paging stops here whatever Wix says, so a folder that never ends cannot hang a request. */
+const FILE_PAGE_CAP = 1000;
+
+/** Every file directly in a Media Manager folder. The file id is the one a wix:image URI carries. */
+export async function listMediaFiles(siteId: string, parentFolderId: string): Promise<{ files: WixMediaFile[]; truncated: boolean }> {
+  const files: WixMediaFile[] = [];
+  for (let page = 0; page < FILE_PAGE_CAP; page += 1) {
+    const res = await wixRequest<{ files?: WixMediaFile[] }>(
+      siteId,
+      "GET",
+      `/site-media/v1/files?parentFolderId=${encodeURIComponent(parentFolderId)}&paging.limit=${FILE_PAGE}&paging.offset=${page * FILE_PAGE}`
+    );
+    const batch = res?.files ?? [];
+    files.push(...batch);
+    if (batch.length < FILE_PAGE) return { files, truncated: false };
+  }
+  return { files, truncated: true };
+}
+
 /** A root-level folder by display name (case-insensitive), or null. */
 export async function findMediaFolder(siteId: string, displayName: string): Promise<WixMediaFolder | null> {
   const wanted = displayName.trim().toLowerCase();
