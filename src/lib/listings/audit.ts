@@ -11,7 +11,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
-import { bulkRemoveItems, listMediaFiles, queryAllItems, type WixDataItem } from "@/lib/wix/client";
+import { bulkRemoveItems, listMediaFiles, mediaState, queryAllItems, type WixDataItem } from "@/lib/wix/client";
 import { wixFileId } from "@/lib/listings/normalize";
 import { selectAll } from "@/lib/listings/db";
 import { HubError } from "@/lib/listings/hub";
@@ -34,6 +34,24 @@ export interface FolderAudit {
   outsideFolderCount: number;
   /** Files in the folder the engine does not know (older imports, manual uploads). */
   unknownInFolder: number;
+  /** Engine files Wix holds no picture for: the import call succeeded but its fetch did not. */
+  brokenFiles: number;
+  /** Engine files Wix is still processing; they may yet come good. */
+  pendingFiles: number;
+}
+
+/** How much of a folder may look broken before the engine assumes it is misreading Wix, not Wix failing. */
+export const BROKEN_SHARE_CAP = 0.35;
+
+export interface ReimportResult {
+  /** Engine files Wix holds no picture for. */
+  broken: number;
+  /** Photo records cleared, so the next photo pass imports them again. */
+  cleared: number;
+  /** Listings whose gallery is rewritten once the photos are back. */
+  listings: number;
+  /** Set when the share of broken files was too high to be believed; nothing was cleared. */
+  refused: string | null;
 }
 
 export interface StaleRow {
@@ -176,6 +194,8 @@ export async function auditSite(siteId: string): Promise<SiteAuditReport> {
     outsideFolder: [],
     outsideFolderCount: 0,
     unknownInFolder: 0,
+    brokenFiles: 0,
+    pendingFiles: 0,
   };
   let folderFileIds: string[] | null = null;
   if (site.media_folder_id) {
@@ -183,7 +203,14 @@ export async function auditSite(siteId: string): Promise<SiteAuditReport> {
     folderFileIds = listing.files.map((f) => f.id);
     folder.filesInFolder = folderFileIds.length;
     folder.listingTruncated = listing.truncated;
-    Object.assign(folder, compareFolder(await loadEngineFileIds(site.id), folderFileIds));
+    const engineIds = new Set(await loadEngineFileIds(site.id));
+    for (const file of listing.files) {
+      if (!engineIds.has(file.id)) continue;
+      const state = mediaState(file);
+      if (state === "broken") folder.brokenFiles += 1;
+      else if (state === "pending") folder.pendingFiles += 1;
+    }
+    Object.assign(folder, compareFolder(engineIds, folderFileIds));
   } else {
     folder.engineFiles = new Set(await loadEngineFileIds(site.id)).size;
   }
@@ -261,6 +288,59 @@ export async function deleteStaleRows(siteId: string, collectionId: string): Pro
       result.failed += 1;
       if (result.errors.length < SAMPLE) result.errors.push(`${stale[r.originalIndex] ?? "?"}: ${r.error?.description ?? r.error?.code ?? "rejected"}`);
     }
+  }
+  return result;
+}
+
+/**
+ * Clears the engine's record of photos Wix holds no picture for, so the next
+ * photo pass imports them again and the listing's gallery is rewritten.
+ *
+ * Wix's URL import is asynchronous, and a fetch that fails leaves a file id
+ * that renders as a broken thumbnail forever. Nothing in the import response
+ * says so, which is why this looks afterwards instead.
+ *
+ * It refuses when more than BROKEN_SHARE_CAP of the engine's files look
+ * broken: at that point the likelier explanation is that Wix changed what it
+ * reports, and discarding thousands of good imports would be far worse than
+ * leaving a few bad ones.
+ */
+export async function reimportBrokenPhotos(siteId: string): Promise<ReimportResult> {
+  const site = await loadSite(siteId);
+  if (!site.wix_site_id) throw new HubError(`${site.name} has no wix_site_id`, 409);
+  if (!site.media_folder_id) throw new HubError(`${site.name} has no resolved Media Manager folder to check`, 409);
+
+  const listing = await listMediaFiles(site.wix_site_id, site.media_folder_id);
+  const engineIds = new Set(await loadEngineFileIds(site.id));
+  const broken = listing.files.filter((f) => engineIds.has(f.id) && mediaState(f) === "broken").map((f) => f.id);
+  const result: ReimportResult = { broken: broken.length, cleared: 0, listings: 0, refused: null };
+  if (!broken.length) return result;
+  if (engineIds.size && broken.length / engineIds.size > BROKEN_SHARE_CAP) {
+    result.refused = `${broken.length} of ${engineIds.size} of this location's photos look broken to Wix, which is too many to act on; nothing was cleared`;
+    return result;
+  }
+
+  const { data: rows, error } = await supabase
+    .from("ls_site_media")
+    .delete()
+    .eq("site_id", site.id)
+    .in("wix_file_id", broken)
+    .select("media_id");
+  if (error) throw new HubError(`clear broken photos: ${errorMessage(error)}`, 500);
+  const mediaIds = (rows ?? []).map((r) => r.media_id as string);
+  result.cleared = mediaIds.length;
+  if (!mediaIds.length) return result;
+
+  const { data: media } = await supabase.from("ls_listing_media").select("listing_id").in("id", mediaIds);
+  const listingIds = [...new Set((media ?? []).map((m) => m.listing_id as string))];
+  if (listingIds.length) {
+    const { data: touched } = await supabase
+      .from("ls_site_listings")
+      .update({ needs_write: true, gallery_ready: false, updated_at: new Date().toISOString() })
+      .eq("site_id", site.id)
+      .in("listing_id", listingIds)
+      .select("id");
+    result.listings = (touched ?? []).length;
   }
   return result;
 }

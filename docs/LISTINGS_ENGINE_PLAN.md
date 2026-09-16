@@ -777,6 +777,25 @@ and before the term match, so the non-neighborhood overlay never lists
 builder homes. Parrish goes from 697 staged to about 271; Longboat Key
 removes those ten on its next run.
 
+**Photos Wix accepted but never fetched (Jeff, 2026-09-16).** Parrish
+galleries had blanks scattered through them, and the file was genuinely
+empty in the Media Manager, not just unrendered in the CMS. Wix's URL
+import is asynchronous: `POST /site-media/v1/files/import` returns a file
+id straight away and Wix fetches the picture afterwards. When that fetch
+fails nothing in the response says so, so the engine records a file id that
+renders as nothing, for ever. `mediaState()` in the Wix client reads a file
+descriptor and calls it ready, pending, broken or unknown, and
+`reimportBrokenPhotos()` in `audit.ts` clears the engine's record of the
+broken ones so the next photo pass fetches them again and the listing is
+rewritten. It runs on the nightly full run per site, and on the Hub's audit
+panel as "Fetch them again"; the audit also reports the counts. Two
+safeties: a file is only called broken on positive evidence (Wix said
+FAILED, or it described the media and there were no dimensions), never on a
+response that simply lacks the media block, and the repair refuses outright
+when more than `BROKEN_SHARE_CAP` (35%) of a location's photos look broken,
+on the grounds that Wix having changed its payload is likelier than a third
+of the library failing. The refusal is an error in the panel.
+
 **The price filter tag is per site (Jeff, 2026-09-16).** The engine wrote
 Longboat Key's scheme everywhere: "Under $500k", "$500k - $1M", "$1M - $2M"
 and up, ported from that site's own pipeline. Parrish's live collection
