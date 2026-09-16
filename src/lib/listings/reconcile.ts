@@ -21,6 +21,7 @@ import { classifyListing } from "@/lib/listings/classify";
 import { buildListingRecord, recordFingerprint } from "@/lib/listings/transform";
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { runPhotoJob, type PhotoDeps, type PhotoSummary } from "@/lib/listings/photos";
+import { refreshVillageStatsOnWix } from "@/lib/listings/village-stats";
 import * as db from "@/lib/listings/db";
 import {
   lastCompleteIncrementalStartedAt,
@@ -578,13 +579,35 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
     }
   }
 
-  // ---- village counts (Postgres only until the site is live) ----
+  // ---- neighborhood counts: Postgres always; the site's neighborhoods collection once the site is live ----
   try {
     const { changed } = await db.refreshVillageCounts(site.id);
     summary.villagesChanged = changed;
     run.counts.stats_refreshed = true;
   } catch (error) {
     run.event("error", "stats_failed", `${site.name}: neighborhood counts not refreshed: ${errorMessage(error)}`, { siteId: site.id });
+  }
+  // In shadow mode the Velo pipeline still writes the neighborhood pages' stats and the
+  // ads feed's counts; from cutover on that is this run's job (village-stats.ts).
+  if (site.write_mode === "live") {
+    if (Date.now() > opts.deadline) {
+      run.counts.stats_refreshed = false;
+      run.event("warn", "budget", `${site.name}: out of time before the neighborhood stats refresh; the pages' ranges and the ads feed lag until the next run`, { siteId: site.id });
+    } else {
+      try {
+        const stats = await refreshVillageStatsOnWix(site, { deadline: opts.deadline });
+        run.counts.wix_requests += stats.requests;
+        run.counts.stats_refreshed = !stats.remaining;
+        if (stats.failed || stats.remaining) {
+          run.event("warn", "stats_failed", `${site.name}: neighborhood stats: ${stats.written} of ${stats.changed} changed row(s) written${stats.failed ? `, ${stats.failed} rejected` : ""}${stats.remaining ? ", the rest wait for the next run" : ""}`, {
+            siteId: site.id, details: stats,
+          });
+        }
+      } catch (error) {
+        run.counts.stats_refreshed = false;
+        run.event("error", "stats_failed", `${site.name}: neighborhood stats not written to Wix: ${errorMessage(error)}`, { siteId: site.id });
+      }
+    }
   }
 }
 
