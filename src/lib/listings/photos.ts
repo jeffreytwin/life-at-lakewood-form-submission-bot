@@ -40,6 +40,17 @@ export const IMPORT_SPACING_MS = 320;
 export const BACKLOG_LISTINGS = 60;
 /** On a shadow-mode site the Velo pipeline gets this long to fetch a new photo before the engine does. */
 export const SHADOW_GRACE_MINUTES = 90;
+/** A Media Manager folder lookup that takes longer than this is treated as failed; the site's imports wait for the next pass. */
+export const FOLDER_LOOKUP_TIMEOUT_MS = 20_000;
+
+/** Rejects when `work` has not settled within `ms`; the underlying request is abandoned, not cancelled. */
+export function withTimeout<T>(work: Promise<T>, ms: number, what: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${what} timed out after ${Math.round(ms / 1000)} s`)), ms);
+  });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 
 export interface DownloadResult {
@@ -227,7 +238,7 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
     if (cached) return { ok: true, id: cached };
     if (folderMissing.has(site.id)) return { ok: false };
     try {
-      const id = await deps.findFolder(site.wix_site_id!, site.media_folder_name);
+      const id = await withTimeout(deps.findFolder(site.wix_site_id!, site.media_folder_name), FOLDER_LOOKUP_TIMEOUT_MS, `Media Manager folder lookup for ${site.name}`);
       if (id) {
         folderIds.set(site.id, id);
         await deps.cacheFolder(site.id, id);

@@ -244,20 +244,37 @@ export interface WixMediaFolder {
 /** The Media Manager's root folder id. */
 export const WIX_MEDIA_ROOT = "media-root";
 const FOLDER_PAGE = 100;
+/** Folder listing never reads more pages than this (1,000 folders), whatever Wix answers. */
+export const FOLDER_PAGE_CAP = 10;
 
-/** The folders directly under a folder (the root by default). */
+/**
+ * The folders directly under a folder (the root by default). Bounded: the
+ * first Parrish photo runs (2026-09-16) hung here until Vercel killed the
+ * invocation, so the listing stops at FOLDER_PAGE_CAP pages and as soon as
+ * a page repeats a folder already seen (an offset Wix ignores).
+ */
 export async function listMediaFolders(siteId: string, parentFolderId: string = WIX_MEDIA_ROOT): Promise<WixMediaFolder[]> {
   const folders: WixMediaFolder[] = [];
-  for (let offset = 0; ; offset += FOLDER_PAGE) {
+  const seen = new Set<string>();
+  for (let page = 0; page < FOLDER_PAGE_CAP; page += 1) {
     const res = await wixRequest<{ folders?: WixMediaFolder[] }>(
       siteId,
       "GET",
-      `/site-media/v1/folders?parentFolderId=${encodeURIComponent(parentFolderId)}&paging.limit=${FOLDER_PAGE}&paging.offset=${offset}`
+      `/site-media/v1/folders?parentFolderId=${encodeURIComponent(parentFolderId)}&paging.limit=${FOLDER_PAGE}&paging.offset=${page * FOLDER_PAGE}`
     );
-    const page = res?.folders ?? [];
-    folders.push(...page);
-    if (page.length < FOLDER_PAGE) return folders;
+    const batch = res?.folders ?? [];
+    let repeated = false;
+    for (const f of batch) {
+      if (!f?.id || seen.has(f.id)) {
+        repeated = true;
+        continue;
+      }
+      seen.add(f.id);
+      folders.push(f);
+    }
+    if (repeated || batch.length < FOLDER_PAGE) return folders;
   }
+  return folders;
 }
 
 export interface WixMediaFile {

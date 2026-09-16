@@ -22,7 +22,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
-import { displayNameFor, hasFreshUrl, runPhotoJob, runStandalonePhotoJob, FRESH_URL_MS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { displayNameFor, hasFreshUrl, runPhotoJob, runStandalonePhotoJob, withTimeout, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
 
@@ -313,5 +313,39 @@ describe("runPhotoJob: Media Manager folders", () => {
     expect(errors[0].message).toContain("ParrishListingPhotos");
     // The photos stay in the backlog for the next pass: nothing is written for the site.
     expect(db.upsertSiteMedia).not.toHaveBeenCalled();
+  });
+
+  it("gives up on a folder lookup that never answers and holds the site's imports", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { site_ids: ["site-par"] })]);
+    const deps = fakeDeps({ findFolder: vi.fn(() => new Promise<string | null>(() => {})) });
+    const { handle, events } = fakeRun();
+    vi.useFakeTimers();
+    try {
+      const pending = runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [folderSite], deps });
+      await vi.advanceTimersByTimeAsync(FOLDER_LOOKUP_TIMEOUT_MS + 1000);
+      const summary = await pending;
+      expect(summary).toMatchObject({ downloaded: 1, imported: 0 });
+      expect(deps.importToWix).not.toHaveBeenCalled();
+      const errors = events.filter((e) => e.kind === "folder_missing");
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain("timed out");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("withTimeout", () => {
+  it("passes a settled value through and rejects one that takes too long", async () => {
+    await expect(withTimeout(Promise.resolve(7), 1000, "quick")).resolves.toBe(7);
+    vi.useFakeTimers();
+    try {
+      const slow = withTimeout(new Promise<number>(() => {}), 500, "slow lookup");
+      const check = expect(slow).rejects.toThrow("slow lookup timed out after 1 s");
+      await vi.advanceTimersByTimeAsync(600);
+      await check;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
