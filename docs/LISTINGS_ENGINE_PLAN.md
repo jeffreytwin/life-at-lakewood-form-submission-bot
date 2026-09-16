@@ -758,6 +758,19 @@ instead of the former global constant. The first discovery scan had found
 Residential-only site had already staged is unstaged on its next
 classification with reason `property_type`.
 
+**What a site rules out (Jeff, 2026-09-16).** The rule stands: a listing
+whose subdivision matches no neighborhood term is not on the site. The
+first discovery scan showed what that costs (73 Longboat Key for-sale
+listings, most of them boat slips at the Moorings and homes under the
+generic subdivision "LONGBOAT KEY"), so the Neighborhoods page gained a
+**Not shown: no neighborhood term** table per location
+(`GET /api/internal/listings/villages/unmatched`, `src/lib/listings/unmatched.ts`):
+the Active, for-sale listings in the market the engine holds, classified
+with the site's rules, the `no_village` ones grouped by MLS subdivision
+with count, price range and a few addresses, and a "add as a term of
+<neighborhood>" action that posts the subdivision as a term. A missing
+term is a glance and a click; nothing changes until someone clicks.
+
 **Rollout, in order:** merge and deploy → apply migration 046 → set
 `active = true` on the Parrish row → Run Discovery from the Hub (the
 ticks finish the scan) → the seed's placeholders and the finds are
