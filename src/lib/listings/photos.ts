@@ -165,6 +165,8 @@ interface DownloadOutcome {
   ok: boolean;
   error?: string;
   retryAt?: number;
+  /** The photo has now failed MAX_DOWNLOAD_ATTEMPTS times and waits a day between tries. */
+  exhausted?: boolean;
 }
 
 async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, summary: PhotoSummary, run: RunHandle): Promise<DownloadOutcome> {
@@ -210,7 +212,7 @@ async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, 
     m.retry_after = iso(retryAt);
     summary.failed += 1;
     run.counts.images_failed += 1;
-    return { ok: false, error: message, retryAt };
+    return { ok: false, error: message, retryAt, exhausted: attempt >= MAX_DOWNLOAD_ATTEMPTS };
   }
 }
 
@@ -246,7 +248,7 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
       }
       run.event("error", "folder_missing", `${site.name}: Media Manager folder "${site.media_folder_name}" not found among the root folders; its photos wait until it exists`, { siteId: site.id });
     } catch (error) {
-      run.event("error", "folder_missing", `${site.name}: could not look up Media Manager folder "${site.media_folder_name}" (${errorMessage(error)}); its photos wait`, { siteId: site.id });
+      run.event("warn", "folder_missing", `${site.name}: could not look up Media Manager folder "${site.media_folder_name}" (${errorMessage(error)}); its photos wait for the next pass`, { siteId: site.id });
     }
     folderMissing.add(site.id);
     return { ok: false };
@@ -256,7 +258,7 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
 
   async function processListing(listingId: string, media: db.PhotoBacklogRow[], urls: Map<string, string> | undefined): Promise<boolean> {
     let truncated = false;
-    const downloads = { failed: 0, lastError: "", retryAt: 0 };
+    const downloads = { failed: 0, exhausted: 0, lastError: "", retryAt: 0 };
     const importedMedia = new Map<string, Set<string>>();
     const importErrors = new Map<string, string>();
     try {
@@ -274,6 +276,7 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
           downloads.failed += 1;
           downloads.lastError = outcome.error ?? "";
           downloads.retryAt = outcome.retryAt ?? 0;
+          if (outcome.exhausted) downloads.exhausted += 1;
         }
         await deps.sleep(DOWNLOAD_SPACING_MS);
       }
@@ -329,12 +332,18 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
         );
       }
       for (const [siteId, message] of importErrors) {
-        run.event("error", "photos_failed", `${sites.get(siteId)?.name ?? siteId}: importing photos for ${listingId} failed: ${message}`, { siteId, listingId });
+        run.event("warn", "import_failed", `${sites.get(siteId)?.name ?? siteId}: importing photos for ${listingId} failed: ${message}; retried in ${Math.round(IMPORT_RETRY_MS / 60_000)} min`, { siteId, listingId });
       }
       if (downloads.failed) {
-        run.event("warn", "photos_failed", `${listingId}: ${downloads.failed} of ${total} photo download(s) failed (${downloads.lastError}); next attempt after ${iso(downloads.retryAt)}`, {
+        // A download that keeps failing is retried hourly on its own; only a photo that has used up
+        // its hourly attempts (a dead or changed URL, most likely) is worth a person's attention.
+        const gaveUp = downloads.exhausted > 0;
+        const tail = gaveUp
+          ? `${downloads.exhausted} photo(s) failed ${MAX_DOWNLOAD_ATTEMPTS} times and now retry daily; check the listing's photos in the MLS`
+          : `next attempt after ${iso(downloads.retryAt)}`;
+        run.event(gaveUp ? "error" : "warn", "download_failed", `${listingId}: ${downloads.failed} of ${total} photo download(s) failed (${downloads.lastError}); ${tail}`, {
           listingId,
-          details: { retryAfter: iso(downloads.retryAt) },
+          details: { retryAfter: iso(downloads.retryAt), exhausted: downloads.exhausted },
         });
       }
     }

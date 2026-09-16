@@ -22,7 +22,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
-import { displayNameFor, hasFreshUrl, runPhotoJob, runStandalonePhotoJob, withTimeout, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { displayNameFor, hasFreshUrl, runPhotoJob, runStandalonePhotoJob, withTimeout, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
 
@@ -182,8 +182,33 @@ describe("runPhotoJob", () => {
     );
     expect(deps.importToWix).not.toHaveBeenCalled();
     expect(db.upsertSiteListings).not.toHaveBeenCalled();
-    expect(events).toEqual([expect.objectContaining({ level: "warn", kind: "photos_failed", message: expect.stringContaining("1 of 1 photo download(s) failed") })]);
+    expect(events).toEqual([expect.objectContaining({ level: "warn", kind: "download_failed", message: expect.stringContaining("1 of 1 photo download(s) failed") })]);
     expect(handle.counts.images_failed).toBe(1);
+  });
+
+  it("raises an error only once a photo has used up its hourly download attempts", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { download_attempts: MAX_DOWNLOAD_ATTEMPTS - 1 })]);
+    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 404, bytes: null, contentType: null })) });
+    const { handle, events } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(db.updateListingMedia).toHaveBeenCalledWith("m-MFR1-1", expect.objectContaining({ download_attempts: MAX_DOWNLOAD_ATTEMPTS, retry_after: new Date(NOW + LONG_RETRY_MS).toISOString() }));
+    expect(events).toEqual([expect.objectContaining({ level: "error", kind: "download_failed", message: expect.stringContaining("now retry daily") })]);
+  });
+
+  it("reports a refused Wix import as a warning and retries it later", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { storage_path: "listings/images/MFR1/p1.jpeg", content_hash: "abc", source_url: null })]);
+    const deps = fakeDeps({ importToWix: vi.fn(async () => { throw new Error("Wix API POST /site-media/v1/files/import: 500 (Wix answered with an HTML error page)"); }) });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(summary).toMatchObject({ imported: 0, failed: 1 });
+    expect(db.updateListingMedia).toHaveBeenCalledWith("m-MFR1-1", expect.objectContaining({ retry_after: new Date(NOW + IMPORT_RETRY_MS).toISOString(), last_error: expect.stringContaining("import to") }));
+    const failures = events.filter((e) => e.kind === "import_failed");
+    expect(failures).toEqual([expect.objectContaining({ level: "warn", message: expect.stringContaining("retried in 30 min") })]);
+    expect(events.filter((e) => e.level === "error")).toHaveLength(0);
   });
 
   it("imports a stored photo a site still lacks without downloading it again", async () => {
@@ -330,6 +355,8 @@ describe("runPhotoJob: Media Manager folders", () => {
       const errors = events.filter((e) => e.kind === "folder_missing");
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toContain("timed out");
+      // A lookup that failed is retried next pass, so it is a warning (repeats escalate in runs.ts).
+      expect(errors[0].level).toBe("warn");
     } finally {
       vi.useRealTimers();
     }

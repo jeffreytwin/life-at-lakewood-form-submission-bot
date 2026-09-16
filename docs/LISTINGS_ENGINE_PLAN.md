@@ -777,6 +777,26 @@ and before the term match, so the non-neighborhood overlay never lists
 builder homes. Parrish goes from 697 staged to about 271; Longboat Key
 removes those ten on its next run.
 
+**Errors worth attention (Jeff, 2026-09-16).** The Errors panel is for
+things a person has to act on; a failure the engine will retry by itself
+is a warning. Levels now: a failed photo download is a warning until the
+photo has used up its six hourly attempts (`download_failed`, then an
+error: the URL is most likely dead); a Wix import the engine retries in
+30 min is a warning (`import_failed`); a bulk save or remove that failed
+whole, a neighborhood-stats refresh that failed, and a Media Manager
+folder lookup that failed are warnings (retried next run); a run that
+stopped on an MLSGrid or Wix 429/5xx or a network fault is a warning
+(`run_error`; a 400, a 403 or a bug stays an error). Still errors on
+sight: a Wix rejection of one listing's record, a folder that does not
+exist, the mass-delete guard, a shadow site pointed at its live
+collection. Repeats escalate: when earlier runs in the last 6 hours
+already warned twice about the same problem (kind, location, listing),
+the next warning is stored as an error (`escalateRepeats` in
+`runs.ts`, one Postgres read per flush), once: while that error is open
+the repeats stay warnings, and once it is dismissed a further repeat
+raises it again. Wix's HTML error pages are reduced to one phrase in the
+message.
+
 **What a site rules out (Jeff, 2026-09-16).** The rule stands: a listing
 whose subdivision matches no neighborhood term is not on the site. The
 first discovery scan showed what that costs (73 Longboat Key for-sale
