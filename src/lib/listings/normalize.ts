@@ -108,6 +108,7 @@ export function normalizeListing(
     longitude: num(raw.Longitude),
     photo_count: media.length,
     mlg_can_view: typeof raw.MlgCanView === "boolean" ? raw.MlgCanView : null,
+    new_construction: typeof raw.NewConstructionYN === "boolean" ? raw.NewConstructionYN : null,
     modification_timestamp: iso(raw.ModificationTimestamp),
     originating_system_modification_timestamp: iso(raw.OriginatingSystemModificationTimestamp),
     raw: strippedRaw(raw),

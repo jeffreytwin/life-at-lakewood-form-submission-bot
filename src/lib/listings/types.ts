@@ -13,6 +13,7 @@ export type ReasonCode =
   | "city_change"
   | "mls_revoked"
   | "not_in_feed"
+  | "new_construction"
   | "manual_refresh";
 
 export interface LsSite {
@@ -27,6 +28,8 @@ export interface LsSite {
   market_cities: string[];
   /** RESO PropertyType values the site shows (Residential; Longboat Key also Land). */
   property_types: string[];
+  /** Whether builder listings (NewConstructionYN) are shown; false on every site since 2026-09-16. */
+  show_new_construction: boolean;
   active: boolean;
   timezone: string;
   /** Media Manager folder the engine imports this site's photos into; null = Wix's default. */
@@ -105,6 +108,7 @@ export interface MlsGridProperty {
   ModificationTimestamp?: string;
   OriginatingSystemModificationTimestamp?: string;
   MlgCanView?: boolean;
+  NewConstructionYN?: boolean;
   Media?: MlsGridMedia[];
   [key: string]: unknown;
 }
@@ -130,6 +134,8 @@ export interface LsListingRow {
   longitude: number | null;
   photo_count: number;
   mlg_can_view: boolean | null;
+  /** RESO NewConstructionYN; null when the record does not say. */
+  new_construction: boolean | null;
   modification_timestamp: string | null;
   originating_system_modification_timestamp: string | null;
   raw: Record<string, unknown>;
