@@ -22,6 +22,7 @@ import { buildListingRecord, recordFingerprint } from "@/lib/listings/transform"
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { runPhotoJob, type PhotoDeps, type PhotoSummary } from "@/lib/listings/photos";
 import { refreshVillageStatsOnWix } from "@/lib/listings/village-stats";
+import { reimportBrokenPhotos } from "@/lib/listings/audit";
 import { loadDiscoverCursor, nextCursor, saveDiscoverCursor, type DiscoverSummary } from "@/lib/listings/discover";
 import * as db from "@/lib/listings/db";
 import {
@@ -490,6 +491,27 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
     run.event("error", "write_failed", `${site.name}: refused to write, shadow mode targets the live collection ${site.live_collection_id}`, { siteId: site.id });
     return;
   }
+  // The nightly verify covers the photo library too. Wix's URL import is
+  // asynchronous: it can accept a photo, hand back a file id, and then fail to
+  // fetch the picture, leaving a blank in the gallery for ever. This runs before
+  // the site's writes rather than after them, so the busiest run of the day
+  // cannot spend its budget and leave the check undone.
+  if (opts.mode === "full") {
+    try {
+      const repair = await reimportBrokenPhotos(site.id);
+      if (repair.refused) {
+        run.event("error", "photos_broken", `${site.name}: ${repair.refused}`, { siteId: site.id });
+      } else if (repair.broken) {
+        run.event("warn", "photos_broken", `${site.name}: Wix holds no picture for ${repair.broken} photo(s); ${repair.cleared} cleared to be fetched again across ${repair.listings} listing(s)`, {
+          siteId: site.id,
+          details: repair,
+        });
+      }
+    } catch (error) {
+      run.event("warn", "photos_broken", `${site.name}: could not check for photos Wix never fetched (${errorMessage(error)}); the next nightly tries again`, { siteId: site.id });
+    }
+  }
+
   const target = site.target_collection_id;
   const nowIso = new Date().toISOString();
   const refreshBefore = new Date(Date.now() - PULL_DATE_REFRESH_HOURS * 3600_000);

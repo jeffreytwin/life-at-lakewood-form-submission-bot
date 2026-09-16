@@ -787,15 +787,16 @@ renders as nothing, for ever. `mediaState()` in the Wix client reads a file
 descriptor and calls it ready, pending, broken or unknown, and
 `reimportBrokenPhotos()` in `audit.ts` clears the engine's record of the
 broken ones so the next photo pass fetches them again and the listing is
-rewritten. It runs on the Hub's audit panel as "Fetch them again", and by
-itself once a UTC day from `sweepBrokenPhotos()` in `tick.ts`, on an idle
-tick (`lastPhotoCheckDate` in the engine state) as its own run so the counts
-land in the Change Log. It first hung off the end of the nightly full run,
-which was wrong twice over: that is the busiest run of the day and had
-often spent its budget by then (193 s of 240 s on 2026-09-16, under the
-60 s the check wanted), and it was skipped entirely for a site with no
-named folder, which is Longboat Key. A site without one imports into Wix's
-root, so the sweep looks there. Two
+rewritten. It runs on the Hub's audit panel as "Fetch them again", and once a day as
+part of the nightly full run — the verify pass that already exists, rather
+than a second daily job of its own (Jeff, on being shown one: "Don't we
+already have a full run that happens once a day?"). Two things had to be
+right for that to work. It sits at the *top* of each site's write phase,
+not the tail: the nightly is the busiest run of the day (193 s of a 240 s
+budget on 2026-09-16) and a check hanging off the end would often have
+been skipped. And it no longer requires a named Media Manager folder,
+which Longboat Key does not have; a site without one imports into Wix's
+root, so that is where it looks. It never fails the run. Two
 safeties: a file is only called broken on positive evidence (Wix said
 FAILED, or it described the media and there were no dimensions), never on a
 response that simply lacks the media block, and the repair refuses outright
