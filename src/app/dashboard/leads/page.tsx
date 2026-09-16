@@ -5,6 +5,7 @@ import { formatStatus } from "@/lib/shared/status-display";
 import { formatDateTimeET, formatTimeET } from "@/lib/shared/format-date";
 import { suppressNextSoundForLead } from "@/components/StatusSoundMonitor";
 import { emitLeadEvent } from "@/lib/lead-events";
+import { STATUS_SOUNDS, playSound } from "@/lib/notification-sounds";
 
 interface Lead {
   id: string;
@@ -234,9 +235,7 @@ export default function LeadsPage() {
         // Suppress the monitor so it doesn't re-play the sound on next poll
         suppressNextSoundForLead(leadId);
         // Play the manual fallback sound immediately
-        const audio = new Audio("/sounds/mgs - manual.mp3");
-        audio.volume = 0.6;
-        audio.play().catch(() => {});
+        playSound(STATUS_SOUNDS.manual);
         // Speech bubble
         const stopped = leads.find((l) => l.id === leadId);
         emitLeadEvent({
@@ -385,9 +384,7 @@ export default function LeadsPage() {
         alert(`Failed to mark bad data: ${data.error}`);
       } else {
         suppressNextSoundForLead(leadId);
-        const audio = new Audio("/sounds/metal-gear-alert.mp3");
-        audio.volume = 0.6;
-        audio.play().catch(() => {});
+        playSound(STATUS_SOUNDS.bad_data);
         const marked = leads.find((l) => l.id === leadId);
         emitLeadEvent({
           type: "bad_data",

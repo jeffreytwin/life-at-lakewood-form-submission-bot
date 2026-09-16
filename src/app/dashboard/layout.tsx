@@ -6,6 +6,7 @@ import RoutingToggle from "@/components/RoutingToggle";
 import StatusSoundMonitor from "@/components/StatusSoundMonitor";
 import PixelFireworks from "@/components/PixelFireworks";
 import EmailDraftSoundMonitor from "@/components/EmailDraftSoundMonitor";
+import ListingsAlertMonitor from "@/components/ListingsAlertMonitor";
 
 export default function DashboardLayout({
   children,
@@ -37,6 +38,7 @@ export default function DashboardLayout({
       <StatusSoundMonitor />
       <PixelFireworks />
       <EmailDraftSoundMonitor />
+      <ListingsAlertMonitor />
     </div>
   );
 }

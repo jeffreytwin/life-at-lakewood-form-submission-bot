@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { emitLeadEvent, incrementFailed } from "@/lib/lead-events";
+import { NEW_LEAD_SOUND, STATUS_SOUNDS, playSound } from "@/lib/notification-sounds";
 import { attemptsNewestFirst } from "@/lib/shared/attempt-order";
 
 interface LeadSnapshot {
@@ -24,17 +25,6 @@ interface LeadSnapshot {
   }>;
 }
 
-const STATUS_SOUNDS: Record<string, string> = {
-  accepted: "/sounds/metal-gear-victory.mp3",
-  routing: "/sounds/mgs-codec.mp3",
-  failed: "/sounds/metal-gear-alert.mp3",
-  manual: "/sounds/mgs - manual.mp3",
-  owned_by_other: "/sounds/metal-gear-victory.mp3",
-  bad_data: "/sounds/metal-gear-alert.mp3",
-};
-
-const NEW_LEAD_SOUND = "/sounds/mgs-new-form.mp3";
-
 // Lead IDs whose next status-change sound should be suppressed
 // (because the caller already played the sound inline).
 const suppressedLeadIds = new Set<string>();
@@ -42,40 +32,6 @@ const suppressedLeadIds = new Set<string>();
 /** Call this before playing a sound inline to prevent the monitor from duplicating it. */
 export function suppressNextSoundForLead(leadId: string) {
   suppressedLeadIds.add(leadId);
-}
-
-// Track whether audio playback has been unlocked by a user gesture
-let audioUnlocked = false;
-let pendingSound: string | null = null;
-
-function unlockAudio() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  // Play any sound that was blocked before the user interacted
-  if (pendingSound) {
-    const src = pendingSound;
-    pendingSound = null;
-    playSound(src);
-  }
-  document.removeEventListener("click", unlockAudio, true);
-  document.removeEventListener("keydown", unlockAudio, true);
-}
-
-// Listen for first user gesture to unlock audio
-if (typeof document !== "undefined") {
-  document.addEventListener("click", unlockAudio, true);
-  document.addEventListener("keydown", unlockAudio, true);
-}
-
-function playSound(src: string) {
-  const audio = new Audio(src);
-  audio.volume = 0.6;
-  audio.play().catch(() => {
-    // Browser blocked autoplay — queue for after first user interaction
-    if (!audioUnlocked) {
-      pendingSound = src;
-    }
-  });
 }
 
 type EventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "unavailable_owner" | "followup" | "reroute" | "done" | "text_me" | "bad_data";

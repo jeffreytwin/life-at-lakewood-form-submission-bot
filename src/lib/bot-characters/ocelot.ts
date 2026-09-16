@@ -42,6 +42,8 @@ function getMessage(event: LeadEvent): string {
       return "Approved. I'll signal frontlines to put it in motion.";
     case "email_sent":
       return "The message has been delivered, Colonel. Beautiful.";
+    case "listings_alert":
+      return "Trouble on the listings side, Colonel. Take a look at the Listings area — even the finest revolver needs cleaning.";
   }
 }
 
