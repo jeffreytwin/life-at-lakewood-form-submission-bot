@@ -73,8 +73,13 @@ export interface ModifiedSinceResult {
 }
 
 export interface ActiveScanOptions {
-  /** Resume from this @odata.nextLink instead of the first page. */
-  cursor?: string | null;
+  /**
+   * Resume a scan: only records modified after this instant. MLSGrid
+   * returns replication results in ModificationTimestamp order, so the
+   * last timestamp a run saw is where the next run starts; a stale
+   * @odata.nextLink is refused ("$skip value is very high").
+   */
+  since?: Date | null;
   maxPages?: number;
   /** Epoch ms; no new page is requested past it. */
   deadline?: number;
@@ -82,12 +87,14 @@ export interface ActiveScanOptions {
 
 export interface ActiveScanResult {
   items: MlsGridProperty[];
-  /** MLSGrid's count for the filter, when the first page said. */
+  /** MLSGrid's count for the filter (the remainder, when resuming), when the first page said. */
   expectedCount: number | null;
   requestCount: number;
   pages: number;
-  /** The nextLink to resume from when maxPages or the deadline stopped the scan; null once the last page was read. */
-  cursor: string | null;
+  /** The newest ModificationTimestamp among the records read; the next run resumes after it. Null when nothing was read. */
+  lastModificationTimestamp: string | null;
+  /** False when a page came back out of ModificationTimestamp order (the resume point may then skip records). */
+  ordered: boolean;
   truncated: boolean;
 }
 
@@ -162,13 +169,16 @@ export class MlsGridClient {
    * the fields MLSGrid accepts in a replication $filter (City is not).
    */
   async fetchActive(options: ActiveScanOptions = {}): Promise<ActiveScanResult> {
-    const filter = `OriginatingSystemName eq '${ORIGINATING_SYSTEM}' and StandardStatus eq 'Active'`;
-    let url: string | null = options.cursor || `${MLSGRID_BASE}?$filter=${encodeURIComponent(filter)}&$top=${PAGE_SIZE}&$count=true`;
+    const since = options.since ? ` and ModificationTimestamp gt ${options.since.toISOString()}` : "";
+    const filter = `OriginatingSystemName eq '${ORIGINATING_SYSTEM}' and StandardStatus eq 'Active'${since}`;
+    let url: string | null = `${MLSGRID_BASE}?$filter=${encodeURIComponent(filter)}&$top=${PAGE_SIZE}&$count=true`;
     const items: MlsGridProperty[] = [];
     let expectedCount: number | null = null;
     let requestCount = 0;
     let pages = 0;
     let truncated = false;
+    let last: string | null = null;
+    let ordered = true;
     while (url) {
       if (options.deadline && this.now() > options.deadline) {
         truncated = true;
@@ -184,10 +194,18 @@ export class MlsGridClient {
       if (expectedCount === null && typeof page["@odata.count"] === "number") {
         expectedCount = page["@odata.count"];
       }
-      if (Array.isArray(page.value)) items.push(...page.value);
+      if (Array.isArray(page.value)) {
+        items.push(...page.value);
+        for (const raw of page.value) {
+          const ts = typeof raw.ModificationTimestamp === "string" ? raw.ModificationTimestamp : null;
+          if (!ts) continue;
+          if (last && ts < last) ordered = false;
+          if (!last || ts > last) last = ts;
+        }
+      }
       url = page["@odata.nextLink"] ?? null;
     }
-    return { items, expectedCount, requestCount, pages, cursor: truncated ? url : null, truncated };
+    return { items, expectedCount, requestCount, pages, lastModificationTimestamp: last, ordered, truncated };
   }
 
   /** Verify-by-id: the current state of specific listings, 50 per request. */

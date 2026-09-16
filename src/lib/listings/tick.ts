@@ -57,7 +57,7 @@ export function decideMode(args: {
   if (now.getUTCHours() >= FULL_RUN_HOUR_UTC && state.lastFullDate !== utcDate(now)) return "full";
   const dueAfterMs = (INCREMENTAL_EVERY_MINUTES - 5) * 60_000;
   if (!lastOkIncremental || now.getTime() - lastOkIncremental.getTime() >= dueAfterMs) return "incremental";
-  if (state.discoverCursor?.nextLink) return "discover";
+  if (state.discoverCursor?.sinceTimestamp) return "discover";
   return null;
 }
 
