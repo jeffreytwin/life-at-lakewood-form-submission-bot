@@ -777,6 +777,23 @@ and before the term match, so the non-neighborhood overlay never lists
 builder homes. Parrish goes from 697 staged to about 271; Longboat Key
 removes those ten on its next run.
 
+**The price filter tag is per site (Jeff, 2026-09-16).** The engine wrote
+Longboat Key's scheme everywhere: "Under $500k", "$500k - $1M", "$1M - $2M"
+and up, ported from that site's own pipeline. Parrish's live collection
+tags prices the way its older Velo `getNumber` did instead: `$600s` for a
+six-figure price, `3M+` above a million. The two are not interchangeable —
+a page filtering on `$600s` matches nothing when the row says
+`$500k - $1M` — so the Parrish cutover would have left its price filter
+empty. Caught in the shadow collection, before the flip. Migration 050
+adds `ls_sites.price_sort_style` (`ranges` by default, so no site changes
+unless it is named; Parrish set to `shorthand`) and `priceBucket()` takes
+it. The shorthand reproduces `getNumber` exactly, digit slicing and all,
+because that function is what produced the values sitting in the
+collection today: 624,900 -> `$600s`, 3,295,000 -> `3M+`, 12,000,000 ->
+`12M+`, and below six figures the bare `$99000`. Worth re-checking against
+a live row before each new site's cutover; the same question will come up
+for Lakewood Ranch and Wellen Park.
+
 **Galleries Wix could not show (Jeff, 2026-09-16).** Five live Longboat
 Key listings showed one stock photo each instead of their own, with a
 warning and a broken primary image in the CMS. A Wix image URI needs its

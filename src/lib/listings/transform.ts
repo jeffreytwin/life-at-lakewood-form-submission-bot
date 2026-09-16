@@ -6,7 +6,7 @@
 
 import { createHash } from "node:crypto";
 import type { WixItemData } from "@/lib/wix/client";
-import type { GalleryItem, LsListingRow, MlsGridProperty, VillageWithTerms } from "@/lib/listings/types";
+import type { GalleryItem, LsListingRow, MlsGridProperty, PriceSortStyle, VillageWithTerms } from "@/lib/listings/types";
 
 export function titleCase(s: unknown): string {
   if (!s) return "";
@@ -18,8 +18,22 @@ export function formatPrice(n: unknown): unknown {
   return `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 }
 
-export function priceBucket(n: unknown): string {
-  if (typeof n !== "number") return String(n);
+/**
+ * The price filter tag, in the scheme the site's own pages expect. The two
+ * schemes are not interchangeable: a site filtering on "$600s" matches
+ * nothing when the row says "$500k - $1M".
+ *
+ * - ranges: Longboat Key's, ported from its pipeline.
+ * - shorthand: the older Velo `getNumber`, which produced what is in the
+ *   Parrish collection today. Reproduced exactly, digit slicing and all:
+ *   624,900 -> "$600s", 3,295,000 -> "3M+", 12,000,000 -> "12M+".
+ */
+export function priceBucket(n: unknown, style: PriceSortStyle = "ranges"): string {
+  if (typeof n !== "number" || !Number.isFinite(n)) return String(n);
+  return style === "shorthand" ? shorthandBucket(n) : rangeBucket(n);
+}
+
+function rangeBucket(n: number): string {
   if (n < 500000) return "Under $500k";
   if (n < 1000000) return "$500k - $1M";
   if (n < 2000000) return "$1M - $2M";
@@ -27,6 +41,13 @@ export function priceBucket(n: unknown): string {
   if (n < 10000000) return "$5M - $10M";
   if (n < 15000000) return "$10M - $15M";
   return "$15M+";
+}
+
+function shorthandBucket(n: number): string {
+  const digits = Math.trunc(Math.abs(n)).toString();
+  if (digits.length === 6) return `$${digits.slice(0, 1)}00s`;
+  if (digits.length >= 7 && digits.length <= 9) return `${digits.slice(0, digits.length - 6)}M+`;
+  return `$${digits}`;
 }
 
 export function formatSquareFeet(v: unknown): string {
@@ -76,10 +97,12 @@ export interface BuildRecordInput {
   village: VillageWithTerms;
   gallery: GalleryItem[];
   pulledAt: Date;
+  /** The site's price filter scheme; Longboat Key's ranges when not given. */
+  priceSortStyle?: PriceSortStyle;
 }
 
 /** The record for the site's collection, keyed by the MLS ListingId. */
-export function buildListingRecord({ listing, village, gallery, pulledAt }: BuildRecordInput): WixItemData {
+export function buildListingRecord({ listing, village, gallery, pulledAt, priceSortStyle }: BuildRecordInput): WixItemData {
   const raw = listing.raw as unknown as MlsGridProperty;
   const { propertyAddress, addressObject } = buildAddress(raw);
   const display = (village.display ?? {}) as Record<string, unknown>;
@@ -97,7 +120,7 @@ export function buildListingRecord({ listing, village, gallery, pulledAt }: Buil
     listingPrimaryImage: gallery[0]?.src ?? null,
     listingPrice: formatPrice(raw.ListPrice),
     listingPricePure: raw.ListPrice ?? null,
-    listingPriceSort: [priceBucket(raw.ListPrice)],
+    listingPriceSort: [priceBucket(raw.ListPrice, priceSortStyle)],
     // PropertySubType is blank for vacant land in the mfrmls feed; fall
     // back to the PropertyType so the Home Type filter stays usable.
     homeType: raw.PropertySubType || titleCase(raw.PropertyType),

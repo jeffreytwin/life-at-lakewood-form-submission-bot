@@ -532,7 +532,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
       continue;
     }
     const gallery: GalleryItem[] = available.map((p, i) => ({ type: "Image", title: p.title ?? "", src: p.src!, order: i + 1, mlsPathKey: p.pathKey }));
-    const record = buildListingRecord({ listing, village, gallery, pulledAt: listing.pulled_at ? new Date(listing.pulled_at) : startedAt });
+    const record = buildListingRecord({ listing, village, gallery, pulledAt: listing.pulled_at ? new Date(listing.pulled_at) : startedAt, priceSortStyle: site.price_sort_style });
     const fingerprint = recordFingerprint(record);
     const contentChanged = sl.written_fingerprint !== fingerprint;
     const fresh = !!sl.written_at && new Date(sl.written_at) > refreshBefore;

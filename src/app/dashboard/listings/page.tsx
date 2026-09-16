@@ -28,6 +28,7 @@ interface Site {
   market_cities: string[];
   property_types?: string[];
   show_new_construction?: boolean;
+  price_sort_style?: string;
   active: boolean;
   counts: SiteCounts;
   villages: number;
@@ -512,7 +513,7 @@ export default function ListingsOverviewPage() {
                     <strong style={colors ? { color: colors.solid } : undefined}>{site.name}</strong> <span className={mode.cls}>{mode.label}</span>
                     {!site.wix_site_id && <span className="badge badge-danger" style={{ marginLeft: 6 }}>no Wix site id</span>}
                     <div className="text-muted text-sm">
-                      market {site.market_cities.join(", ") || "—"} · shows {(site.property_types ?? ["Residential", "Land"]).join(" + ")}{site.show_new_construction ? "" : ", resale only"} · {site.activeVillages} of {site.villages} neighborhoods active
+                      market {site.market_cities.join(", ") || "—"} · shows {(site.property_types ?? ["Residential", "Land"]).join(" + ")}{site.show_new_construction ? "" : ", resale only"} · price tags {site.price_sort_style === "shorthand" ? "$600s / 3M+" : "Under $500k / $1M - $2M"} · {site.activeVillages} of {site.villages} neighborhoods active
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>

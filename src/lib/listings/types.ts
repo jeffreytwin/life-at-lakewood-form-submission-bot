@@ -2,6 +2,7 @@
 // ls_ tables); MlsGridProperty is the RESO record as MLSGrid returns it.
 
 export type WriteMode = "shadow" | "live" | "paused";
+export type PriceSortStyle = "ranges" | "shorthand";
 export type RunMode = "incremental" | "full" | "photos" | "manual" | "discover";
 export type RunTrigger = "cron" | "hub" | "http" | "manual";
 export type SiteListingState = "staged" | "live" | "removed";
@@ -30,6 +31,8 @@ export interface LsSite {
   property_types: string[];
   /** Whether builder listings (NewConstructionYN) are shown; false on every site since 2026-09-16. */
   show_new_construction: boolean;
+  /** How the price filter tag reads: Longboat Key's ranges, or the older Velo shorthand. */
+  price_sort_style: PriceSortStyle;
   active: boolean;
   timezone: string;
   /** Media Manager folder the engine imports this site's photos into; null = Wix's default. */
