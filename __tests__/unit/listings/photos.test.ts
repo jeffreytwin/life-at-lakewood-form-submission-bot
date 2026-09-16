@@ -22,7 +22,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
-import { displayNameFor, hasFreshUrl, runPhotoJob, runStandalonePhotoJob, withTimeout, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
 
@@ -375,5 +375,109 @@ describe("withTimeout", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("pool", () => {
+  /** Counts how many calls overlap, so the limit can be asserted rather than assumed. */
+  function tracker() {
+    const state = { inFlight: 0, peak: 0, seen: [] as number[] };
+    return {
+      state,
+      worker: async (n: number) => {
+        state.inFlight += 1;
+        state.peak = Math.max(state.peak, state.inFlight);
+        await new Promise((r) => setTimeout(r, 1));
+        state.seen.push(n);
+        state.inFlight -= 1;
+      },
+    };
+  }
+
+  it("covers every item and never exceeds the limit", async () => {
+    const items = Array.from({ length: 20 }, (_, i) => i);
+    const { state, worker } = tracker();
+    const stopped = await pool(items, 4, () => false, worker);
+    expect(stopped).toBe(false);
+    expect(state.seen.sort((a, b) => a - b)).toEqual(items);
+    expect(state.peak).toBe(4);
+    expect(state.inFlight).toBe(0);
+  });
+
+  it("reports stopping early and starts nothing more once the deadline passes", async () => {
+    const items = Array.from({ length: 50 }, (_, i) => i);
+    const { state, worker } = tracker();
+    let done = 0;
+    const stopped = await pool(items, 4, () => done >= 8, async (n) => {
+      await worker(n);
+      done += 1;
+    });
+    expect(stopped).toBe(true);
+    expect(state.seen.length).toBeGreaterThanOrEqual(8);
+    expect(state.seen.length).toBeLessThan(items.length);
+  });
+
+  it("runs a single worker when the limit or the list is one, and handles an empty list", async () => {
+    const { state, worker } = tracker();
+    await pool([1, 2, 3], 1, () => false, worker);
+    expect(state.peak).toBe(1);
+    expect(await pool([], 4, () => false, worker)).toBe(false);
+  });
+});
+
+describe("concurrent passes", () => {
+  const folderSite: LsSite = { ...site, id: "site-par", name: "Life At Parrish", domain: "lifeatparrish.com", wix_site_id: "wix-par", media_folder_name: "ParrishListingPhotos" };
+
+  it("downloads and imports a long gallery several at a time without losing any", async () => {
+    const media = Array.from({ length: 12 }, (_, i) => row("MFR1", i + 1));
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce(media);
+    let downloadsInFlight = 0;
+    let peakDownloads = 0;
+    let importsInFlight = 0;
+    let peakImports = 0;
+    const deps = fakeDeps({
+      download: vi.fn(async () => {
+        downloadsInFlight += 1;
+        peakDownloads = Math.max(peakDownloads, downloadsInFlight);
+        await new Promise((r) => setTimeout(r, 1));
+        downloadsInFlight -= 1;
+        return { status: 200, bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg" };
+      }),
+      importToWix: vi.fn(async () => {
+        importsInFlight += 1;
+        peakImports = Math.max(peakImports, importsInFlight);
+        await new Promise((r) => setTimeout(r, 1));
+        importsInFlight -= 1;
+        return { id: `file-${importsInFlight}` };
+      }),
+    });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(summary).toMatchObject({ downloaded: 12, imported: 12, failed: 0 });
+    expect(peakDownloads).toBe(DOWNLOAD_CONCURRENCY);
+    expect(peakImports).toBe(IMPORT_CONCURRENCY);
+    expect(events.filter((e) => e.level === "error")).toHaveLength(0);
+    // Every photo is recorded against the site, so the gallery is complete.
+    expect(vi.mocked(db.upsertSiteMedia)).toHaveBeenCalledTimes(12);
+  });
+
+  it("still asks Wix for the folder only once when several imports start together", async () => {
+    const media = Array.from({ length: 8 }, (_, i) => row("MFR1", i + 1, { site_ids: ["site-par"] }));
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce(media);
+    const findFolder = vi.fn(async () => {
+      await new Promise((r) => setTimeout(r, 5));
+      return "folder-9";
+    });
+    const deps = fakeDeps({ findFolder });
+    const { handle } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [folderSite], deps });
+
+    expect(summary).toMatchObject({ imported: 8, failed: 0 });
+    expect(findFolder).toHaveBeenCalledTimes(1);
+    expect(deps.cacheFolder).toHaveBeenCalledTimes(1);
+    for (const call of vi.mocked(deps.importToWix).mock.calls) expect(call[3]).toBe("folder-9");
   });
 });

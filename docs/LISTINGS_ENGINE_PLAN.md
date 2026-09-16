@@ -777,6 +777,26 @@ and before the term match, so the non-neighborhood overlay never lists
 builder homes. Parrish goes from 697 staged to about 271; Longboat Key
 removes those ten on its next run.
 
+**Photo throughput (Jeff, 2026-09-16).** Parrish's galleries were going to
+take about 33 hours. The engine was moving roughly 400 photos an hour, but
+at 51 photos a listing that is only 8 listings an hour, which is what the
+Hub showed. Two limits multiplied: the tick ran 4 minutes in every 15 (a
+240 s budget under the 300 s function limit), and inside it every photo was
+handled alone, one download at a time with a 500 ms gap and one import at a
+time with a 320 ms gap, about a second each. Neither the media host nor Wix
+was pushing back (no rate-limited responses in five passes). Both limits
+lifted: the cron is `*/5` instead of `*/15`, and downloads and imports each
+run `DOWNLOAD_CONCURRENCY`/`IMPORT_CONCURRENCY` (4) at a time through
+`pool()` in `photos.ts`, each worker keeping its own spacing, so the rate
+across the pool is four times the per-worker rate. Together that is roughly
+12x: Parrish's remaining 13,000 photos go from about 33 hours to about 3.
+The media host's documented limit is one download per photo per hour, not a
+cap on parallel photos; if it does start refusing, each photo already waits
+an hour and retries itself, and those are warnings, not errors. The folder
+lookup is now held as one promise per site per pass, so the concurrent
+importers share it instead of each asking Wix. Overlapping ticks are
+harmless: `runningRun` makes a tick that finds a run in flight skip.
+
 **Errors worth attention (Jeff, 2026-09-16).** The Errors panel is for
 things a person has to act on; a failure the engine will retry by itself
 is a warning. Levels now: a failed photo download is a warning until the

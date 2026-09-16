@@ -33,6 +33,17 @@ export const LONG_RETRY_MS = 24 * 3600_000;
 /** A listing MLSGrid no longer returns is left to the nightly verify; its photos wait this long. */
 export const NOT_RETURNED_RETRY_MS = 6 * 3600_000;
 /** 2 requests/s is the MLSGrid cap; downloads go one at a time with this gap. */
+/**
+ * How many photos are in flight at once. The media host's documented limit
+ * is one download per photo per hour, not a cap on how many different
+ * photos are fetched at a time, so the spacing below is politeness rather
+ * than a quota; the transfers themselves are what the wall clock is spent
+ * on. Jeff, 2026-09-16: Parrish's 13,000-photo backlog was 33 hours of
+ * one-at-a-time work, so each worker keeps its own spacing and four run
+ * side by side.
+ */
+export const DOWNLOAD_CONCURRENCY = 4;
+export const IMPORT_CONCURRENCY = 4;
 export const DOWNLOAD_SPACING_MS = 500;
 /** Wix documents 200 requests/minute; imports go one at a time with this gap. */
 export const IMPORT_SPACING_MS = 320;
@@ -161,6 +172,8 @@ export function displayNameFor(listingId: string, position: number, pathKey: str
   return `${listingId}-${position}.${extensionOf(pathKey) ?? "jpg"}`;
 }
 
+type FolderResult = { ok: true; id: string | null } | { ok: false };
+
 interface DownloadOutcome {
   ok: boolean;
   error?: string;
@@ -217,6 +230,39 @@ async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, 
 }
 
 /**
+ * Runs `worker` over `items` with at most `limit` in flight. Work is handed
+ * out in order; nothing new starts once `stop()` is true. Returns true when
+ * it stopped early, so the caller can mark the pass truncated.
+ *
+ * Each worker keeps its own spacing, so the rate across the pool is the
+ * per-worker rate times `limit`.
+ */
+export async function pool<T>(
+  items: T[],
+  limit: number,
+  stop: () => boolean,
+  worker: (item: T) => Promise<void>
+): Promise<boolean> {
+  let next = 0;
+  let stopped = false;
+  const workers = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
+    for (;;) {
+      if (stop()) {
+        stopped = true;
+        return;
+      }
+      // Single-threaded: taking an index needs no lock.
+      const index = next;
+      next += 1;
+      if (index >= items.length) return;
+      await worker(items[index]);
+    }
+  });
+  await Promise.all(workers);
+  return stopped;
+}
+
+/**
  * Works the photo backlog until it is empty or the deadline passes: fresh
  * URLs where needed, then downloads, then each site's imports, listing by
  * listing so a listing that completes is flagged for its write at once.
@@ -231,18 +277,22 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
   // folder named on the site row, resolved once per site and cached on the
   // row. A named folder that cannot be found holds the site's imports (one
   // error per pass) rather than scattering photos outside it.
-  const folderIds = new Map<string, string | null>();
-  const folderMissing = new Set<string>();
-  async function folderFor(site: LsSite): Promise<{ ok: true; id: string | null } | { ok: false }> {
+  // One lookup per site per pass, held as a promise so the concurrent
+  // importers below share it instead of each asking Wix for the folder.
+  const folderLookups = new Map<string, Promise<FolderResult>>();
+  async function folderFor(site: LsSite): Promise<FolderResult> {
     if (!site.media_folder_name) return { ok: true, id: null };
     if (site.media_folder_id) return { ok: true, id: site.media_folder_id };
-    const cached = folderIds.get(site.id);
-    if (cached) return { ok: true, id: cached };
-    if (folderMissing.has(site.id)) return { ok: false };
+    const started = folderLookups.get(site.id);
+    if (started) return started;
+    const lookup = lookUpFolder(site, site.media_folder_name);
+    folderLookups.set(site.id, lookup);
+    return lookup;
+  }
+  async function lookUpFolder(site: LsSite, folderName: string): Promise<FolderResult> {
     try {
-      const id = await withTimeout(deps.findFolder(site.wix_site_id!, site.media_folder_name), FOLDER_LOOKUP_TIMEOUT_MS, `Media Manager folder lookup for ${site.name}`);
+      const id = await withTimeout(deps.findFolder(site.wix_site_id!, folderName), FOLDER_LOOKUP_TIMEOUT_MS, `Media Manager folder lookup for ${site.name}`);
       if (id) {
-        folderIds.set(site.id, id);
         await deps.cacheFolder(site.id, id);
         return { ok: true, id };
       }
@@ -250,7 +300,6 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
     } catch (error) {
       run.event("warn", "folder_missing", `${site.name}: could not look up Media Manager folder "${site.media_folder_name}" (${errorMessage(error)}); its photos wait for the next pass`, { siteId: site.id });
     }
-    folderMissing.add(site.id);
     return { ok: false };
   }
   let client: MlsGridClient | null = opts.client ?? null;
@@ -262,15 +311,15 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
     const importedMedia = new Map<string, Set<string>>();
     const importErrors = new Map<string, string>();
     try {
+      const pendingDownloads: Array<{ m: db.PhotoBacklogRow; url: string }> = [];
       for (const m of media) {
         const at = deps.now();
         if (!needsDownload(m, at)) continue;
         const url = hasFreshUrl(m, at) ? m.source_url : (urls?.get(m.path_key) ?? null);
         if (!url) continue; // no fresh URL this pass, or the re-read no longer lists the photo
-        if (overdue()) {
-          truncated = true;
-          return truncated;
-        }
+        pendingDownloads.push({ m, url });
+      }
+      if (await pool(pendingDownloads, DOWNLOAD_CONCURRENCY, overdue, async ({ m, url }) => {
         const outcome = await downloadOne(m, url, deps, summary, run);
         if (!outcome.ok) {
           downloads.failed += 1;
@@ -279,41 +328,49 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
           if (outcome.exhausted) downloads.exhausted += 1;
         }
         await deps.sleep(DOWNLOAD_SPACING_MS);
+      })) {
+        // Out of time mid-listing: its imports wait for the next pass, same as before.
+        truncated = true;
+        return truncated;
       }
+      const pendingImports: Array<{ m: db.PhotoBacklogRow; site: LsSite }> = [];
       for (const m of media) {
         if (!needsImport(m, deps.now())) continue;
+        if (!m.storage_path) continue;
         for (const siteId of m.site_ids) {
           const site = sites.get(siteId);
-          if (!site?.wix_site_id || !m.storage_path) continue;
-          if (overdue()) {
-            truncated = true;
-            return truncated;
-          }
-          const folder = await folderFor(site);
-          if (!folder.ok) continue;
-          const name = displayNameFor(listingId, m.position, m.path_key);
-          try {
-            const file = await deps.importToWix(site.wix_site_id, deps.publicUrl(m.storage_path), name, folder.id);
-            const uri = `wix:image://v1/${file.id}/${encodeURIComponent(name)}`;
-            await db.upsertSiteMedia([{ site_id: siteId, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported" }]);
-            const done = importedMedia.get(siteId) ?? new Set<string>();
-            done.add(m.media_id);
-            importedMedia.set(siteId, done);
-            summary.imported += 1;
-            run.counts.images_imported += 1;
-          } catch (error) {
-            const message = errorMessage(error);
-            importErrors.set(siteId, message);
-            summary.failed += 1;
-            run.counts.images_failed += 1;
-            await db.updateListingMedia(m.media_id, {
-              last_error: `import to ${site.name}: ${message}`.slice(0, 500),
-              last_attempt_at: iso(deps.now()),
-              retry_after: iso(deps.now() + IMPORT_RETRY_MS),
-            });
-          }
-          await deps.sleep(IMPORT_SPACING_MS);
+          if (!site?.wix_site_id) continue;
+          pendingImports.push({ m, site });
         }
+      }
+      if (await pool(pendingImports, IMPORT_CONCURRENCY, overdue, async ({ m, site }) => {
+        const folder = await folderFor(site);
+        if (!folder.ok) return;
+        const name = displayNameFor(listingId, m.position, m.path_key);
+        try {
+          const file = await deps.importToWix(site.wix_site_id!, deps.publicUrl(m.storage_path!), name, folder.id);
+          const uri = `wix:image://v1/${file.id}/${encodeURIComponent(name)}`;
+          await db.upsertSiteMedia([{ site_id: site.id, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported" }]);
+          // No await between these three, so the concurrent workers cannot lose one another's entries.
+          const done = importedMedia.get(site.id) ?? new Set<string>();
+          done.add(m.media_id);
+          importedMedia.set(site.id, done);
+          summary.imported += 1;
+          run.counts.images_imported += 1;
+        } catch (error) {
+          const message = errorMessage(error);
+          importErrors.set(site.id, message);
+          summary.failed += 1;
+          run.counts.images_failed += 1;
+          await db.updateListingMedia(m.media_id, {
+            last_error: `import to ${site.name}: ${message}`.slice(0, 500),
+            last_attempt_at: iso(deps.now()),
+            retry_after: iso(deps.now() + IMPORT_RETRY_MS),
+          });
+        }
+        await deps.sleep(IMPORT_SPACING_MS);
+      })) {
+        truncated = true;
       }
     } finally {
       // Whatever was imported is flagged for the site's next write, even when the deadline cut the listing short.
