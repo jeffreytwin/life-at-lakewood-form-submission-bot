@@ -168,3 +168,84 @@ export function humanizeMessage(message: string, sites: SiteNames[]): string {
   }
   return out;
 }
+
+export interface PlainErrorInput {
+  kind: string;
+  message: string;
+  listing_id?: string | null;
+  address?: string | null;
+}
+
+export interface PlainError {
+  /** One plain sentence: what is wrong. */
+  problem: string;
+  /** One plain sentence: what the person looking at it should do. */
+  nextStep: string;
+}
+
+const ASK_ADMIN = "Let the site admin know if it stays here.";
+
+/**
+ * The overview's Errors panel is read by people who do not know the
+ * engine: one plain sentence for the problem, one for the next step. The
+ * full message stays in the Change Log (Details).
+ */
+export function plainError(e: PlainErrorInput, location: string | null): PlainError {
+  const where = location ?? "the site";
+  const msg = e.message ?? "";
+  const repeated = /not clearing on its own/.test(msg) ? " This has happened several times." : "";
+  const quoted = msg.match(/"([^"]+)"/)?.[1];
+  const listing = e.address ? "this listing" : e.listing_id ? `listing ${e.listing_id}` : "this listing";
+
+  switch (e.kind) {
+    case "download_failed":
+      return {
+        problem: `Some photos for ${listing} can't be downloaded from the MLS.${repeated}`,
+        nextStep: "Check the listing's photos in the MLS. The updater tries again tomorrow.",
+      };
+    case "import_failed":
+    case "photos_failed":
+      return {
+        problem: `Photos for ${listing} aren't uploading to ${where}.${repeated}`,
+        nextStep: `The updater keeps retrying. ${ASK_ADMIN}`,
+      };
+    case "folder_missing":
+      if (/could not look up/.test(msg)) {
+        return { problem: `Wix isn't answering when the updater looks for the photo folder on ${where}.${repeated}`, nextStep: `The updater keeps retrying. ${ASK_ADMIN}` };
+      }
+      return {
+        problem: `The photo folder${quoted ? ` "${quoted}"` : ""} is missing on ${where}, so its photos are waiting.`,
+        nextStep: "Create that folder in the Wix Media Manager, or ask the site admin to.",
+      };
+    case "write_failed":
+      if (/shadow mode targets the live collection/.test(msg)) {
+        return { problem: `${where} is set up wrong: its test collection points at the live one, so nothing was written.`, nextStep: "The site admin needs to fix the location's settings." };
+      }
+      if (/bulk save/.test(msg)) return { problem: `Listings aren't being saved to ${where}.${repeated}`, nextStep: `Wix isn't accepting saves right now. ${ASK_ADMIN}` };
+      if (/bulk remove/.test(msg)) return { problem: `Sold or withdrawn listings aren't being removed from ${where}.${repeated}`, nextStep: `Wix isn't accepting removals right now. ${ASK_ADMIN}` };
+      if (/refused to remove/.test(msg)) return { problem: `Wix would not remove ${listing} from ${where}.`, nextStep: "Open Details to see what Wix said, and let the site admin know." };
+      return { problem: `Wix would not save ${listing} on ${where}.`, nextStep: "Open Details to see what Wix said, and let the site admin know." };
+    case "mass_delete_guard": {
+      const m = msg.match(/remove (\d+) of (\d+)/);
+      const n = m ? `${m[1]} of the ${m[2]}` : "a large share of the";
+      return {
+        problem: `The updater wanted to remove ${n} live listings from ${where} at once, so it removed none.`,
+        nextStep: "Check whether those listings really left the MLS, then let the site admin decide.",
+      };
+    }
+    case "stats_failed":
+      return { problem: `Neighborhood counts on ${where} aren't updating.${repeated}`, nextStep: `The updater retries every run. ${ASK_ADMIN}` };
+    case "run_error": {
+      const stage = msg.match(/Run failed at (\w+)/)?.[1];
+      const during =
+        stage === "fetch" || stage === "pull" ? " while reading the MLS feed"
+        : stage === "write" || stage === "sites" ? " while saving to Wix"
+        : stage === "photos" ? " while handling photos"
+        : "";
+      const why = /MLSGrid 4\d\d/.test(msg) ? " The MLS feed refused the request." : /Wix API[^:]*:? ?4\d\d/.test(msg) ? " Wix refused the request." : "";
+      return { problem: `An update stopped early${during}.${why}${repeated}`, nextStep: `The next update tries again. ${ASK_ADMIN}` };
+    }
+    default:
+      return { problem: msg, nextStep: "Open Details to see what happened." };
+  }
+}
