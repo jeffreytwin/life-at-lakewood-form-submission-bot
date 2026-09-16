@@ -5,6 +5,8 @@
 -- market, staged 426 new-construction homes for Parrish. Decision: exclude
 -- NewConstructionYN listings on every site, with a per-site switch so a
 -- site can opt back in without a code change.
+-- Applied to production via the Supabase MCP on 2026-09-16 (19:29 UTC) as
+-- migration listings_new_construction.
 -- ============================================================
 ALTER TABLE ls_listings ADD COLUMN new_construction BOOLEAN;  -- RESO NewConstructionYN; null = the record does not say
 COMMENT ON COLUMN ls_listings.new_construction IS 'RESO NewConstructionYN as received; classify: new_construction';
