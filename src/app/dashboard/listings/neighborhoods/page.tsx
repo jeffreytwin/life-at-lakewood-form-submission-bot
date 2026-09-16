@@ -151,7 +151,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
   const [unmatched, setUnmatched] = useState<UnmatchedView | null>(null);
   const [unmatchedError, setUnmatchedError] = useState<string | null>(null);
   const [showUnmatched, setShowUnmatched] = useState(false);
-  const [attachTo, setAttachTo] = useState<Record<string, string>>({});
+  const [attach, setAttach] = useState<Record<string, { villageId: string; term: string }>>({});
 
   const loadUnmatched = useCallback(() => {
     return fetch(`/api/internal/listings/villages/unmatched?siteId=${encodeURIComponent(site.id)}`)
@@ -184,13 +184,15 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
       });
   }, [site.id]);
 
-  // A location's neighborhoods load the first time its section opens; the unmatched listings with them.
+  // A location's neighborhoods load the first time its section opens.
   useEffect(() => {
-    if (open && neighborhoods === null) {
-      load();
-      loadUnmatched();
-    }
-  }, [open, neighborhoods, load, loadUnmatched]);
+    if (open && neighborhoods === null) load();
+  }, [open, neighborhoods, load]);
+
+  function openUnmatched() {
+    setShowUnmatched(true);
+    if (unmatched === null) loadUnmatched();
+  }
 
   async function call(key: string, url: string, init: RequestInit): Promise<boolean> {
     setBusy(key);
@@ -209,21 +211,27 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
     } finally {
       setBusy(null);
       load();
-      loadUnmatched();
+      if (unmatched !== null) loadUnmatched();
     }
   }
 
-  /** Adds a subdivision from the unmatched table as a term of the chosen neighborhood. */
-  async function attachSubdivision(group: UnmatchedGroup) {
-    const villageId = attachTo[group.subdivision];
-    if (!villageId || !group.subdivision) return;
-    const target = (neighborhoods ?? []).find((v) => v.id === villageId);
+  /** Adds the term typed next to an unmatched subdivision to the chosen neighborhood. */
+  async function attachTerm(group: UnmatchedGroup) {
+    const input = attach[group.subdivision];
+    const term = input?.term.trim() ?? "";
+    if (!input?.villageId || !term) return;
+    const target = (neighborhoods ?? []).find((v) => v.id === input.villageId);
     if (!target) return;
-    if (!confirm(`Add "${group.subdivision.toLowerCase()}" as a term of ${target.name}? Its ${group.count} listing(s) join the neighborhood on the next run.`)) return;
-    await call(`attach:${group.subdivision}`, `/api/internal/listings/villages/${villageId}/terms`, {
+    if (!group.subdivision.toLowerCase().includes(term.toLowerCase())) {
+      if (!confirm(`"${term}" is not contained in "${group.subdivision}", so it will not match these listings. Add it to ${target.name} anyway?`)) return;
+    } else if (!confirm(`Add "${term.toLowerCase()}" as a term of ${target.name}? Listings whose subdivision contains it join the neighborhood on the next run.`)) {
+      return;
+    }
+    const ok = await call(`attach:${group.subdivision}`, `/api/internal/listings/villages/${input.villageId}/terms`, {
       method: "POST",
-      body: JSON.stringify({ term: group.subdivision, street_term: null }),
+      body: JSON.stringify({ term, street_term: null }),
     });
+    if (ok) setAttach((m) => ({ ...m, [group.subdivision]: { ...input, term: "" } }));
   }
 
   async function addTerm(neighborhood: Neighborhood) {
@@ -313,6 +321,20 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            <span className="text-sm text-muted">
+              See non-neighborhood matches{" "}
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openUnmatched();
+                }}
+                style={{ textDecoration: "underline" }}
+                title="Active, for-sale listings in this location's market whose subdivision matches no neighborhood term"
+              >
+                here
+              </a>
+            </span>
             <span style={{ flex: 1 }} />
             <button className="btn btn-primary btn-sm" onClick={() => setShowNew((v) => !v)}>
               {showNew ? "Cancel" : "Add neighborhood"}
@@ -449,93 +471,113 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
             </div>
           )}
 
-          <div className="card" style={{ marginTop: 16, marginBottom: 0 }}>
-            <div className="card-header" style={{ flexWrap: "wrap", gap: 8 }}>
-              <div>
-                <h3 style={{ margin: 0 }}>
-                  Not shown: no neighborhood term
+          {showUnmatched && (
+            <div className="modal-overlay" onClick={() => setShowUnmatched(false)}>
+              <div className="modal" style={{ maxWidth: 960, width: "95vw" }} onClick={(e) => e.stopPropagation()}>
+                <h3 style={{ marginBottom: 4 }}>
+                  Non-neighborhood matches
                   {unmatched && (
                     <span className="badge badge-muted" style={{ marginLeft: 8 }}>
                       {unmatched.unmatched} of {unmatched.candidates} Active listings
                     </span>
                   )}
                 </h3>
-                <div className="text-muted text-sm">
-                  Active, for-sale listings in this location&apos;s market whose MLS subdivision matches none of the terms above. They stay off the site until a term matches; pick a neighborhood to add the subdivision as its term.
-                </div>
-              </div>
-              <span style={{ flex: 1 }} />
-              <button className="btn btn-secondary btn-sm" onClick={() => setShowUnmatched((v) => !v)} disabled={unmatched === null && !unmatchedError}>
-                {unmatched === null && !unmatchedError ? "Loading…" : showUnmatched ? "Hide" : "Show"}
-              </button>
-            </div>
-            {unmatchedError && (
-              <div className="text-sm" style={{ color: "var(--danger)" }}>
-                {unmatchedError}
-              </div>
-            )}
-            {showUnmatched && unmatched && (
-              unmatched.groups.length === 0 ? (
-                <p className="text-muted text-sm" style={{ margin: 0 }}>Every Active, for-sale listing in the market matches a neighborhood.</p>
-              ) : (
-                <div className="table-wrapper">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>MLS subdivision</th>
-                        <th>Listings</th>
-                        <th>Prices</th>
-                        <th>Add as a term of</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {unmatched.groups.map((g) => (
-                        <tr key={g.subdivision || "(none)"}>
-                          <td style={{ minWidth: 220 }}>
-                            <strong>{g.subdivision || <span className="text-muted">(no subdivision on the MLS record)</span>}</strong>
-                            <div className="text-muted text-sm">
-                              {g.sample.map((s) => (
-                                <div key={s.listing_id}>
-                                  {titleCase(s.street) || s.listing_id} · {money(s.price)}
-                                  {s.property_type && s.property_type !== "Residential" ? ` · ${s.property_type}` : ""}
-                                  {s.property_sub_type ? ` · ${s.property_sub_type}` : ""}
-                                </div>
-                              ))}
-                              {g.count > g.sample.length && <div>…and {g.count - g.sample.length} more</div>}
-                            </div>
-                          </td>
-                          <td>{g.count}</td>
-                          <td className="text-sm">{g.minPrice === g.maxPrice ? money(g.minPrice) : `${money(g.minPrice)} – ${money(g.maxPrice)}`}</td>
-                          <td>
-                            {g.subdivision ? (
-                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                <select
-                                  className="form-input"
-                                  style={{ width: 220, display: "inline-block" }}
-                                  value={attachTo[g.subdivision] ?? ""}
-                                  onChange={(e) => setAttachTo((m) => ({ ...m, [g.subdivision]: e.target.value }))}
-                                >
-                                  <option value="">Choose a neighborhood…</option>
-                                  {(neighborhoods ?? []).filter((v) => v.active).map((v) => (
-                                    <option key={v.id} value={v.id}>{v.name}</option>
-                                  ))}
-                                </select>
-                                <button className="btn btn-secondary btn-sm" disabled={busy !== null || !attachTo[g.subdivision]} onClick={() => attachSubdivision(g)}>
-                                  {busy === `attach:${g.subdivision}` ? "…" : "Add term"}
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-muted text-sm">nothing to match on</span>
-                            )}
-                          </td>
+                <p className="text-muted text-sm">
+                  Active, for-sale listings in this location&apos;s market whose MLS subdivision matches none of the neighborhood terms. They stay off the site
+                  until a term matches. To add one, type the term you want (a subdivision contains it, case does not matter: &quot;morgans glen&quot; for
+                  &quot;MORGANS GLEN TWNHMS PH IIIA &amp; IIIB&quot;) and pick the neighborhood.
+                </p>
+                {unmatchedError && (
+                  <div className="text-sm" style={{ color: "var(--danger)", marginBottom: 8 }}>
+                    {unmatchedError}
+                  </div>
+                )}
+                {unmatched === null && !unmatchedError ? (
+                  <p className="text-muted text-sm" style={{ margin: 0 }}>Loading…</p>
+                ) : unmatched && unmatched.groups.length === 0 ? (
+                  <p className="text-muted text-sm" style={{ margin: 0 }}>Every Active, for-sale listing in the market matches a neighborhood.</p>
+                ) : unmatched ? (
+                  <div className="table-wrapper" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>MLS subdivision</th>
+                          <th>Listings</th>
+                          <th>Prices</th>
+                          <th>Add a term</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {unmatched.groups.map((g) => {
+                          const input = attach[g.subdivision] ?? { villageId: "", term: "" };
+                          return (
+                            <tr key={g.subdivision || "(none)"}>
+                              <td style={{ minWidth: 220 }}>
+                                <strong>{g.subdivision || <span className="text-muted">(no subdivision on the MLS record)</span>}</strong>
+                                <div className="text-muted text-sm">
+                                  {g.sample.map((sm) => (
+                                    <div key={sm.listing_id}>
+                                      {titleCase(sm.street) || sm.listing_id} · {money(sm.price)}
+                                      {sm.property_type && sm.property_type !== "Residential" ? ` · ${sm.property_type}` : ""}
+                                      {sm.property_sub_type ? ` · ${sm.property_sub_type}` : ""}
+                                    </div>
+                                  ))}
+                                  {g.count > g.sample.length && <div>…and {g.count - g.sample.length} more</div>}
+                                </div>
+                              </td>
+                              <td>{g.count}</td>
+                              <td className="text-sm">{g.minPrice === g.maxPrice ? money(g.minPrice) : `${money(g.minPrice)} – ${money(g.maxPrice)}`}</td>
+                              <td>
+                                {g.subdivision ? (
+                                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                    <input
+                                      className="form-input"
+                                      style={{ width: 170, display: "inline-block" }}
+                                      placeholder="subdivision contains…"
+                                      value={input.term}
+                                      onChange={(e) => setAttach((m) => ({ ...m, [g.subdivision]: { ...input, term: e.target.value } }))}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") attachTerm(g);
+                                      }}
+                                    />
+                                    <select
+                                      className="form-input"
+                                      style={{ width: 200, display: "inline-block" }}
+                                      value={input.villageId}
+                                      onChange={(e) => setAttach((m) => ({ ...m, [g.subdivision]: { ...input, villageId: e.target.value } }))}
+                                    >
+                                      <option value="">Neighborhood…</option>
+                                      {(neighborhoods ?? []).filter((v) => v.active).map((v) => (
+                                        <option key={v.id} value={v.id}>{v.name}</option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      className="btn btn-secondary btn-sm"
+                                      disabled={busy !== null || !input.villageId || !input.term.trim()}
+                                      onClick={() => attachTerm(g)}
+                                    >
+                                      {busy === `attach:${g.subdivision}` ? "…" : "Add term"}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted text-sm">nothing to match on</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+                <div className="modal-actions">
+                  <button className="btn btn-secondary" onClick={() => setShowUnmatched(false)}>
+                    Close
+                  </button>
                 </div>
-              )
-            )}
-          </div>
+              </div>
+            </div>
+          )}
 
           {editing && (
             <div className="modal-overlay" onClick={() => setEditing(null)}>
