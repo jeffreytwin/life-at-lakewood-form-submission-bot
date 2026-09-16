@@ -47,6 +47,14 @@ describe.each(ALL_CHARACTER_IDS)("%s", (id) => {
     expect(character.getMessage(reroute)).toContain(NEW_AGENT);
   });
 
+  it("sends the person to the listings area on a listings alert", () => {
+    const msg = character.getMessage({ type: "listings_alert", leadName: "" });
+    expect(msg).toMatch(/listings/i);
+    // The bubble is the only place this alert is explained, so it has to ask
+    // for a look rather than just state that something broke.
+    expect(msg).toMatch(/look|eyes on|check/i);
+  });
+
   it("never casts the new agent as the one who went quiet", () => {
     const msg = character.getMessage(reroute);
     // If the line names the agent who dropped the lead at all, it must be

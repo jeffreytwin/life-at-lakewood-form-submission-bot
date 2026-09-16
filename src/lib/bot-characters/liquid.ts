@@ -42,6 +42,8 @@ function getMessage(event: LeadEvent): string {
       return "Approved. I'll put it on the wire.";
     case "email_sent":
       return "Delivered, Colonel. Another mark.";
+    case "listings_alert":
+      return "Something has failed in the listings, Colonel. Go and look at the Listings area — it will not fix itself.";
   }
 }
 

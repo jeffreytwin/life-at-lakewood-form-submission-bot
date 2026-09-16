@@ -42,6 +42,8 @@ function getMessage(event: LeadEvent): string {
       return "Pinging the frontlines to get this message out ASAP. I'll let you know when that happens...";
     case "email_sent":
       return "Colonel! Just got word the email was sent! You're pretty good...";
+    case "listings_alert":
+      return "Colonel! Something's wrong over in the listings. Take a look at the Listings area when you get a chance.";
   }
 }
 
