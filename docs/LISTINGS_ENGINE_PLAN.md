@@ -777,6 +777,34 @@ and before the term match, so the non-neighborhood overlay never lists
 builder homes. Parrish goes from 697 staged to about 271; Longboat Key
 removes those ten on its next run.
 
+**Galleries Wix could not show (Jeff, 2026-09-16).** Five live Longboat
+Key listings showed one stock photo each instead of their own, with a
+warning and a broken primary image in the CMS. A Wix image URI needs its
+origin dimensions —
+`wix:image://v1/<fileId>/<name>#originWidth=1600&originHeight=898` — and
+the engine's own imports were writing it without the fragment. Wix answers
+that by refusing the field, so the site's gallery fell back to its editor
+placeholder, the same photo on every affected listing. Only listings the
+engine imported photos for were wrong: the 10,382 photos seeded from the
+live collection at cutover carried Wix's own URIs, fragment included, and
+all 2,420 imported ones did not. Nothing had to be re-imported — every
+MLSGrid Media record carries `ImageWidth`/`ImageHeight` (48,296 of 48,296),
+so migration 049 adds `ls_listing_media.image_width/image_height`,
+backfills them from `raw`, and the URIs were rebuilt from them in place.
+`wixImageUri()` and `isRenderableWixImage()` in `types.ts` are now the one
+definition of the shape; the photo job refuses to import a photo whose
+dimensions it does not have (a warning, escalating if it persists) rather
+than writing a URI nothing can show.
+
+**The guard (Jeff asked for an alert).** A photo whose src is not a
+renderable Wix image never reaches a record: the write phase drops it and
+raises `gallery_unusable` at error level, so it lands in the Errors panel
+in plain language ("Some photos for this listing can't be shown on <site>,
+so they were left off the listing"). A listing whose photos are all
+unusable is not written at all and counts as waiting for photos. This is
+the class of bug the Hub could not have caught before: the writes all
+succeeded, Wix accepted the rows, and only the rendered page was wrong.
+
 **Photo throughput (Jeff, 2026-09-16).** Parrish's galleries were going to
 take about 33 hours. The engine was moving roughly 400 photos an hour, but
 at 51 photos a listing that is only 8 listings an hour, which is what the

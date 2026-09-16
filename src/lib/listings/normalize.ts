@@ -65,6 +65,8 @@ export function normalizeMedia(raw: MlsGridProperty, receivedAt: Date): LsListin
       source_url_received_at: receivedAt.toISOString(),
       title: str(m.LongDescription),
       media_modification_timestamp: iso(m.MediaModificationTimestamp ?? m.ModificationTimestamp),
+      image_width: num(m.ImageWidth),
+      image_height: num(m.ImageHeight),
     });
   }
   return rows;
