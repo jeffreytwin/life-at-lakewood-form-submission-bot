@@ -5,8 +5,9 @@
 --   - Life At Parrish as an inactive shadow-mode site, with its neighborhoods,
 --     subdivision terms and tag icons transcribed from the site's manual
 --     dashboard page code (scripts/listings-parrish-villages.mjs)
--- Not yet applied to production (apply via the Supabase MCP after the code
--- that reads media_folder_* is deployed; the site row stays inactive until then).
+-- Applied to production via the Supabase MCP on 2026-09-16 (17:07 UTC), as
+-- migration listings_parrish_site, with the site row inactive; the row is
+-- activated by hand once the code that reads media_folder_* is deployed.
 -- ============================================================
 
 -- The folder name is configuration; the id is resolved once against the
