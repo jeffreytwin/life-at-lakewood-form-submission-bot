@@ -78,6 +78,7 @@ const site: LsSite = {
   market_cities: ["Longboat Key"],
   property_types: ["Residential", "Land"],
   show_new_construction: false,
+  price_sort_style: "ranges",
   active: true,
   timezone: "America/New_York",
   media_folder_name: null,

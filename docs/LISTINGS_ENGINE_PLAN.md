@@ -777,6 +777,42 @@ and before the term match, so the non-neighborhood overlay never lists
 builder homes. Parrish goes from 697 staged to about 271; Longboat Key
 removes those ten on its next run.
 
+**Photos Wix accepted but never fetched (Jeff, 2026-09-16).** Parrish
+galleries had blanks scattered through them, and the file was genuinely
+empty in the Media Manager, not just unrendered in the CMS. Wix's URL
+import is asynchronous: `POST /site-media/v1/files/import` returns a file
+id straight away and Wix fetches the picture afterwards. When that fetch
+fails nothing in the response says so, so the engine records a file id that
+renders as nothing, for ever. `mediaState()` in the Wix client reads a file
+descriptor and calls it ready, pending, broken or unknown, and
+`reimportBrokenPhotos()` in `audit.ts` clears the engine's record of the
+broken ones so the next photo pass fetches them again and the listing is
+rewritten. It runs on the nightly full run per site, and on the Hub's audit
+panel as "Fetch them again"; the audit also reports the counts. Two
+safeties: a file is only called broken on positive evidence (Wix said
+FAILED, or it described the media and there were no dimensions), never on a
+response that simply lacks the media block, and the repair refuses outright
+when more than `BROKEN_SHARE_CAP` (35%) of a location's photos look broken,
+on the grounds that Wix having changed its payload is likelier than a third
+of the library failing. The refusal is an error in the panel.
+
+**The price filter tag is per site (Jeff, 2026-09-16).** The engine wrote
+Longboat Key's scheme everywhere: "Under $500k", "$500k - $1M", "$1M - $2M"
+and up, ported from that site's own pipeline. Parrish's live collection
+tags prices the way its older Velo `getNumber` did instead: `$600s` for a
+six-figure price, `3M+` above a million. The two are not interchangeable —
+a page filtering on `$600s` matches nothing when the row says
+`$500k - $1M` — so the Parrish cutover would have left its price filter
+empty. Caught in the shadow collection, before the flip. Migration 050
+adds `ls_sites.price_sort_style` (`ranges` by default, so no site changes
+unless it is named; Parrish set to `shorthand`) and `priceBucket()` takes
+it. The shorthand reproduces `getNumber` exactly, digit slicing and all,
+because that function is what produced the values sitting in the
+collection today: 624,900 -> `$600s`, 3,295,000 -> `3M+`, 12,000,000 ->
+`12M+`, and below six figures the bare `$99000`. Worth re-checking against
+a live row before each new site's cutover; the same question will come up
+for Lakewood Ranch and Wellen Park.
+
 **Galleries Wix could not show (Jeff, 2026-09-16).** Five live Longboat
 Key listings showed one stock photo each instead of their own, with a
 warning and a broken primary image in the CMS. A Wix image URI needs its

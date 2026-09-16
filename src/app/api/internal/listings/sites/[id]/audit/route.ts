@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeEngineRequest, engineErrorResponse } from "@/lib/listings/auth";
-import { auditSite, deleteStaleRows } from "@/lib/listings/audit";
+import { auditSite, deleteStaleRows, reimportBrokenPhotos } from "@/lib/listings/audit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -24,9 +24,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 /**
  * POST /api/internal/listings/sites/:id/audit
- * Body: { deleteStale: true, collectionId }
- * Deletes the rows the engine does not own from the site's target collection
- * (recomputed server-side; any other collection is refused).
+ * Body: { deleteStale: true, collectionId } deletes the rows the engine does
+ * not own from the site's target collection (recomputed server-side; any
+ * other collection is refused).
+ * Body: { reimportBroken: true } clears the engine's record of photos Wix
+ * holds no picture for, so the next photo pass imports them again.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const denied = authorizeEngineRequest(request);
@@ -34,8 +36,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   try {
     const body = await request.json().catch(() => ({}));
+    if (body?.reimportBroken === true) return NextResponse.json(await reimportBrokenPhotos(id));
     if (body?.deleteStale !== true || typeof body?.collectionId !== "string") {
-      return NextResponse.json({ error: "Body must be { deleteStale: true, collectionId }" }, { status: 400 });
+      return NextResponse.json({ error: "Body must be { deleteStale: true, collectionId } or { reimportBroken: true }" }, { status: 400 });
     }
     return NextResponse.json(await deleteStaleRows(id, body.collectionId));
   } catch (error) {

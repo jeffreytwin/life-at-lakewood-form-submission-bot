@@ -28,6 +28,7 @@ interface Site {
   market_cities: string[];
   property_types?: string[];
   show_new_construction?: boolean;
+  price_sort_style?: string;
   active: boolean;
   counts: SiteCounts;
   villages: number;
@@ -121,6 +122,8 @@ interface AuditReport {
     outsideFolder: string[];
     outsideFolderCount: number;
     unknownInFolder: number;
+    brokenFiles: number;
+    pendingFiles: number;
   };
   collections: Array<{
     collectionId: string;
@@ -262,6 +265,23 @@ export default function ListingsOverviewPage() {
   function runAudit(site: Site) {
     call(`audit:${site.id}`, `/api/internal/listings/sites/${encodeURIComponent(site.id)}/audit`, { method: "GET" }, (body) =>
       setAudits((prev) => ({ ...prev, [site.id]: body as AuditReport }))
+    );
+  }
+
+  function reimportBroken(site: Site, count: number) {
+    if (!confirm(`Wix has no picture for ${count} photo(s) on ${site.name}. Fetch them again? The listings involved are rewritten once the photos are back.`)) return;
+    call(
+      `reimport:${site.id}`,
+      `/api/internal/listings/sites/${encodeURIComponent(site.id)}/audit`,
+      { method: "POST", body: JSON.stringify({ reimportBroken: true }) },
+      (body) => {
+        const r = body as { broken: number; cleared: number; listings: number; refused: string | null };
+        setStaleResults((prev) => ({
+          ...prev,
+          [site.id]: r.refused ?? `${r.cleared} photo(s) queued to be fetched again across ${r.listings} listing(s); they return over the next photo passes`,
+        }));
+        runAudit(site);
+      }
     );
   }
 
@@ -512,7 +532,7 @@ export default function ListingsOverviewPage() {
                     <strong style={colors ? { color: colors.solid } : undefined}>{site.name}</strong> <span className={mode.cls}>{mode.label}</span>
                     {!site.wix_site_id && <span className="badge badge-danger" style={{ marginLeft: 6 }}>no Wix site id</span>}
                     <div className="text-muted text-sm">
-                      market {site.market_cities.join(", ") || "—"} · shows {(site.property_types ?? ["Residential", "Land"]).join(" + ")}{site.show_new_construction ? "" : ", resale only"} · {site.activeVillages} of {site.villages} neighborhoods active
+                      market {site.market_cities.join(", ") || "—"} · shows {(site.property_types ?? ["Residential", "Land"]).join(" + ")}{site.show_new_construction ? "" : ", resale only"} · price tags {site.price_sort_style === "shorthand" ? "$600s / 3M+" : "Under $500k / $1M - $2M"} · {site.activeVillages} of {site.villages} neighborhoods active
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -582,6 +602,19 @@ export default function ListingsOverviewPage() {
                             ? `"${a.site.media_folder_name}" not resolved yet (no import has run for this location)`
                             : `"${a.site.media_folder_name}" holds ${f.filesInFolder} file(s)${f.listingTruncated ? " (listing cut short)" : ""}; the engine holds ${f.engineFiles} photo(s), ${f.engineFilesInFolder} in the folder, ${f.outsideFolderCount} outside${f.outsideFolder.length ? ` (${f.outsideFolder.slice(0, 5).join(", ")}${f.outsideFolderCount > 5 ? ", …" : ""})` : ""}; ${f.unknownInFolder} file(s) in the folder are not the engine's`}
                       </div>
+                      {f.resolved && (f.brokenFiles > 0 || f.pendingFiles > 0) && (
+                        <div style={{ marginTop: 6 }}>
+                          {f.brokenFiles > 0 && (
+                            <>
+                              <strong>{f.brokenFiles} photo(s) Wix has no picture for</strong> (the upload was accepted but the image never arrived; they show as blanks)
+                              <button className="btn btn-secondary btn-sm" style={{ marginLeft: 8 }} disabled={busy !== null} onClick={() => reimportBroken(site, f.brokenFiles)}>
+                                {busy === `reimport:${site.id}` ? "Queueing…" : "Fetch them again"}
+                              </button>
+                            </>
+                          )}
+                          {f.pendingFiles > 0 && <div className="text-muted">{f.pendingFiles} still being processed by Wix; they may come good on their own.</div>}
+                        </div>
+                      )}
                       {a.collections.map((c) => (
                         <div key={c.collectionId} style={{ marginTop: 6 }}>
                           <code>{c.collectionId}</code> ({c.role}): {c.items} row(s), {c.owned} owned by the engine, <strong>{c.staleCount} stale</strong>

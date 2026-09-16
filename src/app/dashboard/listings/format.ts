@@ -233,6 +233,11 @@ export function plainError(e: PlainErrorInput, location: string | null): PlainEr
         nextStep: "Check whether those listings really left the MLS, then let the site admin decide.",
       };
     }
+    case "photos_broken":
+      return {
+        problem: `Too many photos on ${where} look wrong to the checker, so nothing was touched.${repeated}`,
+        nextStep: "The site admin needs to look before any photos are fetched again.",
+      };
     case "gallery_unusable":
       return {
         problem: `Some photos for ${listing} can't be shown on ${where}, so they were left off the listing.${repeated}`,

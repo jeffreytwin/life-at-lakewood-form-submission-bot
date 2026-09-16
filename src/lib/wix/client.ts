@@ -282,6 +282,37 @@ export interface WixMediaFile {
   id: string;
   displayName?: string;
   parentFolderId?: string;
+  /** Wix's own word on the import: READY, PENDING, FAILED. Absent on older responses. */
+  operationStatus?: string;
+  sizeInBytes?: string | number;
+  /** The processed image. A file whose import fetch failed has an id but nothing here. */
+  media?: { image?: { image?: { width?: number; height?: number }; width?: number; height?: number } };
+}
+
+/**
+ * Whether Wix actually holds the picture behind a file id.
+ *
+ * Wix's URL import is asynchronous: the call returns a file id at once and
+ * Wix fetches the bytes afterwards. When that fetch fails, the file still
+ * exists in the Media Manager and in any gallery pointing at it, but there
+ * is no image — what the CMS draws as a broken thumbnail.
+ *
+ * Only "broken" is acted on, and only on positive evidence: Wix said FAILED,
+ * or it described the media and there were no dimensions in it. A response
+ * that simply does not carry the media block is "unknown", never broken, so
+ * a change in Wix's payload cannot make the engine discard good imports.
+ */
+export type MediaState = "ready" | "pending" | "broken" | "unknown";
+
+export function mediaState(file: WixMediaFile): MediaState {
+  const status = typeof file.operationStatus === "string" ? file.operationStatus.toUpperCase() : null;
+  if (status === "FAILED") return "broken";
+  if (status === "PENDING") return "pending";
+  const image = file.media?.image;
+  if (!file.media || !image) return status === "READY" ? "unknown" : "unknown";
+  const width = image.image?.width ?? image.width;
+  const height = image.image?.height ?? image.height;
+  return width && height && width > 0 && height > 0 ? "ready" : "broken";
 }
 
 const FILE_PAGE = 100;
