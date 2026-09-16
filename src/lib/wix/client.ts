@@ -32,7 +32,8 @@ export class WixApiError extends Error {
     context: string,
     retryAfter?: string | null
   ) {
-    super(`Wix API ${context}: ${status} ${body.slice(0, 300)}`);
+    // Wix's edge answers some failures with a whole HTML error page; the Hub does not need it.
+    super(`Wix API ${context}: ${status} ${/^\s*<(!doctype|html)/i.test(body) ? "(Wix answered with an HTML error page)" : body.slice(0, 300)}`);
     this.name = "WixApiError";
     const seconds = retryAfter ? Number(retryAfter) : NaN;
     this.retryAfterSeconds = Number.isFinite(seconds) ? seconds : null;

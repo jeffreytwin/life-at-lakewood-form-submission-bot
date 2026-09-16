@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/shared/logger", () => ({ logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 
-import { FOLDER_PAGE_CAP, findMediaFolder, listMediaFolders } from "@/lib/wix/client";
+import { FOLDER_PAGE_CAP, WixApiError, findMediaFolder, listMediaFolders } from "@/lib/wix/client";
 
 const folder = (i: number) => ({ id: `folder-${i}`, displayName: `Folder ${i}`, parentFolderId: "media-root" });
 const page = (items: unknown[]) => new Response(JSON.stringify({ folders: items }), { status: 200, headers: { "content-type": "application/json" } });
@@ -50,5 +50,14 @@ describe("listMediaFolders", () => {
     stubFetch(() => page([folder(1), { id: "f-parrish", displayName: "ParrishListingPhotos" }]));
     expect((await findMediaFolder("site-1", "parrishlistingphotos"))?.id).toBe("f-parrish");
     expect(await findMediaFolder("site-1", "nope")).toBeNull();
+  });
+});
+
+describe("WixApiError", () => {
+  it("keeps a short body and replaces an HTML error page with one phrase", () => {
+    expect(new WixApiError(400, '{"message":"bad"}', "POST /x").message).toBe('Wix API POST /x: 400 {"message":"bad"}');
+    const html = new WixApiError(500, "<!DOCTYPE html>\n<html><head><title>500 Error</title></head></html>", "POST /site-media/v1/files/import");
+    expect(html.message).toBe("Wix API POST /site-media/v1/files/import: 500 (Wix answered with an HTML error page)");
+    expect(html.body).toContain("<html>");
   });
 });

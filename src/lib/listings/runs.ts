@@ -58,6 +58,70 @@ export function emptyCounts(): RunCounts {
 const MAX_EVENT_BUFFER = 1500;
 const FLUSH_CHUNK = 200;
 
+// Attention levels (Jeff, 2026-09-16): an error event is one that needs a
+// person; the Errors panel shows nothing else. A failure the engine retries
+// on its own is a warning the first times. When the same failure (kind,
+// location, listing) has already been warned about on ESCALATE_AFTER earlier
+// runs inside ESCALATION_WINDOW_MS it is plainly not clearing by itself, so
+// the new warning is stored as an error, once: while that problem has an
+// open (undismissed) error, further repeats stay warnings.
+
+/** Kinds whose warnings describe a failure a later run retries by itself. */
+export const RETRIED_KINDS: ReadonlySet<string> = new Set(["import_failed", "write_failed", "stats_failed", "folder_missing", "run_error"]);
+/** Earlier runs' warnings about the same problem before a repeat becomes an error. */
+export const ESCALATE_AFTER = 2;
+export const ESCALATION_WINDOW_MS = 6 * 3600_000;
+
+export interface PriorEvent {
+  level: string;
+  kind: string;
+  site_id: string | null;
+  listing_id: string | null;
+  dismissed_at: string | null;
+}
+
+const repeatKey = (e: { kind?: unknown; site_id?: unknown; listing_id?: unknown }): string =>
+  `${String(e.kind)}|${e.site_id ?? ""}|${e.listing_id ?? ""}`;
+
+/**
+ * Pure: promotes this run's retried-kind warnings to errors when earlier
+ * runs already warned about the same problem, unless it has an open error
+ * already. Returns how many rows were promoted.
+ */
+export function escalateRepeats(rows: Array<Record<string, unknown>>, prior: PriorEvent[]): number {
+  const warned = new Map<string, number>();
+  const open = new Set<string>();
+  for (const p of prior) {
+    const key = repeatKey(p);
+    if (p.level === "warn") warned.set(key, (warned.get(key) ?? 0) + 1);
+    else if (p.level === "error" && !p.dismissed_at) open.add(key);
+  }
+  let promoted = 0;
+  const hours = Math.round(ESCALATION_WINDOW_MS / 3600_000);
+  for (const row of rows) {
+    if (row.level !== "warn" || !RETRIED_KINDS.has(String(row.kind))) continue;
+    const key = repeatKey(row);
+    if (open.has(key)) continue;
+    const earlier = warned.get(key) ?? 0;
+    if (earlier < ESCALATE_AFTER) continue;
+    row.level = "error";
+    row.message = `${String(row.message)}; ${earlier} earlier run(s) in the last ${hours} h hit the same failure, so it is not clearing on its own`.slice(0, 1000);
+    promoted += 1;
+  }
+  return promoted;
+}
+
+/**
+ * A run that stopped on a rate limit, an upstream 5xx or a network fault is
+ * retried by the next tick, so it is a warning (escalated if it keeps
+ * happening); any other failure needs a look.
+ */
+export function runErrorLevel(message: string): EventLevel {
+  const upstream = /\b(MLSGrid|Wix API[^:]*):? ?(429|5\d\d)\b/i.test(message);
+  const network = /timed? ?out|ECONNRESET|ETIMEDOUT|ECONNREFUSED|EAI_AGAIN|fetch failed|socket hang up|network error/i.test(message);
+  return upstream || network ? "warn" : "error";
+}
+
 export interface RunHandle {
   id: string | null;
   runKey: string;
@@ -233,6 +297,25 @@ export async function startRun(args: {
       if (!buffer.length) return;
       const rows = buffer;
       buffer = [];
+      const retried = rows.filter((r) => r.level === "warn" && RETRIED_KINDS.has(String(r.kind)));
+      if (retried.length) {
+        try {
+          const { data, error: priorError } = await supabase
+            .from("ls_sync_events")
+            .select("level, kind, site_id, listing_id, dismissed_at")
+            .in("kind", [...new Set(retried.map((r) => String(r.kind)))])
+            .in("level", ["warn", "error"])
+            .neq("run_key", runKey)
+            .gte("at", new Date(Date.now() - ESCALATION_WINDOW_MS).toISOString())
+            .limit(2000);
+          if (priorError) throw priorError;
+          const promoted = escalateRepeats(rows, (data ?? []) as PriorEvent[]);
+          counts.warnings -= promoted;
+          counts.errors += promoted;
+        } catch (error) {
+          logger.warn("Listings events escalation check failed", { runKey, error: errorMessage(error) });
+        }
+      }
       for (let i = 0; i < rows.length; i += FLUSH_CHUNK) {
         const { error: insError } = await supabase.from("ls_sync_events").insert(rows.slice(i, i + FLUSH_CHUNK));
         if (insError) logger.warn("Listings events flush failed", { runKey, error: errorMessage(insError), rows: rows.length });
@@ -247,7 +330,7 @@ export async function startRun(args: {
     },
     async finish(status, err) {
       if (err) {
-        handle.event("error", "run_error", `Run failed at ${err.stage}: ${err.message}`, {
+        handle.event(runErrorLevel(err.message), "run_error", `Run failed at ${err.stage}: ${err.message}`, {
           details: { stage: err.stage, stack: err.stack?.slice(0, 2000) },
         });
       }

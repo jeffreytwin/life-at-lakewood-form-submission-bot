@@ -546,7 +546,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
       if (error instanceof WixApiError && error.rateLimited) run.counts.wix_rate_limited += 1;
       run.counts.writes_failed += part.length;
       summary.failed += part.length;
-      run.event("error", "write_failed", `${site.name}: bulk save of ${part.length} listing(s) failed: ${errorMessage(error)}`, { siteId: site.id });
+      run.event("warn", "write_failed", `${site.name}: bulk save of ${part.length} listing(s) failed: ${errorMessage(error)}; retried next run`, { siteId: site.id });
       continue;
     }
     const patches: Array<Record<string, unknown>> = [];
@@ -626,7 +626,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
         if (error instanceof WixApiError && error.rateLimited) run.counts.wix_rate_limited += 1;
         run.counts.writes_failed += part.length;
         summary.failed += part.length;
-        run.event("error", "write_failed", `${site.name}: bulk remove of ${part.length} listing(s) failed: ${errorMessage(error)}`, { siteId: site.id });
+        run.event("warn", "write_failed", `${site.name}: bulk remove of ${part.length} listing(s) failed: ${errorMessage(error)}; retried next run`, { siteId: site.id });
         continue;
       }
       const patches: Array<Record<string, unknown>> = [];
@@ -659,7 +659,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
     summary.villagesChanged = changed;
     run.counts.stats_refreshed = true;
   } catch (error) {
-    run.event("error", "stats_failed", `${site.name}: neighborhood counts not refreshed: ${errorMessage(error)}`, { siteId: site.id });
+    run.event("warn", "stats_failed", `${site.name}: neighborhood counts not refreshed: ${errorMessage(error)}; retried next run`, { siteId: site.id });
   }
   // In shadow mode the Velo pipeline still writes the neighborhood pages' stats and the
   // ads feed's counts; from cutover on that is this run's job (village-stats.ts).
@@ -679,7 +679,7 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
         }
       } catch (error) {
         run.counts.stats_refreshed = false;
-        run.event("error", "stats_failed", `${site.name}: neighborhood stats not written to Wix: ${errorMessage(error)}`, { siteId: site.id });
+        run.event("warn", "stats_failed", `${site.name}: neighborhood stats not written to Wix: ${errorMessage(error)}; retried next run`, { siteId: site.id });
       }
     }
   }

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import ListingsTabs from "./tabs";
 import Toggle from "./toggle";
 import RunTags from "./run-tags";
-import { ago, duration, fmtDateTime, humanizeMessage, megabytes, modeLabel, responseError, runOutcome, siteColors, triggerLabel, wixCollectionUrl, writeModeBadge } from "./format";
+import { ago, duration, fmtDateTime, megabytes, modeLabel, plainError, responseError, runOutcome, siteColors, triggerLabel, wixCollectionUrl, writeModeBadge } from "./format";
 
 interface SiteCounts {
   staged: number;
@@ -371,39 +371,41 @@ export default function ListingsOverviewPage() {
                 </button>
               </div>
               <p className="text-muted text-sm" style={{ marginBottom: 12 }}>
-                Each error stays here until it is dismissed. Details opens its run in the Change Log, where the full history stays.
+                Only problems that need a person show here. Dismiss one once it is handled; the full story stays in the Change Log (Details).
               </p>
               <div className="table-wrapper">
                 <table>
                   <thead>
                     <tr>
                       <th>When</th>
-                      <th>Kind</th>
-                      <th>Listing</th>
-                      <th>Message</th>
+                      <th>Where</th>
+                      <th>What&apos;s wrong</th>
+                      <th>What to do</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {status.errors.map((e) => (
-                      <tr key={e.id}>
-                        <td className="text-sm" style={{ whiteSpace: "nowrap" }}>
-                          {fmtDateTime(e.at)}
-                          {e.site_id && <div className="text-muted">{siteById(e.site_id)}</div>}
-                        </td>
-                        <td className="text-sm">{e.kind}</td>
-                        <td className="text-sm">
-                          {e.listing_id ? (
-                            <Link href={`/dashboard/listings/change-log?listingId=${encodeURIComponent(e.listing_id)}`} title="Everything that happened to this listing">
-                              {e.listing_id}
-                            </Link>
-                          ) : (
-                            "—"
-                          )}
-                          {e.address && <div className="text-muted">{e.address}</div>}
-                        </td>
-                        <td className="text-sm">{humanizeMessage(e.message, status.sites)}</td>
-                        <td style={{ whiteSpace: "nowrap" }}>
+                    {status.errors.map((e) => {
+                      const location = e.site_id ? siteById(e.site_id) : null;
+                      const plain = plainError(e, location);
+                      return (
+                        <tr key={e.id}>
+                          <td className="text-sm" style={{ whiteSpace: "nowrap" }}>
+                            {fmtDateTime(e.at)}
+                          </td>
+                          <td className="text-sm">
+                            {location ?? "All locations"}
+                            {e.listing_id && (
+                              <div>
+                                <Link href={`/dashboard/listings/change-log?listingId=${encodeURIComponent(e.listing_id)}`} title="Everything that happened to this listing">
+                                  {e.address ?? e.listing_id}
+                                </Link>
+                              </div>
+                            )}
+                          </td>
+                          <td className="text-sm">{plain.problem}</td>
+                          <td className="text-sm text-muted">{plain.nextStep}</td>
+                          <td style={{ whiteSpace: "nowrap" }}>
                           <Link href={errorHref(e)} className="btn btn-secondary btn-sm" style={{ marginRight: 6 }}>
                             Details
                           </Link>
@@ -412,7 +414,8 @@ export default function ListingsOverviewPage() {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
