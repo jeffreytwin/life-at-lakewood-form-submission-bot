@@ -61,7 +61,7 @@ import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { reimportBrokenPhotos } from "@/lib/listings/audit";
 import { bulkRemoveItems, bulkSaveItems, type WixItemData } from "@/lib/wix/client";
 import { normalizeListing } from "@/lib/listings/normalize";
-import { runReconcile, BROKEN_PHOTO_CHECK_MIN_MS } from "@/lib/listings/reconcile";
+import { FULL_VERIFY_MAX_LISTINGS, runReconcile, BROKEN_PHOTO_CHECK_MIN_MS } from "@/lib/listings/reconcile";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, LsSiteListing, MlsGridProperty, VillageWithTerms } from "@/lib/listings/types";
 
@@ -400,6 +400,28 @@ describe("the full run's verification cursor", () => {
     // Clearing it here would restart the cycle from the top, which is the bug.
     expect(db.saveFullCursor).not.toHaveBeenCalled();
     expect(events.find((e) => e.kind === "budget")?.message).toContain("resumes from MFRA2");
+  });
+
+  it("caps the pass by listing count, not just by the fetch clock", async () => {
+    // 2026-09-17: all 6,164 held ids came back inside the fetch budget and
+    // the invocation was then killed at `upsert`. Fetching is the cheap half,
+    // so the pass has to be bounded by what it will write.
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    const many = Array.from({ length: FULL_VERIFY_MAX_LISTINGS + 40 }, (_, i) => `MFR${String(i).padStart(6, "0")}`);
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue(many);
+    const client = fakeClient({ byId: [] });
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client });
+
+    // The fetch never sees more than the cap, however much is outstanding.
+    expect(client.fetchByIds.mock.calls[0][0]).toHaveLength(FULL_VERIFY_MAX_LISTINGS);
+    expect(db.saveFullCursor).toHaveBeenCalledWith(
+      expect.objectContaining({ afterListingId: many[FULL_VERIFY_MAX_LISTINGS - 1], verified: FULL_VERIFY_MAX_LISTINGS })
+    );
+    const budget = events.find((e) => e.kind === "budget");
+    expect(budget?.message).toContain(`the cap is ${FULL_VERIFY_MAX_LISTINGS}`);
+    expect(budget?.message).toContain("40 still to check");
   });
 
   it("stays out of the way when there is no cursor and the set fits", async () => {

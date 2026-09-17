@@ -63,6 +63,21 @@ export const MASS_DELETE_SHARE = 0.1;
 export const BROKEN_PHOTO_CHECK_MIN_MS = 45_000;
 const WRITE_CHUNK = 200;
 const FETCH_RESERVE_MS = 90_000;
+/**
+ * How many held listings one full pass verifies. The rest go to the cursor.
+ *
+ * The fetch deadline does not bound this on its own, which cost a run on
+ * 2026-09-17: all 6,164 held ids came back in 124 requests comfortably inside
+ * the fetch budget -- 134 MB -- and the invocation was killed at `upsert`,
+ * part-way through writing 6,164 raw records and their roughly 300,000 media
+ * rows. Fetching by id is the cheap half; the write is what costs.
+ *
+ * 1,500 is sized from what the engine already does every hour without
+ * trouble: an incremental carried 1,431 listings end to end in 68 s, and
+ * 2,873 in 106 s. At six thousand held that is five passes, which the cursor
+ * spreads over idle ticks.
+ */
+export const FULL_VERIFY_MAX_LISTINGS = 1_500;
 const DATA_DRIVEN_REASONS: ReadonlySet<ReasonCode> = new Set(["city_change", "no_village", "mls_revoked", "not_in_feed"]);
 
 /** The photo step inside a run gets at most this long, and always leaves the writes this much. */
@@ -337,10 +352,18 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       // budget is covered across runs instead of re-reading its opening
       // slice for ever. See FullCursor.
       const priorCursor = await db.loadFullCursor();
-      const known = await db.loadKnownListingIds({ after: priorCursor?.afterListingId });
+      const remaining = await db.loadKnownListingIds({ after: priorCursor?.afterListingId });
+      // Bound the pass by how many listings it will *write*, not only by how
+      // long the fetch may take. The fetch deadline alone was not enough:
+      // 2026-09-17, 6,164 held ids came back in all 124 requests well inside
+      // the fetch budget -- 134 MB of them -- and the invocation was then
+      // killed at `upsert`, writing 6,164 raw records and their ~300,000
+      // media rows past the 300 s function limit. Fetching is the cheap half.
+      const known = remaining.slice(0, FULL_VERIFY_MAX_LISTINGS);
+      const beyondCap = remaining.length > known.length;
       const verify = await client.fetchByIds(known, { deadline: fetchDeadline });
       items = verify.items;
-      truncated = verify.truncated;
+      truncated = verify.truncated || beyondCap;
       relevant = items;
       const returned = new Set(items.map((i) => i.ListingId));
       missingIds = verify.verifiedIds.filter((id) => !returned.has(id));
@@ -359,8 +382,9 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
         }
       } else if (last) {
         await db.saveFullCursor({ afterListingId: last, startedAt: priorCursor?.startedAt ?? startedAt.toISOString(), verified: verifiedInCycle });
-        run.event("warn", "budget", `Full run verified ${verify.verifiedIds.length} of the ${known.length} listing(s) still to check before the deadline (${verifiedInCycle} this cycle); the next run carries on from ${last}`, {
-          details: { verified: verify.verifiedIds.length, remaining: known.length, verifiedInCycle, resumeAfter: last },
+        const why = verify.truncated ? "before the deadline" : `this pass (the cap is ${FULL_VERIFY_MAX_LISTINGS})`;
+        run.event("warn", "budget", `Full run verified ${verify.verifiedIds.length} listing(s) ${why}, ${remaining.length - verify.verifiedIds.length} still to check (${verifiedInCycle} this cycle); the next run carries on from ${last}`, {
+          details: { verified: verify.verifiedIds.length, remaining: remaining.length - verify.verifiedIds.length, verifiedInCycle, resumeAfter: last, hitCap: beyondCap && !verify.truncated },
         });
       } else {
         // The deadline was gone before a single batch: leave the cursor
