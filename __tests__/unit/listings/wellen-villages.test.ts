@@ -59,7 +59,7 @@ describe("Wellen Park neighborhoods seed", () => {
 
   it("keeps terms lowercase and unique across the site (one term, one neighborhood)", () => {
     const all = villages.flatMap((v) => v.terms.map((t) => t.term));
-    expect(all).toHaveLength(24);
+    expect(all).toHaveLength(25);
     expect(new Set(all).size).toBe(all.length);
     for (const t of all) expect(t).toBe(t.trim().toLowerCase());
   });
@@ -72,7 +72,14 @@ describe("Wellen Park neighborhoods seed", () => {
 
   it("carries the Kensington guard as the one exclusion", () => {
     const withExclusions = villages.flatMap((v) => v.terms.filter((t) => t.exclude_term).map((t) => [v.name, t.term, t.exclude_term]));
-    expect(withExclusions).toEqual([["The Preserve", "preserve", "kensington"]]);
+    expect(withExclusions).toEqual([["The Preserve", "preserve/west", "kensington"]]);
+  });
+
+  it("anchors The Preserve on the two forms the site carries, never on 'preserve' alone", () => {
+    // The dashboard's bare "preserve" was safe only because it sorted an
+    // already curated id list. As a filter across three cities it swept in
+    // Englewood's Hammocks, Grande and Eagle Preserves; see migration 056.
+    expect(termsOf("The Preserve")).toEqual(["preserve/west", "the preserve"]);
   });
 
   it("evaluates the tag ternaries in order, first match wins", () => {
@@ -127,8 +134,24 @@ describe("Wellen Park terms through classify", () => {
 
   it("takes Kensington's preserve back off The Preserve, and leaves the rest", () => {
     expect(matchVillage("PRESERVE/WEST VILLAGES PH 1", null, asVillages)?.name).toBe("The Preserve");
+    expect(matchVillage("PRESERVE/WEST VLGS PH 2", null, asVillages)?.name).toBe("The Preserve");
+    expect(matchVillage("THE PRESERVE", null, asVillages)?.name).toBe("The Preserve");
     expect(matchVillage("KENSINGTON PRESERVE", null, asVillages)).toBeNull();
     expect(matchVillage("PRESERVE AT KENSINGTON PH 2", null, asVillages)).toBeNull();
+  });
+
+  it("leaves Englewood's preserves alone, which bare 'preserve' did not", () => {
+    // The four that reached HousesforSale2 on the first discovery run, plus
+    // the one queued behind them. None are Wellen Park.
+    for (const subdivision of [
+      "HAMMOCKS PRESERVE PH 01",
+      "HAMMOCKS PRESERVE PH 14",
+      "HAMMOCKS-PRESERVE PHASE 14 BUILD",
+      "GRANDE PRESERVE ON LEMON BAY P",
+      "EAGLE PRESERVE ESTATES",
+    ]) {
+      expect(matchVillage(subdivision, null, asVillages), subdivision).toBeNull();
+    }
   });
 
   it("lets the longer spelling win where two terms of one neighborhood overlap", () => {
@@ -142,12 +165,12 @@ describe("Wellen Park seed SQL", () => {
   const sql = wellenVillagesSql() as unknown as string;
 
   it("says what it carries and targets the site by domain", () => {
-    expect(sql).toContain("-- 21 neighborhoods, 24 subdivision terms");
+    expect(sql).toContain("-- 21 neighborhoods, 25 subdivision terms");
     expect(sql).toContain("WHERE domain = 'lifeinwellenpark.com'");
   });
 
   it("writes the exclusion as a column, not as part of the term", () => {
-    expect(sql).toContain("('The Preserve', 'preserve', 'kensington')");
+    expect(sql).toContain("('The Preserve', 'preserve/west', 'kensington')");
     expect(sql).toContain("INSERT INTO ls_village_terms (site_id, village_id, term, exclude_term)");
   });
 

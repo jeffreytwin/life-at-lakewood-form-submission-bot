@@ -12,11 +12,37 @@
 //
 // Two things about this site's chain the transcription has to keep:
 //
-//  - **"preserve" unless "kensington".** The dashboard assigns The Preserve
-//    on `isThePreserve !== -1 && isKensington === -1`. Longest-term-wins
-//    cannot express that -- Kensington is not a neighborhood here, so there
-//    is no longer term to beat "preserve" -- hence ls_village_terms gains an
-//    exclude_term in migration 052, and this is its one user.
+//  - **The Preserve is two anchored terms, not "preserve".** The dashboard
+//    assigns it on `isThePreserve !== -1 && isKensington === -1`, which was
+//    transcribed literally as the term "preserve" with an exclude_term of
+//    "kensington" (migration 052, the one user of that column). That was
+//    safe on the old pipeline, where the terms only sorted an already
+//    curated MLS_id_list into neighborhoods. It is not safe here: the
+//    engine has no curated list, so the same term is a filter across
+//    Venice, North Port and Englewood, and on the first discovery run it
+//    swept in four Englewood listings -- HAMMOCKS PRESERVE, GRANDE PRESERVE
+//    ON LEMON BAY, HAMMOCKS-PRESERVE -- with EAGLE PRESERVE ESTATES queued
+//    behind them. None are Wellen Park.
+//
+//    Migration 056 replaces it with the two forms the site actually
+//    carries: "preserve/west" (PRESERVE/WEST VLGS PH 1 and PH 2) and
+//    "the preserve"
+//    (12099 Firewheel Place, which the MLS filed under the bare name).
+//    Checked against an export of the live HousesforSale collection:
+//    all 153 rows match a village, The Preserve gets exactly its 3, and no
+//    Englewood "preserve" subdivision is caught. The kensington exclusion
+//    is kept on the longer term; it is redundant against both of these but
+//    it is what the dashboard meant, and it costs nothing.
+//
+//    "preserve/west" rather than "preserve/west vlgs" because this MLS
+//    writes both halves of that name out: RENAISSANCE/WEST VILLAGES PH 1
+//    and RENAISSANCE/WEST VLGS PH 2 are the same neighborhood. Stopping at
+//    "west" covers either spelling and still matches only these two.
+//    "PRESERVE AT WEST VILLAGES" -- the third shape the MLS uses, as in
+//    ISLANDWALK AT WEST VILLAGES -- is deliberately not covered: no listing
+//    uses it today, and a term too narrow lands in the unmatched view, one
+//    click from a fix, where one too wide takes someone else's listing
+//    quietly.
 //  - **The tag ternaries are ordered, first match wins.** Gran Paradiso is
 //    in both the clubhouse list (third) and the villageSpa list (fifth), so
 //    it gets the clubhouse, exactly as the site does today.
@@ -76,7 +102,8 @@ const TERMS = {
   "sarasota n": "Sarasota National",
   "solstice": "Solstice",
   "sunstone": "Sunstone",
-  "preserve": "The Preserve",
+  "preserve/west": "The Preserve",
+  "the preserve": "The Preserve",
   "tortuga": "Tortuga",
   "wellen park golf": "Wellen Park Country Club",
   "wellen pk golf": "Wellen Park Country Club",
@@ -84,7 +111,7 @@ const TERMS = {
 };
 
 /** term -> the subdivision text that takes the match back (the isKensington guard). */
-const EXCLUSIONS = { "preserve": "kensington" };
+const EXCLUSIONS = { "preserve/west": "kensington" };
 
 const ICON = (path) => `https://static.wixstatic.com/media/${path}`;
 const villageSpa = ICON("d0be81_c5146d6c05f045748f3f247b303b6328~mv2.png");
