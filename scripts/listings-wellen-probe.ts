@@ -106,22 +106,34 @@ async function main() {
   // ---- 1. Collections ----
   const ids = [LIVE, SHADOW, NEIGHBORHOODS, "Villages"];
   const collections = new Map<string, Awaited<ReturnType<typeof getDataCollection>>>();
+  // "Absent" and "could not be asked" are different answers and lead
+  // different places: one means create the collection, the other means the
+  // API key cannot see it. getDataCollection returns null only for a real
+  // 404 and throws for everything else, so the two are kept apart here.
+  const unreadable = new Map<string, string>();
   for (const id of ids) {
     const collection = await getDataCollection(SITE_ID, id).catch((error) => {
-      log(`  ${id}: could not be read (${error instanceof Error ? error.message : String(error)})`);
+      unreadable.set(id, error instanceof Error ? error.message : String(error));
       return null;
     });
     collections.set(id, collection);
+    const failure = unreadable.get(id);
     log(
       collection
         ? `  ${id}: "${collection.displayName ?? id}", ${collection.fields.length} fields`
-        : `  ${id}: not on this site`
+        : failure
+          ? `  ${id}: could not be read -- ${failure}`
+          : `  ${id}: not on this site`
     );
   }
   const live = collections.get(LIVE);
   const shadow = collections.get(SHADOW);
   if (!live) {
-    log(`${LIVE} is missing; nothing else can be checked. Stopping.`);
+    log(
+      unreadable.has(LIVE)
+        ? `${LIVE} could not be read, so this says nothing about whether it exists -- check the API key's access to this site. Stopping.`
+        : `${LIVE} is not on this site; nothing else can be checked. Stopping.`
+    );
     return;
   }
   if (collections.get("Villages")) {
