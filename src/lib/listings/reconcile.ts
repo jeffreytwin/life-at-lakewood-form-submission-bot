@@ -333,7 +333,11 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
         details: { ...summary, unpulled: unpulled.length },
       });
     } else {
-      const known = await db.loadKnownListingIds();
+      // Resume where the last full run stopped, so a set too big for one
+      // budget is covered across runs instead of re-reading its opening
+      // slice for ever. See FullCursor.
+      const priorCursor = await db.loadFullCursor();
+      const known = await db.loadKnownListingIds({ after: priorCursor?.afterListingId });
       const verify = await client.fetchByIds(known, { deadline: fetchDeadline });
       items = verify.items;
       truncated = verify.truncated;
@@ -341,9 +345,28 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       const returned = new Set(items.map((i) => i.ListingId));
       missingIds = verify.verifiedIds.filter((id) => !returned.has(id));
       run.counts.mlsgrid_listing_count = known.length;
-      if (truncated) {
-        run.event("warn", "budget", `Full run verified ${verify.verifiedIds.length} of ${known.length} listings before the deadline; the rest wait for the next full run`, {
-          details: { verified: verify.verifiedIds.length, known: known.length },
+
+      const verifiedInCycle = (priorCursor?.verified ?? 0) + verify.verifiedIds.length;
+      const last = verify.verifiedIds[verify.verifiedIds.length - 1];
+      if (!truncated) {
+        // Reached the end of the remainder: the cycle is complete.
+        if (priorCursor) await db.saveFullCursor(null);
+        if (priorCursor) {
+          const cycleMinutes = (startedAt.getTime() - new Date(priorCursor.startedAt).getTime()) / 60_000;
+          run.event("info", "full_cycle", `Full verification complete: ${verifiedInCycle} listing(s) over ${formatMinutes(cycleMinutes)}`, {
+            details: { verified: verifiedInCycle, startedAt: priorCursor.startedAt },
+          });
+        }
+      } else if (last) {
+        await db.saveFullCursor({ afterListingId: last, startedAt: priorCursor?.startedAt ?? startedAt.toISOString(), verified: verifiedInCycle });
+        run.event("warn", "budget", `Full run verified ${verify.verifiedIds.length} of the ${known.length} listing(s) still to check before the deadline (${verifiedInCycle} this cycle); the next run carries on from ${last}`, {
+          details: { verified: verify.verifiedIds.length, remaining: known.length, verifiedInCycle, resumeAfter: last },
+        });
+      } else {
+        // The deadline was gone before a single batch: leave the cursor
+        // exactly as it was rather than restarting the cycle.
+        run.event("warn", "budget", `Full run had no time to verify anything before the deadline; the next run resumes from ${priorCursor?.afterListingId ?? "the start"}`, {
+          details: { remaining: known.length, resumeAfter: priorCursor?.afterListingId ?? null },
         });
       }
     }

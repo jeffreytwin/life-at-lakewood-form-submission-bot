@@ -10,7 +10,7 @@ import { logger } from "@/lib/shared/logger";
 import { INCREMENTAL_EVERY_MINUTES, runReconcile, type ReconcileResult } from "@/lib/listings/reconcile";
 import { lastOkRunStartedAt, purgeOldRuns, purgeUnmatchedListings, runningRun, type UnmatchedPurgeResult } from "@/lib/listings/runs";
 import { runStandalonePhotoJob, type StandalonePhotoResult } from "@/lib/listings/photos";
-import type { RunTrigger } from "@/lib/listings/types";
+import type { FullCursor, RunTrigger } from "@/lib/listings/types";
 import type { DiscoverCursor } from "@/lib/listings/discover";
 
 export const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
@@ -31,6 +31,8 @@ export interface EngineState {
   lastPurgeAt?: string;
   /** A discovery scan in progress (written by the discover run itself); the tick continues it when nothing else is due. */
   discoverCursor?: DiscoverCursor;
+  /** A full run's verification part-way through the held set (written by the run itself); the tick carries it on in an idle slot. */
+  fullCursor?: FullCursor;
 }
 
 export interface TickOptions {
@@ -57,6 +59,10 @@ export function decideMode(args: {
   if (now.getUTCHours() >= FULL_RUN_HOUR_UTC && state.lastFullDate !== utcDate(now)) return "full";
   const dueAfterMs = (INCREMENTAL_EVERY_MINUTES - 5) * 60_000;
   if (!lastOkIncremental || now.getTime() - lastOkIncremental.getTime() >= dueAfterMs) return "incremental";
+  // A full cycle the budget cut short carries on in an idle slot, after the
+  // hourly and before discovery: the engine's own picture of what is still
+  // for sale matters more than finding listings it does not hold yet.
+  if (state.fullCursor?.afterListingId) return "full";
   if (state.discoverCursor?.sinceTimestamp) return "discover";
   return null;
 }
@@ -101,7 +107,13 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
     lastMode: mode,
     lastStatus: result.status,
   };
-  if (mode === "full" && result.status === "ok" && !result.truncated) nextState.lastFullDate = utcDate(now);
+  // Advanced for a truncated run too, which is the whole point of the
+  // cursor: the remainder is carried by nextState.fullCursor and picked up in
+  // an idle slot, so the tick must stop choosing `full` on the hour-of-day
+  // rule. Before the cursor existed this said `&& !result.truncated`, and a
+  // full run too big for one budget was therefore retried every five minutes
+  // until midnight UTC, starving the incrementals and photo passes behind it.
+  if (mode === "full" && result.status === "ok") nextState.lastFullDate = utcDate(now);
   let purged: { runs: number; events: number; unmatched?: UnmatchedPurgeResult } | null = null;
   if (mode === "full") {
     try {
