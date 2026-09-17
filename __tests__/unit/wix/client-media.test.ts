@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { listMediaFiles } from "@/lib/wix/client";
+import { envelopeShape, listMediaFiles } from "@/lib/wix/client";
 
 /**
  * The Media Manager folder listing is the one Wix call whose cost grows with
@@ -169,5 +169,33 @@ describe("wix media folder listing", () => {
     expect(urls).toHaveLength(3);
     expect(result.truncated).toBe(true);
     expect(result.nextOffset).toBe(0);
+  });
+
+  it("reports the response envelope so the paging mechanism can be identified", () => {
+    // Two readings of the docs, two wrong guesses: paging.offset is ignored
+    // and there is no pagingMetadata.cursors.next. This is how the third
+    // attempt gets the shape instead of guessing it -- key names, array
+    // lengths and value types, never values, so it is safe to put in a
+    // report.
+    expect(
+      envelopeShape({
+        files: [{ id: "a" }, { id: "b" }],
+        pagingMetadata: { count: 2, offset: 0, total: 15700 },
+        nextPageToken: "abc",
+        done: false,
+        nothing: null,
+      })
+    ).toEqual([
+      "done:boolean",
+      "files[2]",
+      "nextPageToken:string",
+      "nothing:null",
+      "pagingMetadata{count,offset,total}",
+    ]);
+  });
+
+  it("says nothing about a response that is not an object", () => {
+    expect(envelopeShape(null)).toEqual([]);
+    expect(envelopeShape("a string")).toEqual([]);
   });
 });

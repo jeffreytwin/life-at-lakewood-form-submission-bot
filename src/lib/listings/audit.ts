@@ -11,7 +11,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
-import { bulkRemoveItems, listMediaFiles, mediaState, queryAllItems, WIX_MEDIA_ROOT, type WixDataItem } from "@/lib/wix/client";
+import { bulkRemoveItems, listMediaFiles, mediaState, probeMediaFile, queryAllItems, WIX_MEDIA_ROOT, type MediaFileProbe, type WixDataItem } from "@/lib/wix/client";
 import { wixFileId } from "@/lib/listings/normalize";
 import { selectAll, setSiteMediaScanOffset } from "@/lib/listings/db";
 import { HubError } from "@/lib/listings/hub";
@@ -45,6 +45,18 @@ export interface FolderAudit {
    * like a file that is not there.
    */
   comparedToFolder: boolean;
+  /**
+   * The listing response's envelope, key names only. Shown when the walk
+   * could not finish, because the reason it could not is in here: which
+   * paging fields this endpoint actually returns.
+   */
+  listingShape: string[];
+  /**
+   * What Wix said when asked about a single file by id. Only run when the
+   * listing could not finish, because that is when it matters: a per-file
+   * lookup would not depend on folder paging at all.
+   */
+  fileProbe: MediaFileProbe | null;
 }
 
 /** How much of a folder may look broken before the engine assumes it is misreading Wix, not Wix failing. */
@@ -210,6 +222,8 @@ export async function auditSite(siteId: string, now: number = Date.now()): Promi
     filesInFolder: 0,
     listingTruncated: false,
     comparedToFolder: false,
+    listingShape: [],
+    fileProbe: null,
     engineFiles: 0,
     engineFilesInFolder: 0,
     outsideFolder: [],
@@ -228,6 +242,7 @@ export async function auditSite(siteId: string, now: number = Date.now()): Promi
     folderFileIds = listing.files.map((f) => f.id);
     folder.filesInFolder = folderFileIds.length;
     folder.listingTruncated = listing.truncated;
+    folder.listingShape = listing.shape ?? [];
     const engineIds = new Set(await loadEngineFileIds(site.id));
     for (const file of listing.files) {
       if (!engineIds.has(file.id)) continue;
@@ -242,6 +257,10 @@ export async function auditSite(siteId: string, now: number = Date.now()): Promi
     if (listing.truncated) {
       folder.engineFiles = engineIds.size;
       folder.comparedToFolder = false;
+      // One of the engine's own file ids, asked for directly. Never fails the
+      // audit: it is a question, and "no" is an answer worth having.
+      const [sample] = engineIds;
+      if (sample) folder.fileProbe = await probeMediaFile(site.wix_site_id, sample).catch(() => null);
       // The collections' galleries are checked against the same set, and
       // "points outside the folder" is the same inference from the same
       // absence. null is already how this report says "could not check".
