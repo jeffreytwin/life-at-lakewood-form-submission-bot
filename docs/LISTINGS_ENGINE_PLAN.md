@@ -1256,6 +1256,31 @@ two costs are worth watching after the first discovery:
   into `ls_listings`, a few thousand rows that no site will show. Metadata
   only: photos are fetched for staged listings, so nothing is downloaded
   for them.
+
+  **Measured, 2026-09-17**, when Jeff asked whether the unshown listings
+  cost photos: of 1,295 listings held, 821 are on no site, and their 25,375
+  `ls_listing_media` rows have `storage_path` null — **not one byte
+  downloaded**. All 14,181 stored photos belong to the 474 that are on a
+  site. `ls_photo_backlog` is why: its first CTE joins `ls_site_listings`
+  with `state IN ('staged','live')`, and a listing that matches no term has
+  no such row at all, so it can never reach the backlog. About 31 metadata
+  rows per unshown listing is the whole cost.
+
+  **Why the quiet cities stay** (Jeff, 2026-09-17). North Port does not
+  appear at all in the site's crawled listings, and Englewood only four
+  times against Venice's 182 — the market is tight, so the neighborhoods
+  that reach into them have nothing for sale today. They stay anyway,
+  because that is a statement about this month rather than about the
+  geography, and a term that matches there when the market turns finds the
+  listing's media metadata already on hand. Do not prune a market city on
+  the evidence of a single crawl.
+
+  **What this does mean** is that the unshown set only grows: the retention
+  purge covers `ls_sync_runs` (50 newest / 90 days) and `ls_sync_events`
+  (30 days), and nothing ever deletes an `ls_listings` row. Comfortable at
+  Supabase Pro scale and not worth acting on now, but if it ever wants
+  bounding, the sweep to write is one over listings that are no longer
+  Active and on no site.
 - **The unmatched view.** It lists the Active listings in a site's market
   that match no term, which for this site means every subdivision in three
   cities rather than the handful Wellen Park is missing. It stays the right
