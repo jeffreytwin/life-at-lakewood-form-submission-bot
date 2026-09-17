@@ -1702,3 +1702,52 @@ run only classifies what it pulled; nothing of theirs reached
 written. And the three cities have added about 3,800 `ls_listings` rows and
 55,000 photo-metadata rows with **nothing downloaded**, which is the wide
 market working as designed.
+
+## The full run gets a cursor (2026-09-17): closing the incident's open half
+
+The 09-17 incident above ended with one lesson fixed and one left open:
+
+> "a run mode that gates its own 'done' flag needs a failure path, or one bad
+> run becomes an infinite one. The second is not fixed here: a full run that
+> keeps dying will still be retried every tick until midnight UTC. Worth a
+> bounded retry before the next nightly."
+
+It became urgent the same evening. Switching Wellen Park on took the held set
+from about 1,300 listings to **6,154** — its three market cities are the whole
+of Venice, North Port and Englewood. A full run verifies every held id at 50
+per MLSGrid request with Media expanded, so the set now needs about **124
+requests**, and the fetch phase gets **150 s** (`TICK_BUDGET_MS` 240 s less
+`FETCH_RESERVE_MS` 90 s). This engine's own runs measure 4–13 s a request
+against MLSGrid with Media, so the budget buys roughly **thirty**. The 03:00
+nightly was going to truncate at about a quarter of the set.
+
+Truncation was where two things compounded. `loadKnownListingIds` orders by
+`listing_id` and always started at the beginning, so every attempt
+re-verified the same opening slice and never reached the tail — and the 153
+Wellen Park listings that needed it sat at positions 140 through 6,104.
+Meanwhile `tick.ts` advanced `lastFullDate` only for a run that was *not*
+truncated, so the tick chose `full` again five minutes later, and would have
+kept choosing it until midnight UTC: no incremental, no photo pass, on two
+sites that are live. Twenty-one hours of the thing that cost ten and a half
+that morning.
+
+**The fix is the shape discovery already uses.** `ls_engine_state.fullCursor`
+holds the last id verified; `loadKnownListingIds({ after })` returns the
+remainder; each run resumes and leaves its own mark, and reaching the end
+clears it. `lastFullDate` now advances for a truncated run too — that is the
+point of the cursor, since the remainder is carried rather than restarted —
+and `decideMode` continues an outstanding cycle in an idle slot, after the
+hourly and before discovery. A cycle finishes in a handful of runs instead of
+looping, and the hourly keeps its cadence throughout.
+
+Three details worth keeping. The resume key is a `listing_id`, not an offset,
+because the order is stable: "everything after the last id verified" stays
+exactly the remainder even as rows are inserted, and an id that lands behind
+the cursor is picked up by the next cycle rather than skipped for ever. A run
+that verified *nothing* leaves the cursor untouched instead of clearing it —
+clearing would restart the cycle from the top, which is the bug wearing a
+different hat. And a sliced full run is internally consistent: `missingIds`
+is computed from `verifiedIds`, so only ids actually asked about can be
+marked out of feed, the classify and write phases already work over
+`[...pulledIds, ...missingIds]`, and `planRemovals` sees fewer candidates
+against an unchanged `liveCount`, so the mass-delete guard errs safe.

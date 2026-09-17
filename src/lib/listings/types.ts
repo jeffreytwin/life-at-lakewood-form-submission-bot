@@ -215,3 +215,33 @@ export interface LsSiteListing {
   live_at: string | null;
   removed_at: string | null;
 }
+
+/**
+ * Where a full run's verification stopped, so the next one carries on.
+ *
+ * A full run verifies every id the engine holds, 50 per MLSGrid request with
+ * Media expanded, inside the fetch budget. That was comfortable at a
+ * thousand listings and is not at six thousand: the set now needs about 124
+ * requests and the budget buys roughly thirty. Without a cursor the shortfall
+ * compounds twice over. `loadKnownListingIds` orders by listing_id and always
+ * started at the beginning, so every attempt re-verified the same opening
+ * slice and never reached the tail; and `tick.ts` only advanced
+ * `lastFullDate` for a run that was not truncated, so the tick chose `full`
+ * again five minutes later and kept choosing it until midnight UTC -- with no
+ * incremental and no photo pass in between, on sites that are live. That is
+ * the 2026-09-17 incident, which the plan doc left open as "worth a bounded
+ * retry before the next nightly".
+ *
+ * The cursor is that bound, and the same shape discovery already uses: each
+ * run resumes after the last id it verified and leaves its own mark, so every
+ * pass moves forward and a cycle finishes in a handful of runs instead of
+ * looping. Reaching the end clears it.
+ */
+export interface FullCursor {
+  /** Verification resumes at the first id after this one. */
+  afterListingId: string;
+  /** When this cycle began, so a cursor that has stalled is visible. */
+  startedAt: string;
+  /** Ids verified so far in this cycle, across every run that carried it. */
+  verified: number;
+}

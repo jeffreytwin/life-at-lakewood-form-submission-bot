@@ -4,6 +4,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
 import type {
+  FullCursor,
   LsListingMediaInput,
   LsListingRow,
   LsSite,
@@ -115,16 +116,21 @@ export async function upsertListings(rows: LsListingRow[]): Promise<void> {
   }
 }
 
-/** Every listing id the engine knows that MLSGrid has not dropped. */
-export async function loadKnownListingIds(): Promise<string[]> {
+/**
+ * Every listing id the engine knows that MLSGrid has not dropped, in
+ * listing_id order.
+ *
+ * `after` resumes a full run's verification part-way through the set. The
+ * order is what makes that safe: it is stable, so "everything after the last
+ * id verified" is exactly the remainder, and an id inserted behind the cursor
+ * is picked up by the next cycle rather than skipped for ever.
+ */
+export async function loadKnownListingIds(options: { after?: string | null } = {}): Promise<string[]> {
   const ids: string[] = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("ls_listings")
-      .select("listing_id")
-      .eq("in_feed", true)
-      .order("listing_id")
-      .range(from, from + 999);
+    let query = supabase.from("ls_listings").select("listing_id").eq("in_feed", true);
+    if (options.after) query = query.gt("listing_id", options.after);
+    const { data, error } = await query.order("listing_id").range(from, from + 999);
     if (error) fail("load listing ids", error);
     const page = (data ?? []) as { listing_id: string }[];
     ids.push(...page.map((r) => r.listing_id));
@@ -529,4 +535,38 @@ export async function loadLiveListingStats(siteId: string): Promise<LiveListingS
     bedrooms: num(r.ls_listings?.bedrooms),
     garage_spaces: num(r.ls_listings?.garage_spaces),
   }));
+}
+
+function asFullCursor(value: unknown): FullCursor | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  const afterListingId = typeof raw.afterListingId === "string" ? raw.afterListingId : null;
+  if (!afterListingId) return null;
+  return {
+    afterListingId,
+    startedAt: typeof raw.startedAt === "string" ? raw.startedAt : new Date().toISOString(),
+    verified: typeof raw.verified === "number" ? raw.verified : 0,
+  };
+}
+
+export async function loadFullCursor(): Promise<FullCursor | null> {
+  const { data, error } = await supabase.from("system_settings").select("ls_engine_state").eq("id", 1).single();
+  if (error || !data) return null;
+  return asFullCursor((data.ls_engine_state as { fullCursor?: unknown } | null)?.fullCursor);
+}
+
+/**
+ * Stores the resume point, or clears it when the cycle is complete. Merges
+ * into the engine state as it stands: the tick holds a copy from before the
+ * run and writes it back afterwards, so this has to be a read-modify-write
+ * for the same reason `saveDiscoverCursor` is.
+ */
+export async function saveFullCursor(cursor: FullCursor | null): Promise<void> {
+  const { data, error: loadError } = await supabase.from("system_settings").select("ls_engine_state").eq("id", 1).single();
+  if (loadError) throw new Error(`load engine state: ${errorMessage(loadError)}`);
+  const state = { ...((data?.ls_engine_state as Record<string, unknown> | null) ?? {}) };
+  if (cursor) state.fullCursor = cursor;
+  else delete state.fullCursor;
+  const { error } = await supabase.from("system_settings").update({ ls_engine_state: state }).eq("id", 1);
+  if (error) throw new Error(`save full cursor: ${errorMessage(error)}`);
 }

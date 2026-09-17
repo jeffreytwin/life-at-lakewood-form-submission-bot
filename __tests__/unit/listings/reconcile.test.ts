@@ -15,6 +15,8 @@ vi.mock("@/lib/listings/db", () => ({
   loadVillagesWithTerms: vi.fn(),
   upsertListings: vi.fn(),
   loadKnownListingIds: vi.fn(),
+  loadFullCursor: vi.fn(),
+  saveFullCursor: vi.fn(),
   markNotInFeed: vi.fn(),
   loadListings: vi.fn(),
   replaceListingMedia: vi.fn(),
@@ -154,7 +156,7 @@ function fakeRun(mode: "incremental" | "full"): { handle: RunHandle; events: Rec
   return { handle, events };
 }
 
-function fakeClient(args: { modified?: MlsGridProperty[]; byId?: MlsGridProperty[]; truncated?: boolean }): MlsGridClient & { fetchModifiedSince: ReturnType<typeof vi.fn>; fetchByIds: ReturnType<typeof vi.fn> } {
+function fakeClient(args: { modified?: MlsGridProperty[]; byId?: MlsGridProperty[]; truncated?: boolean; byIdLimit?: number }): MlsGridClient & { fetchModifiedSince: ReturnType<typeof vi.fn>; fetchByIds: ReturnType<typeof vi.fn> } {
   const client = {
     stats: { requests: 0, bytes: 0, retries: 0, rateLimited: 0 },
     fetchModifiedSince: vi.fn(async () => {
@@ -164,7 +166,11 @@ function fakeClient(args: { modified?: MlsGridProperty[]; byId?: MlsGridProperty
     }),
     fetchByIds: vi.fn(async (ids: string[]) => {
       client.stats.requests += 1;
-      return { items: args.byId ?? [], requestedIds: ids, requestCount: 1, truncated: false, verifiedIds: ids };
+      // byIdLimit stands in for the deadline: only the first n ids are
+      // verified and the rest are reported truncated, exactly as the real
+      // client does when the fetch budget runs out mid-set.
+      const verifiedIds = args.byIdLimit === undefined ? ids : ids.slice(0, args.byIdLimit);
+      return { items: args.byId ?? [], requestedIds: ids, requestCount: 1, truncated: verifiedIds.length < ids.length, verifiedIds };
     }),
   };
   return client as unknown as MlsGridClient & { fetchModifiedSince: ReturnType<typeof vi.fn>; fetchByIds: ReturnType<typeof vi.fn> };
@@ -202,6 +208,8 @@ beforeEach(() => {
   vi.mocked(db.countLiveSiteListings).mockResolvedValue(150);
   vi.mocked(db.refreshVillageCounts).mockResolvedValue({ changed: 0 });
   vi.mocked(db.loadKnownListingIds).mockResolvedValue([]);
+  vi.mocked(db.loadFullCursor).mockResolvedValue(null);
+  vi.mocked(db.saveFullCursor).mockResolvedValue(undefined);
   vi.mocked(previousRunStartedAt).mockResolvedValue(null);
   vi.mocked(lastCompleteIncrementalStartedAt).mockResolvedValue(new Date(NOW.getTime() - HOUR));
   vi.mocked(seedSiteMediaFromLive).mockResolvedValue({ liveItems: 202, galleryItems: 0, unkeyed: 0, placeholders: 0, mediaRows: 0, siteMediaRows: 0, refreshed: 3 });
@@ -335,6 +343,74 @@ describe("runReconcile (full)", () => {
     const guard = events.find((e) => e.kind === "mass_delete_guard");
     expect(guard?.level).toBe("error");
     expect(guard?.message).toContain("10 of 20");
+  });
+});
+
+describe("the full run's verification cursor", () => {
+  const ids = ["MFRA1", "MFRA2", "MFRA3", "MFRA4"];
+
+  it("leaves a resume point when the deadline cuts the set short", async () => {
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue(ids);
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [], byIdLimit: 2 }) });
+
+    expect(db.saveFullCursor).toHaveBeenCalledWith(expect.objectContaining({ afterListingId: "MFRA2", verified: 2 }));
+    const budget = events.find((e) => e.kind === "budget");
+    expect(budget?.level).toBe("warn");
+    expect(budget?.message).toContain("carries on from MFRA2");
+  });
+
+  it("asks only for the remainder when a cursor is waiting, and counts the cycle not the run", async () => {
+    const { handle } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadFullCursor).mockResolvedValue({ afterListingId: "MFRA2", startedAt: NOW.toISOString(), verified: 2 });
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue(["MFRA3", "MFRA4", "MFRA5"]);
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [], byIdLimit: 1 }) });
+
+    expect(db.loadKnownListingIds).toHaveBeenCalledWith({ after: "MFRA2" });
+    // 2 carried in, 1 more this run.
+    expect(db.saveFullCursor).toHaveBeenCalledWith(expect.objectContaining({ afterListingId: "MFRA3", verified: 3 }));
+  });
+
+  it("clears the cursor and says so when the cycle reaches the end", async () => {
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadFullCursor).mockResolvedValue({ afterListingId: "MFRA2", startedAt: new Date(NOW.getTime() - 30 * 60_000).toISOString(), verified: 900 });
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue(["MFRA3", "MFRA4"]);
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
+
+    expect(db.saveFullCursor).toHaveBeenCalledWith(null);
+    const done = events.find((e) => e.kind === "full_cycle");
+    expect(done?.level).toBe("info");
+    expect(done?.message).toContain("902 listing(s)");
+  });
+
+  it("does not touch the cursor when there was no time to verify anything", async () => {
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadFullCursor).mockResolvedValue({ afterListingId: "MFRA2", startedAt: NOW.toISOString(), verified: 2 });
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue(["MFRA3", "MFRA4"]);
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [], byIdLimit: 0 }) });
+
+    // Clearing it here would restart the cycle from the top, which is the bug.
+    expect(db.saveFullCursor).not.toHaveBeenCalled();
+    expect(events.find((e) => e.kind === "budget")?.message).toContain("resumes from MFRA2");
+  });
+
+  it("stays out of the way when there is no cursor and the set fits", async () => {
+    const { handle } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue(ids);
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
+
+    expect(db.loadKnownListingIds).toHaveBeenCalledWith({ after: undefined });
+    expect(db.saveFullCursor).not.toHaveBeenCalled();
   });
 });
 
