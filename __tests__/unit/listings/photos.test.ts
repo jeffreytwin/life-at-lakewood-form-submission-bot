@@ -31,6 +31,7 @@ vi.mock("@/lib/listings/db", () => ({
   markSiteMediaVerified: vi.fn(),
   dropSiteMedia: vi.fn(),
   setSiteMediaScanOffset: vi.fn(),
+  countPhotosAwaitingVerification: vi.fn(),
 }));
 vi.mock("@/lib/listings/runs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/listings/runs")>();
@@ -152,6 +153,8 @@ beforeEach(() => {
   vi.mocked(db.loadPhotoBacklog).mockResolvedValue([]);
   vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValue([]);
   vi.mocked(db.dropSiteMedia).mockResolvedValue([]);
+  vi.mocked(db.loadActiveSites).mockResolvedValue([site]);
+  vi.mocked(db.countPhotosAwaitingVerification).mockResolvedValue(0);
 });
 
 describe("runPhotoJob", () => {
@@ -286,8 +289,43 @@ describe("runPhotoJob", () => {
 });
 
 describe("runStandalonePhotoJob", () => {
-  it("records nothing when the backlog is empty", async () => {
+  it("records nothing when there is neither a backlog nor a photo waiting on Wix", async () => {
     const result = await runStandalonePhotoJob({ trigger: "cron", deadline: NOW + MINUTE, deps: fakeDeps() });
+    expect(result.status).toBe("skipped");
+    expect(startRun).not.toHaveBeenCalled();
+  });
+
+  it("runs on an empty backlog when photos are still waiting on Wix", async () => {
+    // The listing whose imports all succeeded: nothing left to import, and
+    // nothing in any gallery either until verification confirms the photos
+    // (migration 053). Skipping here left that to the hourly reconcile.
+    vi.mocked(db.countPhotosAwaitingVerification).mockResolvedValue(52);
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([
+      { id: "sm1", site_id: site.id, media_id: "m-1", wix_file_id: "file-1", listing_id: "MFR1", imported_at: new Date(NOW - 60 * MINUTE).toISOString() },
+    ]);
+    const { handle } = fakeRun();
+    vi.mocked(startRun).mockResolvedValue(handle);
+    const deps = fakeDeps({
+      listFiles: vi.fn(async () => ({ files: [{ id: "file-1", operationStatus: "READY", media: { image: { image: { width: 1600, height: 898 } } } }], truncated: false, nextOffset: 0 })),
+    });
+
+    const result = await runStandalonePhotoJob({ trigger: "cron", deadline: NOW + 10 * MINUTE, deps });
+
+    expect(db.countPhotosAwaitingVerification).toHaveBeenCalledWith([site.id], new Date(Date.now() - VERIFY_AFTER_MS));
+    expect(startRun).toHaveBeenCalledWith({ mode: "photos", trigger: "cron" });
+    expect(db.markSiteMediaVerified).toHaveBeenCalledWith(["sm1"], expect.any(Date));
+    expect(result).toMatchObject({ status: "ok", verified: 1 });
+  });
+
+  it("does not start a run for an inactive site's unverified photos", async () => {
+    // A pass only verifies the sites it runs for, so counting a site it will
+    // not visit would start a run every tick that could never clear them.
+    vi.mocked(db.loadActiveSites).mockResolvedValue([]);
+    vi.mocked(db.countPhotosAwaitingVerification).mockResolvedValue(0);
+
+    const result = await runStandalonePhotoJob({ trigger: "cron", deadline: NOW + MINUTE, deps: fakeDeps() });
+
+    expect(db.countPhotosAwaitingVerification).toHaveBeenCalledWith([], expect.any(Date));
     expect(result.status).toBe("skipped");
     expect(startRun).not.toHaveBeenCalled();
   });

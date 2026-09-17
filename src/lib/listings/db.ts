@@ -287,8 +287,12 @@ export async function loadSiteGalleries(siteId: string, listingIds: string[]): P
   }
   // Only verified photos: a row with no verified_at is one Wix took the URL
   // for and may never have fetched, so it has no src here and cannot reach a
-  // gallery (migration 053). Its listing stays gallery_ready = false, which
-  // holds it in 'staged' until the picture is real.
+  // gallery (migration 053). What happens to its listing depends on how many
+  // are left: with none confirmed it is not written at all and stays
+  // 'staged', with some it goes live carrying those, gallery_ready = false,
+  // and is completed as the rest are confirmed. Either way nothing
+  // unconfirmed is shown -- which is the rule; a whole gallery on the first
+  // write is not.
   const uris = new Map<string, string>();
   for (const part of chunk(mediaIds, IN_CHUNK)) {
     const rows = await selectAll<{ media_id: string; wix_image_uri: string }>("load site media", (from, to) =>
@@ -419,6 +423,26 @@ export interface UnverifiedSiteMedia {
 }
 
 /** The oldest imports still waiting on Wix, for the photo pass to check. */
+/**
+ * How many photos these sites have handed to Wix and not yet been seen
+ * holding a picture for, old enough that a verification pass is worth
+ * starting. Scoped to the caller's sites because a pass only verifies the
+ * sites it runs for: counting an inactive site's photos here would start a
+ * run every tick that could never clear them.
+ */
+export async function countPhotosAwaitingVerification(siteIds: string[], importedBefore: Date): Promise<number> {
+  if (!siteIds.length) return 0;
+  const { count, error } = await supabase
+    .from("ls_site_media")
+    .select("id", { count: "exact", head: true })
+    .in("site_id", siteIds)
+    .is("verified_at", null)
+    .not("wix_file_id", "is", null)
+    .lt("imported_at", importedBefore.toISOString());
+  if (error) fail("count photos awaiting verification", error);
+  return count ?? 0;
+}
+
 export async function loadUnverifiedSiteMedia(siteId: string, limit: number): Promise<UnverifiedSiteMedia[]> {
   const { data, error } = await supabase
     .from("ls_site_media")
