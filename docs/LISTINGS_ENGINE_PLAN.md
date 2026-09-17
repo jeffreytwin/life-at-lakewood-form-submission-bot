@@ -1004,6 +1004,187 @@ must never fetch at once.
   Added 2026-09-14; from then on the verification build runs the full and
   incremental pulls against the shadow collection on every push.
 
+## Cutover runbook: Life At Parrish
+
+*Written 2026-09-17, from the state below. Read it beside the Longboat Key
+runbook above: the shape is the same, three things are not.*
+
+**What is different from Longboat Key.**
+
+1. **There is no Velo job to stop.** Parrish was never on the Velo sync; its
+   listings were pushed by hand from a dashboard page that stopped working on
+   the 16th. Step 2 of the Longboat Key runbook has no equivalent here, and
+   the "two pipelines must never fetch at once" reason for its ordering does
+   not apply.
+2. **Every photo is already the engine's.** Longboat Key's cutover moved no
+   media because the seed had adopted the 10,382 files the Velo pipeline had
+   uploaded. Parrish's live galleries carry no `mlsSourceUrl`, so the seed
+   reused nothing and recorded listing ids only. Every Parrish photo was
+   downloaded from MLSGrid by the engine and imported into
+   `ParrishListingPhotos`: `ls_site_media` holds 14,030 rows for the site,
+   all `origin = 'imported'`, none `seeded`.
+3. **Rollback has nothing to restore.** Longboat Key's step 6 puts
+   `jobs.config` back and Velo re-adopts `HousesforSale` on its next hourly.
+   Nothing will re-adopt Parrish's. The flip overwrites the hand-pushed rows
+   in place, so the only way back to them is a copy taken beforehand — which
+   makes step 2 below the safety net the Longboat Key runbook got for free.
+
+**State at writing (19:20 UTC).** Shadow mode against `HousesforSale2`,
+active, 276 live rows, 0 `needs_write`, 275 of 276 `gallery_ready`, 0 staged,
+no open errors on either site. 14,031 photo rows across those 276 listings
+(51 each on average); exactly one lacks a verified `ls_site_media` row. The
+photo backlog is drained — the last several passes imported 0. `market_cities
+= {Parrish}`, Residential only, no new construction, `price_sort_style =
+shorthand` (migration 050; `ranges` would leave the site's price filter
+matching nothing), media folder `ParrishListingPhotos` resolved to
+`71ff81dc89744d4e9aa739c308eec237`.
+
+### Step 0. The photo gate, and why it is step zero
+
+This is the step Longboat Key did not need, and the only one that should
+delay the flip.
+
+Migration 053's backfill stamped every `ls_site_media` row that existed at
+migration time as verified, including imports it could not vouch for — the
+alternative was emptying a live site's galleries. For Parrish that is
+**13,613 of 14,030 photos carrying a verified stamp nobody checked**; only
+417 have been confirmed by `verifyImportedPhotos` since. So the rule "never
+show a broken photo" binds new imports, and the older 97% rest on
+`reimportBrokenPhotos` catching them instead.
+
+Until PR #320 (commit `60e7729`, production deploy 17:41 UTC today) that
+sweep could not do it: `listMediaFiles` paged by offset against an endpoint
+that pages by cursor, so it re-read page one — 157 times in the reading that
+found it — and nothing past the first hundred files was ever examined, which
+is where Parrish's are. That loop is also why the folder was reported as
+holding 20,000-odd files; its real size is whatever the first untruncated
+audit says. The walk follows `nextCursor` now and `media_scan_offset` stands
+at 6,000 — but the verify pass
+only lists the folder when something has been waiting on Wix, and Parrish has
+nothing waiting, so the cursor has not moved since 18:25 and will next move
+in the 03:00 UTC nightly, by whatever is left of that run's budget. Waiting
+for the background sweep to cover ~14,000 photos is several nights.
+
+Drive it from the Hub instead. On the site card:
+
+1. **Audit photos & rows.** The folder walk gets 55 s and reports
+   `listingTruncated` when it did not reach the end. A truncated listing
+   cannot compare the galleries to the folder at all — absence is not
+   evidence — so the report says "could not be checked" rather than guessing.
+2. **Fetch them again** when the audit reports broken files. It gets 90 s,
+   starts from the top of the folder (not the shared cursor, so the two
+   agree), clears the engine's record of each broken photo and sends the
+   listing back for a rewrite. It refuses outright if more than 35% of the
+   photos it saw look broken, on the grounds that Wix changing its payload is
+   likelier than a third of the library failing; that refusal is a finding,
+   not a failure.
+3. Let a photo pass run (every 5 minutes; `POST
+   /api/internal/listings/run` with `mode: "photos"` forces one), which
+   re-imports what was cleared.
+4. Repeat until an audit comes back **untruncated**, `brokenFiles` 0 and
+   `galleryOutsideFolder` 0.
+
+**Gate:** do not flip while the audit is still truncated. A truncated audit
+is not a clean one; it is an audit that did not finish.
+
+### Step 1. Pick the moment
+
+No Velo timing to work around, so the only concern is not flipping mid-run.
+The tick is every 5 minutes, an incremental is due an hour after the last one
+finished ok, and the nightly full starts at 03:00 UTC. Flip just after an
+incremental reports done in the Change Log, and not in the hour before 03:00
+— the nightly is the busiest run of the day and the 09-17 incident is what a
+full run under pressure looks like.
+
+### Step 2. Take the copy (this is the rollback)
+
+Wix CMS → `HousesforSale` → export the collection. Keep it until the week is
+out. The flip rewrites those rows in place and nothing else will ever put
+them back.
+
+Do not trash the old Media Manager folders yet, for the same reason: the
+exported rows point at files in them. They go in step 7.
+
+### Step 3. Flip the site
+
+Supabase SQL editor. The check constraint requires the target and the mode to
+change together:
+
+```sql
+begin;
+update ls_sites
+   set write_mode = 'live', target_collection_id = live_collection_id, updated_at = now()
+ where domain = 'lifeatparrish.com';
+update ls_site_listings
+   set written_at = null, written_fingerprint = null, needs_write = true
+ where site_id = (select id from ls_sites where domain = 'lifeatparrish.com')
+   and state = 'live';
+commit;
+```
+
+Nulling `written_at` / `written_fingerprint` is what makes every one of the
+276 rows rewrite rather than only the changed ones. `buildListingRecord`
+always writes `listingImageGallery`, and `loadSiteGalleries` builds it only
+from verified `ls_site_media` rows for the site — all of which are the
+engine's own imports — so **the rewrite replaces every gallery on every row
+the engine owns with files from `ParrishListingPhotos`.** That is the whole
+of the "every image from us" requirement, with one exception, which is step
+6.
+
+The write is an upsert keyed by `ListingId`, so the ~262 rows the hand-run
+process had are replaced in place and the rest are inserted; the mass-delete
+guard sees no flood.
+
+### Step 4. Run it
+
+Hub → Listings → **Run Full**, or wait for the next incremental. Expect about
+276 written, 0 failed, 0 removed. The 90-minute shadow grace ends here, but
+with the backlog empty there is nothing for it to release.
+
+In live mode the engine also writes the neighborhood stats onto
+`HousesforSale-DynamicPages`. Parrish's pages do not read
+`activeListingCount` and the site has no `adsInventoryFeed`, so this is inert
+today — it just stops being a thing to remember later.
+
+### Step 5. Verify, within the hour
+
+The Change Log run reads ok; the Errors panel is empty; a listing page, a
+neighborhood page and a gallery render on lifeatparrish.com; the price filter
+returns listings (this is the `shorthand` scheme's first outing in
+production — `$600s`, `3M+` — and a mismatch shows up as an empty filter, not
+an error); the overview's Live box equals the site's inventory.
+
+### Step 6. Delete the stale rows — the one place old photos survive
+
+The hand-run process left rows in `HousesforSale` the engine does not adopt
+(at the 09-16 count: 6 no longer Active, 2 rentals). An upsert does not touch
+them, so after step 4 they are still there, still carrying photos from the
+old Media Manager folders — the only images on the live site that would not
+be ours.
+
+**Audit photos & rows** → **Delete stale rows**. The button recomputes the
+set server-side and refuses any collection but the site's *target*, which is
+why this cannot be done before the flip: in shadow mode the target is
+`HousesforSale2`, and the guard exists precisely so nothing leaves the live
+collection early. After the flip the target is `HousesforSale` and the same
+button is the right tool.
+
+Then audit once more: untruncated, `staleCount` 0, `galleryOutsideFolder` 0.
+That report is the evidence for "every image on every listing is ours".
+
+### Step 7. Rollback, and the week after
+
+**Rollback** (any time in the first week): the reverse edit —
+`write_mode = 'shadow'`, `target_collection_id = 'HousesforSale2'`, the same
+nulling of `written_at` / `written_fingerprint` — stops the engine writing to
+`HousesforSale`, and the export from step 2 restores its rows. There is no
+pipeline to restart. Nothing re-uploads the old photos either, which is why
+the folders stay until the week is out.
+
+**A week later, if quiet:** trash the old listing-photo folders in the Media
+Manager (everything outside `ParrishListingPhotos`), delete the
+`HousesforSale2` shadow collection, and retire the dashboard page's code.
+
 
 ## Phase 5 build notes (2026-09-17): onboarding Life in Wellen Park
 
