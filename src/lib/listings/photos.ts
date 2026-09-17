@@ -12,7 +12,7 @@
 import { createHash } from "node:crypto";
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
-import { findMediaFolder, importMediaFromUrl, listMediaFiles, mediaState, WixApiError, WIX_MEDIA_ROOT, type WixMediaFile } from "@/lib/wix/client";
+import { findMediaFolder, importMediaFromUrl, listMediaFiles, mediaState, WixApiError, WIX_MEDIA_ROOT, type ListMediaFilesOptions, type ListMediaFilesResult } from "@/lib/wix/client";
 import { MlsGridClient, MlsGridError } from "@/lib/listings/mlsgrid";
 import { normalizeMedia } from "@/lib/listings/normalize";
 import * as db from "@/lib/listings/db";
@@ -78,6 +78,12 @@ export const VERIFY_AFTER_MS = 10 * 60_000;
 /** Unverified photos examined per site per pass. */
 export const VERIFY_BATCH = 500;
 /**
+ * Folder pages one pass reads. The scan resumes from where it stopped, so a
+ * folder larger than this is covered across passes rather than in one, and
+ * no single pass can spend the whole Wix budget on looking.
+ */
+export const VERIFY_SCAN_PAGES = 20;
+/**
  * How long a photo may sit unconfirmed before it is given up on and imported
  * again. Wix reports some files as neither ready nor failed -- an id with no
  * media behind it, which mediaState calls "unknown" -- and such a photo would
@@ -118,7 +124,7 @@ export interface PhotoDeps {
   /** The id of a site's root-level Media Manager folder by name, or null when there is none. */
   findFolder: (wixSiteId: string, displayName: string) => Promise<string | null>;
   /** The files in a folder, for confirming Wix holds a picture for an import. */
-  listFiles: (wixSiteId: string, parentFolderId: string, deadline?: number) => Promise<{ files: WixMediaFile[]; truncated: boolean }>;
+  listFiles: (wixSiteId: string, parentFolderId: string, options?: ListMediaFilesOptions) => Promise<ListMediaFilesResult>;
   /** Remembers a resolved folder id on the site row. */
   cacheFolder: (siteId: string, folderId: string) => Promise<void>;
 }
@@ -176,7 +182,7 @@ function defaultDeps(): PhotoDeps {
     publicUrl: (storagePath) => supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(storagePath).data.publicUrl,
     importToWix: (wixSiteId, url, displayName, parentFolderId) => importMediaFromUrl(wixSiteId, url, displayName, parentFolderId),
     findFolder: async (wixSiteId, displayName) => (await findMediaFolder(wixSiteId, displayName))?.id ?? null,
-    listFiles: (wixSiteId, parentFolderId, deadline) => listMediaFiles(wixSiteId, parentFolderId, deadline),
+    listFiles: (wixSiteId, parentFolderId, options) => listMediaFiles(wixSiteId, parentFolderId, options),
     cacheFolder: (siteId, folderId) => db.setSiteMediaFolderId(siteId, folderId),
   };
 }
@@ -382,7 +388,16 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
 
     const folder = await folderFor(site);
     if (!folder.ok) return;
-    const listing = await deps.listFiles(site.wix_site_id, folder.id ?? WIX_MEDIA_ROOT, opts.deadline);
+    // Resume where the last scan stopped. Without this the listing restarts
+    // at the top every pass, which during a backfill is a walk of the whole
+    // folder every five minutes -- growing with the folder, and spending the
+    // account-wide Wix budget the imports need (migration 054).
+    const listing = await deps.listFiles(site.wix_site_id, folder.id ?? WIX_MEDIA_ROOT, {
+      deadline: opts.deadline,
+      startOffset: site.media_scan_offset,
+      maxPages: VERIFY_SCAN_PAGES,
+    });
+    await db.setSiteMediaScanOffset(site.id, listing.nextOffset);
     const byId = new Map(listing.files.map((f) => [f.id, f]));
 
     const verified: string[] = [];

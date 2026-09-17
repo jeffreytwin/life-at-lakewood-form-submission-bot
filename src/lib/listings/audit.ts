@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
 import { bulkRemoveItems, listMediaFiles, mediaState, queryAllItems, WIX_MEDIA_ROOT, type WixDataItem } from "@/lib/wix/client";
 import { wixFileId } from "@/lib/listings/normalize";
-import { selectAll } from "@/lib/listings/db";
+import { selectAll, setSiteMediaScanOffset } from "@/lib/listings/db";
 import { HubError } from "@/lib/listings/hub";
 import type { LsSite } from "@/lib/listings/types";
 
@@ -317,7 +317,13 @@ export async function reimportBrokenPhotos(siteId: string, deadline?: number): P
   // working to a clock passes its deadline and takes whatever was reached.
   // Checking part of the library is fine: the files it did not see are
   // simply left for the next pass, and nothing is inferred from their absence.
-  const listing = await listMediaFiles(site.wix_site_id, folderId, deadline);
+  // Resumes where the last scan stopped, so a folder too big to list inside
+  // one deadline is covered across passes instead of only ever its first
+  // pages (migration 054). The cursor is shared with the photo pass, which
+  // scans the same folder looking for the same thing: whoever runs moves it
+  // on, and reaching the end sets it back to 0 and the cycle begins again.
+  const listing = await listMediaFiles(site.wix_site_id, folderId, { deadline, startOffset: site.media_scan_offset });
+  await setSiteMediaScanOffset(site.id, listing.nextOffset);
   const engineIds = new Set(await loadEngineFileIds(site.id));
   const broken = listing.files.filter((f) => engineIds.has(f.id) && mediaState(f) === "broken").map((f) => f.id);
   const result: ReimportResult = { broken: broken.length, cleared: 0, listings: 0, refused: null, truncated: listing.truncated };

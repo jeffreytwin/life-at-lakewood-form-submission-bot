@@ -73,6 +73,15 @@ export async function loadSitesByIds(siteIds: string[]): Promise<LsSite[]> {
   return (data ?? []) as LsSite[];
 }
 
+/** Remembers where the site's folder listing stopped, so the next one carries on. */
+export async function setSiteMediaScanOffset(siteId: string, offset: number): Promise<void> {
+  const { error } = await supabase
+    .from("ls_sites")
+    .update({ media_scan_offset: Math.max(0, Math.trunc(offset)), updated_at: new Date().toISOString() })
+    .eq("id", siteId);
+  if (error) fail("set media scan offset", error);
+}
+
 /** Caches the Media Manager folder id the photo job resolved from the site's folder name. */
 export async function setSiteMediaFolderId(siteId: string, folderId: string): Promise<void> {
   const { error } = await supabase

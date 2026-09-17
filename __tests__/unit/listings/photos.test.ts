@@ -30,6 +30,7 @@ vi.mock("@/lib/listings/db", () => ({
   loadUnverifiedSiteMedia: vi.fn(),
   markSiteMediaVerified: vi.fn(),
   dropSiteMedia: vi.fn(),
+  setSiteMediaScanOffset: vi.fn(),
 }));
 vi.mock("@/lib/listings/runs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/listings/runs")>();
@@ -39,7 +40,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
 import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, VERIFY_AFTER_MS, VERIFY_GIVE_UP_MS, type PhotoDeps } from "@/lib/listings/photos";
-import { WixApiError } from "@/lib/wix/client";
+import { WIX_MEDIA_ROOT, WixApiError } from "@/lib/wix/client";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
 
@@ -63,6 +64,7 @@ const site: LsSite = {
   timezone: "America/New_York",
   media_folder_name: null,
   media_folder_id: null,
+  media_scan_offset: 0,
 };
 
 interface RecordedEvent {
@@ -127,7 +129,7 @@ function fakeDeps(overrides: Partial<PhotoDeps> = {}): PhotoDeps {
     publicUrl: (path: string) => `https://cdn.test/${path}`,
     importToWix: vi.fn(async () => ({ id: `file-${++fileNo}` })),
     findFolder: vi.fn(async () => null),
-    listFiles: vi.fn(async () => ({ files: [], truncated: false })),
+    listFiles: vi.fn(async () => ({ files: [], truncated: false, nextOffset: 0 })),
     cacheFolder: vi.fn(async () => {}),
     ...overrides,
   };
@@ -684,7 +686,7 @@ describe("confirming Wix actually holds the picture", () => {
 
   it("marks a photo verified once Wix is holding a picture for it", async () => {
     vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
-    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [readyFile("file-1")], truncated: false })) });
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [readyFile("file-1")], truncated: false, nextOffset: 0 })) });
     const { handle } = fakeRun();
 
     const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -697,7 +699,7 @@ describe("confirming Wix actually holds the picture", () => {
   it("drops a photo Wix never fetched and sends its listing back for a rewrite", async () => {
     vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
     vi.mocked(db.dropSiteMedia).mockResolvedValueOnce(["MFR1"]);
-    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [failedFile("file-1")], truncated: false })) });
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [failedFile("file-1")], truncated: false, nextOffset: 0 })) });
     const { handle, events } = fakeRun();
 
     const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -712,7 +714,7 @@ describe("confirming Wix actually holds the picture", () => {
 
   it("leaves a photo Wix is still working on alone", async () => {
     vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
-    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [pendingFile("file-1")], truncated: false })) });
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [pendingFile("file-1")], truncated: false, nextOffset: 0 })) });
     const { handle } = fakeRun();
 
     await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -727,7 +729,7 @@ describe("confirming Wix actually holds the picture", () => {
     const old = (VERIFY_GIVE_UP_MS / MINUTE) + 60;
     vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1", old)]);
     vi.mocked(db.dropSiteMedia).mockResolvedValueOnce(["MFR1"]);
-    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [noMediaFile("file-1")], truncated: false })) });
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [noMediaFile("file-1")], truncated: false, nextOffset: 0 })) });
     const { handle } = fakeRun();
 
     await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -737,7 +739,7 @@ describe("confirming Wix actually holds the picture", () => {
 
   it("does not walk the folder for a photo Wix has only just been given", async () => {
     vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1", (VERIFY_AFTER_MS / MINUTE) - 1)]);
-    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [], truncated: false })) });
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [], truncated: false, nextOffset: 0 })) });
     const { handle } = fakeRun();
 
     await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -746,9 +748,24 @@ describe("confirming Wix actually holds the picture", () => {
     expect(db.markSiteMediaVerified).not.toHaveBeenCalled();
   });
 
+  it("picks the folder scan up where the last pass stopped, and remembers where this one did", async () => {
+    // Without the cursor the scan restarts at the top every pass, so on a
+    // folder of any size the tail is never reached and a broken photo living
+    // there is never found -- while the walk itself spends the account-wide
+    // Wix budget the imports need (migration 054).
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [], truncated: true, nextOffset: 900 })) });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [{ ...site, media_scan_offset: 600 }], deps });
+
+    expect(deps.listFiles).toHaveBeenCalledWith("wix-lbk", WIX_MEDIA_ROOT, expect.objectContaining({ startOffset: 600, deadline: NOW + 10 * MINUTE }));
+    expect(db.setSiteMediaScanOffset).toHaveBeenCalledWith(site.id, 900);
+  });
+
   it("keeps waiting on a photo the folder listing never reached", async () => {
     vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
-    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [], truncated: true })) });
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [], truncated: true, nextOffset: 0 })) });
     const { handle } = fakeRun();
 
     await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
