@@ -1026,10 +1026,20 @@ this cutover was run against: all 14,030 `ls_site_media` rows for Parrish
 are `origin = 'imported'` into `ParrishListingPhotos`, and nulling
 `written_at` rewrote every row rather than only the changed ones.
 
-**Still open:** step 6, the stale rows — the hand-pushed leftovers the
-engine does not adopt are still in `HousesforSale` carrying photos from the
-old folders, and **Delete stale rows** now acts on the live collection. Then
-step 7 a week out: the old Media Manager folders and `HousesforSale2`.
+**Step 6 done, same evening.** Jeff ran **Delete stale rows** against
+`HousesforSale` once the target had moved: **6 rows**, the hand-pushed
+leftovers the engine does not adopt (the 09-16 analysis had counted 8 — 6 no
+longer Active and 2 leases — so the set had drifted by two over the day).
+With those gone the collection is 276 rows, every one of them the engine's:
+276 live rows carrying a `wix_item_id`, `needs_write` 0, `gallery_ready` 276,
+no open events. That is the requirement met end to end — every image on every
+listing on lifeatparrish.com is one the engine downloaded from MLSGrid and
+imported into `ParrishListingPhotos`.
+
+**Still open:** step 7, a week out (around the 24th) — the old Media Manager
+folders and `HousesforSale2`. Not before: those folders and the
+`HousesforSale` export Jeff took at step 2 are the only rollback Parrish has,
+because nothing will re-adopt the collection the way Velo would have.
 
 **What is different from Longboat Key.**
 
