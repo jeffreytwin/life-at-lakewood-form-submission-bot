@@ -60,6 +60,18 @@ export async function loadActiveSites(siteIds?: string[]): Promise<LsSite[]> {
   return (data ?? []) as LsSite[];
 }
 
+/**
+ * Sites by id whether or not they are active: onboarding needs the row a
+ * new site is being built on, which stays inactive until its first run is
+ * meant to happen.
+ */
+export async function loadSitesByIds(siteIds: string[]): Promise<LsSite[]> {
+  if (!siteIds.length) return [];
+  const { data, error } = await supabase.from("ls_sites").select("*").in("id", siteIds).order("domain");
+  if (error) fail("load sites", error);
+  return (data ?? []) as LsSite[];
+}
+
 /** Caches the Media Manager folder id the photo job resolved from the site's folder name. */
 export async function setSiteMediaFolderId(siteId: string, folderId: string): Promise<void> {
   const { error } = await supabase

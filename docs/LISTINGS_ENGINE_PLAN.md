@@ -1004,3 +1004,119 @@ must never fetch at once.
   Added 2026-09-14; from then on the verification build runs the full and
   incremental pulls against the shadow collection on every push.
 
+
+## Phase 5 build notes (2026-09-17): onboarding Life in Wellen Park
+
+The third site, and the first whose market is not one city. Plan step 5 said
+this onboarding needed "no code"; it needed a little, for one reason.
+
+**Wellen Park is a community, not a city.** Longboat Key and Parrish are
+places the MLS has a name for, so `market_cities` is that name and the
+neighborhood terms only have to separate one neighborhood from its
+neighbours. Wellen Park is a master-planned community the size of a town
+straddling Sarasota County and the City of North Port, and the MLS files
+its homes under whichever postal city the address falls in: Venice for most
+of it, North Port to the east, Englewood for the neighborhoods the site
+carries down there (Boca Royale). Jeff, 2026-09-17: Englewood, North Port
+and Venice, and add more if the engine turns any up.
+
+That is safe, because the city is only the first gate — a listing still has
+to match a neighborhood term to reach the site — but it is not free, and the
+two costs are worth watching after the first discovery:
+
+- **Storage.** A record is kept when it is in *some* site's market
+  (`isRelevant`), so these three cities put every Active listing in them
+  into `ls_listings`, a few thousand rows that no site will show. Metadata
+  only: photos are fetched for staged listings, so nothing is downloaded
+  for them.
+- **The unmatched view.** It lists the Active listings in a site's market
+  that match no term, which for this site means every subdivision in three
+  cities rather than the handful Wellen Park is missing. It stays the right
+  tool for "what is this site not showing", but it needs reading with that
+  in mind.
+
+**Terms, derived rather than transcribed** (`src/lib/listings/seed-villages.ts`).
+The site has no `Villages` collection to import the Longboat Key way, and
+unlike Parrish it has no dashboard if-chain to transcribe either: its
+neighborhoods live in `HousesforSale-DynamicPages` ("Neighborhoods") and the
+subdivision each one covers is only visible in the listings it is already
+showing, every one of which carries both `subdivision` as the MLS wrote it
+and `village1`, the neighborhood it was filed under. So the seed reads the
+neighborhoods for their identity (name, slug, page, tag icons, and the item
+id the stats writeback needs) and derives each one's terms from the pairs
+the site has been making all along. `POST /api/internal/listings/villages/import`
+with `{ siteId, source: "site-collections" }`; a named site is imported
+whether or not it is active, which is how a site being onboarded gets its
+neighborhoods before its first run, and the seed only ever adds terms, so a
+re-seed keeps whatever the Hub has tuned.
+
+The derivation is the part that had to be careful, and the reason is the
+city list above. A term is a `contains` against the subdivision, so on a
+one-city site a loose term costs little; across Venice, North Port and
+Englewood a loose term quietly puts someone else's listing on the site.
+Two rules keep it honest:
+
+- **Candidates are anchored.** Only the leading atoms of a subdivision's
+  name, or of each `/`-separated part of it, ever become terms — "wellen",
+  "wellen park", "wellen park golf", never "golf". An MLS name is
+  `<NAME> <phase/unit>`, so its head is the part that identifies it, and
+  anchoring is what keeps "palm", "national" and "royale" out of the
+  running. Each candidate is checked against the string classify will
+  actually see, so a run spanning a separator ("wellen park golf country"
+  over "... GOLF & COUNTRY ...") is dropped where it is generated rather
+  than matching nothing later.
+- **Candidates are exclusive.** A term that also sits inside another
+  neighborhood's subdivisions is rejected, so Wellen Park Golf & Country
+  Club gets "wellen park golf" (LAKESPUR/WELLEN PARK and EVERLY AT WELLEN
+  PARK rule out the shorter two) and Grand Palm gets "grand palm" (GRAND
+  PARADISO rules out "grand"). Greedy set cover then takes the fewest,
+  shortest terms that cover the neighborhood's subdivisions; a subdivision
+  nothing exclusive covers is reported uncovered rather than given a term
+  that would steal from a neighbour.
+
+What the site's own listings show is a sample, not the whole MLS, so a
+derived term can still be wider than the neighborhood it was read from. The
+derivation therefore errs towards the specific: a term that is too narrow
+puts a listing in the unmatched view, one click from a fix, while one that
+is too wide puts someone else's listing on the site quietly. The Hub's
+Neighborhoods page is where the result is tuned; a neighborhood with
+nothing for sale today is reported termless rather than guessed at.
+
+Checked against the 29 subdivision/neighborhood pairs the site was showing
+in the snapshot under `pipeline/audit/snapshots/lifeinwellenpark.com`
+(`__tests__/unit/listings/seed-villages.test.ts`, which also runs each pair
+back through `matchVillage` to confirm it lands where the site had it):
+14 neighborhoods, 15 terms, nothing uncovered.
+
+**Site row.** `Life in Wellen Park`, `lifeinwellenpark.com`, Wix site
+`1a8c2755-823e-4882-ae32-e6c108a30e39`, shadow mode against
+`HousesforSale2`, `market_cities = ['Venice', 'North Port', 'Englewood']`,
+Residential only, `price_sort_style = shorthand` (the site tags prices
+"$300s"/"2M+", as Parrish does — ranges would leave its price filter
+matching nothing), media folder `WellenParkListingPhotos`, **inactive**.
+Migration 051, applied 2026-09-17.
+
+**What this session could not verify, and the probe that will.** Its egress
+policy blocked both wixapis.com and lifeinwellenpark.com, so the market
+cities, the price scheme and the collection names above were read off the
+site's own crawled pages rather than the live API.
+`scripts/listings-wellen-probe.mjs` (a prebuild step, `LS_WELLEN_PROBE=1`,
+read-only) answers the rest from a Vercel build log: which collections the
+site has, whether `HousesforSale2` exists and can hold every field
+`buildListingRecord` writes, the city and price-tag distribution across all
+of the live rows, the neighborhoods with the terms the import would derive
+(printed as SQL for review), and whether the media folder exists.
+
+**Before the row is switched on:**
+1. `HousesforSale2` on the site — duplicate `HousesforSale` without data,
+   admin-only writes, as on Longboat Key and Parrish.
+2. The `WellenParkListingPhotos` folder in the Media Manager — a named
+   folder that cannot be found holds the site's photo imports with one
+   `folder_missing` error per pass (migration 046) rather than scattering
+   photos outside it.
+3. The neighborhood seed — the village import above, then a read of the
+   Hub's Neighborhoods page: tighten anything the derivation left wider
+   than it should be, and give the neighborhoods with nothing for sale
+   today a term by hand.
+4. `active = true`, then Run Discovery from the Hub for the starting
+   inventory, as Parrish did.
