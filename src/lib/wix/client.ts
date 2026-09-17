@@ -383,6 +383,12 @@ export interface ListMediaFilesResult {
  * next time. Reaching the end returns `nextOffset: 0`, and the cycle starts
  * again.
  */
+interface WixMediaFilesResponse {
+  files?: WixMediaFile[];
+  /** Cursor paging, where the endpoint offers it; absent on an offset-only response. */
+  pagingMetadata?: { cursors?: { next?: string | null } | null } | null;
+}
+
 export async function listMediaFiles(
   siteId: string,
   parentFolderId: string,
@@ -390,19 +396,47 @@ export async function listMediaFiles(
 ): Promise<ListMediaFilesResult> {
   const { deadline, startOffset = 0, maxPages = FILE_PAGE_CAP } = options;
   const files: WixMediaFile[] = [];
+  // Every id already returned. The endpoint answers cursor paging; where it
+  // does not understand paging.offset it silently ignores it and serves the
+  // same first page forever -- which is what Parrish did: 157 requests, 15,700
+  // entries, about a hundred distinct files, a scan cursor that climbed past
+  // 30,000 without ever reaching an end, and an audit that called 13,932
+  // photos "outside the folder" because it never saw them. Repeating is the
+  // only evidence available that paging is not advancing, so it is what stops
+  // the walk.
+  const seen = new Set<string>();
   let offset = Math.max(0, startOffset);
+  let cursor: string | null = null;
   for (let page = 0; page < Math.min(maxPages, FILE_PAGE_CAP); page += 1) {
     if (deadline !== undefined && Date.now() > deadline) return { files, truncated: true, nextOffset: offset };
-    const res = await wixRequest<{ files?: WixMediaFile[] }>(
+    const paging: string = cursor
+      ? `paging.cursor=${encodeURIComponent(cursor)}`
+      : `paging.limit=${FILE_PAGE}&paging.offset=${offset}`;
+    const res: WixMediaFilesResponse | null = await wixRequest<WixMediaFilesResponse>(
       siteId,
       "GET",
-      `/site-media/v1/files?parentFolderId=${encodeURIComponent(parentFolderId)}&paging.limit=${FILE_PAGE}&paging.offset=${offset}`
+      `/site-media/v1/files?parentFolderId=${encodeURIComponent(parentFolderId)}&${paging}`
     );
-    const batch = res?.files ?? [];
-    files.push(...batch);
+    const batch: WixMediaFile[] = res?.files ?? [];
+    const fresh = batch.filter((f) => typeof f.id === "string" && !seen.has(f.id));
+    for (const f of fresh) seen.add(f.id);
+    files.push(...fresh);
     offset += batch.length;
-    // A short page is the end of the folder: start over next time.
-    if (batch.length < FILE_PAGE) return { files, truncated: false, nextOffset: 0 };
+    // Whether this endpoint pages by cursor at all, which decides what counts
+    // as the end below. Offered-and-null is the last page; never offered means
+    // offset paging, where a short page is the end.
+    const offers = !!res?.pagingMetadata?.cursors;
+    cursor = res?.pagingMetadata?.cursors?.next ?? null;
+    const done = { files, truncated: false, nextOffset: 0 };
+    // Nothing new on a page that had rows: paging is not moving, so neither
+    // are we. The end rather than truncated -- there is no later page to come
+    // back for, and "cut short" would invite a resume that fetched this same
+    // page again.
+    if (batch.length && !fresh.length) return done;
+    // A cursor that has run out is the end, even on a full page.
+    if (offers && !cursor) return done;
+    // Without cursors, a short page is the end of the folder.
+    if (!offers && batch.length < FILE_PAGE) return done;
   }
   return { files, truncated: true, nextOffset: offset };
 }
