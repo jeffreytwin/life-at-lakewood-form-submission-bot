@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { classifyListing, matchVillage, type ClassifyListing } from "@/lib/listings/classify";
 import type { VillageWithTerms } from "@/lib/listings/types";
 
-const village = (name: string, terms: Array<[string, string | null]>): VillageWithTerms => ({
+const village = (name: string, terms: Array<[string, string | null] | [string, string | null, string | null]>): VillageWithTerms => ({
   id: name.toLowerCase().replace(/\W+/g, "-"),
   site_id: "site",
   name,
@@ -13,7 +13,7 @@ const village = (name: string, terms: Array<[string, string | null]>): VillageWi
   active: true,
   active_listing_count: 0,
   zero_since: null,
-  terms: terms.map(([term, street_term]) => ({ term, street_term })),
+  terms: terms.map(([term, street_term, exclude_term]) => ({ term, street_term, exclude_term: exclude_term ?? null })),
 });
 
 const villages = [

@@ -309,7 +309,7 @@ export async function seedVillagesFromSiteCollections(site: LsSite): Promise<Vil
     for (const term of village.terms) {
       const { error: insError } = await supabase
         .from("ls_village_terms")
-        .insert({ site_id: site.id, village_id: row.id, term });
+        .insert({ site_id: site.id, village_id: row.id, term, street_term: null, exclude_term: null });
       if (insError) {
         // Already there (a re-seed, or the Hub added it) or owned elsewhere.
         if (isUniqueViolation(insError)) {

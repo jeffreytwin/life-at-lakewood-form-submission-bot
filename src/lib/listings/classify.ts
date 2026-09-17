@@ -55,7 +55,13 @@ export type ClassifyOutcome =
 /**
  * The village whose term the subdivision contains. The longest matching term
  * wins (plan decision 5); a term with a street qualifier only matches when
- * the street text contains it too.
+ * the street text contains it too, and a term with an exclusion does not
+ * match when the subdivision also contains that.
+ *
+ * The exclusion exists because longest-wins can only settle a contest
+ * between two neighborhoods on the site. Wellen Park's rule is "preserve is
+ * The Preserve, unless it is Kensington's" -- and Kensington is not a
+ * neighborhood here, so there is nothing for a longer term to beat.
  */
 export function matchVillage(
   subdivision: string | null,
@@ -68,9 +74,10 @@ export function matchVillage(
   let best: { village: VillageWithTerms; length: number; qualified: boolean } | null = null;
   for (const village of villages) {
     if (village.active === false) continue;
-    for (const { term, street_term } of village.terms) {
+    for (const { term, street_term, exclude_term } of village.terms) {
       if (!term || !needle.includes(term)) continue;
       if (street_term && !streetLower.includes(street_term)) continue;
+      if (exclude_term && needle.includes(exclude_term)) continue;
       const candidate = { village, length: term.length, qualified: !!street_term };
       if (
         !best ||

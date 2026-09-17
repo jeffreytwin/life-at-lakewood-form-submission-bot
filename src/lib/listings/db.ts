@@ -9,6 +9,7 @@ import type {
   LsSite,
   LsSiteListing,
   LsVillage,
+  VillageTerm,
   VillageWithTerms,
 } from "@/lib/listings/types";
 
@@ -84,15 +85,15 @@ export async function setSiteMediaFolderId(siteId: string, folderId: string): Pr
 export async function loadVillagesWithTerms(siteId: string): Promise<VillageWithTerms[]> {
   const [{ data: villages, error: e1 }, terms] = await Promise.all([
     supabase.from("ls_villages").select("*").eq("site_id", siteId).order("name"),
-    selectAll<{ village_id: string; term: string; street_term: string | null }>("load village terms", (from, to) =>
-      supabase.from("ls_village_terms").select("village_id, term, street_term").eq("site_id", siteId).order("id").range(from, to)
+    selectAll<{ village_id: string; term: string; street_term: string | null; exclude_term: string | null }>("load village terms", (from, to) =>
+      supabase.from("ls_village_terms").select("village_id, term, street_term, exclude_term").eq("site_id", siteId).order("id").range(from, to)
     ),
   ]);
   if (e1) fail("load villages", e1);
-  const byVillage = new Map<string, { term: string; street_term: string | null }[]>();
+  const byVillage = new Map<string, VillageTerm[]>();
   for (const t of terms) {
     const list = byVillage.get(t.village_id) ?? [];
-    list.push({ term: t.term, street_term: t.street_term });
+    list.push({ term: t.term, street_term: t.street_term, exclude_term: t.exclude_term });
     byVillage.set(t.village_id, list);
   }
   return ((villages ?? []) as LsVillage[]).map((v) => ({ ...v, terms: byVillage.get(v.id) ?? [] }));
