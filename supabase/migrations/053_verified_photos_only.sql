@@ -21,8 +21,17 @@
 -- unrepresentable rather than by cleaning up after it: a gallery is built
 -- only from rows that carry one. NULL means Wix accepted the import and we
 -- have not yet seen a picture; such a photo is simply not in the gallery,
--- and its listing stays gallery_ready = false, which already holds it in
--- 'staged' rather than promoting it.
+-- and its listing carries gallery_ready = false.
+--
+-- That flag does not by itself hold a listing back, and it was described
+-- here as though it did. What the write step actually does: a listing with
+-- no confirmed photo at all is not written and stays 'staged'; one with
+-- some is written with the photos that are confirmed, goes live with
+-- gallery_ready = false, and is completed as the others are confirmed. So
+-- what this buys is the rule itself -- nothing unconfirmed is ever shown --
+-- rather than a guarantee that a gallery is whole the first time it
+-- appears. Holding a whole listing off the site because one photo of
+-- twenty-three is stuck would be the worse trade.
 --
 -- BACKFILL. Every existing row is stamped verified, including the imported
 -- ones this cannot vouch for. Requiring verification retroactively would
