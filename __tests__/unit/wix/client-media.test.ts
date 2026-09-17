@@ -190,12 +190,72 @@ describe("wix media folder listing", () => {
       "files[2]",
       "nextPageToken:string",
       "nothing:null",
-      "pagingMetadata{count,offset,total}",
+      "pagingMetadata{count:number,offset:number,total:number}",
     ]);
   });
 
   it("says nothing about a response that is not an object", () => {
     expect(envelopeShape(null)).toEqual([]);
     expect(envelopeShape("a string")).toEqual([]);
+  });
+
+  it("follows the cursor envelope this endpoint actually sends", async () => {
+    // Established by asking it: files[100] nextCursor{cursors,hasNext}.
+    let call = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        call += 1;
+        const files = Array.from({ length: 100 }, (_, i) => ({ id: `p${call}-${i}` }));
+        const hasNext = call < 3;
+        return new Response(
+          JSON.stringify({ files, nextCursor: { cursors: { next: `tok-${call}` }, hasNext } }),
+          { headers: { "content-type": "application/json" } }
+        );
+      })
+    );
+
+    const result = await listMediaFiles("site-1", "folder-1");
+
+    expect(result.files).toHaveLength(300);
+    expect(urls[1]).toContain("paging.cursor=tok-1");
+    expect(urls[2]).toContain("paging.cursor=tok-2");
+    // hasNext false ends it, even though that page was full.
+    expect(result.truncated).toBe(false);
+    expect(urls).toHaveLength(3);
+  });
+
+  it("takes the token when cursors is the token itself", async () => {
+    // The one press showed cursors exists but not whether it holds the token
+    // or an object with a next; both are accepted rather than guessed at.
+    let call = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        call += 1;
+        const files = Array.from({ length: 100 }, (_, i) => ({ id: `q${call}-${i}` }));
+        return new Response(
+          JSON.stringify({ files, nextCursor: { cursors: call < 2 ? "flat-1" : "", hasNext: call < 2 } }),
+          { headers: { "content-type": "application/json" } }
+        );
+      })
+    );
+
+    const result = await listMediaFiles("site-1", "folder-1");
+
+    expect(urls[1]).toContain("paging.cursor=flat-1");
+    expect(result.files).toHaveLength(200);
+    expect(result.truncated).toBe(false);
+  });
+
+  it("describes a nested cursor object deeply enough to act on", () => {
+    // One level was not enough the first time: "nextCursor{cursors,hasNext}"
+    // left it open whether cursors was the token or held one.
+    expect(envelopeShape({ files: [1], nextCursor: { cursors: { next: "t" }, hasNext: true } })).toEqual([
+      "files[1]",
+      "nextCursor{cursors{next},hasNext:boolean}",
+    ]);
   });
 });

@@ -369,12 +369,24 @@ export interface ListMediaFilesOptions {
  * pagingMetadata.cursors.next to follow. Rather than guess a third time, the
  * audit reports what the endpoint actually sends back.
  */
+/** One level further in, which is where "cursors" turned out to hide a "next". */
+function describeInner(obj: Record<string, unknown>): string {
+  return Object.entries(obj)
+    .slice(0, 10)
+    .map(([k, v]) => {
+      if (Array.isArray(v)) return `${k}[${v.length}]`;
+      if (v && typeof v === "object") return `${k}{${Object.keys(v as Record<string, unknown>).slice(0, 6).join(",")}}`;
+      return `${k}:${v === null ? "null" : typeof v}`;
+    })
+    .join(",");
+}
+
 export function envelopeShape(res: unknown): string[] {
   if (!res || typeof res !== "object") return [];
   const out: string[] = [];
   for (const [key, value] of Object.entries(res as Record<string, unknown>)) {
     if (Array.isArray(value)) out.push(`${key}[${value.length}]`);
-    else if (value && typeof value === "object") out.push(`${key}{${Object.keys(value as Record<string, unknown>).slice(0, 10).join(",")}}`);
+    else if (value && typeof value === "object") out.push(`${key}{${describeInner(value as Record<string, unknown>)}}`);
     else out.push(`${key}:${value === null ? "null" : typeof value}`);
   }
   return out.sort();
@@ -408,8 +420,27 @@ export interface ListMediaFilesResult {
  */
 interface WixMediaFilesResponse {
   files?: WixMediaFile[];
-  /** Cursor paging, where the endpoint offers it; absent on an offset-only response. */
+  /**
+   * What this endpoint actually sends, established by asking it rather than
+   * by reading docs: `nextCursor{cursors,hasNext}`. Whether `cursors` is the
+   * token itself or an object holding a `next` was not visible in that answer,
+   * so cursorToken accepts either instead of guessing a fourth time.
+   */
+  nextCursor?: { cursors?: unknown; hasNext?: boolean } | null;
+  /** The shape two earlier readings expected; still honoured if it ever appears. */
   pagingMetadata?: { cursors?: { next?: string | null } | null } | null;
+}
+
+/** The continuation token out of either cursor shape, or null. */
+function cursorToken(res: WixMediaFilesResponse | null): string | null {
+  const raw = res?.nextCursor?.cursors;
+  if (typeof raw === "string") return raw || null;
+  if (raw && typeof raw === "object") {
+    const next = (raw as { next?: unknown }).next;
+    if (typeof next === "string" && next) return next;
+  }
+  const legacy = res?.pagingMetadata?.cursors?.next;
+  return typeof legacy === "string" && legacy ? legacy : null;
 }
 
 export async function listMediaFiles(
@@ -450,8 +481,9 @@ export async function listMediaFiles(
     // Whether this endpoint pages by cursor at all, which decides what counts
     // as the end below. Offered-and-null is the last page; never offered means
     // offset paging, where a short page is the end.
-    const offers = !!res?.pagingMetadata?.cursors;
-    cursor = res?.pagingMetadata?.cursors?.next ?? null;
+    const offers = !!res?.nextCursor || !!res?.pagingMetadata?.cursors;
+    const moreToCome = res?.nextCursor?.hasNext;
+    cursor = cursorToken(res);
     const done = { files, truncated: false, nextOffset: 0, shape };
     // Nothing new on a page that had rows: paging is not moving, so neither
     // are we. Truncated, because what we hold is the first page and not the
@@ -460,8 +492,9 @@ export async function listMediaFiles(
     // "outside" a folder they were in. nextOffset 0 because there is no later
     // page to resume at; the next scan starts over rather than climbing.
     if (batch.length && !fresh.length) return { files, truncated: true, nextOffset: 0, shape };
-    // A cursor that has run out is the end, even on a full page.
-    if (offers && !cursor) return done;
+    // hasNext is the endpoint's own word for it, and it is the last page even
+    // on a full one. A missing cursor says the same thing.
+    if (offers && (moreToCome === false || !cursor)) return done;
     // Without cursors, a short page is the end of the folder.
     if (!offers && batch.length < FILE_PAGE) return done;
   }
