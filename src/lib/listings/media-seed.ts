@@ -131,7 +131,10 @@ export async function seedSiteMediaFromLive(site: LsSite): Promise<MediaSeedResu
     } else {
       result.siteMediaRows += 1;
     }
-    upserts.push({ site_id: site.id, media_id: w.mediaId, wix_file_id: w.fileId, wix_image_uri: w.uri, origin: "seeded" });
+    // A seeded photo was read out of the gallery the site is already
+    // serving, so Wix demonstrably holds a picture for it: verified by
+    // definition, and not something the photo pass needs to confirm.
+    upserts.push({ site_id: site.id, media_id: w.mediaId, wix_file_id: w.fileId, wix_image_uri: w.uri, origin: "seeded", verified_at: new Date().toISOString() });
   }
   for (const part of chunk(upserts, 500)) {
     const { error } = await supabase.from("ls_site_media").upsert(part, { onConflict: "site_id,media_id" });

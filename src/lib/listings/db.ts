@@ -276,10 +276,21 @@ export async function loadSiteGalleries(siteId: string, listingIds: string[]): P
       mediaIds.push(row.id);
     }
   }
+  // Only verified photos: a row with no verified_at is one Wix took the URL
+  // for and may never have fetched, so it has no src here and cannot reach a
+  // gallery (migration 053). Its listing stays gallery_ready = false, which
+  // holds it in 'staged' until the picture is real.
   const uris = new Map<string, string>();
   for (const part of chunk(mediaIds, IN_CHUNK)) {
     const rows = await selectAll<{ media_id: string; wix_image_uri: string }>("load site media", (from, to) =>
-      supabase.from("ls_site_media").select("media_id, wix_image_uri").eq("site_id", siteId).in("media_id", part).order("id").range(from, to)
+      supabase
+        .from("ls_site_media")
+        .select("media_id, wix_image_uri")
+        .eq("site_id", siteId)
+        .in("media_id", part)
+        .not("verified_at", "is", null)
+        .order("id")
+        .range(from, to)
     );
     for (const row of rows) uris.set(row.media_id, row.wix_image_uri);
   }
@@ -380,12 +391,72 @@ export async function findStoredByHash(hash: string): Promise<string | null> {
 }
 
 export async function upsertSiteMedia(
-  rows: Array<{ site_id: string; media_id: string; wix_file_id: string | null; wix_image_uri: string; origin: "seeded" | "imported" }>
+  rows: Array<{ site_id: string; media_id: string; wix_file_id: string | null; wix_image_uri: string; origin: "seeded" | "imported"; verified_at?: string | null }>
 ): Promise<void> {
   for (const part of chunk(rows, MEDIA_UPSERT_CHUNK)) {
     const { error } = await supabase.from("ls_site_media").upsert(part, { onConflict: "site_id,media_id" });
     if (error) fail("upsert site media", error);
   }
+}
+
+/** One photo the engine has put in Wix but not yet seen a picture for. */
+export interface UnverifiedSiteMedia {
+  id: string;
+  site_id: string;
+  media_id: string;
+  wix_file_id: string | null;
+  listing_id: string;
+  imported_at: string;
+}
+
+/** The oldest imports still waiting on Wix, for the photo pass to check. */
+export async function loadUnverifiedSiteMedia(siteId: string, limit: number): Promise<UnverifiedSiteMedia[]> {
+  const { data, error } = await supabase
+    .from("ls_site_media")
+    .select("id, site_id, media_id, wix_file_id, imported_at, ls_listing_media:media_id(listing_id)")
+    .eq("site_id", siteId)
+    .is("verified_at", null)
+    .not("wix_file_id", "is", null)
+    .order("imported_at")
+    .limit(limit);
+  if (error) fail("load unverified site media", error);
+  return (data ?? []).map((row) => {
+    const media = (row as { ls_listing_media?: { listing_id?: string } | Array<{ listing_id?: string }> | null }).ls_listing_media;
+    const listing = Array.isArray(media) ? media[0] : media;
+    return {
+      id: row.id as string,
+      site_id: row.site_id as string,
+      media_id: row.media_id as string,
+      wix_file_id: row.wix_file_id as string | null,
+      listing_id: listing?.listing_id ?? "",
+      imported_at: row.imported_at as string,
+    };
+  });
+}
+
+/** Wix is holding a picture for these: they may go in a gallery. */
+export async function markSiteMediaVerified(ids: string[], at: Date): Promise<void> {
+  for (const part of chunk(ids, MEDIA_UPSERT_CHUNK)) {
+    const { error } = await supabase.from("ls_site_media").update({ verified_at: at.toISOString() }).in("id", part);
+    if (error) fail("mark site media verified", error);
+  }
+}
+
+/**
+ * Wix has no picture for these and never will: forget the import so the
+ * photo pass fetches them again. Returns the listings to rewrite.
+ */
+export async function dropSiteMedia(ids: string[]): Promise<string[]> {
+  const listings = new Set<string>();
+  for (const part of chunk(ids, MEDIA_UPSERT_CHUNK)) {
+    const { data, error } = await supabase.from("ls_site_media").delete().in("id", part).select("media_id");
+    if (error) fail("drop site media", error);
+    const mediaIds = (data ?? []).map((r) => r.media_id as string);
+    if (!mediaIds.length) continue;
+    const { data: media } = await supabase.from("ls_listing_media").select("listing_id").in("id", mediaIds);
+    for (const m of media ?? []) listings.add(m.listing_id as string);
+  }
+  return [...listings];
 }
 
 // ---- neighborhood stats ----
