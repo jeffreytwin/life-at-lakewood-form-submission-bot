@@ -1,10 +1,42 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/shared/logger", () => ({ logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
-vi.mock("@/lib/supabase/client", () => ({ supabase: {} }));
-vi.mock("@/lib/wix/client", () => ({ bulkRemoveItems: vi.fn(), listMediaFiles: vi.fn(), queryAllItems: vi.fn() }));
+// A chain just deep enough for loadSite; the rest of the reads go through
+// the mocked db helpers below.
+const siteRow = {
+  id: "site-parrish",
+  name: "Life At Parrish",
+  domain: "lifeatparrish.com",
+  wix_site_id: "wix-parrish",
+  target_collection_id: "HousesforSale2",
+  live_collection_id: "HousesforSale",
+  media_folder_name: "ParrishListingPhotos",
+  media_folder_id: "folder-parrish",
+  media_scan_offset: 20_000,
+};
+vi.mock("@/lib/supabase/client", () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: () => ({ maybeSingle: async () => ({ data: siteRow, error: null }) }),
+      }),
+    }),
+  },
+}));
+vi.mock("@/lib/listings/db", () => ({ selectAll: vi.fn(async () => []), setSiteMediaScanOffset: vi.fn() }));
+vi.mock("@/lib/wix/client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/wix/client")>();
+  return {
+    WIX_MEDIA_ROOT: actual.WIX_MEDIA_ROOT,
+    mediaState: actual.mediaState,
+    bulkRemoveItems: vi.fn(),
+    listMediaFiles: vi.fn(async () => ({ files: [], truncated: false, nextOffset: 0 })),
+    queryAllItems: vi.fn(async () => []),
+  };
+});
 
-import { compareCollection, compareFolder, scanWindow } from "@/lib/listings/audit";
+import { listMediaFiles } from "@/lib/wix/client";
+import { AUDIT_FOLDER_BUDGET_MS, auditSite, compareCollection, compareFolder, scanWindow } from "@/lib/listings/audit";
 
 const uri = (fileId: string) => `wix:image://v1/${fileId}/photo.jpg#originWidth=1600&originHeight=1066`;
 
@@ -66,5 +98,36 @@ describe("scanWindow", () => {
 
   it("does not run off the front of the folder on a bad stored cursor", () => {
     expect(scanWindow(Date.now() + 60_000, -5).startOffset).toBe(0);
+  });
+});
+
+describe("auditSite's folder walk", () => {
+  it("gives the listing a budget, so a folder too big to walk reports instead of timing out", async () => {
+    // Parrish's folder passed 20,000 files -- over 200 sequential Wix
+    // requests -- against a route capped at 120s, and the whole request
+    // started returning 504. A 504 is not a report; a partial listing is.
+    const now = Date.parse("2026-09-17T16:35:00.000Z");
+    vi.mocked(listMediaFiles).mockResolvedValueOnce({ files: [], truncated: true, nextOffset: 20_000 });
+
+    const report = await auditSite("site-parrish", now);
+
+    expect(listMediaFiles).toHaveBeenCalledWith("wix-parrish", "folder-parrish", { deadline: now + AUDIT_FOLDER_BUDGET_MS });
+    // The Hub renders this as "(listing cut short)" beside the file count.
+    expect(report.folder.listingTruncated).toBe(true);
+  });
+
+  it("leaves room for the collection queries that follow it", () => {
+    // maxDuration on the route is 120s; the folder walk is only the first
+    // half of the audit.
+    expect(AUDIT_FOLDER_BUDGET_MS).toBeLessThan(120_000 / 2);
+  });
+
+  it("starts at the beginning, not at the background scan's cursor", async () => {
+    // The site row carries media_scan_offset 20000; a person asking about
+    // the library means all of it.
+    vi.mocked(listMediaFiles).mockClear();
+    await auditSite("site-parrish", Date.now());
+    const options = vi.mocked(listMediaFiles).mock.calls[0][2];
+    expect(options?.startOffset).toBeUndefined();
   });
 });

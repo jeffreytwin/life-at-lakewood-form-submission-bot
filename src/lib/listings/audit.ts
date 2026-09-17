@@ -182,7 +182,18 @@ async function loadEngineFileIds(siteId: string): Promise<string[]> {
   return rows.map((r) => r.wix_file_id ?? wixFileId(r.wix_image_uri)).filter((id): id is string => !!id);
 }
 
-export async function auditSite(siteId: string): Promise<SiteAuditReport> {
+/**
+ * How long the audit gives the folder listing before settling for what it
+ * has. The route is capped at AUDIT_MAX_DURATION_MS and the collection
+ * queries still have to run after this, so the walk cannot simply have the
+ * lot: Parrish's folder passed 20,000 files -- over 200 sequential Wix
+ * requests -- and the whole request began returning 504, which is no report
+ * at all. A partial listing is already a first-class outcome here
+ * (listingTruncated), so the honest failure is to say how far it got.
+ */
+export const AUDIT_FOLDER_BUDGET_MS = 55_000;
+
+export async function auditSite(siteId: string, now: number = Date.now()): Promise<SiteAuditReport> {
   const site = await loadSite(siteId);
   if (!site.wix_site_id) throw new HubError(`${site.name} has no wix_site_id`, 409);
 
@@ -201,7 +212,11 @@ export async function auditSite(siteId: string): Promise<SiteAuditReport> {
   };
   let folderFileIds: string[] | null = null;
   if (site.media_folder_id) {
-    const listing = await listMediaFiles(site.wix_site_id, site.media_folder_id);
+    // From the start, not from the shared cursor: this is a person asking
+    // about the whole library, and scanWindow explains why (see below).
+    const listing = await listMediaFiles(site.wix_site_id, site.media_folder_id, {
+      deadline: now + AUDIT_FOLDER_BUDGET_MS,
+    });
     folderFileIds = listing.files.map((f) => f.id);
     folder.filesInFolder = folderFileIds.length;
     folder.listingTruncated = listing.truncated;
