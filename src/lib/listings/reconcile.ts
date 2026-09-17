@@ -59,6 +59,8 @@ export const DEFAULT_MAX_PAGES = 40;
 export const PULL_DATE_REFRESH_HOURS = 12;
 export const MASS_DELETE_MIN = 10;
 export const MASS_DELETE_SHARE = 0.1;
+/** The photo-library check only starts when the run has at least this much left. */
+export const BROKEN_PHOTO_CHECK_MIN_MS = 45_000;
 const WRITE_CHUNK = 200;
 const FETCH_RESERVE_MS = 90_000;
 const DATA_DRIVEN_REASONS: ReadonlySet<ReasonCode> = new Set(["city_change", "no_village", "mls_revoked", "not_in_feed"]);
@@ -451,6 +453,47 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       result.sites.push(summary);
     }
 
+    // The nightly verify covers the photo library too: Wix's URL import is
+    // asynchronous, so it can accept a photo, hand back a file id and then
+    // fail to fetch the picture, leaving a blank in the gallery for ever.
+    //
+    // It runs here, after every site has been written, and only with time to
+    // spare. It used to run first, on the reasoning that the busiest run of
+    // the day should not spend its budget and leave the check undone -- but
+    // that trades the wrong way round. Listing Parrish's folder is hundreds
+    // of sequential Wix requests, and on 2026-09-17 it ran past the
+    // function's time limit on every nightly attempt: the invocation was
+    // killed at this stage before a single row was written, the run never
+    // recorded `done`, so `lastFullDate` never moved and the next tick
+    // started the same doomed full run again -- for two and a half hours,
+    // during which nothing was written to either site and no staged listing
+    // went live. A check that is a day late costs nothing; writes that never
+    // happen cost the sites.
+    if (opts.mode === "full") {
+      for (const site of sites) {
+        const remaining = opts.deadline - Date.now();
+        if (remaining < BROKEN_PHOTO_CHECK_MIN_MS) {
+          run.event("info", "photos_broken", `${site.name}: no time left this run to check for photos Wix never fetched; the next nightly does it`, { siteId: site.id });
+          continue;
+        }
+        try {
+          const repair = await reimportBrokenPhotos(site.id, opts.deadline);
+          if (repair.refused) {
+            run.event("error", "photos_broken", `${site.name}: ${repair.refused}`, { siteId: site.id });
+          } else if (repair.broken) {
+            run.event("warn", "photos_broken", `${site.name}: Wix holds no picture for ${repair.broken} photo(s); ${repair.cleared} cleared to be fetched again across ${repair.listings} listing(s)${repair.truncated ? ", and the rest of the folder was not reached this run" : ""}`, {
+              siteId: site.id,
+              details: repair,
+            });
+          } else if (repair.truncated) {
+            run.event("info", "photos_broken", `${site.name}: the photo check reached only part of the folder before the run's deadline; the next nightly continues`, { siteId: site.id });
+          }
+        } catch (error) {
+          run.event("warn", "photos_broken", `${site.name}: could not check for photos Wix never fetched (${errorMessage(error)}); the next nightly tries again`, { siteId: site.id });
+        }
+      }
+    }
+
     run.stage = truncated ? "truncated" : "done";
     await run.finish("ok");
     result.stage = run.stage;
@@ -491,27 +534,6 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
     run.event("error", "write_failed", `${site.name}: refused to write, shadow mode targets the live collection ${site.live_collection_id}`, { siteId: site.id });
     return;
   }
-  // The nightly verify covers the photo library too. Wix's URL import is
-  // asynchronous: it can accept a photo, hand back a file id, and then fail to
-  // fetch the picture, leaving a blank in the gallery for ever. This runs before
-  // the site's writes rather than after them, so the busiest run of the day
-  // cannot spend its budget and leave the check undone.
-  if (opts.mode === "full") {
-    try {
-      const repair = await reimportBrokenPhotos(site.id);
-      if (repair.refused) {
-        run.event("error", "photos_broken", `${site.name}: ${repair.refused}`, { siteId: site.id });
-      } else if (repair.broken) {
-        run.event("warn", "photos_broken", `${site.name}: Wix holds no picture for ${repair.broken} photo(s); ${repair.cleared} cleared to be fetched again across ${repair.listings} listing(s)`, {
-          siteId: site.id,
-          details: repair,
-        });
-      }
-    } catch (error) {
-      run.event("warn", "photos_broken", `${site.name}: could not check for photos Wix never fetched (${errorMessage(error)}); the next nightly tries again`, { siteId: site.id });
-    }
-  }
-
   const target = site.target_collection_id;
   const nowIso = new Date().toISOString();
   const refreshBefore = new Date(Date.now() - PULL_DATE_REFRESH_HOURS * 3600_000);

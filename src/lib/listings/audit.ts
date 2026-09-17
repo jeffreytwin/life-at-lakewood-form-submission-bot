@@ -52,6 +52,8 @@ export interface ReimportResult {
   listings: number;
   /** Set when the share of broken files was too high to be believed; nothing was cleared. */
   refused: string | null;
+  /** The folder listing ran out of time or pages; the rest waits for the next pass. */
+  truncated?: boolean;
 }
 
 export interface StaleRow {
@@ -305,19 +307,27 @@ export async function deleteStaleRows(siteId: string, collectionId: string): Pro
  * reports, and discarding thousands of good imports would be far worse than
  * leaving a few bad ones.
  */
-export async function reimportBrokenPhotos(siteId: string): Promise<ReimportResult> {
+export async function reimportBrokenPhotos(siteId: string, deadline?: number): Promise<ReimportResult> {
   const site = await loadSite(siteId);
   if (!site.wix_site_id) throw new HubError(`${site.name} has no wix_site_id`, 409);
   // A site with no folder of its own imports into Wix's root, so that is where to look.
   const folderId = site.media_folder_id ?? WIX_MEDIA_ROOT;
 
-  const listing = await listMediaFiles(site.wix_site_id, folderId);
+  // Listing a big folder is hundreds of sequential Wix requests, so a caller
+  // working to a clock passes its deadline and takes whatever was reached.
+  // Checking part of the library is fine: the files it did not see are
+  // simply left for the next pass, and nothing is inferred from their absence.
+  const listing = await listMediaFiles(site.wix_site_id, folderId, deadline);
   const engineIds = new Set(await loadEngineFileIds(site.id));
   const broken = listing.files.filter((f) => engineIds.has(f.id) && mediaState(f) === "broken").map((f) => f.id);
-  const result: ReimportResult = { broken: broken.length, cleared: 0, listings: 0, refused: null };
+  const result: ReimportResult = { broken: broken.length, cleared: 0, listings: 0, refused: null, truncated: listing.truncated };
   if (!broken.length) return result;
-  if (engineIds.size && broken.length / engineIds.size > BROKEN_SHARE_CAP) {
-    result.refused = `${broken.length} of ${engineIds.size} of this location's photos look broken to Wix, which is too many to act on; nothing was cleared`;
+  // Against the engine photos this pass actually saw: on a truncated listing
+  // the whole library is the wrong denominator and would wave through a share
+  // the cap exists to catch.
+  const seen = listing.files.filter((f) => engineIds.has(f.id)).length;
+  if (seen && broken.length / seen > BROKEN_SHARE_CAP) {
+    result.refused = `${broken.length} of the ${seen} of this location's photos this pass checked look broken to Wix, which is too many to act on; nothing was cleared`;
     return result;
   }
 

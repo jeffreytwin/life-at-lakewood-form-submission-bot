@@ -59,7 +59,7 @@ import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { reimportBrokenPhotos } from "@/lib/listings/audit";
 import { bulkRemoveItems, bulkSaveItems, type WixItemData } from "@/lib/wix/client";
 import { normalizeListing } from "@/lib/listings/normalize";
-import { runReconcile } from "@/lib/listings/reconcile";
+import { runReconcile, BROKEN_PHOTO_CHECK_MIN_MS } from "@/lib/listings/reconcile";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, LsSiteListing, MlsGridProperty, VillageWithTerms } from "@/lib/listings/types";
 
@@ -394,8 +394,11 @@ describe("the nightly photo check", () => {
   /**
    * Jeff, 2026-09-16: "Don't we already have a full run that happens once a
    * day?" We do, so the check for photos Wix accepted but never fetched lives
-   * there — at the top of each site, before its writes, so the busiest run of
-   * the day cannot spend its budget and leave the check undone.
+   * there. It ran at the top of each site until 2026-09-17, when listing
+   * Parrish's folder -- hundreds of sequential Wix requests -- ran past the
+   * function's time limit on every nightly attempt and the invocation was
+   * killed before a single row was written. It now runs after the writes,
+   * with the run's deadline, and only when there is time to spare.
    */
   beforeEach(() => {
     const { listing } = normalizeListing(raw, NOW);
@@ -414,8 +417,61 @@ describe("the nightly photo check", () => {
 
     await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
 
-    expect(reimportBrokenPhotos).toHaveBeenCalledWith(site.id);
+    expect(reimportBrokenPhotos).toHaveBeenCalledWith(site.id, NOW.getTime() + 240_000);
     expect(events).toContainEqual(expect.objectContaining({ level: "warn", kind: "photos_broken", message: expect.stringContaining("12 photo(s)") }));
+  });
+
+  it("writes the site before it checks the photo library", async () => {
+    // The ordering is the whole point: a check that is a day late costs
+    // nothing, writes that never happen cost the sites.
+    const { handle } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    // A renderable gallery, so the site actually has a row to write.
+    vi.mocked(db.loadSiteGalleries).mockResolvedValue(
+      new Map([[FIXTURE_ID, [{ mediaId: "m0", position: 1, pathKey: "images/x/0.jpeg", title: null, src: "wix:image://v1/d0be81_good~mv2.jpeg/1.jpeg#originWidth=1600&originHeight=898" }]]])
+    );
+    const order: string[] = [];
+    vi.mocked(bulkSaveItems).mockImplementation(async () => {
+      order.push("write");
+      return { results: [{ success: true }], requests: 1 } as never;
+    });
+    vi.mocked(reimportBrokenPhotos).mockImplementation(async () => {
+      order.push("photo-check");
+      return { broken: 0, cleared: 0, listings: 0, refused: null };
+    });
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
+
+    expect(order.indexOf("write")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("write")).toBeLessThan(order.indexOf("photo-check"));
+  });
+
+  it("skips the check when the run has no time left, and still finishes ok", async () => {
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+
+    // A deadline already inside the reserve: the writes ran, the check does not start.
+    const result = await runReconcile({
+      mode: "full",
+      trigger: "cron",
+      deadline: Date.now() + BROKEN_PHOTO_CHECK_MIN_MS - 1_000,
+      client: fakeClient({ byId: [] }),
+    });
+
+    expect(reimportBrokenPhotos).not.toHaveBeenCalled();
+    expect(result.status).toBe("ok");
+    expect(result.stage).toBe("done");
+    expect(events).toContainEqual(expect.objectContaining({ kind: "photos_broken", message: expect.stringContaining("no time left") }));
+  });
+
+  it("says so when the folder listing did not reach the end", async () => {
+    const { handle, events } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(reimportBrokenPhotos).mockResolvedValue({ broken: 0, cleared: 0, listings: 0, refused: null, truncated: true });
+
+    await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
+
+    expect(events).toContainEqual(expect.objectContaining({ kind: "photos_broken", message: expect.stringContaining("only part of the folder") }));
   });
 
   it("does not run on an hourly, and never fails the run", async () => {
