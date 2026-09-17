@@ -11,121 +11,113 @@ deliberately.
 
 ---
 
-## Where things stand, and the next session's kickoff (2026-09-16)
+## Where things stand, and the next session's kickoff (2026-09-17, 22:35 UTC)
 
-Written at the end of the session that built the Hub's Listings section,
-the photo pipeline and the cutover preparation, so the next session starts
-from the facts rather than the chat.
+Written at the end of the session that cut Parrish over, onboarded Wellen
+Park and spent the evening finding three separate bounds the full run did
+not have. The 2026-09-16 hand-off it replaces is preserved in git history.
 
-**Cutover done (2026-09-16, 11:51 AM ET).** Longboat Key is live. The
-order was the runbook's: Jeff published `backend/jobs.config` as
-`{ "jobs": [] }` (~15:45 UTC), PR #289 was merged and its production
-deploy (`dpl_Ee62GniUwbYpV58KsY1tedWNF72c`, commit `703689d`) confirmed
-ready, then the step 3 SQL ran at 15:51:07 UTC (`write_mode = live`,
-target `HousesforSale`, the 203 live rows marked for rewrite). The first
-live run, `full:2026-09-16T15:52:14.284Z` (Run Full from the Hub),
-finished ok in 21 s: 0 inserted / 203 updated / 0 deleted, 0 failed
-writes, 0 errors, 0 warnings, 6 Wix requests, `stats_refreshed` true with
-no `stats_failed` or `budget` event, so the neighborhood stats reached
-`HousesforSale-DynamicPages`. Afterwards every live row carried a
-`written_at` from that run, `needs_write` was 0, `ls_villages` summed to
-203 across 105 neighborhoods (43 at zero with `zero_since`), and the photo
-backlog was empty with the shadow grace off. The Errors panel held only
-the pre-existing 2026-09-15 `warn/delete` for MFRA4697907. The site-side
-checks of runbook step 5 (a listing page, a neighborhood page, a gallery,
-the ads feed, the Live box against the inventory) were Jeff's in a
-browser: the cutover session's egress policy blocked lifeinlongboatkey.com.
-Rollback stays runbook step 6 through the 23rd; the step 7 cleanup follows
-if the week is quiet. The "State of Longboat Key" paragraph below
-describes the pre-cutover state.
+**Three sites, two live.**
 
-**State of Longboat Key (11:30 AM ET, 2026-09-16).** The engine has been on
-since 12:15 PM ET on the 15th. The site is still in **shadow mode**
-(`write_mode = shadow`, target `HousesforSale2`): 203 live rows, 0 in
-progress, 0 open errors. Every hourly run since the switch-on has finished
-ok (the last six: +0/~11/-1, +1/~1, +0/~0, +0/~1, +0/~1, +0/~0, no failed
-writes, no errors); the nightly full ran at 03:00 UTC on the 16th and the
-retention purge with it. The photo backlog is empty and no photo run has
-happened yet: in shadow mode the Velo pipeline still fetches each new
-listing's photos and the engine waits 90 minutes before fetching one
-itself, so far it has never had to.
+| site | mode | rows | notes |
+|---|---|---|---|
+| Life in Longboat Key | **live** | 199 live | since 2026-09-16 |
+| Life At Parrish | **live** | 276 live, 276 gallery_ready | cut over 19:36 UTC today |
+| Life in Wellen Park | shadow → `HousesforSale2` | 44 staged, climbing | switched on 20:51 UTC today |
 
-**Merged to the default branch** (`claude/automate-form-routing-22fSB`):
-PRs #283 to #288, the five Hub rounds (Neighborhoods, In Progress, Change
-Log runs-first, Errors panel with dismissals, Eastern time, location names)
-and step 3, the photo pipeline. Migrations 043, 044 and 045 are applied to
-production (via the Supabase MCP; each file's header says so).
+`needs_write` is 0 on both live sites and there are no open errors anywhere.
 
-**Open:** PR #289 on `claude/intelligent-tesla-ba6jum` (neighborhood stats
-for live sites + this doc's cutover runbook): draft, green, no review
-threads. **It must be merged and deployed before the flip**, because the
-Velo hourly job also writes each neighborhood's `activeListingCount` /
-`zeroSince` and the four `*Active` ranges, which the neighborhood pages
-show and the Google Ads inventory feed reads; #289 makes the engine write
-them once the site is live. Once #289 is merged, restart the working
-branch from the default branch (the branch then carries only merged
-history).
+**Parrish is done, and its requirement was met.** Every image on every
+listing is one the engine downloaded from MLSGrid and imported into
+`ParrishListingPhotos`: all 14,030 `ls_site_media` rows are
+`origin = 'imported'`, none seeded, because the old galleries carried no
+`mlsSourceUrl` for the seed to adopt. The six stale rows the hand-run
+process left were deleted after the flip. **Step 7 is the only thing
+outstanding: around the 24th, trash the old Media Manager folders and
+`HousesforSale2`.** Keep Jeff's `HousesforSale` export until then — with no
+Velo pipeline to re-adopt the collection, that export plus those folders are
+the only rollback Parrish has. Full runbook: "Cutover runbook: Life At
+Parrish" below.
 
-**Jeff's position at hand-off:** he has read the runbook and intends to
-proceed. He has **not** stopped the Velo jobs yet; he said he would
-shortly. Nothing about the database has been flipped. The Supabase MCP
-connection in the next session may need reconnecting (it dropped once in
-this one); the runbook's SQL can equally be run in the Supabase SQL editor.
+**Wellen Park is mid-backfill.** Discovery completed (111,026 Active
+listings scanned MLS-wide, 6,164 now held). `WellenParkListingPhotos`
+resolved — that was the probe's last open question and the name was right,
+so `scripts/listings-wellen-probe.mjs` was never needed and never ran.
+Photos are importing. The terms were checked against an export of the live
+`HousesforSale`: **all 153 rows match a village**, and migration 056 fixed
+the one that did not (see "Wellen Park switched on" below; `preserve` alone
+was sweeping in Englewood's Hammocks and Grande Preserves).
 
-**The next session, in order:**
+### The open item: the full run's third bound
 
-1. Confirm #289 merged and the production deploy finished (Vercel). If
-   not merged, that is the first ask.
-2. Wait for Jeff's word that `backend/jobs.config` on lifeinlongboatkey.com
-   is `{ "jobs": [] }` and published (runbook step 2). Do not flip before:
-   MLSGrid allows one download per photo per hour, and two pipelines
-   fetching at once cost one of them its download.
-3. On his go, run runbook step 3 (the `ls_sites` flip plus the nulling of
-   `written_at` / `written_fingerprint`), then Run Full from the Hub or
-   wait for the :30 hourly. Expect about 203 rewritten, 0 failed, 0
-   removed, then the neighborhood stats step (no `stats_failed` entry).
-4. Verify (runbook step 5): the Change Log run reads ok, the Errors panel
-   is empty, a listing page, a neighborhood page and a gallery render on
-   the live site, `GET /_functions/adsInventoryFeed` still answers with
-   counts, the overview's Live box equals the site's inventory. Then
-   watch the first few hourly runs: from now on the photo job fetches new
-   listings' photos itself with no grace (expect `photos` entries and, on
-   idle ticks, runs of mode `photos` when something is pending).
-5. Rollback is runbook step 6; the week-later cleanup is step 7.
+**The full verification cycle is part-way through and currently failing.**
+This is the thing to pick up first.
 
-**Follow-ups not yet done, in rough priority:**
+Tonight the full run hit three separate limits, each hiding behind the last:
 
-- Step 6 of the sequence: serve the ads inventory feed from the engine
-  (today it is `GET /_functions/adsInventoryFeed` on the Wix site, which
-  keeps working after cutover as long as the engine maintains the counts,
-  which #289 does).
-- The nightly shadow-vs-live comparison as a job: Jeff chose to run that
-  analysis separately; the verification script has the comparison.
-- `audit_log` entries for cutover and term edits (plan, "What the Hub
-  already provides"): not written today.
-- The Hub has no "Run Photos" button; `POST /api/internal/listings/run`
-  with `mode: "photos"` (optionally `shadowGraceMinutes: 0`) is the
-  manual path.
-- Onboarding the other three sites (step 5): rows in `ls_sites` plus the
-  neighborhoods import; no code.
+1. **The fetch had no cursor.** `loadKnownListingIds` always restarted at the
+   top, and `lastFullDate` only advanced for an untruncated run, so a set too
+   big for one budget retried every five minutes until midnight UTC. Fixed by
+   `FullCursor` (PR #325).
+2. **The pass had no size cap.** The fetch turned out to be the *cheap* half:
+   all 6,164 ids came back in 124 requests inside the fetch budget — 134 MB —
+   and the invocation was killed at `upsert`. Fixed by
+   `FULL_VERIFY_MAX_LISTINGS = 1500` (PR #326).
+3. **The stale-media query got slow.** With the cap in place the first pass
+   succeeded (1,500 verified, cursor saved) and the second died on
+   `load listing media: canceling statement due to statement timeout
+   (57014)`. `ls_listing_media` had grown to **179,170 rows / 163 MB** as
+   Wellen Park's three cities landed, and `replaceListingMedia` ordered its
+   stale sweep by `id` while the index is on `(listing_id, path_key)` — a
+   sort of every matched row, on every page. Measured on production: 486 ms
+   with a top-N heapsort versus **1.5 ms** as a merge join off the index.
+   Fixed by ordering to match the index (PR #327).
 
-**Operational facts.** Supabase project `hwjnymwzibpfylmkccox`
-(form-submission-bot). Longboat Key `wix_site_id`
-`8b20e921-5b70-4428-8fcd-8c8ef3bad3ab`. The engine's cron is
-`/api/cron/listings-tick` every 15 minutes; the hourly currently starts at
-:30. Hub: `/dashboard/listings` (Overview, Neighborhoods, Change Log; In
-Progress from the site card). A check-in routine for PR #289
-(`trig_011qSatiUvgFU1qSCTNZCCYA`) still fires into the old session at
-16:32 UTC on the 16th; it is harmless and can be deleted.
+**State to check first:** `system_settings.ls_engine_state.fullCursor` was at
+`{ afterListingId: "MFRC7528816", verified: 3000 }` with 3,164 of 6,164 still
+to verify. With #327 deployed the remaining passes should run on idle ticks
+and clear the cursor. If they do not, the run row names the stage — that
+two-level trail diagnosed all three of the above without a single log dive.
 
-**Kickoff prompt for the next session:**
+Note `lastFullDate` is still `2026-09-17`, so the 03:00 UTC nightly will
+start its own cycle regardless.
 
-> Read `docs/LISTINGS_ENGINE_PLAN.md`, starting with "Where things stand"
-> and the "Cutover runbook: Longboat Key". Confirm PR #289 is merged and
-> deployed. Then wait for my word that the Velo jobs are stopped, run the
-> runbook's step 3 SQL on my go, start the first live run, and verify it
-> per step 5. Keep the Hub's Errors panel and the Change Log in view for
-> the first hours.
+### What else shipped today
+
+- **Migration 055**, retention for listings no site ever showed. Status
+  decides, not age: `349 of 379` unshown listings were Active, and the
+  unmatched view (`in_feed = true AND standard_status = 'Active'`) is how a
+  missing term or village is found, so the sweep's predicate is that view's
+  exact complement. Inert until about mid-November. See "Storage" under
+  Phase 5.
+- **Migration 056**, The Preserve's terms. Also corrects a wrong call this
+  session made and Jeff caught: reading the staged set alone suggested new
+  construction was about to empty the site, when in fact all 153 of the
+  site's own rows were still discovery skeletons and absent from the sample.
+  **While a discovery scan is in flight, the fully-pulled subset is not a
+  sample of anything.**
+- PRs #321–#327, all merged. Migrations 055 and 056 applied via the Supabase
+  MCP.
+
+### Kickoff prompt for the next session
+
+> Read `docs/LISTINGS_ENGINE_PLAN.md`, starting with "Where things stand".
+> Check whether Wellen Park's full verification cycle finished: the run rows
+> since 22:30 UTC on the 17th, and whether
+> `ls_engine_state.fullCursor` has cleared. Then confirm the 03:00 nightly
+> ran clean, that both live sites still have `needs_write` 0, and how far
+> Wellen Park's photo backfill has got. Its staged inventory is the thing to
+> review before any cutover — especially anything the terms caught that is
+> not Wellen Park.
+
+**Operational facts.** Supabase project `hwjnymwzibpfylmkccox`. Wix site ids:
+Longboat Key `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab`, Parrish
+`a704cfe5-dd9b-44ff-a017-9d637d8c6fdc`, Wellen Park
+`1a8c2755-823e-4882-ae32-e6c108a30e39`. Cron `/api/cron/listings-tick` every
+5 minutes; hourly incremental, nightly full after 03:00 UTC. Hub:
+`/dashboard/listings`. Run Full and Run Discovery post to
+`/api/internal/listings/run`, which calls `runReconcile` directly — so a Hub
+run saves the cursor but does **not** advance `lastFullDate`.
 
 ## Decisions locked
 
@@ -1781,3 +1773,41 @@ skeletons came out of it with real data even though the run died before
 classify. And the run row told the whole story without a log — stage
 `upsert`, `mlsgrid_request_count` 124, `mlsgrid_items_fetched` 6,164,
 `mlsgrid_bytes` 133,871,649 — which is the two-level trail earning its keep.
+
+### The third bound: a query that outgrew its ordering (2026-09-17, 22:30)
+
+With the cap in place the first pass worked — 1,500 verified, cursor saved at
+`MFRA4701053`, 4,664 to go — and the second, resuming correctly from that
+cursor, died at `upsert`:
+
+```
+load listing media: canceling statement due to statement timeout (57014)
+```
+
+`replaceListingMedia` sweeps stale rows by loading each batch's media and
+comparing keys. It ordered that read by `id` while the only useful index is
+`idx_ls_listing_media_key` on `(listing_id, path_key)`, so the filter used
+the index and the sort did not — every matched row sorted, on every page of
+`selectAll`. That was survivable at fifty thousand rows. Wellen Park's three
+market cities took `ls_listing_media` to **179,170 rows / 163 MB**, and it
+stopped being survivable.
+
+Measured on production before changing anything:
+
+| ordering | execution | plan |
+|---|---|---|
+| `order by id` | 486 ms | top-N heapsort over 5,962 rows, 5,989 buffers |
+| `order by listing_id, path_key` | **1.5 ms** | merge semi join off the index, no sort, 948 buffers |
+
+The caller reads the rows into a set and never looks at the order, so
+`selectAll` only needs it to be *stable*. Matching the index costs nothing
+and is about 325x faster per page.
+
+**Three bounds in one evening, and the pattern is worth naming.** Each fix
+revealed the next, because each removed whatever had been failing first: the
+fetch had no cursor, so nothing reached the cap; the pass had no cap, so
+nothing reached the query. The estimate that sized each one came from a
+different workload than the one that broke — incremental request latency for
+the fetch, incremental end-to-end time for the cap, a table a quarter of its
+eventual size for the query. **Measure the thing that is about to run, not
+the thing that looks like it.**

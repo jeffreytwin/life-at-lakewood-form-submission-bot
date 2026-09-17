@@ -171,8 +171,22 @@ export async function replaceListingMedia(media: LsListingMediaInput[], listingI
   const incoming = new Set(media.map((m) => mediaKey(m.listing_id, m.path_key)));
   const stale: string[] = [];
   for (const part of chunk(listingIds, IN_CHUNK)) {
+    // Ordered by (listing_id, path_key), which is idx_ls_listing_media_key,
+    // so the filter and the paging walk the same index and nothing is
+    // sorted. Ordering by `id` instead cost a sort of every matched row on
+    // every page, and at 179,000 rows that became
+    // "canceling statement due to statement timeout (57014)" -- a full pass
+    // died on it on 2026-09-17 once Wellen Park's three cities had grown the
+    // table fourfold. `selectAll` only needs the order to be *stable* for
+    // paging; this caller reads the rows into a set and never looks at it.
     const rows = await selectAll<{ id: string; listing_id: string; path_key: string }>("load listing media", (from, to) =>
-      supabase.from("ls_listing_media").select("id, listing_id, path_key").in("listing_id", part).order("id").range(from, to)
+      supabase
+        .from("ls_listing_media")
+        .select("id, listing_id, path_key")
+        .in("listing_id", part)
+        .order("listing_id")
+        .order("path_key")
+        .range(from, to)
     );
     for (const row of rows) {
       if (!incoming.has(mediaKey(row.listing_id, row.path_key))) stale.push(row.id);
