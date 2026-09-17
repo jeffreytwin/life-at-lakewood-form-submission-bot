@@ -336,12 +336,32 @@ export async function deleteStaleRows(siteId: string, collectionId: string): Pro
  * cursor alone as well, so pressing the button does not cost the background
  * scan its place.
  */
-export function scanWindow(deadline: number | undefined, cursor: number): { startOffset: number; advances: boolean } {
-  const paced = deadline !== undefined;
-  return { startOffset: paced ? Math.max(0, cursor) : 0, advances: paced };
+export function scanWindow(resume: boolean, cursor: number): { startOffset: number; advances: boolean } {
+  return { startOffset: resume ? Math.max(0, cursor) : 0, advances: resume };
 }
 
-export async function reimportBrokenPhotos(siteId: string, deadline?: number): Promise<ReimportResult> {
+/**
+ * How long a sweep started from the Hub gives the folder listing. The route
+ * is capped at 120s, same as the audit, and without a budget it walks up to
+ * a thousand pages -- which on Parrish's folder is a 504 and no repair at
+ * all, exactly as the audit was before AUDIT_FOLDER_BUDGET_MS.
+ */
+export const REIMPORT_FOLDER_BUDGET_MS = 90_000;
+
+export interface ReimportOptions {
+  /** No new page is started past this; what was reached is reported truncated. */
+  deadline?: number;
+  /**
+   * Whether to carry on from the shared cursor and leave it further along.
+   * True for the nightly, which covers the folder across runs. False from the
+   * Hub, where the audit beside it reports from the start of the folder and
+   * the two would otherwise disagree for no visible reason.
+   */
+  resume?: boolean;
+}
+
+export async function reimportBrokenPhotos(siteId: string, options: ReimportOptions = {}): Promise<ReimportResult> {
+  const { deadline, resume = false } = options;
   const site = await loadSite(siteId);
   if (!site.wix_site_id) throw new HubError(`${site.name} has no wix_site_id`, 409);
   // A site with no folder of its own imports into Wix's root, so that is where to look.
@@ -354,14 +374,14 @@ export async function reimportBrokenPhotos(siteId: string, deadline?: number): P
   // a caller resumes from the cursor and moves it on, so the folder is
   // covered across passes rather than only ever its first pages (054).
   //
-  // A caller with no deadline is a person who pressed the button, and they
-  // mean the whole library -- as the read-only audit beside it already does.
-  // Resuming from wherever the background scan happened to be would report
-  // on the tail and silently leave the rest, right after an audit that swept
-  // everything: "12 broken" followed by "cleared 2", for no visible reason.
-  // It leaves the cursor alone too, so a manual sweep does not cost the
-  // background scan its place.
-  const { startOffset, advances } = scanWindow(deadline, site.media_scan_offset);
+  // A sweep from the Hub does not resume: the audit beside it reports from
+  // the start of the folder, so a repair that began wherever the background
+  // scan had reached would disagree with it for no visible reason -- "12
+  // broken" and then "cleared 2". It leaves the cursor alone as well, so
+  // pressing the button does not cost the background scan its place. Both
+  // are bounded, so both say when they did not reach the end, and the tail
+  // is the nightly's to cover.
+  const { startOffset, advances } = scanWindow(resume, site.media_scan_offset);
   const listing = await listMediaFiles(site.wix_site_id, folderId, { deadline, startOffset });
   if (advances) await setSiteMediaScanOffset(site.id, listing.nextOffset);
   const engineIds = new Set(await loadEngineFileIds(site.id));

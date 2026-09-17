@@ -418,7 +418,9 @@ describe("the nightly photo check", () => {
 
     await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
 
-    expect(reimportBrokenPhotos).toHaveBeenCalledWith(site.id, NOW.getTime() + 240_000);
+    // resume: the nightly carries the shared cursor on, so the folder is
+    // covered across runs. The Hub's sweep passes false and starts at the top.
+    expect(reimportBrokenPhotos).toHaveBeenCalledWith(site.id, { deadline: NOW.getTime() + 240_000, resume: true });
     expect(events).toContainEqual(expect.objectContaining({ level: "warn", kind: "photos_broken", message: expect.stringContaining("12 photo(s)") }));
   });
 

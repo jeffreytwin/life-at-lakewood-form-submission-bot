@@ -36,7 +36,7 @@ vi.mock("@/lib/wix/client", async (importOriginal) => {
 });
 
 import { listMediaFiles } from "@/lib/wix/client";
-import { AUDIT_FOLDER_BUDGET_MS, auditSite, compareCollection, compareFolder, scanWindow } from "@/lib/listings/audit";
+import { AUDIT_FOLDER_BUDGET_MS, REIMPORT_FOLDER_BUDGET_MS, auditSite, compareCollection, compareFolder, scanWindow } from "@/lib/listings/audit";
 
 const uri = (fileId: string) => `wix:image://v1/${fileId}/photo.jpg#originWidth=1600&originHeight=1066`;
 
@@ -83,21 +83,28 @@ describe("compareCollection", () => {
 });
 
 describe("scanWindow", () => {
-  it("resumes from the cursor and moves it on for a caller working to a clock", () => {
-    // The photo pass and the nightly sweep: the folder is covered across
-    // passes rather than only ever its first pages.
-    expect(scanWindow(Date.now() + 60_000, 20_000)).toEqual({ startOffset: 20_000, advances: true });
+  it("resumes from the cursor and moves it on for the nightly", () => {
+    // It covers the folder across runs rather than only ever its first pages.
+    expect(scanWindow(true, 20_000)).toEqual({ startOffset: 20_000, advances: true });
   });
 
-  it("sweeps the whole library for a person who pressed the button, and leaves the cursor alone", () => {
-    // Otherwise the audit reports on everything and the reimport beside it
-    // fixes only the tail: "12 broken" and then "cleared 2", for no visible
-    // reason. Parrish's cursor sat at 20,000 when this was found.
-    expect(scanWindow(undefined, 20_000)).toEqual({ startOffset: 0, advances: false });
+  it("starts at the beginning from the Hub, and leaves the cursor alone", () => {
+    // The audit beside it reports from the start of the folder, so a repair
+    // beginning wherever the background scan had reached would disagree with
+    // it for no visible reason: "12 broken" and then "cleared 2". Parrish's
+    // cursor sat at 20,000 when this was found.
+    expect(scanWindow(false, 20_000)).toEqual({ startOffset: 0, advances: false });
   });
 
   it("does not run off the front of the folder on a bad stored cursor", () => {
-    expect(scanWindow(Date.now() + 60_000, -5).startOffset).toBe(0);
+    expect(scanWindow(true, -5).startOffset).toBe(0);
+  });
+
+  it("keeps the Hub's sweep inside the route's budget", () => {
+    // maxDuration on the route is 120s. Unbounded, a folder the size of
+    // Parrish's walks past it and the repair comes back a 504 -- which is
+    // what the audit beside it was doing until AUDIT_FOLDER_BUDGET_MS.
+    expect(REIMPORT_FOLDER_BUDGET_MS).toBeLessThan(120_000);
   });
 });
 
