@@ -98,7 +98,7 @@ const village: VillageWithTerms = {
   active: true,
   active_listing_count: 0,
   zero_since: null,
-  terms: [{ term: "bay isles", street_term: null }],
+  terms: [{ term: "bay isles", street_term: null, exclude_term: null }],
 };
 
 function siteListing(listingId: string, patch: Partial<LsSiteListing> = {}): LsSiteListing {

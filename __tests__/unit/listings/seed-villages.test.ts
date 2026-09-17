@@ -145,7 +145,7 @@ describe("deriveVillageSeed on Life in Wellen Park's own rows", () => {
       active: true,
       active_listing_count: 0,
       zero_since: null,
-      terms: v.terms.map((term) => ({ term, street_term: null })),
+      terms: v.terms.map((term) => ({ term, street_term: null, exclude_term: null })),
     }));
     for (const [expected, subdivision] of WELLEN) {
       expect(matchVillage(subdivision, null, villages)?.name, subdivision).toBe(expected);

@@ -17,6 +17,7 @@ interface Term {
   id: string;
   term: string;
   street_term: string | null;
+  exclude_term: string | null;
 }
 
 interface Neighborhood {
@@ -245,7 +246,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
   }
 
   function removeTerm(neighborhood: Neighborhood, term: Term) {
-    const label = `"${term.term}"${term.street_term ? ` with street "${term.street_term}"` : ""}`;
+    const label = `"${term.term}"${term.street_term ? ` with street "${term.street_term}"` : ""}${term.exclude_term ? ` excluding "${term.exclude_term}"` : ""}`;
     if (!confirm(`Remove ${label} from ${neighborhood.name}? Listings that only matched through it leave the neighborhood on the next run.`)) return;
     call(`term:${term.id}`, `/api/internal/listings/villages/${neighborhood.id}/terms/${term.id}`, { method: "DELETE" });
   }
@@ -402,6 +403,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                               <span key={t.id} className="badge badge-info" style={{ textTransform: "none", display: "inline-flex", alignItems: "center", gap: 6 }}>
                                 {t.term}
                                 {t.street_term && <span className="text-muted">· street {t.street_term}</span>}
+                                {t.exclude_term && <span className="text-muted">· not {t.exclude_term}</span>}
                                 <button
                                   onClick={() => removeTerm(v, t)}
                                   disabled={busy !== null}

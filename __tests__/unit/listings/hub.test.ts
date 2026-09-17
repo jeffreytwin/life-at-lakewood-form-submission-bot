@@ -120,11 +120,27 @@ describe("guards", () => {
 
   it("adds a normalised term to its village's site", async () => {
     enqueue("ls_villages", { data: { id: "v1", site_id: "s1", name: "The Bayou" } });
-    enqueue("ls_village_terms", { data: { id: "t1", term: "bay isles", street_term: "bayou" } });
+    enqueue("ls_village_terms", { data: { id: "t1", term: "bay isles", street_term: "bayou", exclude_term: null } });
     const term = await addTerm("v1", { term: "Bay Isles", street_term: " Bayou " });
-    expect(term).toEqual({ id: "t1", term: "bay isles", street_term: "bayou" });
+    expect(term).toEqual({ id: "t1", term: "bay isles", street_term: "bayou", exclude_term: null });
     const insert = calls.find((c) => c.table === "ls_village_terms")!;
-    expect(insert.ops[0]).toBe('insert({"site_id":"s1","village_id":"v1","term":"bay isles","street_term":"bayou"})');
+    expect(insert.ops[0]).toBe('insert({"site_id":"s1","village_id":"v1","term":"bay isles","street_term":"bayou","exclude_term":null})');
+  });
+
+  it("normalises an exclusion alongside the term", async () => {
+    enqueue("ls_villages", { data: { id: "v1", site_id: "s1", name: "The Preserve" } });
+    enqueue("ls_village_terms", { data: { id: "t2", term: "preserve", street_term: null, exclude_term: "kensington" } });
+    const term = await addTerm("v1", { term: " Preserve ", exclude_term: " Kensington " });
+    expect(term).toEqual({ id: "t2", term: "preserve", street_term: null, exclude_term: "kensington" });
+    const insert = calls.find((c) => c.table === "ls_village_terms")!;
+    expect(insert.ops[0]).toBe('insert({"site_id":"s1","village_id":"v1","term":"preserve","street_term":null,"exclude_term":"kensington"})');
+  });
+
+  it("refuses an exclusion the term itself contains, which would match nothing", async () => {
+    enqueue("ls_villages", { data: { id: "v1", site_id: "s1", name: "The Preserve" } });
+    await expect(addTerm("v1", { term: "preserve at kensington", exclude_term: "kensington" })).rejects.toMatchObject({
+      message: '"preserve at kensington" always contains "kensington", so the exclusion would stop it matching anything',
+    });
   });
 
   it("only pauses or resumes a site, and never a live one", async () => {

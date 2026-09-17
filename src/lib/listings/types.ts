@@ -57,6 +57,8 @@ export interface LsVillage {
 export interface VillageTerm {
   term: string;
   street_term: string | null;
+  /** The term does not match when the subdivision also contains this (Wellen Park: "preserve" is The Preserve, unless it is Kensington's). */
+  exclude_term: string | null;
 }
 
 export interface VillageWithTerms extends LsVillage {

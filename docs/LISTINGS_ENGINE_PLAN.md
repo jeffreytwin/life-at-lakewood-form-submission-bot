@@ -1120,3 +1120,73 @@ of the live rows, the neighborhoods with the terms the import would derive
    today a term by hand.
 4. `active = true`, then Run Discovery from the Hub for the starting
    inventory, as Parrish did.
+
+### The dashboard code arrives (2026-09-17, same day)
+
+Jeff supplied Wellen Park's `backend/Fetch.jsw` and its dashboard page, so
+the neighborhoods are now transcribed from the process the engine replaces
+rather than derived from what the site happens to be showing —
+`scripts/listings-wellen-villages.mjs`, carried by **migration 052**: 21
+neighborhoods, 24 terms, the three tag ternaries, applied 2026-09-17.
+
+**The derivation held up, which is worth recording.** Run over the same
+site first, it found the 14 neighborhoods with listings on the crawl date
+and gave every one of them the same Wix item id the dashboard code has, and
+for 13 of 14 the same terms. Its one miss was Sarasota National, where it
+chose `sarasota` and the dashboard has `sarasota national` + `sarasota n`
+— the failure the derivation's own doc comment predicts, a term wider than
+the neighborhood it was read from. What it could not have found is the
+seven neighborhoods with nothing for sale that day (Antigua, Ashcombe,
+Avelina, Brightmore, Gran Place, Palmera, The Preserve), which is the real
+limit of reading a site's current inventory. `seed-villages.ts` stays the
+path for a site with no dashboard page to transcribe; where both exist, the
+dashboard wins.
+
+**`exclude_term` (migration 052).** The dashboard assigns The Preserve on
+`isThePreserve !== -1 && isKensington === -1`. Longest-term-wins settles a
+contest between two of a site's own neighborhoods, and Kensington is not
+one, so no longer term exists to beat `preserve`. `ls_village_terms` gains
+a nullable `exclude_term`: the term does not match when the subdivision
+contains it too. One user today; the Hub shows it on the chip
+("preserve · not kensington") and `addTerm` refuses an exclusion the term
+itself contains, which would match nothing.
+
+**Three things to watch on the first shadow run.**
+
+- **`preserve` reaches further here than it did there.** The old pipeline
+  pulled a hand-curated `MLS_id_list` and used these terms only to decide
+  which neighborhood an already-chosen listing belonged to. The engine has
+  no such list: it takes every Active listing in the market, so the same
+  terms are a filter now, and across Venice, North Port and Englewood
+  `preserve` will match more than Wellen Park's Preserve. Check The
+  Preserve's staged listings before cutover; `oasis`, `renaissance` and
+  `sarasota n` deserve the same glance. This is what shadow mode is for.
+- **The site will show more than it does today, and that is correct.** The
+  dashboard's `.filter()` returns `valData` from both branches, so it never
+  filtered — and its `isActive` test binds to the last `||` term only, so
+  status was never really checked either. What kept the site honest was the
+  curated id list. The engine applies status, property type, city, new
+  construction and the term match properly, so expect its inventory to
+  differ from the 153 rows in `HousesforSale`: more Wellen Park resales the
+  list never had, and fewer non-Active rows.
+- **Three neighborhood pages have no terms:** `esplanade`, `oakbend` and
+  `sunstone-lakeside` exist on the site but appear nowhere in the dashboard
+  chain, so they never received listings and still will not. (`sunstone`
+  catches "SUNSTONE LAKESIDE…" for Sunstone.) If any should have their own,
+  the Hub's Neighborhoods page is where to add them.
+
+The probe (`scripts/listings-wellen-probe.mjs`) now cross-checks the
+transcription instead of printing seed SQL: it runs every live listing
+through the transcribed terms and reports any row the terms would file
+somewhere other than where the site has it, then prints what the derivation
+would have said for comparison, so a neighborhood the dashboard chain has
+drifted away from shows up.
+
+**Jeff has created** `HousesforSale2` and the `WellenParkListingPhotos`
+folder (2026-09-17), so what is left before `active = true` is the probe
+and a read of the Neighborhoods page.
+
+**The MLSGrid token in `Fetch.jsw` is live and in plaintext** (the same key
+the engine uses from Vercel). Rotate it when the Wellen Park cutover
+deletes that file, as the Longboat Key runbook's step 7 already does for
+its Wix Secrets copy.

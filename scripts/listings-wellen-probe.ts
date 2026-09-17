@@ -17,18 +17,31 @@
 //      ls_sites.market_cities has to cover. Wellen Park sits across
 //      Venice, North Port and Englewood, so this is the one setting that
 //      cannot be read off a single city name.
-//   4. The neighborhoods, and the subdivision terms the site's own
-//      listings imply for them -- the exact output the
-//      `source: "site-collections"` village import would write, printed as
-//      SQL so it can be reviewed before anything is written.
+//   4. Whether the transcribed neighborhood terms (migration 052, from the
+//      site's dashboard page) still file every live listing where the site
+//      itself has it -- a regression check on the port -- and what the
+//      derivation in seed-villages.ts would have said instead, so a
+//      neighborhood the dashboard chain has drifted away from shows up.
 //   5. The Media Manager folders, so the photo folder in migration 051 can
 //      be confirmed to exist (a named folder that does not resolve holds
 //      every photo import for the site).
 
 import { getDataCollection, listMediaFolders, queryAllItems, type WixItemData } from "@/lib/wix/client";
 import { buildListingRecord } from "@/lib/listings/transform";
+import { matchVillage } from "@/lib/listings/classify";
 import { deriveVillageSeed, type ObservedListing } from "@/lib/listings/seed-villages";
 import type { VillageWithTerms } from "@/lib/listings/types";
+import { wellenVillages } from "./listings-wellen-villages.mjs";
+
+/** One neighborhood as scripts/listings-wellen-villages.mjs transcribes it. */
+interface TranscribedVillage {
+  name: string;
+  slug: string;
+  itemId: string;
+  pageUrl: string;
+  display: Record<string, string>;
+  terms: Array<{ term: string; exclude_term: string | null }>;
+}
 
 const SITE_ID = process.env.LS_WELLEN_SITE_ID || "1a8c2755-823e-4882-ae32-e6c108a30e39";
 const DOMAIN = process.env.LS_WELLEN_DOMAIN || "lifeinwellenpark.com";
@@ -40,7 +53,6 @@ const SYSTEM_FIELDS = new Set(["_id", "_owner", "_createdDate", "_updatedDate", 
 
 const log = (line = "") => console.log(line ? `WP: ${line}` : "");
 const text = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
-const sql = (s: string) => `'${s.replace(/'/g, "''")}'`;
 
 /** The fields the engine writes to a site's collection, from the transform itself. */
 function writtenFields(): string[] {
@@ -159,44 +171,58 @@ async function main() {
     villageItemId: text(item.data.village1),
     villageName: text(item.data.village),
   }));
-  const seed = deriveVillageSeed(neighborhoods, observed);
-  log(
-    `neighborhood seed: ${seed.villages.length} neighborhoods, ${seed.villages.reduce((n, v) => n + v.terms.length, 0)} terms, ` +
-      `${seed.skippedRows} unnamed row(s), ${seed.orphanListings} listing(s) filed under no neighborhood`
-  );
-  for (const village of seed.villages) {
-    log(`  ${village.name} [${village.wix_item_id}]`);
-    log(`      terms: ${village.terms.join(" | ") || "(none -- no listing to learn from; add one in the Hub)"}`);
-    if (village.subdivisions.length) log(`      from:  ${village.subdivisions.join(" / ")}`);
-    if (village.uncovered.length) log(`      NOT COVERED: ${village.uncovered.join(" / ")}`);
-  }
-  if (seed.termless.length) log(`termless neighborhoods (${seed.termless.length}): ${seed.termless.join(", ")}`);
+  // The terms migration 052 carries, against the rows the site has now:
+  // every live listing should land back on the neighborhood it already sits
+  // in. A mismatch means the transcription drifted from the dashboard, or
+  // the dashboard has since changed.
+  const transcribed = wellenVillages() as unknown as TranscribedVillage[];
+  const asVillages: VillageWithTerms[] = transcribed.map((v) => ({
+    id: v.itemId,
+    site_id: "wellen",
+    name: v.name,
+    wix_slug: v.slug,
+    wix_item_id: v.itemId,
+    page_url: v.pageUrl,
+    display: v.display,
+    active: true,
+    active_listing_count: 0,
+    zero_since: null,
+    terms: v.terms.map((t) => ({ term: t.term, street_term: null, exclude_term: t.exclude_term })),
+  }));
+  log(`transcribed seed (migration 052): ${transcribed.length} neighborhoods, ${transcribed.reduce((n, v) => n + v.terms.length, 0)} terms`);
 
-  // The same rows as SQL, for review before the import writes them.
-  log();
-  log(`-- ${seed.villages.length} neighborhoods, ${seed.villages.reduce((n, v) => n + v.terms.length, 0)} terms, from ${DOMAIN}'s own collections`);
-  log(`WITH site AS (SELECT id FROM ls_sites WHERE domain = ${sql(DOMAIN)}),`);
-  log(`village_rows(name, wix_slug, wix_item_id, page_url, display) AS (VALUES`);
-  log(
-    seed.villages
-      .map((v) => `    (${sql(v.name)}, ${v.wix_slug ? sql(v.wix_slug) : "NULL"}, ${sql(v.wix_item_id)}, ${v.page_url ? sql(v.page_url) : "NULL"}, ${sql(JSON.stringify(v.display))}::jsonb)`)
-      .join(",\n")
-  );
-  log(`)`);
-  log(`INSERT INTO ls_villages (site_id, name, wix_slug, wix_item_id, page_url, display)`);
-  log(`SELECT site.id, v.name, v.wix_slug, v.wix_item_id, v.page_url, v.display FROM village_rows v, site`);
-  log(`ON CONFLICT (site_id, name) DO UPDATE SET wix_slug = EXCLUDED.wix_slug, wix_item_id = EXCLUDED.wix_item_id, page_url = EXCLUDED.page_url, display = EXCLUDED.display, updated_at = now();`);
-  const termRows = seed.villages.flatMap((v) => v.terms.map((t) => `    (${sql(v.name)}, ${sql(t)})`));
-  if (termRows.length) {
-    log();
-    log(`WITH site AS (SELECT id FROM ls_sites WHERE domain = ${sql(DOMAIN)}),`);
-    log(`term_rows(village_name, term) AS (VALUES`);
-    log(termRows.join(",\n"));
-    log(`)`);
-    log(`INSERT INTO ls_village_terms (site_id, village_id, term)`);
-    log(`SELECT site.id, v.id, t.term FROM term_rows t JOIN site ON true JOIN ls_villages v ON v.site_id = site.id AND v.name = t.village_name`);
-    log(`ON CONFLICT DO NOTHING;`);
+  let agreed = 0;
+  const mismatches: string[] = [];
+  const unclaimed: string[] = [];
+  for (const item of listingItems) {
+    const subdivision = text(item.data.subdivision);
+    const site = text(item.data.village);
+    if (!subdivision || !site) continue;
+    const mine = matchVillage(subdivision, null, asVillages)?.name ?? null;
+    if (mine === site) agreed += 1;
+    else if (mine === null) unclaimed.push(`${subdivision} -> the site says ${site}, the terms match nothing`);
+    else mismatches.push(`${subdivision} -> the site says ${site}, the terms say ${mine}`);
   }
+  log(`the terms agree with the site on ${agreed} of ${agreed + mismatches.length + unclaimed.length} rows`);
+  for (const line of [...mismatches, ...unclaimed]) log(`  MISMATCH ${line}`);
+
+  // What the site's own data would have implied, for comparison: a
+  // neighborhood or spelling here that the transcription lacks is one the
+  // dashboard chain has drifted away from.
+  const seed = deriveVillageSeed(neighborhoods, observed);
+  const known = new Map(transcribed.map((v) => [v.name, v]));
+  log(`derived seed, for comparison: ${seed.villages.length} neighborhoods, ${seed.villages.reduce((n, v) => n + v.terms.length, 0)} terms, ${seed.orphanListings} listing(s) filed under no neighborhood`);
+  for (const village of seed.villages) {
+    const match = known.get(village.name);
+    if (!match) {
+      log(`  NOT IN 052: ${village.name} [${village.wix_item_id}] terms ${village.terms.join(" | ") || "(none)"}`);
+      continue;
+    }
+    if (match.itemId !== village.wix_item_id) log(`  ITEM ID DIFFERS: ${village.name} -- 052 has ${match.itemId}, the site's rows point at ${village.wix_item_id}`);
+    const extra = village.terms.filter((t) => !match.terms.some((m) => t.includes(m.term)));
+    if (extra.length) log(`  ${village.name}: the site's rows also suggest ${extra.join(" | ")}`);
+  }
+  if (seed.termless.length) log(`neighborhoods with nothing for sale today: ${seed.termless.join(", ")}`);
   log();
 
   // ---- 5. Media Manager ----

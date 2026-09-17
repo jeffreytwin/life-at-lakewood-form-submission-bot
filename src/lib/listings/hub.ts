@@ -117,8 +117,8 @@ export interface VillageView extends LsVillage {
 export async function listVillages(siteId: string): Promise<VillageView[]> {
   const [villages, terms, listings] = await Promise.all([
     selectAll<LsVillage>("load villages", (from, to) => supabase.from("ls_villages").select("*").eq("site_id", siteId).order("name").range(from, to)),
-    selectAll<{ id: string; village_id: string; term: string; street_term: string | null }>("load village terms", (from, to) =>
-      supabase.from("ls_village_terms").select("id, village_id, term, street_term").eq("site_id", siteId).order("term").range(from, to)
+    selectAll<{ id: string; village_id: string; term: string; street_term: string | null; exclude_term: string | null }>("load village terms", (from, to) =>
+      supabase.from("ls_village_terms").select("id, village_id, term, street_term, exclude_term").eq("site_id", siteId).order("term").range(from, to)
     ),
     selectAll<{ village_id: string | null; state: string }>("load site listings", (from, to) =>
       supabase.from("ls_site_listings").select("village_id, state").eq("site_id", siteId).in("state", ["staged", "live"]).order("id").range(from, to)
@@ -126,7 +126,7 @@ export async function listVillages(siteId: string): Promise<VillageView[]> {
   ]);
   const byVillage = new Map<string, VillageView>();
   for (const v of villages) byVillage.set(v.id, { ...v, terms: [], liveListings: 0, stagedListings: 0 });
-  for (const t of terms) byVillage.get(t.village_id)?.terms.push({ id: t.id, term: t.term, street_term: t.street_term });
+  for (const t of terms) byVillage.get(t.village_id)?.terms.push({ id: t.id, term: t.term, street_term: t.street_term, exclude_term: t.exclude_term });
   for (const l of listings) {
     const v = l.village_id ? byVillage.get(l.village_id) : undefined;
     if (!v) continue;
@@ -202,15 +202,22 @@ export async function deleteVillage(id: string): Promise<void> {
   if (error) throw new HubError(`delete village: ${errorMessage(error)}`, 500);
 }
 
-export async function addTerm(villageId: string, input: { term: unknown; street_term?: unknown }): Promise<{ id: string; term: string; street_term: string | null }> {
+export async function addTerm(
+  villageId: string,
+  input: { term: unknown; street_term?: unknown; exclude_term?: unknown }
+): Promise<{ id: string; term: string; street_term: string | null; exclude_term: string | null }> {
   const village = await loadVillage(villageId);
   const term = normalizeTerm(input.term);
   if (!term) throw new HubError("A term needs some text");
   const street_term = normalizeTerm(input.street_term);
+  const exclude_term = normalizeTerm(input.exclude_term);
+  if (exclude_term && term.includes(exclude_term)) {
+    throw new HubError(`"${term}" always contains "${exclude_term}", so the exclusion would stop it matching anything`);
+  }
   const { data, error } = await supabase
     .from("ls_village_terms")
-    .insert({ site_id: village.site_id, village_id: village.id, term, street_term })
-    .select("id, term, street_term")
+    .insert({ site_id: village.site_id, village_id: village.id, term, street_term, exclude_term })
+    .select("id, term, street_term, exclude_term")
     .single();
   if (error) {
     if (isUniqueViolation(error)) {
@@ -219,7 +226,7 @@ export async function addTerm(villageId: string, input: { term: unknown; street_
     }
     throw new HubError(`add term: ${errorMessage(error)}`, 500);
   }
-  return data as { id: string; term: string; street_term: string | null };
+  return data as { id: string; term: string; street_term: string | null; exclude_term: string | null };
 }
 
 async function termOwner(siteId: string, term: string, streetTerm: string | null): Promise<string | null> {
