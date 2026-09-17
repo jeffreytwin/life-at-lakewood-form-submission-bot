@@ -468,6 +468,40 @@ export async function listMediaFiles(
   return { files, truncated: true, nextOffset: offset, shape };
 }
 
+export interface MediaFileProbe {
+  /** The path asked for, so the report says what was tried. */
+  path: string;
+  ok: boolean;
+  /** HTTP status when the call failed, or null when it threw for another reason. */
+  status: number | null;
+  /** The envelope, key names only, when it succeeded. */
+  shape: string[];
+  /** Why it failed, trimmed. */
+  error: string | null;
+}
+
+/**
+ * Asks Wix about one file by id, and reports what came back.
+ *
+ * Listing a folder is the wrong shape for the question the engine actually
+ * has, which is never "what is in this folder" but always "does Wix hold a
+ * picture for this file". Per-file lookup would not depend on paging at all,
+ * and would ask only about the engine's own photos rather than wading through
+ * an orphan-filled folder. Whether that endpoint exists on this API is the
+ * other thing worth knowing from the one diagnostic press, so it is asked
+ * alongside the listing's shape.
+ */
+export async function probeMediaFile(siteId: string, fileId: string): Promise<MediaFileProbe> {
+  const path = `/site-media/v1/files/${encodeURIComponent(fileId)}`;
+  try {
+    const res = await wixRequest<unknown>(siteId, "GET", path);
+    return { path, ok: true, status: 200, shape: envelopeShape(res), error: null };
+  } catch (error) {
+    const status = error instanceof WixApiError ? error.status : null;
+    return { path, ok: false, status, shape: [], error: (error instanceof Error ? error.message : String(error)).slice(0, 200) };
+  }
+}
+
 export async function findMediaFolder(siteId: string, displayName: string): Promise<WixMediaFolder | null> {
   const wanted = displayName.trim().toLowerCase();
   const folders = await listMediaFolders(siteId);

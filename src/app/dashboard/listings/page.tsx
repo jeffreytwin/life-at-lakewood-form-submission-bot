@@ -119,6 +119,7 @@ interface AuditReport {
     listingTruncated: boolean;
     comparedToFolder: boolean;
     listingShape: string[];
+    fileProbe: { path: string; ok: boolean; status: number | null; shape: string[]; error: string | null } | null;
     engineFiles: number;
     engineFilesInFolder: number;
     outsideFolder: string[];
@@ -603,7 +604,7 @@ export default function ListingsOverviewPage() {
                           : !f.resolved
                             ? `"${a.site.media_folder_name}" not resolved yet (no import has run for this location)`
                             : !f.comparedToFolder
-                              ? `"${a.site.media_folder_name}": the listing stopped after ${f.filesInFolder} file(s), so the engine's ${f.engineFiles} photo(s) could not be checked against it. A photo the walk never reached looks the same as one that is not there, so no count is given.${f.listingShape.length ? ` The endpoint answered with: ${f.listingShape.join(" ")}.` : ""}`
+                              ? `"${a.site.media_folder_name}": the listing stopped after ${f.filesInFolder} file(s), so the engine's ${f.engineFiles} photo(s) could not be checked against it. A photo the walk never reached looks the same as one that is not there, so no count is given.${f.listingShape.length ? ` The endpoint answered with: ${f.listingShape.join(" ")}.` : ""}${f.fileProbe ? ` Asking for one file directly (${f.fileProbe.path}): ${f.fileProbe.ok ? `worked, answering with ${f.fileProbe.shape.join(" ")}` : `${f.fileProbe.status ?? "failed"} ${f.fileProbe.error ?? ""}`}.` : ""}`
                               : `"${a.site.media_folder_name}" holds ${f.filesInFolder} file(s); the engine holds ${f.engineFiles} photo(s), ${f.engineFilesInFolder} in the folder, ${f.outsideFolderCount} outside${f.outsideFolder.length ? ` (${f.outsideFolder.slice(0, 5).join(", ")}${f.outsideFolderCount > 5 ? ", …" : ""})` : ""}; ${f.unknownInFolder} file(s) in the folder are not the engine's`}
                       </div>
                       {f.resolved && (f.brokenFiles > 0 || f.pendingFiles > 0) && (

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/shared/logger", () => ({ logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 // A chain just deep enough for loadSite; the rest of the reads go through
@@ -31,14 +31,22 @@ vi.mock("@/lib/wix/client", async (importOriginal) => {
     mediaState: actual.mediaState,
     bulkRemoveItems: vi.fn(),
     listMediaFiles: vi.fn(async () => ({ files: [], truncated: false, nextOffset: 0 })),
+    probeMediaFile: vi.fn(async () => ({ path: "/site-media/v1/files/f1", ok: false, status: 404, shape: [], error: "not found" })),
     queryAllItems: vi.fn(async () => []),
   };
 });
 
-import { listMediaFiles } from "@/lib/wix/client";
+import { listMediaFiles, probeMediaFile } from "@/lib/wix/client";
+import { selectAll } from "@/lib/listings/db";
 import { AUDIT_FOLDER_BUDGET_MS, REIMPORT_FOLDER_BUDGET_MS, auditSite, compareCollection, compareFolder, scanWindow } from "@/lib/listings/audit";
 
 const uri = (fileId: string) => `wix:image://v1/${fileId}/photo.jpg#originWidth=1600&originHeight=1066`;
+
+// Call history carries between tests otherwise; the factory implementations
+// above survive, which is what clearAllMocks (not resetAllMocks) does.
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("compareFolder", () => {
   it("counts engine photos in and outside the folder, and folder files the engine does not know", () => {
@@ -127,6 +135,29 @@ describe("auditSite's folder walk", () => {
     // maxDuration on the route is 120s; the folder walk is only the first
     // half of the audit.
     expect(AUDIT_FOLDER_BUDGET_MS).toBeLessThan(120_000 / 2);
+  });
+
+  it("asks Wix about one file directly when the listing could not finish", async () => {
+    // The listing being unusable is exactly when it matters whether a
+    // per-file lookup works: that path would not depend on folder paging at
+    // all. Never fails the audit -- "no" is an answer worth having.
+    vi.mocked(listMediaFiles).mockResolvedValueOnce({ files: [], truncated: true, nextOffset: 0, shape: ["files[100]"] });
+    vi.mocked(selectAll).mockResolvedValueOnce([{ wix_file_id: "f1", wix_image_uri: "" }] as never);
+
+    const report = await auditSite("site-parrish", Date.now());
+
+    expect(probeMediaFile).toHaveBeenCalledWith("wix-parrish", "f1");
+    expect(report.folder.listingShape).toEqual(["files[100]"]);
+    expect(report.folder.fileProbe?.status).toBe(404);
+  });
+
+  it("does not ask about a file when the listing finished", async () => {
+    vi.mocked(listMediaFiles).mockResolvedValueOnce({ files: [], truncated: false, nextOffset: 0, shape: [] });
+
+    const report = await auditSite("site-parrish", Date.now());
+
+    expect(probeMediaFile).not.toHaveBeenCalled();
+    expect(report.folder.fileProbe).toBeNull();
   });
 
   it("starts at the beginning, not at the background scan's cursor", async () => {
