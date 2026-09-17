@@ -40,7 +40,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
-import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, STORE_RETRIES, STORE_RETRY_MS, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, VERIFY_AFTER_MS, VERIFY_GIVE_UP_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { declaredLength, displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, STORE_RETRIES, STORE_RETRY_MS, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, VERIFY_AFTER_MS, VERIFY_GIVE_UP_MS, type PhotoDeps } from "@/lib/listings/photos";
 import { WIX_MEDIA_ROOT, WixApiError } from "@/lib/wix/client";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
@@ -285,6 +285,28 @@ describe("runPhotoJob", () => {
     expect(deps.download).toHaveBeenCalledTimes(1);
     expect(deps.download).toHaveBeenCalledWith(expect.stringContaining("/p2.jpeg"));
     expect(summary).toMatchObject({ downloaded: 1, imported: 1 });
+  });
+});
+
+describe("what the server said it was sending", () => {
+  const headers = (h: Record<string, string>) => new Headers(h);
+
+  it("takes a plain content-length", () => {
+    expect(declaredLength(headers({ "content-length": "4096" }))).toBe(4096);
+  });
+
+  it("ignores it on a compressed response, where it describes different bytes", () => {
+    // fetch decompresses transparently: the header counts the compressed
+    // body, arrayBuffer() returns the decompressed one. Comparing them would
+    // call every photo truncated and stop the pipeline dead.
+    expect(declaredLength(headers({ "content-length": "1200", "content-encoding": "gzip" }))).toBeNull();
+    expect(declaredLength(headers({ "content-length": "1200", "content-encoding": "br" }))).toBeNull();
+  });
+
+  it("says nothing when the server said nothing, or said nonsense", () => {
+    expect(declaredLength(headers({}))).toBeNull();
+    expect(declaredLength(headers({ "content-length": "0" }))).toBeNull();
+    expect(declaredLength(headers({ "content-length": "banana" }))).toBeNull();
   });
 });
 

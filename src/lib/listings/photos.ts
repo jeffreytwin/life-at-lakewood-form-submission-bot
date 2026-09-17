@@ -183,12 +183,11 @@ function defaultDeps(): PhotoDeps {
       try {
         const res = await fetch(url, { signal: controller.signal, headers: { accept: "image/*" } });
         const bytes = res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
-        const declared = Number(res.headers.get("content-length"));
         return {
           status: res.status,
           bytes,
           contentType: res.headers.get("content-type"),
-          contentLength: Number.isFinite(declared) && declared > 0 ? declared : null,
+          contentLength: declaredLength(res.headers),
         };
       } finally {
         clearTimeout(timer);
@@ -204,6 +203,24 @@ function defaultDeps(): PhotoDeps {
     listFiles: (wixSiteId, parentFolderId, options) => listMediaFiles(wixSiteId, parentFolderId, options),
     cacheFolder: (siteId, folderId) => db.setSiteMediaFolderId(siteId, folderId),
   };
+}
+
+/**
+ * The size the server said it was sending, when that is comparable with what
+ * we received -- and null when it is not, which is the whole point of it
+ * being a function.
+ *
+ * fetch decompresses transparently, so on a content-encoded response
+ * content-length describes the compressed bytes while arrayBuffer() hands
+ * back the decompressed ones. The two can never match, and comparing them
+ * would call every photo truncated and stop the pipeline dead. Images are
+ * already compressed and are not normally encoded again, but a CDN in front
+ * of the media host is free to, so this checks rather than assumes.
+ */
+export function declaredLength(headers: Headers): number | null {
+  if (headers.get("content-encoding")) return null;
+  const declared = Number(headers.get("content-length"));
+  return Number.isFinite(declared) && declared > 0 ? declared : null;
 }
 
 const iso = (ms: number): string => new Date(ms).toISOString();
