@@ -120,6 +120,8 @@ export interface DownloadResult {
   status: number;
   bytes: Uint8Array | null;
   contentType: string | null;
+  /** What the server said it was sending, when it said; null when it did not. */
+  contentLength: number | null;
 }
 
 /** The job's IO, injectable for tests. */
@@ -181,7 +183,13 @@ function defaultDeps(): PhotoDeps {
       try {
         const res = await fetch(url, { signal: controller.signal, headers: { accept: "image/*" } });
         const bytes = res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
-        return { status: res.status, bytes, contentType: res.headers.get("content-type") };
+        const declared = Number(res.headers.get("content-length"));
+        return {
+          status: res.status,
+          bytes,
+          contentType: res.headers.get("content-type"),
+          contentLength: Number.isFinite(declared) && declared > 0 ? declared : null,
+        };
       } finally {
         clearTimeout(timer);
       }
@@ -243,7 +251,7 @@ interface DownloadOutcome {
   exhausted?: boolean;
 }
 
-async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, summary: PhotoSummary, run: RunHandle): Promise<DownloadOutcome> {
+async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, summary: PhotoSummary, run: RunHandle, deadline: number): Promise<DownloadOutcome> {
   const attempt = m.download_attempts + 1;
   const at = deps.now();
   // Set once the bytes have arrived: from there a failure is not the
@@ -255,6 +263,15 @@ async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, 
       throw new Error(`HTTP ${res.status}${res.status === 429 ? " (the media host allows one download per photo per hour)" : ""}`);
     }
     if (res.contentType && !res.contentType.toLowerCase().startsWith("image/")) throw new Error(`unexpected content type ${res.contentType}`);
+    // A body cut short can still resolve: fetch only rejects when the stream
+    // errors, not when a proxy closes it cleanly early. The bytes would hash,
+    // store and import perfectly well, and a truncated JPEG still decodes --
+    // so Wix would hold a picture, verification would pass it, and half a
+    // photo would reach the site with nothing to say so. Comparing against
+    // what the server said it was sending is the only place this is visible.
+    if (res.contentLength !== null && res.bytes.byteLength !== res.contentLength) {
+      throw new Error(`truncated download: ${res.bytes.byteLength} of ${res.contentLength} bytes`);
+    }
     const hash = createHash("sha256").update(res.bytes).digest("hex");
     // The bytes are here, so the photo's one download for this hour is spent
     // whatever happens next. A failure from here on is ours -- the storage
@@ -272,9 +289,15 @@ async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, 
         }
         break;
       } catch (error) {
-        if (tries >= STORE_RETRIES) throw error;
+        // pool() only tests the deadline between photos, never inside one, so
+        // an unbounded backoff here runs the pass past it -- and the reserve
+        // it would eat is the one that keeps a run from being killed at
+        // stage=write. Past the deadline the photo simply waits for the next
+        // pass, which is what a truncated pass is for.
+        const wait = STORE_RETRY_MS * (tries + 1);
+        if (tries >= STORE_RETRIES || deps.now() + wait > deadline) throw error;
         summary.storeRetries += 1;
-        await deps.sleep(STORE_RETRY_MS * (tries + 1));
+        await deps.sleep(wait);
       }
     }
     await db.updateListingMedia(m.media_id, {
@@ -522,7 +545,7 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
         pendingDownloads.push({ m, url });
       }
       if (await pool(pendingDownloads, DOWNLOAD_CONCURRENCY, overdue, async ({ m, url }) => {
-        const outcome = await downloadOne(m, url, deps, summary, run);
+        const outcome = await downloadOne(m, url, deps, summary, run, opts.deadline);
         if (!outcome.ok) {
           downloads.failed += 1;
           downloads.lastError = outcome.error ?? "";
@@ -736,6 +759,15 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
       summary.truncated = true;
       break;
     }
+  }
+  // Said once per pass rather than per photo. A retry that is never mentioned
+  // is the failure mode this whole path exists to avoid: the pass reports
+  // perfect health while the database is being hammered, and the first sign
+  // of trouble is a photo that missed its gallery.
+  if (summary.storeRetries) {
+    run.event("warn", "store_retried", `${summary.storeRetries} storage write(s) failed and were retried in place; the photos landed but the database is under pressure`, {
+      details: { retries: summary.storeRetries, downloaded: summary.downloaded },
+    });
   }
   return summary;
 }

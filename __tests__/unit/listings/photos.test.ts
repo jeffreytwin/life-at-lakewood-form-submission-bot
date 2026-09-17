@@ -125,7 +125,7 @@ function fakeDeps(overrides: Partial<PhotoDeps> = {}): PhotoDeps {
   return {
     now: () => NOW,
     sleep: async () => {},
-    download: vi.fn(async () => ({ status: 200, bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg" })),
+    download: vi.fn(async () => ({ status: 200, bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg", contentLength: null })),
     store: vi.fn(async () => {}),
     publicUrl: (path: string) => `https://cdn.test/${path}`,
     importToWix: vi.fn(async () => ({ id: `file-${++fileNo}` })),
@@ -200,7 +200,7 @@ describe("runPhotoJob", () => {
 
   it("waits an hour after a failed download and reports it as a warning", async () => {
     vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
-    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 429, bytes: null, contentType: null })) });
+    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 429, bytes: null, contentType: null, contentLength: null })) });
     const { handle, events } = fakeRun();
 
     const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -218,7 +218,7 @@ describe("runPhotoJob", () => {
 
   it("raises an error only once a photo has used up its hourly download attempts", async () => {
     vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { download_attempts: MAX_DOWNLOAD_ATTEMPTS - 1 })]);
-    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 404, bytes: null, contentType: null })) });
+    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 404, bytes: null, contentType: null, contentLength: null })) });
     const { handle, events } = fakeRun();
 
     await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -288,6 +288,57 @@ describe("runPhotoJob", () => {
   });
 });
 
+describe("a download the server cut short", () => {
+  const body = (bytes: number, declared: number | null) => ({
+    status: 200,
+    bytes: new Uint8Array(bytes),
+    contentType: "image/jpeg",
+    contentLength: declared,
+  });
+
+  it("refuses bytes that fall short of what the server said it was sending", async () => {
+    // fetch only rejects when the stream errors; a proxy that closes cleanly
+    // early resolves with a short body. Those bytes hash, store and import
+    // perfectly well, and a truncated JPEG still decodes -- so Wix would hold
+    // a picture and the verification pass would wave it through.
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
+    const deps = fakeDeps({ download: vi.fn(async () => body(900, 4096)) });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(deps.store).not.toHaveBeenCalled();
+    expect(summary).toMatchObject({ downloaded: 0, imported: 0, failed: 1 });
+    expect(events).toContainEqual(expect.objectContaining({
+      level: "warn",
+      kind: "download_failed",
+      message: expect.stringContaining("truncated download: 900 of 4096 bytes"),
+    }));
+  });
+
+  it("accepts a whole body", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
+    const deps = fakeDeps({ download: vi.fn(async () => body(4096, 4096)) });
+    const { handle } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(summary).toMatchObject({ downloaded: 1, imported: 1, failed: 0 });
+  });
+
+  it("takes the body on trust when the server declared no length", async () => {
+    // Not every server sends content-length, and a chunked response has none.
+    // Absent is not evidence of truncation, so it is not treated as such.
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
+    const deps = fakeDeps({ download: vi.fn(async () => body(900, null)) });
+    const { handle } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(summary).toMatchObject({ downloaded: 1, failed: 0 });
+  });
+});
+
 describe("a storage write that fails for a reason of ours", () => {
   const poolExhausted = () => new Error("storage upload: Too many connections issued to the database");
 
@@ -342,9 +393,39 @@ describe("a storage write that fails for a reason of ours", () => {
     expect(events).toContainEqual(expect.objectContaining({ level: "warn", kind: "download_failed" }));
   });
 
+  it("says once that it retried, so a struggling database is not silent", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
+    const store = vi.fn().mockRejectedValueOnce(poolExhausted()).mockResolvedValue(undefined);
+    const { handle, events } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps: fakeDeps({ store }) });
+
+    expect(events).toContainEqual(expect.objectContaining({
+      level: "warn",
+      kind: "store_retried",
+      message: expect.stringContaining("1 storage write(s) failed and were retried in place"),
+    }));
+  });
+
+  it("does not back off past the pass deadline", async () => {
+    // pool() only tests the deadline between photos, so a backoff inside one
+    // runs the pass over -- eating the reserve that keeps a run from being
+    // killed at stage=write.
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
+    const sleep = vi.fn<(ms: number) => Promise<void>>(async () => {});
+    const store = vi.fn().mockRejectedValue(poolExhausted());
+    const { handle } = fakeRun();
+
+    // Only a second left: not enough for even the first 2s backoff.
+    await runPhotoJob({ run: handle, deadline: NOW + 1_000, sites: [site], deps: fakeDeps({ store, sleep }) });
+
+    expect(store).toHaveBeenCalledTimes(1);
+    expect(sleep.mock.calls.map((c) => c[0])).not.toContain(STORE_RETRY_MS);
+  });
+
   it("still spends an attempt when the download itself is what failed", async () => {
     vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { download_attempts: 4 })]);
-    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 429, bytes: null, contentType: null })) });
+    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 429, bytes: null, contentType: null, contentLength: null })) });
     const { handle } = fakeRun();
 
     await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
@@ -576,7 +657,7 @@ describe("concurrent passes", () => {
         peakDownloads = Math.max(peakDownloads, downloadsInFlight);
         await new Promise((r) => setTimeout(r, 1));
         downloadsInFlight -= 1;
-        return { status: 200, bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg" };
+        return { status: 200, bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg", contentLength: null };
       }),
       importToWix: vi.fn(async () => {
         importsInFlight += 1;
