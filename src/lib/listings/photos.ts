@@ -28,6 +28,15 @@ export const FRESH_URL_MS = 50 * 60_000;
 export const RETRY_AFTER_MS = 65 * 60_000;
 /** A Wix import that failed is retried after this long. */
 export const IMPORT_RETRY_MS = 30 * 60_000;
+/**
+ * A storage write that failed for a reason of ours -- the Supabase pool
+ * under a heavy pass, "Too many connections issued to the database" -- is
+ * retried in place with the bytes already in hand, rather than throwing the
+ * download away and waiting out the media host's hour for a second copy of
+ * what we are already holding. Seconds, not an hour.
+ */
+export const STORE_RETRY_MS = 2_000;
+export const STORE_RETRIES = 3;
 /** After this many failed downloads a photo waits a day between attempts. */
 export const MAX_DOWNLOAD_ATTEMPTS = 6;
 export const LONG_RETRY_MS = 24 * 3600_000;
@@ -143,6 +152,8 @@ export interface PhotoSummary {
   verified: number;
   /** Imports Wix never fetched; dropped so they are imported again, and never shown. */
   unverified: number;
+  /** Storage writes that failed and were retried in place rather than costing the photo an hour. */
+  storeRetries: number;
   /** True when the deadline stopped the job with work left. */
   truncated: boolean;
 }
@@ -158,7 +169,7 @@ export interface PhotoJobOptions {
   shadowGraceMinutes?: number;
 }
 
-export const emptyPhotoSummary = (): PhotoSummary => ({ listings: 0, refreshed: 0, downloaded: 0, reused: 0, imported: 0, failed: 0, verified: 0, unverified: 0, truncated: false });
+export const emptyPhotoSummary = (): PhotoSummary => ({ listings: 0, refreshed: 0, downloaded: 0, reused: 0, imported: 0, failed: 0, verified: 0, unverified: 0, storeRetries: 0, truncated: false });
 
 function defaultDeps(): PhotoDeps {
   return {
@@ -235,6 +246,9 @@ interface DownloadOutcome {
 async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, summary: PhotoSummary, run: RunHandle): Promise<DownloadOutcome> {
   const attempt = m.download_attempts + 1;
   const at = deps.now();
+  // Set once the bytes have arrived: from there a failure is not the
+  // photo's, and must not spend one of its attempts (see below).
+  let spent = false;
   try {
     const res = await deps.download(url);
     if (res.status !== 200 || !res.bytes || !res.bytes.byteLength) {
@@ -242,11 +256,26 @@ async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, 
     }
     if (res.contentType && !res.contentType.toLowerCase().startsWith("image/")) throw new Error(`unexpected content type ${res.contentType}`);
     const hash = createHash("sha256").update(res.bytes).digest("hex");
-    let storagePath = await db.findStoredByHash(hash);
-    if (storagePath) summary.reused += 1;
-    else {
-      storagePath = storagePathFor(m.path_key);
-      await deps.store(storagePath, res.bytes, res.contentType ?? contentTypeFor(m.path_key));
+    // The bytes are here, so the photo's one download for this hour is spent
+    // whatever happens next. A failure from here on is ours -- the storage
+    // write or the row that records it -- so it is worth another go straight
+    // away instead of costing the photo an hour and an attempt.
+    spent = true;
+    let storagePath: string | null = null;
+    for (let tries = 0; ; tries += 1) {
+      try {
+        storagePath = await db.findStoredByHash(hash);
+        if (storagePath) summary.reused += 1;
+        else {
+          storagePath = storagePathFor(m.path_key);
+          await deps.store(storagePath, res.bytes, res.contentType ?? contentTypeFor(m.path_key));
+        }
+        break;
+      } catch (error) {
+        if (tries >= STORE_RETRIES) throw error;
+        summary.storeRetries += 1;
+        await deps.sleep(STORE_RETRY_MS * (tries + 1));
+      }
     }
     await db.updateListingMedia(m.media_id, {
       storage_path: storagePath,
@@ -265,9 +294,15 @@ async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, 
     return { ok: true };
   } catch (error) {
     const message = errorMessage(error);
-    const retryAt = at + (attempt >= MAX_DOWNLOAD_ATTEMPTS ? LONG_RETRY_MS : RETRY_AFTER_MS);
+    // A storage failure that outlived its retries leaves the photo waiting
+    // the media host's hour all the same -- its download is spent and only a
+    // fresh one can replace it -- but it does not count against the six
+    // attempts that drop a photo to a daily retry. Those are for a photo the
+    // MLS will not give us; this one it gave us, and we dropped it.
+    const attempts = spent ? m.download_attempts : attempt;
+    const retryAt = at + (attempts >= MAX_DOWNLOAD_ATTEMPTS ? LONG_RETRY_MS : RETRY_AFTER_MS);
     await db.updateListingMedia(m.media_id, {
-      download_attempts: attempt,
+      download_attempts: attempts,
       last_attempt_at: iso(at),
       retry_after: iso(retryAt),
       last_error: message.slice(0, 500),
@@ -275,7 +310,7 @@ async function downloadOne(m: db.PhotoBacklogRow, url: string, deps: PhotoDeps, 
     m.retry_after = iso(retryAt);
     summary.failed += 1;
     run.counts.images_failed += 1;
-    return { ok: false, error: message, retryAt, exhausted: attempt >= MAX_DOWNLOAD_ATTEMPTS };
+    return { ok: false, error: message, retryAt, exhausted: attempts >= MAX_DOWNLOAD_ATTEMPTS };
   }
 }
 

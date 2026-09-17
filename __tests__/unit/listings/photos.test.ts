@@ -40,7 +40,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
-import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, VERIFY_AFTER_MS, VERIFY_GIVE_UP_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, STORE_RETRIES, STORE_RETRY_MS, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, VERIFY_AFTER_MS, VERIFY_GIVE_UP_MS, type PhotoDeps } from "@/lib/listings/photos";
 import { WIX_MEDIA_ROOT, WixApiError } from "@/lib/wix/client";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
@@ -288,6 +288,72 @@ describe("runPhotoJob", () => {
   });
 });
 
+describe("a storage write that fails for a reason of ours", () => {
+  const poolExhausted = () => new Error("storage upload: Too many connections issued to the database");
+
+  it("keeps the bytes and writes them again rather than costing the photo an hour", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
+    const store = vi.fn().mockRejectedValueOnce(poolExhausted()).mockResolvedValue(undefined);
+    const deps = fakeDeps({ store });
+    const { handle } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    // Downloaded once: the retry uses the bytes already in hand, because the
+    // photo's one download for this hour has been spent either way.
+    expect(deps.download).toHaveBeenCalledTimes(1);
+    expect(store).toHaveBeenCalledTimes(2);
+    expect(summary).toMatchObject({ downloaded: 1, imported: 1, failed: 0, storeRetries: 1 });
+    expect(db.updateListingMedia).toHaveBeenCalledWith("m-MFR1-1", expect.objectContaining({ retry_after: null, storage_path: "listings/images/MFR1/p1.jpeg" }));
+  });
+
+  it("gives the pool room between tries", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1)]);
+    const sleep = vi.fn<(ms: number) => Promise<void>>(async () => {});
+    const store = vi.fn().mockRejectedValueOnce(poolExhausted()).mockRejectedValueOnce(poolExhausted()).mockResolvedValue(undefined);
+    const deps = fakeDeps({ store, sleep });
+    const { handle } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    // The first two waits are the store's; the pacing between the download
+    // and the import follows them.
+    expect(sleep.mock.calls.map((c) => c[0]).slice(0, 2)).toEqual([STORE_RETRY_MS, STORE_RETRY_MS * 2]);
+    expect(summary).toMatchObject({ downloaded: 1, storeRetries: 2 });
+  });
+
+  it("does not spend one of the photo's attempts when the retries run out", async () => {
+    // Six failed attempts drop a photo to a daily retry. Those are for a
+    // photo the MLS will not give us; this one it gave us and we dropped it,
+    // so the count must not move -- though the wait is still the media
+    // host's hour, the download being spent.
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { download_attempts: 4 })]);
+    const deps = fakeDeps({ store: vi.fn().mockRejectedValue(poolExhausted()) });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(deps.store).toHaveBeenCalledTimes(STORE_RETRIES + 1);
+    expect(db.updateListingMedia).toHaveBeenCalledWith(
+      "m-MFR1-1",
+      expect.objectContaining({ download_attempts: 4, retry_after: new Date(NOW + RETRY_AFTER_MS).toISOString() })
+    );
+    expect(summary).toMatchObject({ downloaded: 0, failed: 1 });
+    expect(events).toContainEqual(expect.objectContaining({ level: "warn", kind: "download_failed" }));
+  });
+
+  it("still spends an attempt when the download itself is what failed", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { download_attempts: 4 })]);
+    const deps = fakeDeps({ download: vi.fn(async () => ({ status: 429, bytes: null, contentType: null })) });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(deps.store).not.toHaveBeenCalled();
+    expect(db.updateListingMedia).toHaveBeenCalledWith("m-MFR1-1", expect.objectContaining({ download_attempts: 5 }));
+  });
+});
+
 describe("runStandalonePhotoJob", () => {
   it("records nothing when there is neither a backlog nor a photo waiting on Wix", async () => {
     const result = await runStandalonePhotoJob({ trigger: "cron", deadline: NOW + MINUTE, deps: fakeDeps() });
@@ -311,7 +377,11 @@ describe("runStandalonePhotoJob", () => {
 
     const result = await runStandalonePhotoJob({ trigger: "cron", deadline: NOW + 10 * MINUTE, deps });
 
-    expect(db.countPhotosAwaitingVerification).toHaveBeenCalledWith([site.id], new Date(Date.now() - VERIFY_AFTER_MS));
+    // Not an exact Date: the function reads its own clock, so pinning the
+    // millisecond here fails whenever one passes between the two reads.
+    expect(db.countPhotosAwaitingVerification).toHaveBeenCalledWith([site.id], expect.any(Date));
+    const [, cutoff] = vi.mocked(db.countPhotosAwaitingVerification).mock.calls[0];
+    expect(Date.now() - cutoff.getTime()).toBeGreaterThanOrEqual(VERIFY_AFTER_MS);
     expect(startRun).toHaveBeenCalledWith({ mode: "photos", trigger: "cron" });
     expect(db.markSiteMediaVerified).toHaveBeenCalledWith(["sm1"], expect.any(Date));
     expect(result).toMatchObject({ status: "ok", verified: 1 });
