@@ -1638,3 +1638,67 @@ time, so a listing cut short by the deadline restarts in the same place and
 never reaches the tail of a large folder. It is no longer load-bearing for
 correctness — `verified_at` is — but the nightly sweep is weaker than it
 looks on a folder Parrish's size, and a stored cursor would fix it.
+
+## Wellen Park switched on (2026-09-17): what the first discovery caught
+
+`active = true` at 20:51 UTC, shadow against `HousesforSale2`. Jeff pressed
+Run Discovery a minute later. The run finished `ok` but **`stage:
+truncated`** — 210 MLSGrid requests, 33,400 of 111,026 Active listings
+scanned, 2,110 found — and left its cursor for the ticks to continue, which
+is the designed behaviour, not a failure.
+
+**The one wrong term, and how it was found.** Within minutes the site had
+four staged listings and **all four were wrong**: HAMMOCKS PRESERVE PH 01
+and PH 14, HAMMOCKS-PRESERVE PHASE 14 BUILD and GRANDE PRESERVE ON LEMON
+BAY, every one of them Englewood, with EAGLE PRESERVE ESTATES queued behind.
+This is exactly what the Phase 5 notes said to check — "`preserve` reaches
+further here than it did there" — and the reason is structural: the old
+dashboard's terms only sorted an already curated `MLS_id_list` into
+neighborhoods, while the engine's terms are the filter deciding whether a
+listing is the site's at all. Migration 056 replaces the bare `preserve`
+with `preserve/west` and `the preserve`; its header carries the reasoning,
+including why the anchor stops at "west" and why "PRESERVE AT WEST VILLAGES"
+is deliberately left to the unmatched view.
+
+**The export settled it, and corrected me.** Reading the staged set alone,
+this session concluded that new construction was about to empty the site —
+50 of the 52 classifiable Residential matches carried
+`NewConstructionYN`, so `show_new_construction = false` looked fatal for a
+master-planned community — and recommended flipping it. Jeff's answer was
+"No. It's not new construction", with an export of the live
+`HousesforSale` collection attached. He was right and the recommendation
+was wrong: **all 153 of the site's own rows were still discovery skeletons**
+(`property_type` and `new_construction` null, because the scan records a
+find before it pulls the full record), so they were absent from the sample
+the conclusion was drawn from. The 50 were whatever discovery had pulled
+first, which skews to recently-modified builder inventory. The lesson is
+narrow and worth keeping: **while a discovery scan is in flight, the
+fully-pulled subset is not a sample of anything** — check against the site's
+own collection, not against what the engine happens to hold.
+
+**What the export proved.** All 153 rows are known to the engine, and after
+migration 056 **all 153 match a village** (152 before it; the straggler was
+12099 Firewheel Place, subdivision `THE PRESERVE`, which the site files
+under the same village as the two `PRESERVE/WEST VLGS` rows). By
+neighborhood: Sarasota National 26, Wellen Park Country Club 23, Gran
+Paradiso 20, **Boca Royale 15**, IslandWalk 13, Grand Palm 9, Solstice 8,
+Antigua 7, Renaissance 5, Everly 4, Lakespur 4, Sunstone 4, Tortuga 4,
+Oasis 3, The Preserve 3, Brightmore 2, Avelina 1, Gran Place 1, Wysteria 1.
+Boca Royale is 15 of the 153 and sits in Englewood, so that market city is
+already earning its place; North Port contributes none of them today, which
+is the tight market Jeff described rather than a wrong setting.
+
+**Why the site showed 6 staged and not 153.** Not a matching problem at all:
+the 153 are skeletons and classify rules a null `property_type` ineligible,
+so they wait for the nightly full to pull them properly. Worth remembering
+the next time a freshly onboarded site looks empty.
+
+**Still open at hand-off.** The `WellenParkListingPhotos` folder has not
+resolved yet (`media_folder_id` null) — no Wellen Park photo pass has needed
+it, so the probe's last unanswered question stands until one runs. The four
+Englewood listings stay staged until the nightly re-classifies them, since a
+run only classifies what it pulled; nothing of theirs reached
+`HousesforSale2`, because a staged listing with no confirmed photo is never
+written. And the three cities have added about 3,800 `ls_listings` rows and
+55,000 photo-metadata rows with **nothing downloaded**, which is the wide
+market working as designed.
