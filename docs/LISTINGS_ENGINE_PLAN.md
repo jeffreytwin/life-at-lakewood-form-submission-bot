@@ -1009,6 +1009,52 @@ must never fetch at once.
 *Written 2026-09-17, from the state below. Read it beside the Longboat Key
 runbook above: the shape is the same, three things are not.*
 
+**Cutover done (2026-09-17, 19:36 UTC).** Life At Parrish is live. Jeff
+audited the photo library and took the `HousesforSale` export (steps 0 and
+2), the flip ran at 19:36:25 with no run in flight, and the 19:40 cron tick
+carried it: `incremental`, ok, 23.8 s, **0 inserted / 276 updated / 0
+deleted**, 0 failed writes, 0 warnings, 0 errors, `stats_refreshed` true, so
+the neighborhood stats reached `HousesforSale-DynamicPages`. Afterwards all
+276 live rows carried a fresh `written_at`, `needs_write` was 0, and
+`gallery_ready` was 276 of 276 — the one listing still waiting on a
+re-imported photo at the flip completed itself in the same run. No open
+errors on either site. Step 5 was Jeff's in a browser (this session's egress
+cannot reach lifeatparrish.com): "looking good on the website".
+
+Every gallery on the site is now the engine's, which was the requirement
+this cutover was run against: all 14,030 `ls_site_media` rows for Parrish
+are `origin = 'imported'` into `ParrishListingPhotos`, and nulling
+`written_at` rewrote every row rather than only the changed ones.
+
+**Step 6 done, same evening.** Jeff ran **Delete stale rows** against
+`HousesforSale` once the target had moved: **6 rows**, the hand-pushed
+leftovers the engine does not adopt. The 09-16 analysis had counted 8 (6 no
+longer Active, 2 leases); what changed in between was not recorded, and the
+button recomputes the set server-side rather than taking a stored list, so 6
+is what was actually there.
+
+Worth stating plainly, because the numbers look like they disagree: the
+engine's count did not move, and should not have. `deleteStaleRows` deletes
+the collection items whose `_id` is *not* in `loadOwnedIds`, and for Parrish
+that owned set is exactly the 276 live rows (the 427 removed ones carry no
+`wix_item_id`). So the six were never among the 276 — they had no
+`ls_site_listings` row at all, which is why no engine count ever included
+them and why they still carried photos from the old folders. The collection
+went 282 to 276; the engine's 276 is what it converged on. A drop to 270
+would have meant the button had deleted six of the engine's own listings,
+which is what recomputing `owned` exists to prevent.
+
+With those gone the collection is 276 rows, every one of them the engine's:
+276 live rows carrying a `wix_item_id`, `needs_write` 0, `gallery_ready` 276,
+no open events. That is the requirement met end to end — every image on every
+listing on lifeatparrish.com is one the engine downloaded from MLSGrid and
+imported into `ParrishListingPhotos`.
+
+**Still open:** step 7, a week out (around the 24th) — the old Media Manager
+folders and `HousesforSale2`. Not before: those folders and the
+`HousesforSale` export Jeff took at step 2 are the only rollback Parrish has,
+because nothing will re-adopt the collection the way Velo would have.
+
 **What is different from Longboat Key.**
 
 1. **There is no Velo job to stop.** Parrish was never on the Velo sync; its
