@@ -350,38 +350,63 @@ const FILE_PAGE = 100;
 const FILE_PAGE_CAP = 1000;
 
 /** Every file directly in a Media Manager folder. The file id is the one a wix:image URI carries. */
+export interface ListMediaFilesOptions {
+  /** Epoch ms; paging stops cleanly at it and reports `truncated`. */
+  deadline?: number;
+  /** Where to start, from a previous call's `nextOffset`. */
+  startOffset?: number;
+  /** Pages this call may read, whatever the deadline allows. */
+  maxPages?: number;
+}
+
+export interface ListMediaFilesResult {
+  files: WixMediaFile[];
+  /** The listing stopped before the end of the folder. */
+  truncated: boolean;
+  /** Where the next call should start; 0 once the end has been reached. */
+  nextOffset: number;
+}
+
 /**
- * The files in a folder, a page at a time. `deadline` (epoch ms) stops the
- * paging cleanly and reports `truncated`.
+ * The files in a folder, a page at a time, resumable.
  *
- * The deadline is not optional in spirit: at 100 files a page the cap alone
- * allows a thousand sequential round trips, and a folder the size of
- * Parrish's (about 22,000 photos) is some 220 of them. Called without one
- * from inside a run, this walked past the function's own time limit and the
- * invocation was killed before anything else in the run could happen
- * (2026-09-17: every nightly full run for two and a half hours).
+ * Both the deadline and the offset matter, and for different reasons. At 100
+ * files a page the cap alone allows a thousand sequential round trips, and a
+ * folder the size of Parrish's is some 140 of them; called without a
+ * deadline from inside a run, this walked past the function's own time limit
+ * and the invocation was killed before anything else could happen
+ * (2026-09-17). But a deadline on its own only turns that into a different
+ * bug: paging always started at zero, so a listing cut short stopped at the
+ * same place every time and the tail of a large folder was never reached.
+ *
+ * So a caller that works to a clock passes both, and stores `nextOffset` for
+ * next time. Reaching the end returns `nextOffset: 0`, and the cycle starts
+ * again.
  */
 export async function listMediaFiles(
   siteId: string,
   parentFolderId: string,
-  deadline?: number
-): Promise<{ files: WixMediaFile[]; truncated: boolean }> {
+  options: ListMediaFilesOptions = {}
+): Promise<ListMediaFilesResult> {
+  const { deadline, startOffset = 0, maxPages = FILE_PAGE_CAP } = options;
   const files: WixMediaFile[] = [];
-  for (let page = 0; page < FILE_PAGE_CAP; page += 1) {
-    if (deadline !== undefined && Date.now() > deadline) return { files, truncated: true };
+  let offset = Math.max(0, startOffset);
+  for (let page = 0; page < Math.min(maxPages, FILE_PAGE_CAP); page += 1) {
+    if (deadline !== undefined && Date.now() > deadline) return { files, truncated: true, nextOffset: offset };
     const res = await wixRequest<{ files?: WixMediaFile[] }>(
       siteId,
       "GET",
-      `/site-media/v1/files?parentFolderId=${encodeURIComponent(parentFolderId)}&paging.limit=${FILE_PAGE}&paging.offset=${page * FILE_PAGE}`
+      `/site-media/v1/files?parentFolderId=${encodeURIComponent(parentFolderId)}&paging.limit=${FILE_PAGE}&paging.offset=${offset}`
     );
     const batch = res?.files ?? [];
     files.push(...batch);
-    if (batch.length < FILE_PAGE) return { files, truncated: false };
+    offset += batch.length;
+    // A short page is the end of the folder: start over next time.
+    if (batch.length < FILE_PAGE) return { files, truncated: false, nextOffset: 0 };
   }
-  return { files, truncated: true };
+  return { files, truncated: true, nextOffset: offset };
 }
 
-/** A root-level folder by display name (case-insensitive), or null. */
 export async function findMediaFolder(siteId: string, displayName: string): Promise<WixMediaFolder | null> {
   const wanted = displayName.trim().toLowerCase();
   const folders = await listMediaFolders(siteId);

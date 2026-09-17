@@ -39,6 +39,8 @@ export interface LsSite {
   media_folder_name: string | null;
   /** The folder's id once resolved from its name (cached by the photo job). */
   media_folder_id: string | null;
+  /** Where the next Media Manager folder listing resumes; 0 = from the top. */
+  media_scan_offset: number;
 }
 
 export interface LsVillage {

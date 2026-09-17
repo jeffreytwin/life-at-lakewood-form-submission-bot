@@ -85,6 +85,7 @@ const site: LsSite = {
   timezone: "America/New_York",
   media_folder_name: null,
   media_folder_id: null,
+  media_scan_offset: 0,
 };
 
 const village: VillageWithTerms = {
