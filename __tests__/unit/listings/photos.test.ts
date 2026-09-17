@@ -26,7 +26,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
-import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
 import { WixApiError } from "@/lib/wix/client";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
@@ -525,11 +525,63 @@ describe("when Wix asks the engine to slow down", () => {
   /**
    * Jeff, 2026-09-16, on a panel full of them: "why am I being alerted? Is
    * this something I need to deal with?" A 429 is Wix asking for less. The
-   * engine stands down for that location and says so once, as a warning.
+   * engine waits as long as it is asked, offers the same photo again, and
+   * only when Wix will not relent stands the location down for the pass --
+   * once, as a warning.
    */
-  const limited = () => new WixApiError(429, "<!DOCTYPE html><html></html>", "POST /site-media/v1/files/import");
+  const limited = (retryAfter?: string) =>
+    new WixApiError(429, "<!DOCTYPE html><html></html>", "POST /site-media/v1/files/import", retryAfter);
 
-  it("stops importing for that location, leaves the photos due, and warns once", async () => {
+  it("waits the time Wix asks for and imports the photo on the retry", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([
+      row("MFR1", 1, { storage_path: "listings/images/MFR1/p1.jpeg", content_hash: "a", source_url: null }),
+    ]);
+    const slept: number[] = [];
+    let first = true;
+    const deps = fakeDeps({
+      sleep: vi.fn(async (ms: number) => { slept.push(ms); }),
+      importToWix: vi.fn(async () => {
+        if (first) { first = false; throw limited("3"); }
+        return { id: "file-1" };
+      }),
+    });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    // The photo lands rather than waiting for a later pass, and the refusal
+    // is still counted so the pacing stays visible.
+    expect(summary).toMatchObject({ imported: 1, failed: 0 });
+    expect(handle.counts.wix_rate_limited).toBe(1);
+    expect(vi.mocked(deps.importToWix)).toHaveBeenCalledTimes(2);
+    // Retry-After: 3 seconds, honoured.
+    expect(slept).toContain(3_000);
+    // Nothing to tell anyone: it recovered on its own.
+    expect(events.filter((e) => e.kind === "rate_limited")).toHaveLength(0);
+  });
+
+  it("caps the wait so one refusal cannot swallow the pass", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([
+      row("MFR1", 1, { storage_path: "listings/images/MFR1/p1.jpeg", content_hash: "a", source_url: null }),
+    ]);
+    const slept: number[] = [];
+    let first = true;
+    const deps = fakeDeps({
+      sleep: vi.fn(async (ms: number) => { slept.push(ms); }),
+      importToWix: vi.fn(async () => {
+        if (first) { first = false; throw limited("3600"); }
+        return { id: "file-1" };
+      }),
+    });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(slept).toContain(RATE_LIMIT_MAX_WAIT_MS);
+    expect(slept.every((ms) => ms <= RATE_LIMIT_MAX_WAIT_MS)).toBe(true);
+  });
+
+  it("stands the location down for the pass when Wix will not relent, and warns once", async () => {
     const media = Array.from({ length: 6 }, (_, i) => row("MFR1", i + 1, { storage_path: `listings/images/MFR1/p${i + 1}.jpeg`, content_hash: `h${i}`, source_url: null }));
     vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce(media);
     const deps = fakeDeps({ importToWix: vi.fn(async () => { throw limited(); }) });
@@ -542,10 +594,10 @@ describe("when Wix asks the engine to slow down", () => {
     expect(summary).toMatchObject({ imported: 0, failed: 0 });
     expect(db.updateListingMedia).not.toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ retry_after: expect.any(String) }));
     expect(handle.counts.images_failed).toBe(0);
-    // Workers already in flight when the first refusal lands are refused too,
-    // so the count is at most one per worker, never one per photo.
+    // Each worker offers its photo once and re-offers it RATE_LIMIT_RETRIES
+    // times before giving up on the location; no photo beyond those is tried.
     expect(handle.counts.wix_rate_limited).toBeGreaterThanOrEqual(1);
-    expect(handle.counts.wix_rate_limited).toBeLessThanOrEqual(IMPORT_CONCURRENCY);
+    expect(handle.counts.wix_rate_limited).toBeLessThanOrEqual(IMPORT_CONCURRENCY * (1 + RATE_LIMIT_RETRIES));
 
     // Told once, as a warning, not once per photo and never as an error.
     const warned = events.filter((e) => e.kind === "rate_limited");
@@ -553,8 +605,28 @@ describe("when Wix asks the engine to slow down", () => {
     expect(warned[0].level).toBe("warn");
     expect(events.filter((e) => e.level === "error")).toHaveLength(0);
 
-    // And it stopped asking after the first refusal rather than trying all six.
-    expect(vi.mocked(deps.importToWix).mock.calls.length).toBeLessThan(media.length);
+    // It stopped advancing through the gallery: only the photos the workers
+    // already held were offered, not all six.
+    const tried = new Set(vi.mocked(deps.importToWix).mock.calls.map((c) => c[2]));
+    expect(tried.size).toBeLessThanOrEqual(IMPORT_CONCURRENCY);
+  });
+
+  it("does not re-test a location it has already stood down, on a later listing", async () => {
+    // The stand-down is per pass, not per listing: before 2026-09-17 each
+    // listing started a fresh one, so every listing collected its own refusal.
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([
+      row("MFR1", 1, { storage_path: "listings/images/MFR1/p1.jpeg", content_hash: "a", source_url: null }),
+      row("MFR2", 1, { storage_path: "listings/images/MFR2/p1.jpeg", content_hash: "b", source_url: null }),
+      row("MFR3", 1, { storage_path: "listings/images/MFR3/p1.jpeg", content_hash: "c", source_url: null }),
+    ]);
+    const deps = fakeDeps({ importToWix: vi.fn(async () => { throw limited(); }) });
+    const { handle, events } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    // The first listing exhausts its retries; the other two are not offered.
+    expect(vi.mocked(deps.importToWix).mock.calls.length).toBeLessThanOrEqual(1 + RATE_LIMIT_RETRIES);
+    expect(events.filter((e) => e.kind === "rate_limited")).toHaveLength(1);
   });
 
   it("still treats a real import failure as a failure", async () => {

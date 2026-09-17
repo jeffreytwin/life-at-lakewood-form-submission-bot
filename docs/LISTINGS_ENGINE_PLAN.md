@@ -1190,3 +1190,54 @@ and a read of the Neighborhoods page.
 the engine uses from Vercel). Rotate it when the Wellen Park cutover
 deletes that file, as the Longboat Key runbook's step 7 already does for
 its Wix Secrets copy.
+
+## Photo import pacing (2026-09-17): going slower to go faster
+
+Jeff, watching Parrish: "photo downloads are taking a really long time."
+They were not downloads. Every five-minute tick looked like this:
+
+```
+02:55  29s  downloaded 0  imported 60  wix 429s 33
+02:50   1s  downloaded 0  imported  0  wix 429s 34
+02:45  30s  downloaded 0  imported 60  wix 429s 33
+```
+
+All 13,880 photos were already in Supabase storage; `images_downloaded` was
+0 on every run. The slow hop was the Wix Media Manager import, moving 60
+photos per tick — 720/hour against 2,407 still pending, about 3.3 hours —
+in 30 seconds of a 240-second budget. Two causes, compounding.
+
+**The rate was set for one worker and run with two.**
+`IMPORT_SPACING_MS` was 320 ms, the right gap for a single worker under
+Wix's documented 200 requests/minute. `IMPORT_CONCURRENCY` had since gone
+to 2, and `pool()` says plainly that "the rate across the pool is the
+per-worker rate times `limit`" — so the job was asking for ~375/min and Wix
+refused about one import in three, around the clock. The gap is now 600 ms:
+two workers, 200/min, the whole allowance and no more. A refused request
+costs a round trip and imports nothing, so pacing down is what speeds the
+pass up.
+
+**The stand-down was scoped to one listing, not the pass.** `slowDown` was
+declared inside `processListing` while its comment said "for the rest of the
+pass". Each listing therefore started a fresh one, re-tested Wix, collected
+a refusal and abandoned that listing's remaining photos — which is exactly
+the 60-imports-then-idle shape above. It now lives in `runPhotoJob`, as the
+comment always claimed, and the warning goes out once per pass at the point
+the site stands down rather than once per listing in the `finally`.
+
+**And a refusal is now waited out, not skipped.** `WixApiError` has carried
+`retryAfterSeconds` since the client was written and nothing read it. On a
+429 the worker now waits what Wix asks (floor `IMPORT_SPACING_MS`, cap
+`RATE_LIMIT_MAX_WAIT_MS` = 60 s so one refusal cannot swallow the pass) and
+offers the same photo again, up to `RATE_LIMIT_RETRIES` = 2 times. Only a
+site that keeps refusing, or a wait that would run past the deadline, stands
+down. Photos still take no cool-down and count as paced rather than failed,
+so nothing about the alerting changes: one warning, never an error.
+
+Expected effect: imports succeed instead of being refused, and a pass uses
+its budget instead of exiting in 30 seconds. Worth confirming on the next
+few ticks — `images_imported` per run should climb well past 60 and
+`wix_rate_limited` should fall towards zero. If 429s persist at 200/min the
+limit is tighter than Wix documents (the account-level key covers every
+site, so the sites may share one allowance), and the next lever is
+`IMPORT_CONCURRENCY` back to 1 at 300 ms rather than a shorter gap.

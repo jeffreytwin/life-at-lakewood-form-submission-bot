@@ -50,8 +50,25 @@ export const DOWNLOAD_CONCURRENCY = 4;
 // stands down for that location rather than arguing.
 export const IMPORT_CONCURRENCY = 2;
 export const DOWNLOAD_SPACING_MS = 500;
-/** Wix documents 200 requests/minute; imports go one at a time with this gap. */
-export const IMPORT_SPACING_MS = 320;
+/**
+ * Wix documents 200 requests/minute. Each worker keeps this gap of its own,
+ * so the rate across the pool is IMPORT_CONCURRENCY / IMPORT_SPACING_MS: at
+ * 600 ms and two workers that is 200/min, the whole allowance and no more.
+ *
+ * It was 320 ms, which is the right gap for ONE worker and was set when
+ * there was one. Two workers at that gap ask for 375/min, and Wix refused
+ * about one import in three around the clock (2026-09-17: 60 imported and
+ * ~32 refused every five-minute tick on Parrish). Going slower per request
+ * is what makes the pass go faster, because a refused request costs a
+ * round trip and imports nothing.
+ */
+export const IMPORT_SPACING_MS = 600;
+/** A 429 that carries no Retry-After: how long to wait before offering the photo again. */
+export const RATE_LIMIT_WAIT_MS = 5_000;
+/** The longest one refusal is allowed to hold a worker, whatever Retry-After asks for. */
+export const RATE_LIMIT_MAX_WAIT_MS = 60_000;
+/** Times one photo is re-offered after a refusal before its site stands down for the pass. */
+export const RATE_LIMIT_RETRIES = 2;
 /** Listings per backlog page; the job keeps paging while time remains. */
 export const BACKLOG_LISTINGS = 60;
 /** On a shadow-mode site the Velo pipeline gets this long to fetch a new photo before the engine does. */
@@ -309,13 +326,36 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
   }
   let client: MlsGridClient | null = opts.client ?? null;
   const overdue = (): boolean => deps.now() > opts.deadline;
+  // Sites Wix has told to slow down, and would not stop telling: their
+  // imports stop for the rest of the pass. This used to live inside
+  // processListing, so it reset on every listing and each one re-tested Wix,
+  // collected a refusal and abandoned its remaining photos -- which is how a
+  // pass with a four-minute budget finished in thirty seconds having
+  // imported sixty photos.
+  const slowDown = new Map<string, string>();
+
+  /** How long a refusal asks the engine to wait, bounded so one cannot eat the pass. */
+  function rateLimitWait(error: WixApiError): number {
+    const asked = error.retryAfterSeconds != null ? error.retryAfterSeconds * 1000 : RATE_LIMIT_WAIT_MS;
+    return Math.min(Math.max(asked, IMPORT_SPACING_MS), RATE_LIMIT_MAX_WAIT_MS);
+  }
+
+  /**
+   * A site Wix will not stop refusing: no more imports for it this pass, said
+   * once as a warning. Never an error -- there is nothing for a person to do
+   * about a rate limit, and the photos stay due with no cool-down, so the
+   * next pass picks them straight up.
+   */
+  function standDown(site: LsSite, message: string): void {
+    if (slowDown.has(site.id)) return;
+    slowDown.set(site.id, message);
+    run.event("warn", "rate_limited", `${site.name}: Wix kept asking the engine to slow down (${message}); its remaining photos wait for the next pass`, { siteId: site.id });
+  }
 
   async function processListing(listingId: string, media: db.PhotoBacklogRow[], urls: Map<string, string> | undefined): Promise<boolean> {
     let truncated = false;
     const downloads = { failed: 0, exhausted: 0, lastError: "", retryAt: 0 };
     const missingDimensions = new Set<string>();
-    // Sites Wix has told to slow down; their imports stop for the rest of the pass.
-    const slowDown = new Map<string, string>();
     const importedMedia = new Map<string, Set<string>>();
     const importErrors = new Map<string, string>();
     try {
@@ -362,39 +402,49 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
         const folder = await folderFor(site);
         if (!folder.ok) return;
         const name = displayNameFor(listingId, m.position, m.path_key);
-        try {
-          const file = await deps.importToWix(site.wix_site_id!, deps.publicUrl(m.storage_path!), name, folder.id);
-          const uri = wixImageUri(file.id, name, m.image_width, m.image_height);
-          if (!uri) {
-            missingDimensions.add(m.media_id);
+        // A refusal is Wix asking for less, not a fault in the photo: wait as
+        // long as it asks and offer the same photo again. Only when it keeps
+        // refusing, or the wait would run past the deadline, does the site
+        // stand down -- skipping straight on would leave the photo for a later
+        // pass that is no likelier to be welcome.
+        for (let attempt = 0; ; attempt += 1) {
+          try {
+            const file = await deps.importToWix(site.wix_site_id!, deps.publicUrl(m.storage_path!), name, folder.id);
+            const uri = wixImageUri(file.id, name, m.image_width, m.image_height);
+            if (!uri) {
+              missingDimensions.add(m.media_id);
+              return;
+            }
+            await db.upsertSiteMedia([{ site_id: site.id, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported" }]);
+            // No await between these three, so the concurrent workers cannot lose one another's entries.
+            const done = importedMedia.get(site.id) ?? new Set<string>();
+            done.add(m.media_id);
+            importedMedia.set(site.id, done);
+            summary.imported += 1;
+            run.counts.images_imported += 1;
+            break;
+          } catch (error) {
+            const message = errorMessage(error);
+            if (error instanceof WixApiError && error.rateLimited) {
+              run.counts.wix_rate_limited += 1;
+              const waitMs = rateLimitWait(error);
+              if (attempt >= RATE_LIMIT_RETRIES || deps.now() + waitMs > opts.deadline || slowDown.has(site.id)) {
+                standDown(site, message);
+                return;
+              }
+              await deps.sleep(waitMs);
+              continue;
+            }
+            importErrors.set(site.id, message);
+            summary.failed += 1;
+            run.counts.images_failed += 1;
+            await db.updateListingMedia(m.media_id, {
+              last_error: `import to ${site.name}: ${message}`.slice(0, 500),
+              last_attempt_at: iso(deps.now()),
+              retry_after: iso(deps.now() + IMPORT_RETRY_MS),
+            });
             return;
           }
-          await db.upsertSiteMedia([{ site_id: site.id, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported" }]);
-          // No await between these three, so the concurrent workers cannot lose one another's entries.
-          const done = importedMedia.get(site.id) ?? new Set<string>();
-          done.add(m.media_id);
-          importedMedia.set(site.id, done);
-          summary.imported += 1;
-          run.counts.images_imported += 1;
-        } catch (error) {
-          const message = errorMessage(error);
-          // A rate limit is Wix asking for less, not a fault in the photo. Stop
-          // importing for this site, leave the photo due (no cool-down), and
-          // count it as paced rather than failed: hammering on would only earn
-          // more refusals and bury the run in identical failures.
-          if (error instanceof WixApiError && error.rateLimited) {
-            slowDown.set(site.id, message);
-            run.counts.wix_rate_limited += 1;
-            return;
-          }
-          importErrors.set(site.id, message);
-          summary.failed += 1;
-          run.counts.images_failed += 1;
-          await db.updateListingMedia(m.media_id, {
-            last_error: `import to ${site.name}: ${message}`.slice(0, 500),
-            last_attempt_at: iso(deps.now()),
-            retry_after: iso(deps.now() + IMPORT_RETRY_MS),
-          });
         }
         await deps.sleep(IMPORT_SPACING_MS);
       })) {
@@ -415,11 +465,6 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
           `${site?.name ?? siteId}: ${done.size} photo(s) imported for ${listingId}${pending ? ` (${pending} of ${total} still pending)` : ` (gallery complete, ${total} photo${total === 1 ? "" : "s"})`}`,
           { siteId, listingId }
         );
-      }
-      for (const [siteId, message] of slowDown) {
-        // One line per location per listing, not one per photo, and never an
-        // error: there is nothing for a person to do about a rate limit.
-        run.event("warn", "rate_limited", `${sites.get(siteId)?.name ?? siteId}: Wix asked the engine to slow down (${message}); the rest of ${listingId}'s photos wait for the next pass`, { siteId, listingId });
       }
       for (const [siteId, message] of importErrors) {
         run.event("warn", "import_failed", `${sites.get(siteId)?.name ?? siteId}: importing photos for ${listingId} failed: ${message}; retried in ${Math.round(IMPORT_RETRY_MS / 60_000)} min`, { siteId, listingId });
