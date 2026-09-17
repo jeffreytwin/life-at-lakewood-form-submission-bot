@@ -1751,3 +1751,33 @@ is computed from `verifiedIds`, so only ids actually asked about can be
 marked out of feed, the classify and write phases already work over
 `[...pulledIds, ...missingIds]`, and `planRemovals` sees fewer candidates
 against an unchanged `liveCount`, so the mass-delete guard errs safe.
+
+### The cap the cursor needed (2026-09-17, an hour later)
+
+The cursor above bounded the wrong half, and pressing Run Full proved it
+within four minutes. The run fetched **all 6,164 held ids in all 124
+requests** — 134 MB — comfortably inside the 150 s fetch budget, then died at
+`upsert`: *"killed: the invocation ended before the run recorded a result"*,
+Vercel's 300 s limit reached part-way through writing 6,164 raw records and
+their roughly 300,000 media rows.
+
+The estimate that sized the fetch budget was drawn from incremental runs
+(4–13 s a request) and did not transfer: verify-by-id with `$expand=Media`
+returns 50 listings a request and is far quicker per listing than an
+incremental's paging. **Fetching by id is the cheap half; the write is what
+costs.** So the cursor never engaged — it only saves a resume point when the
+*fetch* truncates, and the fetch had finished.
+
+`FULL_VERIFY_MAX_LISTINGS` (1,500) is the missing bound: a pass verifies at
+most that many, `truncated` is now `verify.truncated || beyondCap`, and the
+cursor carries the rest exactly as before. The size comes from what the
+engine already does hourly without trouble — an incremental carried 1,431
+listings end to end in 68 s, and 2,873 in 106 s — so six thousand held is
+five passes across idle ticks.
+
+Two things worth keeping from the failure. The partial upsert **persisted**:
+`upsertListings` chunks at 50 and commits as it goes, so all 153 Wellen Park
+skeletons came out of it with real data even though the run died before
+classify. And the run row told the whole story without a log — stage
+`upsert`, `mlsgrid_request_count` 124, `mlsgrid_items_fetched` 6,164,
+`mlsgrid_bytes` 133,871,649 — which is the two-level trail earning its keep.
