@@ -720,7 +720,22 @@ export type StandalonePhotoResult = PhotoSummary & { runKey: string | null; stat
 export async function runStandalonePhotoJob(opts: StandalonePhotoOptions): Promise<StandalonePhotoResult> {
   const grace = opts.shadowGraceMinutes ?? SHADOW_GRACE_MINUTES;
   const probe = await db.loadPhotoBacklog(1, grace);
-  if (!probe.length) return { ...emptyPhotoSummary(), runKey: null, status: "skipped" };
+  if (!probe.length) {
+    // An empty import backlog is not an idle engine. Since migration 053 a
+    // photo reaches a gallery only once Wix has been seen holding a picture
+    // for it, so a listing whose imports all succeeded sits in 'staged' with
+    // gallery_ready = false until a verification pass confirms them -- and
+    // verification runs at the head of runPhotoJob, which this was skipping.
+    // That left it to the hourly reconcile: an hour's wait for work whose
+    // clock is ten minutes, in precisely the common case, because the
+    // backlog empties the moment the imports finish.
+    const sites = await db.loadActiveSites();
+    const waiting = await db.countPhotosAwaitingVerification(
+      sites.map((s) => s.id),
+      new Date(Date.now() - VERIFY_AFTER_MS)
+    );
+    if (!waiting) return { ...emptyPhotoSummary(), runKey: null, status: "skipped" };
+  }
   const run = await startRun({ mode: "photos", trigger: opts.trigger });
   try {
     await run.checkpoint("photos");

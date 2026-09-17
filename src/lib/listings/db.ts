@@ -419,6 +419,26 @@ export interface UnverifiedSiteMedia {
 }
 
 /** The oldest imports still waiting on Wix, for the photo pass to check. */
+/**
+ * How many photos these sites have handed to Wix and not yet been seen
+ * holding a picture for, old enough that a verification pass is worth
+ * starting. Scoped to the caller's sites because a pass only verifies the
+ * sites it runs for: counting an inactive site's photos here would start a
+ * run every tick that could never clear them.
+ */
+export async function countPhotosAwaitingVerification(siteIds: string[], importedBefore: Date): Promise<number> {
+  if (!siteIds.length) return 0;
+  const { count, error } = await supabase
+    .from("ls_site_media")
+    .select("id", { count: "exact", head: true })
+    .in("site_id", siteIds)
+    .is("verified_at", null)
+    .not("wix_file_id", "is", null)
+    .lt("imported_at", importedBefore.toISOString());
+  if (error) fail("count photos awaiting verification", error);
+  return count ?? 0;
+}
+
 export async function loadUnverifiedSiteMedia(siteId: string, limit: number): Promise<UnverifiedSiteMedia[]> {
   const { data, error } = await supabase
     .from("ls_site_media")
