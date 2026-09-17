@@ -1241,3 +1241,56 @@ few ticks — `images_imported` per run should climb well past 60 and
 limit is tighter than Wix documents (the account-level key covers every
 site, so the sites may share one allowance), and the next lever is
 `IMPORT_CONCURRENCY` back to 1 at 300 ms rather than a shorter gap.
+
+## Incident (2026-09-17): the nightly full run that could never finish
+
+Jeff, mid-morning: "It's been hours and the 28 listings in progress have not
+moved." They had not moved since 03:00 UTC, and neither had anything else.
+
+**What happened.** `writeSite` opened, for a `full` run, with
+`reimportBrokenPhotos(site.id)` — the check for photos Wix accepted but never
+fetched, added on the 16th and folded into the nightly. It took no deadline,
+and it begins by listing the site's whole Media Manager folder:
+`listMediaFiles` pages at 100 files a request, up to 1,000 requests. Parrish's
+folder holds about 22,000 photos, so that is some 220 sequential Wix round
+trips before a single row could be written. The invocation hit Vercel's
+300-second limit and was killed at `stage = write`.
+
+Then the loop. `lastFullDate` is only advanced by a run that finishes ok
+(`tick.ts`), and a killed run finishes nothing — so the next tick saw the full
+run still due for today and started it again. **47 killed runs, 03:00 to
+13:35, ten and a half hours**, in which:
+
+- nothing was written to either site: `needs_write` stood at 271 of 271 on
+  Parrish and 198 of 198 on Longboat Key, which is **live**;
+- no staged listing went live, because promotion happens in the write — the
+  28 Jeff was watching;
+- no incremental and no standalone photo run happened at all, because the
+  tick was always busy with the doomed full.
+
+The photo work inside those runs still happened, which is why the symptom
+looked like slow photos rather than a stalled engine.
+
+**The fix.** Writes come first. The photo-library check moved to after every
+site has been written, runs only when at least `BROKEN_PHOTO_CHECK_MIN_MS`
+(45 s) remains, and takes the run's deadline; `listMediaFiles` takes a
+deadline too and reports `truncated` instead of paging on. A check that is a
+day late costs nothing; writes that never happen cost the sites. The
+broken-share cap now divides by the engine photos the pass actually saw, not
+the whole library, so a truncated listing cannot wave through a share the cap
+exists to catch.
+
+**Recovery.** `system_settings.ls_engine_state.lastFullDate` was set to
+2026-09-17 by hand, which is all it took to stop the tick choosing `full`. The
+next incremental finished ok in 106 s: 29 inserted, 393 updated, 0 rate
+limits. Parrish went from 28 staged / 243 live to 3 staged / 272 live (the
+last 3 are waiting on their own photos), Longboat Key to `needs_write` 0, and
+the photo backlog to **empty** — the 1,663 photos outstanding at 05:30 all
+landed once the passes could run.
+
+**Two lessons for the next long-running step.** Anything that walks a whole
+remote collection needs the run's deadline passed in, not just a page cap; and
+a run mode that gates its own "done" flag needs a failure path, or one bad run
+becomes an infinite one. The second is not fixed here: a full run that keeps
+dying will still be retried every tick until midnight UTC. Worth a bounded
+retry before the next nightly.

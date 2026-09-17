@@ -350,9 +350,25 @@ const FILE_PAGE = 100;
 const FILE_PAGE_CAP = 1000;
 
 /** Every file directly in a Media Manager folder. The file id is the one a wix:image URI carries. */
-export async function listMediaFiles(siteId: string, parentFolderId: string): Promise<{ files: WixMediaFile[]; truncated: boolean }> {
+/**
+ * The files in a folder, a page at a time. `deadline` (epoch ms) stops the
+ * paging cleanly and reports `truncated`.
+ *
+ * The deadline is not optional in spirit: at 100 files a page the cap alone
+ * allows a thousand sequential round trips, and a folder the size of
+ * Parrish's (about 22,000 photos) is some 220 of them. Called without one
+ * from inside a run, this walked past the function's own time limit and the
+ * invocation was killed before anything else in the run could happen
+ * (2026-09-17: every nightly full run for two and a half hours).
+ */
+export async function listMediaFiles(
+  siteId: string,
+  parentFolderId: string,
+  deadline?: number
+): Promise<{ files: WixMediaFile[]; truncated: boolean }> {
   const files: WixMediaFile[] = [];
   for (let page = 0; page < FILE_PAGE_CAP; page += 1) {
+    if (deadline !== undefined && Date.now() > deadline) return { files, truncated: true };
     const res = await wixRequest<{ files?: WixMediaFile[] }>(
       siteId,
       "GET",
