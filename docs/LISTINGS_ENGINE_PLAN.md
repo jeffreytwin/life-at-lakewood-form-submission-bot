@@ -849,6 +849,22 @@ unusable is not written at all and counts as waiting for photos. This is
 the class of bug the Hub could not have caught before: the writes all
 succeeded, Wix accepted the rows, and only the rendered page was wrong.
 
+**Wix pushed back (Jeff, 2026-09-16, at a panel full of them: "why am I
+being alerted? Is this something I need to deal with?").** Four imports at
+a time every five minutes earned 256 refusals from Wix in an hour, up to
+~1,200 failed attempts in a single pass, and 57 of them escalated into
+errors in the panel. Two things were wrong. The job kept hammering: each
+429 was recorded as that photo's failure, put the photo on a 30-minute
+cool-down it had not earned, and the next worker tried again immediately.
+And `escalateRepeats` promoted the repeats to errors, which is exactly
+backwards for a rate limit — it repeats by design until the caller slows
+down, and there is nothing a person can do about it. Now: a 429 stands the
+location down for the rest of the pass, leaves its photos due, counts as
+paced rather than failed, and is reported once per listing as a warning
+(`rate_limited`, deliberately not in `RETRIED_KINDS`, so it can never
+escalate). `IMPORT_CONCURRENCY` is back to 2. Downloads stay at 4: the MLS
+media host never objected.
+
 **Photo throughput (Jeff, 2026-09-16).** Parrish's galleries were going to
 take about 33 hours. The engine was moving roughly 400 photos an hour, but
 at 51 photos a listing that is only 8 listings an hour, which is what the

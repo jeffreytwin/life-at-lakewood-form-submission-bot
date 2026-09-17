@@ -34,6 +34,13 @@ describe("escalateRepeats", () => {
     expect(escalateRepeats([row({})], dismissed)).toBe(1);
   });
 
+  it("never escalates a rate limit, however often it repeats", () => {
+    const history = Array.from({ length: 10 }, () => prior({ kind: "rate_limited" }));
+    const rows = [row({ kind: "rate_limited" })];
+    expect(escalateRepeats(rows, history)).toBe(0);
+    expect(rows[0].level).toBe("warn");
+  });
+
   it("only touches the retried kinds", () => {
     const rows = [row({ kind: "download_failed" })];
     expect(escalateRepeats(rows, [prior({ kind: "download_failed" }), prior({ kind: "download_failed" })])).toBe(0);

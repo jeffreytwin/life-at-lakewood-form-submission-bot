@@ -66,7 +66,15 @@ const FLUSH_CHUNK = 200;
 // the new warning is stored as an error, once: while that problem has an
 // open (undismissed) error, further repeats stay warnings.
 
-/** Kinds whose warnings describe a failure a later run retries by itself. */
+/**
+ * Kinds whose warnings describe a failure a later run retries by itself, and
+ * which therefore mean something is stuck if they keep repeating.
+ *
+ * `rate_limited` is deliberately not one of them. A 429 is the other end
+ * asking for less, and it repeats by design until the engine has slowed
+ * enough — escalating it would page a person about the one thing they cannot
+ * act on. On 2026-09-16 that filled the panel with 57 identical errors.
+ */
 export const RETRIED_KINDS: ReadonlySet<string> = new Set(["import_failed", "write_failed", "stats_failed", "folder_missing", "run_error"]);
 /** Earlier runs' warnings about the same problem before a repeat becomes an error. */
 export const ESCALATE_AFTER = 2;

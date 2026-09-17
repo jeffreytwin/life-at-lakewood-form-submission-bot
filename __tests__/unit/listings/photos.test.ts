@@ -4,7 +4,11 @@ vi.mock("@/lib/shared/logger", () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 vi.mock("@/lib/supabase/client", () => ({ supabase: {} }));
-vi.mock("@/lib/wix/client", () => ({ importMediaFromUrl: vi.fn() }));
+vi.mock("@/lib/wix/client", async (importOriginal) => {
+  // The real WixApiError: the photo job branches on its rateLimited flag.
+  const actual = await importOriginal<typeof import("@/lib/wix/client")>();
+  return { WixApiError: actual.WixApiError, importMediaFromUrl: vi.fn(), findMediaFolder: vi.fn() };
+});
 vi.mock("@/lib/listings/db", () => ({
   loadActiveSites: vi.fn(),
   loadPhotoBacklog: vi.fn(),
@@ -23,6 +27,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
 import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { WixApiError } from "@/lib/wix/client";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
 
@@ -513,5 +518,54 @@ describe("photos Wix cannot render", () => {
     expect(db.upsertSiteMedia).toHaveBeenCalledWith([
       expect.objectContaining({ wix_image_uri: "wix:image://v1/file-1/MFR1-1.jpeg#originWidth=1024&originHeight=768" }),
     ]);
+  });
+});
+
+describe("when Wix asks the engine to slow down", () => {
+  /**
+   * Jeff, 2026-09-16, on a panel full of them: "why am I being alerted? Is
+   * this something I need to deal with?" A 429 is Wix asking for less. The
+   * engine stands down for that location and says so once, as a warning.
+   */
+  const limited = () => new WixApiError(429, "<!DOCTYPE html><html></html>", "POST /site-media/v1/files/import");
+
+  it("stops importing for that location, leaves the photos due, and warns once", async () => {
+    const media = Array.from({ length: 6 }, (_, i) => row("MFR1", i + 1, { storage_path: `listings/images/MFR1/p${i + 1}.jpeg`, content_hash: `h${i}`, source_url: null }));
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce(media);
+    const deps = fakeDeps({ importToWix: vi.fn(async () => { throw limited(); }) });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    // A rate limit is not the photo's fault: nothing is counted failed and
+    // nothing is put on a cool-down, so the next pass picks them straight up.
+    expect(summary).toMatchObject({ imported: 0, failed: 0 });
+    expect(db.updateListingMedia).not.toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ retry_after: expect.any(String) }));
+    expect(handle.counts.images_failed).toBe(0);
+    // Workers already in flight when the first refusal lands are refused too,
+    // so the count is at most one per worker, never one per photo.
+    expect(handle.counts.wix_rate_limited).toBeGreaterThanOrEqual(1);
+    expect(handle.counts.wix_rate_limited).toBeLessThanOrEqual(IMPORT_CONCURRENCY);
+
+    // Told once, as a warning, not once per photo and never as an error.
+    const warned = events.filter((e) => e.kind === "rate_limited");
+    expect(warned).toHaveLength(1);
+    expect(warned[0].level).toBe("warn");
+    expect(events.filter((e) => e.level === "error")).toHaveLength(0);
+
+    // And it stopped asking after the first refusal rather than trying all six.
+    expect(vi.mocked(deps.importToWix).mock.calls.length).toBeLessThan(media.length);
+  });
+
+  it("still treats a real import failure as a failure", async () => {
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce([row("MFR1", 1, { storage_path: "listings/images/MFR1/p1.jpeg", content_hash: "a", source_url: null })]);
+    const deps = fakeDeps({ importToWix: vi.fn(async () => { throw new WixApiError(500, "boom", "POST /site-media/v1/files/import"); }) });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(summary).toMatchObject({ failed: 1 });
+    expect(events.filter((e) => e.kind === "rate_limited")).toHaveLength(0);
+    expect(events).toContainEqual(expect.objectContaining({ kind: "import_failed" }));
   });
 });
