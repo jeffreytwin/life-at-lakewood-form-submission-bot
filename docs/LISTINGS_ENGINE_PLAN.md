@@ -1028,8 +1028,22 @@ are `origin = 'imported'` into `ParrishListingPhotos`, and nulling
 
 **Step 6 done, same evening.** Jeff ran **Delete stale rows** against
 `HousesforSale` once the target had moved: **6 rows**, the hand-pushed
-leftovers the engine does not adopt (the 09-16 analysis had counted 8 — 6 no
-longer Active and 2 leases — so the set had drifted by two over the day).
+leftovers the engine does not adopt. The 09-16 analysis had counted 8 (6 no
+longer Active, 2 leases); what changed in between was not recorded, and the
+button recomputes the set server-side rather than taking a stored list, so 6
+is what was actually there.
+
+Worth stating plainly, because the numbers look like they disagree: the
+engine's count did not move, and should not have. `deleteStaleRows` deletes
+the collection items whose `_id` is *not* in `loadOwnedIds`, and for Parrish
+that owned set is exactly the 276 live rows (the 427 removed ones carry no
+`wix_item_id`). So the six were never among the 276 — they had no
+`ls_site_listings` row at all, which is why no engine count ever included
+them and why they still carried photos from the old folders. The collection
+went 282 to 276; the engine's 276 is what it converged on. A drop to 270
+would have meant the button had deleted six of the engine's own listings,
+which is what recomputing `owned` exists to prevent.
+
 With those gone the collection is 276 rows, every one of them the engine's:
 276 live rows carrying a `wix_item_id`, `needs_write` 0, `gallery_ready` 276,
 no open events. That is the requirement met end to end — every image on every
