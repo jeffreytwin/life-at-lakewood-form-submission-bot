@@ -116,9 +116,12 @@ describe("wix media folder listing", () => {
     expect(urls).toHaveLength(2);
     // The hundred distinct files, counted once.
     expect(result.files).toHaveLength(100);
-    // Not truncated: there is no later page to come back for, and saying so
-    // would invite a resume that fetched this same page again.
-    expect(result.truncated).toBe(false);
+    // Truncated: this is the first page, not the folder. A caller told
+    // otherwise treats every file it never saw as absent -- which is the
+    // reading that put 13,932 of Parrish's photos "outside" a folder they
+    // were in.
+    expect(result.truncated).toBe(true);
+    // But no offset to resume at, so the cursor stops climbing.
     expect(result.nextOffset).toBe(0);
   });
 
@@ -164,5 +167,7 @@ describe("wix media folder listing", () => {
 
     expect(result.files).toHaveLength(200);
     expect(urls).toHaveLength(3);
+    expect(result.truncated).toBe(true);
+    expect(result.nextOffset).toBe(0);
   });
 });

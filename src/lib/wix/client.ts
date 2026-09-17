@@ -429,10 +429,12 @@ export async function listMediaFiles(
     cursor = res?.pagingMetadata?.cursors?.next ?? null;
     const done = { files, truncated: false, nextOffset: 0 };
     // Nothing new on a page that had rows: paging is not moving, so neither
-    // are we. The end rather than truncated -- there is no later page to come
-    // back for, and "cut short" would invite a resume that fetched this same
-    // page again.
-    if (batch.length && !fresh.length) return done;
+    // are we. Truncated, because what we hold is the first page and not the
+    // folder -- a caller told otherwise would treat every file it never saw
+    // as absent, which is the reading that put 13,932 of Parrish's photos
+    // "outside" a folder they were in. nextOffset 0 because there is no later
+    // page to resume at; the next scan starts over rather than climbing.
+    if (batch.length && !fresh.length) return { files, truncated: true, nextOffset: 0 };
     // A cursor that has run out is the end, even on a full page.
     if (offers && !cursor) return done;
     // Without cursors, a short page is the end of the folder.
