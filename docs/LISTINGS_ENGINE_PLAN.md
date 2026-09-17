@@ -1275,12 +1275,41 @@ two costs are worth watching after the first discovery:
   listing's media metadata already on hand. Do not prune a market city on
   the evidence of a single crawl.
 
-  **What this does mean** is that the unshown set only grows: the retention
-  purge covers `ls_sync_runs` (50 newest / 90 days) and `ls_sync_events`
-  (30 days), and nothing ever deletes an `ls_listings` row. Comfortable at
-  Supabase Pro scale and not worth acting on now, but if it ever wants
-  bounding, the sweep to write is one over listings that are no longer
-  Active and on no site.
+  **The sweep that bounds it (migration 055, same day).** Nothing used to
+  delete an `ls_listings` row -- retention covered `ls_sync_runs` and
+  `ls_sync_events` only -- so the unshown set was monotonic. Jeff: "I don't
+  want to have any data get out of hand over time without us noticing."
+  `ls_purge_unmatched_listings(older_than_days, max_rows)` runs in the
+  nightly full, and `purgeUnmatchedListings` in `runs.ts` reports what it
+  took.
+
+  What it does **not** do is delete on age, and the reason is the whole
+  design. Jeff's use for the unshown set is that he reads it: the unmatched
+  view is how he finds a subdivision or street that should have matched a
+  village he already has, and a village that is missing altogether. That
+  view selects `in_feed = true AND standard_status = 'Active'`
+  (`unmatched.ts`), and on the day this was built **349 of the 379 unshown
+  listings were Active** -- so an age rule would have deleted the entire
+  contents of the picture it is meant to protect, and they would not have
+  come back (the incremental pulls by modification window, the full only
+  re-verifies ids already held; only a discover scan finds a quiet Active
+  listing again). So the sweep's predicate is the exact complement of that
+  view's: out of the feed, or a status that can no longer reach a site.
+  Nothing it deletes has ever been shown there.
+
+  Two details worth keeping. The clock is `modification_timestamp`, not
+  `last_seen_at`: the nightly re-verifies every id it holds, so
+  `last_seen_at` read as *today* for all eight status cohorts including
+  listings closed weeks earlier, and an age test against it would never have
+  fired once -- a retention sweep that silently never runs being precisely
+  the failure asked about. And a listing that was ever on a site is left
+  alone: its `ls_site_listings` rows are the record of what went up and came
+  down, and the FK cascades.
+
+  Verified before it shipped: at 60 days it takes **0** rows today, at 0
+  days it would take **18** (13 Closed, 2 Expired, 2 Withdrawn, 1 Canceled),
+  and the 349 Active are untouched either way. It stays a no-op until about
+  mid-November, when the first listings reach 60 days.
 - **The unmatched view.** It lists the Active listings in a site's market
   that match no term, which for this site means every subdivision in three
   cities rather than the handful Wellen Park is missing. It stays the right

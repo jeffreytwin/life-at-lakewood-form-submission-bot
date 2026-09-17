@@ -8,7 +8,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { INCREMENTAL_EVERY_MINUTES, runReconcile, type ReconcileResult } from "@/lib/listings/reconcile";
-import { lastOkRunStartedAt, purgeOldRuns, runningRun } from "@/lib/listings/runs";
+import { lastOkRunStartedAt, purgeOldRuns, purgeUnmatchedListings, runningRun, type UnmatchedPurgeResult } from "@/lib/listings/runs";
 import { runStandalonePhotoJob, type StandalonePhotoResult } from "@/lib/listings/photos";
 import type { RunTrigger } from "@/lib/listings/types";
 import type { DiscoverCursor } from "@/lib/listings/discover";
@@ -102,13 +102,23 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
     lastStatus: result.status,
   };
   if (mode === "full" && result.status === "ok" && !result.truncated) nextState.lastFullDate = utcDate(now);
-  let purged: { runs: number; events: number } | null = null;
+  let purged: { runs: number; events: number; unmatched?: UnmatchedPurgeResult } | null = null;
   if (mode === "full") {
     try {
       purged = await purgeOldRuns();
       nextState.lastPurgeAt = now.toISOString();
     } catch (purgeError) {
       logger.warn("Listings retention purge failed", { error: String(purgeError) });
+    }
+    // Separate try: the listing sweep is newer and touches more than run
+    // rows, so a failure in it must not cost the runs/events purge above,
+    // nor the run itself. It is bounded and idempotent, so the next nightly
+    // simply picks up whatever this one did not take.
+    try {
+      const unmatched = await purgeUnmatchedListings();
+      purged = { ...(purged ?? { runs: 0, events: 0 }), unmatched };
+    } catch (sweepError) {
+      logger.warn("Listings unmatched sweep failed", { error: String(sweepError) });
     }
   }
   await supabase.from("system_settings").update({ ls_engine_state: nextState }).eq("id", 1);

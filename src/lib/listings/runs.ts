@@ -383,3 +383,112 @@ export async function purgeOldRuns(): Promise<{ runs: number; events: number }> 
   }
   return { runs, events: (eventsDeleted ?? []).length };
 }
+
+/** How long a listing no site ever showed has to sit unchanged before the sweep takes it. */
+export const UNMATCHED_RETENTION_DAYS = 60;
+/** At most this many per sweep, so a predicate that is wrong cannot empty the table in one night. */
+export const UNMATCHED_PURGE_MAX_ROWS = 500;
+
+export interface UnmatchedPurgeResult {
+  listings: number;
+  mediaRows: number;
+  /** The sweep filled its cap, so more are waiting and the next run will take them. */
+  hitCap: boolean;
+  /** How many went, by status, for the event message. */
+  byStatus: Record<string, number>;
+}
+
+interface PurgedRow {
+  listing_id: string;
+  standard_status: string | null;
+  city: string | null;
+  in_feed: boolean;
+  last_change: string | null;
+  media_rows: number;
+}
+
+/**
+ * Retention for listings no site has ever shown (migration 055). A market
+ * city holds every Active listing in it whether or not a term matches, and
+ * nothing used to delete one, so the unshown set only grew.
+ *
+ * Status decides, not age: an unmatched listing that is still Active is the
+ * inventory the wide city list exists to hold and the unmatched view's whole
+ * content, so only listings that can no longer become live are swept, and
+ * only once nothing has changed on them for UNMATCHED_RETENTION_DAYS. See the
+ * migration for why the clock is modification_timestamp and not last_seen_at.
+ *
+ * The point of the bound is that the unmatched set is read, not merely
+ * stored: it is where a missing term or a missing village shows up. So the
+ * predicate is deliberately the complement of what `listUnmatchedListings`
+ * selects (`in_feed = true AND standard_status = 'Active'`) -- this can only
+ * ever delete rows that view has never shown. Widen it and that stops being
+ * true.
+ *
+ * Writes an event when it deletes something, because a sweep nobody sees is
+ * how data gets out of hand quietly -- which is the point of having it. A
+ * sweep that deletes nothing stays silent, so the nightly does not log a
+ * no-op every night for the two months before the first row is old enough.
+ */
+export async function purgeUnmatchedListings(
+  options: { olderThanDays?: number; maxRows?: number } = {}
+): Promise<UnmatchedPurgeResult> {
+  const olderThanDays = options.olderThanDays ?? UNMATCHED_RETENTION_DAYS;
+  const maxRows = options.maxRows ?? UNMATCHED_PURGE_MAX_ROWS;
+  const { data, error } = await supabase.rpc("ls_purge_unmatched_listings", {
+    older_than_days: olderThanDays,
+    max_rows: maxRows,
+  });
+  if (error) throw new Error(`purge unmatched listings: ${errorMessage(error)}`);
+
+  const rows = (data ?? []) as PurgedRow[];
+  const byStatus: Record<string, number> = {};
+  let mediaRows = 0;
+  for (const row of rows) {
+    const status = row.standard_status || "unknown";
+    byStatus[status] = (byStatus[status] ?? 0) + 1;
+    mediaRows += Number(row.media_rows) || 0;
+  }
+  const result: UnmatchedPurgeResult = { listings: rows.length, mediaRows, hitCap: rows.length >= maxRows, byStatus };
+  if (!rows.length) return result;
+
+  const spread = Object.entries(byStatus)
+    .sort((a, b) => b[1] - a[1])
+    .map(([status, n]) => `${n} ${status}`)
+    .join(", ");
+  const capNote = result.hitCap ? ` The sweep filled its limit of ${maxRows}, so more are waiting for the next one.` : "";
+  await recordGlobalEvent({
+    level: "info",
+    kind: "retention_purge",
+    message:
+      `Removed ${rows.length} listing(s) no site was showing and ${mediaRows} photo record(s) with them ` +
+      `(${spread}; nothing changed on them in ${olderThanDays} days).${capNote}`,
+    details: {
+      listings: rows.length,
+      mediaRows,
+      olderThanDays,
+      maxRows,
+      hitCap: result.hitCap,
+      byStatus,
+      sample: rows.slice(0, 10).map((r) => ({ listingId: r.listing_id, status: r.standard_status, city: r.city, lastChange: r.last_change })),
+    },
+  });
+  return result;
+}
+
+/**
+ * An event that belongs to no site and no run: the retention sweep works
+ * across every site's market at once. site_id is nullable and the Change Log
+ * only filters on it when a site is chosen, so an unfiltered view shows it.
+ * Never throws -- a failed note must not fail the sweep that already ran.
+ */
+async function recordGlobalEvent(event: { level: EventLevel; kind: string; message: string; details?: unknown }): Promise<void> {
+  const { error } = await supabase.from("ls_sync_events").insert({
+    site_id: null,
+    level: event.level,
+    kind: event.kind,
+    message: event.message,
+    details: event.details ?? null,
+  });
+  if (error) logger.warn("Listings retention event failed", { kind: event.kind, error: errorMessage(error) });
+}
