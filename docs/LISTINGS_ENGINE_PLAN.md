@@ -1009,6 +1009,28 @@ must never fetch at once.
 *Written 2026-09-17, from the state below. Read it beside the Longboat Key
 runbook above: the shape is the same, three things are not.*
 
+**Cutover done (2026-09-17, 19:36 UTC).** Life At Parrish is live. Jeff
+audited the photo library and took the `HousesforSale` export (steps 0 and
+2), the flip ran at 19:36:25 with no run in flight, and the 19:40 cron tick
+carried it: `incremental`, ok, 23.8 s, **0 inserted / 276 updated / 0
+deleted**, 0 failed writes, 0 warnings, 0 errors, `stats_refreshed` true, so
+the neighborhood stats reached `HousesforSale-DynamicPages`. Afterwards all
+276 live rows carried a fresh `written_at`, `needs_write` was 0, and
+`gallery_ready` was 276 of 276 — the one listing still waiting on a
+re-imported photo at the flip completed itself in the same run. No open
+errors on either site. Step 5 was Jeff's in a browser (this session's egress
+cannot reach lifeatparrish.com): "looking good on the website".
+
+Every gallery on the site is now the engine's, which was the requirement
+this cutover was run against: all 14,030 `ls_site_media` rows for Parrish
+are `origin = 'imported'` into `ParrishListingPhotos`, and nulling
+`written_at` rewrote every row rather than only the changed ones.
+
+**Still open:** step 6, the stale rows — the hand-pushed leftovers the
+engine does not adopt are still in `HousesforSale` carrying photos from the
+old folders, and **Delete stale rows** now acts on the live collection. Then
+step 7 a week out: the old Media Manager folders and `HousesforSale2`.
+
 **What is different from Longboat Key.**
 
 1. **There is no Velo job to stop.** Parrish was never on the Velo sync; its
