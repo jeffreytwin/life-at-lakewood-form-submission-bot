@@ -477,7 +477,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
           continue;
         }
         try {
-          const repair = await reimportBrokenPhotos(site.id, opts.deadline);
+          const repair = await reimportBrokenPhotos(site.id, { deadline: opts.deadline, resume: true });
           if (repair.refused) {
             run.event("error", "photos_broken", `${site.name}: ${repair.refused}`, { siteId: site.id });
           } else if (repair.broken) {

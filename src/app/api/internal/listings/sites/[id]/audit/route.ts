@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeEngineRequest, engineErrorResponse } from "@/lib/listings/auth";
-import { auditSite, deleteStaleRows, reimportBrokenPhotos } from "@/lib/listings/audit";
+import { auditSite, deleteStaleRows, reimportBrokenPhotos, REIMPORT_FOLDER_BUDGET_MS } from "@/lib/listings/audit";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -36,7 +36,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   try {
     const body = await request.json().catch(() => ({}));
-    if (body?.reimportBroken === true) return NextResponse.json(await reimportBrokenPhotos(id));
+    // Bounded, or a folder the size of Parrish's walks past the route's
+    // maxDuration and the whole repair comes back a 504.
+    if (body?.reimportBroken === true) {
+      return NextResponse.json(await reimportBrokenPhotos(id, { deadline: Date.now() + REIMPORT_FOLDER_BUDGET_MS }));
+    }
     if (body?.deleteStale !== true || typeof body?.collectionId !== "string") {
       return NextResponse.json({ error: "Body must be { deleteStale: true, collectionId } or { reimportBroken: true }" }, { status: 400 });
     }
