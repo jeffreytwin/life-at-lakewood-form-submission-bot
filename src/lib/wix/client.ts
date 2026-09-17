@@ -359,12 +359,35 @@ export interface ListMediaFilesOptions {
   maxPages?: number;
 }
 
+/**
+ * The key names of a response envelope, one level deep, with array lengths
+ * and value *types* but never values. Enough to work out how an endpoint
+ * pages without putting any of the payload into a report.
+ *
+ * It exists because the Media Manager file listing pages neither of the two
+ * ways the code has assumed: paging.offset is ignored, and there is no
+ * pagingMetadata.cursors.next to follow. Rather than guess a third time, the
+ * audit reports what the endpoint actually sends back.
+ */
+export function envelopeShape(res: unknown): string[] {
+  if (!res || typeof res !== "object") return [];
+  const out: string[] = [];
+  for (const [key, value] of Object.entries(res as Record<string, unknown>)) {
+    if (Array.isArray(value)) out.push(`${key}[${value.length}]`);
+    else if (value && typeof value === "object") out.push(`${key}{${Object.keys(value as Record<string, unknown>).slice(0, 10).join(",")}}`);
+    else out.push(`${key}:${value === null ? "null" : typeof value}`);
+  }
+  return out.sort();
+}
+
 export interface ListMediaFilesResult {
   files: WixMediaFile[];
   /** The listing stopped before the end of the folder. */
   truncated: boolean;
   /** Where the next call should start; 0 once the end has been reached. */
   nextOffset: number;
+  /** The first response's envelope (key names only), for diagnosing how this endpoint pages. */
+  shape?: string[];
 }
 
 /**
@@ -407,8 +430,9 @@ export async function listMediaFiles(
   const seen = new Set<string>();
   let offset = Math.max(0, startOffset);
   let cursor: string | null = null;
+  let shape: string[] = [];
   for (let page = 0; page < Math.min(maxPages, FILE_PAGE_CAP); page += 1) {
-    if (deadline !== undefined && Date.now() > deadline) return { files, truncated: true, nextOffset: offset };
+    if (deadline !== undefined && Date.now() > deadline) return { files, truncated: true, nextOffset: offset, shape };
     const paging: string = cursor
       ? `paging.cursor=${encodeURIComponent(cursor)}`
       : `paging.limit=${FILE_PAGE}&paging.offset=${offset}`;
@@ -417,6 +441,7 @@ export async function listMediaFiles(
       "GET",
       `/site-media/v1/files?parentFolderId=${encodeURIComponent(parentFolderId)}&${paging}`
     );
+    if (!shape.length) shape = envelopeShape(res);
     const batch: WixMediaFile[] = res?.files ?? [];
     const fresh = batch.filter((f) => typeof f.id === "string" && !seen.has(f.id));
     for (const f of fresh) seen.add(f.id);
@@ -427,20 +452,20 @@ export async function listMediaFiles(
     // offset paging, where a short page is the end.
     const offers = !!res?.pagingMetadata?.cursors;
     cursor = res?.pagingMetadata?.cursors?.next ?? null;
-    const done = { files, truncated: false, nextOffset: 0 };
+    const done = { files, truncated: false, nextOffset: 0, shape };
     // Nothing new on a page that had rows: paging is not moving, so neither
     // are we. Truncated, because what we hold is the first page and not the
     // folder -- a caller told otherwise would treat every file it never saw
     // as absent, which is the reading that put 13,932 of Parrish's photos
     // "outside" a folder they were in. nextOffset 0 because there is no later
     // page to resume at; the next scan starts over rather than climbing.
-    if (batch.length && !fresh.length) return { files, truncated: true, nextOffset: 0 };
+    if (batch.length && !fresh.length) return { files, truncated: true, nextOffset: 0, shape };
     // A cursor that has run out is the end, even on a full page.
     if (offers && !cursor) return done;
     // Without cursors, a short page is the end of the folder.
     if (!offers && batch.length < FILE_PAGE) return done;
   }
-  return { files, truncated: true, nextOffset: offset };
+  return { files, truncated: true, nextOffset: offset, shape };
 }
 
 export async function findMediaFolder(siteId: string, displayName: string): Promise<WixMediaFolder | null> {

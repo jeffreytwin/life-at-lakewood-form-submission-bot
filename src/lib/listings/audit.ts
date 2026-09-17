@@ -45,6 +45,12 @@ export interface FolderAudit {
    * like a file that is not there.
    */
   comparedToFolder: boolean;
+  /**
+   * The listing response's envelope, key names only. Shown when the walk
+   * could not finish, because the reason it could not is in here: which
+   * paging fields this endpoint actually returns.
+   */
+  listingShape: string[];
 }
 
 /** How much of a folder may look broken before the engine assumes it is misreading Wix, not Wix failing. */
@@ -210,6 +216,7 @@ export async function auditSite(siteId: string, now: number = Date.now()): Promi
     filesInFolder: 0,
     listingTruncated: false,
     comparedToFolder: false,
+    listingShape: [],
     engineFiles: 0,
     engineFilesInFolder: 0,
     outsideFolder: [],
@@ -228,6 +235,7 @@ export async function auditSite(siteId: string, now: number = Date.now()): Promi
     folderFileIds = listing.files.map((f) => f.id);
     folder.filesInFolder = folderFileIds.length;
     folder.listingTruncated = listing.truncated;
+    folder.listingShape = listing.shape ?? [];
     const engineIds = new Set(await loadEngineFileIds(site.id));
     for (const file of listing.files) {
       if (!engineIds.has(file.id)) continue;
