@@ -82,6 +82,36 @@ async function wixRequest<T>(
   return (text ? JSON.parse(text) : null) as T;
 }
 
+export interface WixCollectionField {
+  key: string;
+  displayName?: string;
+  type?: string;
+}
+
+export interface WixDataCollection {
+  id: string;
+  displayName?: string;
+  fields: WixCollectionField[];
+  permissions?: Record<string, unknown>;
+  plugins?: unknown[];
+}
+
+/** A collection's schema, or null when the site has no collection by that id. */
+export async function getDataCollection(siteId: string, collectionId: string): Promise<WixDataCollection | null> {
+  try {
+    const res = await wixRequest<{ collection?: WixDataCollection }>(
+      siteId,
+      "GET",
+      `/wix-data/v2/collections/${encodeURIComponent(collectionId)}`
+    );
+    const collection = res?.collection ?? null;
+    return collection ? { ...collection, fields: collection.fields ?? [] } : null;
+  } catch (error) {
+    if (error instanceof WixApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
 const draftsParam = "publishPluginOptions.includeDraftItems=true";
 
 export interface QueryItemsOptions {
