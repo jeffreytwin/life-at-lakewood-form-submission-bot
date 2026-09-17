@@ -4,7 +4,7 @@ vi.mock("@/lib/shared/logger", () => ({ logger: { debug: vi.fn(), info: vi.fn(),
 vi.mock("@/lib/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/lib/wix/client", () => ({ bulkRemoveItems: vi.fn(), listMediaFiles: vi.fn(), queryAllItems: vi.fn() }));
 
-import { compareCollection, compareFolder } from "@/lib/listings/audit";
+import { compareCollection, compareFolder, scanWindow } from "@/lib/listings/audit";
 
 const uri = (fileId: string) => `wix:image://v1/${fileId}/photo.jpg#originWidth=1600&originHeight=1066`;
 
@@ -47,5 +47,24 @@ describe("compareCollection", () => {
     const result = compareCollection(items, ["MFR1", "MFR2", "row-3"], null);
     expect(result.staleCount).toBe(0);
     expect(result.galleryOutsideFolder).toBeNull();
+  });
+});
+
+describe("scanWindow", () => {
+  it("resumes from the cursor and moves it on for a caller working to a clock", () => {
+    // The photo pass and the nightly sweep: the folder is covered across
+    // passes rather than only ever its first pages.
+    expect(scanWindow(Date.now() + 60_000, 20_000)).toEqual({ startOffset: 20_000, advances: true });
+  });
+
+  it("sweeps the whole library for a person who pressed the button, and leaves the cursor alone", () => {
+    // Otherwise the audit reports on everything and the reimport beside it
+    // fixes only the tail: "12 broken" and then "cleared 2", for no visible
+    // reason. Parrish's cursor sat at 20,000 when this was found.
+    expect(scanWindow(undefined, 20_000)).toEqual({ startOffset: 0, advances: false });
+  });
+
+  it("does not run off the front of the folder on a bad stored cursor", () => {
+    expect(scanWindow(Date.now() + 60_000, -5).startOffset).toBe(0);
   });
 });

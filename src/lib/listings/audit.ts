@@ -307,6 +307,25 @@ export async function deleteStaleRows(siteId: string, collectionId: string): Pro
  * reports, and discarding thousands of good imports would be far worse than
  * leaving a few bad ones.
  */
+/**
+ * Where a sweep of the Media Manager folder starts, and whether it moves the
+ * shared cursor on.
+ *
+ * A caller working to a clock covers the folder across passes: it picks up
+ * where the last one stopped and leaves the cursor further along. A caller
+ * with no clock is a person who pressed the button, and they mean the whole
+ * library -- as the read-only audit beside it already does. Resuming from
+ * wherever the background scan happened to be would report on the tail and
+ * silently leave the rest, right after an audit that swept everything:
+ * "12 broken" and then "cleared 2", for no visible reason. It leaves the
+ * cursor alone as well, so pressing the button does not cost the background
+ * scan its place.
+ */
+export function scanWindow(deadline: number | undefined, cursor: number): { startOffset: number; advances: boolean } {
+  const paced = deadline !== undefined;
+  return { startOffset: paced ? Math.max(0, cursor) : 0, advances: paced };
+}
+
 export async function reimportBrokenPhotos(siteId: string, deadline?: number): Promise<ReimportResult> {
   const site = await loadSite(siteId);
   if (!site.wix_site_id) throw new HubError(`${site.name} has no wix_site_id`, 409);
@@ -315,15 +334,21 @@ export async function reimportBrokenPhotos(siteId: string, deadline?: number): P
 
   // Listing a big folder is hundreds of sequential Wix requests, so a caller
   // working to a clock passes its deadline and takes whatever was reached.
-  // Checking part of the library is fine: the files it did not see are
-  // simply left for the next pass, and nothing is inferred from their absence.
-  // Resumes where the last scan stopped, so a folder too big to list inside
-  // one deadline is covered across passes instead of only ever its first
-  // pages (migration 054). The cursor is shared with the photo pass, which
-  // scans the same folder looking for the same thing: whoever runs moves it
-  // on, and reaching the end sets it back to 0 and the cycle begins again.
-  const listing = await listMediaFiles(site.wix_site_id, folderId, { deadline, startOffset: site.media_scan_offset });
-  await setSiteMediaScanOffset(site.id, listing.nextOffset);
+  // Checking part of the library is fine there: the files it did not see are
+  // left for the next pass, and nothing is inferred from their absence. Such
+  // a caller resumes from the cursor and moves it on, so the folder is
+  // covered across passes rather than only ever its first pages (054).
+  //
+  // A caller with no deadline is a person who pressed the button, and they
+  // mean the whole library -- as the read-only audit beside it already does.
+  // Resuming from wherever the background scan happened to be would report
+  // on the tail and silently leave the rest, right after an audit that swept
+  // everything: "12 broken" followed by "cleared 2", for no visible reason.
+  // It leaves the cursor alone too, so a manual sweep does not cost the
+  // background scan its place.
+  const { startOffset, advances } = scanWindow(deadline, site.media_scan_offset);
+  const listing = await listMediaFiles(site.wix_site_id, folderId, { deadline, startOffset });
+  if (advances) await setSiteMediaScanOffset(site.id, listing.nextOffset);
   const engineIds = new Set(await loadEngineFileIds(site.id));
   const broken = listing.files.filter((f) => engineIds.has(f.id) && mediaState(f) === "broken").map((f) => f.id);
   const result: ReimportResult = { broken: broken.length, cleared: 0, listings: 0, refused: null, truncated: listing.truncated };
