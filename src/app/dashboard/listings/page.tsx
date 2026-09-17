@@ -117,6 +117,7 @@ interface AuditReport {
     resolved: boolean;
     filesInFolder: number;
     listingTruncated: boolean;
+    comparedToFolder: boolean;
     engineFiles: number;
     engineFilesInFolder: number;
     outsideFolder: string[];
@@ -600,7 +601,9 @@ export default function ListingsOverviewPage() {
                           ? "none configured (imports go to Wix's default location)"
                           : !f.resolved
                             ? `"${a.site.media_folder_name}" not resolved yet (no import has run for this location)`
-                            : `"${a.site.media_folder_name}" holds ${f.filesInFolder} file(s)${f.listingTruncated ? " (listing cut short)" : ""}; the engine holds ${f.engineFiles} photo(s), ${f.engineFilesInFolder} in the folder, ${f.outsideFolderCount} outside${f.outsideFolder.length ? ` (${f.outsideFolder.slice(0, 5).join(", ")}${f.outsideFolderCount > 5 ? ", …" : ""})` : ""}; ${f.unknownInFolder} file(s) in the folder are not the engine's`}
+                            : !f.comparedToFolder
+                              ? `"${a.site.media_folder_name}": the listing stopped after ${f.filesInFolder} file(s), so the engine's ${f.engineFiles} photo(s) could not be checked against it. A photo the walk never reached looks the same as one that is not there, so no count is given.`
+                              : `"${a.site.media_folder_name}" holds ${f.filesInFolder} file(s); the engine holds ${f.engineFiles} photo(s), ${f.engineFilesInFolder} in the folder, ${f.outsideFolderCount} outside${f.outsideFolder.length ? ` (${f.outsideFolder.slice(0, 5).join(", ")}${f.outsideFolderCount > 5 ? ", …" : ""})` : ""}; ${f.unknownInFolder} file(s) in the folder are not the engine's`}
                       </div>
                       {f.resolved && (f.brokenFiles > 0 || f.pendingFiles > 0) && (
                         <div style={{ marginTop: 6 }}>

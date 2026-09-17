@@ -95,4 +95,79 @@ describe("wix media folder listing", () => {
     expect(urls.map(offsetOf)).toEqual([0, 100]);
     expect(result.files).toHaveLength(120);
   });
+
+  it("stops when the endpoint keeps serving the same page", async () => {
+    // Parrish, for real: 157 requests, 15,700 entries, about a hundred
+    // distinct files. The endpoint ignored paging.offset and served the first
+    // page forever, so the scan cursor climbed past 30,000 without ever
+    // reaching an end and the audit called 13,932 photos "outside the folder"
+    // because it had never seen them.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        const files = Array.from({ length: 100 }, (_, i) => ({ id: `file-${i}` }));
+        return new Response(JSON.stringify({ files }), { headers: { "content-type": "application/json" } });
+      })
+    );
+
+    const result = await listMediaFiles("site-1", "folder-1");
+
+    expect(urls).toHaveLength(2);
+    // The hundred distinct files, counted once.
+    expect(result.files).toHaveLength(100);
+    // Truncated: this is the first page, not the folder. A caller told
+    // otherwise treats every file it never saw as absent -- which is the
+    // reading that put 13,932 of Parrish's photos "outside" a folder they
+    // were in.
+    expect(result.truncated).toBe(true);
+    // But no offset to resume at, so the cursor stops climbing.
+    expect(result.nextOffset).toBe(0);
+  });
+
+  it("follows a cursor when the endpoint offers one", async () => {
+    let call = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        call += 1;
+        const files = Array.from({ length: 100 }, (_, i) => ({ id: `page${call}-file-${i}` }));
+        const next = call < 3 ? `cursor-${call}` : null;
+        return new Response(JSON.stringify({ files, pagingMetadata: { cursors: { next } } }), {
+          headers: { "content-type": "application/json" },
+        });
+      })
+    );
+
+    const result = await listMediaFiles("site-1", "folder-1");
+
+    expect(result.files).toHaveLength(300);
+    expect(urls[0]).toContain("paging.offset=0");
+    expect(urls[1]).toContain("paging.cursor=cursor-1");
+    expect(urls[2]).toContain("paging.cursor=cursor-2");
+    expect(result.truncated).toBe(false);
+  });
+
+  it("keeps the files it did see when paging stalls partway", async () => {
+    let call = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        urls.push(url);
+        call += 1;
+        // Two real pages, then the same page again forever.
+        const page = Math.min(call, 2);
+        const files = Array.from({ length: 100 }, (_, i) => ({ id: `page${page}-file-${i}` }));
+        return new Response(JSON.stringify({ files }), { headers: { "content-type": "application/json" } });
+      })
+    );
+
+    const result = await listMediaFiles("site-1", "folder-1");
+
+    expect(result.files).toHaveLength(200);
+    expect(urls).toHaveLength(3);
+    expect(result.truncated).toBe(true);
+    expect(result.nextOffset).toBe(0);
+  });
 });

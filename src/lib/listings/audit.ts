@@ -38,6 +38,13 @@ export interface FolderAudit {
   brokenFiles: number;
   /** Engine files Wix is still processing; they may yet come good. */
   pendingFiles: number;
+  /**
+   * Whether the engine's photos were actually checked against the folder.
+   * False when the listing was cut short: the counts below it are then not
+   * evidence of anything, because a file the walk never reached looks exactly
+   * like a file that is not there.
+   */
+  comparedToFolder: boolean;
 }
 
 /** How much of a folder may look broken before the engine assumes it is misreading Wix, not Wix failing. */
@@ -202,6 +209,7 @@ export async function auditSite(siteId: string, now: number = Date.now()): Promi
     resolved: !!site.media_folder_id,
     filesInFolder: 0,
     listingTruncated: false,
+    comparedToFolder: false,
     engineFiles: 0,
     engineFilesInFolder: 0,
     outsideFolder: [],
@@ -227,9 +235,24 @@ export async function auditSite(siteId: string, now: number = Date.now()): Promi
       if (state === "broken") folder.brokenFiles += 1;
       else if (state === "pending") folder.pendingFiles += 1;
     }
-    Object.assign(folder, compareFolder(engineIds, folderFileIds));
+    // Only against a listing that reached the end. "Outside the folder" is
+    // inferred from absence, and absence from a partial listing means only
+    // that the walk stopped first -- which is how a cut-short scan reported
+    // 13,932 of Parrish's 14,031 photos as outside a folder they were in.
+    if (listing.truncated) {
+      folder.engineFiles = engineIds.size;
+      folder.comparedToFolder = false;
+      // The collections' galleries are checked against the same set, and
+      // "points outside the folder" is the same inference from the same
+      // absence. null is already how this report says "could not check".
+      folderFileIds = null;
+    } else {
+      Object.assign(folder, compareFolder(engineIds, folderFileIds));
+      folder.comparedToFolder = true;
+    }
   } else {
     folder.engineFiles = new Set(await loadEngineFileIds(site.id)).size;
+    folder.comparedToFolder = false;
   }
 
   const owned = await loadOwnedIds(site.id);
