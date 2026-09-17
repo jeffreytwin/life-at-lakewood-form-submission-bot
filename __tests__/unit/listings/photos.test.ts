@@ -7,7 +7,16 @@ vi.mock("@/lib/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/lib/wix/client", async (importOriginal) => {
   // The real WixApiError: the photo job branches on its rateLimited flag.
   const actual = await importOriginal<typeof import("@/lib/wix/client")>();
-  return { WixApiError: actual.WixApiError, importMediaFromUrl: vi.fn(), findMediaFolder: vi.fn() };
+  // mediaState and WIX_MEDIA_ROOT are pure; the verification step's reading
+  // of what Wix reports is part of what these tests check.
+  return {
+    WixApiError: actual.WixApiError,
+    mediaState: actual.mediaState,
+    WIX_MEDIA_ROOT: actual.WIX_MEDIA_ROOT,
+    importMediaFromUrl: vi.fn(),
+    findMediaFolder: vi.fn(),
+    listMediaFiles: vi.fn(),
+  };
 });
 vi.mock("@/lib/listings/db", () => ({
   loadActiveSites: vi.fn(),
@@ -18,6 +27,9 @@ vi.mock("@/lib/listings/db", () => ({
   findStoredByHash: vi.fn(),
   upsertSiteMedia: vi.fn(),
   upsertSiteListings: vi.fn(),
+  loadUnverifiedSiteMedia: vi.fn(),
+  markSiteMediaVerified: vi.fn(),
+  dropSiteMedia: vi.fn(),
 }));
 vi.mock("@/lib/listings/runs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/listings/runs")>();
@@ -26,7 +38,7 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 
 import * as db from "@/lib/listings/db";
 import { emptyCounts, startRun, type RunHandle } from "@/lib/listings/runs";
-import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, type PhotoDeps } from "@/lib/listings/photos";
+import { displayNameFor, hasFreshUrl, pool, runPhotoJob, runStandalonePhotoJob, withTimeout, DOWNLOAD_CONCURRENCY, FOLDER_LOOKUP_TIMEOUT_MS, FRESH_URL_MS, IMPORT_CONCURRENCY, IMPORT_RETRY_MS, LONG_RETRY_MS, MAX_DOWNLOAD_ATTEMPTS, RATE_LIMIT_MAX_WAIT_MS, RATE_LIMIT_RETRIES, RETRY_AFTER_MS, VERIFY_AFTER_MS, VERIFY_GIVE_UP_MS, type PhotoDeps } from "@/lib/listings/photos";
 import { WixApiError } from "@/lib/wix/client";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, MlsGridProperty } from "@/lib/listings/types";
@@ -115,6 +127,7 @@ function fakeDeps(overrides: Partial<PhotoDeps> = {}): PhotoDeps {
     publicUrl: (path: string) => `https://cdn.test/${path}`,
     importToWix: vi.fn(async () => ({ id: `file-${++fileNo}` })),
     findFolder: vi.fn(async () => null),
+    listFiles: vi.fn(async () => ({ files: [], truncated: false })),
     cacheFolder: vi.fn(async () => {}),
     ...overrides,
   };
@@ -135,6 +148,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(db.findStoredByHash).mockResolvedValue(null);
   vi.mocked(db.loadPhotoBacklog).mockResolvedValue([]);
+  vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValue([]);
+  vi.mocked(db.dropSiteMedia).mockResolvedValue([]);
 });
 
 describe("runPhotoJob", () => {
@@ -153,8 +168,10 @@ describe("runPhotoJob", () => {
       expect.objectContaining({ storage_path: "listings/images/MFR1/p1.jpeg", source_url: null, retry_after: null, download_attempts: 1, content_hash: expect.stringMatching(/^[0-9a-f]{64}$/) })
     );
     expect(deps.importToWix).toHaveBeenCalledWith("wix-lbk", "https://cdn.test/listings/images/MFR1/p1.jpeg", "MFR1-1.jpeg", null);
+    // verified_at null: Wix has the URL, not yet the picture, so this photo
+    // is recorded but stays out of the gallery until it is confirmed.
     expect(db.upsertSiteMedia).toHaveBeenCalledWith([
-      { site_id: site.id, media_id: "m-MFR1-1", wix_file_id: "file-1", wix_image_uri: "wix:image://v1/file-1/MFR1-1.jpeg#originWidth=1600&originHeight=898", origin: "imported" },
+      { site_id: site.id, media_id: "m-MFR1-1", wix_file_id: "file-1", wix_image_uri: "wix:image://v1/file-1/MFR1-1.jpeg#originWidth=1600&originHeight=898", origin: "imported", verified_at: null },
     ]);
     expect(db.upsertSiteListings).toHaveBeenCalledWith([{ site_id: site.id, listing_id: "MFR1", needs_write: true }]);
     expect(handle.counts).toMatchObject({ images_downloaded: 2, images_imported: 2, images_failed: 0 });
@@ -639,5 +656,105 @@ describe("when Wix asks the engine to slow down", () => {
     expect(summary).toMatchObject({ failed: 1 });
     expect(events.filter((e) => e.kind === "rate_limited")).toHaveLength(0);
     expect(events).toContainEqual(expect.objectContaining({ kind: "import_failed" }));
+  });
+});
+
+/**
+ * Jeff, 2026-09-17: "We must never show broken photos in a houses for sale
+ * database. Period."
+ *
+ * Wix's URL import is asynchronous, so a file id proves only that the URL was
+ * taken. Until the engine has seen a picture the photo carries no verified_at
+ * and loadSiteGalleries leaves it out, so a gallery cannot contain one. These
+ * check the step that decides.
+ */
+describe("confirming Wix actually holds the picture", () => {
+  const waiting = (id: string, fileId: string, importedMinutesAgo = 60) => ({
+    id,
+    site_id: site.id,
+    media_id: `m-${id}`,
+    wix_file_id: fileId,
+    listing_id: "MFR1",
+    imported_at: new Date(NOW - importedMinutesAgo * MINUTE).toISOString(),
+  });
+  const readyFile = (id: string) => ({ id, operationStatus: "READY", media: { image: { image: { width: 1600, height: 898 } } } });
+  const failedFile = (id: string) => ({ id, operationStatus: "FAILED" });
+  const pendingFile = (id: string) => ({ id, operationStatus: "PENDING" });
+  const noMediaFile = (id: string) => ({ id, operationStatus: "READY" });
+
+  it("marks a photo verified once Wix is holding a picture for it", async () => {
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [readyFile("file-1")], truncated: false })) });
+    const { handle } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(db.markSiteMediaVerified).toHaveBeenCalledWith(["sm1"], new Date(NOW));
+    expect(db.dropSiteMedia).not.toHaveBeenCalled();
+    expect(summary.verified).toBe(1);
+  });
+
+  it("drops a photo Wix never fetched and sends its listing back for a rewrite", async () => {
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
+    vi.mocked(db.dropSiteMedia).mockResolvedValueOnce(["MFR1"]);
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [failedFile("file-1")], truncated: false })) });
+    const { handle, events } = fakeRun();
+
+    const summary = await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(db.dropSiteMedia).toHaveBeenCalledWith(["sm1"]);
+    // gallery_ready false is what keeps the listing out of 'live' until the
+    // picture is real, and needs_write rewrites the gallery without it.
+    expect(db.upsertSiteListings).toHaveBeenCalledWith([{ site_id: site.id, listing_id: "MFR1", needs_write: true, gallery_ready: false }]);
+    expect(summary.unverified).toBe(1);
+    expect(events).toContainEqual(expect.objectContaining({ level: "warn", kind: "photos_broken", message: expect.stringContaining("never fetched 1 photo(s)") }));
+  });
+
+  it("leaves a photo Wix is still working on alone", async () => {
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [pendingFile("file-1")], truncated: false })) });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(db.markSiteMediaVerified).not.toHaveBeenCalled();
+    expect(db.dropSiteMedia).not.toHaveBeenCalled();
+  });
+
+  it("gives up on one Wix will neither finish nor fail, so it is imported again", async () => {
+    // An id with nothing behind it: never ready, never failed. Left alone it
+    // would be a photo that is never shown and never retried.
+    const old = (VERIFY_GIVE_UP_MS / MINUTE) + 60;
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1", old)]);
+    vi.mocked(db.dropSiteMedia).mockResolvedValueOnce(["MFR1"]);
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [noMediaFile("file-1")], truncated: false })) });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(db.dropSiteMedia).toHaveBeenCalledWith(["sm1"]);
+  });
+
+  it("does not walk the folder for a photo Wix has only just been given", async () => {
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1", (VERIFY_AFTER_MS / MINUTE) - 1)]);
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [], truncated: false })) });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    expect(deps.listFiles).not.toHaveBeenCalled();
+    expect(db.markSiteMediaVerified).not.toHaveBeenCalled();
+  });
+
+  it("keeps waiting on a photo the folder listing never reached", async () => {
+    vi.mocked(db.loadUnverifiedSiteMedia).mockResolvedValueOnce([waiting("sm1", "file-1")]);
+    const deps = fakeDeps({ listFiles: vi.fn(async () => ({ files: [], truncated: true })) });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site], deps });
+
+    // Absent from a truncated listing is not evidence of anything.
+    expect(db.dropSiteMedia).not.toHaveBeenCalled();
+    expect(db.markSiteMediaVerified).not.toHaveBeenCalled();
   });
 });

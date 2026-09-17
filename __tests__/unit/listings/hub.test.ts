@@ -14,7 +14,7 @@ function builder(table: string) {
   const ops: string[] = [];
   calls.push({ table, ops });
   const chain: Record<string, unknown> = {};
-  const methods = ["select", "insert", "update", "delete", "upsert", "eq", "neq", "in", "is", "lt", "ilike", "order", "limit", "range", "single", "maybeSingle"];
+  const methods = ["select", "insert", "update", "delete", "upsert", "eq", "neq", "in", "is", "not", "lt", "ilike", "order", "limit", "range", "single", "maybeSingle"];
   for (const m of methods) {
     chain[m] = (...args: unknown[]) => {
       ops.push(`${m}(${args.map((a) => JSON.stringify(a)).join(",")})`);

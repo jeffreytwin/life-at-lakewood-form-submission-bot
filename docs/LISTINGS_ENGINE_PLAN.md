@@ -1294,3 +1294,66 @@ a run mode that gates its own "done" flag needs a failure path, or one bad run
 becomes an infinite one. The second is not fixed here: a full run that keeps
 dying will still be retried every tick until midnight UTC. Worth a bounded
 retry before the next nightly.
+
+## Never show a broken photo (2026-09-17)
+
+Jeff, after the day's photo work: *"We must never show broken photos in a
+houses for sale database. Period."*
+
+The engine could, and did. Wix's URL import is asynchronous: it takes a URL,
+returns a file id immediately, and fetches the picture afterwards — or fails
+to, leaving an id with nothing behind it. `ls_site_media` recorded the photo
+the moment that id came back, so from then on the engine treated it as
+available. The URI it builds is well-formed (it carries
+`#originWidth/#originHeight` from the MLS record, so `isRenderableWixImage`
+passes it), so it went straight into the gallery. Wix held no picture, and
+the site showed a broken image.
+
+The only thing that ever caught this was `reimportBrokenPhotos`, a nightly
+sweep looking for the damage *after* it was already on the site — and which,
+until today, had never once completed a run.
+
+**`verified_at` (migration 053)** makes the bad state unrepresentable rather
+than cleaning up after it. `loadSiteGalleries` returns a `src` only for rows
+that carry one, so a gallery cannot contain an unconfirmed photo; the
+listing's `gallery_ready` stays false, which already holds it in `staged`
+instead of promoting it. An import writes `verified_at: null`. A *seeded*
+photo was read out of the gallery the site is already serving, so Wix
+demonstrably holds a picture for it: verified by definition.
+
+**`verifyImportedPhotos`** runs at the head of every photo pass and settles
+what Wix did with the last one:
+
+- Wix holds a picture → `verified_at` stamped, and the photo may now be shown.
+- Wix failed → the `ls_site_media` row is dropped and the listing goes back
+  for a rewrite with `gallery_ready = false`, so the gallery is rebuilt
+  without it and the photo is imported again.
+- Still pending → left for the next pass.
+- Neither, for more than `VERIFY_GIVE_UP_MS` (6 h) → treated as failed. Wix
+  reports some files as an id with no media, which `mediaState` calls
+  "unknown"; without this such a photo would be neither shown nor retried,
+  for ever.
+
+The folder listing is the bulk read (one request per hundred files against
+one per file) and only runs when something has been waiting longer than
+`VERIFY_AFTER_MS` (10 minutes), so a photo imported moments ago does not
+trigger a walk of the whole folder to be told it is pending. A photo absent
+from a *truncated* listing keeps waiting: not being seen is not evidence.
+
+**What this costs.** Galleries appear later — a photo has to be confirmed
+before it can be shown, so a new listing sits `staged` for a pass or two
+longer than it used to. That is the right side of the trade: an incomplete
+gallery is a smaller harm than a broken one, and the rule is absolute.
+
+**The backfill is deliberate.** Every row that existed at migration time is
+stamped verified, including imports this cannot vouch for. Requiring
+verification retroactively would have emptied both live sites' galleries —
+10,468 photos on Longboat Key — until a sweep caught up, to fix a handful of
+broken pictures. The rule binds everything imported from here on; what is
+already out there is a one-off cleanup (the Hub's "Audit photos & rows").
+
+**Still worth doing.** `listMediaFiles` pages by offset from zero every
+time, so a listing cut short by the deadline restarts in the same place and
+never reaches the tail of a large folder. It is no longer load-bearing for
+correctness — `verified_at` is — but the nightly sweep is weaker than it
+looks on a folder Parrish's size, and a stored cursor would fix it.

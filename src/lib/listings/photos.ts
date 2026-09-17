@@ -12,7 +12,7 @@
 import { createHash } from "node:crypto";
 import { supabase } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/shared/errors";
-import { findMediaFolder, importMediaFromUrl, WixApiError } from "@/lib/wix/client";
+import { findMediaFolder, importMediaFromUrl, listMediaFiles, mediaState, WixApiError, WIX_MEDIA_ROOT, type WixMediaFile } from "@/lib/wix/client";
 import { MlsGridClient, MlsGridError } from "@/lib/listings/mlsgrid";
 import { normalizeMedia } from "@/lib/listings/normalize";
 import * as db from "@/lib/listings/db";
@@ -69,6 +69,21 @@ export const RATE_LIMIT_WAIT_MS = 5_000;
 export const RATE_LIMIT_MAX_WAIT_MS = 60_000;
 /** Times one photo is re-offered after a refusal before its site stands down for the pass. */
 export const RATE_LIMIT_RETRIES = 2;
+/**
+ * How long Wix gets to fetch a picture before the engine goes looking for
+ * it. Its URL import is asynchronous, so a photo is PENDING for a while by
+ * design; checking sooner would just find that and cost a folder listing.
+ */
+export const VERIFY_AFTER_MS = 10 * 60_000;
+/** Unverified photos examined per site per pass. */
+export const VERIFY_BATCH = 500;
+/**
+ * How long a photo may sit unconfirmed before it is given up on and imported
+ * again. Wix reports some files as neither ready nor failed -- an id with no
+ * media behind it, which mediaState calls "unknown" -- and such a photo would
+ * otherwise be neither shown nor retried, for ever.
+ */
+export const VERIFY_GIVE_UP_MS = 6 * 3600_000;
 /** Listings per backlog page; the job keeps paging while time remains. */
 export const BACKLOG_LISTINGS = 60;
 /** On a shadow-mode site the Velo pipeline gets this long to fetch a new photo before the engine does. */
@@ -102,6 +117,8 @@ export interface PhotoDeps {
   importToWix: (wixSiteId: string, url: string, displayName: string, parentFolderId: string | null) => Promise<{ id: string }>;
   /** The id of a site's root-level Media Manager folder by name, or null when there is none. */
   findFolder: (wixSiteId: string, displayName: string) => Promise<string | null>;
+  /** The files in a folder, for confirming Wix holds a picture for an import. */
+  listFiles: (wixSiteId: string, parentFolderId: string, deadline?: number) => Promise<{ files: WixMediaFile[]; truncated: boolean }>;
   /** Remembers a resolved folder id on the site row. */
   cacheFolder: (siteId: string, folderId: string) => Promise<void>;
 }
@@ -116,6 +133,10 @@ export interface PhotoSummary {
   reused: number;
   imported: number;
   failed: number;
+  /** Imports Wix has since been seen holding a picture for; they may now be shown. */
+  verified: number;
+  /** Imports Wix never fetched; dropped so they are imported again, and never shown. */
+  unverified: number;
   /** True when the deadline stopped the job with work left. */
   truncated: boolean;
 }
@@ -131,7 +152,7 @@ export interface PhotoJobOptions {
   shadowGraceMinutes?: number;
 }
 
-export const emptyPhotoSummary = (): PhotoSummary => ({ listings: 0, refreshed: 0, downloaded: 0, reused: 0, imported: 0, failed: 0, truncated: false });
+export const emptyPhotoSummary = (): PhotoSummary => ({ listings: 0, refreshed: 0, downloaded: 0, reused: 0, imported: 0, failed: 0, verified: 0, unverified: 0, truncated: false });
 
 function defaultDeps(): PhotoDeps {
   return {
@@ -155,6 +176,7 @@ function defaultDeps(): PhotoDeps {
     publicUrl: (storagePath) => supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(storagePath).data.publicUrl,
     importToWix: (wixSiteId, url, displayName, parentFolderId) => importMediaFromUrl(wixSiteId, url, displayName, parentFolderId),
     findFolder: async (wixSiteId, displayName) => (await findMediaFolder(wixSiteId, displayName))?.id ?? null,
+    listFiles: (wixSiteId, parentFolderId, deadline) => listMediaFiles(wixSiteId, parentFolderId, deadline),
     cacheFolder: (siteId, folderId) => db.setSiteMediaFolderId(siteId, folderId),
   };
 }
@@ -326,6 +348,88 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
   }
   let client: MlsGridClient | null = opts.client ?? null;
   const overdue = (): boolean => deps.now() > opts.deadline;
+
+  /**
+   * Which of the site's imports Wix actually holds a picture for.
+   *
+   * Wix's URL import is asynchronous, so a file id coming back means only
+   * that the URL was accepted. Until this has seen a picture the photo has
+   * no verified_at and is kept out of every gallery, which is what makes
+   * "never show a broken photo" true by construction rather than by
+   * cleanup. A file Wix has given up on (FAILED, or READY with no image) is
+   * forgotten here so the next pass imports it again; one still PENDING is
+   * left for the next pass.
+   *
+   * The folder listing is the bulk read -- one request per hundred files,
+   * against one per file -- and it runs only when something has been
+   * waiting longer than VERIFY_AFTER_MS, so a photo imported moments ago
+   * does not trigger a walk of the whole folder to be told it is pending.
+   */
+  async function verifyImportedPhotos(site: LsSite): Promise<void> {
+    if (!site.wix_site_id) return;
+    let waiting: db.UnverifiedSiteMedia[];
+    try {
+      waiting = await db.loadUnverifiedSiteMedia(site.id, VERIFY_BATCH);
+    } catch (error) {
+      run.event("warn", "photos_broken", `${site.name}: could not read the photos waiting on Wix (${errorMessage(error)}); the next pass tries again`, { siteId: site.id });
+      return;
+    }
+    if (!waiting.length) return;
+    // Nothing has been waiting long enough to be worth a folder listing:
+    // Wix is still within its normal fetch window for all of them.
+    const oldest = Date.parse(waiting[0].imported_at);
+    if (Number.isFinite(oldest) && deps.now() - oldest < VERIFY_AFTER_MS) return;
+
+    const folder = await folderFor(site);
+    if (!folder.ok) return;
+    const listing = await deps.listFiles(site.wix_site_id, folder.id ?? WIX_MEDIA_ROOT, opts.deadline);
+    const byId = new Map(listing.files.map((f) => [f.id, f]));
+
+    const verified: string[] = [];
+    const dead: string[] = [];
+    let pending = 0;
+    for (const row of waiting) {
+      const file = row.wix_file_id ? byId.get(row.wix_file_id) : undefined;
+      // Not in the listing at all: it may be on a page the deadline cut
+      // short, so it keeps waiting rather than being called broken.
+      if (!file) continue;
+      const state = mediaState(file);
+      if (state === "ready") {
+        verified.push(row.id);
+        continue;
+      }
+      if (state === "broken") {
+        dead.push(row.id);
+        continue;
+      }
+      // Still pending, or one of Wix's ids with nothing behind it. Give it a
+      // while, then import it again rather than leave a photo that will
+      // never be shown and never be retried.
+      const waitedFor = deps.now() - Date.parse(row.imported_at);
+      if (Number.isFinite(waitedFor) && waitedFor > VERIFY_GIVE_UP_MS) dead.push(row.id);
+      else pending += 1;
+    }
+
+    if (verified.length) {
+      await db.markSiteMediaVerified(verified, new Date(deps.now()));
+      summary.verified += verified.length;
+    }
+    if (dead.length) {
+      const listings = await db.dropSiteMedia(dead);
+      summary.unverified += dead.length;
+      if (listings.length) {
+        await db.upsertSiteListings(listings.map((listing_id) => ({ site_id: site.id, listing_id, needs_write: true, gallery_ready: false })));
+      }
+      run.event("warn", "photos_broken", `${site.name}: Wix never fetched ${dead.length} photo(s) it accepted; they are out of the galleries and will be imported again across ${listings.length} listing(s)`, {
+        siteId: site.id,
+        details: { dropped: dead.length, listings: listings.length },
+      });
+    }
+    if (listing.truncated && pending) {
+      run.event("info", "photos_broken", `${site.name}: ${pending} photo(s) still waiting on Wix and the folder listing did not finish; the next pass continues`, { siteId: site.id });
+    }
+  }
+
   // Sites Wix has told to slow down, and would not stop telling: their
   // imports stop for the rest of the pass. This used to live inside
   // processListing, so it reset on every listing and each one re-tested Wix,
@@ -415,7 +519,10 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
               missingDimensions.add(m.media_id);
               return;
             }
-            await db.upsertSiteMedia([{ site_id: site.id, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported" }]);
+            // verified_at stays null: Wix has the URL, not necessarily the
+          // picture. verifyImportedPhotos decides, and until it does this
+          // photo is not in any gallery (migration 053).
+          await db.upsertSiteMedia([{ site_id: site.id, media_id: m.media_id, wix_file_id: file.id, wix_image_uri: uri, origin: "imported", verified_at: null }]);
             // No await between these three, so the concurrent workers cannot lose one another's entries.
             const done = importedMedia.get(site.id) ?? new Set<string>();
             done.add(m.media_id);
@@ -490,6 +597,18 @@ export async function runPhotoJob(opts: PhotoJobOptions): Promise<PhotoSummary> 
       }
     }
     return truncated;
+  }
+
+  // Before anything else: settle what Wix did with the last pass's imports,
+  // so a photo it never fetched leaves the galleries rather than sitting in
+  // one. Cheap when there is nothing waiting.
+  for (const site of sites.values()) {
+    if (overdue()) break;
+    try {
+      await verifyImportedPhotos(site);
+    } catch (error) {
+      run.event("warn", "photos_broken", `${site.name}: could not confirm what Wix holds for its imports (${errorMessage(error)}); the next pass tries again`, { siteId: site.id });
+    }
   }
 
   for (;;) {
