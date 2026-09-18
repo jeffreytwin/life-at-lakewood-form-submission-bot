@@ -114,6 +114,17 @@ Verified item lifecycle (probe run 2026-07-02, test items cleaned up):
   source `url` → returns Wix media file id + static URL (async,
   `operationStatus: PENDING`). Feed the returned id/URL into IMAGE fields and
   record it in `fp_media_map`.
+- **IMAGE and MEDIA_GALLERY values must carry the picture's origin
+  dimensions**: `wix:image://v1/<fileId>/<name>#originWidth=W&originHeight=H`.
+  Without the fragment Wix accepts the write (the probe above only checked
+  that the shape persists) but refuses to render the field: the CMS shows a
+  broken image and the site falls back to its editor placeholder. Found on
+  the listings engine 2026-09-16 (`LISTINGS_ENGINE_PLAN.md`, "Galleries Wix
+  could not show"); the floor plan write-back was fixed 2026-09-18 (migration
+  064, `src/lib/floorplans/media.ts`). Gallery entries are written as
+  `{type: "image", src, title}`; the legacy collections also carry `alt`,
+  `slug`, `fileName` and `settings.{width,height,focalPoint}`, which the CMS
+  fills in itself.
 
 ## Supabase seed state
 

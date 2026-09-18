@@ -7,7 +7,10 @@
 // - Removals require the plan to have been missing across runs (last_seen_at
 //   older than 24h) AND a scrape covering >= 60% of the last known count.
 // - Rejections stick: a change identical to a rejected row is not re-queued.
-// - User-edited fields (manual overrides) are never proposed for reversion.
+// - User-edited fields (manual overrides) are never proposed for reversion,
+//   and the record an approved update writes keeps them (diff.ts).
+// - Galleries are diffed too (photos and blueprints, in order), so a
+//   builder's photo changes reach the site instead of freezing at the add.
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
@@ -20,6 +23,7 @@ import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morris
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -79,17 +83,6 @@ interface RunResult {
   plans?: number;
   queued?: number;
 }
-
-// Fields diffed for updates: canonical record key -> display label.
-const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
-  ["priceDisplay", "price"],
-  ["name", "name"],
-  ["beds", "beds"],
-  ["baths", "baths"],
-  ["sqft", "sqft"],
-  ["garages", "garages"],
-  ["quickMoveIn", "quick move-in"],
-];
 
 async function setRunStatus(
   connectionId: string,
@@ -282,24 +275,22 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       continue;
     }
 
-    // Known plan: mark seen, then diff field-by-field.
+    // Known plan: mark seen, then diff field-by-field (scalars and both
+    // galleries). The rules live in diff.ts: a field a person edited is
+    // never proposed for reversion, and the merged record an approval
+    // writes keeps every such field.
     await supabase
       .from("fp_floor_plans")
       .update({ last_seen_at: new Date().toISOString() })
       .eq("id", existing.id);
-    const current = (existing.record ?? {}) as NormalizedPlan;
-    const overrides = new Set(current.userEditedFields ?? []);
-    for (const [field, label] of DIFF_FIELDS) {
-      if (overrides.has(field)) continue; // user's word beats the scraper's
-      const oldVal = current[field];
-      const newVal = plan[field];
-      if (String(oldVal ?? "") === String(newVal ?? "")) continue;
-      const merged: NormalizedPlan = { ...current, ...plan, userEditedFields: current.userEditedFields };
+    const current = (existing.record ?? {}) as CanonicalRecord;
+    const merged = mergeForUpdate(current, plan);
+    for (const change of fieldChanges(current, plan)) {
       if (
         await queueChange({
           siteId: site.id, communityId: community.id, builderId: builder.id,
-          planKey: plan.planKey, changeType: "update", fieldChanged: label,
-          oldValue: String(oldVal ?? ""), newValue: String(newVal ?? ""),
+          planKey: plan.planKey, changeType: "update", fieldChanged: change.label,
+          oldValue: change.oldValue, newValue: change.newValue,
           proposedRecord: merged, wixRecordId: existing.wix_record_id,
           floorPlanId: existing.id, runId,
         })

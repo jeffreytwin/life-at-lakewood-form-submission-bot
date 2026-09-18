@@ -5,6 +5,12 @@
 // invisible on the live site until a human publishes them in the Wix CMS.
 // Success moves the row to synced_draft (or synced), failure to failed with
 // error_detail. The canonical fp_floor_plans row is upserted on success.
+//
+// Photos: every image is fetched and measured before Wix imports it, because
+// a wix:image URI renders only with its origin dimensions (see media.ts).
+// The Wix file id and the size live in fp_media_map, keyed by source URL, so
+// an unchanged image is never imported twice and its URI is rebuilt from the
+// stored size on every write.
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
@@ -13,8 +19,11 @@ import {
   updateItem,
   removeItem,
   importMediaFromUrl,
+  mediaState,
   type WixItemData,
 } from "@/lib/wix/client";
+import { wixImageUri } from "@/lib/listings/types";
+import { measureImageUrl, wixFileIdOf } from "@/lib/floorplans/media";
 
 interface ProposedRecord {
   planKey: string;
@@ -36,25 +45,51 @@ interface ProposedRecord {
 
 const MAX_GALLERY_IMAGES = 10;
 
-type GalleryItem = { type: "image"; src: string };
+/** One MEDIA_GALLERY entry, in the shape the legacy collections carry. */
+type GalleryItem = { type: "image"; src: string; title: string };
 
-/** Imports an ordered list of source URLs, preserving order; failures are skipped. */
+interface GalleryImport {
+  items: GalleryItem[];
+  /** Source URLs left out this time: unfetchable, unmeasurable, or refused by Wix. */
+  skipped: string[];
+}
+
+/** The Media Manager file name for a gallery position, keeping the source's own extension when it has one. */
+function displayNameFor(planKey: string, suffix: string, position: number, sourceUrl: string): string {
+  let ext = "jpg";
+  try {
+    const m = new URL(sourceUrl).pathname.match(/\.(jpe?g|png|webp|gif|svg)$/i);
+    if (m) ext = m[1].toLowerCase();
+  } catch {
+    // not a URL we can parse; the default extension is fine for a display name
+  }
+  return `${planKey}-${suffix}-${position}.${ext}`;
+}
+
+/** Imports an ordered list of source URLs, preserving order; an image that cannot be imported is skipped, not written broken. */
 async function importGallery(
   siteId: string,
   wixSiteId: string,
   urls: string[],
   planKey: string,
   suffix: string
-): Promise<GalleryItem[]> {
+): Promise<GalleryImport> {
   const items: GalleryItem[] = [];
+  const skipped: string[] = [];
   for (const [i, url] of urls.slice(0, MAX_GALLERY_IMAGES).entries()) {
-    const uri = await importImage(siteId, wixSiteId, url, `${planKey}-${suffix}-${i + 1}.jpg`);
-    if (uri) items.push({ type: "image", src: uri });
+    const displayName = displayNameFor(planKey, suffix, i + 1, url);
+    const uri = await importImage(siteId, wixSiteId, url, displayName);
+    if (uri) items.push({ type: "image", src: uri, title: displayName });
+    else skipped.push(url);
   }
-  return items;
+  return { items, skipped };
 }
 
-/** URL-deduped image import; returns a wix:image URI for IMAGE fields. */
+/**
+ * A renderable wix:image URI for one source photo, importing it into the
+ * site's Media Manager on first sight. Null when the photo is left out:
+ * it could not be fetched or measured, or Wix reported the import failed.
+ */
 async function importImage(
   siteId: string,
   wixSiteId: string,
@@ -63,24 +98,58 @@ async function importImage(
 ): Promise<string | null> {
   const { data: existing } = await supabase
     .from("fp_media_map")
-    .select("wix_media_id")
+    .select("wix_media_id, width, height")
     .eq("site_id", siteId)
     .eq("source_url", sourceUrl)
     .maybeSingle();
-  if (existing?.wix_media_id) return existing.wix_media_id;
+  const cachedFileId = wixFileIdOf(existing?.wix_media_id);
+
+  if (cachedFileId && existing?.width && existing?.height) {
+    return wixImageUri(cachedFileId, displayName, existing.width, existing.height);
+  }
+
+  // Not measured yet: a new photo, or one imported before its size was
+  // recorded (every import before migration 064). Measure first; a photo
+  // that cannot be sized is left out rather than written as a URI Wix
+  // refuses, which would take the whole gallery down with it.
+  const measured = await measureImageUrl(sourceUrl);
+  if (!measured) {
+    logger.warn("Floor plan photo could not be fetched or measured; left out", { sourceUrl });
+    return null;
+  }
+
+  if (cachedFileId) {
+    // The same Wix file as before, now with its size on record.
+    await supabase
+      .from("fp_media_map")
+      .update({ width: measured.width, height: measured.height, content_hash: measured.contentHash })
+      .eq("site_id", siteId)
+      .eq("source_url", sourceUrl);
+    return wixImageUri(cachedFileId, displayName, measured.width, measured.height);
+  }
 
   try {
     const file = await importMediaFromUrl(wixSiteId, sourceUrl, displayName);
-    const wixUri = `wix:image://v1/${file.id}/${encodeURIComponent(displayName)}`;
+    if (mediaState(file) === "broken") {
+      // Wix answered the import with FAILED: an id with nothing behind it,
+      // and caching it would make the broken thumbnail permanent.
+      logger.warn("Wix reported the floor plan photo import failed; left out", { sourceUrl, fileId: file.id });
+      return null;
+    }
+    const uri = wixImageUri(file.id, displayName, measured.width, measured.height);
+    if (!uri) return null;
     await supabase.from("fp_media_map").upsert(
       {
         site_id: siteId,
         source_url: sourceUrl,
-        wix_media_id: wixUri,
+        wix_media_id: uri,
+        content_hash: measured.contentHash,
+        width: measured.width,
+        height: measured.height,
       },
       { onConflict: "site_id,source_url" }
     );
-    return wixUri;
+    return uri;
   } catch (error) {
     // Image failure shouldn't block the record; sync without the image.
     logger.warn("Floor plan image import failed", {
@@ -89,6 +158,39 @@ async function importImage(
     });
     return null;
   }
+}
+
+function galleryUrls(rec: ProposedRecord): string[] {
+  const urls = rec.galleryImages ?? [];
+  if (urls.length) return urls;
+  return rec.primaryImage ? [rec.primaryImage] : [];
+}
+
+/**
+ * Both galleries for a record. Throws when the record lists photos and not
+ * one could be imported, so an approval never inserts a photo-less plan or
+ * wipes a live gallery over a transient failure; a partial gallery is
+ * written and the rest logged.
+ */
+async function importRecordMedia(
+  siteId: string,
+  wixSiteId: string,
+  rec: ProposedRecord
+): Promise<{ gallery: GalleryItem[]; blueprints: GalleryItem[] }> {
+  const photoUrls = galleryUrls(rec);
+  const gallery = await importGallery(siteId, wixSiteId, photoUrls, rec.planKey, "photo");
+  const blueprints = await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
+  if (photoUrls.length && !gallery.items.length) {
+    throw new Error(`none of the ${photoUrls.length} photos could be imported (first: ${photoUrls[0]})`);
+  }
+  if (gallery.skipped.length || blueprints.skipped.length) {
+    logger.warn("Floor plan write-back left images out", {
+      planKey: rec.planKey,
+      photosSkipped: gallery.skipped.length,
+      blueprintsSkipped: blueprints.skipped.length,
+    });
+  }
+  return { gallery: gallery.items, blueprints: blueprints.items };
 }
 
 function toWixData(
@@ -117,12 +219,6 @@ function toWixData(
     syncKey: rec.planKey,
     lastSyncedAt: new Date().toISOString(),
   };
-}
-
-function galleryUrls(rec: ProposedRecord): string[] {
-  const urls = rec.galleryImages ?? [];
-  if (urls.length) return urls;
-  return rec.primaryImage ? [rec.primaryImage] : [];
 }
 
 export async function applyPendingChange(changeId: string): Promise<{
@@ -164,8 +260,7 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
       const asDraft = site.insert_publish_mode !== "published";
-      const gallery = await importGallery(site.id, site.wix_site_id, galleryUrls(rec), rec.planKey, "photo");
-      const blueprints = await importGallery(site.id, site.wix_site_id, rec.blueprintImages ?? [], rec.planKey, "plan");
+      const { gallery, blueprints } = await importRecordMedia(site.id, site.wix_site_id, rec);
       const item = await insertItem(
         site.wix_site_id,
         site.wix_collection_id,
@@ -233,8 +328,7 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
-      const gallery = await importGallery(site.id, site.wix_site_id, galleryUrls(rec), rec.planKey, "photo");
-      const blueprints = await importGallery(site.id, site.wix_site_id, rec.blueprintImages ?? [], rec.planKey, "plan");
+      const { gallery, blueprints } = await importRecordMedia(site.id, site.wix_site_id, rec);
       await updateItem(
         site.wix_site_id,
         site.wix_collection_id,

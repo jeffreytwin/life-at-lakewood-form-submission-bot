@@ -243,7 +243,8 @@ export async function removeItem(
   );
 }
 
-export interface ImportedMediaFile {
+/** The import response: the file, plus whatever Wix says about the import (see mediaState). */
+export interface ImportedMediaFile extends WixMediaFile {
   id: string;
   url: string;
   displayName: string;
