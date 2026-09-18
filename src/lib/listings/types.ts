@@ -29,7 +29,7 @@ export interface LsSite {
   market_cities: string[];
   /** RESO PropertyType values the site shows (Residential; Longboat Key also Land). */
   property_types: string[];
-  /** Whether builder listings (NewConstructionYN) are shown; false on every site since 2026-09-16. */
+  /** Whether builder listings are shown. Off wherever the site has its own new-build section; on for Longboat Key, which has none (Jeff, 2026-09-18). */
   show_new_construction: boolean;
   /** How the price filter tag reads: Longboat Key's ranges, or the older Velo shorthand. */
   price_sort_style: PriceSortStyle;
@@ -119,6 +119,7 @@ export interface MlsGridProperty {
   OriginatingSystemModificationTimestamp?: string;
   MlgCanView?: boolean;
   NewConstructionYN?: boolean;
+  PropertyCondition?: string[];
   Media?: MlsGridMedia[];
   [key: string]: unknown;
 }
@@ -144,7 +145,12 @@ export interface LsListingRow {
   longitude: number | null;
   photo_count: number;
   mlg_can_view: boolean | null;
-  /** RESO NewConstructionYN; null when the record does not say. */
+  /**
+   * Whether this is builder inventory: RESO NewConstructionYN, or a
+   * PropertyCondition of "Under Construction" when the flag disagrees with
+   * it. See isNewConstruction in normalize.ts. `raw` keeps the feed's own
+   * NewConstructionYN either way.
+   */
   new_construction: boolean | null;
   modification_timestamp: string | null;
   originating_system_modification_timestamp: string | null;

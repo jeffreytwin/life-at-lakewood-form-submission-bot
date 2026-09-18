@@ -22,7 +22,7 @@ history.
 
 | site | mode | rows | notes |
 |---|---|---|---|
-| Life in Longboat Key | **live** | 199 live | since 2026-09-16 |
+| Life in Longboat Key | **live** | 197 live → 208 | since 2026-09-16; **shows new construction** from 061 |
 | Life At Parrish | **live** | 276 live, 276 gallery_ready | cut over 19:36 UTC on the 17th |
 | Life in Wellen Park | shadow → `HousesforSale2` | 156 written, 10,829 photos | backfill complete; cross-checked against Redfin, see below |
 | Life At Lakewood | **inactive**, shadow when switched on | — | seeded 2026-09-18; waiting on the probe |
@@ -2082,3 +2082,107 @@ sees the modification window, and `discover` skips anything already known —
 so a term change reaches listings the site does not yet hold only on a
 **full** run, which verifies every held id. The 03:00 nightly picks it up;
 the Hub's Run Full does it now.
+
+## New construction is a fact about the site, not the listing (2026-09-18)
+
+Jeff read Life in Wellen Park's shadow collection, saw an obvious builder
+listing on it, and asked why. The answer was in two halves and only one of
+them was a defect.
+
+### Reading the collection, and a wrong guess worth recording
+
+He first reported seeing `MFR103298178` as a row id. No such listing has ever
+been in the engine: every one of the 6,215 ids is `MFR` + a **letter** +
+digits, across seventeen prefixes, and none is `MFR` + a digit.
+
+The guess made from that — that `HousesforSale2` still held rows from the
+hand-run process, as Parrish's did — **was wrong**, and the export settled it
+in one pass: 157 rows, every id engine-shaped, all Active, all
+`MlgCanView true`. No residue at all. `MFR103298178` is the *listing agent's*
+MLS id (John Neal, Neal Communities Realty), which the engine writes from
+`ListAgentMlsId` into `listingAgentMls`; Stellar keys agents as `MFR` +
+digits, which is exactly why it reads like one of ours.
+
+Two lessons, both cheap: **a plausible mechanism is not evidence** — the
+Parrish precedent fit so well that it got stated before the collection was
+looked at. And in a 45-column export, "I saw this id" is worth resolving to a
+*column* before theorising about what it means. (The `New Construction?` and
+`Builder` columns are blank on all 157 rows and that is also not a signal:
+the engine does not write them, they are leftovers from the old dashboard's
+schema.)
+
+### The real defect: the MLS flag is sometimes simply wrong
+
+Jeff's instinct was right for a better reason. Two of those rows:
+
+```
+MFRA4704051   $527,990   BOCA ROYALE EAST UNIT 20   11417 Spring Hill Terrace
+MFRA4704591   $494,990   BOCA ROYALE EAST UNIT 20   27633 Royale Dornoch Terrace
+  PropertyCondition ["Under Construction"] · YearBuilt 2026
+  BuilderName "Neal Communities of SWFL" · listed by Neal Communities Realty
+  NewConstructionYN  false
+```
+
+Under construction, built this year, builder named, listed by the builder's
+own brokerage — and the one field the engine reads says otherwise. These are
+the same two that showed up in the morning's Redfin comparison as "on the
+site, not in Redfin", which means **Redfin is not trusting that flag either**.
+
+`PropertyCondition` is the corroborating RESO field, and across the 6,215
+listings held it agrees with the flag almost perfectly:
+
+```
+["Under Construction"]   472 Active   466 flagged    6 not    98.7% agree
+["Pre-Construction"]      49 Active    47 flagged    2 not
+["Completed"]          1,015 Active   403 flagged  612 not    ← ambiguous
+```
+
+So `normalize.ts` takes **"Under Construction" only** as decisive. Not
+`Pre-Construction`: `MFRTB8540951` on Longboat Key is Pre-Construction with
+`YearBuilt 1974` and no builder — a $4M teardown lot sold for a proposed
+rebuild, and a real listing. Not `Completed`: 612 of its 1,015 are ordinary
+resales, and the word describes the house rather than who is selling it. Six
+rows flipped; four were on a site.
+
+### And the rule had a reason nobody had written down
+
+Asked to confirm, Jeff gave the principle instead of the answer:
+
+> Life in Longboat Key is okay to have new construction in its listings.
+> That's because it doesn't have a new build section on its website. However,
+> since all other sites we have new build sections (Life in Wellen Park, Life
+> At Lakewood and Life At Parrish), new construction should be excluded from
+> their collections.
+
+`show_new_construction` had been false on every site since 2026-09-16 as a
+blanket policy. It was never a fact about listings — it is a fact about
+**whether the site has somewhere else to put them**. A site with a new-build
+section would show the same home twice; a site without one just loses it.
+
+Longboat Key has no such section, and the eleven listings it had been hiding
+were the most expensive inventory on the island: $13,995,000 in Sleepy
+Lagoon, St. Regis residences at $12,850,000 and $4,439,000, $11,900,000 in
+Bay Isles, $6,495,000 in Emerald Harbor. Hiding those bought nothing.
+
+Net, on each site's next full run:
+
+```
+lifeatparrish.com      277 → 275   2 Meritage, Oakfield Trails   (live)
+lifeinwellenpark.com   159 → 157   2 Neal Communities            (shadow)
+lifeinlongboatkey.com  197 → 208   +11 builder listings          (live)
+lifeatlakewood.com       0 →   0   not switched on
+```
+
+**When a policy has a reason, put the reason in the column's comment.** Had
+`show_new_construction` said "off wherever the site has its own new-build
+section" from the start, Longboat would never have been set false, and the
+eleven would not have spent a month invisible.
+
+### A note on timing
+
+Nothing in migration 061 touches `ls_site_listings`, deliberately. A
+listing's place on a site is decided by `classifyListing` during a run, and a
+run only judges what it pulled — an incremental sees its modification window,
+`discover` skips anything already held. Term changes and eligibility changes
+alike reach the sites on the next **full** run, which verifies every held id
+across five cursor-paged passes.
