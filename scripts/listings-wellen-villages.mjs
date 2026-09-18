@@ -43,6 +43,44 @@
 //    uses it today, and a term too narrow lands in the unmatched view, one
 //    click from a fix, where one too wide takes someone else's listing
 //    quietly.
+//  - **The country club's condos are their own terms, never a bare "wellen
+//    park".** Migration 060, after checking the site's staged inventory
+//    against a Redfin export of the same MLS feed: COACH HOMES II AT WELLEN
+//    PARK and VERANDA III/WELLEN PARK are inside Wellen Park Golf & Country
+//    Club -- 0.12 and 0.06 miles from listings the site already shows there
+//    -- and the two golf terms reached only its single-family spellings.
+//
+//    The tempting repair is a bare "wellen park". It is the one that must
+//    not be made: longest-term-wins compares term lengths, and "wellen
+//    park" (11) beats "brightmore" (10), "sunstone" (8), "lakespur" (8) and
+//    "palmera" (7), so every "<neighborhood> AT WELLEN PARK" would quietly
+//    move onto the country club's page. So the terms name the products
+//    instead: "veranda", which matches one subdivision in the whole
+//    database, and "coach homes", which matches five -- three of them Gran
+//    Paradiso's, hence the second exclusion. Longest-wins would settle that
+//    one too ("gran paradiso" is 13 to "coach homes" 11), but the exclusion
+//    says so outright instead of resting on an arithmetic accident.
+//
+//    "wellen park g" and "wellen golf" go with them, for WELLEN PARK G & CC
+//    and WELLEN GOLF & COUNTRY CLUB; both match only this club's spellings
+//    and neither moves a row today. Still not covered: the double-space
+//    "WELLEN  GOLF & COUNTRY CLUB" and the Terrace spellings (TERRACE
+//    11/WELLEN PK, TER III/WELLEN PK, WELLEN PK PH I TER I). A term narrow
+//    enough for those is a transcription of one row each, and they hold no
+//    resale today.
+//
+//  - **Boca Royale answers to its old name too.** "englewood golf course"
+//    is ENGLEWOOD GOLF COURSE at 84 Cayman Isles Boulevard, whose four
+//    nearest listings are all Boca Royale -- the closest, 11 Cayman Isles
+//    Boulevard, on the same street. It matches that one subdivision in the
+//    whole database. Its sibling ENGLEWOOD GOLF VILLAS 11 (5 Barbados Road)
+//    is deliberately left out: the name and the street fit the pattern but
+//    its neighbours do not (Hebblewhite Court at 0.08 miles, Oak Grove on
+//    Englewood Road at 0.15, nearest Boca Royale 0.35 away at the entrance).
+//    The coordinates could not settle it, so Jeff did -- not Boca Royale,
+//    2026-09-18. "englewood golf course" rather than "englewood golf" is
+//    what that decision looks like in a term.
+//
 //  - **The tag ternaries are ordered, first match wins.** Gran Paradiso is
 //    in both the clubhouse list (third) and the villageSpa list (fifth), so
 //    it gets the clubhouse, exactly as the site does today.
@@ -87,6 +125,7 @@ const TERMS = {
   "ashcombe": "Ashcombe",
   "avelina": "Avelina",
   "boca royale": "Boca Royale",
+  "englewood golf course": "Boca Royale",
   "brightmore": "Brightmore",
   "everly": "Everly",
   "gran paradiso": "Gran Paradiso",
@@ -105,13 +144,17 @@ const TERMS = {
   "preserve/west": "The Preserve",
   "the preserve": "The Preserve",
   "tortuga": "Tortuga",
+  "coach homes": "Wellen Park Country Club",
+  "veranda": "Wellen Park Country Club",
+  "wellen golf": "Wellen Park Country Club",
+  "wellen park g": "Wellen Park Country Club",
   "wellen park golf": "Wellen Park Country Club",
   "wellen pk golf": "Wellen Park Country Club",
   "wysteria": "Wysteria",
 };
 
 /** term -> the subdivision text that takes the match back (the isKensington guard). */
-const EXCLUSIONS = { "preserve/west": "kensington" };
+const EXCLUSIONS = { "preserve/west": "kensington", "coach homes": "gran paradiso" };
 
 const ICON = (path) => `https://static.wixstatic.com/media/${path}`;
 const villageSpa = ICON("d0be81_c5146d6c05f045748f3f247b303b6328~mv2.png");

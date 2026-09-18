@@ -59,7 +59,7 @@ describe("Wellen Park neighborhoods seed", () => {
 
   it("keeps terms lowercase and unique across the site (one term, one neighborhood)", () => {
     const all = villages.flatMap((v) => v.terms.map((t) => t.term));
-    expect(all).toHaveLength(25);
+    expect(all).toHaveLength(30);
     expect(new Set(all).size).toBe(all.length);
     for (const t of all) expect(t).toBe(t.trim().toLowerCase());
   });
@@ -67,12 +67,18 @@ describe("Wellen Park neighborhoods seed", () => {
   it("folds the spellings the MLS uses for one neighborhood", () => {
     expect(termsOf("Gran Paradiso")).toEqual(["gran paradiso", "grand paradiso"]);
     expect(termsOf("Sarasota National")).toEqual(["sarasota n", "sarasota national"]);
-    expect(termsOf("Wellen Park Country Club")).toEqual(["wellen park golf", "wellen pk golf"]);
+    expect(termsOf("Wellen Park Country Club")).toEqual([
+      "coach homes", "veranda", "wellen golf", "wellen park g", "wellen park golf", "wellen pk golf",
+    ]);
+    expect(termsOf("Boca Royale")).toEqual(["boca royale", "englewood golf course"]);
   });
 
-  it("carries the Kensington guard as the one exclusion", () => {
+  it("carries two exclusions, the Kensington guard and Gran Paradiso's coach homes", () => {
     const withExclusions = villages.flatMap((v) => v.terms.filter((t) => t.exclude_term).map((t) => [v.name, t.term, t.exclude_term]));
-    expect(withExclusions).toEqual([["The Preserve", "preserve/west", "kensington"]]);
+    expect(withExclusions).toEqual([
+      ["The Preserve", "preserve/west", "kensington"],
+      ["Wellen Park Country Club", "coach homes", "gran paradiso"],
+    ]);
   });
 
   it("anchors The Preserve on the two forms the site carries, never on 'preserve' alone", () => {
@@ -154,6 +160,56 @@ describe("Wellen Park terms through classify", () => {
     }
   });
 
+  it("reaches the country club's condos without a bare 'wellen park' term", () => {
+    // Migration 060. Both of these say WELLEN PARK and both sit inside the
+    // club -- 0.12 and 0.06 miles from listings the site already shows
+    // there -- and the two golf terms reached only its single-family
+    // spellings.
+    expect(matchVillage("COACH HOMES II AT WELLEN PARK, PH 2", null, asVillages)?.name).toBe("Wellen Park Country Club");
+    expect(matchVillage("VERANDA III/WELLEN PARK PH I", null, asVillages)?.name).toBe("Wellen Park Country Club");
+    expect(matchVillage("WELLEN PARK G & CC", null, asVillages)?.name).toBe("Wellen Park Country Club");
+    expect(matchVillage("WELLEN GOLF & COUNTRY CLUB", null, asVillages)?.name).toBe("Wellen Park Country Club");
+  });
+
+  it("leaves Gran Paradiso's coach homes where they are", () => {
+    // Three of the five "coach homes" subdivisions in the database are Gran
+    // Paradiso's. Longest-wins would settle it -- "gran paradiso" is 13 to
+    // "coach homes" 11 -- but the exclusion is what says so.
+    for (const sub of ["COACH HOMES 1 AT GRAN PARADISO", "COACH HOMES 3/GRAN PARADISO PH", "COACH HOMES 4/GRAN PARADISO PH"]) {
+      expect(matchVillage(sub, null, asVillages)?.name).toBe("Gran Paradiso");
+    }
+  });
+
+  it("never lets a term take a neighborhood's own listings onto the country club page", () => {
+    // The repair not made: a bare "wellen park" is 11 characters and would
+    // outrank every one of these, which is why the terms name the products.
+    expect(matchVillage("BRIGHTMORE AT WELLEN PARK", null, asVillages)?.name).toBe("Brightmore");
+    expect(matchVillage("SUNSTONE AT WELLEN PARK", null, asVillages)?.name).toBe("Sunstone");
+    expect(matchVillage("SUNSTONE LAKESIDE AT WELLEN PARK", null, asVillages)?.name).toBe("Sunstone");
+    expect(matchVillage("LAKESPUR AT WELLEN PARK", null, asVillages)?.name).toBe("Lakespur");
+    expect(matchVillage("PALMERA AT WELLEN PARK", null, asVillages)?.name).toBe("Palmera");
+    expect(matchVillage("ANTIGUA/WELLEN PARK", null, asVillages)?.name).toBe("Antigua");
+    expect(matchVillage("SOLSTICE AT WELLEN PARK", null, asVillages)?.name).toBe("Solstice");
+    expect(matchVillage("EVERLY/WELLEN PARK", null, asVillages)?.name).toBe("Everly");
+    expect(matchVillage("AVELINA WELLEN PARK VILLAGE F-2", null, asVillages)?.name).toBe("Avelina");
+  });
+
+  it("answers to Boca Royale's old name, and stops there", () => {
+    expect(matchVillage("ENGLEWOOD GOLF COURSE", null, asVillages)?.name).toBe("Boca Royale");
+    // Its sibling on Barbados Road is deliberately not covered: the name
+    // fits Boca Royale and its neighbours do not, and Jeff settled it on
+    // 2026-09-18 -- not Boca Royale. One word, "course", is the whole guard.
+    expect(matchVillage("ENGLEWOOD GOLF VILLAS 11", null, asVillages)).toBeNull();
+  });
+
+  it("keeps THE RESERVE off The Preserve's page", () => {
+    // One letter apart, and the two Tremingham Way homes it names are
+    // seven-figure listings in their own enclave next to Gran Paradiso.
+    // Jeff confirmed on 2026-09-18 that they are not the site's, so this
+    // must keep returning null however the terms are edited.
+    expect(matchVillage("THE RESERVE", null, asVillages)).toBeNull();
+  });
+
   it("lets the longer spelling win where two terms of one neighborhood overlap", () => {
     // "sarasota n" is inside "sarasota national"; both are Sarasota National,
     // so the overlap is harmless, but the longer one is the one that matches.
@@ -165,7 +221,7 @@ describe("Wellen Park seed SQL", () => {
   const sql = wellenVillagesSql() as unknown as string;
 
   it("says what it carries and targets the site by domain", () => {
-    expect(sql).toContain("-- 21 neighborhoods, 25 subdivision terms");
+    expect(sql).toContain("-- 21 neighborhoods, 30 subdivision terms");
     expect(sql).toContain("WHERE domain = 'lifeinwellenpark.com'");
   });
 
