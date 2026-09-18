@@ -197,13 +197,16 @@ describe("Wellen Park terms through classify", () => {
   it("answers to Boca Royale's old name, and stops there", () => {
     expect(matchVillage("ENGLEWOOD GOLF COURSE", null, asVillages)?.name).toBe("Boca Royale");
     // Its sibling on Barbados Road is deliberately not covered: the name
-    // fits Boca Royale, its neighbours do not, and nobody here can settle it.
+    // fits Boca Royale and its neighbours do not, and Jeff settled it on
+    // 2026-09-18 -- not Boca Royale. One word, "course", is the whole guard.
     expect(matchVillage("ENGLEWOOD GOLF VILLAS 11", null, asVillages)).toBeNull();
   });
 
   it("keeps THE RESERVE off The Preserve's page", () => {
     // One letter apart, and the two Tremingham Way homes it names are
     // seven-figure listings in their own enclave next to Gran Paradiso.
+    // Jeff confirmed on 2026-09-18 that they are not the site's, so this
+    // must keep returning null however the terms are edited.
     expect(matchVillage("THE RESERVE", null, asVillages)).toBeNull();
   });
 

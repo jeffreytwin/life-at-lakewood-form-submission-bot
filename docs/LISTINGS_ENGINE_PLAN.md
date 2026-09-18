@@ -1997,11 +1997,13 @@ else is inside the rectangle, so most of the thirteen are other communities:
   (`BERMUDA CLUB EAST AT PLANTATION`, `BUCKINGHAM MEADOWS` ×2,
   `KENWOOD GLEN 1 OF ST ANDREWS E`, `ST ANDREWS ESTS/PLANTATION`) and two in
   Oak Forest, Englewood, whose nearest neighbours are all Bay Vista Blvd.
-- **Two judgement calls.** `THE RESERVE`, 434 and 444 Tremingham Way — a
+- **Two that went to Jeff.** `THE RESERVE`, 434 and 444 Tremingham Way — a
   small enclave between Gran Paradiso and Plantation, $1.1M and $1.35M, and
-  no such neighborhood on the site. Worth noticing that the terms held the
-  line here: `THE RESERVE` is one letter from The Preserve's `the preserve`,
-  and a looser term would have put both on the wrong neighborhood page.
+  no such neighborhood on the site. **He confirmed they are not the site's**
+  (2026-09-18), so the answer is to add nothing. Worth noticing that the
+  terms reached that answer on their own: `THE RESERVE` is one letter from
+  The Preserve's `the preserve`, and a looser term would have put both on
+  the wrong neighborhood page.
 - **Four the site arguably should show**, three of them fixed in migration
   060.
 
@@ -2043,8 +2045,16 @@ the same street. Its sibling `ENGLEWOOD GOLF VILLAS 11` (5 Barbados Road) is
 **deliberately left out**: the name and the street fit Boca Royale's
 Caribbean pattern, but its neighbours do not (Hebblewhite Court at 0.08
 miles, Oak Grove on Englewood Road at 0.15, nearest Boca Royale 0.35 away at
-the entrance boulevard). That is equally consistent with being just inside
-the gates or just outside them, and only Jeff can settle it.
+the entrance boulevard). Equally consistent with just inside the gates or
+just outside, so it went to Jeff — **not Boca Royale** (2026-09-18). That
+decision is the difference between the term `englewood golf course` and the
+term `englewood golf`, and it is why the narrow one is right.
+
+**Both of the calls the data could not make came back "leave it off."** That
+is the expected shape rather than a disappointment: the engine's terms fail
+towards the unmatched view, where a human sees the row and decides, and two
+out of two of those decisions here were to show nothing. A term set that had
+guessed would have been wrong twice.
 
 ### Dry-run before applying, in SQL
 

@@ -75,7 +75,11 @@
 //    Boulevard, on the same street. It matches that one subdivision in the
 //    whole database. Its sibling ENGLEWOOD GOLF VILLAS 11 (5 Barbados Road)
 //    is deliberately left out: the name and the street fit the pattern but
-//    its neighbours do not, and only Jeff can settle it.
+//    its neighbours do not (Hebblewhite Court at 0.08 miles, Oak Grove on
+//    Englewood Road at 0.15, nearest Boca Royale 0.35 away at the entrance).
+//    The coordinates could not settle it, so Jeff did -- not Boca Royale,
+//    2026-09-18. "englewood golf course" rather than "englewood golf" is
+//    what that decision looks like in a term.
 //
 //  - **The tag ternaries are ordered, first match wins.** Gran Paradiso is
 //    in both the clubhouse list (third) and the villageSpa list (fifth), so

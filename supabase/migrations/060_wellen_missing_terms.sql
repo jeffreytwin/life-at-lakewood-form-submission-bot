@@ -20,9 +20,11 @@
 -- PLANTATION, BUCKINGHAM MEADOWS x2, KENWOOD GLEN 1 OF ST ANDREWS E, ST
 -- ANDREWS ESTS/PLANTATION) and two in Oak Forest, Englewood. The site is
 -- right to leave those out. Two more -- THE RESERVE, on Tremingham Way --
--- are a judgement call for Jeff, not a defect: they sit in their own enclave
+-- were a judgement call for Jeff, not a defect: they sit in their own enclave
 -- between Gran Paradiso and Plantation, and the site has no such
--- neighborhood. Worth recording that the terms held the line there: THE
+-- neighborhood. He confirmed on 2026-09-18 that they are not the site's, so
+-- no term covers them and none should. Worth recording that the terms held
+-- the line there on their own: THE
 -- RESERVE is one letter from The Preserve's 'the preserve', and a looser
 -- term would have put two seven-figure homes on the wrong neighborhood page.
 --
@@ -76,20 +78,27 @@
 -- Cayman Isles Boulevard at 0.15 miles -- the same street. 'englewood golf
 -- course' matches this one subdivision in the whole database.
 --
--- NOT fixed here: ENGLEWOOD GOLF VILLAS 11 (5 Barbados Road), the fourth.
--- The name and the street both fit Boca Royale's Caribbean pattern, but its
--- neighbours do not: HEBBLEWHITE COURT at 0.08 miles and OAK GROVE on
--- Englewood Road at 0.15, with the nearest Boca Royale listing 0.35 miles
--- off at the community's entrance boulevard. That is consistent with being
--- just outside the gates and equally consistent with being just inside
--- them, and a term of 'englewood golf' rather than 'englewood golf course'
--- is the only difference. Left for Jeff, who knows the ground.
+-- NOT covered, and now deliberately so: ENGLEWOOD GOLF VILLAS 11 (5 Barbados
+-- Road), the fourth. The name and the street both fit Boca Royale's
+-- Caribbean pattern, but its neighbours do not: HEBBLEWHITE COURT at 0.08
+-- miles and OAK GROVE on Englewood Road at 0.15, with the nearest Boca
+-- Royale listing 0.35 miles off at the community's entrance boulevard. The
+-- coordinates could not settle it either way, so it went to Jeff, who knows
+-- the ground: **not Boca Royale** (2026-09-18). Hence 'englewood golf
+-- course' rather than 'englewood golf' -- the one word is the whole
+-- difference, and the narrow term is the right one.
 --
--- VERIFIED after applying: the site goes 156 -> 159, the three listings land
+-- VERIFIED after applying: the site goes 156 -> 159 on its next full run,
+-- the three listings land
 -- on Wellen Park Country Club (x2) and Boca Royale (x1), and no other
 -- listing changes neighborhood. Every resale Active Residential listing in
 -- Venice, North Port or Englewood whose subdivision names Wellen Park or
--- Boca Royale is now on the site, except Englewood Golf Villas above.
+-- Boca Royale is now on the site, except Englewood Golf Villas, which is
+-- not the site's.
+--
+-- Classification runs over the listings a run pulled, so a term change
+-- reaches listings the site does not yet hold only on a full run. The 03:00
+-- nightly picks it up; the Hub's Run Full does it sooner.
 --
 -- Applied to production via the Supabase MCP on 2026-09-18 as migration
 -- listings_wellen_missing_terms.
