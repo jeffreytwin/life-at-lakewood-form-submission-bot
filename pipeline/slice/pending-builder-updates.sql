@@ -1,3 +1,6 @@
+-- APPLIED to production on 2026-09-18 via the Supabase MCP (all statements
+-- below except the commented-out Lakewood Ranch block). Kept for the record.
+--
 -- Deferred fp_builders metadata updates (Supabase MCP writes were
 -- approval-blocked when the extractors landed). These are LABELS ONLY:
 -- extractor dispatch is keyed by builder name in src/lib/floorplans/sync.ts

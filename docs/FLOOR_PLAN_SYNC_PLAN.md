@@ -11,6 +11,88 @@ Sites in scope: **lifeatlakewood.com**, **lifeinwellenpark.com**, **lifeatparris
 
 ---
 
+## Where things stand (2026-09-18)
+
+Written when the pipeline was picked back up after ten weeks idle. Built
+July 2 to 3 (PRs #258 to #262), vertical slice run July 2 to 4, nothing
+since; the listings engine (`LISTINGS_ENGINE_PLAN.md`) took September.
+
+**Live state, from Supabase.** 34 builders seeded, every one paused. 99
+builder×community connections; one has a recorded run (SimplyDwell at
+Broadleaf, 2026-07-04, 26 plans, all 26 adds rejected). 10 Toll Brothers
+plans at The Isles were synced to Lakewood's FloorPlansV2 as drafts on
+2026-07-02 to 04 and are still there. The nightly loop is off and has never
+run; only SimplyDwell is marked onboarded, so switching it on would run
+nothing. No cutover report has ever been generated.
+
+**Fixed on 2026-09-18 (this branch).**
+
+- Photo URIs now carry origin dimensions (`media.ts`, migration 064). Every
+  photo is fetched and measured with sharp before Wix imports it, the size
+  is stored in `fp_media_map`, and a photo that cannot be measured is left
+  out rather than written as a URI Wix refuses. The 10 Toll drafts were
+  written without the fragment and are expected to show broken images in
+  the CMS until a change touching them is approved.
+- The record an approved update writes keeps user-edited fields
+  (`diff.ts`, `mergeForUpdate`). Before, `{...current, ...plan}` reverted
+  every override the diff had declined to propose.
+- Galleries are diffed (photos and blueprints, in order, `fieldChanges`),
+  described as "3 photos · 5f2a9c1e" so a rejection sticks to that exact
+  set. This is also the repair path for the Toll drafts: Run the
+  connection, approve the photo and blueprint updates.
+- `pipeline/slice/pending-builder-updates.sql` applied: builder engine
+  labels, Lee Wetherington's real base URL, Taylor Morrison and Mattamy
+  connection URLs pre-seeded.
+- The approve route has `maxDuration = 300`, like the nightly tick.
+
+**Known gaps, in the order they bite.**
+
+1. Imports are not verified after the fact. Wix's URL import is
+   asynchronous; the write-back now drops an import Wix reports FAILED at
+   once, but a fetch that fails later leaves an id with no picture behind
+   it. The listings engine's `verified_at` pass (migration 053) is the
+   model; it needs a background job, which the approve request is not.
+2. Extractors capture list-page images only: Toll Brothers 2 exterior
+   photos, Lennar hero and elevations, Taylor Morrison 1 elevation,
+   Mattamy and the MPC aggregator 1 card image, the Claude engine whatever
+   the list page shows. Only Meritage and DRB return interiors. The legacy
+   galleries the freelancers built have median sizes of 6 (Lakewood), 16
+   (Parrish) and 12 (Wellen Park) with 158 / 297 / 110 plans over 10
+   photos, and `MAX_GALLERY_IMAGES` is 10. Per-plan detail-page fetches
+   come before any gallery ordering work.
+3. Approval does the Wix work inside the request, one image at a time,
+   and bulk approve sends one request per change. Full galleries need the
+   listings engine's tick-and-budget pattern.
+4. Quick move-ins are separate canonical records (`raw.relatedPlan`) but
+   the write-back never fills `relatedFloorPlanQuickMoveInOnly`, and the
+   extractors disagree on what `relatedPlan` holds (name vs URL slug).
+5. Gallery diffs for `fetch_claude` builders may be noisy: the Claude
+   engine's image-to-plan association can vary run to run. The pending
+   dedupe keeps it to one row per plan; watch the queue when they run.
+
+**Planned: gallery ordering (Jeff, 2026-09-18).** Order wanted: primary
+picture, kitchen, living room, dining room, pool/lanai, office, hallways,
+stairs, bedrooms, bathrooms, laundry, closets, extra exterior. Approach:
+detail-page galleries first (gap 2); then classify each photo by builder
+metadata (DRB image types, Taylor Morrison alt text, Lennar's hero /
+elevation / drawing split), then file-name room words (on Parrish 2,312 of
+7,105 legacy gallery items carry one, Lakewood 870 of 4,337, Wellen Park
+40 of 2,505), then Claude vision for the rest (one request per plan,
+downscaled thumbnails, structured output of room and confidence per
+photo). Labels stored beside each URL and cached per image so nightly runs
+never reclassify; a manual reorder in the Hub is a user override; the room
+name written into each gallery item's `title` and `alt`. Cost at 20 photos
+a plan is about $0.06 with Opus 5 and $0.025 with Sonnet 5, so a one-time
+pass over the ~1,600 legacy plans is on the order of $100, half through
+the Batch API. Open questions: where foyer, garage, bonus/loft, outdoor
+kitchen, amenities, aerials and virtual staging go; whether the primary
+bedroom leads the bedrooms; whether the primary picture stays at gallery
+position 1 as well as in `floorPlanImage`; whether to cap galleries;
+whether quick move-ins follow the same rule; whether to reorder the legacy
+galleries at cutover.
+
+---
+
 ## Decisions locked (from planning discussions)
 
 1. **New Wix collection per site, fully pipeline-operated.** Each site gets a fresh

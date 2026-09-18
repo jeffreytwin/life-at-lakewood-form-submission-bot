@@ -4,6 +4,10 @@ import { logger } from "@/lib/shared/logger";
 import { applyPendingChange } from "@/lib/floorplans/writeback";
 
 export const dynamic = "force-dynamic";
+// The write-back fetches, measures and imports every photo of the plan in
+// turn before the Wix write; the default function limit is not enough
+// for a full gallery. Same ceiling as the nightly tick.
+export const maxDuration = 300;
 
 export async function POST(
   _request: NextRequest,
