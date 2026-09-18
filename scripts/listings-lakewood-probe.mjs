@@ -28,6 +28,11 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The probe ran on 2026-09-18 and its findings are in migration 062; the
+// branch trigger that made it run is gone again, because a build that pays
+// eight minutes for an answer already had is pure cost. Set
+// LS_LAKEWOOD_PROBE=1, or re-add a branch check the way
+// listings-engine-phase2.mjs does, to run it again.
 if (process.env.LS_LAKEWOOD_PROBE !== '1') {
   console.log(`LWR: LS_LAKEWOOD_PROBE is not set; skipping (branch ${process.env.VERCEL_GIT_COMMIT_REF ?? '(none)'}).`);
   process.exit(0);

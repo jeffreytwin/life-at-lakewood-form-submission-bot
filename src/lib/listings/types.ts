@@ -31,6 +31,10 @@ export interface LsSite {
   property_types: string[];
   /** Whether builder listings are shown. Off wherever the site has its own new-build section; on for Longboat Key, which has none (Jeff, 2026-09-18). */
   show_new_construction: boolean;
+  /** The site's own names for engine fields, where its collection differs (engine key -> site key); see transform.applyFieldMap. */
+  field_map: Record<string, string> | null;
+  /** Which record shape the site's page code reads; see transform.RecordStyle. */
+  record_style: "standard" | "lakewood";
   /** How the price filter tag reads: Longboat Key's ranges, or the older Velo shorthand. */
   price_sort_style: PriceSortStyle;
   active: boolean;

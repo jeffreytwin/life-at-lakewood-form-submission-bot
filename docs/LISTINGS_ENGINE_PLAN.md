@@ -2186,3 +2186,152 @@ run only judges what it pulled — an incremental sees its modification window,
 `discover` skips anything already held. Term changes and eligibility changes
 alike reach the sites on the next **full** run, which verifies every held id
 across five cursor-paged passes.
+
+## The Lakewood probe, and what it was worth (2026-09-18)
+
+The probe had been the one thing gating Life At Lakewood since the morning,
+and it had not run: every build logged `LWR: LS_LAKEWOOD_PROBE is not set`,
+because the variable has to be added by hand in the Vercel console. Two
+detours were taken before it ran, and both are worth recording.
+
+**First detour: switching on in shadow instead.** Defensible —
+`SHADOW_GRACE_MINUTES = 90` means a shadow site downloads no photo until its
+media rows are ninety minutes old, so there is a designed window to read what
+staged before anything reaches the Media Manager. The site was switched on at
+15:52 and off again ten minutes later when Jeff asked for probe-first.
+Nothing had happened: 0 site rows, 0 listings pulled, 0 runs in the window.
+
+**Second: the variable was never the only way in.**
+`listings-engine-phase2.mjs` had always run off a *branch* rather than a
+variable. Giving the probe the same trigger meant a push was enough. The gate
+came out again in the same change that recorded the findings, because a build
+paying eight minutes for an answer already had is pure cost.
+
+**And the engine had to be paused first.** The probe pages the whole MLS —
+557 requests — on the same MLSGrid key the cron uses, and `mlsgrid.ts`
+deliberately does not retry a 429: *"a 429 stops the run instead of retrying
+into a longer token suspension."* Two clients at 600 ms spacing is about 3.3
+requests/s against a documented 2/s. That would have failed the live sites'
+runs, not just the probe. `ls_engine_enabled` went false at 15:55:50 and true
+again at 16:10:37, with a failsafe check-in armed before anything else so a
+lost container could not strand it. Zero runs missed.
+
+### What it found
+
+```
+scanned 111,289 Active listings · 557 requests · 469s
+6,804 in market — SARASOTA 3,726 · BRADENTON 2,736 · LAKEWOOD RANCH 342
+743 match a neighborhood term
+  − 159 new construction
+  − 205 not Residential
+  = ~415 would stage, against 404 rows in the collection today
+LifeAtLakewoodListingPhotos: found
+```
+
+**One bad term, which is the whole point.** `indigo` reached
+`INDIGO RIDGE AT UNIVERSITY PLACE` — a different master-planned community,
+and it would have landed on this site's Indigo page. That is `preserve` on
+Wellen Park again (migration 056), caught this time before a single row
+staged. Migration 062 gives the term the guard the dashboard never needed.
+
+**Five bare terms came back clean**, which is the other half of the point: a
+probe that only ever confirms fears is not being read honestly. `cresswind`
+reaches only `CRESSWIND LAKEWOOD RANCH`; `del webb` reaches Del Webb Catalina
+at Lakewood Ranch, because Parrish's Del Webb at Bayview is in Parrish and
+the city gate excludes it; `lake club` and `palisades` reach nothing the site
+does not already show; `aurora` reaches `AURORA SUB`, which Jeff confirmed.
+Two terms that had been guesses — `windward at lakewood` and
+`windward/lakewood` — both hit real spellings, so Windward is no longer
+unconfirmed.
+
+Everything else in the "reaches a subdivision the site does not show" list is
+the terms working rather than failing: `lakewood national` reaching twenty-one
+Lakewood National subdivisions is correct, and those listings are simply ones
+the old dashboard has not pushed.
+
+### A site's own field names
+
+The probe also reported four fields the engine writes that neither Lakewood
+collection has. Jeff's export showed why — this is the original site, its
+collection predates the engine, and three of them exist under older names:
+
+| engine | Life At Lakewood |
+|---|---|
+| `villageSortHelp` | `villageSort` |
+| `listingBrokerageContactInformation` | `listingBrokerContactInfo` |
+| `lotSize` | `lotSize` *(Jeff added it)* |
+| `isPublished` | `isPublished` *(Jeff added it)* |
+
+Its page code reads those names, so writing the engine's names would put the
+data in fields nothing renders: an empty neighborhood sort, and **no
+brokerage attribution, which the MLS requires be displayed**.
+
+`ls_sites.field_map` renames the engine's keys per site on the way out
+(`transform.applyFieldMap`). The alternative was adding the engine's names
+alongside the site's, which is what Wellen Park did — its collection carries
+both `Listing Broker Contact Information` and
+`listingBrokerageContactInformation`. That works, and leaves two fields
+meaning one thing, and the next site drifts its own way again.
+
+`_id` can never be remapped, and a test holds that: `deleteStaleRows` and
+`loadOwnedIds` both match on it, so renaming it would make every row look
+unowned and invite the stale sweep to delete the site's own listings.
+
+**The reusable part:** an export of a Wix collection gives *display names*,
+not field keys. The engine writes `purpleTag1`; Wellen Park's column for it
+is labelled "Gold Tag 1". Diffing exports tells you where to look; only the
+probe, which reads `.fields`, tells you what is actually there.
+
+### And the probe could not have found the rest of it
+
+Migration 062's rename was half right and would have shipped a quiet bug.
+Jeff sent the site's own dashboard code, and `setDataObject` writes:
+
+```js
+"villageSort":  [villageSortHelp, 'Show All']
+"homeTypeSort": [PropertySubType,  'Show All']
+"bedroomsSort": [BedroomsTotal,    'Show All']
+"garagesSort":  [GarageSpaces]
+"galleryImage": <a constant camera badge>
+```
+
+`villageSort` is **multi-value**, and every row carries the literal string
+`"Show All"` — which is what makes each filter's Show All option match
+everything. Renaming `villageSortHelp` to it would have written a plain
+string into an array field and broken the filter, with nothing to say so.
+Three of those fields have no equivalent in the standard record at all, so
+those filters would have gone blank on every engine-written row.
+
+The asymmetry is the site's, not a slip: the sentinel is on `villageSort`,
+`homeTypeSort` and `bedroomsSort` but **not** on `listingPriceSort`,
+`bathroomsSort` or `garagesSort`. Migration 063 carries all of it as
+`ls_sites.record_style`, the way `price_sort_style` already carries a
+per-site difference in how one field is computed, and `field_map` keeps only
+the rename that is genuinely just a rename.
+
+**This is the limit of what a schema probe can tell you.** It compares field
+*names* and can say one is missing. It cannot say what the page code does
+with the fields that are present, and an export does not show it either —
+an export has values, not the shape a filter expects. Ask for the page code
+before writing to a collection built by someone else's pipeline.
+
+### Two more things the dashboard code settled
+
+**The `isActive` precedence bug is real.** `if (a !== -1 || b !== -1 || …
+|| z !== -1 && isActive)` — `&&` binds tighter than `||`, so `isActive`
+gates only the last term. Hence 18 Coming Soon rows in a collection meant to
+be Active-only.
+
+**And the chain never filtered anything.** Both branches return:
+
+```js
+if (…matched a village…) { …set Village/village1/URL…; return valData }
+else { return valData }
+```
+
+A `.filter()` whose every branch returns a truthy object filters nothing.
+Selection was entirely the curated `MLS_id_list`; the subdivision chain only
+ever *labelled*. That is the difference between the old pipeline and the
+engine stated as plainly as it can be, and it is why porting those terms as
+filters was always going to behave differently — the thing migration 056
+learned the hard way on Wellen Park.

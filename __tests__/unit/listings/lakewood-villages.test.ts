@@ -148,6 +148,35 @@ describe("Life At Lakewood neighborhoods seed", () => {
     expect(fileUnder("WINDWARD BAY AMD")).toBeNull();
   });
 
+  it("keeps University Place's Indigo Ridge off this site's Indigo", () => {
+    // The one term the 2026-09-18 probe caught: "indigo" reached INDIGO
+    // RIDGE AT UNIVERSITY PLACE, a different master-planned community, and
+    // it would have landed on this site's Indigo page -- "preserve" on
+    // Wellen Park all over again, caught before a row staged. Migration 062.
+    expect(fileUnder("INDIGO RIDGE AT UNIVERSITY PLACE")).toBeNull();
+    // Every spelling the site itself carries still reaches Indigo.
+    for (const sub of [
+      "INDIGO", "INDIGO PH I", "INDIGO PH IV & V",
+      "INDIGO PH VI SUBPHASE 6A 6B & 6C", "INDIGO PH VI SUBPHASE 6B & 6C REP",
+      "INDIGO PH VII SUBPHASE 7A & 7B", "INDIGO PH VIII SUBPH 8A, 8B & 8C",
+    ]) expect(fileUnder(sub)).toBe("Indigo");
+  });
+
+  it("records what the probe cleared, so a later edit has to argue with it", () => {
+    // Checked against every Active listing in the MLS on 2026-09-18:
+    // cresswind reaches only CRESSWIND LAKEWOOD RANCH; del webb reaches Del
+    // Webb Catalina at Lakewood Ranch (Parrish's Del Webb at Bayview is in
+    // Parrish, which this site's city gate excludes); lake club and
+    // palisades reach nothing the site does not already show; and aurora
+    // reaches AURORA SUB, which Jeff confirmed is this site's.
+    expect(fileUnder("CRESSWIND LAKEWOOD RANCH")).toBe("Cresswind");
+    expect(fileUnder("DEL WEBB CATALINA AT LAKEWOOD RANCH")).toBe("Del Webb");
+    expect(fileUnder("AURORA SUB")).toBe("Aurora");
+    // Two spellings that had been guesses until the probe found them.
+    expect(fileUnder("WINDWARD AT LAKEWOOD RANCH PHASE 2")).toBe("Windward");
+    expect(fileUnder("WINDWARD/LAKEWOOD RANCH PH 1")).toBe("Windward");
+  });
+
   it("names the terms no anchor was available for, so the probe can check them", () => {
     // These are the ones the MLS writes with nothing to anchor to. They are
     // the open risk this site carries into its first shadow run.
@@ -199,5 +228,6 @@ describe("Life At Lakewood neighborhoods seed", () => {
     expect(sql).toContain(`-- ${villages.length} neighborhoods, ${allTerms.length} subdivision terms`);
     // The exclusions travel with their terms, not as a bare NULL column.
     expect(sql).toContain("'esplanade ph', 'azario'");
+    expect(sql).toContain("'indigo', 'university place'");
   });
 });
