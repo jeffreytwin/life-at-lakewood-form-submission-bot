@@ -196,7 +196,7 @@ async function loadOwnedIds(siteId: string): Promise<string[]> {
 
 async function loadEngineFileIds(siteId: string): Promise<string[]> {
   const rows = await selectAll<{ wix_file_id: string | null; wix_image_uri: string }>("load site media files", (from, to) =>
-    supabase.from("ls_site_media").select("wix_file_id, wix_image_uri").eq("site_id", siteId).order("id").range(from, to)
+    supabase.from("ls_site_media").select("wix_file_id, wix_image_uri").eq("site_id", siteId).order("media_id").range(from, to)
   );
   return rows.map((r) => r.wix_file_id ?? wixFileId(r.wix_image_uri)).filter((id): id is string => !!id);
 }

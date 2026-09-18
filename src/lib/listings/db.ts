@@ -297,8 +297,19 @@ export async function loadSiteGalleries(siteId: string, listingIds: string[]): P
   const mediaIds: string[] = [];
   const photos: Array<SiteGalleryPhoto & { listingId: string }> = [];
   for (const part of chunk(listingIds, IN_CHUNK)) {
+    // Ordered the way idx_ls_listing_media_key is built, not by id: with an
+    // id ordering the planner walks the primary key and filters each row
+    // against the 200-id list, and the deeper the page the further it walks.
+    // The gallery order comes from `position` below, so this ordering only
+    // has to be stable across pages. See migration 059's note.
     const rows = await selectAll<{ id: string; listing_id: string; position: number; path_key: string; title: string | null }>("load galleries", (from, to) =>
-      supabase.from("ls_listing_media").select("id, listing_id, position, path_key, title").in("listing_id", part).order("id").range(from, to)
+      supabase
+        .from("ls_listing_media")
+        .select("id, listing_id, position, path_key, title")
+        .in("listing_id", part)
+        .order("listing_id")
+        .order("path_key")
+        .range(from, to)
     );
     for (const row of rows) {
       photos.push({ mediaId: row.id, listingId: row.listing_id, position: row.position, pathKey: row.path_key, title: row.title, src: null });
@@ -322,7 +333,7 @@ export async function loadSiteGalleries(siteId: string, listingIds: string[]): P
         .eq("site_id", siteId)
         .in("media_id", part)
         .not("verified_at", "is", null)
-        .order("id")
+        .order("media_id") // idx_ls_site_media_pair is (site_id, media_id); site_id is fixed above
         .range(from, to)
     );
     for (const row of rows) uris.set(row.media_id, row.wix_image_uri);
