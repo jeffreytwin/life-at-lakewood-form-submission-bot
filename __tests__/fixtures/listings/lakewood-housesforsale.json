@@ -1,0 +1,1021 @@
+{
+ "_source": "Export of the live HousesforSale collection on lifeatlakewood.com, 2026-09-17 (404 rows).",
+ "_note": "One row per distinct (subdivision, village) pair the site itself files, with how many listings carry it. This is the ground truth the seeded terms are checked against: the terms are correct only if they file every pair exactly here.",
+ "_listings": 404,
+ "_statuses": {
+  "Active": 386,
+  "Coming Soon": 18
+ },
+ "pairs": [
+  {
+   "subdivision": "0579900; ESPLANADE PHASE I; LOT 110; PB 55/11",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ARBOR GRANDE",
+   "village": "Arbor Grande",
+   "listings": 5
+  },
+  {
+   "subdivision": "AURORA",
+   "village": "Aurora",
+   "listings": 5
+  },
+  {
+   "subdivision": "AVALON WOODS PH II",
+   "village": "Avalon Woods",
+   "listings": 2
+  },
+  {
+   "subdivision": "AVANTI AT WATERSIDE",
+   "village": "Waterside - Avanti",
+   "listings": 1
+  },
+  {
+   "subdivision": "AVANTI/WATERSIDE",
+   "village": "Waterside - Avanti",
+   "listings": 4
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE",
+   "village": "Azario - Esplanade",
+   "listings": 2
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH II SUBPH A, B & C",
+   "village": "Azario - Esplanade",
+   "listings": 1
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH II SUBPH A, B & P",
+   "village": "Azario - Esplanade",
+   "listings": 1
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH II SUBPH A,B & C",
+   "village": "Azario - Esplanade",
+   "listings": 1
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH II SUBPH C-O",
+   "village": "Azario - Esplanade",
+   "listings": 5
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH III SUBPH D",
+   "village": "Azario - Esplanade",
+   "listings": 2
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH IX",
+   "village": "Azario - Esplanade",
+   "listings": 1
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH VI SUBPH A &",
+   "village": "Azario - Esplanade",
+   "listings": 1
+  },
+  {
+   "subdivision": "AZARIO ESPLANADE PH VII",
+   "village": "Azario - Esplanade",
+   "listings": 1
+  },
+  {
+   "subdivision": "AZARIO LAKEWOOD RANCH",
+   "village": "Azario - Esplanade",
+   "listings": 1
+  },
+  {
+   "subdivision": "BACCIANO I/ESPLANADE LAKEWOOD",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "BACCIANO II AT ESPLANADE LAKEWOOD RANCH",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 2
+  },
+  {
+   "subdivision": "BACCIANO III AT ESPLANADE LAKEWOOD RANCH",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 2
+  },
+  {
+   "subdivision": "BACCIANO IV AT ESPLANADE LAKEWOOD RANCH",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "BACCIANO IV AT ESPLANADE LWR PH 30",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "BRIDGEWATER PH I AT LAKEWOOD RANCH",
+   "village": "Bridgewater",
+   "listings": 2
+  },
+  {
+   "subdivision": "CENTRAL PARK  LAKEWOOD RANCH",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE A-1B",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE A-2A",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE B-2A & B-2C",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE B-2B",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE C-BB",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE D-1AA",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE E-1B",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE E-1C",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CENTRAL PARK SUBPHASE G-2A & G-2B",
+   "village": "Central Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "CLUBSIDE AT COUNTRY CLUB EAST PH II",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "CLUBSIDE AT COUNTRY CLUB EAST PH IX",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COACH HOMES III AT LAKEWOOD NATIONAL",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWD RNCH OO1&2",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWD RNCH PP",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWD RNCH QQ1 1",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWD RNCH QQ1 2B",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWD RNCH RR",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWD RNCH UU1B&1C",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWD RNCH YY1-4",
+   "village": "Country Club East",
+   "listings": 3
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWOOD RANCH",
+   "village": "Country Club East",
+   "listings": 3
+  },
+  {
+   "subdivision": "COUNTRY CLUB EAST AT LAKEWOOD RANCH OO1&2",
+   "village": "Country Club East",
+   "listings": 1
+  },
+  {
+   "subdivision": "CRESSWIND PH I SUBPH A & B",
+   "village": "Cresswind",
+   "listings": 1
+  },
+  {
+   "subdivision": "CRESSWIND PH II",
+   "village": "Cresswind",
+   "listings": 1
+  },
+  {
+   "subdivision": "CRESSWIND PH II SUBPH A, B & C",
+   "village": "Cresswind",
+   "listings": 2
+  },
+  {
+   "subdivision": "DEL WEBB",
+   "village": "Del Webb",
+   "listings": 2
+  },
+  {
+   "subdivision": "DEL WEBB PH I-A",
+   "village": "Del Webb",
+   "listings": 3
+  },
+  {
+   "subdivision": "DEL WEBB PH I-B SUBPHASES D & F",
+   "village": "Del Webb",
+   "listings": 4
+  },
+  {
+   "subdivision": "DEL WEBB PH II SUBPHASES 2A, 2B & 2C",
+   "village": "Del Webb",
+   "listings": 4
+  },
+  {
+   "subdivision": "DEL WEBB PH III SUBPH 3A, 3B & 3C",
+   "village": "Del Webb",
+   "listings": 4
+  },
+  {
+   "subdivision": "DEL WEBB PH V SUBPH 5A, 5B & 5C",
+   "village": "Del Webb",
+   "listings": 3
+  },
+  {
+   "subdivision": "EDGEWATER VILLAGE",
+   "village": "Edgewater",
+   "listings": 2
+  },
+  {
+   "subdivision": "EDGEWATER VILLAGE SUBPHASE A",
+   "village": "Edgewater",
+   "listings": 1
+  },
+  {
+   "subdivision": "EDGEWATER VILLAGE SUBPHASE A UNIT 4B",
+   "village": "Edgewater",
+   "listings": 1
+  },
+  {
+   "subdivision": "EDGEWATER VILLAGE SUBPHASE B",
+   "village": "Edgewater",
+   "listings": 3
+  },
+  {
+   "subdivision": "EMERALD LNDG/WATERSIDE",
+   "village": "Waterside - Emerald Landing",
+   "listings": 2
+  },
+  {
+   "subdivision": "ESPLANADE",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE AT LAKEWOOD RANCH",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE GOLF AND COUNTRY CLUB",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE LAKEWOOD RANCH",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE PH I",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE PH II",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE PH III A,B,C,D,J&PART OF F",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 5
+  },
+  {
+   "subdivision": "ESPLANADE PH III SUBPHASES E, G & H",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE PH V SUBPHASES A,B,C,D,E&F",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "ESPLANADE PH VIII SUBPH A & B",
+   "village": "Esplanade Golf & Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK RIVERS",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE SP BB UN 1",
+   "village": "Greenbrook Village",
+   "listings": 2
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE SP BB UN 2",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE SUBPHASE BB",
+   "village": "Greenbrook Village",
+   "listings": 2
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE SUBPHASE GG",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE SUBPHASE K UNIT 4 &5",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE SUBPHASE L",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK VILLAGE SUBPHASE Y",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK WALK PH 1",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK WALK PH 2",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK WALK PH 3A",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "GREENBROOK WALK PH 3B",
+   "village": "Greenbrook Village",
+   "listings": 1
+  },
+  {
+   "subdivision": "HARMONY AT LAKEWOOD RANCH",
+   "village": "Harmony",
+   "listings": 1
+  },
+  {
+   "subdivision": "HARMONY AT LAKEWOOD RANCH PH I",
+   "village": "Harmony",
+   "listings": 7
+  },
+  {
+   "subdivision": "HARMONY AT LAKEWOOD RANCH PH II A & B",
+   "village": "Harmony",
+   "listings": 2
+  },
+  {
+   "subdivision": "HARMONY AT LAKEWOOD RANCH PH II-C 1-4",
+   "village": "Harmony",
+   "listings": 6
+  },
+  {
+   "subdivision": "INDIGO",
+   "village": "Indigo",
+   "listings": 1
+  },
+  {
+   "subdivision": "INDIGO PH I",
+   "village": "Indigo",
+   "listings": 2
+  },
+  {
+   "subdivision": "INDIGO PH IV & V",
+   "village": "Indigo",
+   "listings": 3
+  },
+  {
+   "subdivision": "INDIGO PH VI SUBPHASE 6A 6B & 6C",
+   "village": "Indigo",
+   "listings": 1
+  },
+  {
+   "subdivision": "INDIGO PH VI SUBPHASE 6B & 6C REP",
+   "village": "Indigo",
+   "listings": 2
+  },
+  {
+   "subdivision": "INDIGO PH VII SUBPHASE 7A & 7B",
+   "village": "Indigo",
+   "listings": 1
+  },
+  {
+   "subdivision": "INDIGO PH VIII SUBPH 8A, 8B & 8C",
+   "village": "Indigo",
+   "listings": 2
+  },
+  {
+   "subdivision": "ISLES AT LAKEWOOD RANCH",
+   "village": "The Isles",
+   "listings": 3
+  },
+  {
+   "subdivision": "ISLES AT LAKEWOOD RANCH PH II",
+   "village": "The Isles",
+   "listings": 6
+  },
+  {
+   "subdivision": "LAKE CLUB",
+   "village": "The Lake Club",
+   "listings": 2
+  },
+  {
+   "subdivision": "LAKE CLUB - GENOA",
+   "village": "The Lake Club",
+   "listings": 2
+  },
+  {
+   "subdivision": "LAKE CLUB PH II",
+   "village": "The Lake Club",
+   "listings": 4
+  },
+  {
+   "subdivision": "LAKE CLUB PH II UNIT 1-B",
+   "village": "The Lake Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKE CLUB PH IV SUBPH B-1 AKA GENOA",
+   "village": "The Lake Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEHOUSE COVE AT WATERSIDE",
+   "village": "Waterside - LakeHouse Cove",
+   "listings": 2
+  },
+  {
+   "subdivision": "LAKEHOUSE COVE/WATERSIDE",
+   "village": "Waterside - LakeHouse Cove",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEHOUSE COVE/WATERSIDE PH 1",
+   "village": "Waterside - LakeHouse Cove",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEHOUSE COVE/WATERSIDE PH 4",
+   "village": "Waterside - LakeHouse Cove",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEHOUSE COVE/WATERSIDE PH 5",
+   "village": "Waterside - LakeHouse Cove",
+   "listings": 3
+  },
+  {
+   "subdivision": "LAKEHOUSE COVE/WATERSIDE PHS 5",
+   "village": "Waterside - LakeHouse Cove",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD NATIONAL",
+   "village": "Lakewood National",
+   "listings": 7
+  },
+  {
+   "subdivision": "LAKEWOOD NATIONAL GOLF CLUB",
+   "village": "Lakewood National",
+   "listings": 3
+  },
+  {
+   "subdivision": "LAKEWOOD NATIONAL PH",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH CC SP C UN 5",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH CC SP D UN 3B &4",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH CCV SP AA, U1&U2",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH CCV SP EE U2A-2E",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB",
+   "village": "The Country Club",
+   "listings": 6
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB EAST BELLEISLE",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE C 2",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE D 3A",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE D 3B&4",
+   "village": "The Country Club",
+   "listings": 3
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE DD 1&2",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE EE 3A-3C",
+   "village": "The Country Club",
+   "listings": 2
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE EE 3D",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE FF",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE H",
+   "village": "The Country Club",
+   "listings": 2
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE HH",
+   "village": "The Country Club",
+   "listings": 3
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE I",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE J",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE L, M",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE L, M, N&O",
+   "village": "The Country Club",
+   "listings": 3
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE Q",
+   "village": "The Country Club",
+   "listings": 2
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE R",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VILLAGE R&S",
+   "village": "The Country Club",
+   "listings": 4
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH COUNTRY CLUB VLG C 1B",
+   "village": "The Country Club",
+   "listings": 1
+  },
+  {
+   "subdivision": "LAKEWOOD RANCH SOLERA PH IA & IB",
+   "village": "Solera",
+   "listings": 2
+  },
+  {
+   "subdivision": "LORRAINE LAKES",
+   "village": "Lorraine Lakes",
+   "listings": 4
+  },
+  {
+   "subdivision": "LORRAINE LAKES PH I",
+   "village": "Lorraine Lakes",
+   "listings": 11
+  },
+  {
+   "subdivision": "LORRAINE LAKES PH IIA",
+   "village": "Lorraine Lakes",
+   "listings": 9
+  },
+  {
+   "subdivision": "LORRAINE LAKES PH IIB-3 & IIC",
+   "village": "Lorraine Lakes",
+   "listings": 14
+  },
+  {
+   "subdivision": "MALLORY PARK PH I D & PH II A",
+   "village": "Mallory Park",
+   "listings": 3
+  },
+  {
+   "subdivision": "MALLORY PARK PH II SUBPH B",
+   "village": "Mallory Park",
+   "listings": 1
+  },
+  {
+   "subdivision": "MALLORY PARK PH II SUBPH C & D",
+   "village": "Mallory Park",
+   "listings": 2
+  },
+  {
+   "subdivision": "NAUTIQUE/WATERSIDE",
+   "village": "Waterside - Nautique",
+   "listings": 3
+  },
+  {
+   "subdivision": "PALISADES",
+   "village": "Palisades",
+   "listings": 1
+  },
+  {
+   "subdivision": "PARK EAST AT AZARIO",
+   "village": "Azario - Park East",
+   "listings": 1
+  },
+  {
+   "subdivision": "PARK EAST AT AZARIO PH I SUBPH A & B",
+   "village": "Azario - Park East",
+   "listings": 2
+  },
+  {
+   "subdivision": "POLO RUN PH I-A & I-B",
+   "village": "Polo Run",
+   "listings": 5
+  },
+  {
+   "subdivision": "POLO RUN PH IIA & IIB",
+   "village": "Polo Run",
+   "listings": 2
+  },
+  {
+   "subdivision": "POLO RUN PH IIC IID & IIE",
+   "village": "Polo Run",
+   "listings": 1
+  },
+  {
+   "subdivision": "RIVERWALK RIDGE",
+   "village": "Riverwalk",
+   "listings": 1
+  },
+  {
+   "subdivision": "RIVERWALK VILLAGE CYPRESS BANKS SP H 1&2",
+   "village": "Riverwalk",
+   "listings": 1
+  },
+  {
+   "subdivision": "SAPPHIRE POINT PH I & II SUBPH 1A, 1B, 1",
+   "village": "Sapphire Point",
+   "listings": 6
+  },
+  {
+   "subdivision": "SAPPHIRE POINT PH IIIA",
+   "village": "Sapphire Point",
+   "listings": 3
+  },
+  {
+   "subdivision": "SAPPHIRE POINT PH IVA & IVB",
+   "village": "Sapphire Point",
+   "listings": 2
+  },
+  {
+   "subdivision": "SAVANNA AT LAKEWOOD RANCH",
+   "village": "Savanna",
+   "listings": 1
+  },
+  {
+   "subdivision": "SAVANNA AT LAKEWOOD RANCH PH I",
+   "village": "Savanna",
+   "listings": 3
+  },
+  {
+   "subdivision": "SAVANNA AT LAKEWOOD RANCH PH II A&B",
+   "village": "Savanna",
+   "listings": 2
+  },
+  {
+   "subdivision": "SAVANNA AT LAKEWOOD RANCH PH III 3ABD",
+   "village": "Savanna",
+   "listings": 5
+  },
+  {
+   "subdivision": "SAVANNA AT LAKEWOOD RANCH PH IV SUBPH 4A",
+   "village": "Savanna",
+   "listings": 3
+  },
+  {
+   "subdivision": "SAVANNA AT LAKEWOOD RANCH PHASE III",
+   "village": "Savanna",
+   "listings": 1
+  },
+  {
+   "subdivision": "SHELLSTONE AT WATERSIDE",
+   "village": "Waterside - Shellstone",
+   "listings": 1
+  },
+  {
+   "subdivision": "SHOREVIEW/LAKEWOOD RANCH WATER",
+   "village": "Waterside - Shoreview",
+   "listings": 3
+  },
+  {
+   "subdivision": "SOLERA AT LAKEWOOD RANCH",
+   "village": "Solera",
+   "listings": 4
+  },
+  {
+   "subdivision": "SOLERA AT LAKEWOOD RANCH PH II",
+   "village": "Solera",
+   "listings": 6
+  },
+  {
+   "subdivision": "STAR FARMS",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "STAR FARMS AT LAKEWOOD RANCH",
+   "village": "Star Farms",
+   "listings": 3
+  },
+  {
+   "subdivision": "STAR FARMS PH I-IV",
+   "village": "Star Farms",
+   "listings": 6
+  },
+  {
+   "subdivision": "STAR FARMS PH IV SUBPH A",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "STAR FARMS PH IV SUBPH D & E",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "STAR FARMS PH IV SUBPH F-L-M",
+   "village": "Star Farms",
+   "listings": 2
+  },
+  {
+   "subdivision": "STAR FARMS PH IV SUBPH H & I",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "STAR FARMS PH V SUBPHASES ABCD",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "STAR FARMS PH VSUBPHASES A B C",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "STAR FARMSPH V-SUB",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "STAR FARMSPH V-SUBPHASES ABCDE",
+   "village": "Star Farms",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD HOLLOW CONDO PH III",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD HOLLOW PH 1-A & 1-B",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD HOLLOW PH II",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE SP A UN 1",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE SUB PH D U",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE SUBPHASE C",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE SUBPHASE C U11",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE SUBPHASE C U13",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE SUBPHASE C U3",
+   "village": "Summerfield",
+   "listings": 2
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE SUBPHASE D U3",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SUMMERFIELD VILLAGE UNIT 1 REV",
+   "village": "Summerfield",
+   "listings": 1
+  },
+  {
+   "subdivision": "SWEETWATER AT LAKEWOOD RANCH",
+   "village": "Sweetwater",
+   "listings": 1
+  },
+  {
+   "subdivision": "SWEETWATER AT LAKEWOOD RANCH PH I & II",
+   "village": "Sweetwater",
+   "listings": 11
+  },
+  {
+   "subdivision": "SWEETWATER VILLAS AT LAKEWOOD RANCH",
+   "village": "Sweetwater",
+   "listings": 2
+  },
+  {
+   "subdivision": "TERRACE II AT LAKEWOOD NATIONAL PH I",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE III AT LAKEWOOD NATIONAL PH 2",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE IV AT LAKEWOOD NATIONAL PH I",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE IV AT LAKEWOOD NATIONAL PH II",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE V AT LAKEWOOD NATIONAL PH I",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE V AT LAKEWOOD NATIONAL PH II",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE VII AT LAKEWOOD NATIONAL PH I",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE VIII AT LAKEWOOD NATIONAL PH I",
+   "village": "Lakewood National",
+   "listings": 1
+  },
+  {
+   "subdivision": "TERRACE VIII AT LAKEWOOD NATIONAL PH II",
+   "village": "Lakewood National",
+   "listings": 3
+  },
+  {
+   "subdivision": "THE MOORINGS AT EDGEWATER",
+   "village": "Edgewater",
+   "listings": 1
+  },
+  {
+   "subdivision": "THE MOORINGS AT EDGEWATER II CONDO",
+   "village": "Edgewater",
+   "listings": 1
+  },
+  {
+   "subdivision": "WILD BLUE AT WATERSIDE",
+   "village": "Waterside - Wild Blue",
+   "listings": 1
+  },
+  {
+   "subdivision": "WILD BLUE/WATERSIDE PH 1",
+   "village": "Waterside - Wild Blue",
+   "listings": 1
+  },
+  {
+   "subdivision": "WOODLEAF HAMMOCK PH I",
+   "village": "Woodleaf Hammock",
+   "listings": 1
+  }
+ ]
+}

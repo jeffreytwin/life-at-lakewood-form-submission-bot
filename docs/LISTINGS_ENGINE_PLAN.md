@@ -11,19 +11,21 @@ deliberately.
 
 ---
 
-## Where things stand, and the next session's kickoff (2026-09-17, 22:35 UTC)
+## Where things stand, and the next session's kickoff (2026-09-18, 00:10 UTC)
 
 Written at the end of the session that cut Parrish over, onboarded Wellen
-Park and spent the evening finding three separate bounds the full run did
-not have. The 2026-09-16 hand-off it replaces is preserved in git history.
+Park, found three separate bounds the full run did not have, and prepared
+Life At Lakewood. The 2026-09-16 hand-off it replaces is preserved in git
+history.
 
-**Three sites, two live.**
+**Four sites, two live.**
 
 | site | mode | rows | notes |
 |---|---|---|---|
 | Life in Longboat Key | **live** | 199 live | since 2026-09-16 |
-| Life At Parrish | **live** | 276 live, 276 gallery_ready | cut over 19:36 UTC today |
-| Life in Wellen Park | shadow → `HousesforSale2` | 44 staged, climbing | switched on 20:51 UTC today |
+| Life At Parrish | **live** | 276 live, 276 gallery_ready | cut over 19:36 UTC on the 17th |
+| Life in Wellen Park | shadow → `HousesforSale2` | 126 staged, 8 written | switched on 20:51 UTC on the 17th |
+| Life At Lakewood | **inactive**, shadow when switched on | — | seeded 2026-09-18; waiting on the probe |
 
 `needs_write` is 0 on both live sites and there are no open errors anywhere.
 
@@ -48,10 +50,7 @@ Photos are importing. The terms were checked against an export of the live
 the one that did not (see "Wellen Park switched on" below; `preserve` alone
 was sweeping in Englewood's Hammocks and Grande Preserves).
 
-### The open item: the full run's third bound
-
-**The full verification cycle is part-way through and currently failing.**
-This is the thing to pick up first.
+### The full run's three bounds — all three fixed and proven
 
 Tonight the full run hit three separate limits, each hiding behind the last:
 
@@ -73,14 +72,88 @@ Tonight the full run hit three separate limits, each hiding behind the last:
    with a top-N heapsort versus **1.5 ms** as a merge join off the index.
    Fixed by ordering to match the index (PR #327).
 
-**State to check first:** `system_settings.ls_engine_state.fullCursor` was at
-`{ afterListingId: "MFRC7528816", verified: 3000 }` with 3,164 of 6,164 still
-to verify. With #327 deployed the remaining passes should run on idle ticks
-and clear the cursor. If they do not, the run row names the stage — that
-two-level trail diagnosed all three of the above without a single log dive.
+**It works.** With #327 deployed, the 22:41 pass cleared `upsert` in about 24
+seconds — the stage that had killed the 22:30 run — and finished
+`ok · truncated` in 140s. The cursor advanced `MFRA4701053` →
+`MFRC7528816` → `MFRN6144585`, 4,500 of 6,164 verified, 1,664 left. Each
+pass costs about 2.5 minutes, so the cycle finishes on its own.
 
-Note `lastFullDate` is still `2026-09-17`, so the 03:00 UTC nightly will
-start its own cycle regardless.
+The run row's two-level trail (`status` plus `stage`) diagnosed all three of
+these without a single log dive. That is worth keeping in mind as the next
+site adds another few thousand listings to the same nightly.
+
+**One thing the cursor does not cover, found while watching this:** a Hub
+"Run Full" calls `runReconcile` directly and never touches
+`ls_engine_state`, so a successful Hub run leaves `lastStatus` on whatever
+the last *cron* run set. After a failure that means the tick keeps sitting
+out its 30-minute `RETRY_AFTER_ERROR_MINUTES` backoff even though the work
+has since succeeded by hand. Harmless — the next due incremental clears it —
+but it is why "press the button again" and "wait for the cron" are not the
+same thing after an error.
+
+### Life At Lakewood: seeded, deliberately not switched on
+
+The fourth site and the biggest by every measure — 404 listings in its live
+collection, 39 neighborhoods, and a market of Lakewood Ranch, Bradenton and
+Sarasota. Migrations 057 (site row, **inactive**) and 058 (neighborhoods and
+terms) are applied; `HousesforSale2` and `LifeAtLakewoodListingPhotos`
+already exist, Jeff created both on the 17th.
+
+**Everything is ready except the one check that matters, and that check is
+the reason this site did not get switched on the way Wellen Park did.**
+
+Wellen Park proved that transcribing a dashboard's terms literally is unsafe:
+the same word that *sorted* an already-chosen listing into a neighborhood
+becomes, in the engine, the *filter* deciding whether the listing is the
+site's at all. Migration 056 is what that cost. This site leans on the same
+pattern far harder, so the terms were rebuilt rather than transcribed:
+
+- Jeff's export of the live collection (404 rows) gives the ground truth —
+  every (subdivision → neighborhood) pair the site files today. It is in the
+  repo as `__tests__/fixtures/listings/lakewood-housesforsale.json`.
+- **Nine of the dashboard's terms already collide** with subdivisions the
+  engine holds in five cities this site does not even cover: `isles` (21
+  subdivisions — Alameda, Englewood, Lemon Bay), `del webb` (5, including
+  Parrish's own Del Webb at Bayview), `emerald`, `edgewater`, `esplanade`,
+  `lake club`, `riverwalk`, `sweetwater`, `windward`. A floor, not a measure.
+- So each was narrowed to the longest form the export proves every MLS
+  spelling carries: `isles at lakewood ranch`, `harmony at lakewood`,
+  `edgewater village` + `moorings at edgewater`, and so on. The dashboard's
+  `country club village` was dropped outright — it covered nothing the other
+  two Country Club terms did not.
+- **Result: 403 of 404 rows file exactly where the site files them, and none
+  files anywhere else.** The one exception is a listing whose subdivision is
+  the bare word `ESPLANADE`, which no anchored term can reach; it will land
+  in the unmatched view rather than be bought with a term that would also
+  take Sarasota's Esplanades. `lakewood-villages.test.ts` holds that check.
+
+**Six terms are still bare, because the MLS writes those names with nothing
+to anchor to:** `aurora`, `cresswind`, `del webb`, `indigo`, `lake club`,
+`palisades`. They are the open risk, and `scripts/listings-lakewood-probe.ts`
+exists to settle them before anything stages. Set `LS_LAKEWOOD_PROBE=1` and
+deploy the branch; it pages every Active listing in the MLS, keeps the three
+market cities, and prints — term by term — every subdivision each one reaches
+that the site does not already show. It also reports how many in-market
+matches are `NewConstructionYN` (the engine excludes builder listings on
+every site), which is the other number worth having before comparing the
+engine's count to the collection's. Budget fifteen minutes.
+
+**Two things to expect when the comparison is made.** 18 of the 404 rows are
+Coming Soon, not Active: the dashboard chain computes `isActive` but JS
+precedence binds that `&&` to the last term of its `||` chain alone, so
+everything except Woodleaf Hammock passed whatever its status. The engine
+will not stage those. And **Riverwalk is folded into Summerfield** — the
+dashboard gives them two labels but one `village1` and one page
+(`summerfield-and-riverwalk`), and `ls_villages` has a unique index on
+`(site_id, wix_item_id)` because `village-stats` writes each neighborhood's
+counts back to its row. Two listings will read "Summerfield" instead of
+"Riverwalk", and the filter loses Riverwalk as an option. **Put to Jeff on
+the 18th and confirmed** — fold it in; a real Riverwalk row in the
+neighborhoods collection undoes it in one migration if that changes.
+
+Jeff also chose the probe-first path over switching on in shadow and
+watching, so the next move on this site is a Vercel build with
+`LS_LAKEWOOD_PROBE=1` and nothing else.
 
 ### What else shipped today
 
@@ -102,22 +175,27 @@ start its own cycle regardless.
 ### Kickoff prompt for the next session
 
 > Read `docs/LISTINGS_ENGINE_PLAN.md`, starting with "Where things stand".
-> Check whether Wellen Park's full verification cycle finished: the run rows
-> since 22:30 UTC on the 17th, and whether
-> `ls_engine_state.fullCursor` has cleared. Then confirm the 03:00 nightly
-> ran clean, that both live sites still have `needs_write` 0, and how far
-> Wellen Park's photo backfill has got. Its staged inventory is the thing to
-> review before any cutover — especially anything the terms caught that is
-> not Wellen Park.
+> Confirm Wellen Park's full verification cycle finished — `fullCursor` was
+> at `MFRN6144585` with 1,664 left — and that the 03:00 nightly ran clean
+> with both live sites still at `needs_write` 0. Then two things are open:
+> Wellen Park's staged inventory wants reviewing before any cutover
+> (especially anything the terms caught that is not Wellen Park), and Life
+> At Lakewood is seeded but inactive, waiting on
+> `scripts/listings-lakewood-probe.ts` to clear its six unanchored terms
+> against the real Bradenton / Sarasota market. Do not switch Lakewood on
+> before reading that probe's output.
 
 **Operational facts.** Supabase project `hwjnymwzibpfylmkccox`. Wix site ids:
 Longboat Key `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab`, Parrish
 `a704cfe5-dd9b-44ff-a017-9d637d8c6fdc`, Wellen Park
-`1a8c2755-823e-4882-ae32-e6c108a30e39`. Cron `/api/cron/listings-tick` every
-5 minutes; hourly incremental, nightly full after 03:00 UTC. Hub:
-`/dashboard/listings`. Run Full and Run Discovery post to
-`/api/internal/listings/run`, which calls `runReconcile` directly — so a Hub
-run saves the cursor but does **not** advance `lastFullDate`.
+`1a8c2755-823e-4882-ae32-e6c108a30e39`, Life At Lakewood
+`4fbabb96-2d6c-4f20-a240-9223153498b5` (that last one from `fp_sites`, where
+the floor-plan pipeline has held it since July). Cron
+`/api/cron/listings-tick` every 5 minutes; hourly incremental, nightly full
+after 03:00 UTC. Hub: `/dashboard/listings`. Run Full and Run Discovery post
+to `/api/internal/listings/run`, which calls `runReconcile` directly — so a
+Hub run saves the cursor but does **not** advance `lastFullDate`, nor clear
+`lastStatus` after an error.
 
 ## Decisions locked
 
