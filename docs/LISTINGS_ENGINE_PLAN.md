@@ -91,6 +91,59 @@ has since succeeded by hand. Harmless — the next due incremental clears it —
 but it is why "press the button again" and "wait for the cron" are not the
 same thing after an error.
 
+### The fourth bound, and the one that was not a query at all
+
+Two hours after the third bound was fixed, Jeff: *"An update stopped early
+while saving to Wix. This has happened several times."* Two more statement
+timeouts, twenty minutes apart, in two different queries:
+
+- **01:36, stage `write`** — `load galleries`. The same mistake as PR #327,
+  two hundred lines away in the same file, missed when its sibling was
+  fixed. `loadSiteGalleries` ordered `ls_listing_media` by `id` against an
+  index on `(listing_id, path_key)`.
+
+  Worse than #327 because the predicate differs. With a literal 200-id list
+  the planner does not sort at all — it walks the **primary key** and filters
+  each row against the list: **4,479 ms** for the first page, discarding
+  15,901 rows to return 1,000, and deepening on every `OFFSET` page after
+  that. Ordered to match the index it is **804 ms at the ninth page**. Four
+  more paginated reads over the two big tables had the same bug and were
+  fixed with it. (PR #329.)
+
+- **01:45, stage `photos`** — `load photo backlog`. `ls_photo_backlog` built
+  each row's `site_ids` with a correlated subquery over a materialised CTE,
+  which carries no index: 4,375 loops over 6,001 rows. Replaced with one
+  hash aggregate (migration 059), checked row-for-row against the old
+  function first — 4,347 rows both ways, zero difference.
+
+**The lesson is the third item, which was not code.** `ls_site_media` had
+not been autovacuumed in **eleven hours**, through the entire Wellen Park
+import, because autovacuum's default trigger is 20% of the live rows and at
+28,000 rows that is ~5,600 dead tuples. Its index-only scan was doing 9,064
+heap fetches — an index-only scan that is not index-only. A manual `VACUUM`
+took that to 107 and the function from 2.7 s to 0.83 s.
+
+Which means: **of the three changes made that hour, the vacuum did the most
+work and the clever one did the least.** At today's size the 26 million
+comparisons were not the dominant cost. The rewrite still earns its place —
+it is the only term that grows as the *square* of the backlog — but the
+honest ordering matters, because the reflex was to go looking for a bad
+query and the bad query was only half the answer.
+
+**And a mistake worth recording.** The `ALTER TABLE ... autovacuum_*`
+statements were written into migration 059 *after* the migration had already
+been applied, so they never reached production and `reloptions` stayed null.
+The manual vacuum wore off inside forty minutes, and the backlog timed out
+once more at 02:40 before the settings went out separately as
+`listings_media_autovacuum_tuning`. Appending to a file that has already
+been applied applies nothing; check `pg_class.reloptions` (or whatever the
+statement was supposed to change) rather than trusting the file.
+
+**Still ahead of the timeout, but next in line:** building `lacking` is now
+the dominant cost in that function — a nested loop over `ls_listing_media`
+for every staged or live listing, ~33,000 buffers today. Linear rather than
+quadratic, so not urgent, but Lakewood's three cities would multiply it.
+
 ### Life At Lakewood: seeded, deliberately not switched on
 
 The fourth site and the biggest by every measure — 404 listings in its live
