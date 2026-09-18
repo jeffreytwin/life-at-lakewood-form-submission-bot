@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fixture from "../../fixtures/listings/mlsgrid-property.json";
-import { mediaPathKey, normalizeListing, streetText, wixFileId } from "@/lib/listings/normalize";
+import { isNewConstruction, mediaPathKey, normalizeListing, streetText, wixFileId } from "@/lib/listings/normalize";
 import type { MlsGridProperty } from "@/lib/listings/types";
 
 const raw = fixture as unknown as MlsGridProperty;
@@ -30,6 +30,50 @@ describe("wixFileId", () => {
   it("parses the file id out of a gallery URI", () => {
     expect(wixFileId("wix:image://v1/d0be81_abc~mv2.jpg/photo.jpg")).toBe("d0be81_abc~mv2.jpg");
     expect(wixFileId("https://static.wixstatic.com/media/x.jpg")).toBeNull();
+  });
+});
+
+describe("isNewConstruction", () => {
+  const of = (props: Partial<MlsGridProperty>) =>
+    isNewConstruction({ ListingId: "MFRX1", ...props } as MlsGridProperty);
+
+  it("takes the MLS flag when it is set", () => {
+    expect(of({ NewConstructionYN: true })).toBe(true);
+    expect(of({ NewConstructionYN: false })).toBe(false);
+  });
+
+  it("says nothing when the record says nothing", () => {
+    expect(of({})).toBeNull();
+    expect(of({ PropertyCondition: [] })).toBeNull();
+  });
+
+  it("overrides a false flag when the house is still being built", () => {
+    // The two Boca Royale East homes that started this: Under Construction,
+    // YearBuilt 2026, BuilderName "Neal Communities of SWFL", listed by Neal
+    // Communities' own brokerage -- and NewConstructionYN false.
+    expect(of({ NewConstructionYN: false, PropertyCondition: ["Under Construction"] })).toBe(true);
+    expect(of({ PropertyCondition: ["Under Construction"] })).toBe(true);
+    expect(of({ PropertyCondition: ["under construction"] })).toBe(true);
+    expect(of({ PropertyCondition: [" Under Construction "] })).toBe(true);
+  });
+
+  it("leaves Pre-Construction alone, because it also means a teardown lot", () => {
+    // MFRTB8540951 on Longboat Key: Pre-Construction, YearBuilt 1974, no
+    // builder -- a $4M lot sold for a proposed rebuild, and a real listing.
+    expect(of({ NewConstructionYN: false, PropertyCondition: ["Pre-Construction"] })).toBe(false);
+    expect(of({ PropertyCondition: ["Pre-Construction"] })).toBeNull();
+  });
+
+  it("leaves Completed alone, because most of them are ordinary resales", () => {
+    // 612 of the 1,015 Completed listings held on 2026-09-18 are not builder
+    // inventory. The word describes the house, not who is selling it.
+    expect(of({ NewConstructionYN: false, PropertyCondition: ["Completed"] })).toBe(false);
+    expect(of({ NewConstructionYN: true, PropertyCondition: ["Completed"] })).toBe(true);
+  });
+
+  it("survives a PropertyCondition that is not an array", () => {
+    expect(of({ PropertyCondition: "Under Construction" as unknown as string[] })).toBeNull();
+    expect(of({ NewConstructionYN: false, PropertyCondition: null as unknown as string[] })).toBe(false);
   });
 });
 

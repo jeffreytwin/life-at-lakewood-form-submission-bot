@@ -28,6 +28,40 @@ export function wixFileId(uri: string): string | null {
   return match ? match[1] : null;
 }
 
+/**
+ * Is this builder inventory?
+ *
+ * NewConstructionYN is the field for it and is usually right, but it is
+ * typed by the listing agent and sometimes is not. Found on 2026-09-18 when
+ * Jeff looked at Life in Wellen Park's shadow collection: two Boca Royale
+ * East homes, PropertyCondition "Under Construction", YearBuilt 2026,
+ * BuilderName "Neal Communities of SWFL", listed by Neal Communities' own
+ * brokerage -- and NewConstructionYN false. Redfin drops both, so it is not
+ * reading that flag either.
+ *
+ * PropertyCondition is the corroborating RESO field and the two agree almost
+ * perfectly across the 6,215 listings held on 2026-09-18:
+ *
+ *     ["Under Construction"]   472 Active   466 flagged    6 not
+ *     ["Pre-Construction"]      49 Active    47 flagged    2 not
+ *     ["Completed"]          1,015 Active   403 flagged  612 not
+ *
+ * So "Under Construction" is taken as decisive: a home still being built is
+ * new construction whatever the flag says, and the six disagreements are
+ * data entry rather than a second meaning.
+ *
+ * "Pre-Construction" is deliberately NOT included. It also covers a lot sold
+ * for a proposed rebuild -- MFRTB8540951 on Longboat Key is Pre-Construction
+ * with YearBuilt 1974 and no builder, a $4M teardown and a real listing.
+ * "Completed" is not included either: 612 of its 1,015 are ordinary resales,
+ * and the word means the house is finished, not who built it.
+ */
+export function isNewConstruction(raw: MlsGridProperty): boolean | null {
+  const condition = Array.isArray(raw.PropertyCondition) ? raw.PropertyCondition : [];
+  if (condition.some((c) => typeof c === "string" && c.trim().toLowerCase() === "under construction")) return true;
+  return typeof raw.NewConstructionYN === "boolean" ? raw.NewConstructionYN : null;
+}
+
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 const str = (v: unknown): string | null => (typeof v === "string" && v.length ? v : null);
 const iso = (v: unknown): string | null => {
@@ -110,7 +144,7 @@ export function normalizeListing(
     longitude: num(raw.Longitude),
     photo_count: media.length,
     mlg_can_view: typeof raw.MlgCanView === "boolean" ? raw.MlgCanView : null,
-    new_construction: typeof raw.NewConstructionYN === "boolean" ? raw.NewConstructionYN : null,
+    new_construction: isNewConstruction(raw),
     modification_timestamp: iso(raw.ModificationTimestamp),
     originating_system_modification_timestamp: iso(raw.OriginatingSystemModificationTimestamp),
     raw: strippedRaw(raw),
