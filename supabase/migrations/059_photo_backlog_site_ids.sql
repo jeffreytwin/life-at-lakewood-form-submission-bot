@@ -46,7 +46,11 @@
 -- same row set, same order.
 --
 -- Applied to production via the Supabase MCP on 2026-09-18 as migration
--- listings_photo_backlog_site_ids.
+-- listings_photo_backlog_site_ids -- the function only. The ALTER TABLEs at
+-- the bottom of this file were written after that apply and went out
+-- separately as listings_media_autovacuum_tuning, which is why the backlog
+-- timed out once more at 02:40 before they were in place. See the note down
+-- there.
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.ls_photo_backlog(max_listings integer DEFAULT 60, shadow_grace_minutes integer DEFAULT 90)
@@ -135,6 +139,22 @@ $function$;
 -- thousand rows instead of every few tens of thousands. These are the two
 -- tables that grow with every photo of every listing on every site, and
 -- Life At Lakewood has not even been switched on yet.
+--
+-- APPLIED SEPARATELY, and late, as listings_media_autovacuum_tuning. These
+-- statements were appended to this file after the function above had already
+-- gone out, so the first apply did not carry them and pg_class.reloptions
+-- stayed null. The cost of that gap is on the record: the manual VACUUM at
+-- 01:55 wore off inside forty minutes, ls_site_media was back to 2,942 heap
+-- fetches, and the backlog timed out again at 02:40. With the settings in
+-- place and one more VACUUM, heap fetches are 0 and the call is 1.5 s.
+--
+-- The remaining cost is `lacking` itself: a nested loop over
+-- ls_listing_media for every staged or live listing, about 33,000 buffers
+-- and 33,000 rows today. That grows linearly with (listings x photos), not
+-- as a square, so it is not urgent -- but it is the next thing that will
+-- outgrow the statement timeout, and Lakewood's three cities would multiply
+-- it. Narrowing `wanted` to the listings that can actually have pending
+-- photos, before joining the media table, is the shape of that fix.
 -- ------------------------------------------------------------
 
 ALTER TABLE ls_site_media SET (
