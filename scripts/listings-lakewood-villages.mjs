@@ -117,11 +117,11 @@ const VILLAGES = {
   // other 13 are untouched, the shared page is unaffected, and its stats get
   // all 15 listings rather than 13.
   //
-  // This is Jeff's call rather than the engine's, and it is reversible: a
-  // real Riverwalk row in HousesforSale-DynamicPages, with its own id, makes
-  // it two neighborhoods again and costs one migration.
-  // scripts/listings-lakewood-probe.ts lists that collection, so the first
-  // run of it says whether such a row already exists.
+  // Put to Jeff on 2026-09-18 and confirmed: fold it in. It stays
+  // reversible -- a real Riverwalk row in HousesforSale-DynamicPages, with
+  // its own id, makes it two neighborhoods again and costs one migration,
+  // and scripts/listings-lakewood-probe.ts lists that collection, so the
+  // first run of it says whether such a row already exists.
   "Summerfield": ["summerfield-and-riverwalk", "5a88ccbb-3ebf-4545-87bb-4e1599415b0e"],
   "Sweetwater": ["sweetwater", "b963c227-7acb-47e1-a81b-31c29cfe7007"],
   "The Country Club": ["country-club", "39b23fe1-5893-4b62-a2aa-cf87e0df6694"],

@@ -62,8 +62,9 @@
 -- other. So they are one neighborhood here, named Summerfield, carrying both
 -- pairs of terms. The two RIVERWALK listings will read "Summerfield", and
 -- the site's filter loses Riverwalk as an option. Everything else is
--- unchanged, and a real Riverwalk row in the neighborhoods collection undoes
--- it in one migration.
+-- unchanged. Put to Jeff on 2026-09-18 and confirmed; a real Riverwalk row
+-- in the neighborhoods collection undoes it in one migration if he changes
+-- his mind.
 --
 -- Applied to production via the Supabase MCP on 2026-09-17 as migration
 -- listings_lakewood_villages.

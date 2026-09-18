@@ -147,9 +147,13 @@ dashboard gives them two labels but one `village1` and one page
 (`summerfield-and-riverwalk`), and `ls_villages` has a unique index on
 `(site_id, wix_item_id)` because `village-stats` writes each neighborhood's
 counts back to its row. Two listings will read "Summerfield" instead of
-"Riverwalk", and the filter loses Riverwalk as an option. **That is Jeff's
-call to confirm**, and a real Riverwalk row in the neighborhoods collection
-undoes it in one migration.
+"Riverwalk", and the filter loses Riverwalk as an option. **Put to Jeff on
+the 18th and confirmed** — fold it in; a real Riverwalk row in the
+neighborhoods collection undoes it in one migration if that changes.
+
+Jeff also chose the probe-first path over switching on in shadow and
+watching, so the next move on this site is a Vercel build with
+`LS_LAKEWOOD_PROBE=1` and nothing else.
 
 ### What else shipped today
 
