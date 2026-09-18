@@ -101,7 +101,46 @@ export interface BuildRecordInput {
   priceSortStyle?: PriceSortStyle;
   /** The site's own field names, where they differ from the engine's; see applyFieldMap. */
   fieldMap?: Record<string, string> | null;
+  /** Which record shape the site's page code reads; see RecordStyle. */
+  recordStyle?: RecordStyle;
 }
+
+/**
+ * Which shape of record a site's page code reads.
+ *
+ * "standard" is what Longboat Key, Parrish and Wellen Park were built
+ * against. "lakewood" is the original site's, and it differs in ways only its
+ * own page code could reveal (Jeff sent it on 2026-09-18):
+ *
+ *  - **Filters are multi-value, with a "Show All" sentinel.** Every row
+ *    carries the literal string "Show All" in villageSort, homeTypeSort and
+ *    bedroomsSort, which is what makes each filter's "Show All" option match
+ *    everything. Writing a plain string into those fields breaks the filter
+ *    quietly, so the first field_map -- which renamed villageSortHelp to
+ *    villageSort and nothing more -- was wrong, and is corrected here.
+ *
+ *  - **Three sort fields the standard record has no equivalent for**:
+ *    homeTypeSort, bedroomsSort, garagesSort. Without them those filters go
+ *    blank on every engine-written row, and nothing would have said so.
+ *
+ *  - The sentinel is NOT on listingPriceSort, bathroomsSort or garagesSort.
+ *    That asymmetry is the site's, not a mistake here -- it is exactly what
+ *    its dashboard writes.
+ *
+ *  - **galleryImage** is a constant camera badge on every row.
+ *
+ * Named after the site rather than abstracted, because one site is all the
+ * evidence there is. The fifth site gets looked at before this grows a third
+ * value.
+ */
+export type RecordStyle = "standard" | "lakewood";
+
+/** Life At Lakewood's filters match everything on this sentinel; see RecordStyle. */
+const SHOW_ALL = "Show All";
+
+/** The camera badge Life At Lakewood puts on every row, from its own dashboard code. */
+const LAKEWOOD_GALLERY_BADGE =
+  "wix:image://v1/d0be81_521cf9f5f881464ab7c3e22109389117~mv2.png/camera%20gallery.png#originWidth=4800&originHeight=1369";
 
 /**
  * Renames the engine's field keys to a site's own, for collections that named
@@ -134,7 +173,7 @@ export function applyFieldMap(record: WixItemData, fieldMap?: Record<string, str
 }
 
 /** The record for the site's collection, keyed by the MLS ListingId. */
-export function buildListingRecord({ listing, village, gallery, pulledAt, priceSortStyle, fieldMap }: BuildRecordInput): WixItemData {
+export function buildListingRecord({ listing, village, gallery, pulledAt, priceSortStyle, fieldMap, recordStyle }: BuildRecordInput): WixItemData {
   const raw = listing.raw as unknown as MlsGridProperty;
   const { propertyAddress, addressObject } = buildAddress(raw);
   const display = (village.display ?? {}) as Record<string, unknown>;
@@ -144,6 +183,22 @@ export function buildListingRecord({ listing, village, gallery, pulledAt, priceS
   const isLand = (raw.PropertyType ?? "").toLowerCase() === "land";
   const bedrooms = raw.BedroomsTotal != null ? raw.BedroomsTotal : isLand ? 0 : raw.BedroomsTotal;
   const bathrooms = raw.BathroomsTotalInteger != null ? raw.BathroomsTotalInteger : isLand ? 0 : raw.BathroomsTotalInteger;
+
+  // The neighborhood sort label, and the filter fields whose shape is the
+  // site's rather than the engine's.
+  const sortLabel = text(display.villageSortHelp, village.name);
+  const homeType = raw.PropertySubType || titleCase(raw.PropertyType);
+  const garageSpaces = raw.GarageSpaces == null ? 0 : raw.GarageSpaces;
+  const sortFields: WixItemData =
+    recordStyle === "lakewood"
+      ? {
+          villageSort: [sortLabel, SHOW_ALL],
+          homeTypeSort: [homeType, SHOW_ALL],
+          bedroomsSort: [String(bedrooms ?? 0), SHOW_ALL],
+          garagesSort: [String(garageSpaces)],
+          galleryImage: LAKEWOOD_GALLERY_BADGE,
+        }
+      : { villageSortHelp: sortLabel };
 
   return applyFieldMap({
     _id: listing.listing_id,
@@ -155,11 +210,11 @@ export function buildListingRecord({ listing, village, gallery, pulledAt, priceS
     listingPriceSort: [priceBucket(raw.ListPrice, priceSortStyle)],
     // PropertySubType is blank for vacant land in the mfrmls feed; fall
     // back to the PropertyType so the Home Type filter stays usable.
-    homeType: raw.PropertySubType || titleCase(raw.PropertyType),
+    homeType,
     village: village.name,
     village1: village.wix_item_id,
     villageLink: village.page_url,
-    villageSortHelp: text(display.villageSortHelp, village.name),
+    ...sortFields,
     blueTag1: text(display.blueTag1),
     purpleTag1: text(display.purpleTag1),
     greenTag1: text(display.greenTag1),
@@ -171,7 +226,7 @@ export function buildListingRecord({ listing, village, gallery, pulledAt, priceS
     listingBrokerageContactInformation: raw.MFR_AttributionContact ?? null,
     bathrooms: bathrooms ?? null,
     bathroomsSort: [Math.ceil(raw.BathroomsTotalInteger || 0).toString()],
-    garages: `${raw.GarageSpaces == null ? 0 : raw.GarageSpaces} Car`,
+    garages: `${garageSpaces} Car`,
     squareFeet: formatSquareFeet(raw.LivingArea),
     lotSize: formatLotSize(raw),
     propertyDescription: raw.PublicRemarks ?? null,

@@ -144,6 +144,65 @@ describe("applyFieldMap", () => {
   });
 });
 
+describe("recordStyle: lakewood", () => {
+  // Every expectation here is read off Life At Lakewood's own dashboard code
+  // (setDataObject), which is the only place the shape of these fields is
+  // visible. The collection export shows values, not what a filter expects.
+  const lakewood = () => buildListingRecord({ listing, village, gallery, pulledAt, recordStyle: "lakewood" });
+  const standard = () => buildListingRecord({ listing, village, gallery, pulledAt });
+
+  it("writes villageSort as a multi-value field carrying the Show All sentinel", () => {
+    // "villageSort": [data.villageSortHelp, 'Show All']
+    // A plain string here leaves the filter's Show All option matching
+    // nothing, which is the bug migration 062's rename would have shipped.
+    expect(lakewood().villageSort).toEqual(["Bay Isles - Harbor Section", "Show All"]);
+    expect(lakewood().villageSortHelp).toBeUndefined();
+    // The standard record is untouched: villageSortHelp, and no villageSort.
+    expect(standard().villageSortHelp).toBe("Bay Isles - Harbor Section");
+    expect(standard().villageSort).toBeUndefined();
+  });
+
+  it("writes the three sort fields the standard record has no equivalent for", () => {
+    const record = lakewood();
+    expect(record.homeTypeSort).toEqual(["Condominium", "Show All"]);
+    expect(record.bedroomsSort).toEqual(["3", "Show All"]);
+    expect(record.garagesSort).toEqual(["1"]);
+    for (const key of ["homeTypeSort", "bedroomsSort", "garagesSort", "galleryImage"]) {
+      expect(standard()[key]).toBeUndefined();
+    }
+  });
+
+  it("keeps the sentinel off the three fields the site does not put it on", () => {
+    // listingPriceSort, bathroomsSort and garagesSort are single-valued in
+    // the site's own code. The asymmetry looks like a mistake and is not.
+    const record = lakewood();
+    for (const key of ["listingPriceSort", "bathroomsSort", "garagesSort"]) {
+      expect(record[key]).not.toContain("Show All");
+    }
+  });
+
+  it("carries the site's camera badge on every row", () => {
+    expect(lakewood().galleryImage).toBe(
+      "wix:image://v1/d0be81_521cf9f5f881464ab7c3e22109389117~mv2.png/camera%20gallery.png#originWidth=4800&originHeight=1369"
+    );
+  });
+
+  it("still renames the attribution field, which is a rename and nothing more", () => {
+    const record = buildListingRecord({
+      listing, village, gallery, pulledAt,
+      recordStyle: "lakewood",
+      fieldMap: { listingBrokerageContactInformation: "listingBrokerContactInfo" },
+    });
+    expect("listingBrokerContactInfo" in record).toBe(true);
+    expect("listingBrokerageContactInformation" in record).toBe(false);
+  });
+
+  it("leaves every other site's record byte-for-byte what it was", () => {
+    expect(buildListingRecord({ listing, village, gallery, pulledAt, recordStyle: "standard" }))
+      .toEqual(standard());
+  });
+});
+
 describe("recordFingerprint", () => {
   it("ignores the pull date and key order but not content", () => {
     const a = buildListingRecord({ listing, village, gallery, pulledAt });

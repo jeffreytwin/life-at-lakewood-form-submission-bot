@@ -2281,3 +2281,57 @@ unowned and invite the stale sweep to delete the site's own listings.
 not field keys. The engine writes `purpleTag1`; Wellen Park's column for it
 is labelled "Gold Tag 1". Diffing exports tells you where to look; only the
 probe, which reads `.fields`, tells you what is actually there.
+
+### And the probe could not have found the rest of it
+
+Migration 062's rename was half right and would have shipped a quiet bug.
+Jeff sent the site's own dashboard code, and `setDataObject` writes:
+
+```js
+"villageSort":  [villageSortHelp, 'Show All']
+"homeTypeSort": [PropertySubType,  'Show All']
+"bedroomsSort": [BedroomsTotal,    'Show All']
+"garagesSort":  [GarageSpaces]
+"galleryImage": <a constant camera badge>
+```
+
+`villageSort` is **multi-value**, and every row carries the literal string
+`"Show All"` — which is what makes each filter's Show All option match
+everything. Renaming `villageSortHelp` to it would have written a plain
+string into an array field and broken the filter, with nothing to say so.
+Three of those fields have no equivalent in the standard record at all, so
+those filters would have gone blank on every engine-written row.
+
+The asymmetry is the site's, not a slip: the sentinel is on `villageSort`,
+`homeTypeSort` and `bedroomsSort` but **not** on `listingPriceSort`,
+`bathroomsSort` or `garagesSort`. Migration 063 carries all of it as
+`ls_sites.record_style`, the way `price_sort_style` already carries a
+per-site difference in how one field is computed, and `field_map` keeps only
+the rename that is genuinely just a rename.
+
+**This is the limit of what a schema probe can tell you.** It compares field
+*names* and can say one is missing. It cannot say what the page code does
+with the fields that are present, and an export does not show it either —
+an export has values, not the shape a filter expects. Ask for the page code
+before writing to a collection built by someone else's pipeline.
+
+### Two more things the dashboard code settled
+
+**The `isActive` precedence bug is real.** `if (a !== -1 || b !== -1 || …
+|| z !== -1 && isActive)` — `&&` binds tighter than `||`, so `isActive`
+gates only the last term. Hence 18 Coming Soon rows in a collection meant to
+be Active-only.
+
+**And the chain never filtered anything.** Both branches return:
+
+```js
+if (…matched a village…) { …set Village/village1/URL…; return valData }
+else { return valData }
+```
+
+A `.filter()` whose every branch returns a truthy object filters nothing.
+Selection was entirely the curated `MLS_id_list`; the subdivision chain only
+ever *labelled*. That is the difference between the old pipeline and the
+engine stated as plainly as it can be, and it is why porting those terms as
+filters was always going to behave differently — the thing migration 056
+learned the hard way on Wellen Park.

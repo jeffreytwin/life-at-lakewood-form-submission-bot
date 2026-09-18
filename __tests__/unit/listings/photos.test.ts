@@ -61,6 +61,7 @@ const site: LsSite = {
   property_types: ["Residential", "Land"],
   show_new_construction: false,
   field_map: null,
+  record_style: "standard" as const,
   price_sort_style: "ranges",
   active: true,
   timezone: "America/New_York",
