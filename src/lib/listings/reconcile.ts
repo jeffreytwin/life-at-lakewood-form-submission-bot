@@ -55,7 +55,13 @@ export const MAX_WINDOW_HOURS = 24;
 export const WATERMARK_OVERLAP_MS = 2 * 60_000;
 /** 40 pages of 200 is 8,000 MLS-wide records, well inside a tick. */
 export const DEFAULT_MAX_PAGES = 40;
-/** Live rows are rewritten this often so dateOfMlsPull stays fresh (MLSGrid compliance). */
+/**
+ * How stale a live row's dateOfMlsPull may get before it is rewritten for
+ * that reason alone. This is the floor, for rows no run has confirmed
+ * against the MLS -- a `discover` run confirms none of them. An `incremental`
+ * or `full` run restamps the rows it did confirm whatever their age; see
+ * PullDateScope.
+ */
 export const PULL_DATE_REFRESH_HOURS = 12;
 export const MASS_DELETE_MIN = 10;
 export const MASS_DELETE_SHARE = 0.1;
@@ -93,6 +99,31 @@ export const WRITE_RESERVE_MS = 60_000;
 
 /** What a run pulls: the hourly window, the full verify of every held id, or a discovery scan of every Active listing. */
 export type ReconcileMode = "incremental" | "full" | "discover";
+
+/**
+ * Which rows a run may stamp with its own time as the dateOfMlsPull.
+ *
+ * Jeff, 2026-09-18: MLS auditors read that field to see when the code last
+ * looked at the MLS, so it has to say when the engine last confirmed the
+ * listing -- not when the listing last changed, which is what it said before
+ * and left months-old dates on listings nobody had edited.
+ *
+ * "all" is the hourly pull: it asks MLSGrid for everything modified since the
+ * watermark, so a held listing absent from the answer is confirmed unchanged
+ * as of that moment. Absence is an answer, and that is the whole basis of the
+ * replication model.
+ *
+ * A set of ids is a full run, which verifies held ids by name in slices a
+ * budget at a time: only the slice this pass asked about was confirmed. Over
+ * a cycle every id passes through, and the hourly keeps the rest current
+ * meanwhile.
+ *
+ * null is `discover`, which must not stamp anything: it pages Active listings
+ * MLS-wide looking for ones the engine does NOT hold and skips every one it
+ * does. Stamping those rows would assert a check that never happened, on the
+ * one field an auditor is reading to catch exactly that.
+ */
+type PullDateScope = "all" | ReadonlySet<string> | null;
 
 /** The mode word the Hub uses for a run. */
 export function modeWord(mode: ReconcileMode): string {
@@ -280,6 +311,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
     let relevant: MlsGridProperty[] = [];
     let missingIds: string[] = [];
     let truncated = false;
+    let pullDateScope: PullDateScope = null;
     if (opts.mode === "incremental") {
       let since = opts.since ?? (await lastCompleteIncrementalStartedAt()) ?? new Date(startedAt.getTime() - 2 * 3600_000);
       since = new Date(since.getTime() - WATERMARK_OVERLAP_MS);
@@ -304,6 +336,8 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       const marketCities = new Set(sites.flatMap((s) => (s.market_cities ?? []).map((c) => c.toLowerCase())));
       const known = new Set(await db.loadKnownListingIds());
       relevant = items.filter((raw) => isRelevant(raw, marketCities, known));
+      // The window covers every held listing, so every row is confirmed current.
+      pullDateScope = "all";
     } else if (opts.mode === "discover") {
       // Every Active listing MLS-wide, without Media; a scan the budget cuts
       // short leaves a cursor and the next discover run continues it.
@@ -368,6 +402,8 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       const returned = new Set(items.map((i) => i.ListingId));
       missingIds = verify.verifiedIds.filter((id) => !returned.has(id));
       run.counts.mlsgrid_listing_count = known.length;
+      // Only the ids this pass asked MLSGrid about; the cursor carries the rest.
+      pullDateScope = new Set(verify.verifiedIds);
 
       const verifiedInCycle = (priorCursor?.verified ?? 0) + verify.verifiedIds.length;
       const last = verify.verifiedIds[verify.verifiedIds.length - 1];
@@ -496,7 +532,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
     await run.checkpoint(stage);
     for (const site of sites) {
       const summary = summaries.get(site.id)!;
-      await writeSite(site, run, opts, summary, startedAt);
+      await writeSite(site, run, opts, summary, startedAt, pullDateScope);
       result.sites.push(summary);
     }
 
@@ -566,7 +602,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
   return result;
 }
 
-async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, summary: SiteWriteSummary, startedAt: Date): Promise<void> {
+async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, summary: SiteWriteSummary, startedAt: Date, pullDateScope: PullDateScope): Promise<void> {
   if (!site.wix_site_id) {
     summary.skipped = "no wix_site_id";
     return;
@@ -583,7 +619,15 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
   }
   const target = site.target_collection_id;
   const nowIso = new Date().toISOString();
-  const refreshBefore = new Date(Date.now() - PULL_DATE_REFRESH_HOURS * 3600_000);
+  // See PullDateScope. A row this run confirmed is restamped and therefore
+  // rewritten, however recently it was last written; every other row keeps
+  // the twelve-hour floor, so an unconfirmed row is not rewritten for nothing.
+  const restamps = (listingId: string): boolean => pullDateScope === "all" || (pullDateScope !== null && pullDateScope.has(listingId));
+  const staleBefore = new Date(Date.now() - PULL_DATE_REFRESH_HOURS * 3600_000);
+  // Nothing is written before now, so a restamped row is never "fresh".
+  const restampedBefore = new Date();
+  // Load against whichever boundary lets the most through; `restamps` decides row by row below.
+  const refreshBefore = pullDateScope === null ? staleBefore : restampedBefore;
 
   // ---- writes: staged and live rows that need it ----
   const due = await db.loadWritableSiteListings(site.id, refreshBefore);
@@ -623,12 +667,16 @@ async function writeSite(site: LsSite, run: RunHandle, opts: ReconcileOptions, s
       continue;
     }
     const gallery: GalleryItem[] = available.map((p, i) => ({ type: "Image", title: p.title ?? "", src: p.src!, order: i + 1, mlsPathKey: p.pathKey }));
-    const record = buildListingRecord({ listing, village, gallery, pulledAt: listing.pulled_at ? new Date(listing.pulled_at) : startedAt, priceSortStyle: site.price_sort_style, fieldMap: site.field_map, recordStyle: site.record_style });
+    const restamped = restamps(sl.listing_id);
+    const pulledAt = restamped ? startedAt : listing.pulled_at ? new Date(listing.pulled_at) : startedAt;
+    const record = buildListingRecord({ listing, village, gallery, pulledAt, priceSortStyle: site.price_sort_style, fieldMap: site.field_map, recordStyle: site.record_style });
     const fingerprint = recordFingerprint(record);
     const contentChanged = sl.written_fingerprint !== fingerprint;
-    const fresh = !!sl.written_at && new Date(sl.written_at) > refreshBefore;
+    const fresh = !!sl.written_at && new Date(sl.written_at) > (restamped ? restampedBefore : staleBefore);
     if (sl.state === "live" && !contentChanged && fresh) {
-      unchangedPatches.push({ site_id: site.id, listing_id: sl.listing_id, needs_write: false });
+      // Only rows still flagged need the patch. A run that restamps loads
+      // every row of the site, and most of them are already clear.
+      if (sl.needs_write) unchangedPatches.push({ site_id: site.id, listing_id: sl.listing_id, needs_write: false });
       summary.unchanged += 1;
       continue;
     }

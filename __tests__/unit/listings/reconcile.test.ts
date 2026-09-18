@@ -40,6 +40,10 @@ vi.mock("@/lib/listings/runs", async (importOriginal) => {
 vi.mock("@/lib/listings/media-seed", () => ({
   seedSiteMediaFromLive: vi.fn(),
 }));
+vi.mock("@/lib/listings/discover", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/listings/discover")>();
+  return { nextCursor: actual.nextCursor, loadDiscoverCursor: vi.fn(), saveDiscoverCursor: vi.fn() };
+});
 vi.mock("@/lib/listings/audit", () => ({ reimportBrokenPhotos: vi.fn(async () => ({ broken: 0, cleared: 0, listings: 0, refused: null })) }));
 vi.mock("@/lib/listings/village-stats", () => ({
   refreshVillageStatsOnWix: vi.fn(async () => ({ villages: 0, changed: 0, written: 0, failed: 0, zeroInventory: 0, remaining: false, requests: 0 })),
@@ -58,10 +62,11 @@ vi.mock("@/lib/wix/client", () => ({
 import * as db from "@/lib/listings/db";
 import { emptyCounts, lastCompleteIncrementalStartedAt, previousRunStartedAt, startRun, type RunHandle } from "@/lib/listings/runs";
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
+import { loadDiscoverCursor, saveDiscoverCursor } from "@/lib/listings/discover";
 import { reimportBrokenPhotos } from "@/lib/listings/audit";
 import { bulkRemoveItems, bulkSaveItems, type WixItemData } from "@/lib/wix/client";
 import { normalizeListing } from "@/lib/listings/normalize";
-import { FULL_VERIFY_MAX_LISTINGS, runReconcile, BROKEN_PHOTO_CHECK_MIN_MS } from "@/lib/listings/reconcile";
+import { FULL_VERIFY_MAX_LISTINGS, runReconcile, BROKEN_PHOTO_CHECK_MIN_MS, type ReconcileMode } from "@/lib/listings/reconcile";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, LsSiteListing, MlsGridProperty, VillageWithTerms } from "@/lib/listings/types";
 
@@ -133,7 +138,7 @@ interface RecordedEvent {
   fields?: Record<string, unknown>;
 }
 
-function fakeRun(mode: "incremental" | "full"): { handle: RunHandle; events: RecordedEvent[] } {
+function fakeRun(mode: ReconcileMode): { handle: RunHandle; events: RecordedEvent[] } {
   const events: RecordedEvent[] = [];
   const counts = emptyCounts();
   const handle: RunHandle = {
@@ -158,13 +163,18 @@ function fakeRun(mode: "incremental" | "full"): { handle: RunHandle; events: Rec
   return { handle, events };
 }
 
-function fakeClient(args: { modified?: MlsGridProperty[]; byId?: MlsGridProperty[]; truncated?: boolean; byIdLimit?: number }): MlsGridClient & { fetchModifiedSince: ReturnType<typeof vi.fn>; fetchByIds: ReturnType<typeof vi.fn> } {
+function fakeClient(args: { modified?: MlsGridProperty[]; byId?: MlsGridProperty[]; active?: MlsGridProperty[]; truncated?: boolean; byIdLimit?: number }): MlsGridClient & { fetchModifiedSince: ReturnType<typeof vi.fn>; fetchByIds: ReturnType<typeof vi.fn> } {
   const client = {
     stats: { requests: 0, bytes: 0, retries: 0, rateLimited: 0 },
     fetchModifiedSince: vi.fn(async () => {
       client.stats.requests += 2;
       client.stats.bytes += 4096;
       return { items: args.modified ?? [], expectedCount: (args.modified ?? []).length, requestCount: 2, pages: 2, truncated: !!args.truncated };
+    }),
+    fetchActive: vi.fn(async () => {
+      client.stats.requests += 1;
+      const items = args.active ?? [];
+      return { items, expectedCount: items.length, requestCount: 1, pages: 1, lastModificationTimestamp: items.at(-1)?.ModificationTimestamp ?? null, ordered: true, truncated: !!args.truncated };
     }),
     fetchByIds: vi.fn(async (ids: string[]) => {
       client.stats.requests += 1;
@@ -214,6 +224,8 @@ beforeEach(() => {
   vi.mocked(db.saveFullCursor).mockResolvedValue(undefined);
   vi.mocked(previousRunStartedAt).mockResolvedValue(null);
   vi.mocked(lastCompleteIncrementalStartedAt).mockResolvedValue(new Date(NOW.getTime() - HOUR));
+  vi.mocked(loadDiscoverCursor).mockResolvedValue(null);
+  vi.mocked(saveDiscoverCursor).mockResolvedValue(undefined);
   vi.mocked(seedSiteMediaFromLive).mockResolvedValue({ liveItems: 202, galleryItems: 0, unkeyed: 0, placeholders: 0, mediaRows: 0, siteMediaRows: 0, refreshed: 3 });
   vi.mocked(bulkSaveItems).mockImplementation(okBulk("INSERT"));
   vi.mocked(bulkRemoveItems).mockImplementation(okBulk("DELETE"));
@@ -435,6 +447,73 @@ describe("the full run's verification cursor", () => {
 
     expect(db.loadKnownListingIds).toHaveBeenCalledWith({ after: undefined });
     expect(db.saveFullCursor).not.toHaveBeenCalled();
+  });
+});
+
+describe("dateOfMlsPull, which MLS auditors read", () => {
+  // Jeff, 2026-09-18: the field has to say when the code last looked at the
+  // MLS for this listing, not when the listing last changed.
+  const setup = (pulledLongAgo: string) => {
+    const { listing, media } = normalizeListing(raw, NOW);
+    vi.mocked(db.loadWritableSiteListings).mockResolvedValue([siteListing(FIXTURE_ID)]);
+    vi.mocked(db.loadListings).mockResolvedValue(new Map([[FIXTURE_ID, { ...listing, pulled_at: pulledLongAgo }]]));
+    vi.mocked(db.loadSiteGalleries).mockResolvedValue(
+      new Map([[FIXTURE_ID, media.map((m, i) => ({ mediaId: `m${i}`, position: m.position, pathKey: m.path_key, title: m.title, src: "wix:image://v1/d0be81_seed~mv2.jpg/1.jpg#originWidth=1600&originHeight=898" }))]])
+    );
+    vi.mocked(db.loadPendingRemovals).mockResolvedValue([]);
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue([FIXTURE_ID]);
+  };
+  const writtenPullDate = () => {
+    const call = vi.mocked(bulkSaveItems).mock.calls.at(-1);
+    const rows = (call?.[2] ?? []) as unknown as Array<Record<string, unknown>>;
+    return (rows[0]?.dateOfMlsPull ?? null) as { $date: string } | null;
+  };
+  const STALE = new Date(NOW.getTime() - 30 * HOUR).toISOString();
+
+  it("stamps the run's own time on an hourly run, not the listing's last pull", async () => {
+    const { handle } = fakeRun("incremental");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(previousRunStartedAt).mockResolvedValue(new Date(NOW.getTime() - HOUR));
+    setup(STALE);
+    await runReconcile({ mode: "incremental", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ modified: [] }) });
+    // Not STALE: an incremental asks MLSGrid for everything modified since the
+    // watermark, so a listing absent from the answer is confirmed current now.
+    expect(writtenPullDate()).toEqual({ $date: NOW.toISOString() });
+  });
+
+  it("stamps it on a full run, which asks MLSGrid about the held id by name", async () => {
+    const { handle } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    setup(STALE);
+    await runReconcile({ mode: "full", trigger: "hub", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [raw] }) });
+    expect(writtenPullDate()).toEqual({ $date: NOW.toISOString() });
+  });
+
+  it("leaves a row the full pass never reached, so the date only claims what was checked", async () => {
+    // A full run verifies held ids in slices a budget at a time. This pass
+    // stopped before the fixture's id, so its row keeps the date of the run
+    // that last pulled it; a later pass in the cycle picks it up.
+    const { handle } = fakeRun("full");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    setup(STALE);
+    vi.mocked(db.loadKnownListingIds).mockResolvedValue(["MFRAAA0001", FIXTURE_ID]);
+    await runReconcile({ mode: "full", trigger: "hub", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [], byIdLimit: 1 }) });
+    expect(bulkSaveItems).toHaveBeenCalled();
+    expect(writtenPullDate()).toEqual({ $date: STALE });
+  });
+
+  it("leaves it alone on a discover run, which never looks at the listings the engine holds", async () => {
+    // discover pages Active listings MLS-wide for ones the engine does NOT
+    // hold and skips everything it does. Stamping those rows would assert a
+    // check that never happened, on the one field an auditor reads to catch it.
+    const { handle } = fakeRun("discover");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    setup(STALE);
+    await runReconcile({ mode: "discover", trigger: "hub", deadline: NOW.getTime() + 240_000, client: fakeClient({ active: [] }) });
+    // The row is still written -- it was staged and waiting -- but it carries
+    // the date of the run that actually pulled it.
+    expect(bulkSaveItems).toHaveBeenCalled();
+    expect(writtenPullDate()).toEqual({ $date: STALE });
   });
 });
 

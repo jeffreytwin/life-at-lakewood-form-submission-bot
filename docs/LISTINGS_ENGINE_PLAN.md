@@ -610,14 +610,31 @@ while porting `runSync`.
   the tick waits 30 minutes before trying again, so a suspended MLSGrid token
   is not hammered.
 - **Writes.** A site's rows are written with `bulkSaveItems` in chunks of 200
-  keyed by `_id = ListingId`; live rows are rewritten only when the record's
-  fingerprint changes or `dateOfMlsPull` is older than 12 hours. Removals go
-  through the mass-delete guard: a full run that wants to remove max(10, 10 %)
-  of the site's live rows removes nothing and records the candidates
+  keyed by `_id = ListingId`; a live row is rewritten when the record's
+  fingerprint changes, when this run confirmed the listing against the MLS
+  (see **Date of MLS Pull**), or when its `dateOfMlsPull` is older than
+  12 hours. Removals go through the mass-delete guard: a full run that wants
+  to remove max(10, 10 %) of the site's live rows removes nothing and
+  records the candidates
   (`mass_delete_guard` error event); an hourly run holds back only the
   data-driven reasons (city, village, display rights, feed) at that
   threshold. `POST /api/internal/listings/run` with `allowMassDelete: true`
   applies a reviewed batch.
+- **Date of MLS Pull.** `dateOfMlsPull` is the field an MLS auditor reads to
+  check when the code last looked at the MLS, so it says when the engine last
+  *confirmed* the listing, not when the listing last changed. An hourly run
+  restamps every row: it asks MLSGrid for everything modified since the
+  watermark, so a held listing absent from the answer is confirmed unchanged
+  as of that moment -- absence is an answer, which is the basis of the
+  replication model. A full run restamps only the ids that pass asked about
+  by name; the cursor carries the rest and a later pass in the cycle picks
+  them up. A discovery run restamps nothing: it pages Active listings
+  MLS-wide for ones the engine does *not* hold and skips every one it does,
+  so stamping those rows would assert a check that never happened. Rows no
+  run confirmed still fall back to the 12-hour floor
+  (`PULL_DATE_REFRESH_HOURS`). The cost is that every live row on every site
+  is rewritten hourly rather than twice a day -- roughly 640 rows today, and
+  around 1,040 once Life At Lakewood goes live.
 - **Photos in phase 2.** No downloads from MLSGrid yet. `media-seed.ts` keys
   every live gallery item by its MLS path and records the site's existing
   `wix:image://` URI, so a listing already on the site is written to the
