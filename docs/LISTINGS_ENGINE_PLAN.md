@@ -24,7 +24,7 @@ history.
 |---|---|---|---|
 | Life in Longboat Key | **live** | 199 live | since 2026-09-16 |
 | Life At Parrish | **live** | 276 live, 276 gallery_ready | cut over 19:36 UTC on the 17th |
-| Life in Wellen Park | shadow → `HousesforSale2` | 126 staged, 8 written | switched on 20:51 UTC on the 17th |
+| Life in Wellen Park | shadow → `HousesforSale2` | 156 written, 10,829 photos | backfill complete; cross-checked against Redfin, see below |
 | Life At Lakewood | **inactive**, shadow when switched on | — | seeded 2026-09-18; waiting on the probe |
 
 `needs_write` is 0 on both live sites and there are no open errors anywhere.
@@ -1942,3 +1942,133 @@ different workload than the one that broke — incremental request latency for
 the fetch, incremental end-to-end time for the cap, a table a quarter of its
 eventual size for the query. **Measure the thing that is about to run, not
 the thing that looks like it.**
+
+## Checking a site against a second source (2026-09-18): Wellen Park vs Redfin
+
+Wellen Park's backfill finished with **156 listings written and 10,829
+photos imported**. Jeff then pulled a Redfin search with his own filters
+over the same area — 171 rows — and asked how it compared. This is the first
+time one of these sites has been checked against something outside the
+engine, and the method is worth keeping.
+
+**Redfin's export carries `MLS#`, which is our `listing_id` without the
+`MFR` prefix.** That makes it an exact join rather than an address match,
+and it is the whole reason the comparison is worth anything. Of the 171
+rows, 167 are sourced "Stellar MLS as Distributed by MLS Grid" — the same
+feed the engine reads. The other four are two FSBO listings, one from a
+different MLS, and Redfin's own footer row.
+
+```
+167  Redfin rows from MLS Grid
+167  of those the engine holds, all Active      <- nothing missing from the feed
+154  of those staged or live on the site
+ 13  Redfin has, the site does not
+  2  the site has, Redfin does not
+```
+
+**The first line is the finding that matters.** Every single listing Redfin
+found, the engine already had. The ingest is not missing anything; every
+difference below is a question of what the site *shows*, which is a terms
+question and a policy question, not a pipeline one.
+
+### The 78 that are not a discrepancy at all
+
+Venice has 118 Active Residential listings whose subdivision names Wellen
+Park; the site shows 40. That gap looks alarming until you split it: **76 of
+the 78 are `new_construction = true`.** Builder inventory is excluded on
+every site (`classify.ts`, Jeff 2026-09-16), and Jeff's Redfin filter
+excludes it too — which is why both lists agree despite neither mentioning
+it. The two that are not new construction are two of the four real misses
+below.
+
+A second non-discrepancy in the same shape: 117 of the `%wellen%` rows are
+`Residential Lease`. All 17 `ESPLANADE AT WELLEN PARK` listings are new
+construction, so the site having no Esplanade neighborhood costs it nothing
+today — but the first resale there will land in the unmatched view, and that
+is the moment to decide whether Esplanade belongs on this site.
+
+### What the thirteen actually were
+
+Redfin's search is a **map polygon**; the engine's is a **set of subdivision
+terms**. A polygon drawn around Wellen Park necessarily includes whatever
+else is inside the rectangle, so most of the thirteen are other communities:
+
+- **Seven correctly excluded.** Five in Plantation Golf & Country Club
+  (`BERMUDA CLUB EAST AT PLANTATION`, `BUCKINGHAM MEADOWS` ×2,
+  `KENWOOD GLEN 1 OF ST ANDREWS E`, `ST ANDREWS ESTS/PLANTATION`) and two in
+  Oak Forest, Englewood, whose nearest neighbours are all Bay Vista Blvd.
+- **Two judgement calls.** `THE RESERVE`, 434 and 444 Tremingham Way — a
+  small enclave between Gran Paradiso and Plantation, $1.1M and $1.35M, and
+  no such neighborhood on the site. Worth noticing that the terms held the
+  line here: `THE RESERVE` is one letter from The Preserve's `the preserve`,
+  and a looser term would have put both on the wrong neighborhood page.
+- **Four the site arguably should show**, three of them fixed in migration
+  060.
+
+### Migration 060, and the repair that must not be made
+
+`COACH HOMES II AT WELLEN PARK, PH 2` and `VERANDA III/WELLEN PARK PH I`
+both say WELLEN PARK, and both are inside Wellen Park Golf & Country Club —
+0.12 and 0.06 miles from listings the site already shows there. They are the
+club's attached product, and its terms (`wellen park golf`, `wellen pk
+golf`) reached only its single-family spellings.
+
+**The obvious fix is a bare `wellen park` term, and it is the one that would
+break the site.** Longest-term-wins compares term *lengths*: `wellen park`
+is 11 characters and beats `brightmore` (10), `sunstone` (8), `lakespur` (8)
+and `palmera` (7), so every `<neighborhood> AT WELLEN PARK` would quietly
+move onto the country club's page. The same trap as `preserve` in migration
+056, arriving from the opposite direction — there a term was too generic for
+the market, here it would be too *long* for its neighbours.
+
+So the terms name the products instead, each checked against every
+subdivision in the database:
+
+| term | matches | why it is safe |
+|---|---|---|
+| `veranda` | 1 subdivision | the only one anywhere in the feed |
+| `coach homes` | 5 | three are Gran Paradiso's, excluded by `exclude_term` |
+| `wellen park g` | WPGCC spellings only | covers `WELLEN PARK G & CC` |
+| `wellen golf` | WPGCC spellings only | covers `WELLEN GOLF & COUNTRY CLUB` |
+| `englewood golf course` | 1 subdivision | Boca Royale's name before it was Boca Royale |
+
+The Gran Paradiso exclusion is redundant against longest-wins
+(`gran paradiso` is 13 to `coach homes` 11) and is there anyway, because a
+rule that holds by arithmetic accident stops holding the day someone renames
+a neighborhood.
+
+`ENGLEWOOD GOLF COURSE` is 84 Cayman Isles Boulevard, whose four nearest
+listings are all Boca Royale — the closest, 11 Cayman Isles Boulevard, on
+the same street. Its sibling `ENGLEWOOD GOLF VILLAS 11` (5 Barbados Road) is
+**deliberately left out**: the name and the street fit Boca Royale's
+Caribbean pattern, but its neighbours do not (Hebblewhite Court at 0.08
+miles, Oak Grove on Englewood Road at 0.15, nearest Boca Royale 0.35 away at
+the entrance boulevard). That is equally consistent with being just inside
+the gates or just outside them, and only Jeff can settle it.
+
+### Dry-run before applying, in SQL
+
+The matcher is TypeScript, but its rule — longest matching term, street
+qualifier, exclusion — is short enough to restate in SQL. Before applying
+060, the proposed term set was run against every Active Residential resale
+listing in Venice, North Port and Englewood and diffed against the current
+assignment. It predicted exactly three changes and no movement anywhere
+else, which is what the migration then did. **For a change whose blast
+radius is "every listing on the site", a dry run that reproduces the
+matching rule against production data is cheap and worth it.**
+
+### The two the site has and Redfin does not
+
+Both are `BOCA ROYALE EAST UNIT 20`, live, and both are flagged
+`new_construction = false` while priced like builder inventory ($494,990 and
+$527,990). Redfin almost certainly treats them as new construction and
+filters them out. Nothing to fix; recorded because it is the one direction
+where the site is the more inclusive of the two.
+
+### Terms take effect on the next full run
+
+Classification runs over the listings a run *pulled*. An incremental only
+sees the modification window, and `discover` skips anything already known —
+so a term change reaches listings the site does not yet hold only on a
+**full** run, which verifies every held id. The 03:00 nightly picks it up;
+the Hub's Run Full does it now.
