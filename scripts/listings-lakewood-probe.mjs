@@ -28,8 +28,14 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-if (process.env.LS_LAKEWOOD_PROBE !== '1') {
-  console.log(`LWR: LS_LAKEWOOD_PROBE is not set; skipping (branch ${process.env.VERCEL_GIT_COMMIT_REF ?? '(none)'}).`);
+// Branch trigger, the same shape listings-engine-phase2.mjs uses, so a probe
+// can be run by pushing rather than by setting a Vercel variable by hand.
+// TEMPORARY: remove PROBE_BRANCH once this probe has been read, or every
+// build of that branch pays fifteen minutes for an answer already had.
+const PROBE_BRANCH = 'claude/elegant-hopper-f7ht89';
+const ref = process.env.VERCEL_GIT_COMMIT_REF ?? '';
+if (process.env.LS_LAKEWOOD_PROBE !== '1' && ref !== PROBE_BRANCH) {
+  console.log(`LWR: branch ${ref || '(none)'} is not ${PROBE_BRANCH} and LS_LAKEWOOD_PROBE is not set; skipping.`);
   process.exit(0);
 }
 if (!process.env.WIX_API_KEY) {
