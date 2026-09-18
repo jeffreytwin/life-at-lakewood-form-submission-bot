@@ -85,14 +85,41 @@ export function sortedMedia(media: MlsGridMedia[] | undefined): MlsGridMedia[] {
   return [...media].sort((a, b) => (a.Order ?? 0) - (b.Order ?? 0));
 }
 
+/**
+ * One row per photo, deduplicated on path_key.
+ *
+ * The dedupe is not cosmetic. ls_listing_media is upserted with
+ * `onConflict: "listing_id,path_key"`, and Postgres refuses an INSERT ...
+ * ON CONFLICT DO UPDATE whose own rows collide on the conflict key:
+ *
+ *     upsert listing media: ON CONFLICT DO UPDATE command cannot affect
+ *     row a second time (21000)
+ *
+ * That killed Life At Lakewood's first discovery run at `upsert` on
+ * 2026-09-18, 144 s and 33,000 records in, and it does not self-heal: the
+ * same listing yields the same duplicate on every pull, so every run that
+ * reaches it dies the same way. Three markets and 6,804 listings were enough
+ * to turn up an MLS record listing one photo twice; the first three sites
+ * never did.
+ *
+ * The first occurrence wins, which is the lowest Order because sortedMedia
+ * has already sorted by it.
+ *
+ * Positions are numbered over the rows actually kept rather than over the
+ * input index, so they stay contiguous from 1 — which is what this function
+ * always claimed to do, and was not doing for any listing with a photo whose
+ * URL carried no usable path_key.
+ */
 export function normalizeMedia(raw: MlsGridProperty, receivedAt: Date): LsListingMediaInput[] {
   const rows: LsListingMediaInput[] = [];
-  for (const [index, m] of sortedMedia(raw.Media).entries()) {
+  const seen = new Set<string>();
+  for (const m of sortedMedia(raw.Media)) {
     const pathKey = typeof m.MediaURL === "string" ? mediaPathKey(m.MediaURL) : null;
-    if (!pathKey) continue;
+    if (!pathKey || seen.has(pathKey)) continue;
+    seen.add(pathKey);
     rows.push({
       listing_id: raw.ListingId,
-      position: index + 1,
+      position: rows.length + 1,
       media_key: str(m.MediaKey),
       path_key: pathKey,
       source_url: str(m.MediaURL),
