@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import fixture from "../../fixtures/listings/mlsgrid-property.json";
 import { normalizeListing } from "@/lib/listings/normalize";
 import {
+  applyFieldMap,
   buildAddress,
   buildListingRecord,
   formatLotSize,
@@ -96,6 +97,50 @@ describe("buildListingRecord", () => {
     const land = normalizeListing(landRaw, pulledAt).listing;
     const record = buildListingRecord({ listing: land, village, gallery, pulledAt });
     expect(record).toMatchObject({ homeType: "Land", bedrooms: 0, bathrooms: 0, squareFeet: "0", lotSize: "1.2-acre lot" });
+  });
+});
+
+describe("applyFieldMap", () => {
+  // Life At Lakewood is the original site: its collection calls
+  // villageSortHelp `villageSort` and listingBrokerageContactInformation
+  // `listingBrokerContactInfo`, and its page code reads those names.
+  const LAKEWOOD = {
+    villageSortHelp: "villageSort",
+    listingBrokerageContactInformation: "listingBrokerContactInfo",
+  };
+
+  it("renames only the keys the site names differently", () => {
+    const record = buildListingRecord({ listing, village, gallery, pulledAt, fieldMap: LAKEWOOD });
+    expect(record.villageSort).toBe("Bay Isles - Harbor Section");
+    expect(record.villageSortHelp).toBeUndefined();
+    expect("listingBrokerageContactInformation" in record).toBe(false);
+    expect("listingBrokerContactInfo" in record).toBe(true);
+    // Everything else is untouched, and no field is lost in the rename.
+    expect(record.village).toBe("Bay Isles - Harbor Section");
+    expect(record.listingPrice).toBe("$1,395,000");
+    expect(Object.keys(record)).toHaveLength(
+      Object.keys(buildListingRecord({ listing, village, gallery, pulledAt })).length
+    );
+  });
+
+  it("leaves a site without a map exactly as it was", () => {
+    const plain = buildListingRecord({ listing, village, gallery, pulledAt });
+    for (const map of [undefined, null, {}]) {
+      expect(buildListingRecord({ listing, village, gallery, pulledAt, fieldMap: map })).toEqual(plain);
+    }
+  });
+
+  it("never renames _id, whatever the map says", () => {
+    // deleteStaleRows and loadOwnedIds both match on _id; renaming it would
+    // make every row look unowned and invite the stale sweep to delete them.
+    const out = applyFieldMap({ _id: "MFRX1", village: "V" }, { _id: "mlsNumber", village: "villageName" });
+    expect(out._id).toBe("MFRX1");
+    expect(out.villageName).toBe("V");
+  });
+
+  it("ignores a no-op or half-written entry rather than dropping the field", () => {
+    const out = applyFieldMap({ a: 1, b: 2, c: 3 }, { a: "a", b: "", c: "z" });
+    expect(out).toEqual({ a: 1, b: 2, z: 3 });
   });
 });
 

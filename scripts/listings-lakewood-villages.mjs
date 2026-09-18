@@ -255,6 +255,14 @@ export const BARE_TERMS = ["aurora", "del webb", "indigo", "lake club", "palisad
 
 /** term -> subdivision text that takes the match back (classify's exclude_term). */
 const EXCLUSIONS = {
+  // Indigo is this site's, unless it is University Place's. Found by the
+  // 2026-09-18 probe: "indigo" reached INDIGO RIDGE AT UNIVERSITY PLACE, a
+  // different master-planned community. The site's own twelve Indigo rows
+  // are all the bare name or a phase (INDIGO, INDIGO PH I, INDIGO PH IV & V,
+  // ...), so the term stays and takes a guard -- written against the
+  // community rather than against "indigo ridge", so a second University
+  // Place spelling cannot slip past it. Migration 062.
+  "indigo": "university place",
   "esplanade ph": "azario",
   "esplanade phase": "azario",
   "esplanade golf": "azario",

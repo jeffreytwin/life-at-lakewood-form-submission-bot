@@ -99,10 +99,42 @@ export interface BuildRecordInput {
   pulledAt: Date;
   /** The site's price filter scheme; Longboat Key's ranges when not given. */
   priceSortStyle?: PriceSortStyle;
+  /** The site's own field names, where they differ from the engine's; see applyFieldMap. */
+  fieldMap?: Record<string, string> | null;
+}
+
+/**
+ * Renames the engine's field keys to a site's own, for collections that named
+ * the same thing differently before the engine existed.
+ *
+ * Life At Lakewood is the original site and its collection predates all of
+ * this: it calls villageSortHelp `villageSort` and
+ * listingBrokerageContactInformation `listingBrokerContactInfo`. Its page
+ * code reads those names, so writing the engine's names would land the data
+ * in fields nothing renders -- an empty neighborhood sort and, worse, no
+ * brokerage attribution, which the MLS requires be displayed.
+ *
+ * The alternative was adding the engine's names alongside the site's, which
+ * is what Wellen Park did: its collection carries both
+ * `Listing Broker Contact Information` and
+ * `listingBrokerageContactInformation`. That works but leaves two fields
+ * meaning one thing, and the next site drifts its own way again.
+ *
+ * `_id` is never remapped: it is the listing id, and deleteStaleRows and
+ * loadOwnedIds both match on it.
+ */
+export function applyFieldMap(record: WixItemData, fieldMap?: Record<string, string> | null): WixItemData {
+  if (!fieldMap) return record;
+  const entries = Object.entries(fieldMap).filter(([from, to]) => from && to && from !== to && from !== "_id");
+  if (!entries.length) return record;
+  const renames = new Map(entries);
+  const out: WixItemData = {};
+  for (const [key, value] of Object.entries(record)) out[renames.get(key) ?? key] = value;
+  return out;
 }
 
 /** The record for the site's collection, keyed by the MLS ListingId. */
-export function buildListingRecord({ listing, village, gallery, pulledAt, priceSortStyle }: BuildRecordInput): WixItemData {
+export function buildListingRecord({ listing, village, gallery, pulledAt, priceSortStyle, fieldMap }: BuildRecordInput): WixItemData {
   const raw = listing.raw as unknown as MlsGridProperty;
   const { propertyAddress, addressObject } = buildAddress(raw);
   const display = (village.display ?? {}) as Record<string, unknown>;
@@ -113,7 +145,7 @@ export function buildListingRecord({ listing, village, gallery, pulledAt, priceS
   const bedrooms = raw.BedroomsTotal != null ? raw.BedroomsTotal : isLand ? 0 : raw.BedroomsTotal;
   const bathrooms = raw.BathroomsTotalInteger != null ? raw.BathroomsTotalInteger : isLand ? 0 : raw.BathroomsTotalInteger;
 
-  return {
+  return applyFieldMap({
     _id: listing.listing_id,
     propertyAddress,
     propertyAddressGoogleMaps: addressObject,
@@ -151,7 +183,7 @@ export function buildListingRecord({ listing, village, gallery, pulledAt, priceS
     subdivision: raw.SubdivisionName ? raw.SubdivisionName.replace("SAVANNAH", "SAVANNA") : null,
     dateOfMlsPull: wixDate(pulledAt),
     isPublished: true,
-  };
+  }, fieldMap);
 }
 
 function stable(value: unknown): unknown {
