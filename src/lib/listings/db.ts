@@ -164,7 +164,19 @@ export async function loadListings(listingIds: string[]): Promise<Map<string, Ls
  * batched query groups rather than two queries per listing.
  */
 export async function replaceListingMedia(media: LsListingMediaInput[], listingIds: string[]): Promise<{ removed: number }> {
-  for (const part of chunk(media, MEDIA_UPSERT_CHUNK)) {
+  // Last line of defence on the conflict key. normalizeMedia already
+  // deduplicates, and this is the caller that matters -- but a single
+  // duplicated photo must never be able to kill a whole run again, which is
+  // what Postgres 21000 did to Lakewood's first discovery. First row wins,
+  // matching normalizeMedia.
+  const seen = new Set<string>();
+  const unique = media.filter((row) => {
+    const key = `${row.listing_id}\u0000${row.path_key}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  for (const part of chunk(unique, MEDIA_UPSERT_CHUNK)) {
     const { error } = await supabase.from("ls_listing_media").upsert(part, { onConflict: "listing_id,path_key" });
     if (error) fail("upsert listing media", error);
   }

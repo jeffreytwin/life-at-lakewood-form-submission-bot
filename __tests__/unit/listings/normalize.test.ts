@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fixture from "../../fixtures/listings/mlsgrid-property.json";
-import { isNewConstruction, mediaPathKey, normalizeListing, streetText, wixFileId } from "@/lib/listings/normalize";
+import { isNewConstruction, mediaPathKey, normalizeListing, normalizeMedia, streetText, wixFileId } from "@/lib/listings/normalize";
 import type { MlsGridProperty } from "@/lib/listings/types";
 
 const raw = fixture as unknown as MlsGridProperty;
@@ -30,6 +30,44 @@ describe("wixFileId", () => {
   it("parses the file id out of a gallery URI", () => {
     expect(wixFileId("wix:image://v1/d0be81_abc~mv2.jpg/photo.jpg")).toBe("d0be81_abc~mv2.jpg");
     expect(wixFileId("https://static.wixstatic.com/media/x.jpg")).toBeNull();
+  });
+});
+
+describe("normalizeMedia deduplication", () => {
+  const withMedia = (urls: Array<string | undefined>): MlsGridProperty =>
+    ({ ListingId: "MFRX1", Media: urls.map((MediaURL, i) => ({ MediaURL, Order: i })) }) as unknown as MlsGridProperty;
+  const at = new Date("2026-09-18T16:55:00.000Z");
+  const url = (name: string) =>
+    `https://media.mlsgrid.com/token=abc&expires=1&id=2/images/MFRX1/${name}.jpeg`;
+
+  it("keeps one row per path_key, first occurrence winning", () => {
+    // The failure this prevents: ls_listing_media upserts on
+    // (listing_id, path_key), and Postgres rejects an ON CONFLICT statement
+    // whose own rows collide -- 21000, "cannot affect row a second time".
+    // It killed Lakewood's first discovery run at upsert and would have
+    // killed every retry, because the same listing yields the same duplicate.
+    const rows = normalizeMedia(withMedia([url("a"), url("b"), url("a"), url("c"), url("b")]), at);
+    expect(rows.map((r) => r.path_key)).toEqual([
+      "images/MFRX1/a.jpeg", "images/MFRX1/b.jpeg", "images/MFRX1/c.jpeg",
+    ]);
+    expect(new Set(rows.map((r) => r.path_key)).size).toBe(rows.length);
+  });
+
+  it("numbers positions contiguously from 1 over the rows it keeps", () => {
+    // Previously the position came from the input index, so a duplicate or a
+    // URL with no usable path_key left a hole in the numbering.
+    const rows = normalizeMedia(withMedia([url("a"), undefined, url("a"), url("b")]), at);
+    expect(rows.map((r) => r.position)).toEqual([1, 2]);
+  });
+
+  it("still drops media with no usable URL", () => {
+    expect(normalizeMedia(withMedia([undefined, undefined]), at)).toEqual([]);
+  });
+
+  it("leaves a gallery with no duplicates exactly as it was", () => {
+    const rows = normalizeMedia(withMedia([url("a"), url("b"), url("c")]), at);
+    expect(rows.map((r) => r.position)).toEqual([1, 2, 3]);
+    expect(rows).toHaveLength(3);
   });
 });
 
