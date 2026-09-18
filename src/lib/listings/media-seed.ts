@@ -105,7 +105,7 @@ export async function seedSiteMediaFromLive(site: LsSite): Promise<MediaSeedResu
   for (const part of chunk(listingIds, 200)) {
     // A couple of hundred galleries is thousands of rows: page, never trust one response.
     const rows = await selectAll<{ id: string; listing_id: string; path_key: string }>("load seeded media", (from, to) =>
-      supabase.from("ls_listing_media").select("id, listing_id, path_key").in("listing_id", part).order("id").range(from, to)
+      supabase.from("ls_listing_media").select("id, listing_id, path_key").in("listing_id", part).order("listing_id").order("path_key").range(from, to)
     );
     for (const row of rows) {
       const hit = uris.get(mediaKey(row.listing_id, row.path_key));
@@ -118,7 +118,7 @@ export async function seedSiteMediaFromLive(site: LsSite): Promise<MediaSeedResu
   const existing = new Map<string, { origin: string; wix_image_uri: string }>();
   for (const part of chunk(wanted.map((w) => w.mediaId), 200)) {
     const rows = await selectAll<{ media_id: string; origin: string; wix_image_uri: string }>("load site media", (from, to) =>
-      supabase.from("ls_site_media").select("media_id, origin, wix_image_uri").eq("site_id", site.id).in("media_id", part).order("id").range(from, to)
+      supabase.from("ls_site_media").select("media_id, origin, wix_image_uri").eq("site_id", site.id).in("media_id", part).order("media_id").range(from, to)
     );
     for (const row of rows) existing.set(row.media_id, row);
   }
