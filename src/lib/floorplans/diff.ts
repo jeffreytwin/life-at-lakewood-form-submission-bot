@@ -108,6 +108,8 @@ export function mergeForUpdate(current: CanonicalRecord, plan: NormalizedPlan): 
   }
   // The numeric price is derived from the edited display price (see the PATCH route).
   if (overrides.has("priceDisplay")) merged.price = current.price;
+  // The score is set in the Hub and no engine knows it: the canonical one stays.
+  merged.score = current.score ?? plan.score ?? null;
   merged.userEditedFields = current.userEditedFields;
   return merged as unknown as NormalizedPlan;
 }

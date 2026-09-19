@@ -110,19 +110,27 @@ nothing. No cutover report has ever been generated.
   fields the pipeline does not own (score, notes, anything set by hand).
   Wix's update replaces the whole item, so before this every approved
   update would have wiped them.
-- Settings → **Sites** reads every site's Floor Plans V2 collection live
-  from Wix, diffs it against a reference collection (Wellen Park's V2 by
-  default; any site's V2 or legacy Floor Plans) and aligns it step by
-  step: add what a site lacks, take the reference's labels, take the labels
-  from the site's own legacy collection, or remove a site's extra fields
-  (confirmed separately). `scripts/floorplan-wix-schema-snapshot.mjs`
-  caches the schemas in `fp_collection_schemas` (migration 066) from a
-  preview build, for work without Wix credentials. **Finding:** the three
-  V2 collections are identical (38 fields, revision 3); Wellen Park's and
-  Parrish's legacy collections are not the same as each other (Parrish has
-  six more fields and uses `score` as a "Status" tag list); what differs
-  for a person is V2's raw-key labels. Details in `docs/WIX_COLLECTIONS.md`,
+- **One standard Floor Plans V2 schema**, in code
+  (`standard-floor-plan-schema.json`: 31 data fields, keys, types and
+  labels, "Neighborhood" rather than "Village"). Settings → **Sites** reads
+  every site's collection live from Wix, diffs it against the standard and
+  aligns it step by step: add what a site lacks, apply the standard
+  labels, or remove a site's extra fields (confirmed separately).
+  `scripts/floorplan-wix-schema-snapshot.mjs` applies the labels and
+  missing fields from a preview build and caches the schemas in
+  `fp_collection_schemas` (migration 066). **Finding:** the three V2
+  collections were already identical in keys and types (38 fields,
+  revision 3); Wellen Park's and Parrish's legacy collections are not the
+  same as each other (Parrish has six more fields and uses `score` as a
+  "Status" tag list); what differed for a person was V2's raw-key labels,
+  now the human ones everywhere. Details in `docs/WIX_COLLECTIONS.md`,
   "Schemas compared across sites".
+- A base plan needs its **score** before it can be approved (Jeff: the
+  sites list high scores first; the freelancers used 1 to 10, with a few
+  11s). It is set in the edit overlay, kept across runs, never proposed as
+  a change, and written to the row's `score`. Approve is held until it is
+  set; Approve All leaves such plans pending and says so. A quick move-in
+  carries no score and needs none.
 - The whole review row opens the overlay.
 
 **Known gaps, in the order they bite.**

@@ -15,11 +15,12 @@ const EDITABLE_FIELDS = [
   "virtualTourUrl",
   "description",
   "relatedPlanName",
+  "score",
 ] as const;
 
 /**
  * PATCH /api/internal/floorplans/changes/:id
- * Body: { record: { name?, priceDisplay?, beds?, baths?, sqft?, garages?, homeType?, virtualTourUrl?, description?, relatedPlanName? } }
+ * Body: { record: { name?, priceDisplay?, beds?, baths?, sqft?, garages?, homeType?, virtualTourUrl?, description?, relatedPlanName?, score? } }
  *
  * Edits a PENDING change's proposed record before approval. Edited fields
  * are recorded as manual overrides (userEditedFields) so the nightly diff
@@ -51,6 +52,16 @@ export async function PATCH(
     const edited = new Set(record.userEditedFields ?? []);
     for (const field of EDITABLE_FIELDS) {
       if (!(field in edits)) continue;
+      if (field === "score") {
+        // A person's number, not a builder value: it never counts as an override.
+        const raw = String(edits.score ?? "").trim();
+        const parsed = raw === "" ? null : Number(raw);
+        if (parsed !== null && !Number.isFinite(parsed)) {
+          return NextResponse.json({ error: "score must be a number" }, { status: 400 });
+        }
+        record.score = parsed;
+        continue;
+      }
       if (field === "sqft") {
         // The form shows "3,908" and the record holds 3908: compare as numbers,
         // or every save would mark an untouched value as an override.
