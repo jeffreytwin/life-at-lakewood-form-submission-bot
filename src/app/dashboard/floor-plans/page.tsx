@@ -300,17 +300,21 @@ export default function FloorPlansPage() {
               <tbody>
                 {visible.map((c) => {
                   const rec = c.proposed_record;
+                  // The main image is the gallery's first photo; primaryImage is the first slice's field.
+                  const thumb = rec?.galleryImages?.[0] ?? rec?.primaryImage ?? null;
+                  const photoCount = rec?.galleryImages?.length ?? 0;
                   return (
                     <tr key={c.id}>
                       <td style={{ width: 92 }}>
-                        {rec?.primaryImage ? (
-                          <a href={rec.primaryImage} target="_blank" rel="noreferrer">
+                        {thumb ? (
+                          <a href={thumb} target="_blank" rel="noreferrer" title={photoCount ? `${photoCount} photos` : undefined}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={rec.primaryImage}
+                              src={thumb}
                               alt={rec?.name ?? c.plan_key}
                               style={{ width: 84, height: 56, objectFit: "cover", borderRadius: 6, display: "block" }}
                             />
+                            {photoCount > 1 && <div className="text-muted" style={{ fontSize: 10 }}>{photoCount} photos</div>}
                           </a>
                         ) : (
                           <span className="text-muted text-sm">no image</span>
