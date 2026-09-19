@@ -35,9 +35,13 @@ jobs:
 
       # Discovery captures land in pipeline/slice/discovery; a page that
       # cannot be fetched must not stop the commit of the ones that could.
-      - name: Capture Toll Brothers plan pages
+      - name: Install Playwright for the browser capture
         continue-on-error: true
-        run: node pipeline/slice/discover-toll-model.mjs
+        run: npm i --no-save playwright && npx playwright install --with-deps chromium
+
+      - name: Probe the Toll Brothers model API and capture a plan page's own calls
+        continue-on-error: true
+        run: node pipeline/slice/discover-toll-api.mjs
 
       - name: Live extractor verification
         continue-on-error: true
