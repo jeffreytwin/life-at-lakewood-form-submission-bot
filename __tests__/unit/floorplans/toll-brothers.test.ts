@@ -53,3 +53,37 @@ describe("plansFromNextData (Toll Brothers)", () => {
     }
   });
 });
+
+// Jeff, 2026-09-19: the rest of the gallery (exterior designs, showcase
+// photos) and the 3D walkthrough live in other parts of the page than the
+// headshot, and the sites want the Matterport share link in the tour field.
+describe("Toll Brothers media", () => {
+  const plans = plansFromNextData(dump("isles-main"));
+  const avery = plans.find((p) => p.planKey === "avery")!;
+  const carver = plans.find((p) => p.planKey === "carver")!;
+
+  it("turns a Matterport walkthrough into the share link the Lakewood rows already use, with its still", () => {
+    expect(avery.virtualTourUrl).toBe("https://my.matterport.com/show/?m=HQYuPU2ve1n&qs=1&play=1");
+    expect(avery.virtualTourImage).toMatch(/^https:\/\/cdn\.tollbrothers\.com\/.*matterports\/.*\.jpg$/);
+  });
+
+  it("keeps an InsideMaps walkthrough link as the builder gives it", () => {
+    expect(carver.virtualTourUrl).toMatch(/^https:\/\/www\.insidemaps\.com\/app\/walkthrough-v2\/\?projectId=/);
+  });
+
+  it("leads with the headshot and trails with the other exterior designs, each named", () => {
+    const [primary, ...rest] = avery.galleryImages;
+    expect(primary).toMatch(/AVER_CRB_/);
+    expect(rest).toHaveLength(2);
+    expect(rest).not.toContain(primary);
+    expect(avery.galleryMeta?.[primary]).toEqual({ caption: "Caribbean", room: "primary", kind: "primary" });
+    expect(rest.map((u) => avery.galleryMeta?.[u]?.caption)).toEqual(["Antilles", "Island Colonial"]);
+    expect(rest.every((u) => avery.galleryMeta?.[u]?.kind === "exterior")).toBe(true);
+    // Drawings stay out of the photo gallery.
+    expect(avery.blueprintImages).toEqual([expect.stringMatching(/floorplans-original\/.*\.svg$/)]);
+  });
+
+  it("carries the builder's description", () => {
+    expect(avery.description).toMatch(/^Contemporary elegance\./);
+  });
+});

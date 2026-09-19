@@ -25,6 +25,9 @@ interface PendingChange {
     primaryImage?: string | null;
     galleryImages?: string[];
     blueprintImages?: string[];
+    galleryMeta?: Record<string, { caption?: string | null; room?: string | null; kind?: string }>;
+    description?: string | null;
+    virtualTourUrl?: string | null;
     userEditedFields?: string[];
   } | null;
   fp_sites: { domain: string; name: string } | null;
@@ -64,6 +67,8 @@ export default function FloorPlansPage() {
     sqft: "",
     garages: "",
     homeType: "",
+    virtualTourUrl: "",
+    description: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
   const [editGallery, setEditGallery] = useState<string[]>([]);
@@ -147,6 +152,8 @@ export default function FloorPlansPage() {
       sqft: rec.sqft != null ? String(rec.sqft) : "",
       garages: rec.garages ?? "",
       homeType: rec.homeType ?? "",
+      virtualTourUrl: rec.virtualTourUrl ?? "",
+      description: rec.description ?? "",
     });
     const gallery = rec.galleryImages?.length
       ? rec.galleryImages
@@ -339,6 +346,13 @@ export default function FloorPlansPage() {
                           <div className="text-muted text-sm">✎ edited: {rec?.userEditedFields?.join(", ")}</div>
                         )}
                         {rec?.quickMoveIn && <div className="text-muted text-sm">Quick Move-In</div>}
+                        {rec?.virtualTourUrl && (
+                          <div>
+                            <a href={rec.virtualTourUrl} target="_blank" rel="noreferrer" className="text-sm">
+                              3D tour ↗
+                            </a>
+                          </div>
+                        )}
                         {rec?.sourceUrl && (
                           <div>
                             <a href={rec.sourceUrl} target="_blank" rel="noreferrer" className="text-sm">
@@ -426,6 +440,7 @@ export default function FloorPlansPage() {
                 ["sqft", "Square feet"],
                 ["garages", "Garages (e.g. 3 car)"],
                 ["homeType", "Home type"],
+                ["virtualTourUrl", "Virtual tour link"],
               ] as const
             ).map(([field, label]) => (
               <div className="form-group" key={field}>
@@ -437,6 +452,15 @@ export default function FloorPlansPage() {
                 />
               </div>
             ))}
+            <div className="form-group">
+              <label>Description</label>
+              <textarea
+                className="form-input"
+                rows={4}
+                value={editForm.description}
+                onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+              />
+            </div>
             {(
               [
                 ["Photo gallery (first image is the main image)", editGallery, setEditGallery],
@@ -469,6 +493,16 @@ export default function FloorPlansPage() {
                           <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => setList(list.filter((u) => u !== url))}>✕</button>
                           <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => moveImage(list, setList, i, 1)} disabled={i === list.length - 1}>→</button>
                         </div>
+                        {list === editGallery && editing.proposed_record?.galleryMeta?.[url] && (
+                          <div
+                            className="text-muted"
+                            title={editing.proposed_record.galleryMeta[url].caption ?? ""}
+                            style={{ fontSize: 10, width: 96, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                          >
+                            {editing.proposed_record.galleryMeta[url].room ?? "?"}
+                            {editing.proposed_record.galleryMeta[url].caption ? ` · ${editing.proposed_record.galleryMeta[url].caption}` : ""}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

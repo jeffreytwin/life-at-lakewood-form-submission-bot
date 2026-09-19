@@ -1,3 +1,38 @@
+/**
+ * Where a gallery image sits in the order the sites show a plan's photos
+ * (Jeff, 2026-09-18): the primary picture, then kitchen, living room,
+ * dining room, pool and lanai, office, hallways, stairs, bedrooms,
+ * bathrooms, laundry, closets, anything unplaced, and the extra exterior
+ * options last.
+ */
+export const ROOM_ORDER = [
+  "primary",
+  "kitchen",
+  "living",
+  "dining",
+  "outdoor",
+  "office",
+  "hallway",
+  "stairs",
+  "bedroom",
+  "bathroom",
+  "laundry",
+  "closet",
+  "other",
+  "exterior",
+] as const;
+export type Room = (typeof ROOM_ORDER)[number];
+
+/** What is known about one gallery image beyond its URL. */
+export interface GalleryMeta {
+  /** The builder's caption or title for the photo, when it gave one. */
+  caption?: string | null;
+  /** The room the photo shows, when known: named by the builder or read off the caption. Null when nothing said. */
+  room?: Room | null;
+  /** Where the image came from: the builder's headshot, a showcase photo, or an alternative exterior design. */
+  kind?: "primary" | "photo" | "exterior";
+}
+
 // Canonical normalized plan shape produced by every extractor engine.
 export interface NormalizedPlan {
   planKey: string;
@@ -16,6 +51,14 @@ export interface NormalizedPlan {
   galleryImages: string[];
   /** Ordered blueprint/floor-plan drawings, kept separate from photos. */
   blueprintImages: string[];
+  /** Caption, room and origin of each gallery image, keyed by URL. */
+  galleryMeta?: Record<string, GalleryMeta>;
+  /** The builder's own description of the plan, when the page gives one. */
+  description?: string | null;
+  /** Virtual tour link: a Matterport share link, an InsideMaps walkthrough, whatever the builder offers. */
+  virtualTourUrl?: string | null;
+  /** A still for the virtual tour button, when the builder gives one. */
+  virtualTourImage?: string | null;
   userEditedFields?: string[];
   raw?: Record<string, unknown>;
 }

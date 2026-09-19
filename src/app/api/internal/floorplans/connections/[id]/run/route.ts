@@ -3,7 +3,9 @@ import { logger } from "@/lib/shared/logger";
 import { runConnection } from "@/lib/floorplans/sync";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+// Extractors that read one page per plan (Toll Brothers) take a minute or
+// two for a community; same ceiling as the nightly tick.
+export const maxDuration = 300;
 
 /**
  * POST /api/internal/floorplans/connections/:id/run

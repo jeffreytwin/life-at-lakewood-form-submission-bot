@@ -18,7 +18,21 @@ export const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
   ["sqft", "sqft"],
   ["garages", "garages"],
   ["quickMoveIn", "quick move-in"],
+  ["virtualTourUrl", "virtual tour"],
+  ["description", "description"],
 ];
+
+/** Fields too long to show or match whole; their queue values are a lead-in plus a digest, like galleries. */
+const LONG_TEXT_FIELDS = new Set<keyof NormalizedPlan>(["description"]);
+
+/** "Contemporary elegance. The Avery's welcoming covered entry and fo… · 5f2a9c1e", or "" for nothing. */
+export function describeText(value: unknown): string {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text) return "";
+  const digest = createHash("sha256").update(text).digest("hex").slice(0, 8);
+  const lead = text.length > 80 ? text.slice(0, 80).trimEnd() + "…" : text;
+  return `${lead} · ${digest}`;
+}
 
 export type GalleryField = "galleryImages" | "blueprintImages";
 
@@ -95,7 +109,8 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
     const oldVal = current[field];
     const newVal = plan[field];
     if (String(oldVal ?? "") === String(newVal ?? "")) continue;
-    changes.push({ field, label, oldValue: String(oldVal ?? ""), newValue: String(newVal ?? "") });
+    const show = LONG_TEXT_FIELDS.has(field) ? describeText : (v: unknown) => String(v ?? "");
+    changes.push({ field, label, oldValue: show(oldVal), newValue: show(newVal) });
   }
   for (const [field, label] of GALLERY_FIELDS) {
     if (overrides.has(field)) continue;

@@ -24,6 +24,7 @@ import {
 } from "@/lib/wix/client";
 import { wixImageUri } from "@/lib/listings/types";
 import { measureImageUrl, wixFileIdOf } from "@/lib/floorplans/media";
+import type { GalleryMeta } from "@/lib/floorplans/types";
 
 interface ProposedRecord {
   planKey: string;
@@ -41,12 +42,18 @@ interface ProposedRecord {
   primaryImage?: string | null;
   galleryImages: string[];
   blueprintImages?: string[];
+  galleryMeta?: Record<string, GalleryMeta>;
+  description?: string | null;
+  virtualTourUrl?: string | null;
+  virtualTourImage?: string | null;
 }
 
-const MAX_GALLERY_IMAGES = 10;
+// A safety bound, not a policy: the freelancers' galleries run to 58 photos
+// and Jeff has not yet said whether to cap them (2026-09-19).
+const MAX_GALLERY_IMAGES = 40;
 
-/** One MEDIA_GALLERY entry, in the shape the legacy collections carry. */
-type GalleryItem = { type: "image"; src: string; title: string };
+/** One MEDIA_GALLERY entry, in the shape the legacy collections carry; the caption rides as title and alt. */
+type GalleryItem = { type: "image"; src: string; title: string; alt?: string };
 
 interface GalleryImport {
   items: GalleryItem[];
@@ -72,14 +79,16 @@ async function importGallery(
   wixSiteId: string,
   urls: string[],
   planKey: string,
-  suffix: string
+  suffix: string,
+  meta: Record<string, GalleryMeta> = {}
 ): Promise<GalleryImport> {
   const items: GalleryItem[] = [];
   const skipped: string[] = [];
   for (const [i, url] of urls.slice(0, MAX_GALLERY_IMAGES).entries()) {
     const displayName = displayNameFor(planKey, suffix, i + 1, url);
     const uri = await importImage(siteId, wixSiteId, url, displayName);
-    if (uri) items.push({ type: "image", src: uri, title: displayName });
+    const caption = meta[url]?.caption?.trim();
+    if (uri) items.push({ type: "image", src: uri, title: caption || displayName, ...(caption ? { alt: caption } : {}) });
     else skipped.push(url);
   }
   return { items, skipped };
@@ -176,10 +185,14 @@ async function importRecordMedia(
   siteId: string,
   wixSiteId: string,
   rec: ProposedRecord
-): Promise<{ gallery: GalleryItem[]; blueprints: GalleryItem[] }> {
+): Promise<{ gallery: GalleryItem[]; blueprints: GalleryItem[]; tourImage: string | null }> {
   const photoUrls = galleryUrls(rec);
-  const gallery = await importGallery(siteId, wixSiteId, photoUrls, rec.planKey, "photo");
+  const gallery = await importGallery(siteId, wixSiteId, photoUrls, rec.planKey, "photo", rec.galleryMeta ?? {});
   const blueprints = await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
+  // The still behind the virtual tour button; optional, so its failure only costs the still.
+  const tourImage = rec.virtualTourImage
+    ? await importImage(siteId, wixSiteId, rec.virtualTourImage, displayNameFor(rec.planKey, "tour", 1, rec.virtualTourImage))
+    : null;
   if (photoUrls.length && !gallery.items.length) {
     throw new Error(`none of the ${photoUrls.length} photos could be imported (first: ${photoUrls[0]})`);
   }
@@ -190,7 +203,7 @@ async function importRecordMedia(
       blueprintsSkipped: blueprints.skipped.length,
     });
   }
-  return { gallery: gallery.items, blueprints: blueprints.items };
+  return { gallery: gallery.items, blueprints: blueprints.items, tourImage };
 }
 
 function toWixData(
@@ -198,7 +211,8 @@ function toWixData(
   communityName: string,
   builderName: string,
   gallery: GalleryItem[],
-  blueprints: GalleryItem[]
+  blueprints: GalleryItem[],
+  tourImage: string | null = null
 ): WixItemData {
   return {
     floorPlanName: rec.name,
@@ -211,6 +225,9 @@ function toWixData(
     garages: rec.garages ?? undefined,
     squareFeet: rec.sqft ? rec.sqft.toLocaleString("en-US") : undefined,
     quickMoveInAvailable: rec.quickMoveIn,
+    floorPlanDescription: rec.description?.trim() || undefined,
+    virtualTourLink: rec.virtualTourUrl?.trim() || undefined,
+    ...(tourImage ? { virtualTourImageV2: tourImage } : {}),
     // The main image is gallery position #1, always.
     ...(gallery[0] ? { floorPlanImage: gallery[0].src } : {}),
     ...(gallery.length ? { floorPlanImageGalleryLink: gallery } : {}),
@@ -260,11 +277,11 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
       const asDraft = site.insert_publish_mode !== "published";
-      const { gallery, blueprints } = await importRecordMedia(site.id, site.wix_site_id, rec);
+      const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
       const item = await insertItem(
         site.wix_site_id,
         site.wix_collection_id,
-        toWixData(rec, community.name, builder.name, gallery, blueprints),
+        toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage),
         { asDraft }
       );
 
@@ -328,12 +345,12 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
-      const { gallery, blueprints } = await importRecordMedia(site.id, site.wix_site_id, rec);
+      const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
       await updateItem(
         site.wix_site_id,
         site.wix_collection_id,
         change.wix_record_id,
-        toWixData(rec, community.name, builder.name, gallery, blueprints)
+        toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage)
       );
       await supabase
         .from("fp_floor_plans")
