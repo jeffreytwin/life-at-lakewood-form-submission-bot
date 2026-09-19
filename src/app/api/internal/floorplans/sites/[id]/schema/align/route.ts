@@ -3,75 +3,55 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { getDataCollection, updateDataCollection } from "@/lib/wix/client";
 import { alignedFields, diffFields, type FieldSpec } from "@/lib/floorplans/collection-schema";
+import { STANDARD_COLLECTION_ID, STANDARD_FLOOR_PLAN_FIELDS } from "@/lib/floorplans/standard-schema";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/internal/floorplans/sites/:id/schema/align
- * Body: { referenceSiteId: string, referenceCollectionId?: string, add?: boolean, relabel?: boolean, removeExtra?: boolean }
+ * Body: { add?: boolean, relabel?: boolean, removeExtra?: boolean }
  *
- * Makes this site's Floor Plans V2 collection carry the reference
- * collection's fields: missing fields added and shared fields relabeled to
- * match (both on by default, each can be turned off); fields the reference
- * lacks removed only when removeExtra is true, because removing a field
- * deletes its data on every item. The reference is another site's V2, or
- * any site's legacy FloorPlans (its own, to take the labels a person knows
- * from the CMS). A field whose type differs is reported and left alone:
- * Wix cannot retype a field in place. Nothing is sent to Wix when there is
- * nothing to change.
+ * Makes this site's Floor Plans V2 collection carry the standard
+ * (standard-schema.ts): missing fields added and labels aligned (both on
+ * by default, each can be turned off); fields the standard lacks removed
+ * only when removeExtra is true, because removing a field deletes its
+ * data on every item. A field whose type differs is reported and left
+ * alone: Wix cannot retype a field in place. Nothing is sent to Wix when
+ * there is nothing to change.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
     const body = await request.json().catch(() => ({}));
-    const referenceSiteId = typeof body?.referenceSiteId === "string" ? body.referenceSiteId : null;
-    if (!referenceSiteId) return NextResponse.json({ error: "referenceSiteId is required" }, { status: 400 });
     const options = {
       add: body?.add !== false,
       relabel: body?.relabel !== false,
       removeExtra: body?.removeExtra === true,
     };
 
-    const { data: sites, error } = await supabase
+    const { data: site, error } = await supabase
       .from("fp_sites")
-      .select("id, domain, wix_site_id, wix_collection_id, legacy_collection_id")
-      .in("id", [...new Set([id, referenceSiteId])]);
+      .select("id, domain, wix_site_id, wix_collection_id")
+      .eq("id", id)
+      .maybeSingle();
     if (error) throw error;
-    const target = sites?.find((s) => s.id === id);
-    const reference = sites?.find((s) => s.id === referenceSiteId);
-    if (!target || !reference) return NextResponse.json({ error: "Site not found" }, { status: 404 });
-    if (!target.wix_site_id || !reference.wix_site_id) {
-      return NextResponse.json({ error: "Both sites need a wix_site_id" }, { status: 400 });
-    }
-    const targetCollectionId = target.wix_collection_id ?? "FloorPlansV2";
-    const referenceCollectionId =
-      typeof body?.referenceCollectionId === "string" && body.referenceCollectionId
-        ? body.referenceCollectionId
-        : (reference.wix_collection_id ?? "FloorPlansV2");
-    if (reference.id === target.id && referenceCollectionId === targetCollectionId) {
-      return NextResponse.json({ error: "A collection cannot be aligned to itself" }, { status: 400 });
-    }
+    if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    if (!site.wix_site_id) return NextResponse.json({ error: "Site has no wix_site_id" }, { status: 400 });
+    const collectionId = site.wix_collection_id ?? STANDARD_COLLECTION_ID;
 
-    const [targetCollection, referenceCollection] = await Promise.all([
-      getDataCollection(target.wix_site_id, targetCollectionId),
-      getDataCollection(reference.wix_site_id, referenceCollectionId),
-    ]);
-    if (!targetCollection || !referenceCollection) {
-      return NextResponse.json({ error: "A collection was not found on one of the sites" }, { status: 404 });
-    }
+    const collection = await getDataCollection(site.wix_site_id, collectionId);
+    if (!collection) return NextResponse.json({ error: `${collectionId} not found on ${site.domain}` }, { status: 404 });
 
-    const refFields = referenceCollection.fields as FieldSpec[];
-    const tgtFields = targetCollection.fields as FieldSpec[];
-    const { mismatched } = diffFields(refFields, tgtFields);
-    const { fields, added, removed, relabeled } = alignedFields(refFields, tgtFields, options);
+    const current = collection.fields as FieldSpec[];
+    const { mismatched } = diffFields(STANDARD_FLOOR_PLAN_FIELDS, current);
+    const { fields, added, removed, relabeled } = alignedFields(STANDARD_FLOOR_PLAN_FIELDS, current, options);
     if (!added.length && !removed.length && !relabeled.length) {
       return NextResponse.json({ changed: false, added, removed, relabeled, mismatched });
     }
 
-    const updated = await updateDataCollection(target.wix_site_id, { ...targetCollection, fields });
-    logger.info("Floor Plans V2 schema aligned", {
-      site: target.domain,
-      reference: `${reference.domain}/${referenceCollectionId}`,
+    const updated = await updateDataCollection(site.wix_site_id, { ...collection, fields });
+    logger.info("Floor Plans V2 schema aligned to the standard", {
+      site: site.domain,
       added,
       removed,
       relabeled,

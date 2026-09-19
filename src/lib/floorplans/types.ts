@@ -74,6 +74,12 @@ export interface NormalizedPlan {
   relatedPlanMatch?: RelatedPlanMatch;
   /** Base plans only: at least one quick move-in of this plan is on offer in this community. */
   hasQuickMoveIns?: boolean;
+  /**
+   * Set by a person in the Hub, never by an engine: the sites list high
+   * scores first (the freelancers used 1 to 10). Required before a base
+   * plan is approved; a quick move-in carries none. Kept across runs.
+   */
+  score?: number | null;
   userEditedFields?: string[];
   raw?: Record<string, unknown>;
 }

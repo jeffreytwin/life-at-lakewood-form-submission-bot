@@ -60,6 +60,8 @@ interface ProposedRecord {
   relatedPlanKey?: string | null;
   relatedPlanName?: string | null;
   hasQuickMoveIns?: boolean;
+  /** Set in the Hub; the sites list high scores first. Base plans only. */
+  score?: number | null;
 }
 
 // A safety bound, not a policy: the freelancers' galleries run to 58 photos
@@ -345,6 +347,7 @@ function toWixData(rec: ProposedRecord, ctx: WixRowContext): WixItemData {
     // Whether quick move-ins of this plan are on offer: the flag, the banner
     // text, the badge and the status dot, plus the price bracket tag.
     ...basePlanMarkers(rec),
+    ...(typeof rec.score === "number" && Number.isFinite(rec.score) ? { score: rec.score } : {}),
   };
 }
 

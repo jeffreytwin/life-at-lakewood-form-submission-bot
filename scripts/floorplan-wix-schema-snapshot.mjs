@@ -9,8 +9,14 @@
 // so production and unrelated preview builds skip it. Always exits 0 — it
 // must never fail or slow a deploy.
 
+import { readFileSync } from 'node:fs';
+
 const BRANCHES = new Set(['claude/nice-bell-3c6qob']);
 const VILLAGES_COLLECTION = 'HousesforSale-DynamicPages';
+// The one schema every site's Floor Plans V2 carries (src/lib/floorplans/standard-schema.ts).
+const STANDARD = JSON.parse(
+  readFileSync(new URL('../src/lib/floorplans/standard-floor-plan-schema.json', import.meta.url), 'utf8')
+);
 
 const branch = process.env.VERCEL_GIT_COMMIT_REF;
 if (!BRANCHES.has(branch)) {
@@ -77,6 +83,58 @@ async function snapshotSchema(site, collectionId) {
   log(`${site.domain}/${collectionId}: ${col.fields?.length ?? 0} fields, revision ${col.revision ?? '?'}`);
 }
 
+/**
+ * Brings a site's Floor Plans V2 up to the standard: labels aligned and
+ * missing fields added, never a removal or a type change (Wix cannot
+ * retype a field in place; a mismatch is logged and left alone). Sends
+ * nothing when the collection already matches. The same change the Hub's
+ * Settings → Sites makes on a click.
+ */
+async function applyStandard(site, collectionId) {
+  const res = await wix('GET', `/wix-data/v2/collections/${encodeURIComponent(collectionId)}`, site.wix_site_id);
+  const col = res.json?.collection;
+  if (res.status !== 200 || !col) {
+    log(`${site.domain}/${collectionId}: cannot apply the standard, lookup ${res.status}`);
+    return;
+  }
+  const fields = (col.fields ?? []).map((f) => ({ ...f }));
+  const byKey = new Map(fields.map((f) => [f.key, f]));
+  const added = [];
+  const relabeled = [];
+  const skipped = [];
+  for (const std of STANDARD) {
+    const f = byKey.get(std.key);
+    if (!f) {
+      fields.push({
+        key: std.key,
+        displayName: std.displayName,
+        type: std.type,
+        ...(std.typeMetadata ? { typeMetadata: std.typeMetadata } : {}),
+      });
+      added.push(std.key);
+      continue;
+    }
+    if ((f.type ?? '') !== (std.type ?? '')) {
+      skipped.push(`${std.key} (${f.type} here, ${std.type} in the standard)`);
+      continue;
+    }
+    if ((f.displayName ?? '') !== std.displayName) {
+      f.displayName = std.displayName;
+      relabeled.push(std.key);
+    }
+  }
+  if (!added.length && !relabeled.length) {
+    log(`${site.domain}/${collectionId}: already carries the standard${skipped.length ? ` (left alone: ${skipped.join('; ')})` : ''}`);
+    return;
+  }
+  const put = await wix('PUT', '/wix-data/v2/collections', site.wix_site_id, { collection: { ...col, fields } });
+  log(
+    `${site.domain}/${collectionId}: apply the standard -> ${put.status}; added [${added.join(', ')}], relabeled ${relabeled.length}` +
+      (skipped.length ? `, left alone: ${skipped.join('; ')}` : '') +
+      (put.status !== 200 ? ` ${(put.text ?? '').slice(0, 300)}` : '')
+  );
+}
+
 async function cacheItems(site, collectionId) {
   const items = [];
   for (let offset = 0; ; offset += 100) {
@@ -124,6 +182,11 @@ try {
   for (const site of sites) {
     if (!site.wix_site_id) continue;
     const v2 = site.wix_collection_id ?? 'FloorPlansV2';
+    try {
+      await applyStandard(site, v2);
+    } catch (err) {
+      log(`${site.domain}/${v2}: applying the standard failed: ${err?.message ?? err}`);
+    }
     const collections = [...new Set([v2, site.legacy_collection_id ?? 'FloorPlans', 'Builders', VILLAGES_COLLECTION])];
     for (const collectionId of collections) {
       try {

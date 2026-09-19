@@ -186,13 +186,18 @@ the pipeline does not own, because Wix's update replaces the whole item.
 branch, like the legacy import) caches every active site's collection
 schemas (Floor Plans V2, the legacy FloorPlans, Builders, the villages
 collection) in `fp_collection_schemas` (migration 066) and the Floor Plans
-V2 items in `fp_legacy_items`. The Hub's Settings → Sites page reads the
-same collections live, diffs each against the reference site (Wellen Park
-by default) and aligns them: missing fields added and shared fields
-relabeled with one click, extra fields removed only on a separate confirmed
-click, a field whose type differs reported and left alone (Wix cannot
-retype a field in place; it would have to be dropped and re-created). The
-rules are in `src/lib/floorplans/collection-schema.ts`.
+V2 items in `fp_legacy_items`. The standard itself lives in code:
+`src/lib/floorplans/standard-floor-plan-schema.json` (31 data fields with
+their keys, types and labels; Jeff, 2026-09-19: labels and field names
+identical on every site, "Neighborhood" rather than "Village"). The Hub's
+Settings → Sites page reads each site's collection live and diffs it
+against the standard: missing fields added and labels aligned with one
+click each, extra fields removed only on a separate confirmed click, a
+field whose type differs reported and left alone (Wix cannot retype a
+field in place; it would have to be dropped and re-created). The snapshot
+build applies the standard's labels and missing fields to every site as
+well, so no site drifts for long. The rules are in
+`src/lib/floorplans/collection-schema.ts`.
 
 Findings from the snapshot of 2026-09-19 19:38 UTC:
 
@@ -217,10 +222,10 @@ Findings from the snapshot of 2026-09-19 19:38 UTC:
   the raw keys ("FloorPlanImage", "RelatedFloorPlanQuickMoveInOnly"); the
   legacy collections read "Primary Image", "Primary Image + Rest of
   Images", "Related Floor Plan (Quick Move-In Only)", "Floor Plan Price
-  (Tags)". Settings → Sites can take the labels from a site's own legacy
-  collection and relabel V2 in one click, per site, so each keeps its own
-  wording ("Village" on Lakewood and Wellen Park, "Neighborhood" on
-  Parrish).
+  (Tags)". The standard carries those human labels, with "Neighborhood"
+  for both village fields on every site and "(Reference)" marking the two
+  reference fields apart from their text twins; the snapshot build applied
+  them to all three collections on 2026-09-19.
 - The legacy collections also carry `link-floor-plans-floorPlanName`, the
   dynamic page link Wix adds when a dynamic page is built on a collection.
   V2 gets its own when its dynamic pages are created in the editor at

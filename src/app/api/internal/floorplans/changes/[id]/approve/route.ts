@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { applyPendingChange } from "@/lib/floorplans/writeback";
+import { approvalBlocker } from "@/lib/floorplans/approval";
 
 export const dynamic = "force-dynamic";
 // The write-back fetches, measures and imports every photo of the plan in
@@ -15,6 +16,19 @@ export async function POST(
 ) {
   const { id } = await params;
   try {
+    const { data: change, error: loadError } = await supabase
+      .from("fp_pending_changes")
+      .select("id, status, change_type, proposed_record")
+      .eq("id", id)
+      .maybeSingle();
+    if (loadError) throw loadError;
+    if (!change || change.status !== "pending") {
+      return NextResponse.json({ error: "Change not found or not pending" }, { status: 409 });
+    }
+    // A base plan goes to the site with its score or not at all (approval.ts).
+    const blocker = approvalBlocker(change.change_type, change.proposed_record);
+    if (blocker) return NextResponse.json({ error: blocker }, { status: 409 });
+
     const { data: updated, error } = await supabase
       .from("fp_pending_changes")
       .update({ status: "approved", updated_at: new Date().toISOString() })

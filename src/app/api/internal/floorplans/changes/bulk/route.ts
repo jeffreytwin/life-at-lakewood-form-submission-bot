@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { applyPendingChange } from "@/lib/floorplans/writeback";
 import { groupChanges } from "@/lib/floorplans/group-changes";
+import { approvalBlocker } from "@/lib/floorplans/approval";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -16,7 +17,9 @@ export const maxDuration = 300;
  * with a new price, new photos and a new description is three rows. The rows
  * of one plan carry the same proposed record, so approving writes the plan
  * to Wix once, through the group's lead row, and gives every row of that
- * plan the same outcome.
+ * plan the same outcome. A plan that cannot be approved yet (a base plan
+ * without a score, approval.ts) stays pending and comes back as "blocked";
+ * 409 when nothing could be approved at all.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -45,21 +48,29 @@ export async function POST(request: NextRequest) {
 
     const { data: rows, error: loadError } = await supabase
       .from("fp_pending_changes")
-      .select("id, site_id, community_id, builder_id, plan_key, change_type, status, created_at, updated_at")
+      .select("id, site_id, community_id, builder_id, plan_key, change_type, status, created_at, updated_at, proposed_record")
       .in("id", ids)
       .eq("status", "pending");
     if (loadError) throw loadError;
     if (!rows?.length) return NextResponse.json({ results: [] });
 
+    const results: { planKey: string; rows: number; status: string; error: string | null }[] = [];
+    const approvable: ReturnType<typeof groupChanges<(typeof rows)[number]>> = [];
+    for (const group of groupChanges(rows)) {
+      const blocker = approvalBlocker(group.lead.change_type, group.lead.proposed_record);
+      if (blocker) results.push({ planKey: group.lead.plan_key, rows: group.rows.length, status: "blocked", error: blocker });
+      else approvable.push(group);
+    }
+    if (!approvable.length) return NextResponse.json({ results }, { status: 409 });
+
     const { error: approveError } = await supabase
       .from("fp_pending_changes")
       .update({ status: "approved", updated_at: now })
-      .in("id", rows.map((r) => r.id))
+      .in("id", approvable.flatMap((g) => g.rows.map((r) => r.id)))
       .eq("status", "pending");
     if (approveError) throw approveError;
 
-    const results: { planKey: string; rows: number; status: string; error: string | null }[] = [];
-    for (const group of groupChanges(rows)) {
+    for (const group of approvable) {
       const outcome = await applyPendingChange(group.lead.id);
       const rest = group.rows.filter((r) => r.id !== group.lead.id);
       if (rest.length) {

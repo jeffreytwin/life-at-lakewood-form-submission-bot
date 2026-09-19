@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
+import { approvalBlocker } from "@/lib/floorplans/approval";
 
 interface GalleryMeta {
   caption?: string | null;
@@ -29,6 +30,8 @@ interface ProposedRecord {
   relatedPlanName?: string | null;
   relatedPlanMatch?: "extractor" | "plan-id" | "plan-name" | "unmatched";
   hasQuickMoveIns?: boolean;
+  /** Set here in the Hub; the sites list high scores first. Required before a base plan is approved. */
+  score?: number | null;
   userEditedFields?: string[];
 }
 
@@ -199,6 +202,7 @@ export default function FloorPlansPage() {
     virtualTourUrl: "",
     description: "",
     relatedPlanName: "",
+    score: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
   const [editGallery, setEditGallery] = useState<string[]>([]);
@@ -301,6 +305,7 @@ export default function FloorPlansPage() {
       virtualTourUrl: rec.virtualTourUrl ?? "",
       description: rec.description ?? "",
       relatedPlanName: rec.relatedPlanName ?? "",
+      score: rec.score == null ? "" : String(rec.score),
     });
     const gallery = rec.galleryImages?.length
       ? rec.galleryImages
@@ -340,19 +345,28 @@ export default function FloorPlansPage() {
     if (!confirm(`Approve all ${pendingGroups.length} visible plans? Approved new plans are written to Wix as drafts.`)) return;
     setBulkBusy(true);
     const failed: string[] = [];
+    const blocked: string[] = [];
     try {
       for (const g of pendingGroups) {
-        if (!(await act(g, "approve", true))) failed.push(g.lead.proposed_record?.name ?? g.lead.plan_key);
+        const name = g.lead.proposed_record?.name ?? g.lead.plan_key;
+        if (approvalBlocker(g.kind, g.lead.proposed_record)) {
+          blocked.push(name);
+          continue;
+        }
+        if (!(await act(g, "approve", true))) failed.push(name);
       }
     } finally {
       setBulkBusy(false);
       fetchChanges();
-      if (failed.length) alert(`${failed.length} plan(s) could not be written to Wix: ${failed.join(", ")}. See the Failed filter for details.`);
+      const notes: string[] = [];
+      if (blocked.length) notes.push(`${blocked.length} plan(s) still need a score and were left pending: ${blocked.join(", ")}.`);
+      if (failed.length) notes.push(`${failed.length} plan(s) could not be written to Wix: ${failed.join(", ")}. See the Failed filter for details.`);
+      if (notes.length) alert(notes.join("\n"));
     }
   }
 
   const detailLine = (rec: ProposedRecord | null) =>
-    `${rec?.priceDisplay ?? "—"}${rec?.beds ? ` · ${rec.beds} bd` : ""}${rec?.baths ? ` · ${rec.baths} ba` : ""}${rec?.sqft ? ` · ${rec.sqft.toLocaleString("en-US")} sqft` : ""}`;
+    `${rec?.priceDisplay ?? "—"}${rec?.beds ? ` · ${rec.beds} bd` : ""}${rec?.baths ? ` · ${rec.baths} ba` : ""}${rec?.sqft ? ` · ${rec.sqft.toLocaleString("en-US")} sqft` : ""}${typeof rec?.score === "number" ? ` · score ${rec.score}` : ""}`;
 
   return (
     <div>
@@ -453,6 +467,8 @@ export default function FloorPlansPage() {
                   const isPending = pendingIds(g).length > 0;
                   const fieldRows = g.rows.filter((r) => r.change_type === "update" && r.field_changed);
                   const failedRow = g.rows.find((r) => r.status === "failed" && r.error_detail);
+                  // A base plan waits for its score before Approve is offered (approval.ts).
+                  const blocker = isPending ? approvalBlocker(g.kind, rec) : null;
                   return (
                     <tr
                       key={g.key}
@@ -561,6 +577,9 @@ export default function FloorPlansPage() {
                         {failedRow && (
                           <div className="text-muted text-sm">⚠ {failedRow.error_detail}</div>
                         )}
+                        {blocker && (
+                          <div className="text-sm" style={{ color: "var(--warning, #b45309)" }}>⚠ {blocker}</div>
+                        )}
                       </td>
                       <td className="text-sm">
                         {c.fp_sites?.domain}
@@ -576,7 +595,8 @@ export default function FloorPlansPage() {
                           <div style={{ display: "flex", gap: 8 }}>
                             <button
                               className="btn btn-primary"
-                              disabled={busy.has(g.key)}
+                              disabled={busy.has(g.key) || Boolean(blocker)}
+                              title={blocker ?? undefined}
                               onClick={() => act(g, "approve")}
                             >
                               {busy.has(g.key) ? "…" : "Approve"}
@@ -636,6 +656,18 @@ export default function FloorPlansPage() {
                 />
               </div>
             ))}
+            {!editing.lead.proposed_record?.quickMoveIn && (
+              <div className="form-group">
+                <label>Score (required before approval; the sites list high scores first; 1 to 10 as the freelancers used it)</label>
+                <input
+                  className="form-input"
+                  type="number"
+                  step={1}
+                  value={editForm.score}
+                  onChange={(e) => setEditForm((f) => ({ ...f, score: e.target.value }))}
+                />
+              </div>
+            )}
             {editing.lead.proposed_record?.quickMoveIn && (
               <div className="form-group">
                 <label>Base plan (the floor plan this quick move-in is built from; the site files it under that plan)</label>
