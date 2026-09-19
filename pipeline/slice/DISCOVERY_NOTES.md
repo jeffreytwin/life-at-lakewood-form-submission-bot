@@ -236,12 +236,25 @@ Toll keeps each piece, all in `__NEXT_DATA__`:
   one equal to the headshot is the primary; the rest go last in the gallery
   as the "extra exterior options".
 - **Media Showcase** (captioned interior photos): `model.gallery.mediaGroups[]
-  .media[]` `{type: "image", url, description}`. **Null on the community
-  page for base models**; some quick move-ins carry it there. It lives on the
-  plan's own page, so `extractTollBrothers` now fetches each plan's
-  `sourceUrl` (four at a time) and merges it via `enrichPlanFromModelPage`.
-  Structure captured by `discover-toll-model.mjs` (dispatch the slice
-  workflow on the working branch) into `discovery/toll-model-*.pruned.json`.
+  .media[]` `{type: "image", url, description}` (video entries,
+  `video::vimeo` / `video::MP4`, sit in the same list and are skipped). Where
+  it turned up (captures of 2026-09-19, `discovery/toll-model-*` and
+  `discovery/toll-api/`): **quick move-ins carry theirs right in the
+  community page** (`qmis[].gallery.mediaGroups`, e.g. Lori Caribbean 6
+  photos, Bianca Elite Antilles 8, every photo also tagged by room in its
+  file name: `_KITCHEN_`, `_PRIMARY_BEDROOM_`, `_OFFICE_`); base plans carry
+  it on their own page's `modelComponent`, empty for a plan with no photo
+  set (Carver, Carver Elite, Kingsdale: nothing on the page, nothing in the
+  API, and a real browser rendered no showcase section for Carver). The
+  same model JSON is served plainly at `pageData.apiUrl`:
+  `/api/v2/community/<communityId>/model/<masterPlanID>` for a base plan,
+  `…/model/<masterPlanID>/qdh/<commPlanID>` for a quick move-in (200 with a
+  browser user agent, no auth); `/api/v2/community/<communityId>` is the whole
+  collection with every model. `extractTollBrothers` reads the page for
+  plans the community page left without photos (four at a time) and merges
+  it via `enrichPlanFromModelPage`; a failed page leaves the community-page
+  plan. The captioned images an API probe counts on a base plan are the
+  community amenities (`amenities.amenityGroups[].media`), not the plan.
 - **3D walkthrough**: `model.gallery.walkThroughs[].media`. Two shapes seen:
   `{type: "walkthrough::matterport", link: "<model id>", url: <still>}`, and
   `{type: "walkthrough", link: "https://www.insidemaps.com/app/walkthrough-v2/?projectId=…"}`.
