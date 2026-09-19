@@ -15,11 +15,15 @@ describe("classifyRoom", () => {
     expect(classifyRoom("Beautiful outdoor living space with swimming pool, perfect for entertaining")).toBe("outdoor");
   });
 
-  it("settles the ambiguous ones the way a person would", () => {
+  it("settles the ambiguous ones the way a person would: the room named first wins", () => {
     expect(classifyRoom("Owner's bath with soaking tub")).toBe("bathroom");
     expect(classifyRoom("Luxurious owner's suite")).toBe("bedroom");
     expect(classifyRoom("Front porch")).toBe("outdoor");
     expect(classifyRoom("Kitchen and dining")).toBe("kitchen");
+    expect(classifyRoom("Relaxing primary bedroom suite with generous walk-in closet")).toBe("bedroom");
+    expect(classifyRoom("Spacious walk-in closet off the owner's suite")).toBe("closet");
+    expect(classifyRoom("Light-filled great rooms with views to the covered rear lanai")).toBe("living");
+    expect(classifyRoom("Covered lanai off the great room")).toBe("outdoor");
   });
 
   it("names nothing when nothing is said", () => {
@@ -33,6 +37,13 @@ describe("fileNameWords", () => {
     expect(classifyRoom(fileNameWords("https://cdn/x/swfl-dw-dwc-cascadia-kitchen-4-67eeb387dc442.jpeg"))).toBe("kitchen");
     expect(classifyRoom(fileNameWords("https://cdn/x/02_KitchenDining.jpg"))).toBe("kitchen");
     expect(classifyRoom(fileNameWords("https://cdn/x/swfl-dw-dwc-cascadia-lanai-1.jpeg"))).toBe("outdoor");
+  });
+
+  it("reads Toll's literal room tags, which beat the caption's prose", () => {
+    const src = "https://cdn.tollbrothers.com/x/TheIslesatLakewoodRanch-SanibelCollection_Lori_408_OFFICE_1920.jpg";
+    expect(classifyRoom(fileNameWords(src))).toBe("office");
+    const { meta } = orderGallery([{ src, caption: "Flexible living spaces offer an ideal work from home setting" }]);
+    expect(meta[src].room).toBe("office");
   });
 
   it("finds nothing in Toll's coded file names, and survives a bad URL", () => {

@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { plansFromNextData } from "@/lib/floorplans/extractors/toll-brothers";
+import { enrichPlanFromModelPage, modelFromPlanPage, plansFromNextData } from "@/lib/floorplans/extractors/toll-brothers";
+import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // The pruned discovery dumps are real __NEXT_DATA__ captures from the
 // The Isles at Lakewood Ranch pages (arrays capped at 3 items, long strings
@@ -85,5 +86,51 @@ describe("Toll Brothers media", () => {
 
   it("carries the builder's description", () => {
     expect(avery.description).toMatch(/^Contemporary elegance\./);
+  });
+});
+
+// Plan pages, captured 2026-09-19 (pipeline/slice/discover-toll-model.mjs):
+// a quick move-in page carries its captioned showcase in __NEXT_DATA__; a
+// base plan page carries the same model shape with gallery.mediaGroups
+// empty, its showcase coming from elsewhere.
+describe("Toll Brothers plan pages", () => {
+  const qmiPage = dump("qmi-lori");
+  const carverPage = dump("model-carver");
+  const bare: NormalizedPlan = {
+    planKey: "17547-palmiste-dr", name: "17547 Palmiste Dr", price: null, priceDisplay: null, beds: "", baths: "",
+    sqft: null, garages: null, homeType: null, quickMoveIn: true, comingSoon: false, sourceUrl: null,
+    galleryImages: [], blueprintImages: [], raw: { commPlanID: 286045 },
+  };
+
+  it("finds the model behind a plan page by its commPlanID, and nothing for a stranger", () => {
+    expect(modelFromPlanPage(qmiPage, 286045)?.name).toBe("Lori Caribbean");
+    expect(modelFromPlanPage(carverPage, 246162)?.name).toBe("Carver");
+    expect(modelFromPlanPage(carverPage, 999999)).toBeNull();
+  });
+
+  it("merges a quick move-in's captioned showcase in room order, its video left out", () => {
+    const enriched = enrichPlanFromModelPage(bare, qmiPage);
+    const rooms = enriched.galleryImages.map((u) => enriched.galleryMeta?.[u]?.room);
+    expect(rooms).toEqual(["primary", "kitchen", "living", "office", "bedroom", "bathroom", "exterior"]);
+    expect(enriched.galleryImages[0]).toMatch(/OUTDOOR_LIVING/);
+    expect(enriched.galleryMeta?.[enriched.galleryImages[1]]?.caption).toMatch(/^Gourmet kitchen/);
+    expect(enriched.galleryImages.every((u) => /^https:\/\/cdn\.tollbrothers\.com\//.test(u))).toBe(true);
+    expect(enriched.virtualTourUrl).toBe("https://www.insidemaps.com/app/walkthrough-v2/?projectId=SRFkE8Mz0P&env=production&disableCookie=true");
+    expect(enriched.virtualTourImage).toMatch(/Lori-IslandColonial_1920\.jpg$/);
+    expect(enriched.description).toMatch(/^The Lori home design/);
+    expect(enriched.blueprintImages).toHaveLength(1);
+  });
+
+  it("gives a base plan its page's elevations, tour and description, and no photos it does not have", () => {
+    const carver = plansFromNextData(dump("isles-main")).find((p) => p.planKey === "carver")!;
+    const enriched = enrichPlanFromModelPage(carver, carverPage);
+    const kinds = enriched.galleryImages.map((u) => enriched.galleryMeta?.[u]?.kind);
+    expect(kinds).toEqual(["primary", "exterior", "exterior"]);
+    expect(enriched.virtualTourUrl).toMatch(/insidemaps\.com/);
+    expect(enriched.description).toMatch(/^Urban design and style\./);
+  });
+
+  it("leaves a plan alone when the page is not its own", () => {
+    expect(enrichPlanFromModelPage(bare, carverPage)).toBe(bare);
   });
 });

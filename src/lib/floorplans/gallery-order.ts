@@ -18,9 +18,11 @@ export interface GalleryInput {
 }
 
 /**
- * The order of the checks matters: "owner's bath" is a bathroom before it
- * is a bedroom, "outdoor living" is outdoor before it is living, and a
- * "front porch" is outdoor before it is a front.
+ * The room a text names is the one it names FIRST: "primary bedroom suite
+ * with walk-in closet" is a bedroom, "walk-in closet off the owner's suite"
+ * is a closet, "outdoor living space" is outdoor. Ties fall to list order.
+ * "front" is left out on purpose: a front porch is outdoor, a front door
+ * is a hallway, and elevations announce themselves anyway.
  */
 const ROOM_KEYWORDS: [Room, RegExp][] = [
   ["outdoor", /\b(lanai|pool|patio|outdoor|terrace|veranda|porch|backyard|back yard|deck|summer kitchen)\b/i],
@@ -34,7 +36,7 @@ const ROOM_KEYWORDS: [Room, RegExp][] = [
   ["stairs", /\b(stair|stairs|staircase|stairway|landing)\b/i],
   ["hallway", /\b(hall|hallway|foyer|entry|entryway|entrance)\b/i],
   ["bedroom", /\b(bedroom|bedrooms|bed|owner'?s? suite|primary suite|master suite|guest suite|suite)\b/i],
-  ["exterior", /\b(exterior|exteriors|elevation|elevations|front|facade|curb|garage|streetscape|rendering)\b/i],
+  ["exterior", /\b(exterior|exteriors|elevation|elevations|facade|curb|garage|streetscape|rendering)\b/i],
 ];
 
 /** The words a file name carries, for builders that name photos by room ("cascadia-kitchen-4.jpeg", "02_KitchenDining.jpg"). */
@@ -51,10 +53,14 @@ export function fileNameWords(src: string): string {
   }
 }
 
-/** The room a caption, title or file name names, or null when it names none. */
+/** The room a caption, title or file name names first, or null when it names none. */
 export function classifyRoom(text: string): Room | null {
-  for (const [room, re] of ROOM_KEYWORDS) if (re.test(text)) return room;
-  return null;
+  let best: { room: Room; at: number } | null = null;
+  for (const [room, re] of ROOM_KEYWORDS) {
+    const at = text.search(re);
+    if (at >= 0 && (!best || at < best.at)) best = { room, at };
+  }
+  return best?.room ?? null;
 }
 
 export interface OrderedGallery {
@@ -65,8 +71,12 @@ export interface OrderedGallery {
 /**
  * Orders gallery images by room and records what was known about each.
  * The primary picture leads whatever position it came in; exteriors trail.
- * Duplicated URLs keep their first appearance. The sort is stable, so
- * photos of the same room, and photos of no known room, keep page order.
+ * A room the builder named wins; then the file name, which builders tag
+ * literally ("_PRIMARY_BEDROOM_", "cascadia-kitchen-4"); then the caption,
+ * which is prose and can wander ("Flexible living spaces offer an ideal
+ * work from home setting" is the office). Duplicated URLs keep their first
+ * appearance. The sort is stable, so photos of the same room, and photos
+ * of no known room, keep page order.
  */
 export function orderGallery(items: GalleryInput[]): OrderedGallery {
   const seen = new Set<string>();
@@ -78,7 +88,7 @@ export function orderGallery(items: GalleryInput[]): OrderedGallery {
     let room: Room | null;
     if (kind === "primary") room = "primary";
     else if (kind === "exterior") room = "exterior";
-    else room = item.room ?? classifyRoom(`${item.caption ?? ""} ${fileNameWords(item.src)}`);
+    else room = item.room ?? classifyRoom(fileNameWords(item.src)) ?? classifyRoom(item.caption ?? "");
     entries.push({
       src: item.src,
       rank: ROOM_ORDER.indexOf(room ?? "other"),
