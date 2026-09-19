@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeGallery, fieldChanges, galleryOf, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { describeGallery, describeText, fieldChanges, galleryOf, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 const plan = (over: Partial<NormalizedPlan> = {}): NormalizedPlan => ({
@@ -58,6 +58,24 @@ describe("fieldChanges", () => {
         newValue: expect.stringMatching(/^1 blueprint · [0-9a-f]{8}$/),
       },
     ]);
+  });
+});
+
+describe("long text fields", () => {
+  it("queues a description change as a lead-in plus digest, so the row stays readable and a rejection sticks", () => {
+    const long = "Contemporary elegance. The Avery's welcoming covered entry and foyer reveal views of the spacious great room and dining room.";
+    const changes = fieldChanges(plan({ description: null }), plan({ description: long }));
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({ field: "description", label: "description", oldValue: "" });
+    expect(changes[0].newValue).toMatch(/^Contemporary elegance\. The Avery's welcoming covered entry and foyer reveal view… · [0-9a-f]{8}$/);
+    expect(describeText(long)).toBe(changes[0].newValue);
+    expect(describeText("short")).toMatch(/^short · [0-9a-f]{8}$/);
+    expect(describeText("   ")).toBe("");
+  });
+
+  it("diffs the virtual tour like any scalar", () => {
+    const changes = fieldChanges(plan(), plan({ virtualTourUrl: "https://my.matterport.com/show/?m=HQYuPU2ve1n&qs=1&play=1" }));
+    expect(changes).toEqual([{ field: "virtualTourUrl", label: "virtual tour", oldValue: "", newValue: "https://my.matterport.com/show/?m=HQYuPU2ve1n&qs=1&play=1" }]);
   });
 });
 

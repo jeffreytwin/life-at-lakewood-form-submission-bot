@@ -33,10 +33,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Discovery captures land in pipeline/slice/discovery; a page that
+      # cannot be fetched must not stop the commit of the ones that could.
+      - name: Install Playwright for the browser capture
+        continue-on-error: true
+        run: npm i --no-save playwright && npx playwright install --with-deps chromium
+
+      - name: Capture Toll Brothers plan pages
+        continue-on-error: true
+        run: node pipeline/slice/discover-toll-model.mjs
+
+      - name: Probe the Toll Brothers model API and capture a plan page's own calls
+        continue-on-error: true
+        run: node pipeline/slice/discover-toll-api.mjs
+
       - name: Live extractor verification
+        continue-on-error: true
         run: FP_LIVE=1 npx vitest run __tests__/integration/floorplans-live.test.ts
 
       - name: Commit results back to branch
+        if: always()
         run: |
           git config user.name "floorplan-audit-bot"
           git config user.email "actions@github.com"

@@ -1,0 +1,35 @@
+{
+ "showcase": null,
+ "exteriors": {
+  "imgs": [
+   {
+    "src": "https://cdn.tollbrothers.com/sites/comtollbrotherswww/svg/arrowexit.svg",
+    "alt": "Previous Slide"
+   },
+   {
+    "src": "https://cdn.tollbrothers.com/sites/comtollbrotherswww/svg/arrowexit.svg",
+    "alt": "Next Slide"
+   },
+   {
+    "src": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ANT_FLT_2FE_6231_6_1920.jpg",
+    "alt": "Antilles"
+   },
+   {
+    "src": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_CRB_FLT_2FE_6231_7_1920.jpg",
+    "alt": "Caribbean"
+   },
+   {
+    "src": "https://cdn.tollbrothers.com/communities/13003/plans/246162/exteriors-resized/CARV_ISCL_FLT_2FE_6231_7_1920.jpg",
+    "alt": "Island Colonial"
+   }
+  ],
+  "texts": [
+   "Exterior Designs",
+   "Antilles",
+   "Caribbean",
+   "Island Colonial"
+  ]
+ },
+ "tourLinks": [],
+ "title": "Carver Model Home Design in The Isles at Lakewood Ranch - Sanibel Collection by Toll Brothers"
+}

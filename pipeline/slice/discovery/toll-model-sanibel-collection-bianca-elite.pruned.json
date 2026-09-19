@@ -1,0 +1,4065 @@
+{
+ "props": {
+  "pageProps": {
+   "componentType": "ModelComponent",
+   "pageData": {
+    "componentType": "ModelComponent",
+    "path": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+    "apiUrl": "/api/v2/community/13003/model/14513",
+    "name": "Bianca Elite",
+    "internetId": "13003-14513",
+    "projectId": "62310000-93G",
+    "community_id": null,
+    "mastercommunity_id": null,
+    "communityComponent": null,
+    "masterCommunityComponent": null,
+    "modelComponent": {
+     "name": "Bianca Elite",
+     "city": "Lakewood Ranch",
+     "state": "FL",
+     "zip": "34202",
+     "county": "Manatee",
+     "metroName": "Sarasota, FL",
+     "metroUrl": "/Sarasota-FL",
+     "lat": "27.39",
+     "lon": "-82.36",
+     "hbqMarketInterest": "FL",
+     "metroId": 835,
+     "communityFilters": [
+      "Award-Winning",
+      "Gated",
+      "Integrated Retail",
+      "Master-planned Community",
+      "Top-Rated Education"
+     ],
+     "headShot": {
+      "title": "We need a title here",
+      "media": {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/The_Isles_BiancaElite_FrontExterior_1_1920.jpg",
+       "title": "Caribbean",
+       "representative": false,
+       "virtual": false
+      }
+     },
+     "homeType": "Single-Family Home",
+     "feature": "TODO: POPULATE FEATURE",
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+     "masterBedroomLocation": "1st Floor",
+     "minBed": 5,
+     "minBath": 3,
+     "minSqft": 3908,
+     "minHalfBath": 1,
+     "maxBed": 5,
+     "maxBath": 3,
+     "maxHalfBath": 1,
+     "masterPlanID": 14513,
+     "pricedFrom": 1057995,
+     "commPlanID": 269887,
+     "stories": "2.0",
+     "minGarage": "3.0",
+     "maxGarage": "3.0",
+     "isFormerDecorated": false,
+     "isQMI": false,
+     "isComingSoon": false,
+     "isDecoratedModel": true,
+     "isBiddableQMI": false,
+     "isBiddableLot": false,
+     "hidePlusSignForSqft": false,
+     "communityId": 13003,
+     "gallery": {
+      "title": null,
+      "mediaGroups": [
+       {
+        "name": "",
+        "media": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Terrace_1_1920.jpg",
+          "description": "Designed for outdoor enjoyment",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_LivingRoom_3_CC_RGB_1920.jpg",
+          "description": "Open-concept great rooms filled with natural light",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen_1_1920.jpg",
+          "description": "Gourmet kitchens designed for both style and function",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBedroom_1_1920.jpg",
+          "description": "Expansive primary bedrooms designed for comfort",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBathroom_1_1920.jpg",
+          "description": "Elegant primary baths with premium finishes",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen-DiningRoom_1_1920.jpg",
+          "description": "Butler’s pantry for added convenience and storage",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_DiningRoom_1_1920.jpg",
+          "description": "Refined dining rooms ideal for hosting",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Walk-InCloset_1_1920.jpg",
+          "description": "Generously sized walk-in closets for everyday convenience",
+          "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+          "representative": false,
+          "virtual": false
+         },
+         "…(15 items total)"
+        ]
+       }
+      ],
+      "walkThroughs": [
+       {
+        "name": "Bianca Elite",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "hbqMarketInterest": "FL",
+        "headShot": {
+         "title": "We need a title here",
+         "media": {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/The_Isles_BiancaElite_FrontExterior_1_1920.jpg",
+          "title": "Caribbean",
+          "representative": false,
+          "virtual": false
+         }
+        },
+        "homeType": "Single-Family Home",
+        "feature": "TODO: POPULATE FEATURE",
+        "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Bianca-Elite",
+        "masterBedroomLocation": "1st Floor",
+        "minBed": 5,
+        "minBath": 3,
+        "minSqft": 3908,
+        "minHalfBath": 1,
+        "maxBed": 5,
+        "maxBath": 3,
+        "maxHalfBath": 1,
+        "masterPlanID": 14513,
+        "pricedFrom": 1057995,
+        "commPlanID": 269887,
+        "stories": "2.0",
+        "minGarage": "3.0",
+        "maxGarage": "3.0",
+        "isFormerDecorated": false,
+        "isQMI": false,
+        "isComingSoon": false,
+        "isDecoratedModel": true,
+        "isBiddableQMI": false,
+        "isBiddableLot": false,
+        "hidePlusSignForSqft": false,
+        "communityId": 13003,
+        "loanLimit": 766550,
+        "standardMortgageRate": "7.0",
+        "jumboMortgageRate": "7.0",
+        "media": {
+         "type": "walkthrough::matterport",
+         "description": "Bianca Elite Caribbean",
+         "link": "KN8aBBQRFkX",
+         "name": "KN8aBBQRFkX",
+         "representative": false,
+         "virtual": false
+        },
+        "logo": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+         "representative": false,
+         "virtual": false
+        },
+        "communityE1id": "62310000",
+        "communityJdeNum": "6231",
+        "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+        "modelName": "Bianca Elite",
+        "showMortgageCalculator": false,
+        "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+        "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+        "collectionName": "Sanibel Collection",
+        "options": [
+         {
+          "id": "92",
+          "name": "Featured Home Design"
+         },
+         {
+          "id": "32",
+          "name": "Show Directions on Future Community"
+         },
+         {
+          "id": "93",
+          "name": "DYOH V2"
+         }
+        ],
+        "communityTypes": [
+         "Luxury Home"
+        ],
+        "cpRegion": "FL-TAMPA SARASOTA",
+        "masterCommunityId": 765,
+        "masterCommunityName": "The Isles at Lakewood Ranch",
+        "qmis": [
+         {
+          "name": "Bianca Elite Antilles",
+          "city": "Lakewood Ranch",
+          "state": "FL",
+          "zip": "34202",
+          "street": "17822 Palmiste Dr",
+          "county": "Manatee",
+          "metroName": "Sarasota, FL",
+          "metroUrl": "/Sarasota-FL",
+          "lat": "27.39902",
+          "lon": "-82.35538",
+          "hbqMarketInterest": "FL",
+          "metroId": 835,
+          "communityFilters": [
+           "Award-Winning",
+           "Gated",
+           "Integrated Retail",
+           "Master-planned Community",
+           "Top-Rated Education"
+          ],
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+            "title": "Antilles",
+            "representative": false,
+            "virtual": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "moveInDate": "2027-02-26",
+          "address": "17822 Palmiste Dr",
+          "lotNumber": "366",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 6,
+          "minBath": 4,
+          "minSqft": 3915,
+          "minHalfBath": 1,
+          "masterPlanID": 14513,
+          "pricedFrom": 1417000,
+          "commPlanID": 286778,
+          "stories": "2.0",
+          "minGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": true,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "gallery": {
+           "title": null,
+           "mediaGroups": [
+            {
+             "name": "",
+             "media": [
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Terrace_1_1920.jpg",
+               "description": "Designed for outdoor enjoyment",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_LivingRoom_3_CC_RGB_1920.jpg",
+               "description": "Open-concept great rooms filled with natural light",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen_1_1920.jpg",
+               "description": "Gourmet kitchens designed for both style and function",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBedroom_1_1920.jpg",
+               "description": "Expansive primary bedrooms designed for comfort",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBathroom_1_1920.jpg",
+               "description": "Elegant primary baths with premium finishes",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen-DiningRoom_1_1920.jpg",
+               "description": "Butler’s pantry for added convenience and storage",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_DiningRoom_1_1920.jpg",
+               "description": "Refined dining rooms ideal for hosting",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Walk-InCloset_1_1920.jpg",
+               "description": "Generously sized walk-in closets for everyday convenience",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+               "representative": false,
+               "virtual": false
+              },
+              "…(15 items total)"
+             ]
+            }
+           ],
+           "walkThroughs": [
+            {
+             "name": "Bianca Elite Antilles",
+             "lat": "27.39",
+             "lon": "-82.36",
+             "hbqMarketInterest": "FL",
+             "headShot": {
+              "title": "We need a title here",
+              "media": {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+               "title": "Antilles",
+               "representative": false,
+               "virtual": false
+              }
+             },
+             "homeType": "Single-Family Home",
+             "feature": "TODO: POPULATE FEATURE",
+             "moveInDate": "2027-02-26",
+             "address": "17822 Palmiste Dr",
+             "lotNumber": "366",
+             "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+             "masterBedroomLocation": "1st Floor",
+             "minBed": 6,
+             "minBath": 4,
+             "minSqft": 3915,
+             "minHalfBath": 1,
+             "masterPlanID": 14513,
+             "pricedFrom": 1417000,
+             "commPlanID": 286778,
+             "stories": "2.0",
+             "minGarage": "3.0",
+             "isFormerDecorated": false,
+             "isQMI": true,
+             "isComingSoon": false,
+             "isDecoratedModel": false,
+             "isBiddableQMI": false,
+             "isBiddableLot": false,
+             "hidePlusSignForSqft": false,
+             "communityId": 13003,
+             "loanLimit": 766550,
+             "standardMortgageRate": "7.0",
+             "jumboMortgageRate": "7.0",
+             "media": {
+              "type": "walkthrough::matterport",
+              "description": "Bianca Elite Caribbean",
+              "link": "KN8aBBQRFkX",
+              "name": "KN8aBBQRFkX",
+              "representative": true,
+              "virtual": false
+             },
+             "logo": {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+              "representative": false,
+              "virtual": false
+             },
+             "communityE1id": "62310000",
+             "communityJdeNum": "6231",
+             "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+             "modelName": "Bianca Elite",
+             "showMortgageCalculator": false,
+             "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+             "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+             "collectionName": "Sanibel Collection",
+             "downloadables": [
+              {
+               "type": "pdf::designerAppointed",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-original/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles.pdf",
+               "representative": false,
+               "virtual": false
+              }
+             ],
+             "designerAppointed": [
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page1_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page2_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page3_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page4_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page5_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page6_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page7_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page8_1800.jpg",
+               "representative": false,
+               "virtual": false
+              },
+              "…(14 items total)"
+             ],
+             "options": [
+              {
+               "id": "32",
+               "name": "Show Directions on Future Community"
+              },
+              {
+               "id": "93",
+               "name": "DYOH V2"
+              }
+             ],
+             "communityTypes": [
+              "Luxury Home"
+             ],
+             "cpRegion": "FL-TAMPA SARASOTA",
+             "masterCommunityId": 765,
+             "masterCommunityName": "The Isles at Lakewood Ranch",
+             "dacID": "C13",
+             "elevations": [
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+               "title": "Antilles",
+               "representative": false,
+               "virtual": false
+              }
+             ],
+             "modelBullets": [
+              "For a limited time, personalize this home with select interior finishes through our Design Studio to complement finishes selected by our Design Studio team",
+              "Private preserve view backdrop framing the covered lanai and casual dining area, complemented by a self-contained multi-gen suite with private living area, walk-in closet, and full bath",
+              "Alternate primary bath featuring an oval soaking tub, glass-enclosed shower, dual-sink vanity, and private water closet",
+              "Expansive second-level loft flanked by two generously-sized bedrooms with walk-in closets, creating a versatile and well-appointed upper-level retreat"
+             ],
+             "dacName": "Classic Farmhouse​ Tailored",
+             "description": "The Bianca Elite features open gathering spaces and private retreats designed for comfortable living. The first floor features an everyday entry, powder room, laundry area, and generous storage throughout in addition to a flexible multi-gen suite, providing a private area for extended family or gues…(670)",
+             "featureCallouts": [
+              "Multi-Generational Suite",
+              "Private Nature Views"
+             ],
+             "onlineDate": "2026-06-09",
+             "featured": false
+            }
+           ],
+           "externalImages": []
+          },
+          "loanLimit": 766550,
+          "standardMortgageRate": "7.0",
+          "jumboMortgageRate": "7.0",
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false,
+           "virtual": false
+          },
+          "floorplans": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/floorplans-original/8931258-FL-IslesLakewoodRanch-366-BiancaElite-1.svg",
+            "description": "1st Floor",
+            "title": "1st Floor",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/floorplans-original/8931258-FL-IslesLakewoodRanch-366-BiancaElite-2.svg",
+            "description": "2nd Floor",
+            "title": "2nd Floor",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "externalFloorplans": [],
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Bianca Elite",
+          "siteplan": [
+           {
+            "type": "siteplan:svg",
+            "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+            "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+            "siteplanId": "691884",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "downloadables": [
+           {
+            "type": "pdf::designerAppointed",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-original/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles.pdf",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "designerAppointed": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page1_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page2_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page3_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page4_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page5_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page6_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page7_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page8_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           "…(14 items total)"
+          ],
+          "events": [
+           {
+            "headline": {
+             "text": "Learn More About\nFinancing Offers\nAvailable Now",
+             "link": "/lowest"
+            },
+            "byline": {},
+            "startDate": "2025-03-06",
+            "eventType": "bannerEventISPT",
+            "eventID": 4894
+           },
+           {
+            "headline": {
+             "text": "Up to $20,000 to Use Your Way on Select Homes",
+             "link": "/national-open-house"
+            },
+            "cta": {
+             "text": "RSVP Today"
+            },
+            "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+            "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+            "formName": "NOH_2601",
+            "formCallback": "https://hello.tollbrothers.com/l/402642/2026-08-31/2cxmqc1",
+            "eventName": "National Open House Event",
+            "dateText": "SEPTEMBER 19-20",
+            "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 9/5/26 and 9/20/26, sign an agreement of sale, and close on the home. Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and …(770)",
+            "paragraphs": [
+             {
+              "text": "September 19 or September 20"
+             }
+            ],
+            "color": "8D714D",
+            "startDate": "2026-09-05",
+            "endDate": "2026-09-20",
+            "eventType": "nationalEvent",
+            "template": {
+             "text": "NOH"
+            },
+            "parentEventId": 10108,
+            "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/noh-autoresponse.jpg",
+            "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/02/tb_noh_landing_page_2602.svg",
+            "eventID": 10112
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           }
+          ],
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "dacID": "C13",
+          "qmis": [],
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+            "title": "Antilles",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "modelBullets": [
+           "For a limited time, personalize this home with select interior finishes through our Design Studio to complement finishes selected by our Design Studio team",
+           "Private preserve view backdrop framing the covered lanai and casual dining area, complemented by a self-contained multi-gen suite with private living area, walk-in closet, and full bath",
+           "Alternate primary bath featuring an oval soaking tub, glass-enclosed shower, dual-sink vanity, and private water closet",
+           "Expansive second-level loft flanked by two generously-sized bedrooms with walk-in closets, creating a versatile and well-appointed upper-level retreat"
+          ],
+          "subModels": [],
+          "dacName": "Classic Farmhouse​ Tailored",
+          "description": "The Bianca Elite features open gathering spaces and private retreats designed for comfortable living. The first floor features an everyday entry, powder room, laundry area, and generous storage throughout in addition to a flexible multi-gen suite, providing a private area for extended family or gues…(670)",
+          "featureCallouts": [
+           "Multi-Generational Suite",
+           "Private Nature Views"
+          ],
+          "onlineDate": "2026-06-09",
+          "designReadyOptions": [],
+          "featured": false,
+          "commLat": "27.39",
+          "commLon": "-82.36",
+          "salesOffice": {
+           "city": "Lakewood Ranch",
+           "state": "FL",
+           "zip": "34202",
+           "street": "17523 Fairwinds Dr",
+           "lat": "27.39",
+           "lon": "-82.36",
+           "salesOfficeOffsite": false,
+           "showHours": true,
+           "byAppointmentOnly": false,
+           "hideDirections": false,
+           "salesOfficePhone": "941-313-7373",
+           "salesPeople": [
+            {
+             "firstName": "Heather",
+             "lastName": "Caserta"
+            }
+           ],
+           "onlineConcierge": [
+            {
+             "firstName": "Kathleen",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Arianna",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Patty",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Adriana",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Zach",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            }
+           ],
+           "hideTour": false,
+           "hideSalesOffice": false,
+           "hideNeighborhoodMap": false,
+           "operatingHours": [
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Monday",
+             "day": "Mon",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Tuesday",
+             "day": "Tue",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Wednesday",
+             "day": "Wed",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Thursday",
+             "day": "Thu",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Friday",
+             "day": "Fri",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Saturday",
+             "day": "Sat",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "12 pm to 6 pm",
+             "fullDay": "Sunday",
+             "day": "Sun",
+             "appointmentOnly": false
+            }
+           ]
+          },
+          "acquireId": "FLW",
+          "acquireJde": "6231",
+          "amenities": {
+           "amenityGroups": [
+            {
+             "name": "",
+             "amenities": [
+              {
+               "name": "Amenity Center",
+               "icon": "Clubhouse.svg"
+              },
+              {
+               "name": "Cabanas",
+               "icon": "Cabana.svg"
+              },
+              {
+               "name": "Dock",
+               "icon": "Dock.svg"
+              },
+              {
+               "name": "Outdoor Heated Pool",
+               "icon": "Pool.svg"
+              },
+              {
+               "name": "Clubhouse",
+               "icon": "Clubhouse.svg"
+              },
+              {
+               "name": "Dog Park",
+               "icon": "Dog_Park.svg"
+              },
+              {
+               "name": "Event Lawns",
+               "icon": "Event_Lawn.svg"
+              },
+              {
+               "name": "Fishing Pond",
+               "icon": "Fishing_Pond.svg"
+              },
+              "…(19 items total)"
+             ],
+             "media": [
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+               "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+               "description": "The Lounge at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6476-Update_1920.jpg",
+               "description": "The Veranda at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6489-Update_1920.jpg",
+               "description": "The Green at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+               "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6534-Update_1920.jpg",
+               "description": "The Dock at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6596-Update_1920.jpg",
+               "description": "The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6605-Update_1920.jpg",
+               "description": "Aerial view of The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              "…(9 items total)"
+             ],
+             "ordinal": 0
+            }
+           ],
+           "title": "Some title",
+           "headshot": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+            "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+            "representative": false,
+            "virtual": false
+           }
+          }
+         },
+         {
+          "name": "Bianca Elite Island Colonial",
+          "city": "Lakewood Ranch",
+          "state": "FL",
+          "zip": "34202",
+          "street": "17743 Palmiste Dr",
+          "county": "Manatee",
+          "metroName": "Sarasota, FL",
+          "metroUrl": "/Sarasota-FL",
+          "lat": "27.39998",
+          "lon": "-82.35574",
+          "hbqMarketInterest": "FL",
+          "metroId": 835,
+          "communityFilters": [
+           "Award-Winning",
+           "Gated",
+           "Integrated Retail",
+           "Master-planned Community",
+           "Top-Rated Education"
+          ],
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false,
+            "virtual": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "moveInDate": "2027-04-30",
+          "address": "17743 Palmiste Dr",
+          "lotNumber": "429",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 5,
+          "minBath": 3,
+          "minSqft": 3914,
+          "minHalfBath": 1,
+          "masterPlanID": 14513,
+          "pricedFrom": 1560000,
+          "commPlanID": 288231,
+          "stories": "2.0",
+          "minGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": true,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "gallery": {
+           "title": null,
+           "mediaGroups": [
+            {
+             "name": "",
+             "media": [
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Terrace_1_1920.jpg",
+               "description": "Designed for outdoor enjoyment",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_LivingRoom_3_CC_RGB_1920.jpg",
+               "description": "Open-concept great rooms filled with natural light",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen_1_1920.jpg",
+               "description": "Gourmet kitchens designed for both style and function",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBedroom_1_1920.jpg",
+               "description": "Expansive primary bedrooms designed for comfort",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBathroom_1_1920.jpg",
+               "description": "Elegant primary baths with premium finishes",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen-DiningRoom_1_1920.jpg",
+               "description": "Butler’s pantry for added convenience and storage",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_DiningRoom_1_1920.jpg",
+               "description": "Refined dining rooms ideal for hosting",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Walk-InCloset_1_1920.jpg",
+               "description": "Generously sized walk-in closets for everyday convenience",
+               "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+               "representative": false,
+               "virtual": false
+              },
+              "…(15 items total)"
+             ]
+            }
+           ],
+           "walkThroughs": [
+            {
+             "name": "Bianca Elite Island Colonial",
+             "lat": "27.39",
+             "lon": "-82.36",
+             "hbqMarketInterest": "FL",
+             "headShot": {
+              "title": "We need a title here",
+              "media": {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+               "title": "Island Colonial",
+               "representative": false,
+               "virtual": false
+              }
+             },
+             "homeType": "Single-Family Home",
+             "feature": "TODO: POPULATE FEATURE",
+             "moveInDate": "2027-04-30",
+             "address": "17743 Palmiste Dr",
+             "lotNumber": "429",
+             "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+             "masterBedroomLocation": "1st Floor",
+             "minBed": 5,
+             "minBath": 3,
+             "minSqft": 3914,
+             "minHalfBath": 1,
+             "masterPlanID": 14513,
+             "pricedFrom": 1560000,
+             "commPlanID": 288231,
+             "stories": "2.0",
+             "minGarage": "3.0",
+             "isFormerDecorated": false,
+             "isQMI": true,
+             "isComingSoon": false,
+             "isDecoratedModel": false,
+             "isBiddableQMI": false,
+             "isBiddableLot": false,
+             "hidePlusSignForSqft": false,
+             "communityId": 13003,
+             "loanLimit": 766550,
+             "standardMortgageRate": "7.0",
+             "jumboMortgageRate": "7.0",
+             "media": {
+              "type": "walkthrough::matterport",
+              "description": "Bianca Elite Caribbean",
+              "link": "KN8aBBQRFkX",
+              "name": "KN8aBBQRFkX",
+              "representative": true,
+              "virtual": false
+             },
+             "logo": {
+              "type": "image",
+              "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+              "representative": false,
+              "virtual": false
+             },
+             "communityE1id": "62310000",
+             "communityJdeNum": "6231",
+             "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+             "modelName": "Bianca Elite",
+             "showMortgageCalculator": false,
+             "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+             "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+             "collectionName": "Sanibel Collection",
+             "options": [
+              {
+               "id": "32",
+               "name": "Show Directions on Future Community"
+              },
+              {
+               "id": "93",
+               "name": "DYOH V2"
+              }
+             ],
+             "communityTypes": [
+              "Luxury Home"
+             ],
+             "cpRegion": "FL-TAMPA SARASOTA",
+             "masterCommunityId": 765,
+             "masterCommunityName": "The Isles at Lakewood Ranch",
+             "dacID": "C20",
+             "elevations": [
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+               "title": "Island Colonial",
+               "representative": false,
+               "virtual": false
+              }
+             ],
+             "modelBullets": [
+              "Private home site featuring a pool and spa for a resort-inspired outdoor living experience",
+              "Alternate covered lanai with 12-foot ceiling, outdoor kitchen prep package, and full-height exterior privacy wall",
+              "Primary bath with freestanding tub, glass-enclosed shower with handheld shower, dual-sink vanity, and private water closet",
+              "Whole-house spray foam insulation, masonry core foam, and circulating hot water system for elevated performance and comfort"
+             ],
+             "dacName": "Warm Transitional Refined",
+             "description": "The Bianca Elite features stunning gathering spaces and quiet retreats. A welcoming foyer with a tray ceiling leads past a flex room and an elegant dining room into a spacious great room adorned with a tray ceiling. Adjacent, a casual dining room is filled with light from beautiful sliding doors lea…(940)",
+             "featureCallouts": [
+              "Pool With Screen Enclosure",
+              "Private Home Site"
+             ],
+             "onlineDate": "2026-08-18",
+             "featured": false
+            }
+           ],
+           "externalImages": []
+          },
+          "loanLimit": 766550,
+          "standardMortgageRate": "7.0",
+          "jumboMortgageRate": "7.0",
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false,
+           "virtual": false
+          },
+          "floorplans": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/288231/floorplans-original/9824613-FL-IslesLakewoodRanch-429-BiancaElite_1-1.svg",
+            "description": "1st Floor",
+            "title": "1st Floor",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/288231/floorplans-original/9824613-FL-IslesLakewoodRanch-429-BiancaElite_1-2.svg",
+            "description": "2nd Floor",
+            "title": "2nd Floor",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "externalFloorplans": [],
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Bianca Elite",
+          "siteplan": [
+           {
+            "type": "siteplan:svg",
+            "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+            "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+            "siteplanId": "691884",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "downloadables": [],
+          "designerAppointed": [],
+          "events": [
+           {
+            "headline": {
+             "text": "Learn More About\nFinancing Offers\nAvailable Now",
+             "link": "/lowest"
+            },
+            "byline": {},
+            "startDate": "2025-03-06",
+            "eventType": "bannerEventISPT",
+            "eventID": 4894
+           },
+           {
+            "headline": {
+             "text": "Up to $20,000 to Use Your Way on Select Homes",
+             "link": "/national-open-house"
+            },
+            "cta": {
+             "text": "RSVP Today"
+            },
+            "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+            "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+            "formName": "NOH_2601",
+            "formCallback": "https://hello.tollbrothers.com/l/402642/2026-08-31/2cxmqc1",
+            "eventName": "National Open House Event",
+            "dateText": "SEPTEMBER 19-20",
+            "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 9/5/26 and 9/20/26, sign an agreement of sale, and close on the home. Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and …(770)",
+            "paragraphs": [
+             {
+              "text": "September 19 or September 20"
+             }
+            ],
+            "color": "8D714D",
+            "startDate": "2026-09-05",
+            "endDate": "2026-09-20",
+            "eventType": "nationalEvent",
+            "template": {
+             "text": "NOH"
+            },
+            "parentEventId": 10108,
+            "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/noh-autoresponse.jpg",
+            "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/02/tb_noh_landing_page_2602.svg",
+            "eventID": 10112
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           },
+           {
+            "headline": {
+             "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+             "link": "/4.99",
+             "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+            },
+            "byline": {
+             "text": "Limited Time Only on Select Homes"
+            },
+            "formName": "TB299FHA_012026",
+            "slugName": "4.99",
+            "paragraphs": [
+             {
+              "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+             },
+             {
+              "text": "Your new home is waiting. Make your move today. "
+             }
+            ],
+            "graphs": [
+             {
+              "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+             }
+            ],
+            "bullets": [
+             {
+              "text": "500000"
+             },
+             {
+              "text": "Bullet 2"
+             }
+            ],
+            "color": "348266",
+            "endDate": "2026-10-30",
+            "eventType": "bannerEventNational",
+            "template": {
+             "text": "buydown-bluediamond"
+            },
+            "eventID": 10380
+           }
+          ],
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "dacID": "C20",
+          "qmis": [],
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "modelBullets": [
+           "Private home site featuring a pool and spa for a resort-inspired outdoor living experience",
+           "Alternate covered lanai with 12-foot ceiling, outdoor kitchen prep package, and full-height exterior privacy wall",
+           "Primary bath with freestanding tub, glass-enclosed shower with handheld shower, dual-sink vanity, and private water closet",
+           "Whole-house spray foam insulation, masonry core foam, and circulating hot water system for elevated performance and comfort"
+          ],
+          "subModels": [],
+          "dacName": "Warm Transitional Refined",
+          "description": "The Bianca Elite features stunning gathering spaces and quiet retreats. A welcoming foyer with a tray ceiling leads past a flex room and an elegant dining room into a spacious great room adorned with a tray ceiling. Adjacent, a casual dining room is filled with light from beautiful sliding doors lea…(940)",
+          "featureCallouts": [
+           "Pool With Screen Enclosure",
+           "Private Home Site"
+          ],
+          "onlineDate": "2026-08-18",
+          "designReadyOptions": [],
+          "featured": false,
+          "commLat": "27.39",
+          "commLon": "-82.36",
+          "salesOffice": {
+           "city": "Lakewood Ranch",
+           "state": "FL",
+           "zip": "34202",
+           "street": "17523 Fairwinds Dr",
+           "lat": "27.39",
+           "lon": "-82.36",
+           "salesOfficeOffsite": false,
+           "showHours": true,
+           "byAppointmentOnly": false,
+           "hideDirections": false,
+           "salesOfficePhone": "941-313-7373",
+           "salesPeople": [
+            {
+             "firstName": "Heather",
+             "lastName": "Caserta"
+            }
+           ],
+           "onlineConcierge": [
+            {
+             "firstName": "Kathleen",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Arianna",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Patty",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Adriana",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            },
+            {
+             "firstName": "Zach",
+             "email": "FLOnlineSales@tollbrothers.com",
+             "phone": "855-600-8655",
+             "sms": "855-600-8655"
+            }
+           ],
+           "hideTour": false,
+           "hideSalesOffice": false,
+           "hideNeighborhoodMap": false,
+           "operatingHours": [
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Monday",
+             "day": "Mon",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Tuesday",
+             "day": "Tue",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Wednesday",
+             "day": "Wed",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Thursday",
+             "day": "Thu",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Friday",
+             "day": "Fri",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "10 am to 6 pm",
+             "fullDay": "Saturday",
+             "day": "Sat",
+             "appointmentOnly": false
+            },
+            {
+             "timeString": "12 pm to 6 pm",
+             "fullDay": "Sunday",
+             "day": "Sun",
+             "appointmentOnly": false
+            }
+           ]
+          },
+          "acquireId": "FLW",
+          "acquireJde": "6231",
+          "amenities": {
+           "amenityGroups": [
+            {
+             "name": "",
+             "amenities": [
+              {
+               "name": "Amenity Center",
+               "icon": "Clubhouse.svg"
+              },
+              {
+               "name": "Cabanas",
+               "icon": "Cabana.svg"
+              },
+              {
+               "name": "Dock",
+               "icon": "Dock.svg"
+              },
+              {
+               "name": "Outdoor Heated Pool",
+               "icon": "Pool.svg"
+              },
+              {
+               "name": "Clubhouse",
+               "icon": "Clubhouse.svg"
+              },
+              {
+               "name": "Dog Park",
+               "icon": "Dog_Park.svg"
+              },
+              {
+               "name": "Event Lawns",
+               "icon": "Event_Lawn.svg"
+              },
+              {
+               "name": "Fishing Pond",
+               "icon": "Fishing_Pond.svg"
+              },
+              "…(19 items total)"
+             ],
+             "media": [
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+               "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+               "description": "The Lounge at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6476-Update_1920.jpg",
+               "description": "The Veranda at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6489-Update_1920.jpg",
+               "description": "The Green at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+               "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6534-Update_1920.jpg",
+               "description": "The Dock at The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6596-Update_1920.jpg",
+               "description": "The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              {
+               "type": "image",
+               "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6605-Update_1920.jpg",
+               "description": "Aerial view of The Pier House, the community amenity center",
+               "representative": false,
+               "virtual": false
+              },
+              "…(9 items total)"
+             ],
+             "ordinal": 0
+            }
+           ],
+           "title": "Some title",
+           "headshot": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+            "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+            "representative": false,
+            "virtual": false
+           }
+          }
+         }
+        ],
+        "qmiCount": 2,
+        "elevations": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/The_Isles_BiancaElite_FrontExterior_1_1920.jpg",
+          "title": "Caribbean",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+          "title": "Island Colonial",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+          "title": "Antilles",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_CRB_FLT_3FE_6231_1_1920.jpg",
+          "title": "Caribbean",
+          "representative": false,
+          "virtual": false
+         }
+        ],
+        "modelBullets": [
+         "Easy flow between kitchen, great room, casual dining area, and covered lanai",
+         "Main floor primary suite offers deluxe bath and walk-in closet",
+         "Loft and flex room ideal for a variety of uses"
+        ],
+        "description": "The Bianca Elite features stunning gathering spaces and quiet retreats. A welcoming foyer with a tray ceiling leads past a flex room and an elegant dining room into a spacious great room adorned with a tray ceiling. Adjacent, a casual dining room is filled with light from beautiful sliding doors lea…(940)",
+        "featureCallouts": [
+         "Loft",
+         "Flex Room"
+        ],
+        "onlineDate": "2024-06-12",
+        "pricedFromWithQMI": 1057995
+       }
+      ],
+      "externalImages": []
+     },
+     "loanLimit": 766550,
+     "standardMortgageRate": "7.0",
+     "jumboMortgageRate": "7.0",
+     "logo": {
+      "type": "image",
+      "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+      "representative": false,
+      "virtual": false
+     },
+     "floorplans": [
+      {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/floorplans-original/93G-6231-pln-354724-01.svg",
+       "description": "1st Floor",
+       "title": "1st Floor",
+       "representative": false,
+       "virtual": false
+      },
+      {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/floorplans-original/93G-6231-pln-354724-02.svg",
+       "description": "2nd Floor",
+       "title": "2nd Floor",
+       "representative": false,
+       "virtual": false
+      }
+     ],
+     "externalFloorplans": [],
+     "communityE1id": "62310000",
+     "communityJdeNum": "6231",
+     "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+     "modelName": "Bianca Elite",
+     "siteplan": [
+      {
+       "type": "siteplan:svg",
+       "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+       "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+       "siteplanId": "691884",
+       "representative": false,
+       "virtual": false
+      }
+     ],
+     "showMortgageCalculator": false,
+     "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+     "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+     "collectionName": "Sanibel Collection",
+     "downloadables": [],
+     "designerAppointed": [],
+     "events": [
+      {
+       "headline": {
+        "text": "Learn More About\nFinancing Offers\nAvailable Now",
+        "link": "/lowest"
+       },
+       "byline": {},
+       "startDate": "2025-03-06",
+       "eventType": "bannerEventISPT",
+       "eventID": 4894
+      },
+      {
+       "headline": {
+        "text": "Up to $20,000 to Use Your Way on Select Homes",
+        "link": "/national-open-house"
+       },
+       "cta": {
+        "text": "RSVP Today"
+       },
+       "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+       "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+       "formName": "NOH_2601",
+       "formCallback": "https://hello.tollbrothers.com/l/402642/2026-08-31/2cxmqc1",
+       "eventName": "National Open House Event",
+       "dateText": "SEPTEMBER 19-20",
+       "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 9/5/26 and 9/20/26, sign an agreement of sale, and close on the home. Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and …(770)",
+       "paragraphs": [
+        {
+         "text": "September 19 or September 20"
+        }
+       ],
+       "color": "8D714D",
+       "startDate": "2026-09-05",
+       "endDate": "2026-09-20",
+       "eventType": "nationalEvent",
+       "template": {
+        "text": "NOH"
+       },
+       "parentEventId": 10108,
+       "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/noh-autoresponse.jpg",
+       "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/02/tb_noh_landing_page_2602.svg",
+       "eventID": 10112
+      },
+      {
+       "headline": {
+        "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+        "link": "/4.99",
+        "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+       },
+       "byline": {
+        "text": "Limited Time Only on Select Homes"
+       },
+       "formName": "TB299FHA_012026",
+       "slugName": "4.99",
+       "paragraphs": [
+        {
+         "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+        },
+        {
+         "text": "Your new home is waiting. Make your move today. "
+        }
+       ],
+       "graphs": [
+        {
+         "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+        }
+       ],
+       "bullets": [
+        {
+         "text": "500000"
+        },
+        {
+         "text": "Bullet 2"
+        }
+       ],
+       "color": "348266",
+       "endDate": "2026-10-30",
+       "eventType": "bannerEventNational",
+       "template": {
+        "text": "buydown-bluediamond"
+       },
+       "eventID": 10380
+      },
+      {
+       "headline": {
+        "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+        "link": "/4.99",
+        "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+       },
+       "byline": {
+        "text": "Limited Time Only on Select Homes"
+       },
+       "formName": "TB299FHA_012026",
+       "slugName": "4.99",
+       "paragraphs": [
+        {
+         "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+        },
+        {
+         "text": "Your new home is waiting. Make your move today. "
+        }
+       ],
+       "graphs": [
+        {
+         "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+        }
+       ],
+       "bullets": [
+        {
+         "text": "500000"
+        },
+        {
+         "text": "Bullet 2"
+        }
+       ],
+       "color": "348266",
+       "endDate": "2026-10-30",
+       "eventType": "bannerEventNational",
+       "template": {
+        "text": "buydown-bluediamond"
+       },
+       "eventID": 10380
+      },
+      {
+       "headline": {
+        "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+        "link": "/4.99",
+        "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+       },
+       "byline": {
+        "text": "Limited Time Only on Select Homes"
+       },
+       "formName": "TB299FHA_012026",
+       "slugName": "4.99",
+       "paragraphs": [
+        {
+         "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+        },
+        {
+         "text": "Your new home is waiting. Make your move today. "
+        }
+       ],
+       "graphs": [
+        {
+         "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+        }
+       ],
+       "bullets": [
+        {
+         "text": "500000"
+        },
+        {
+         "text": "Bullet 2"
+        }
+       ],
+       "color": "348266",
+       "endDate": "2026-10-30",
+       "eventType": "bannerEventNational",
+       "template": {
+        "text": "buydown-bluediamond"
+       },
+       "eventID": 10380
+      },
+      {
+       "headline": {
+        "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+        "link": "/4.99",
+        "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+       },
+       "byline": {
+        "text": "Limited Time Only on Select Homes"
+       },
+       "formName": "TB299FHA_012026",
+       "slugName": "4.99",
+       "paragraphs": [
+        {
+         "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+        },
+        {
+         "text": "Your new home is waiting. Make your move today. "
+        }
+       ],
+       "graphs": [
+        {
+         "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+        }
+       ],
+       "bullets": [
+        {
+         "text": "500000"
+        },
+        {
+         "text": "Bullet 2"
+        }
+       ],
+       "color": "348266",
+       "endDate": "2026-10-30",
+       "eventType": "bannerEventNational",
+       "template": {
+        "text": "buydown-bluediamond"
+       },
+       "eventID": 10380
+      }
+     ],
+     "options": [
+      {
+       "id": "92",
+       "name": "Featured Home Design"
+      },
+      {
+       "id": "32",
+       "name": "Show Directions on Future Community"
+      },
+      {
+       "id": "93",
+       "name": "DYOH V2"
+      }
+     ],
+     "communityTypes": [
+      "Luxury Home"
+     ],
+     "cpRegion": "FL-TAMPA SARASOTA",
+     "masterCommunityId": 765,
+     "masterCommunityName": "The Isles at Lakewood Ranch",
+     "qmis": [
+      {
+       "name": "Bianca Elite Antilles",
+       "city": "Lakewood Ranch",
+       "state": "FL",
+       "zip": "34202",
+       "street": "17822 Palmiste Dr",
+       "county": "Manatee",
+       "metroName": "Sarasota, FL",
+       "metroUrl": "/Sarasota-FL",
+       "lat": "27.39902",
+       "lon": "-82.35538",
+       "hbqMarketInterest": "FL",
+       "metroId": 835,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Integrated Retail",
+        "Master-planned Community",
+        "Top-Rated Education"
+       ],
+       "headShot": {
+        "title": "We need a title here",
+        "media": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+         "title": "Antilles",
+         "representative": false,
+         "virtual": false
+        }
+       },
+       "homeType": "Single-Family Home",
+       "feature": "TODO: POPULATE FEATURE",
+       "moveInDate": "2027-02-26",
+       "address": "17822 Palmiste Dr",
+       "lotNumber": "366",
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+       "masterBedroomLocation": "1st Floor",
+       "minBed": 6,
+       "minBath": 4,
+       "minSqft": 3915,
+       "minHalfBath": 1,
+       "masterPlanID": 14513,
+       "pricedFrom": 1417000,
+       "commPlanID": 286778,
+       "stories": "2.0",
+       "minGarage": "3.0",
+       "isFormerDecorated": false,
+       "isQMI": true,
+       "isComingSoon": false,
+       "isDecoratedModel": false,
+       "isBiddableQMI": false,
+       "isBiddableLot": false,
+       "hidePlusSignForSqft": false,
+       "communityId": 13003,
+       "gallery": {
+        "title": null,
+        "mediaGroups": [
+         {
+          "name": "",
+          "media": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Terrace_1_1920.jpg",
+            "description": "Designed for outdoor enjoyment",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_LivingRoom_3_CC_RGB_1920.jpg",
+            "description": "Open-concept great rooms filled with natural light",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen_1_1920.jpg",
+            "description": "Gourmet kitchens designed for both style and function",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBedroom_1_1920.jpg",
+            "description": "Expansive primary bedrooms designed for comfort",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBathroom_1_1920.jpg",
+            "description": "Elegant primary baths with premium finishes",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen-DiningRoom_1_1920.jpg",
+            "description": "Butler’s pantry for added convenience and storage",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_DiningRoom_1_1920.jpg",
+            "description": "Refined dining rooms ideal for hosting",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Walk-InCloset_1_1920.jpg",
+            "description": "Generously sized walk-in closets for everyday convenience",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+            "representative": false,
+            "virtual": false
+           },
+           "…(15 items total)"
+          ]
+         }
+        ],
+        "walkThroughs": [
+         {
+          "name": "Bianca Elite Antilles",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+            "title": "Antilles",
+            "representative": false,
+            "virtual": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "moveInDate": "2027-02-26",
+          "address": "17822 Palmiste Dr",
+          "lotNumber": "366",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/286778",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 6,
+          "minBath": 4,
+          "minSqft": 3915,
+          "minHalfBath": 1,
+          "masterPlanID": 14513,
+          "pricedFrom": 1417000,
+          "commPlanID": 286778,
+          "stories": "2.0",
+          "minGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": true,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "loanLimit": 766550,
+          "standardMortgageRate": "7.0",
+          "jumboMortgageRate": "7.0",
+          "media": {
+           "type": "walkthrough::matterport",
+           "description": "Bianca Elite Caribbean",
+           "link": "KN8aBBQRFkX",
+           "name": "KN8aBBQRFkX",
+           "representative": true,
+           "virtual": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false,
+           "virtual": false
+          },
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Bianca Elite",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "downloadables": [
+           {
+            "type": "pdf::designerAppointed",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-original/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles.pdf",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "designerAppointed": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page1_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page2_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page3_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page4_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page5_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page6_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page7_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page8_1800.jpg",
+            "representative": false,
+            "virtual": false
+           },
+           "…(14 items total)"
+          ],
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "dacID": "C13",
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+            "title": "Antilles",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "modelBullets": [
+           "For a limited time, personalize this home with select interior finishes through our Design Studio to complement finishes selected by our Design Studio team",
+           "Private preserve view backdrop framing the covered lanai and casual dining area, complemented by a self-contained multi-gen suite with private living area, walk-in closet, and full bath",
+           "Alternate primary bath featuring an oval soaking tub, glass-enclosed shower, dual-sink vanity, and private water closet",
+           "Expansive second-level loft flanked by two generously-sized bedrooms with walk-in closets, creating a versatile and well-appointed upper-level retreat"
+          ],
+          "dacName": "Classic Farmhouse​ Tailored",
+          "description": "The Bianca Elite features open gathering spaces and private retreats designed for comfortable living. The first floor features an everyday entry, powder room, laundry area, and generous storage throughout in addition to a flexible multi-gen suite, providing a private area for extended family or gues…(670)",
+          "featureCallouts": [
+           "Multi-Generational Suite",
+           "Private Nature Views"
+          ],
+          "onlineDate": "2026-06-09",
+          "featured": false
+         }
+        ],
+        "externalImages": []
+       },
+       "loanLimit": 766550,
+       "standardMortgageRate": "7.0",
+       "jumboMortgageRate": "7.0",
+       "logo": {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+        "representative": false,
+        "virtual": false
+       },
+       "floorplans": [
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/floorplans-original/8931258-FL-IslesLakewoodRanch-366-BiancaElite-1.svg",
+         "description": "1st Floor",
+         "title": "1st Floor",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/floorplans-original/8931258-FL-IslesLakewoodRanch-366-BiancaElite-2.svg",
+         "description": "2nd Floor",
+         "title": "2nd Floor",
+         "representative": false,
+         "virtual": false
+        }
+       ],
+       "externalFloorplans": [],
+       "communityE1id": "62310000",
+       "communityJdeNum": "6231",
+       "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+       "modelName": "Bianca Elite",
+       "siteplan": [
+        {
+         "type": "siteplan:svg",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+         "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+         "siteplanId": "691884",
+         "representative": false,
+         "virtual": false
+        }
+       ],
+       "showMortgageCalculator": false,
+       "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+       "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+       "collectionName": "Sanibel Collection",
+       "downloadables": [
+        {
+         "type": "pdf::designerAppointed",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-original/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles.pdf",
+         "representative": false,
+         "virtual": false
+        }
+       ],
+       "designerAppointed": [
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page1_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page2_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page3_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page4_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page5_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page6_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page7_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/286778/daf-resized/8931258_The_Isles_at_Lakewood_Ranch_-_Sanibel_Collection_0366_Bianca_Elite_Antilles_page8_1800.jpg",
+         "representative": false,
+         "virtual": false
+        },
+        "…(14 items total)"
+       ],
+       "events": [
+        {
+         "headline": {
+          "text": "Learn More About\nFinancing Offers\nAvailable Now",
+          "link": "/lowest"
+         },
+         "byline": {},
+         "startDate": "2025-03-06",
+         "eventType": "bannerEventISPT",
+         "eventID": 4894
+        },
+        {
+         "headline": {
+          "text": "Up to $20,000 to Use Your Way on Select Homes",
+          "link": "/national-open-house"
+         },
+         "cta": {
+          "text": "RSVP Today"
+         },
+         "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+         "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+         "formName": "NOH_2601",
+         "formCallback": "https://hello.tollbrothers.com/l/402642/2026-08-31/2cxmqc1",
+         "eventName": "National Open House Event",
+         "dateText": "SEPTEMBER 19-20",
+         "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 9/5/26 and 9/20/26, sign an agreement of sale, and close on the home. Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and …(770)",
+         "paragraphs": [
+          {
+           "text": "September 19 or September 20"
+          }
+         ],
+         "color": "8D714D",
+         "startDate": "2026-09-05",
+         "endDate": "2026-09-20",
+         "eventType": "nationalEvent",
+         "template": {
+          "text": "NOH"
+         },
+         "parentEventId": 10108,
+         "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/noh-autoresponse.jpg",
+         "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/02/tb_noh_landing_page_2602.svg",
+         "eventID": 10112
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        }
+       ],
+       "options": [
+        {
+         "id": "32",
+         "name": "Show Directions on Future Community"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "masterCommunityId": 765,
+       "masterCommunityName": "The Isles at Lakewood Ranch",
+       "dacID": "C13",
+       "qmis": [],
+       "elevations": [
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+         "title": "Antilles",
+         "representative": false,
+         "virtual": false
+        }
+       ],
+       "modelBullets": [
+        "For a limited time, personalize this home with select interior finishes through our Design Studio to complement finishes selected by our Design Studio team",
+        "Private preserve view backdrop framing the covered lanai and casual dining area, complemented by a self-contained multi-gen suite with private living area, walk-in closet, and full bath",
+        "Alternate primary bath featuring an oval soaking tub, glass-enclosed shower, dual-sink vanity, and private water closet",
+        "Expansive second-level loft flanked by two generously-sized bedrooms with walk-in closets, creating a versatile and well-appointed upper-level retreat"
+       ],
+       "subModels": [],
+       "dacName": "Classic Farmhouse​ Tailored",
+       "description": "The Bianca Elite features open gathering spaces and private retreats designed for comfortable living. The first floor features an everyday entry, powder room, laundry area, and generous storage throughout in addition to a flexible multi-gen suite, providing a private area for extended family or gues…(670)",
+       "featureCallouts": [
+        "Multi-Generational Suite",
+        "Private Nature Views"
+       ],
+       "onlineDate": "2026-06-09",
+       "designReadyOptions": [],
+       "featured": false,
+       "commLat": "27.39",
+       "commLon": "-82.36",
+       "salesOffice": {
+        "city": "Lakewood Ranch",
+        "state": "FL",
+        "zip": "34202",
+        "street": "17523 Fairwinds Dr",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "salesOfficeOffsite": false,
+        "showHours": true,
+        "byAppointmentOnly": false,
+        "hideDirections": false,
+        "salesOfficePhone": "941-313-7373",
+        "salesPeople": [
+         {
+          "firstName": "Heather",
+          "lastName": "Caserta"
+         }
+        ],
+        "onlineConcierge": [
+         {
+          "firstName": "Kathleen",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Arianna",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Patty",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Adriana",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Zach",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         }
+        ],
+        "hideTour": false,
+        "hideSalesOffice": false,
+        "hideNeighborhoodMap": false,
+        "operatingHours": [
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Monday",
+          "day": "Mon",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Tuesday",
+          "day": "Tue",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Wednesday",
+          "day": "Wed",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Thursday",
+          "day": "Thu",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Friday",
+          "day": "Fri",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Saturday",
+          "day": "Sat",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "12 pm to 6 pm",
+          "fullDay": "Sunday",
+          "day": "Sun",
+          "appointmentOnly": false
+         }
+        ]
+       },
+       "acquireId": "FLW",
+       "acquireJde": "6231",
+       "amenities": {
+        "amenityGroups": [
+         {
+          "name": "",
+          "amenities": [
+           {
+            "name": "Amenity Center",
+            "icon": "Clubhouse.svg"
+           },
+           {
+            "name": "Cabanas",
+            "icon": "Cabana.svg"
+           },
+           {
+            "name": "Dock",
+            "icon": "Dock.svg"
+           },
+           {
+            "name": "Outdoor Heated Pool",
+            "icon": "Pool.svg"
+           },
+           {
+            "name": "Clubhouse",
+            "icon": "Clubhouse.svg"
+           },
+           {
+            "name": "Dog Park",
+            "icon": "Dog_Park.svg"
+           },
+           {
+            "name": "Event Lawns",
+            "icon": "Event_Lawn.svg"
+           },
+           {
+            "name": "Fishing Pond",
+            "icon": "Fishing_Pond.svg"
+           },
+           "…(19 items total)"
+          ],
+          "media": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+            "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+            "description": "The Lounge at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6476-Update_1920.jpg",
+            "description": "The Veranda at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6489-Update_1920.jpg",
+            "description": "The Green at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+            "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6534-Update_1920.jpg",
+            "description": "The Dock at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6596-Update_1920.jpg",
+            "description": "The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6605-Update_1920.jpg",
+            "description": "Aerial view of The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           "…(9 items total)"
+          ],
+          "ordinal": 0
+         }
+        ],
+        "title": "Some title",
+        "headshot": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+         "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+         "representative": false,
+         "virtual": false
+        }
+       }
+      },
+      {
+       "name": "Bianca Elite Island Colonial",
+       "city": "Lakewood Ranch",
+       "state": "FL",
+       "zip": "34202",
+       "street": "17743 Palmiste Dr",
+       "county": "Manatee",
+       "metroName": "Sarasota, FL",
+       "metroUrl": "/Sarasota-FL",
+       "lat": "27.39998",
+       "lon": "-82.35574",
+       "hbqMarketInterest": "FL",
+       "metroId": 835,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Integrated Retail",
+        "Master-planned Community",
+        "Top-Rated Education"
+       ],
+       "headShot": {
+        "title": "We need a title here",
+        "media": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+         "title": "Island Colonial",
+         "representative": false,
+         "virtual": false
+        }
+       },
+       "homeType": "Single-Family Home",
+       "feature": "TODO: POPULATE FEATURE",
+       "moveInDate": "2027-04-30",
+       "address": "17743 Palmiste Dr",
+       "lotNumber": "429",
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+       "masterBedroomLocation": "1st Floor",
+       "minBed": 5,
+       "minBath": 3,
+       "minSqft": 3914,
+       "minHalfBath": 1,
+       "masterPlanID": 14513,
+       "pricedFrom": 1560000,
+       "commPlanID": 288231,
+       "stories": "2.0",
+       "minGarage": "3.0",
+       "isFormerDecorated": false,
+       "isQMI": true,
+       "isComingSoon": false,
+       "isDecoratedModel": false,
+       "isBiddableQMI": false,
+       "isBiddableLot": false,
+       "hidePlusSignForSqft": false,
+       "communityId": 13003,
+       "gallery": {
+        "title": null,
+        "mediaGroups": [
+         {
+          "name": "",
+          "media": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Terrace_1_1920.jpg",
+            "description": "Designed for outdoor enjoyment",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_LivingRoom_3_CC_RGB_1920.jpg",
+            "description": "Open-concept great rooms filled with natural light",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen_1_1920.jpg",
+            "description": "Gourmet kitchens designed for both style and function",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBedroom_1_1920.jpg",
+            "description": "Expansive primary bedrooms designed for comfort",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_PrimaryBathroom_1_1920.jpg",
+            "description": "Elegant primary baths with premium finishes",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Kitchen-DiningRoom_1_1920.jpg",
+            "description": "Butler’s pantry for added convenience and storage",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_DiningRoom_1_1920.jpg",
+            "description": "Refined dining rooms ideal for hosting",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/interiors-resized/The_Isles_BiancaElite_Walk-InCloset_1_1920.jpg",
+            "description": "Generously sized walk-in closets for everyday convenience",
+            "link": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+            "representative": false,
+            "virtual": false
+           },
+           "…(15 items total)"
+          ]
+         }
+        ],
+        "walkThroughs": [
+         {
+          "name": "Bianca Elite Island Colonial",
+          "lat": "27.39",
+          "lon": "-82.36",
+          "hbqMarketInterest": "FL",
+          "headShot": {
+           "title": "We need a title here",
+           "media": {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false,
+            "virtual": false
+           }
+          },
+          "homeType": "Single-Family Home",
+          "feature": "TODO: POPULATE FEATURE",
+          "moveInDate": "2027-04-30",
+          "address": "17743 Palmiste Dr",
+          "lotNumber": "429",
+          "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection/Quick-Move-In/288231",
+          "masterBedroomLocation": "1st Floor",
+          "minBed": 5,
+          "minBath": 3,
+          "minSqft": 3914,
+          "minHalfBath": 1,
+          "masterPlanID": 14513,
+          "pricedFrom": 1560000,
+          "commPlanID": 288231,
+          "stories": "2.0",
+          "minGarage": "3.0",
+          "isFormerDecorated": false,
+          "isQMI": true,
+          "isComingSoon": false,
+          "isDecoratedModel": false,
+          "isBiddableQMI": false,
+          "isBiddableLot": false,
+          "hidePlusSignForSqft": false,
+          "communityId": 13003,
+          "loanLimit": 766550,
+          "standardMortgageRate": "7.0",
+          "jumboMortgageRate": "7.0",
+          "media": {
+           "type": "walkthrough::matterport",
+           "description": "Bianca Elite Caribbean",
+           "link": "KN8aBBQRFkX",
+           "name": "KN8aBBQRFkX",
+           "representative": true,
+           "virtual": false
+          },
+          "logo": {
+           "type": "image",
+           "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+           "representative": false,
+           "virtual": false
+          },
+          "communityE1id": "62310000",
+          "communityJdeNum": "6231",
+          "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+          "modelName": "Bianca Elite",
+          "showMortgageCalculator": false,
+          "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+          "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+          "collectionName": "Sanibel Collection",
+          "options": [
+           {
+            "id": "32",
+            "name": "Show Directions on Future Community"
+           },
+           {
+            "id": "93",
+            "name": "DYOH V2"
+           }
+          ],
+          "communityTypes": [
+           "Luxury Home"
+          ],
+          "cpRegion": "FL-TAMPA SARASOTA",
+          "masterCommunityId": 765,
+          "masterCommunityName": "The Isles at Lakewood Ranch",
+          "dacID": "C20",
+          "elevations": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+            "title": "Island Colonial",
+            "representative": false,
+            "virtual": false
+           }
+          ],
+          "modelBullets": [
+           "Private home site featuring a pool and spa for a resort-inspired outdoor living experience",
+           "Alternate covered lanai with 12-foot ceiling, outdoor kitchen prep package, and full-height exterior privacy wall",
+           "Primary bath with freestanding tub, glass-enclosed shower with handheld shower, dual-sink vanity, and private water closet",
+           "Whole-house spray foam insulation, masonry core foam, and circulating hot water system for elevated performance and comfort"
+          ],
+          "dacName": "Warm Transitional Refined",
+          "description": "The Bianca Elite features stunning gathering spaces and quiet retreats. A welcoming foyer with a tray ceiling leads past a flex room and an elegant dining room into a spacious great room adorned with a tray ceiling. Adjacent, a casual dining room is filled with light from beautiful sliding doors lea…(940)",
+          "featureCallouts": [
+           "Pool With Screen Enclosure",
+           "Private Home Site"
+          ],
+          "onlineDate": "2026-08-18",
+          "featured": false
+         }
+        ],
+        "externalImages": []
+       },
+       "loanLimit": 766550,
+       "standardMortgageRate": "7.0",
+       "jumboMortgageRate": "7.0",
+       "logo": {
+        "type": "image",
+        "url": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg",
+        "representative": false,
+        "virtual": false
+       },
+       "floorplans": [
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/288231/floorplans-original/9824613-FL-IslesLakewoodRanch-429-BiancaElite_1-1.svg",
+         "description": "1st Floor",
+         "title": "1st Floor",
+         "representative": false,
+         "virtual": false
+        },
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/288231/floorplans-original/9824613-FL-IslesLakewoodRanch-429-BiancaElite_1-2.svg",
+         "description": "2nd Floor",
+         "title": "2nd Floor",
+         "representative": false,
+         "virtual": false
+        }
+       ],
+       "externalFloorplans": [],
+       "communityE1id": "62310000",
+       "communityJdeNum": "6231",
+       "communityName": "The Isles at Lakewood Ranch - Sanibel Collection",
+       "modelName": "Bianca Elite",
+       "siteplan": [
+        {
+         "type": "siteplan:svg",
+         "url": "https://cdn.tollbrothers.com/communities/masters/765/siteplans-resized/UPDATED-Maps-SitePlan-Overall-TheIslesAtLakewoodRanch-AllLotInfo-v05-processed.svg",
+         "link": "/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+         "siteplanId": "691884",
+         "representative": false,
+         "virtual": false
+        }
+       ],
+       "showMortgageCalculator": false,
+       "communityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+       "masterCommunityUrl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+       "collectionName": "Sanibel Collection",
+       "downloadables": [],
+       "designerAppointed": [],
+       "events": [
+        {
+         "headline": {
+          "text": "Learn More About\nFinancing Offers\nAvailable Now",
+          "link": "/lowest"
+         },
+         "byline": {},
+         "startDate": "2025-03-06",
+         "eventType": "bannerEventISPT",
+         "eventID": 4894
+        },
+        {
+         "headline": {
+          "text": "Up to $20,000 to Use Your Way on Select Homes",
+          "link": "/national-open-house"
+         },
+         "cta": {
+          "text": "RSVP Today"
+         },
+         "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+         "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+         "formName": "NOH_2601",
+         "formCallback": "https://hello.tollbrothers.com/l/402642/2026-08-31/2cxmqc1",
+         "eventName": "National Open House Event",
+         "dateText": "SEPTEMBER 19-20",
+         "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 9/5/26 and 9/20/26, sign an agreement of sale, and close on the home. Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and …(770)",
+         "paragraphs": [
+          {
+           "text": "September 19 or September 20"
+          }
+         ],
+         "color": "8D714D",
+         "startDate": "2026-09-05",
+         "endDate": "2026-09-20",
+         "eventType": "nationalEvent",
+         "template": {
+          "text": "NOH"
+         },
+         "parentEventId": 10108,
+         "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/noh-autoresponse.jpg",
+         "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/02/tb_noh_landing_page_2602.svg",
+         "eventID": 10112
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        },
+        {
+         "headline": {
+          "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+          "link": "/4.99",
+          "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+         },
+         "byline": {
+          "text": "Limited Time Only on Select Homes"
+         },
+         "formName": "TB299FHA_012026",
+         "slugName": "4.99",
+         "paragraphs": [
+          {
+           "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+          },
+          {
+           "text": "Your new home is waiting. Make your move today. "
+          }
+         ],
+         "graphs": [
+          {
+           "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+          }
+         ],
+         "bullets": [
+          {
+           "text": "500000"
+          },
+          {
+           "text": "Bullet 2"
+          }
+         ],
+         "color": "348266",
+         "endDate": "2026-10-30",
+         "eventType": "bannerEventNational",
+         "template": {
+          "text": "buydown-bluediamond"
+         },
+         "eventID": 10380
+        }
+       ],
+       "options": [
+        {
+         "id": "32",
+         "name": "Show Directions on Future Community"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "masterCommunityId": 765,
+       "masterCommunityName": "The Isles at Lakewood Ranch",
+       "dacID": "C20",
+       "qmis": [],
+       "elevations": [
+        {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+         "title": "Island Colonial",
+         "representative": false,
+         "virtual": false
+        }
+       ],
+       "modelBullets": [
+        "Private home site featuring a pool and spa for a resort-inspired outdoor living experience",
+        "Alternate covered lanai with 12-foot ceiling, outdoor kitchen prep package, and full-height exterior privacy wall",
+        "Primary bath with freestanding tub, glass-enclosed shower with handheld shower, dual-sink vanity, and private water closet",
+        "Whole-house spray foam insulation, masonry core foam, and circulating hot water system for elevated performance and comfort"
+       ],
+       "subModels": [],
+       "dacName": "Warm Transitional Refined",
+       "description": "The Bianca Elite features stunning gathering spaces and quiet retreats. A welcoming foyer with a tray ceiling leads past a flex room and an elegant dining room into a spacious great room adorned with a tray ceiling. Adjacent, a casual dining room is filled with light from beautiful sliding doors lea…(940)",
+       "featureCallouts": [
+        "Pool With Screen Enclosure",
+        "Private Home Site"
+       ],
+       "onlineDate": "2026-08-18",
+       "designReadyOptions": [],
+       "featured": false,
+       "commLat": "27.39",
+       "commLon": "-82.36",
+       "salesOffice": {
+        "city": "Lakewood Ranch",
+        "state": "FL",
+        "zip": "34202",
+        "street": "17523 Fairwinds Dr",
+        "lat": "27.39",
+        "lon": "-82.36",
+        "salesOfficeOffsite": false,
+        "showHours": true,
+        "byAppointmentOnly": false,
+        "hideDirections": false,
+        "salesOfficePhone": "941-313-7373",
+        "salesPeople": [
+         {
+          "firstName": "Heather",
+          "lastName": "Caserta"
+         }
+        ],
+        "onlineConcierge": [
+         {
+          "firstName": "Kathleen",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Arianna",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Patty",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Adriana",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         },
+         {
+          "firstName": "Zach",
+          "email": "FLOnlineSales@tollbrothers.com",
+          "phone": "855-600-8655",
+          "sms": "855-600-8655"
+         }
+        ],
+        "hideTour": false,
+        "hideSalesOffice": false,
+        "hideNeighborhoodMap": false,
+        "operatingHours": [
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Monday",
+          "day": "Mon",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Tuesday",
+          "day": "Tue",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Wednesday",
+          "day": "Wed",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Thursday",
+          "day": "Thu",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Friday",
+          "day": "Fri",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "10 am to 6 pm",
+          "fullDay": "Saturday",
+          "day": "Sat",
+          "appointmentOnly": false
+         },
+         {
+          "timeString": "12 pm to 6 pm",
+          "fullDay": "Sunday",
+          "day": "Sun",
+          "appointmentOnly": false
+         }
+        ]
+       },
+       "acquireId": "FLW",
+       "acquireJde": "6231",
+       "amenities": {
+        "amenityGroups": [
+         {
+          "name": "",
+          "amenities": [
+           {
+            "name": "Amenity Center",
+            "icon": "Clubhouse.svg"
+           },
+           {
+            "name": "Cabanas",
+            "icon": "Cabana.svg"
+           },
+           {
+            "name": "Dock",
+            "icon": "Dock.svg"
+           },
+           {
+            "name": "Outdoor Heated Pool",
+            "icon": "Pool.svg"
+           },
+           {
+            "name": "Clubhouse",
+            "icon": "Clubhouse.svg"
+           },
+           {
+            "name": "Dog Park",
+            "icon": "Dog_Park.svg"
+           },
+           {
+            "name": "Event Lawns",
+            "icon": "Event_Lawn.svg"
+           },
+           {
+            "name": "Fishing Pond",
+            "icon": "Fishing_Pond.svg"
+           },
+           "…(19 items total)"
+          ],
+          "media": [
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+            "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+            "description": "The Lounge at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6476-Update_1920.jpg",
+            "description": "The Veranda at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6489-Update_1920.jpg",
+            "description": "The Green at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+            "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6534-Update_1920.jpg",
+            "description": "The Dock at The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6596-Update_1920.jpg",
+            "description": "The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           {
+            "type": "image",
+            "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6605-Update_1920.jpg",
+            "description": "Aerial view of The Pier House, the community amenity center",
+            "representative": false,
+            "virtual": false
+           },
+           "…(9 items total)"
+          ],
+          "ordinal": 0
+         }
+        ],
+        "title": "Some title",
+        "headshot": {
+         "type": "image",
+         "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+         "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+         "representative": false,
+         "virtual": false
+        }
+       }
+      }
+     ],
+     "qmiCount": 2,
+     "elevations": [
+      {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/The_Isles_BiancaElite_FrontExterior_1_1920.jpg",
+       "title": "Caribbean",
+       "representative": false,
+       "virtual": false
+      },
+      {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ISCL_FLT_3FE_6231_1_1920.jpg",
+       "title": "Island Colonial",
+       "representative": false,
+       "virtual": false
+      },
+      {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_ANT_FLT_3FE_6231_1_1920.jpg",
+       "title": "Antilles",
+       "representative": false,
+       "virtual": false
+      },
+      {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/plans/269887/exteriors-resized/93G_CRB_FLT_3FE_6231_1_1920.jpg",
+       "title": "Caribbean",
+       "representative": false,
+       "virtual": false
+      }
+     ],
+     "modelBullets": [
+      "Easy flow between kitchen, great room, casual dining area, and covered lanai",
+      "Main floor primary suite offers deluxe bath and walk-in closet",
+      "Loft and flex room ideal for a variety of uses"
+     ],
+     "subModels": [],
+     "description": "The Bianca Elite features stunning gathering spaces and quiet retreats. A welcoming foyer with a tray ceiling leads past a flex room and an elegant dining room into a spacious great room adorned with a tray ceiling. Adjacent, a casual dining room is filled with light from beautiful sliding doors lea…(940)",
+     "featureCallouts": [
+      "Loft",
+      "Flex Room"
+     ],
+     "onlineDate": "2024-06-12",
+     "pricedFromWithQMI": 1057995,
+     "commLat": "27.39",
+     "commLon": "-82.36",
+     "salesOffice": {
+      "city": "Lakewood Ranch",
+      "state": "FL",
+      "zip": "34202",
+      "street": "17523 Fairwinds Dr",
+      "lat": "27.39",
+      "lon": "-82.36",
+      "salesOfficeOffsite": false,
+      "showHours": true,
+      "byAppointmentOnly": false,
+      "hideDirections": false,
+      "salesOfficePhone": "941-313-7373",
+      "salesPeople": [
+       {
+        "firstName": "Heather",
+        "lastName": "Caserta"
+       }
+      ],
+      "onlineConcierge": [
+       {
+        "firstName": "Kathleen",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       },
+       {
+        "firstName": "Arianna",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       },
+       {
+        "firstName": "Patty",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       },
+       {
+        "firstName": "Adriana",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       },
+       {
+        "firstName": "Zach",
+        "email": "FLOnlineSales@tollbrothers.com",
+        "phone": "855-600-8655",
+        "sms": "855-600-8655"
+       }
+      ],
+      "hideTour": false,
+      "hideSalesOffice": false,
+      "hideNeighborhoodMap": false,
+      "operatingHours": [
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Monday",
+        "day": "Mon",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Tuesday",
+        "day": "Tue",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Wednesday",
+        "day": "Wed",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Thursday",
+        "day": "Thu",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Friday",
+        "day": "Fri",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "10 am to 6 pm",
+        "fullDay": "Saturday",
+        "day": "Sat",
+        "appointmentOnly": false
+       },
+       {
+        "timeString": "12 pm to 6 pm",
+        "fullDay": "Sunday",
+        "day": "Sun",
+        "appointmentOnly": false
+       }
+      ]
+     },
+     "dyohLink": "https://rifp.ml3ds-icon.com/#/floorplan/503173?v=2&com=6231",
+     "acquireId": "FLW",
+     "acquireJde": "6231",
+     "amenities": {
+      "amenityGroups": [
+       {
+        "name": "",
+        "amenities": [
+         {
+          "name": "Amenity Center",
+          "icon": "Clubhouse.svg"
+         },
+         {
+          "name": "Cabanas",
+          "icon": "Cabana.svg"
+         },
+         {
+          "name": "Dock",
+          "icon": "Dock.svg"
+         },
+         {
+          "name": "Outdoor Heated Pool",
+          "icon": "Pool.svg"
+         },
+         {
+          "name": "Clubhouse",
+          "icon": "Clubhouse.svg"
+         },
+         {
+          "name": "Dog Park",
+          "icon": "Dog_Park.svg"
+         },
+         {
+          "name": "Event Lawns",
+          "icon": "Event_Lawn.svg"
+         },
+         {
+          "name": "Fishing Pond",
+          "icon": "Fishing_Pond.svg"
+         },
+         "…(19 items total)"
+        ],
+        "media": [
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+          "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6401-Update_1920.jpg",
+          "description": "The Lounge at The Pier House, the community amenity center",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6476-Update_1920.jpg",
+          "description": "The Veranda at The Pier House, the community amenity center",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6489-Update_1920.jpg",
+          "description": "The Green at The Pier House, the community amenity center",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6528-Update_1920.jpg",
+          "description": "The Lagoon resort-style swimming pool at The Pier House, the community amenity center",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6534-Update_1920.jpg",
+          "description": "The Dock at The Pier House, the community amenity center",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6596-Update_1920.jpg",
+          "description": "The Pier House, the community amenity center",
+          "representative": false,
+          "virtual": false
+         },
+         {
+          "type": "image",
+          "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Amenity-Center-6605-Update_1920.jpg",
+          "description": "Aerial view of The Pier House, the community amenity center",
+          "representative": false,
+          "virtual": false
+         },
+         "…(9 items total)"
+        ],
+        "ordinal": 0
+       }
+      ],
+      "title": "Some title",
+      "headshot": {
+       "type": "image",
+       "url": "https://cdn.tollbrothers.com/communities/13003/images-resized/Isles-at-LWR--Community-Entrance-6538-Update_1920.jpg",
+       "description": "Welcome home to the Isles at Lakewood Ranch by Toll Brothers",
+       "representative": false,
+       "virtual": false
+      }
+     },
+     "isFuture": false
+    },
+    "eventComponent": null
+   },
+   "projectId": "62310000-93G",
+   "robots": true,
+   "isProductPage": true,
+   "disableChat": false
+  },
+  "__N_SSP": true
+ },
+ "page": "/luxury-homes-for-sale/[[...product]]",
+ "query": {
+  "product": [
+   "Florida",
+   "The-Isles-at-Lakewood-Ranch",
+   "Sanibel-Collection",
+   "Bianca-Elite"
+  ]
+ },
+ "buildId": "Lu1XaIRyL1aQXvDdr84xW",
+ "runtimeConfig": {
+  "services": {
+   "okta": [
+    "/my-favorites",
+    "/luxury-homes-for-sale/[[...product]]"
+   ],
+   "mapkit": [
+    "/[[...slug]]",
+    "/details",
+    "/luxury-homes/[[...searchSlug]]",
+    "/search/[[...searchSlug]]",
+    "/luxury-homes-for-rent/[[...searchSlug]]"
+   ]
+  }
+ },
+ "isFallback": false,
+ "isExperimentalCompile": false,
+ "dynamicIds": [
+  91769
+ ],
+ "gssp": true,
+ "scriptLoader": []
+}

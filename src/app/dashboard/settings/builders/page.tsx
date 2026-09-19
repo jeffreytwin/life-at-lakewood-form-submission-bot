@@ -124,6 +124,31 @@ export default function BuildersSettingsPage() {
     }
   }
 
+  async function resetConnection(b: Builder, c: Connection) {
+    const where = `${b.name} at ${c.fp_communities?.name ?? "this community"}`;
+    if (
+      !confirm(
+        `Reset ${where}?\n\nThis removes every plan the pipeline holds for this connection from the site's Floor Plans V2 collection (drafts included) and from the Hub, with its pending changes and follow-ups, and clears its run history. Imported photos are kept and reused. The next Run starts from scratch.`
+      )
+    ) {
+      return;
+    }
+    setRunning((s) => new Set(s).add(c.id));
+    try {
+      const res = await fetch(`/api/internal/floorplans/connections/${c.id}/reset`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) alert(`Reset failed: ${data.error ?? res.status}`);
+      else alert(`Reset ${where}: ${data.plans ?? 0} plans removed (${data.wixRemoved ?? 0} from Wix), ${data.changes ?? 0} queued changes cleared.`);
+    } finally {
+      setRunning((s) => {
+        const next = new Set(s);
+        next.delete(c.id);
+        return next;
+      });
+      fetchBuilders();
+    }
+  }
+
   function health(b: Builder) {
     if (!b.active) return { label: "Paused", cls: "badge-muted" };
     if (!b.extraction_method) return { label: "Needs setup", cls: "badge-warning" };
@@ -341,6 +366,15 @@ export default function BuildersSettingsPage() {
                                   disabled={!b.active}
                                 >
                                   {c.active ? "Pause" : "Resume"}
+                                </button>
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: "2px 10px" }}
+                                  title="Remove every plan this connection has put in Floor Plans V2 and the Hub, and start over"
+                                  onClick={() => resetConnection(b, c)}
+                                  disabled={running.has(c.id)}
+                                >
+                                  Reset
                                 </button>
                               </div>
                             </td>

@@ -221,3 +221,60 @@ landed). Interpretation:
 - Extractor extended + unit-tested against the committed Isles dumps
   (`__tests__/unit/floorplans/toll-brothers.test.ts`). QMIs are named by
   street address (Lennar convention), base plan in `raw.relatedPlan`.
+
+## Toll Brothers media — done on the community page, showcase on the plan page (2026-09-19)
+
+Jeff, picking the pipeline back up: the first slice imported only each
+plan's headshot (plus, by mistake, its blueprint SVG as a photo). Going
+builder by builder now, and possibly community by community later. Where
+Toll keeps each piece, all in `__NEXT_DATA__`:
+
+- **Primary picture**: `model.headShot.media.url` (title is the elevation
+  name, e.g. "Caribbean"); `model.media` repeats it.
+- **Exterior designs** (the "Unique Exteriors" strip): `model.elevations[]`
+  `{type: "image", url, title}` — Antilles, Caribbean, Island Colonial. The
+  one equal to the headshot is the primary; the rest go last in the gallery
+  as the "extra exterior options".
+- **Media Showcase** (captioned interior photos): `model.gallery.mediaGroups[]
+  .media[]` `{type: "image", url, description}` (video entries,
+  `video::vimeo` / `video::MP4`, sit in the same list and are skipped). Where
+  it turned up (captures of 2026-09-19, `discovery/toll-model-*` and
+  `discovery/toll-api/`): **quick move-ins carry theirs right in the
+  community page** (`qmis[].gallery.mediaGroups`, e.g. Lori Caribbean 6
+  photos, Bianca Elite Antilles 8, every photo also tagged by room in its
+  file name: `_KITCHEN_`, `_PRIMARY_BEDROOM_`, `_OFFICE_`); base plans carry
+  it on their own page's `modelComponent`, empty for a plan with no photo
+  set (Carver, Carver Elite, Kingsdale: nothing on the page, nothing in the
+  API, and a real browser rendered no showcase section for Carver). The
+  same model JSON is served plainly at `pageData.apiUrl`:
+  `/api/v2/community/<communityId>/model/<masterPlanID>` for a base plan,
+  `…/model/<masterPlanID>/qdh/<commPlanID>` for a quick move-in (200 with a
+  browser user agent, no auth); `/api/v2/community/<communityId>` is the whole
+  collection with every model. `extractTollBrothers` reads the page for
+  plans the community page left without photos (four at a time) and merges
+  it via `enrichPlanFromModelPage`; a failed page leaves the community-page
+  plan. The captioned images an API probe counts on a base plan are the
+  community amenities (`amenities.amenityGroups[].media`), not the plan.
+  Confirmed on every base plan at The Isles (capture of 17:58 UTC): only
+  **Bianca Elite**, the decorated model, has a set (8 photos: terrace, living
+  room, kitchen, primary bedroom and bath, butler's pantry, dining room,
+  walk-in closet; 4 exterior designs; 2 drawings; Matterport `KN8aBBQRFkX`).
+  Bianca, Carver, Carver Elite, Kingsdale, Lori and Lori Elite have none.
+  **Avery is no longer listed** among the seven base plans, so some of the
+  July drafts are for plans Toll has dropped; Reset clears them.
+- **3D walkthrough**: `model.gallery.walkThroughs[].media`. Two shapes seen:
+  `{type: "walkthrough::matterport", link: "<model id>", url: <still>}`, and
+  `{type: "walkthrough", link: "https://www.insidemaps.com/app/walkthrough-v2/?projectId=…"}`.
+  Matterport ids become `https://my.matterport.com/show/?m=<id>&qs=1&play=1`,
+  the form the 122 Matterport tours already on lifeatlakewood.com use;
+  InsideMaps links are kept as given. The still becomes `virtualTourImageV2`.
+  Community-level `gallery.mediaGroups` also carries `video::MP4` and
+  `video::vimeo` entries; not used.
+- **Description**: `model.description` (about 700 characters of marketing
+  copy) → `floorPlanDescription`.
+- **Blueprints**: `model.floorplans[]` (SVG) → `floorPlanBluePrintGallery`.
+
+Gallery order (`src/lib/floorplans/gallery-order.ts`, first pass): headshot,
+then showcase photos by room read off their captions ("Gourmet kitchens…" →
+kitchen, "Open-concept great rooms…" → living, "Designed for outdoor
+enjoyment" → outdoor), unplaced photos in page order, exteriors last.

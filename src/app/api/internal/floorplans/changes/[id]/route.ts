@@ -12,11 +12,13 @@ const EDITABLE_FIELDS = [
   "sqft",
   "garages",
   "homeType",
+  "virtualTourUrl",
+  "description",
 ] as const;
 
 /**
  * PATCH /api/internal/floorplans/changes/:id
- * Body: { record: { name?, priceDisplay?, beds?, baths?, sqft?, garages?, homeType? } }
+ * Body: { record: { name?, priceDisplay?, beds?, baths?, sqft?, garages?, homeType?, virtualTourUrl?, description? } }
  *
  * Edits a PENDING change's proposed record before approval. Edited fields
  * are recorded as manual overrides (userEditedFields) so the nightly diff
