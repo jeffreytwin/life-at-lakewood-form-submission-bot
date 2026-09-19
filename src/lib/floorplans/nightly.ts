@@ -105,7 +105,7 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
     const result = await runConnection(conn.id);
     processed += 1;
     ran += 1;
-    if (result.status === "failed") failed += 1;
+    if (result.status === "failed" || result.status === "partial") failed += 1;
   }
 
   const remaining = todo.length - processed;
@@ -121,10 +121,25 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
       .from("fp_follow_up_tasks")
       .select("id", { count: "exact", head: true })
       .eq("status", "open");
+    // Name what needs a person, not just how many: a builder page that
+    // broke reads "zero results" or "partial" here, worst first.
+    const { data: failing } = await supabase
+      .from("fp_builder_communities")
+      .select("last_run_status, consecutive_failures, fp_builders:builder_id(name), fp_communities:community_id(name)")
+      .eq("active", true)
+      .gt("consecutive_failures", 0)
+      .order("consecutive_failures", { ascending: false })
+      .limit(5);
+    const attention = (failing ?? []).map((c) => {
+      const b = c.fp_builders as unknown as { name: string } | null;
+      const k = c.fp_communities as unknown as { name: string } | null;
+      return `${b?.name ?? "?"}/${k?.name ?? "?"} (${(c.last_run_status ?? "").slice(0, 60)}, ${c.consecutive_failures}×)`;
+    });
     const digest =
       `Floor plan sync: ${pendingCount ?? 0} changes awaiting review` +
       (starredTouched ? ` (${starredTouched} starred-plan follow-ups open)` : "") +
-      `. Ran ${ran} connections${failed ? `, ${failed} failed` : ""}.`;
+      `. Ran ${ran} connections${failed ? `, ${failed} failed` : ""}.` +
+      (attention.length ? ` Needs attention: ${attention.join("; ")}.` : "");
     logger.info("Floor plan nightly cycle complete", { ran, failed, pendingCount });
     if (settings.fp_digest_phone) await sendDigest(settings.fp_digest_phone, digest);
 

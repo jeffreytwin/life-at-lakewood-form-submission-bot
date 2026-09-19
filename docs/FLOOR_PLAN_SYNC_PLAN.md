@@ -133,6 +133,32 @@ nothing. No cutover report has ever been generated.
   carries no score and needs none.
 - The whole review row opens the overlay.
 
+**Update 2026-09-19, night (mobile, views, and how a broken builder site shows up).**
+
+- On a phone or tablet the overlay's hover preview and drag-and-drop are
+  off (there is no hover, and a press-and-hold started a drag); the arrows
+  move pictures. The queue has a **Show** filter (floor plans only, quick
+  move-ins only, both) and an **Approve all Quick Move-Ins** button, which
+  takes every pending quick move-in on the selected site(s) whatever the
+  view shows.
+- **How a broken builder site shows up.** A run that throws, finds no
+  plans, or finds far fewer plans than last time (under 60% of the last
+  count, `coverage.ts`) is recorded on the connection as a failure:
+  `last_run_status` reads "error: …", "zero results (treated as failure)"
+  or "partial: 3 of the 16 plans found last time", and
+  `consecutive_failures` counts up until a good run resets it. No removal
+  is ever proposed from such a run, so a broken page cannot empty a site.
+  Where a person sees it: a red **Builder sites needing attention** banner
+  at the top of the Floor Plans page (every active connection whose last
+  run failed, worst first, with the status and the run time); the same on
+  Settings → Builder Connections, where a builder shows "N failures" from
+  two in a row; and the nightly digest SMS, which now names the failing
+  connections ("Needs attention: Toll Brothers/The Isles (zero results, 3×)")
+  once nightly runs are on and a digest phone is set. What is still
+  missing: nothing pages anyone between digests, and a page that changes
+  shape while still returning most of its plans (wrong prices, missing
+  photos) reads as "ok"; the review queue is the check for that.
+
 **Known gaps, in the order they bite.**
 
 1. Imports are not verified after the fact. Wix's URL import is
