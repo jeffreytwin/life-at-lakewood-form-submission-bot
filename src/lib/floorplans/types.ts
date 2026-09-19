@@ -35,6 +35,8 @@ export interface GalleryMeta {
 }
 
 // Canonical normalized plan shape produced by every extractor engine.
+export type RelatedPlanMatch = "extractor" | "plan-id" | "plan-name" | "unmatched";
+
 export interface NormalizedPlan {
   planKey: string;
   name: string;
@@ -60,6 +62,18 @@ export interface NormalizedPlan {
   virtualTourUrl?: string | null;
   /** A still for the virtual tour button, when the builder gives one. */
   virtualTourImage?: string | null;
+  /**
+   * Quick move-ins only: the base plan this home is built from, as the site
+   * files it (Wellen Park and Parrish keep the base plan's name on the
+   * quick move-in row, relatedFloorPlanQuickMoveInOnly). planKey is the
+   * base plan's key in the same run; name is what the row carries.
+   */
+  relatedPlanKey?: string | null;
+  relatedPlanName?: string | null;
+  /** How the base plan was found: by the engine, the builder's plan id, the plan name, or not at all. */
+  relatedPlanMatch?: RelatedPlanMatch;
+  /** Base plans only: at least one quick move-in of this plan is on offer in this community. */
+  hasQuickMoveIns?: boolean;
   userEditedFields?: string[];
   raw?: Record<string, unknown>;
 }

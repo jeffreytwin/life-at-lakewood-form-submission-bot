@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { enrichPlanFromModelPage, hasShowcase, modelFromPlanPage, plansFromNextData } from "@/lib/floorplans/extractors/toll-brothers";
+import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // The pruned discovery dumps are real __NEXT_DATA__ captures from the
@@ -45,6 +46,18 @@ describe("plansFromNextData (Toll Brothers)", () => {
     expect(qmis.length).toBeGreaterThan(0);
     // The nameless QMI-only model wrapper must not surface as a base plan.
     expect(plans.every((p) => p.planKey)).toBe(true);
+  });
+
+  it("names each quick move-in's base plan, and the linker ties it to that plan's row", () => {
+    const plans = linkQuickMoveIns(plansFromNextData(dump("isles-main")));
+    const qmis = plans.filter((p) => p.quickMoveIn);
+    expect(qmis.length).toBeGreaterThan(0);
+    for (const q of qmis) expect(q.relatedPlanName).toBeTruthy();
+    const linked = qmis.filter((q) => q.relatedPlanKey);
+    expect(linked.length).toBeGreaterThan(0);
+    for (const q of linked) {
+      expect(plans.find((p) => p.planKey === q.relatedPlanKey)?.hasQuickMoveIns).toBe(true);
+    }
   });
 
   it("never emits a base-plan row flagged as QMI from model shells", () => {

@@ -18,9 +18,23 @@ export const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
   ["sqft", "sqft"],
   ["garages", "garages"],
   ["quickMoveIn", "quick move-in"],
+  ["relatedPlanName", "base plan"],
+  ["hasQuickMoveIns", "quick move-ins available"],
   ["virtualTourUrl", "virtual tour"],
   ["description", "description"],
 ];
+
+/** Flags: a missing value is "no", and the queue reads yes/no. */
+const BOOLEAN_FIELDS = new Set<keyof NormalizedPlan>(["quickMoveIn", "hasQuickMoveIns"]);
+
+/**
+ * A quick move-in's row on the site is its address, price, one picture,
+ * description and base plan; Wellen Park and Parrish leave the rest blank
+ * (docs/WIX_COLLECTIONS.md, "Quick move-ins"). So only these earn a review
+ * row for a quick move-in; its specs and the rest of its gallery still
+ * update in the canonical record when any of these change.
+ */
+const QMI_FIELDS = new Set<keyof NormalizedPlan>(["name", "priceDisplay", "description", "relatedPlanName", "quickMoveIn"]);
 
 /** Fields shown with thousands separators in the queue ("3,908"), while the record keeps the number. */
 const NUMERIC_FIELDS = new Set<keyof NormalizedPlan>(["sqft"]);
@@ -106,23 +120,29 @@ export function mergeForUpdate(current: CanonicalRecord, plan: NormalizedPlan): 
  */
 export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): FieldChange[] {
   const overrides = new Set(current.userEditedFields ?? []);
+  const quickMoveIn = plan.quickMoveIn === true;
   const changes: FieldChange[] = [];
   for (const [field, label] of DIFF_FIELDS) {
     if (overrides.has(field)) continue;
-    const oldVal = current[field];
-    const newVal = plan[field];
+    if (quickMoveIn && !QMI_FIELDS.has(field)) continue;
+    const oldVal = BOOLEAN_FIELDS.has(field) ? current[field] === true : current[field];
+    const newVal = BOOLEAN_FIELDS.has(field) ? plan[field] === true : plan[field];
     if (String(oldVal ?? "") === String(newVal ?? "")) continue;
     const show = LONG_TEXT_FIELDS.has(field)
       ? describeText
       : NUMERIC_FIELDS.has(field)
         ? (v: unknown) => (typeof v === "number" ? v.toLocaleString("en-US") : String(v ?? ""))
-        : (v: unknown) => String(v ?? "");
+        : BOOLEAN_FIELDS.has(field)
+          ? (v: unknown) => (v === true ? "yes" : "no")
+          : (v: unknown) => String(v ?? "");
     changes.push({ field, label, oldValue: show(oldVal), newValue: show(newVal) });
   }
   for (const [field, label] of GALLERY_FIELDS) {
     if (overrides.has(field)) continue;
-    const before = galleryOf(current, field);
-    const after = galleryOf(plan, field);
+    // A quick move-in shows one picture and no drawings.
+    if (quickMoveIn && field === "blueprintImages") continue;
+    const before = quickMoveIn ? galleryOf(current, field).slice(0, 1) : galleryOf(current, field);
+    const after = quickMoveIn ? galleryOf(plan, field).slice(0, 1) : galleryOf(plan, field);
     if (sameList(before, after)) continue;
     changes.push({ field, label, oldValue: describeGallery(before, label), newValue: describeGallery(after, label) });
   }

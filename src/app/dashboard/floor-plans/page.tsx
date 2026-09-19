@@ -25,6 +25,10 @@ interface ProposedRecord {
   galleryMeta?: Record<string, GalleryMeta>;
   description?: string | null;
   virtualTourUrl?: string | null;
+  /** Quick move-ins: the base plan; base plans: whether any quick move-in of theirs is on offer. */
+  relatedPlanName?: string | null;
+  relatedPlanMatch?: "extractor" | "plan-id" | "plan-name" | "unmatched";
+  hasQuickMoveIns?: boolean;
   userEditedFields?: string[];
 }
 
@@ -194,6 +198,7 @@ export default function FloorPlansPage() {
     homeType: "",
     virtualTourUrl: "",
     description: "",
+    relatedPlanName: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
   const [editGallery, setEditGallery] = useState<string[]>([]);
@@ -295,6 +300,7 @@ export default function FloorPlansPage() {
       homeType: rec.homeType ?? "",
       virtualTourUrl: rec.virtualTourUrl ?? "",
       description: rec.description ?? "",
+      relatedPlanName: rec.relatedPlanName ?? "",
     });
     const gallery = rec.galleryImages?.length
       ? rec.galleryImages
@@ -448,7 +454,18 @@ export default function FloorPlansPage() {
                   const fieldRows = g.rows.filter((r) => r.change_type === "update" && r.field_changed);
                   const failedRow = g.rows.find((r) => r.status === "failed" && r.error_detail);
                   return (
-                    <tr key={g.key}>
+                    <tr
+                      key={g.key}
+                      onClick={(e) => {
+                        // The whole row opens the overlay (Jeff, 2026-09-19); the
+                        // 3D tour and builder page links and every button keep their own job.
+                        if (!isPending) return;
+                        if ((e.target as HTMLElement).closest("a, button, input, select, textarea")) return;
+                        openEdit(g);
+                      }}
+                      style={isPending ? { cursor: "pointer" } : undefined}
+                      title={isPending ? "Click to edit this plan before approving" : undefined}
+                    >
                       <td style={{ width: 92 }}>
                         {thumb ? (
                           <button
@@ -503,7 +520,17 @@ export default function FloorPlansPage() {
                         {(rec?.userEditedFields?.length ?? 0) > 0 && (
                           <div className="text-muted text-sm">✎ edited: {rec?.userEditedFields?.join(", ")}</div>
                         )}
-                        {rec?.quickMoveIn && <div className="text-muted text-sm">Quick Move-In</div>}
+                        {rec?.quickMoveIn && (
+                          <div className="text-muted text-sm">
+                            Quick move-in{rec.relatedPlanName ? ` of ${rec.relatedPlanName}` : ""}
+                            {rec.relatedPlanMatch === "unmatched" && (
+                              <span title="No base plan by this name in the run. Set it in the overlay."> · ⚠ base plan not found</span>
+                            )}
+                          </div>
+                        )}
+                        {!rec?.quickMoveIn && rec?.hasQuickMoveIns && (
+                          <div className="text-muted text-sm">Has quick move-ins</div>
+                        )}
                         {rec?.virtualTourUrl && (
                           <div>
                             <a href={rec.virtualTourUrl} target="_blank" rel="noreferrer" className="text-sm">
@@ -609,6 +636,16 @@ export default function FloorPlansPage() {
                 />
               </div>
             ))}
+            {editing.lead.proposed_record?.quickMoveIn && (
+              <div className="form-group">
+                <label>Base plan (the floor plan this quick move-in is built from; the site files it under that plan)</label>
+                <input
+                  className="form-input"
+                  value={editForm.relatedPlanName}
+                  onChange={(e) => setEditForm((f) => ({ ...f, relatedPlanName: e.target.value }))}
+                />
+              </div>
+            )}
             <div className="form-group">
               <label>Description</label>
               <textarea

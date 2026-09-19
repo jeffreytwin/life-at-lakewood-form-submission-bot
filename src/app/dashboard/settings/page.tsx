@@ -34,6 +34,12 @@ const settingsItems = [
     icon: "\u25a6",
   },
   {
+    href: "/dashboard/settings/sites",
+    label: "Sites",
+    description: "Each site's Floor Plans V2 collection against the standard \u2014 add what a site lacks",
+    icon: "\u2317",
+  },
+  {
     href: "/dashboard/audit",
     label: "Audit Log",
     description: "View system events and routing history",

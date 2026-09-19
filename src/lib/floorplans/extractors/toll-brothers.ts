@@ -163,6 +163,9 @@ function normalizeQmi(q: TollModel): NormalizedPlan {
     planKey: normKey(name),
     name,
     quickMoveIn: true,
+    // The base plan: Toll's modelName ("Lori" for "17547 Palmiste Dr"); the
+    // shared masterPlanID ties it to the base plan's row as well.
+    relatedPlanName: q.modelName?.trim() || null,
     raw: {
       ...base.raw,
       relatedPlan: q.modelName ?? null,

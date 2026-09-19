@@ -86,6 +86,10 @@ export interface WixCollectionField {
   key: string;
   displayName?: string;
   type?: string;
+  /** For REFERENCE fields, { reference: { referencedCollectionId } }. */
+  typeMetadata?: unknown;
+  systemField?: boolean;
+  [extra: string]: unknown;
 }
 
 export interface WixDataCollection {
@@ -94,6 +98,9 @@ export interface WixDataCollection {
   fields: WixCollectionField[];
   permissions?: Record<string, unknown>;
   plugins?: unknown[];
+  /** Wix's optimistic lock: an update must carry the revision it read. */
+  revision?: string | number;
+  [extra: string]: unknown;
 }
 
 /** A collection's schema, or null when the site has no collection by that id. */
@@ -110,6 +117,20 @@ export async function getDataCollection(siteId: string, collectionId: string): P
     if (error instanceof WixApiError && error.status === 404) return null;
     throw error;
   }
+}
+
+/**
+ * Replaces a collection's definition: fields added, relabeled or removed
+ * (removing a field deletes its data). The whole collection object goes
+ * back, revision included; Wix refuses a stale revision. Used by the Hub's
+ * Settings → Sites align action (the phase 2 script used the same call to
+ * add the blueprint gallery field on 2026-07-02).
+ */
+export async function updateDataCollection(siteId: string, collection: WixDataCollection): Promise<WixDataCollection> {
+  const res = await wixRequest<{ collection?: WixDataCollection }>(siteId, "PUT", "/wix-data/v2/collections", { collection });
+  const updated = res?.collection;
+  if (!updated) throw new Error("Wix returned no collection after the update");
+  return { ...updated, fields: updated.fields ?? [] };
 }
 
 const draftsParam = "publishPluginOptions.includeDraftItems=true";
