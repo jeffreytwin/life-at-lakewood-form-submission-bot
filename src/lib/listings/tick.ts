@@ -4,6 +4,23 @@
 // headroom under the function limit. State the tick needs across
 // invocations lives in system_settings.ls_engine_state, the same shape as
 // the floor plan nightly.
+//
+// DO NOT MAKE THIS HOURLY. The interval is not just how often an incremental
+// runs -- the incremental is due on its own 55-minute clock either way. It is
+// how often a tick is free to do anything ELSE, and everything else rides an
+// idle tick: a full cycle too big for one budget (nine passes at today's
+// size), a discovery scan, the photo backlog. decideMode checks `incremental`
+// BEFORE the full cursor, so with ticks exactly 60 minutes apart the
+// incremental is due at every one of them and the cursor is never reached:
+// the nightly would do one pass a day and never finish, taking silent
+// disappearance detection and the broken-photo audit with it. Nothing would
+// look wrong -- the sites would keep updating from the hourly.
+//
+// Whatever the interval, at least one tick an hour must fall inside the
+// 55-minute window. 15 minutes leaves three, so the nightly's nine passes
+// take about three hours. It was */5 from 2026-09-15 to 2026-09-19 to drive
+// the Parrish, Wellen Park and Lakewood photo backfills; put it back to */5
+// while onboarding a new site, then return it here.
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
