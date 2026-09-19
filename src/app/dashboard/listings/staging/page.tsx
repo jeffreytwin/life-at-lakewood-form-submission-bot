@@ -38,6 +38,13 @@ const WAITING: Record<WaitingOn, { label: string; cls: string; help: string }> =
   data: { label: "MLS data", cls: "badge badge-muted", help: "Seeded from the site before the pull reached it; the next pull fills it in." },
 };
 const ORDER: WaitingOn[] = ["write", "photos", "neighborhood", "data"];
+/**
+ * Rows drawn at once. The whole staged set already arrives in one response --
+ * it is the table that gets slow, not the fetch -- so a page of it keeps the
+ * DOM small. Life At Lakewood staged 417 listings in an hour on 2026-09-18
+ * and the page crawled.
+ */
+const PAGE_SIZE = 50;
 
 export default function ListingsStagingPage() {
   // useSearchParams needs a Suspense boundary on a statically rendered page.
@@ -59,6 +66,7 @@ function StagingView() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [waiting, setWaiting] = useState<WaitingOn | "">("");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetch("/api/internal/listings/status")
@@ -114,7 +122,7 @@ function StagingView() {
     { write: 0, photos: 0, neighborhood: 0, data: 0 } as Record<WaitingOn, number>
   );
   const needle = search.trim().toLowerCase();
-  const visible = rows.filter(
+  const matching = rows.filter(
     (r) =>
       (!waiting || r.waiting_on === waiting) &&
       (!needle ||
@@ -123,6 +131,12 @@ function StagingView() {
         (r.neighborhood ?? "").toLowerCase().includes(needle) ||
         (r.subdivision ?? "").toLowerCase().includes(needle))
   );
+  const pageCount = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  // Clamped, not reset: a filter that shrinks the set below the page you are
+  // on lands you at the end of it rather than on an empty table.
+  const current = Math.min(page, pageCount);
+  const first = (current - 1) * PAGE_SIZE;
+  const visible = matching.slice(first, first + PAGE_SIZE);
 
   return (
     <div>
@@ -149,7 +163,7 @@ function StagingView() {
       >
         <label>
           Location{" "}
-          <select value={siteId} onChange={(e) => setSiteId(e.target.value)} className="form-input" style={{ width: "auto", display: "inline-block" }}>
+          <select value={siteId} onChange={(e) => { setSiteId(e.target.value); setPage(1); }} className="form-input" style={{ width: "auto", display: "inline-block" }}>
             {sites.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
@@ -157,7 +171,7 @@ function StagingView() {
         </label>
         <label>
           Waiting on{" "}
-          <select value={waiting} onChange={(e) => setWaiting(e.target.value as WaitingOn | "")} className="form-input" style={{ width: "auto", display: "inline-block" }}>
+          <select value={waiting} onChange={(e) => { setWaiting(e.target.value as WaitingOn | ""); setPage(1); }} className="form-input" style={{ width: "auto", display: "inline-block" }}>
             <option value="">All</option>
             {ORDER.map((k) => (
               <option key={k} value={k}>{WAITING[k].label}</option>
@@ -169,7 +183,7 @@ function StagingView() {
           style={{ width: 260, display: "inline-block" }}
           placeholder="Find a listing, address or neighborhood"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         />
         <span style={{ flex: 1 }} />
         {site && liveUrl && (
@@ -197,7 +211,7 @@ function StagingView() {
                 className="stat-card"
                 aria-pressed={selected}
                 title={selected ? "Show every staged listing" : `Show only listings waiting on ${WAITING[k].label}`}
-                onClick={() => setWaiting(selected ? "" : k)}
+                onClick={() => { setWaiting(selected ? "" : k); setPage(1); }}
                 style={{ padding: 14, ...(selected ? { borderColor: "var(--accent)" } : {}) }}
               >
                 <div className="stat-label">Waiting on {WAITING[k].label}</div>
@@ -211,7 +225,7 @@ function StagingView() {
 
       {loading ? (
         <div className="empty-state">Loading…</div>
-      ) : visible.length === 0 ? (
+      ) : matching.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">✓</div>
           {rows.length === 0
@@ -268,11 +282,39 @@ function StagingView() {
               </tbody>
             </table>
           </div>
-          {visible.length !== rows.length && (
-            <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>
-              Showing {visible.length} of {rows.length} staged listing(s).
-            </p>
-          )}
+          <div
+            style={{ marginTop: 8, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
+          >
+            <span className="text-muted text-sm">
+              {matching.length === rows.length
+                ? `${first + 1}–${first + visible.length} of ${rows.length} staged listing(s)`
+                : `${first + 1}–${first + visible.length} of ${matching.length} matching, ${rows.length} staged in all`}
+            </span>
+            <span style={{ flex: 1 }} />
+            {pageCount > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={current <= 1}
+                  onClick={() => setPage(current - 1)}
+                >
+                  ← Previous
+                </button>
+                <span className="text-muted text-sm">
+                  Page {current} of {pageCount}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={current >= pageCount}
+                  onClick={() => setPage(current + 1)}
+                >
+                  Next →
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
