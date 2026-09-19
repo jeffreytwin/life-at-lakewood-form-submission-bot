@@ -45,6 +45,27 @@ nothing. No cutover report has ever been generated.
   connection URLs pre-seeded.
 - The approve route has `maxDuration = 300`, like the nightly tick.
 
+**Update 2026-09-19 (Toll Brothers first, per Jeff).**
+
+- Records carry `description`, `virtualTourUrl`, `virtualTourImage` and
+  `galleryMeta` (caption, room and origin per image); the write-back fills
+  `floorPlanDescription`, `virtualTourLink`, `virtualTourImageV2`, and puts
+  captions on gallery items as title and alt; both are diffed and editable
+  in the Hub.
+- Gallery ordering, first pass (`gallery-order.ts`): Jeff's room order,
+  read off captions, titles and file names; unplaced photos keep page
+  order before the exteriors. Applied by the Toll extractor; the vision
+  pass slots into the same sort later.
+- Toll Brothers reads each plan's own page for the captioned showcase
+  photos, its elevations as the exterior options, its walkthrough as the
+  Matterport share link (or InsideMaps link) with its still, and its
+  description. Where each piece lives: `pipeline/slice/DISCOVERY_NOTES.md`.
+- Settings → Builder Connections has **Reset**: removes a connection's
+  plans from Floor Plans V2 (drafts included) and the Hub, clears its run
+  history, keeps the imported photos. This is how the ten Toll drafts get
+  replaced: Reset, then Run, then approve.
+- The run route allows 300 s, since a Toll community is now a page per plan.
+
 **Known gaps, in the order they bite.**
 
 1. Imports are not verified after the fact. Wix's URL import is
@@ -52,14 +73,16 @@ nothing. No cutover report has ever been generated.
    once, but a fetch that fails later leaves an id with no picture behind
    it. The listings engine's `verified_at` pass (migration 053) is the
    model; it needs a background job, which the approve request is not.
-2. Extractors capture list-page images only: Toll Brothers 2 exterior
-   photos, Lennar hero and elevations, Taylor Morrison 1 elevation,
-   Mattamy and the MPC aggregator 1 card image, the Claude engine whatever
-   the list page shows. Only Meritage and DRB return interiors. The legacy
-   galleries the freelancers built have median sizes of 6 (Lakewood), 16
-   (Parrish) and 12 (Wellen Park) with 158 / 297 / 110 plans over 10
-   photos, and `MAX_GALLERY_IMAGES` is 10. Per-plan detail-page fetches
-   come before any gallery ordering work.
+2. Most extractors capture list-page images only: Lennar hero and
+   elevations, Taylor Morrison 1 elevation, Mattamy and the MPC aggregator
+   1 card image, the Claude engine whatever the list page shows. Only
+   Meritage and DRB return interiors, and Toll Brothers since 2026-09-19
+   (see below). The legacy galleries the freelancers built have median
+   sizes of 6 (Lakewood), 16 (Parrish) and 12 (Wellen Park) with 158 / 297
+   / 110 plans over 10 photos; `MAX_GALLERY_IMAGES` is a 40-photo safety
+   bound until Jeff decides on a cap. Each remaining builder needs its own
+   look at where the photos, the exterior options and the virtual tour
+   live (Jeff: builder by builder, maybe community by community).
 3. Approval does the Wix work inside the request, one image at a time,
    and bulk approve sends one request per change. Full galleries need the
    listings engine's tick-and-budget pattern.

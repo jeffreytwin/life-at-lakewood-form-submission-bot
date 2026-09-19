@@ -221,3 +221,40 @@ landed). Interpretation:
 - Extractor extended + unit-tested against the committed Isles dumps
   (`__tests__/unit/floorplans/toll-brothers.test.ts`). QMIs are named by
   street address (Lennar convention), base plan in `raw.relatedPlan`.
+
+## Toll Brothers media — done on the community page, showcase on the plan page (2026-09-19)
+
+Jeff, picking the pipeline back up: the first slice imported only each
+plan's headshot (plus, by mistake, its blueprint SVG as a photo). Going
+builder by builder now, and possibly community by community later. Where
+Toll keeps each piece, all in `__NEXT_DATA__`:
+
+- **Primary picture**: `model.headShot.media.url` (title is the elevation
+  name, e.g. "Caribbean"); `model.media` repeats it.
+- **Exterior designs** (the "Unique Exteriors" strip): `model.elevations[]`
+  `{type: "image", url, title}` — Antilles, Caribbean, Island Colonial. The
+  one equal to the headshot is the primary; the rest go last in the gallery
+  as the "extra exterior options".
+- **Media Showcase** (captioned interior photos): `model.gallery.mediaGroups[]
+  .media[]` `{type: "image", url, description}`. **Null on the community
+  page for base models**; some quick move-ins carry it there. It lives on the
+  plan's own page, so `extractTollBrothers` now fetches each plan's
+  `sourceUrl` (four at a time) and merges it via `enrichPlanFromModelPage`.
+  Structure captured by `discover-toll-model.mjs` (dispatch the slice
+  workflow on the working branch) into `discovery/toll-model-*.pruned.json`.
+- **3D walkthrough**: `model.gallery.walkThroughs[].media`. Two shapes seen:
+  `{type: "walkthrough::matterport", link: "<model id>", url: <still>}`, and
+  `{type: "walkthrough", link: "https://www.insidemaps.com/app/walkthrough-v2/?projectId=…"}`.
+  Matterport ids become `https://my.matterport.com/show/?m=<id>&qs=1&play=1`,
+  the form the 122 Matterport tours already on lifeatlakewood.com use;
+  InsideMaps links are kept as given. The still becomes `virtualTourImageV2`.
+  Community-level `gallery.mediaGroups` also carries `video::MP4` and
+  `video::vimeo` entries; not used.
+- **Description**: `model.description` (about 700 characters of marketing
+  copy) → `floorPlanDescription`.
+- **Blueprints**: `model.floorplans[]` (SVG) → `floorPlanBluePrintGallery`.
+
+Gallery order (`src/lib/floorplans/gallery-order.ts`, first pass): headshot,
+then showcase photos by room read off their captions ("Gourmet kitchens…" →
+kitchen, "Open-concept great rooms…" → living, "Designed for outdoor
+enjoyment" → outdoor), unplaced photos in page order, exteriors last.
