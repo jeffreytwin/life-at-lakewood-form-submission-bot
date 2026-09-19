@@ -244,7 +244,7 @@ Longboat Key `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab`, Parrish
 `1a8c2755-823e-4882-ae32-e6c108a30e39`, Life At Lakewood
 `4fbabb96-2d6c-4f20-a240-9223153498b5` (that last one from `fp_sites`, where
 the floor-plan pipeline has held it since July). Cron
-`/api/cron/listings-tick` every 5 minutes; hourly incremental, nightly full
+`/api/cron/listings-tick` every 15 minutes; hourly incremental, nightly full
 after 03:00 UTC. Hub: `/dashboard/listings`. Run Full and Run Discovery post
 to `/api/internal/listings/run`, which calls `runReconcile` directly — so a
 Hub run saves the cursor but does **not** advance `lastFullDate`, nor clear
@@ -1279,7 +1279,7 @@ Drive it from the Hub instead. On the site card:
    photos it saw look broken, on the grounds that Wix changing its payload is
    likelier than a third of the library failing; that refusal is a finding,
    not a failure.
-3. Let a photo pass run (every 5 minutes; `POST
+3. Let a photo pass run (every 15 minutes; `POST
    /api/internal/listings/run` with `mode: "photos"` forces one), which
    re-imports what was cleared.
 4. Repeat until an audit comes back **untruncated**, `brokenFiles` 0 and
@@ -1291,7 +1291,7 @@ is not a clean one; it is an audit that did not finish.
 ### Step 1. Pick the moment
 
 No Velo timing to work around, so the only concern is not flipping mid-run.
-The tick is every 5 minutes, an incremental is due an hour after the last one
+The tick is every 15 minutes, an incremental is due an hour after the last one
 finished ok, and the nightly full starts at 03:00 UTC. Flip just after an
 incremental reports done in the Change Log, and not in the hour before 03:00
 — the nightly is the busiest run of the day and the 09-17 incident is what a
