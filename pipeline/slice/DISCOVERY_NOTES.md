@@ -255,6 +255,13 @@ Toll keeps each piece, all in `__NEXT_DATA__`:
   it via `enrichPlanFromModelPage`; a failed page leaves the community-page
   plan. The captioned images an API probe counts on a base plan are the
   community amenities (`amenities.amenityGroups[].media`), not the plan.
+  Confirmed on every base plan at The Isles (capture of 17:58 UTC): only
+  **Bianca Elite**, the decorated model, has a set (8 photos: terrace, living
+  room, kitchen, primary bedroom and bath, butler's pantry, dining room,
+  walk-in closet; 4 exterior designs; 2 drawings; Matterport `KN8aBBQRFkX`).
+  Bianca, Carver, Carver Elite, Kingsdale, Lori and Lori Elite have none.
+  **Avery is no longer listed** among the seven base plans, so some of the
+  July drafts are for plans Toll has dropped; Reset clears them.
 - **3D walkthrough**: `model.gallery.walkThroughs[].media`. Two shapes seen:
   `{type: "walkthrough::matterport", link: "<model id>", url: <still>}`, and
   `{type: "walkthrough", link: "https://www.insidemaps.com/app/walkthrough-v2/?projectId=…"}`.

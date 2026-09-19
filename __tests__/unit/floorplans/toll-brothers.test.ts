@@ -147,3 +147,28 @@ describe("hasShowcase", () => {
     expect(hasShowcase(enriched)).toBe(true);
   });
 });
+
+// Bianca Elite is The Isles' decorated model: the one base plan whose page
+// carries a Media Showcase (the captions in Jeff's 2026-09-19 screenshot),
+// four exterior designs, two drawings and a Matterport walkthrough.
+describe("Toll Brothers decorated model page", () => {
+  const page = dump("model-bianca-elite");
+  const bare: NormalizedPlan = {
+    planKey: "bianca-elite", name: "Bianca Elite", price: null, priceDisplay: null, beds: "", baths: "",
+    sqft: null, garages: null, homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null,
+    galleryImages: [], blueprintImages: [], raw: { commPlanID: 269887 },
+  };
+
+  it("orders the showcase by room, keeps both drawings, and takes the Matterport share link", () => {
+    const plan = enrichPlanFromModelPage(bare, page);
+    const rooms = plan.galleryImages.map((u) => plan.galleryMeta?.[u]?.room);
+    expect(rooms.slice(0, 9)).toEqual(["primary", "kitchen", "kitchen", "living", "dining", "outdoor", "bedroom", "bathroom", "closet"]);
+    expect(rooms.slice(9).length).toBeGreaterThanOrEqual(3);
+    expect(rooms.slice(9).every((r) => r === "exterior")).toBe(true);
+    expect(plan.galleryMeta?.[plan.galleryImages[1]]?.caption).toBe("Gourmet kitchens designed for both style and function");
+    expect(plan.blueprintImages).toHaveLength(2);
+    expect(plan.virtualTourUrl).toBe("https://my.matterport.com/show/?m=KN8aBBQRFkX&qs=1&play=1");
+    expect(plan.description).toBeTruthy();
+    expect(hasShowcase(plan)).toBe(true);
+  });
+});
