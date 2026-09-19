@@ -71,7 +71,7 @@ const qmis = [];
 for (const c of mc?.communities ?? []) for (const m of c?.homes?.models ?? []) for (const q of m?.qmis ?? []) if (q?.url) qmis.push(q.url);
 summary.master.basePlans = bases.length;
 summary.master.qmis = qmis.length;
-const targets = [...new Set([...bases.slice(0, 3), ...qmis.slice(0, 2)])];
+const targets = [...new Set([...bases.slice(0, 10), ...qmis.slice(0, 2)])];
 for (const url of targets) {
   const slug = 'toll-model-' + slugOf(url);
   try {

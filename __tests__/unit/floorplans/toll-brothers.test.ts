@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { enrichPlanFromModelPage, modelFromPlanPage, plansFromNextData } from "@/lib/floorplans/extractors/toll-brothers";
+import { enrichPlanFromModelPage, hasShowcase, modelFromPlanPage, plansFromNextData } from "@/lib/floorplans/extractors/toll-brothers";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // The pruned discovery dumps are real __NEXT_DATA__ captures from the
@@ -132,5 +132,18 @@ describe("Toll Brothers plan pages", () => {
 
   it("leaves a plan alone when the page is not its own", () => {
     expect(enrichPlanFromModelPage(bare, carverPage)).toBe(bare);
+  });
+});
+
+describe("hasShowcase", () => {
+  it("is true only for a plan the community page already gave interior photos", () => {
+    const plans = plansFromNextData(dump("isles-main"));
+    const avery = plans.find((p) => p.planKey === "avery")!;
+    expect(hasShowcase(avery)).toBe(false);
+    const enriched = enrichPlanFromModelPage(
+      { ...avery, planKey: "17547-palmiste-dr", name: "17547 Palmiste Dr", raw: { commPlanID: 286045 } },
+      dump("qmi-lori")
+    );
+    expect(hasShowcase(enriched)).toBe(true);
   });
 });

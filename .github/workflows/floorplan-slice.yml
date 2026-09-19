@@ -39,6 +39,10 @@ jobs:
         continue-on-error: true
         run: npm i --no-save playwright && npx playwright install --with-deps chromium
 
+      - name: Capture Toll Brothers plan pages
+        continue-on-error: true
+        run: node pipeline/slice/discover-toll-model.mjs
+
       - name: Probe the Toll Brothers model API and capture a plan page's own calls
         continue-on-error: true
         run: node pipeline/slice/discover-toll-api.mjs

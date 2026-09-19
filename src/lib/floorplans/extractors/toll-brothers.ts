@@ -267,14 +267,20 @@ async function fetchNextData(url: string): Promise<unknown> {
 /** Plan pages read at once; Toll's CDN-fronted site answers these in about a second each. */
 const PAGE_CONCURRENCY = 4;
 
+/** Whether the community page already gave this plan showcase photos (beyond its headshot and exteriors). */
+export const hasShowcase = (plan: NormalizedPlan): boolean =>
+  Object.values(plan.galleryMeta ?? {}).some((m) => m.kind === "photo");
+
 export async function extractTollBrothers(params: {
   url?: string;
 }): Promise<NormalizedPlan[]> {
   if (!params?.url) throw new Error("toll-brothers extractor requires extractor_params.url");
   const plans = plansFromNextData(await fetchNextData(params.url));
   if (!plans.length) throw new Error("no models found in __NEXT_DATA__ (page structure changed?)");
-  // Each plan's own page carries the captioned showcase photos. A page
-  // that fails leaves that plan with what the community page gave it.
+  // A plan's own page carries its captioned showcase photos when it has
+  // a set (quick move-ins already carry theirs in the community page, so
+  // they are not read again). A page that fails leaves that plan with
+  // what the community page gave it.
   const enriched = [...plans];
   let next = 0;
   await Promise.all(
@@ -284,7 +290,7 @@ export async function extractTollBrothers(params: {
         next += 1;
         if (index >= plans.length) return;
         const plan = plans[index];
-        if (!plan.sourceUrl) continue;
+        if (!plan.sourceUrl || hasShowcase(plan)) continue;
         try {
           enriched[index] = enrichPlanFromModelPage(plan, await fetchNextData(plan.sourceUrl));
         } catch {
