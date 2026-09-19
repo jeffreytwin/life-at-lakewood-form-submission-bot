@@ -112,8 +112,8 @@ function NeighborhoodsView() {
           <h2>Neighborhoods</h2>
           <p className="text-muted">
             One section per location. A listing joins a neighborhood when its MLS subdivision contains one of the neighborhood&apos;s
-            terms; the longest matching term wins, and a street qualifier makes a term match only on that street. Changes apply on
-            the next run.
+            terms; the longest matching term wins, a street qualifier makes a term match only on that street, and an exclusion takes
+            the match back when the subdivision contains that too. Changes apply on the next run.
           </p>
         </div>
       </div>
@@ -145,7 +145,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [termInputs, setTermInputs] = useState<Record<string, { term: string; street: string }>>({});
+  const [termInputs, setTermInputs] = useState<Record<string, { term: string; street: string; exclude: string }>>({});
   const [showNew, setShowNew] = useState(false);
   const [form, setForm] = useState<NeighborhoodForm>(emptyForm());
   const [editing, setEditing] = useState<{ id: string; form: NeighborhoodForm } | null>(null);
@@ -236,13 +236,13 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
   }
 
   async function addTerm(neighborhood: Neighborhood) {
-    const input = termInputs[neighborhood.id] ?? { term: "", street: "" };
+    const input = termInputs[neighborhood.id] ?? { term: "", street: "", exclude: "" };
     if (!input.term.trim()) return;
     const ok = await call(`term:${neighborhood.id}`, `/api/internal/listings/villages/${neighborhood.id}/terms`, {
       method: "POST",
-      body: JSON.stringify({ term: input.term, street_term: input.street || null }),
+      body: JSON.stringify({ term: input.term, street_term: input.street || null, exclude_term: input.exclude || null }),
     });
-    if (ok) setTermInputs((t) => ({ ...t, [neighborhood.id]: { term: "", street: "" } }));
+    if (ok) setTermInputs((t) => ({ ...t, [neighborhood.id]: { term: "", street: "", exclude: "" } }));
   }
 
   function removeTerm(neighborhood: Neighborhood, term: Term) {
@@ -376,7 +376,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                 </thead>
                 <tbody>
                   {visible.map((v) => {
-                    const input = termInputs[v.id] ?? { term: "", street: "" };
+                    const input = termInputs[v.id] ?? { term: "", street: "", exclude: "" };
                     const hasListings = v.liveListings + v.stagedListings > 0;
                     return (
                       <tr key={v.id} style={v.active ? undefined : { opacity: 0.6 }}>
@@ -432,6 +432,17 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                               placeholder="street (optional)"
                               value={input.street}
                               onChange={(e) => setTermInputs((t) => ({ ...t, [v.id]: { ...input, street: e.target.value } }))}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") addTerm(v);
+                              }}
+                            />
+                            <input
+                              className="form-input"
+                              style={{ width: 150, display: "inline-block" }}
+                              placeholder="but not… (optional)"
+                              title={`An exclusion takes the match back when the subdivision also contains this. Life At Lakewood's "esplanade ph" excludes "azario", so Esplanade Golf & Country Club does not swallow Azario's Esplanade.`}
+                              value={input.exclude}
+                              onChange={(e) => setTermInputs((t) => ({ ...t, [v.id]: { ...input, exclude: e.target.value } }))}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") addTerm(v);
                               }}
@@ -510,7 +521,18 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                         </tr>
                       </thead>
                       <tbody>
-                        {unmatched.groups.map((g) => {
+                        {/*
+                          A-Z by subdivision: this list is read to find a name,
+                          not to rank it. The records with no subdivision at all
+                          go last -- they are a special case, not a name.
+                        */}
+                        {[...unmatched.groups]
+                          .sort((a, b) =>
+                            !a.subdivision || !b.subdivision
+                              ? Number(!a.subdivision) - Number(!b.subdivision)
+                              : a.subdivision.localeCompare(b.subdivision)
+                          )
+                          .map((g) => {
                           const input = attach[g.subdivision] ?? { villageId: "", term: "" };
                           return (
                             <tr key={g.subdivision || "(none)"}>

@@ -335,14 +335,6 @@ export default function ListingsOverviewPage() {
     );
   }
 
-  function toggleSiteUpdates(site: Site, on: boolean) {
-    const what = on
-      ? `Resume listing updates for ${site.name}? The next run writes everything due for it.`
-      : `Pause listing updates for ${site.name}? Runs keep pulling and classifying for it, but nothing is written to Wix for it until updates are resumed.`;
-    if (!confirm(what)) return;
-    call(`site:${site.id}`, `/api/internal/listings/sites/${site.id}`, { method: "PATCH", body: JSON.stringify({ write_mode: on ? "shadow" : "paused" }) });
-  }
-
   function dismissErrors(body: { ids?: string[]; all?: boolean }) {
     if (body.all && !confirm(`Dismiss all ${status?.openErrors ?? ""} open error(s)? They stay in the Change Log, marked dismissed.`)) return;
     call(body.all ? "dismiss:all" : `dismiss:${body.ids?.[0] ?? ""}`, "/api/internal/listings/errors", { method: "POST", body: JSON.stringify(body) });
@@ -469,17 +461,33 @@ export default function ListingsOverviewPage() {
                 {state.lastMode ? ` (${modeLabel(state.lastMode)}, ${state.lastStatus ?? "?"})` : ""}
                 {state.lastFullDate ? ` · last full ${state.lastFullDate}` : ""}
               </span>
-              <span style={{ flex: 1 }} />
-              <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("incremental")}>
-                {busy === "run:incremental" ? "Running…" : "Run Hourly"}
-              </button>
-              <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("full")}>
-                {busy === "run:full" ? "Running…" : "Run Full"}
-              </button>
-              <button className="btn btn-secondary" disabled={busy !== null} onClick={() => runNow("discover")} title="Find Active listings in a location's market that the engine does not hold yet (a new location's starting inventory)">
-                {busy === "run:discover" ? "Running…" : "Run Discovery"}
-              </button>
             </div>
+            {/*
+              Starting a run by hand is for onboarding a location and for
+              putting something right, not for a normal day: the schedule
+              covers the hourly pull and the nightly verify on its own. Folded
+              away so the page reads as status rather than as a control panel,
+              and one click from open when it is needed.
+            */}
+            <details style={{ marginTop: 12 }}>
+              <summary className="text-muted text-sm" style={{ cursor: "pointer" }}>
+                Maintenance
+              </summary>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 10 }}>
+                <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => runNow("incremental")}>
+                  {busy === "run:incremental" ? "Running…" : "Run Hourly"}
+                </button>
+                <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => runNow("full")}>
+                  {busy === "run:full" ? "Running…" : "Run Full"}
+                </button>
+                <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => runNow("discover")} title="Find Active listings in a location's market that the engine does not hold yet (a new location's starting inventory)">
+                  {busy === "run:discover" ? "Running…" : "Run Discovery"}
+                </button>
+                <span className="text-muted text-sm">
+                  The schedule already runs these; start one by hand only to onboard a location or to put something right.
+                </span>
+              </div>
+            </details>
             {lastResult && (
               <p className="text-sm" style={{ marginTop: 12, marginBottom: 0 }}>
                 <strong>Result:</strong> {lastResult}
@@ -521,8 +529,6 @@ export default function ListingsOverviewPage() {
           {status.sites.map((site) => {
             const mode = writeModeBadge(site.write_mode);
             const colors = siteColors(site.domain);
-            const siteUpdatesOn = site.write_mode !== "paused";
-            const live = site.write_mode === "live";
             const liveUrl = wixCollectionUrl(site.wix_site_id, site.target_collection_id);
             return (
               <div
@@ -544,31 +550,31 @@ export default function ListingsOverviewPage() {
                         {busy === "held" ? "Applying…" : `Apply ${site.counts.pendingRemovals} held removal(s)`}
                       </button>
                     )}
-                    <Toggle
-                      size="sm"
-                      on={siteUpdatesOn}
-                      label="Listing Updates"
-                      action={
-                        live
-                          ? "A live site is cut over or rolled back by editing ls_sites, not from here"
-                          : siteUpdatesOn
-                            ? "Pause Listing Updates"
-                            : "Resume Listing Updates"
-                      }
-                      disabled={busy !== null || live}
-                      onChange={(on) => toggleSiteUpdates(site, on)}
-                    />
                     <Link href={`/dashboard/listings/neighborhoods?siteId=${encodeURIComponent(site.id)}`} className="btn btn-secondary btn-sm">
                       Neighborhoods
                     </Link>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      disabled={busy !== null || !site.wix_site_id}
-                      onClick={() => runAudit(site)}
-                      title="Check that every photo the engine wrote is in the site's Media Manager folder, and list collection rows the engine does not own"
-                    >
-                      {busy === `audit:${site.id}` ? "Auditing…" : "Audit photos & rows"}
-                    </button>
+                    {/*
+                      The audit is housekeeping -- it reads the site's Media
+                      Manager folder and its collection, and the repairs it
+                      offers (fetch broken photos again, delete rows the engine
+                      does not own) hang off its result. Folded away with the
+                      runs above for the same reason.
+                    */}
+                    <details>
+                      <summary className="text-muted text-sm" style={{ cursor: "pointer" }}>
+                        Maintenance
+                      </summary>
+                      <div style={{ marginTop: 8 }}>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          disabled={busy !== null || !site.wix_site_id}
+                          onClick={() => runAudit(site)}
+                          title="Check that every photo the engine wrote is in the site's Media Manager folder, and list collection rows the engine does not own"
+                        >
+                          {busy === `audit:${site.id}` ? "Auditing…" : "Audit photos & rows"}
+                        </button>
+                      </div>
+                    </details>
                   </div>
                 </div>
                 <div className="stats-grid" style={{ marginBottom: 0 }}>
