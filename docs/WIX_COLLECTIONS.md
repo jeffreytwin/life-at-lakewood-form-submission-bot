@@ -126,6 +126,109 @@ Verified item lifecycle (probe run 2026-07-02, test items cleaned up):
   `slug`, `fileName` and `settings.{width,height,focalPoint}`, which the CMS
   fills in itself.
 
+## Quick move-ins: how Wellen Park and Parrish file them (read 2026-09-19)
+
+Jeff's standard for every site, read from the two legacy `FloorPlans`
+collections cached in `fp_legacy_items` (Wellen Park 329 rows, Parrish 829).
+
+- **A quick move-in is its own row.** 130 of Wellen Park's 329 rows and 363
+  of Parrish's 829 are quick move-ins; all but two are named by their street
+  address (`floorPlanName` = "10694 Tiger Lily Drive").
+- **It carries little.** Filled on a quick move-in row: `floorPlanName`,
+  `floorPlanPrice`, `builder` + `builder1` (reference), `village` +
+  `villages` (reference), one `floorPlanImage`, the dynamic page link and
+  `relatedFloorPlanQuickMoveInOnly`. Wellen Park also fills
+  `floorPlanDescription` with the builder's own text for that home; Parrish
+  leaves it blank. Blank on every quick move-in of both sites: bedrooms,
+  bathrooms, garages, square feet, home type, both galleries, the virtual
+  tour, the price tags, `quickMoveInAvailable`, the badge and the dot.
+- **`relatedFloorPlanQuickMoveInOnly` is the base plan's name, as text**,
+  not a reference: "Pearson A", "Bay Breeze". It matches a base plan row of
+  the same builder and village by name on 110 of 130 (Wellen Park) and 321
+  of 363 (Parrish); the rest are the freelancers' typos and variants
+  ("Almafi" for Amalfi, "Terrace - Carolina"), which is why the pipeline
+  links by the builder's own plan id first and writes the base plan's exact
+  name.
+- **The base plan carries the flag and the dressing.** With quick move-ins:
+  `quickMoveInAvailable` = true, `newConstructionOrMoveIn` = "QUICK MOVE-INS
+  BELOW", `quickMoveInImage` = the badge (`28c2d7_1e474c9af37440efa879388e98
+  27b4a9~mv2.png`), `constructionDot` = `d0be81_f345a9c85f234f6b8f240bbdefa0
+  ed9b~mv2.png`; without: false, "NEW CONSTRUCTION", no badge, dot
+  `d0be81_ad8e51464ee34d4b86f4b80584e8367a~mv2.png`. The four move together
+  on every row of both sites (200 plans on Parrish, 66 on Wellen Park). The
+  freelancers lag: 62 Parrish and 14 Wellen Park base plans have quick
+  move-in rows under them but no flag. The pipeline derives the flag from
+  the run, so it cannot lag.
+- **Price tags** (`floorPlanPriceTags`, ARRAY_STRING) are one bracket per
+  plan: "$200s" through "$900s", "1M+", and "Custom Pricing" on Wellen Park
+  for a plan without a price. The pipeline derives them (`priceTagOf`).
+- Lakewood's legacy collection has no quick move-in rows at all: 126 plans
+  carry the flag and badge with nothing filed under them, and its banner
+  text reads "READY FOR MOVE-IN". The Wellen Park / Parrish shape is what
+  the pipeline writes on every site.
+
+The pipeline's mapping (`quick-move-ins.ts`, `writeback.ts`): a quick
+move-in record carries `relatedPlanKey` / `relatedPlanName`, tied by the
+engine's own key, else the builder's plan id (Toll's `masterPlanID`), else
+the plan's name; its Wix row is the address, price, builder, village, one
+picture, description and `relatedFloorPlanQuickMoveInOnly`. A base plan
+record carries `hasQuickMoveIns`, written as the four markers plus the price
+tag. Every row also carries the `builder1` and `villages` references,
+looked up by title in the site's Builders collection ("Toll Brothers") and
+its villages collection (`HousesforSale-DynamicPages`, "The Isles"); a
+name with no item behind it is logged and the row goes out without the
+reference. An update reads the Wix item first and sends back the fields
+the pipeline does not own, because Wix's update replaces the whole item.
+
+## Schemas compared across sites (2026-09-19)
+
+`scripts/floorplan-wix-schema-snapshot.mjs` (a prebuild step on the working
+branch, like the legacy import) caches every active site's collection
+schemas (Floor Plans V2, the legacy FloorPlans, Builders, the villages
+collection) in `fp_collection_schemas` (migration 066) and the Floor Plans
+V2 items in `fp_legacy_items`. The Hub's Settings → Sites page reads the
+same collections live, diffs each against the reference site (Wellen Park
+by default) and aligns them: missing fields added and shared fields
+relabeled with one click, extra fields removed only on a separate confirmed
+click, a field whose type differs reported and left alone (Wix cannot
+retype a field in place; it would have to be dropped and re-created). The
+rules are in `src/lib/floorplans/collection-schema.ts`.
+
+Findings from the snapshot of 2026-09-19 19:38 UTC:
+
+- **The three Floor Plans V2 collections are identical**: 38 fields each,
+  revision 3, the same keys, types and labels. They were created together
+  on 2026-07-02 from the Parrish baseline with the warts fixed, and nothing
+  has touched them since but the blueprint gallery field. There is nothing
+  for Lakewood's V2 to change toward the other two.
+- **Wellen Park's and Parrish's legacy Floor Plans collections are not the
+  same.** Parrish has six fields Wellen Park lacks (`estimatedBuildTime`,
+  `estimatedUpgradesOrChanges`, `estimatedBuildTimeTags`, `publishDate`,
+  `unpublishDate` as TEXT, `score1`), and its `score` is an ARRAY_STRING
+  labeled "Status" while Wellen Park's `score` is the NUMBER labeled
+  "Score" (Parrish keeps the number in `score1`). Parrish labels `village`
+  and `villages` "Neighborhood", Wellen Park "Village". Everything else
+  matches key for key, and V2 carries all of it: V2 is Wellen Park's 24
+  data fields plus Parrish's three estimate fields, the blueprint gallery
+  and `syncKey`, `sourceUrl`, `lastSyncedAt`. Parrish's publish and
+  unpublish dates and `score1` were dropped on purpose (Wix's own
+  draft/publish state and one numeric `score` replace them).
+- **What a person sees differ in the CMS is the labels.** V2's labels are
+  the raw keys ("FloorPlanImage", "RelatedFloorPlanQuickMoveInOnly"); the
+  legacy collections read "Primary Image", "Primary Image + Rest of
+  Images", "Related Floor Plan (Quick Move-In Only)", "Floor Plan Price
+  (Tags)". Settings → Sites can take the labels from a site's own legacy
+  collection and relabel V2 in one click, per site, so each keeps its own
+  wording ("Village" on Lakewood and Wellen Park, "Neighborhood" on
+  Parrish).
+- The legacy collections also carry `link-floor-plans-floorPlanName`, the
+  dynamic page link Wix adds when a dynamic page is built on a collection.
+  V2 gets its own when its dynamic pages are created in the editor at
+  cutover; the API cannot add it.
+- The legacy `Builders` collections differ slightly by site (22, 21 and 23
+  fields) and the villages collection (`HousesforSale-DynamicPages`) is
+  116 to 129 fields wide; both are cached here for the reference fields.
+
 ## Supabase seed state
 
 `fp_sites` seeded with the three sites (wix_site_id + legacy_collection_id),

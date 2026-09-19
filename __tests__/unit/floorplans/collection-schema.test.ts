@@ -60,6 +60,17 @@ describe("alignedFields", () => {
     expect(fields.map((f) => f.key)).toContain("_owner");
   });
 
+  it("can add without relabeling, or relabel without adding", () => {
+    const addOnly = alignedFields(reference, target, { relabel: false });
+    expect(addOnly.added).toEqual(["notes"]);
+    expect(addOnly.relabeled).toEqual([]);
+    expect(addOnly.fields.find((f) => f.key === "floorPlanName")?.displayName).toBe("Plan name");
+    const relabelOnly = alignedFields(reference, target, { add: false });
+    expect(relabelOnly.added).toEqual([]);
+    expect(relabelOnly.relabeled).toEqual(["floorPlanName"]);
+    expect(relabelOnly.fields.map((f) => f.key)).not.toContain("notes");
+  });
+
   it("carries a reference field's target collection along", () => {
     const { fields } = alignedFields(reference, [{ key: "floorPlanName", type: "TEXT" }]);
     expect(fields.find((f) => f.key === "builder1")).toEqual({

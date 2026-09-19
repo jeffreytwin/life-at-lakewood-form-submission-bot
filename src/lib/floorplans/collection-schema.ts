@@ -97,22 +97,31 @@ export interface Alignment {
   relabeled: string[];
 }
 
+export interface AlignOptions {
+  /** Append the reference's missing fields (default). */
+  add?: boolean;
+  /** Take the reference's label for every shared field (default). */
+  relabel?: boolean;
+  /** Drop the target's extra fields, which deletes their data on every item: only when asked. */
+  removeExtra?: boolean;
+}
+
 /**
- * The field list that makes the target match the reference. Adding is the
- * default; removing a field deletes its data on every item, so extras go
- * only when asked. A field whose type differs is left alone either way.
+ * The field list that makes the target match the reference, for the
+ * chosen steps. A field whose type differs is left alone either way.
  */
 export function alignedFields(
   reference: FieldSpec[],
   target: FieldSpec[],
-  { removeExtra = false }: { removeExtra?: boolean } = {}
+  { add = true, relabel: relabelWanted = true, removeExtra = false }: AlignOptions = {}
 ): Alignment {
   const diff = diffFields(reference, target);
   const removeKeys = new Set(removeExtra ? diff.extra.map((f) => f.key) : []);
-  const relabel = new Map(diff.relabeled.map((r) => [r.key, r.to] as const));
+  const relabel = new Map(relabelWanted ? diff.relabeled.map((r) => [r.key, r.to] as const) : []);
   const fields = target
     .filter((f) => !removeKeys.has(f.key))
     .map((f) => (relabel.has(f.key) ? { ...f, displayName: relabel.get(f.key) } : f));
-  for (const f of diff.missing) fields.push(fieldToAdd(f));
-  return { fields, added: diff.missing.map((f) => f.key), removed: [...removeKeys], relabeled: [...relabel.keys()] };
+  const added = add ? diff.missing.map((f) => f.key) : [];
+  if (add) for (const f of diff.missing) fields.push(fieldToAdd(f));
+  return { fields, added, removed: [...removeKeys], relabeled: [...relabel.keys()] };
 }

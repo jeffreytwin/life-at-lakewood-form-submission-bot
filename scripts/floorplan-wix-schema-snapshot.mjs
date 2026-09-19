@@ -132,10 +132,14 @@ try {
         log(`${site.domain}/${collectionId}: schema snapshot failed: ${err?.message ?? err}`);
       }
     }
-    try {
-      await cacheItems(site, v2);
-    } catch (err) {
-      log(`${site.domain}/${v2}: item cache failed: ${err?.message ?? err}`);
+    // The V2 items, and the Builders and villages items the reference
+    // fields (builder1, villages) point at.
+    for (const collectionId of [v2, 'Builders', VILLAGES_COLLECTION]) {
+      try {
+        await cacheItems(site, collectionId);
+      } catch (err) {
+        log(`${site.domain}/${collectionId}: item cache failed: ${err?.message ?? err}`);
+      }
     }
   }
 } catch (err) {

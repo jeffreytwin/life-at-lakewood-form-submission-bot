@@ -19,6 +19,7 @@ import {
   insertItem,
   updateItem,
   removeItem,
+  queryItems,
   importMediaFromUrl,
   mediaState,
   WixApiError,
@@ -226,26 +227,93 @@ async function importRecordMedia(
   return { gallery: gallery.items, blueprints: blueprints.items, tourImage };
 }
 
+/** The Builders and villages collections the reference fields point at, as every site names them. */
+const BUILDERS_COLLECTION = "Builders";
+const VILLAGES_COLLECTION = "HousesforSale-DynamicPages";
+
+/** Wix item ids found by title, kept for the life of the process (a serverless invocation); only hits are kept. */
+const referenceCache = new Map<string, string>();
+
+/**
+ * The _id of the item titled `title` in one of a site's collections, for the
+ * builder1 and villages references every Wellen Park and Parrish row carries
+ * (the Builders item "Toll Brothers", the village "The Isles"). An exact
+ * title first, then a contains-match whose normalized title is the same, or
+ * the only match. Null when there is no such item or the lookup fails: the
+ * row is then written without the reference, and one set by hand survives
+ * the read-merge on update.
+ */
+async function referenceIdOf(wixSiteId: string, collectionId: string, title: string): Promise<string | null> {
+  const wanted = title.trim();
+  if (!wanted) return null;
+  const cacheKey = `${wixSiteId}|${collectionId}|${wanted.toLowerCase()}`;
+  const cached = referenceCache.get(cacheKey);
+  if (cached) return cached;
+  try {
+    let { items } = await queryItems(wixSiteId, collectionId, { filter: { title: { $eq: wanted } }, limit: 1 });
+    if (!items.length) {
+      const loose = await queryItems(wixSiteId, collectionId, { filter: { title: { $contains: wanted } }, limit: 10 });
+      const same = loose.items.filter((it) => normKey(String(it.data?.title ?? "")) === normKey(wanted));
+      items = same.length ? same : loose.items.length === 1 ? loose.items : [];
+    }
+    const id = items[0]?.id ?? (typeof items[0]?.data?._id === "string" ? items[0].data._id : null);
+    if (!id) {
+      logger.warn("No Wix item to reference by title", { collectionId, title: wanted });
+      return null;
+    }
+    referenceCache.set(cacheKey, id);
+    return id;
+  } catch (error) {
+    logger.warn("Wix reference lookup failed", {
+      collectionId,
+      title: wanted,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+interface PlanReferences {
+  builderId: string | null;
+  villageId: string | null;
+}
+
+/** The builder1 and villages references for a row: the site's Builders item and village page item, by name. */
+async function referencesFor(wixSiteId: string, builderName: string, communityName: string): Promise<PlanReferences> {
+  const [builderId, villageId] = await Promise.all([
+    referenceIdOf(wixSiteId, BUILDERS_COLLECTION, builderName),
+    referenceIdOf(wixSiteId, VILLAGES_COLLECTION, communityName),
+  ]);
+  return { builderId, villageId };
+}
+
+interface WixRowContext {
+  communityName: string;
+  builderName: string;
+  gallery: GalleryItem[];
+  blueprints: GalleryItem[];
+  tourImage: string | null;
+  /** Quick move-ins: the name the base plan's own row carries. */
+  basePlanName: string | null;
+  refs: PlanReferences;
+}
+
 /**
  * The Wix row for a record. A base plan carries everything; a quick move-in
  * carries its address, price, one picture, description and the name of its
  * base plan, and nothing else, the way Wellen Park and Parrish keep them
- * (docs/WIX_COLLECTIONS.md, "Quick move-ins").
+ * (docs/WIX_COLLECTIONS.md, "Quick move-ins"). Both carry the builder and
+ * village as text and as references.
  */
-function toWixData(
-  rec: ProposedRecord,
-  communityName: string,
-  builderName: string,
-  gallery: GalleryItem[],
-  blueprints: GalleryItem[],
-  tourImage: string | null = null,
-  basePlanName: string | null = null
-): WixItemData {
+function toWixData(rec: ProposedRecord, ctx: WixRowContext): WixItemData {
+  const { communityName, builderName, gallery, blueprints, tourImage, basePlanName, refs } = ctx;
   const shared: WixItemData = {
     floorPlanName: rec.name,
     floorPlanPrice: rec.priceDisplay ?? undefined,
     village: communityName,
     builder: builderName,
+    ...(refs.builderId ? { builder1: refs.builderId } : {}),
+    ...(refs.villageId ? { villages: refs.villageId } : {}),
     floorPlanDescription: rec.description?.trim() || undefined,
     sourceUrl: rec.sourceUrl ?? undefined,
     syncKey: [normKey(builderName), normKey(communityName), rec.planKey].join("/"),
@@ -355,7 +423,15 @@ export async function applyPendingChange(changeId: string): Promise<{
       const item = await insertItem(
         site.wix_site_id,
         site.wix_collection_id,
-        toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage, await basePlanNameOf(scope, rec)),
+        toWixData(rec, {
+          communityName: community.name,
+          builderName: builder.name,
+          gallery,
+          blueprints,
+          tourImage,
+          basePlanName: await basePlanNameOf(scope, rec),
+          refs: await referencesFor(site.wix_site_id, builder.name, community.name),
+        }),
         { asDraft }
       );
 
@@ -426,7 +502,15 @@ export async function applyPendingChange(changeId: string): Promise<{
       const current = await getItem(site.wix_site_id, site.wix_collection_id, wixRecordId);
       const data: WixItemData = {
         ...fieldsKeptFromWix(current?.data),
-        ...toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage, await basePlanNameOf(scope, rec)),
+        ...toWixData(rec, {
+          communityName: community.name,
+          builderName: builder.name,
+          gallery,
+          blueprints,
+          tourImage,
+          basePlanName: await basePlanNameOf(scope, rec),
+          refs: await referencesFor(site.wix_site_id, builder.name, community.name),
+        }),
       };
       let recreatedAsDraft = false;
       try {

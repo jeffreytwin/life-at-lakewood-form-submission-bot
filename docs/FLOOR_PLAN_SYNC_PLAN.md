@@ -92,6 +92,39 @@ nothing. No cutover report has ever been generated.
   quick move-in adds rejected on 2026-09-19 stay suppressed until their
   price changes or the connection is reset.
 
+**Update 2026-09-19, evening (one schema for every site; quick move-ins).**
+
+- Quick move-ins are filed the way Wellen Park and Parrish file them
+  (`docs/WIX_COLLECTIONS.md`, "Quick move-ins"): their own row named by
+  street address with a price, one picture, a description and the base
+  plan's name in `relatedFloorPlanQuickMoveInOnly`; the base plan carries
+  the flag, the banner text, the badge, the dot and the price tag.
+  `quick-move-ins.ts` ties each quick move-in to its base plan and flags
+  the base plans on every run, for every builder; the diff reviews a quick
+  move-in only on what its row shows; the queue reads "Quick move-in of
+  Lori" and warns when no base plan was found; the overlay edits the base
+  plan.
+- Every row carries the `builder1` and `villages` references the
+  freelancers set, looked up by title in the site's Builders and villages
+  collections. An update reads the Wix item first and sends back the
+  fields the pipeline does not own (score, notes, anything set by hand).
+  Wix's update replaces the whole item, so before this every approved
+  update would have wiped them.
+- Settings → **Sites** reads every site's Floor Plans V2 collection live
+  from Wix, diffs it against a reference collection (Wellen Park's V2 by
+  default; any site's V2 or legacy Floor Plans) and aligns it step by
+  step: add what a site lacks, take the reference's labels, take the labels
+  from the site's own legacy collection, or remove a site's extra fields
+  (confirmed separately). `scripts/floorplan-wix-schema-snapshot.mjs`
+  caches the schemas in `fp_collection_schemas` (migration 066) from a
+  preview build, for work without Wix credentials. **Finding:** the three
+  V2 collections are identical (38 fields, revision 3); Wellen Park's and
+  Parrish's legacy collections are not the same as each other (Parrish has
+  six more fields and uses `score` as a "Status" tag list); what differs
+  for a person is V2's raw-key labels. Details in `docs/WIX_COLLECTIONS.md`,
+  "Schemas compared across sites".
+- The whole review row opens the overlay.
+
 **Known gaps, in the order they bite.**
 
 1. Imports are not verified after the fact. Wix's URL import is
@@ -112,9 +145,12 @@ nothing. No cutover report has ever been generated.
 3. Approval does the Wix work inside the request, one image at a time,
    and bulk approve sends one request per change. Full galleries need the
    listings engine's tick-and-budget pattern.
-4. Quick move-ins are separate canonical records (`raw.relatedPlan`) but
-   the write-back never fills `relatedFloorPlanQuickMoveInOnly`, and the
-   extractors disagree on what `relatedPlan` holds (name vs URL slug).
+4. The `builder1` and `villages` references are looked up by title at
+   write time (since 2026-09-19); a builder or community whose name is not
+   an item title on that site goes out without the reference, with a
+   warning in the log. Lennar is "Lennar" in `fp_builders` and "Lennar
+   Homes" on some sites; check the Builders titles before onboarding a
+   builder, or the site's builder filter will not find its rows.
 5. Gallery diffs for `fetch_claude` builders may be noisy: the Claude
    engine's image-to-plan association can vary run to run. The pending
    dedupe keeps it to one row per plan; watch the queue when they run.
