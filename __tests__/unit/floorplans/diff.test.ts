@@ -73,6 +73,12 @@ describe("long text fields", () => {
     expect(describeText("   ")).toBe("");
   });
 
+  it("shows square feet with a thousands separator", () => {
+    expect(fieldChanges(plan({ sqft: 2443 }), plan({ sqft: 3908 }))).toEqual([
+      { field: "sqft", label: "sqft", oldValue: "2,443", newValue: "3,908" },
+    ]);
+  });
+
   it("diffs the virtual tour like any scalar", () => {
     const changes = fieldChanges(plan(), plan({ virtualTourUrl: "https://my.matterport.com/show/?m=HQYuPU2ve1n&qs=1&play=1" }));
     expect(changes).toEqual([{ field: "virtualTourUrl", label: "virtual tour", oldValue: "", newValue: "https://my.matterport.com/show/?m=HQYuPU2ve1n&qs=1&play=1" }]);

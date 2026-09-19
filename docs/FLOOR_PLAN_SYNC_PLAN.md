@@ -66,6 +66,32 @@ nothing. No cutover report has ever been generated.
   replaced: Reset, then Run, then approve.
 - The run route allows 300 s, since a Toll community is now a page per plan.
 
+**Update 2026-09-19, later (Jeff's first pass over the review queue).**
+
+- A plan's identity is builder + community + name (migration 065): two
+  builders with an "Aria" on one site, or one builder's plan in two
+  communities, no longer share a canonical row; the Wix row's `syncKey` is
+  builder/community/plan. Wix makes dynamic-page slugs unique on its own
+  (`the-aria`, `the-aria-1`).
+- The review queue shows **one row per plan** (`group-changes.ts`): the
+  queue still holds one row per changed field, so a rejection sticks to one
+  exact change, but a person approves or rejects the plan, and the write
+  happens once per plan (`POST /changes/bulk`). The edit overlay only
+  saves; approval is from the list. The main photo opens the overlay;
+  galleries reorder by drag and drop; hovering shows a picture large;
+  square feet carry a thousands separator.
+- Blueprints are appended to the end of the photo gallery on the site and
+  keep their own gallery too. Anything with a loft sorts right after stairs.
+- **Reset before re-running a builder whose Wix rows were deleted by hand.**
+  Deleting items in the CMS leaves the canonical rows behind, so the diff
+  proposes updates rather than adds and every approval 404s (WDE0073).
+  The write-back now re-creates an item Wix no longer has (as a draft in
+  draft mode) and treats a remove of a missing item as done, so nothing
+  strands; but Reset is still the clean path, and it also forgets the
+  scope's rejections. A rejection means "not this exact change": the nine
+  quick move-in adds rejected on 2026-09-19 stay suppressed until their
+  price changes or the connection is reset.
+
 **Known gaps, in the order they bite.**
 
 1. Imports are not verified after the fact. Wix's URL import is
