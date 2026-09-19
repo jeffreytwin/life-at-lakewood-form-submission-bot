@@ -988,3 +988,43 @@ describe("confirming Wix actually holds the picture", () => {
     expect(db.markSiteMediaVerified).not.toHaveBeenCalled();
   });
 });
+
+describe("fair queueing across sites", () => {
+  /**
+   * Jeff, 2026-09-19: Parrish, Longboat Key and Wellen Park each had new
+   * listings staged for more than twenty hours with no photo fetched. Life At
+   * Lakewood had staged 417 listings in one hour the previous afternoon, and
+   * the backlog was a single oldest-first queue MLS-wide, so every pass was
+   * entirely Lakewood's -- a shadow site nobody could see starving three live
+   * ones. ls_photo_backlog now interleaves by site (migration 064).
+   *
+   * The interleaving is SQL, so this holds the TypeScript end of it: the job
+   * groups the rows into a Map keyed by listing id, which preserves the order
+   * they arrived in, and works the listings one at a time in that order. A
+   * re-sort or a plain object here would quietly undo the fix.
+   */
+  const parrish: LsSite = { ...site, id: "site-par", name: "Life At Parrish", domain: "lifeatparrish.com", wix_site_id: "wix-par" };
+
+  it("works the listings in the order the backlog gave them, not one site at a time", async () => {
+    const interleaved = [
+      row("MFRLBK1", 1),
+      row("MFRPAR1", 1, { site_ids: [parrish.id] }),
+      row("MFRLBK2", 1),
+      row("MFRPAR2", 1, { site_ids: [parrish.id] }),
+    ];
+    vi.mocked(db.loadPhotoBacklog).mockResolvedValueOnce(interleaved);
+    const seen: string[] = [];
+    const deps = fakeDeps({
+      download: vi.fn(async (url: string) => {
+        const match = /images\/([^/]+)\//.exec(url);
+        if (match) seen.push(match[1]);
+        return { status: 200, bytes: new Uint8Array([1, 2, 3]), contentType: "image/jpeg", contentLength: null };
+      }),
+    });
+    const { handle } = fakeRun();
+
+    await runPhotoJob({ run: handle, deadline: NOW + 10 * MINUTE, sites: [site, parrish], deps });
+
+    expect(seen).toEqual(["MFRLBK1", "MFRPAR1", "MFRLBK2", "MFRPAR2"]);
+  });
+});

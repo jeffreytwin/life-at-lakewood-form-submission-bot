@@ -764,6 +764,21 @@ while porting `runSync`.
   allows one download per photo per hour: the seed step copies what the
   live gallery got, and the engine fetches only what it never did. A
   live-mode site has no other pipeline and no grace.
+- **Fair queueing (migration 064).** The pass is shared out by site, not
+  taken strictly oldest-first MLS-wide. Each listing is ranked within its own
+  site's queue, oldest first, and the pass takes every site's oldest, then
+  every site's second oldest, and so on -- the output is ordered that way
+  too, so a pass cut short by its deadline has still spread what it did.
+  A site with nothing waiting takes no slots and the rest absorb them, so
+  with only one site busy this is exactly the old behaviour. Before it,
+  Life At Lakewood's 417 listings staged inside one hour on 2026-09-18 were
+  older than everything that arrived after, and for twenty-three hours every
+  pass was entirely Lakewood's: eight listings on three live, public sites
+  went that long without a single photo. A pass of ten at 18:47 UTC the next
+  day went from `Lakewood 10, Longboat 0, Parrish 0, Wellen Park 0` to
+  `3 / 3 / 2 / 2`. Deliberately by site rather than live-before-shadow:
+  weighting live sites ahead would have fixed that morning and made the next
+  onboarding never finish.
 - **The pass.** Listing by listing: (1) a listing whose pending downloads
   have no URL under 50 minutes old is re-read from MLSGrid with the others
   in its page (one verify-by-id request per 50 listings) and its media rows
