@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
+import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
 
 interface GalleryMeta {
   caption?: string | null;
@@ -92,6 +93,26 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
 }
 
 const pendingIds = (g: Group) => g.rows.filter((r) => r.status === "pending").map((r) => r.id);
+const isQuickMoveIn = (g: Group) => g.lead.proposed_record?.quickMoveIn === true;
+
+/**
+ * Phones and tablets: there is no hover, and a press-and-hold starts a
+ * drag, so the hover preview and drag-and-drop are switched off there
+ * (Jeff, 2026-09-19); the arrows do the reordering.
+ */
+const COARSE_POINTER = "(hover: none), (pointer: coarse)";
+function subscribeToPointer(onChange: () => void) {
+  const mq = window.matchMedia(COARSE_POINTER);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+function useCoarsePointer(): boolean {
+  return useSyncExternalStore(
+    subscribeToPointer,
+    () => window.matchMedia(COARSE_POINTER).matches,
+    () => false
+  );
+}
 
 /**
  * One gallery in the edit overlay. Photos move by drag and drop or by the
@@ -113,6 +134,7 @@ function GalleryEditor({
   onPreview: (p: Preview | null) => void;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const coarse = useCoarsePointer();
   if (list.length === 0) return null;
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
@@ -123,7 +145,7 @@ function GalleryEditor({
     <div className="form-group">
       <label>{label}</label>
       <p className="text-muted" style={{ fontSize: 11, margin: "0 0 6px" }}>
-        Drag a picture to where it belongs, or use the arrows. Hover to see it large.
+        {coarse ? "Use the arrows to move a picture." : "Drag a picture to where it belongs, or use the arrows. Hover to see it large."}
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {list.map((url, i) => {
@@ -131,7 +153,7 @@ function GalleryEditor({
           return (
             <div
               key={url}
-              draggable
+              draggable={!coarse}
               onDragStart={() => setDragIndex(i)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -140,9 +162,11 @@ function GalleryEditor({
                 setDragIndex(null);
               }}
               onDragEnd={() => setDragIndex(null)}
-              onMouseEnter={() => onPreview({ src: url, caption: m?.caption })}
+              onMouseEnter={() => {
+                if (!coarse) onPreview({ src: url, caption: m?.caption });
+              }}
               onMouseLeave={() => onPreview(null)}
-              style={{ position: "relative", textAlign: "center", cursor: "grab", opacity: dragIndex === i ? 0.4 : 1 }}
+              style={{ position: "relative", textAlign: "center", cursor: coarse ? "default" : "grab", opacity: dragIndex === i ? 0.4 : 1 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -186,6 +210,9 @@ export default function FloorPlansPage() {
   const [changes, setChanges] = useState<PendingChange[]>([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [siteFilter, setSiteFilter] = useState("all");
+  const [kindFilter, setKindFilter] = useState<"all" | "plans" | "qmi">("all");
+  const [troubled, setTroubled] = useState<TroubledConnection[]>([]);
+  const coarse = useCoarsePointer();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Set<string>>(new Set());
@@ -224,6 +251,20 @@ export default function FloorPlansPage() {
     fetchTasks();
   }, [fetchTasks]);
 
+  // Builder connections whose last run failed, for the banner.
+  const fetchHealth = useCallback(() => {
+    fetch("/api/internal/floorplans/builders")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setTroubled(troubledConnections(data));
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchHealth();
+  }, [fetchHealth]);
+
   const fetchChanges = useCallback(() => {
     fetch(`/api/internal/floorplans/changes?status=${statusFilter}`)
       .then((r) => r.json())
@@ -248,11 +289,20 @@ export default function FloorPlansPage() {
     [changes]
   );
   // One row per plan: the queue holds one row per changed field.
-  const groups = useMemo(
+  const siteGroups = useMemo(
     () => groupChanges(changes.filter((c) => siteFilter === "all" || c.fp_sites?.domain === siteFilter)),
     [changes, siteFilter]
   );
+  // Floor plans only, quick move-ins only, or both (Jeff, 2026-09-19).
+  const groups = useMemo(
+    () => siteGroups.filter((g) => (kindFilter === "all" ? true : kindFilter === "qmi" ? isQuickMoveIn(g) : !isQuickMoveIn(g))),
+    [siteGroups, kindFilter]
+  );
   const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0), [groups]);
+  const pendingQuickMoveIns = useMemo(
+    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g)),
+    [siteGroups]
+  );
 
   /** Approves or rejects every pending row of a plan; reports a failed write instead of hiding it in the Failed filter. */
   async function act(group: Group, action: "approve" | "reject", quiet = false): Promise<boolean> {
@@ -341,13 +391,14 @@ export default function FloorPlansPage() {
     }
   }
 
-  async function bulkApprove() {
-    if (!confirm(`Approve all ${pendingGroups.length} visible plans? Approved new plans are written to Wix as drafts.`)) return;
+  /** Approves a set of plans one after another: every visible plan, or every quick move-in. */
+  async function approveGroups(list: Group[], what: string) {
+    if (!confirm(`Approve ${list.length} ${what}? Approved new plans are written to Wix as drafts.`)) return;
     setBulkBusy(true);
     const failed: string[] = [];
     const blocked: string[] = [];
     try {
-      for (const g of pendingGroups) {
+      for (const g of list) {
         const name = g.lead.proposed_record?.name ?? g.lead.plan_key;
         if (approvalBlocker(g.kind, g.lead.proposed_record)) {
           blocked.push(name);
@@ -379,10 +430,24 @@ export default function FloorPlansPage() {
             {" "}<a href="/dashboard/floor-plans/cutover">Cutover report →</a>
           </p>
         </div>
-        {statusFilter === "pending" && pendingGroups.length > 0 && (
-          <button className="btn btn-primary" onClick={bulkApprove} disabled={bulkBusy}>
-            {bulkBusy ? "Approving…" : `Approve All (${pendingGroups.length})`}
-          </button>
+        {statusFilter === "pending" && (pendingGroups.length > 0 || pendingQuickMoveIns.length > 0) && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {pendingQuickMoveIns.length > 0 && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => approveGroups(pendingQuickMoveIns, "quick move-ins")}
+                disabled={bulkBusy}
+                title="Every pending quick move-in on the selected site(s), whatever the view shows"
+              >
+                {bulkBusy ? "Approving…" : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
+              </button>
+            )}
+            {pendingGroups.length > 0 && (
+              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy}>
+                {bulkBusy ? "Approving…" : `Approve All (${pendingGroups.length})`}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -407,7 +472,44 @@ export default function FloorPlansPage() {
             ))}
           </select>
         </label>
+        <label>
+          Show{" "}
+          <select
+            value={kindFilter}
+            onChange={(e) => setKindFilter(e.target.value as "all" | "plans" | "qmi")}
+            className="form-input"
+            style={{ width: "auto", display: "inline-block" }}
+          >
+            <option value="all">Floor plans and quick move-ins</option>
+            <option value="plans">Floor plans only</option>
+            <option value="qmi">Quick move-ins only</option>
+          </select>
+        </label>
       </div>
+
+      {troubled.length > 0 && (
+        <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid #ef4444" }}>
+          <strong>⚠ Builder sites needing attention</strong>
+          <p className="text-muted text-sm" style={{ margin: "4px 0 0" }}>
+            These connections failed their last run: an error, no plans at all, or far fewer plans than last time.
+            Nothing is removed from a site on such a run. Open the builder&apos;s page to see what changed, then Run again
+            from Builder Connections; a fixed page clears this on its next good run.
+          </p>
+          {troubled.map((t) => (
+            <div key={t.id} className="text-sm" style={{ marginTop: 8 }}>
+              <strong>{t.builder} · {t.community}</strong>
+              <span className="text-muted">
+                {" "}· {t.domain} · {t.failures} run{t.failures === 1 ? "" : "s"} in a row
+                {t.lastRunAt ? ` · ${new Date(t.lastRunAt).toLocaleString()}` : ""}
+              </span>
+              <div className="text-muted">{t.status}</div>
+            </div>
+          ))}
+          <div style={{ marginTop: 8 }}>
+            <a href="/dashboard/settings/builders" className="text-sm">Builder Connections →</a>
+          </div>
+        </div>
+      )}
 
       {tasks.length > 0 && (
         <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid #f59e0b" }}>
@@ -488,7 +590,9 @@ export default function FloorPlansPage() {
                             type="button"
                             title={isPending ? "Edit this plan before approving" : `${photoCount} photos`}
                             onClick={() => (isPending ? openEdit(g) : window.open(thumb, "_blank", "noopener"))}
-                            onMouseEnter={() => setPreview({ src: thumb, caption: rec?.galleryMeta?.[thumb]?.caption })}
+                            onMouseEnter={() => {
+                              if (!coarse) setPreview({ src: thumb, caption: rec?.galleryMeta?.[thumb]?.caption });
+                            }}
                             onMouseLeave={() => setPreview(null)}
                             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
                           >

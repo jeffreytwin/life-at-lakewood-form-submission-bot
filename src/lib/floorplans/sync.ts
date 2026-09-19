@@ -25,6 +25,7 @@ import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
+import { describeCoverage } from "@/lib/floorplans/coverage";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -79,7 +80,8 @@ function resolveExtractor(builderName: string, method: string | null): Extractor
 }
 
 interface RunResult {
-  status: "ok" | "failed" | "skipped";
+  /** partial: plans came back, but far fewer than last time (coverage.ts); counted as a failure, removals held. */
+  status: "ok" | "partial" | "failed" | "skipped";
   detail: string;
   plans?: number;
   queued?: number;
@@ -305,9 +307,8 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   // Removal guard: plan must have been missing since before this run
   // (last_seen_at > 24h old) and the scrape must cover >= 60% of the last
   // known plan count.
-  const coverageOk =
-    !conn.last_plan_count || plans.length >= 0.6 * conn.last_plan_count;
-  if (coverageOk) {
+  const coverage = describeCoverage(plans.length, conn.last_plan_count);
+  if (coverage.ok) {
     const cutoff = Date.now() - 24 * 60 * 60 * 1000;
     for (const c of canonical ?? []) {
       if (scrapedKeys.has(c.plan_key)) continue;
@@ -323,8 +324,13 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     }
   }
 
-  const detail = `ok: ${plans.length} plans, ${queued} changes queued`;
-  await setRunStatus(conn.id, detail, plans.length, false);
+  // A shortfall is the usual sign of a builder page that changed shape, so
+  // it is recorded as a failure and shows up wherever failures do (the
+  // Floor Plans banner, Builder Connections, the digest).
+  const detail = coverage.ok
+    ? `ok: ${plans.length} plans, ${queued} changes queued`
+    : `${coverage.detail}; ${queued} changes queued`;
+  await setRunStatus(conn.id, detail, plans.length, !coverage.ok);
   // First successful run marks the connection nightly-eligible.
   await supabase
     .from("fp_builder_communities")
@@ -334,5 +340,5 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   logger.info("Floor plan connection run complete", {
     connectionId, builder: builder.name, community: community.name, plans: plans.length, queued,
   });
-  return { status: "ok", detail, plans: plans.length, queued };
+  return { status: coverage.ok ? "ok" : "partial", detail, plans: plans.length, queued };
 }
