@@ -1,0 +1,3794 @@
+{
+ "pageProps": {
+  "componentType": "SearchComponent",
+  "eventSlug": null,
+  "isSearchPage": true,
+  "searchResults": {
+   "hasPerfect": false,
+   "hasSuggested": false,
+   "onlyQDHSearch": false,
+   "onlyBTSSearch": false,
+   "onlyDecoratedSearch": false,
+   "includePlans": false,
+   "isModelSearch": false,
+   "onlyRentalSearch": false,
+   "allSearch": false,
+   "stateSearch": true,
+   "countySearch": false,
+   "geoSearch": false,
+   "radialSearch": false,
+   "advanceSearch": false,
+   "jsonSearchParams": "{\"validInput\":true,\"locationOnly\":false,\"incOnlyMetro\":false,\"state\":[\"FL\"],\"ex_c_type\":[\"Rental\",\"Student Housing\",\"Storybook\",\"Storybook\"],\"onlineOnly\":true,\"incSuggest\":\"n\",\"formerDecorated\":false,\"bts\":\"y\",\"decorated\":\"y\",\"qdh\":\"y\",\"hasPlanWalkthrough\":\"N\",\"DAF\":\"N\"}",
+   "sortType": "default",
+   "perfect": [
+    {
+     "@type": "CommunitySearchItem",
+     "options": [
+      {
+       "id": "93",
+       "name": "DYOH V2"
+      }
+     ],
+     "position": 5,
+     "isMaster": false,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bartram-Ranch",
+     "description": "Imbued with the region’s traditional, historic Florida ambiance, Bartram Ranch includes a variety of home designs featuring large yards and open space between the homes. The community offers easy accessibility to a myriad of shopping and dining options, Atlantic Ocean beaches, and downtown Jacksonvi…(406)",
+     "name": "Bartram Ranch",
+     "distance": 18.86383056268048,
+     "title": "Bartram Ranch is a picturesque neighborhood featuring all-new architecture on oversized home sites built with Toll Brothers' commitment to quality, value, and craftsmanship.",
+     "lowestMatchingPrice": "696,995",
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/13236/images-resized/Bartram-Ranch_Delmonico-Coastal_Exterior_05_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/13236/images-resized/Bartram-Ranch_Delmonico-Coastal_Exterior_05_1800.jpg"
+       },
+       "multimediaId": 456439,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/13236/images-resized/Bartram-Ranch_Delmonico-Coastal_Exterior_05_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/13236/images-resized/Bartram-Ranch_Delmonico-Coastal_Exterior_05_920.jpg"
+       },
+       "description": "Beautiful architecture",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/13236/images-resized/Bartram-Ranch_Delmonico-Coastal_Exterior_05_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 377109,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/13236/logo-resized/Bartram-Ranch-bw.svg"
+      },
+      "name": ""
+     },
+     "lat": "30.059375",
+     "lon": "-81.642571",
+     "communityId": 13236,
+     "state": "FL",
+     "city": "St. Johns",
+     "county": "St. Johns",
+     "pricedFrom": "696,995",
+     "phone": "904-595-2300",
+     "headerTitle": "Bartram Ranch is a picturesque neighborhood featuring all-new architecture on oversized home sites built with Toll Brothers' commitment to quality, value, and craftsmanship. Imbued with the region’s",
+     "oscPhone": "844-871-7466",
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Luxury Home"
+     ],
+     "homeProperties": [
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4164,
+       "minHalfbath": 1,
+       "maxSqft": 4164,
+       "minGarage": "4",
+       "pricedFrom": 1149000,
+       "isQdh": true,
+       "name": "Julington Coastal",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "12/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 3956,
+       "minHalfbath": 1,
+       "maxSqft": 3956,
+       "minGarage": "4",
+       "pricedFrom": 983000,
+       "isQdh": true,
+       "name": "Julington Traditional",
+       "maxBed": 4,
+       "maxBath": 4,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4164,
+       "minHalfbath": 1,
+       "maxSqft": 4164,
+       "minGarage": "4",
+       "pricedFrom": 1026000,
+       "isQdh": true,
+       "name": "Julington Craftsman",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "4/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 5,
+       "minSqft": 4474,
+       "minHalfbath": 1,
+       "maxSqft": 4474,
+       "minGarage": "3",
+       "pricedFrom": 1169000,
+       "isQdh": true,
+       "name": "Delmonico Traditional",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4467,
+       "minHalfbath": 0,
+       "maxSqft": 4467,
+       "minGarage": "3",
+       "pricedFrom": 1239000,
+       "isQdh": true,
+       "name": "Westbrook Coastal",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 5,
+       "minSqft": 4794,
+       "minHalfbath": 1,
+       "maxSqft": 4794,
+       "minGarage": "3",
+       "pricedFrom": 1269000,
+       "isQdh": true,
+       "name": "Abigail Traditional",
+       "maxBed": 4,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 5,
+       "minSqft": 4790,
+       "minHalfbath": 1,
+       "maxSqft": 4790,
+       "minGarage": "3",
+       "pricedFrom": 1083000,
+       "isQdh": true,
+       "name": "Abigail Craftsman",
+       "maxBed": 4,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 3751,
+       "minHalfbath": 1,
+       "maxSqft": 3751,
+       "minGarage": "3",
+       "pricedFrom": 979000,
+       "isQdh": true,
+       "name": "Mayport Craftsman",
+       "maxBed": 4,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "12/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      "…(25 items total)"
+     ],
+     "isFuture": false,
+     "tSelect": false,
+     "highriseList": [],
+     "qdhList": [],
+     "modelList": [],
+     "hasExternalDomain": false,
+     "isMinPrice": false,
+     "childPosition": 0,
+     "partOfMaster": false,
+     "hasQdh": true,
+     "contactAtOnceJde": "6216",
+     "citySearchURL": "https://www.tollbrothers.com/luxury-homes/St.-Johns-FL",
+     "contactAtOnceRegion": 735,
+     "hasMatterport": true,
+     "hideScheduleTour": false,
+     "numQDH": 16,
+     "comingSoonQMICount": 0,
+     "zipCode": "32259",
+     "streetAddress": "27 Morning Mist Ln",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "schoolDistrict": "St. Johns County",
+     "pBedLoc": [
+      1
+     ],
+     "minBath": 3,
+     "maxBath": 5,
+     "minHalfBath": 0,
+     "maxHalfBath": 1,
+     "minBed": 3,
+     "maxBed": 6,
+     "minSqft": 2447,
+     "maxSqft": 4794,
+     "minGarage": "2",
+     "maxGarage": "4",
+     "prePlannedCount": 0,
+     "pMin": 696995,
+     "pMax": 1269000,
+     "communityFilters": [
+      "Commuter Friendly",
+      "Gated",
+      "Near Conveniences",
+      "Smart Home Features",
+      "Top-Rated Education"
+     ],
+     "numModel": 9,
+     "selfGuided": false,
+     "onlineDate": "2019-05-02",
+     "activeDate": "2020-03-23",
+     "truncatedDescription": "Bartram Ranch is a picturesque neighborhood featuring all-new architecture on oversized home sites built with Toll Brothers' commitment to quality, value, and craftsmanship. Imbued with the region’s",
+     "type": "CommunitySearchItem"
+    },
+    {
+     "@type": "MasterCommunitySearchItem",
+     "options": null,
+     "badgeText": null,
+     "badgeLink": null,
+     "position": 6,
+     "isMaster": true,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bellflower-at-Wildlight",
+     "description": "Situated in the exceptional Wildlight master plan just minutes from historic downtown Fernandina Beach, Bellflower at Wildlight is a new home community in Yulee, FL, featuring luxurious home designs and access to future resort-style amenities.",
+     "name": "Bellflower at Wildlight",
+     "distance": 21.61813317763223,
+     "title": "Situated in the exceptional Wildlight master plan just minutes from historic downtown Fernandina Beach, Bellflower at Wildlight is a new home community in Yulee, FL, featuring luxurious home designs and access to future resort-style amenities.",
+     "lowestMatchingPrice": "550,000",
+     "visible": null,
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/1049/images-resized/BartramRanch_DelmonicoCoastal_Kitchen_16-Enhanced_CC_RET_RGB_v4_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/1049/images-resized/BartramRanch_DelmonicoCoastal_Kitchen_16-Enhanced_CC_RET_RGB_v4_1800.jpg"
+       },
+       "multimediaId": 670502,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/1049/images-resized/BartramRanch_DelmonicoCoastal_Kitchen_16-Enhanced_CC_RET_RGB_v4_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/1049/images-resized/BartramRanch_DelmonicoCoastal_Kitchen_16-Enhanced_CC_RET_RGB_v4_920.jpg"
+       },
+       "description": "Open concept floor plans with oversized kitchen islands",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/1049/images-resized/BartramRanch_DelmonicoCoastal_Kitchen_16-Enhanced_CC_RET_RGB_v4_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 692970,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/masters/1049/logo-resized/Bellflower-at-Wildlight-logo-V-BLK.svg"
+      },
+      "name": ""
+     },
+     "lat": "30.644444",
+     "lon": "-81.630556",
+     "lowestPricedChild": null,
+     "communities": [
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "24",
+         "name": "Turn HBQ on for Future Community"
+        },
+        {
+         "id": "104",
+         "name": "Disable Status for Site Plans"
+        }
+       ],
+       "position": 6,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bellflower-at-Wildlight/Arbor-Collection",
+       "description": "Nestled in a serene, coastal setting, Bellflower at Wildlight - Arbor Collection showcases new homes in Yulee, FL. Ideally situated within the Garden District of the Wildlight master plan, this community offers residents a fresh and active lifestyle with access to resort-style amenities, including a…(836)",
+       "name": "Bellflower at Wildlight - Arbor Collection",
+       "distance": 0,
+       "title": "Bellflower at Wildlight - Arbor Collection is a community of luxury new homes in Yulee, FL, ranging from 1,802 to 2,497 sq. ft. within the serene Wildlight master plan and offering access to a variety of amenities.",
+       "lowestMatchingPrice": "550,000",
+       "metroId": 810,
+       "metroName": "Jacksonville",
+       "cpRegion": "FL-NORTH",
+       "images": [
+        {
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/15138/images-resized/RetreatatTownCenter_Ella_LivingRoom1_01_CC_RET_RGB_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/15138/images-resized/RetreatatTownCenter_Ella_LivingRoom1_01_CC_RET_RGB_1800.jpg"
+         },
+         "multimediaId": 665334,
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/15138/images-resized/RetreatatTownCenter_Ella_LivingRoom1_01_CC_RET_RGB_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/15138/images-resized/RetreatatTownCenter_Ella_LivingRoom1_01_CC_RET_RGB_920.jpg"
+         },
+         "description": "Bright and airy living spaces",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/15138/images-resized/RetreatatTownCenter_Ella_LivingRoom1_01_CC_RET_RGB_450.jpg"
+         },
+         "name": ""
+        }
+       ],
+       "lat": "30.644444",
+       "lon": "-81.630556",
+       "communityId": 15138,
+       "state": "FL",
+       "city": "Yulee",
+       "county": "Nassau",
+       "pricedFrom": "Mid-$500,000s",
+       "phone": "844-871-7466",
+       "headerTitle": "Bellflower at Wildlight - Arbor Collection is a community of luxury new homes in Yulee, FL, ranging from 1,802 to 2,497 sq. ft. within the serene Wildlight master plan and offering access to a variety of amenities",
+       "oscPhone": "844-871-7466",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Future Community"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2497,
+         "minHalfbath": 0,
+         "maxSqft": 2497,
+         "minGarage": "2",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Herrington",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          2
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2105,
+         "minHalfbath": 1,
+         "maxSqft": 2105,
+         "minGarage": "2",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Sparrow",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "2",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 1802,
+         "minHalfbath": 0,
+         "maxSqft": 1802,
+         "minGarage": "2",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "June",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 2414,
+         "minHalfbath": 0,
+         "maxSqft": 2414,
+         "minGarage": "2",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Ella",
+         "maxBed": 4,
+         "maxBath": 4,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": true,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 0,
+       "partOfMaster": true,
+       "hasQdh": false,
+       "contactAtOnceJde": "9527",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Yulee-FL",
+       "contactAtOnceRegion": 735,
+       "hasMatterport": false,
+       "hideScheduleTour": false,
+       "numQDH": 0,
+       "comingSoonQMICount": 0,
+       "zipCode": "32097",
+       "streetAddress": "Pages Dairy Rd & Bluebell Way",
+       "masterCommunityId": 1049,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "Nassau County",
+       "pBedLoc": [
+        1,
+        2
+       ],
+       "minBath": 2,
+       "maxBath": 4,
+       "minHalfBath": 0,
+       "maxHalfBath": 1,
+       "minBed": 3,
+       "maxBed": 4,
+       "minSqft": 1802,
+       "maxSqft": 2497,
+       "minGarage": "2",
+       "maxGarage": "2",
+       "mcname": "Bellflower at Wildlight",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bellflower-at-Wildlight",
+       "prePlannedCount": 0,
+       "communityFilters": [
+        "Master-planned Community",
+        "Nearby Beach Access",
+        "Outdoor Living",
+        "Serene Setting",
+        "Top-Rated Education"
+       ],
+       "anticipatedOpeningDate": "2026-08-17",
+       "numModel": 4,
+       "selfGuided": false,
+       "onlineDate": "2026-02-25",
+       "truncatedDescription": "Bellflower at Wildlight - Arbor Collection is a community of luxury new homes in Yulee, FL, ranging from 1,802 to 2,497 sq. ft. within the serene Wildlight master plan and offering access to a variety of amenities",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "24",
+         "name": "Turn HBQ on for Future Community"
+        },
+        {
+         "id": "104",
+         "name": "Disable Status for Site Plans"
+        }
+       ],
+       "position": 6,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bellflower-at-Wildlight/Bloom-Collection",
+       "description": "Bellflower at Wildlight - Bloom Collection showcases an impressive mix of comfort, ease, and excitement. Featuring new construction homes in Yulee, FL, this luxury community is wonderfully placed in the Garden District of the exceptional Wildlight master plan, giving residents access to premier amen…(837)",
+       "name": "Bellflower at Wildlight - Bloom Collection",
+       "distance": 0,
+       "title": "Situated in the serene Wildlight master plan just minutes from local beaches, shopping, and dining, Bellflower at Wildlight - Bloom Collection offers new construction homes in Yulee, FL, with fresh, modern floor plans from 2,457 to 3,000 square feet.",
+       "lowestMatchingPrice": "750,000",
+       "metroId": 810,
+       "metroName": "Jacksonville",
+       "cpRegion": "FL-NORTH",
+       "images": [
+        {
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/15139/images-resized/Newbrook_Barnwell_Elite_Outdoor_Living_1_CC_RET_RGB_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/15139/images-resized/Newbrook_Barnwell_Elite_Outdoor_Living_1_CC_RET_RGB_1800.jpg"
+         },
+         "multimediaId": 666730,
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/15139/images-resized/Newbrook_Barnwell_Elite_Outdoor_Living_1_CC_RET_RGB_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/15139/images-resized/Newbrook_Barnwell_Elite_Outdoor_Living_1_CC_RET_RGB_920.jpg"
+         },
+         "description": "Expansive outdoor living options",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/15139/images-resized/Newbrook_Barnwell_Elite_Outdoor_Living_1_CC_RET_RGB_450.jpg"
+         },
+         "name": ""
+        }
+       ],
+       "lat": "30.644444",
+       "lon": "-81.630556",
+       "communityId": 15139,
+       "state": "FL",
+       "city": "Yulee",
+       "county": "Nassau",
+       "pricedFrom": "Mid-$700,000s",
+       "phone": "844-871-7466",
+       "headerTitle": "Situated in the serene Wildlight master plan just minutes from local beaches, shopping, and dining, Bellflower at Wildlight - Bloom Collection offers new construction homes in Yulee, FL, with fresh, modern floor plans from 2,457 to 3,000 square feet",
+       "oscPhone": "844-871-7466",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Future Community"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2607,
+         "minHalfbath": 0,
+         "maxSqft": 2607,
+         "minGarage": "2",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Anastasia",
+         "maxBed": 5,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 2457,
+         "minHalfbath": 0,
+         "maxSqft": 2457,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Barnwell",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 2920,
+         "minHalfbath": 1,
+         "maxSqft": 2920,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Barnwell Elite",
+         "maxBed": 5,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          2
+         ]
+        },
+        {
+         "minBed": 5,
+         "minBath": 3,
+         "minSqft": 3000,
+         "minHalfbath": 0,
+         "maxSqft": 3000,
+         "minGarage": "2",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Kepler",
+         "maxBed": 6,
+         "maxBath": 4,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2866,
+         "minHalfbath": 0,
+         "maxSqft": 2866,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Bellflower",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": true,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 1,
+       "partOfMaster": true,
+       "hasQdh": false,
+       "contactAtOnceJde": "9528",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Yulee-FL",
+       "contactAtOnceRegion": 735,
+       "hasMatterport": false,
+       "hideScheduleTour": false,
+       "numQDH": 0,
+       "comingSoonQMICount": 0,
+       "zipCode": "32097",
+       "streetAddress": "Pages Dairy Rd & Bluebell Way",
+       "masterCommunityId": 1049,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "Nassau County",
+       "pBedLoc": [
+        1,
+        2
+       ],
+       "minBath": 2,
+       "maxBath": 4,
+       "minHalfBath": 0,
+       "maxHalfBath": 1,
+       "minBed": 3,
+       "maxBed": 6,
+       "minSqft": 2457,
+       "maxSqft": 3000,
+       "minGarage": "2",
+       "maxGarage": "3",
+       "mcname": "Bellflower at Wildlight",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bellflower-at-Wildlight",
+       "prePlannedCount": 0,
+       "communityFilters": [
+        "Master-planned Community",
+        "Nearby Beach Access",
+        "Outdoor Living",
+        "Socially Active",
+        "Top-Rated Education"
+       ],
+       "anticipatedOpeningDate": "2026-08-17",
+       "numModel": 5,
+       "selfGuided": false,
+       "onlineDate": "2026-02-25",
+       "truncatedDescription": "Situated in the serene Wildlight master plan just minutes from local beaches, shopping, and dining, Bellflower at Wildlight - Bloom Collection offers new construction homes in Yulee, FL, with fresh, modern floor plans from 2,457 to 3,000 square feet",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "24",
+         "name": "Turn HBQ on for Future Community"
+        },
+        {
+         "id": "104",
+         "name": "Disable Status for Site Plans"
+        }
+       ],
+       "position": 6,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bellflower-at-Wildlight/Flora-Collection",
+       "description": "Bellflower at Wildlight - Flora Collection delivers luxury living in a highly sought-after coastal setting. Showcasing luxury homes in Yulee, FL, this community features an impressive selection of home designs with elegant floor plans ranging from 2,888 to over 4,000 square feet, offering versatile …(768)",
+       "name": "Bellflower at Wildlight - Flora Collection",
+       "distance": 0,
+       "title": "Showcasing an impressive selection of homes in Yulee, FL, Bellflower at Wildlight - Flora Collection delivers elevated living in the exclusive Wildlight master plan close to highly ranked schools and historic downtown Fernandina Beach.",
+       "lowestMatchingPrice": "875,000",
+       "metroId": 810,
+       "metroName": "Jacksonville",
+       "cpRegion": "FL-NORTH",
+       "images": [
+        {
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/15140/images-resized/Palmetto_Cove_Mickler_Pool_4_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/15140/images-resized/Palmetto_Cove_Mickler_Pool_4_1800.jpg"
+         },
+         "multimediaId": 667405,
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/15140/images-resized/Palmetto_Cove_Mickler_Pool_4_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/15140/images-resized/Palmetto_Cove_Mickler_Pool_4_920.jpg"
+         },
+         "description": "Expansive outdoor living areas",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/15140/images-resized/Palmetto_Cove_Mickler_Pool_4_450.jpg"
+         },
+         "name": ""
+        }
+       ],
+       "lat": "30.644444",
+       "lon": "-81.630556",
+       "communityId": 15140,
+       "state": "FL",
+       "city": "Yulee",
+       "county": "Nassau",
+       "pricedFrom": "Upper $800,000s",
+       "phone": "844-871-7466",
+       "headerTitle": "Showcasing an impressive selection of homes in Yulee, FL, Bellflower at Wildlight - Flora Collection delivers elevated living in the exclusive Wildlight master plan close to highly ranked schools and historic downtown Fernandina Beach",
+       "oscPhone": "844-871-7466",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Future Community"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 4,
+         "minBath": 4,
+         "minSqft": 3985,
+         "minHalfbath": 1,
+         "maxSqft": 3985,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Mickler",
+         "maxBed": 5,
+         "maxBath": 5,
+         "maxGarage": "4",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 3653,
+         "minHalfbath": 1,
+         "maxSqft": 3653,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Karsen",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "4",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2888,
+         "minHalfbath": 1,
+         "maxSqft": 2888,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Samuel",
+         "maxBed": 5,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 3389,
+         "minHalfbath": 1,
+         "maxSqft": 3389,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Julington",
+         "maxBed": 6,
+         "maxBath": 4,
+         "maxGarage": "4",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": true,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 2,
+       "partOfMaster": true,
+       "hasQdh": false,
+       "contactAtOnceJde": "9733",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Yulee-FL",
+       "contactAtOnceRegion": 735,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 0,
+       "comingSoonQMICount": 0,
+       "zipCode": "32097",
+       "streetAddress": "Pages Dairy Rd & Bluebell Way",
+       "masterCommunityId": 1049,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "Nassau County",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 3,
+       "maxBath": 5,
+       "minHalfBath": 1,
+       "maxHalfBath": 1,
+       "minBed": 4,
+       "maxBed": 6,
+       "minSqft": 2888,
+       "maxSqft": 3985,
+       "minGarage": "3",
+       "maxGarage": "4",
+       "mcname": "Bellflower at Wildlight",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Bellflower-at-Wildlight",
+       "prePlannedCount": 0,
+       "communityFilters": [],
+       "anticipatedOpeningDate": "2026-08-18",
+       "numModel": 4,
+       "selfGuided": false,
+       "onlineDate": "2026-02-25",
+       "truncatedDescription": "Showcasing an impressive selection of homes in Yulee, FL, Bellflower at Wildlight - Flora Collection delivers elevated living in the exclusive Wildlight master plan close to highly ranked schools and historic downtown Fernandina Beach",
+       "type": "CommunitySearchItem"
+      }
+     ],
+     "county": "Nassau",
+     "pricedFrom": "Mid-$500,000s",
+     "masterCommunityId": 1049,
+     "schoolDistrict": "Nassau County",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "communityFilters": [],
+     "city": "Yulee",
+     "truncatedDescription": "Situated in the exceptional Wildlight master plan just minutes from historic downtown Fernandina Beach, Bellflower at Wildlight is a new home community in Yulee, FL, featuring luxurious home designs and access to future resort-style amenities.",
+     "numQDH": 0,
+     "pbedLoc": [
+      1,
+      2
+     ],
+     "pMin": null,
+     "pMax": null,
+     "state": "FL",
+     "type": "MasterCommunitySearchItem"
+    },
+    {
+     "@type": "CommunitySearchItem",
+     "options": [
+      {
+       "id": "93",
+       "name": "DYOH V2"
+      }
+     ],
+     "position": 7,
+     "isMaster": false,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Estuary-at-Madeira",
+     "description": "Discover your dream lifestyle at Estuary at Madeira, a gated new home community in St. Augustine, FL, offering luxury single-family homes placed within the highly desirable Madeira master plan. Nestled along the Intracoastal Waterway, this collection of modern one- and two-story home designs feature…(711)",
+     "name": "Estuary at Madeira",
+     "distance": 31.890301268335595,
+     "title": "Located minutes from pristine beaches and historic downtown, Estuary at Madeira is a gated new home community in St. Augustine, FL, offering beautiful single-family homes with picturesque lake and marsh views and easy access to established amenities.",
+     "lowestMatchingPrice": "894,995",
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/14798/images-resized/Estuary_at_Madeira__Santa_Maria_FrontExterior_1_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/14798/images-resized/Estuary_at_Madeira__Santa_Maria_FrontExterior_1_1800.jpg"
+       },
+       "multimediaId": 612558,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/14798/images-resized/Estuary_at_Madeira__Santa_Maria_FrontExterior_1_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/14798/images-resized/Estuary_at_Madeira__Santa_Maria_FrontExterior_1_920.jpg"
+       },
+       "description": "Expansive, luxury homes within a mature community",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/14798/images-resized/Estuary_at_Madeira__Santa_Maria_FrontExterior_1_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 488424,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/14798/logo-resized/EstuaryAtMadeira-Logo-BLK.svg"
+      },
+      "name": ""
+     },
+     "lat": "29.945716",
+     "lon": "-81.326765",
+     "communityId": 14798,
+     "state": "FL",
+     "city": "St. Augustine",
+     "county": "St. Johns",
+     "pricedFrom": "894,995",
+     "phone": "904-948-5655",
+     "headerTitle": "Located minutes from pristine beaches and historic downtown, Estuary at Madeira is a gated new home community in St. Augustine, FL, offering beautiful single-family homes with picturesque lake and marsh views and easy access to established amenities",
+     "oscPhone": "844-871-7466",
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Amenities/Resort"
+     ],
+     "homeProperties": [
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 2987,
+       "minHalfbath": 1,
+       "maxSqft": 2987,
+       "minGarage": "3",
+       "pricedFrom": 1049000,
+       "isQdh": true,
+       "name": "Aviles Craftsman",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "3/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 3028,
+       "minHalfbath": 0,
+       "maxSqft": 3028,
+       "minGarage": "3",
+       "pricedFrom": null,
+       "isQdh": true,
+       "name": "Brookhill Coastal",
+       "maxBed": 4,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "8/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4080,
+       "minHalfbath": 1,
+       "maxSqft": 4080,
+       "minGarage": "3",
+       "pricedFrom": 1189000,
+       "isQdh": true,
+       "name": "Juliette Coastal",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "3/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 5,
+       "minSqft": 4711,
+       "minHalfbath": 1,
+       "maxSqft": 4711,
+       "minGarage": "3",
+       "pricedFrom": 1299000,
+       "isQdh": true,
+       "name": "Topsail Craftsman",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "8/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 2905,
+       "minHalfbath": 1,
+       "maxSqft": 2905,
+       "minGarage": "3",
+       "pricedFrom": 894995,
+       "isQdh": false,
+       "name": "Aviles",
+       "maxBed": 5,
+       "maxBath": 3,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 3,
+       "minSqft": 2920,
+       "minHalfbath": 1,
+       "maxSqft": 2920,
+       "minGarage": "3",
+       "pricedFrom": 924995,
+       "isQdh": false,
+       "name": "Brookhill",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 3389,
+       "minHalfbath": 1,
+       "maxSqft": 3389,
+       "minGarage": "3",
+       "pricedFrom": 981995,
+       "isQdh": false,
+       "name": "Juliette",
+       "maxBed": 6,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 3985,
+       "minHalfbath": 1,
+       "maxSqft": 3985,
+       "minGarage": "3",
+       "pricedFrom": 1065995,
+       "isQdh": false,
+       "name": "Santa Maria",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      "…(9 items total)"
+     ],
+     "isFuture": false,
+     "tSelect": false,
+     "highriseList": [],
+     "qdhList": [],
+     "modelList": [],
+     "hasExternalDomain": false,
+     "isMinPrice": false,
+     "childPosition": 0,
+     "partOfMaster": false,
+     "hasQdh": true,
+     "contactAtOnceJde": "9056",
+     "citySearchURL": "https://www.tollbrothers.com/luxury-homes/St.-Augustine-FL",
+     "contactAtOnceRegion": 735,
+     "hasMatterport": true,
+     "hideScheduleTour": false,
+     "numQDH": 4,
+     "comingSoonQMICount": 0,
+     "zipCode": "32095",
+     "streetAddress": "620 Pantano Dr",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "schoolDistrict": "St. Johns County School District",
+     "pBedLoc": [
+      1
+     ],
+     "minBath": 3,
+     "maxBath": 5,
+     "minHalfBath": 0,
+     "maxHalfBath": 1,
+     "minBed": 3,
+     "maxBed": 6,
+     "minSqft": 2905,
+     "maxSqft": 4711,
+     "minGarage": "3",
+     "maxGarage": "4",
+     "prePlannedCount": 0,
+     "pMin": 894995,
+     "pMax": 1299000,
+     "communityFilters": [
+      "Integrated Retail",
+      "Low-Maintenance",
+      "Master-planned Community",
+      "Near Conveniences",
+      "Top-Rated Education"
+     ],
+     "numModel": 5,
+     "selfGuided": false,
+     "onlineDate": "2024-09-28",
+     "activeDate": "2025-03-22",
+     "truncatedDescription": "Located minutes from pristine beaches and historic downtown, Estuary at Madeira is a gated new home community in St. Augustine, FL, offering beautiful single-family homes with picturesque lake and marsh views and easy access to established amenities",
+     "type": "CommunitySearchItem"
+    },
+    {
+     "@type": "CommunitySearchItem",
+     "options": [],
+     "position": 8,
+     "isMaster": false,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Haven-at-Palm-Valley",
+     "description": "Haven at Palm Valley is a luxury community from Toll Brothers, showcasing ease and convenience within a serene coastal atmosphere. Ideally located within the esteemed St. Johns School District, this exclusive gated enclave of new construction homes in Ponte Vedra Beach, FL, offers a highly desirable…(788)",
+     "name": "Haven at Palm Valley",
+     "distance": 18.245090762974066,
+     "title": "Experience premier coastal living at Haven at Palm Valley, a luxury gated community of new construction homes in Ponte Vedra Beach, FL, offering expansive home designs in a secluded setting close to beautiful beaches and top-rated St. Johns schools.",
+     "lowestMatchingPrice": "1,449,995",
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/15132/images-resized/HavenPalmValley_Killian_GreatRoom_1_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/15132/images-resized/HavenPalmValley_Killian_GreatRoom_1_1800.jpg"
+       },
+       "multimediaId": 723910,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/15132/images-resized/HavenPalmValley_Killian_GreatRoom_1_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/15132/images-resized/HavenPalmValley_Killian_GreatRoom_1_920.jpg"
+       },
+       "description": "Bright great rooms with ample natural light",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/15132/images-resized/HavenPalmValley_Killian_GreatRoom_1_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 658424,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/15132/logo-resized/HavenAtPalmValley-Logo-BLK.svg"
+      },
+      "name": ""
+     },
+     "lat": "30.167019",
+     "lon": "-81.38707",
+     "communityId": 15132,
+     "state": "FL",
+     "city": "Ponte Vedra",
+     "county": "St. Johns",
+     "pricedFrom": "1,449,995",
+     "phone": "904-287-9050",
+     "headerTitle": "Experience premier coastal living at Haven at Palm Valley, a luxury gated community of new construction homes in Ponte Vedra Beach, FL, offering expansive home designs in a secluded setting close to beautiful beaches and top-rated St. Johns schools",
+     "oscPhone": "844-871-7466",
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Luxury Home"
+     ],
+     "homeProperties": [
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 3957,
+       "minHalfbath": 1,
+       "maxSqft": 3957,
+       "minGarage": "2.5",
+       "pricedFrom": 1629000,
+       "isQdh": true,
+       "name": "Crew Caribbean",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "2.5",
+       "maxHalfbath": 1,
+       "stories": [
+        "3"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "8/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4073,
+       "minHalfbath": 1,
+       "maxSqft": 4073,
+       "minGarage": "3",
+       "pricedFrom": 1873000,
+       "isQdh": true,
+       "name": "Juliette Farmhouse",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "10/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 3431,
+       "minHalfbath": 1,
+       "maxSqft": 3431,
+       "minGarage": "3",
+       "pricedFrom": 1649000,
+       "isQdh": true,
+       "name": "Killian Farmhouse",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "12/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 3478,
+       "minHalfbath": 1,
+       "maxSqft": 3478,
+       "minGarage": "3",
+       "pricedFrom": 1471995,
+       "isQdh": false,
+       "name": "Riberia",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        2
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 3957,
+       "minHalfbath": 1,
+       "maxSqft": 3957,
+       "minGarage": "2",
+       "pricedFrom": 1559995,
+       "isQdh": false,
+       "name": "Crew",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "3"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4073,
+       "minHalfbath": 1,
+       "maxSqft": 4073,
+       "minGarage": "3",
+       "pricedFrom": 1634995,
+       "isQdh": false,
+       "name": "Juliette",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        2
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 3257,
+       "minHalfbath": 0,
+       "maxSqft": 3257,
+       "minGarage": "3",
+       "pricedFrom": 1449995,
+       "isQdh": false,
+       "name": "Brookhill",
+       "maxBed": 4,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 3431,
+       "minHalfbath": 1,
+       "maxSqft": 3431,
+       "minGarage": "3",
+       "pricedFrom": 1493995,
+       "isQdh": false,
+       "name": "Killian",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        2
+       ]
+      }
+     ],
+     "isFuture": false,
+     "tSelect": false,
+     "highriseList": [],
+     "qdhList": [],
+     "modelList": [],
+     "hasExternalDomain": false,
+     "isMinPrice": false,
+     "childPosition": 0,
+     "partOfMaster": false,
+     "hasQdh": true,
+     "contactAtOnceJde": "9726",
+     "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Ponte-Vedra-FL",
+     "contactAtOnceRegion": 735,
+     "hasMatterport": true,
+     "hideScheduleTour": false,
+     "numQDH": 3,
+     "comingSoonQMICount": 0,
+     "zipCode": "32081",
+     "streetAddress": "62 Palm Spring Cove",
+     "stories": [
+      "1",
+      "2",
+      "3"
+     ],
+     "schoolDistrict": "St. Johns",
+     "pBedLoc": [
+      1,
+      2
+     ],
+     "minBath": 3,
+     "maxBath": 4,
+     "minHalfBath": 0,
+     "maxHalfBath": 1,
+     "minBed": 4,
+     "maxBed": 5,
+     "minSqft": 3257,
+     "maxSqft": 4073,
+     "minGarage": "2",
+     "maxGarage": "3",
+     "prePlannedCount": 0,
+     "pMin": 1449995,
+     "pMax": 1873000,
+     "communityFilters": [
+      "Gated",
+      "Nearby Beach Access",
+      "Outdoor Living",
+      "Serene Setting",
+      "Top-Rated Education"
+     ],
+     "anticipatedOpeningDate": "2026-06-12",
+     "numModel": 5,
+     "selfGuided": false,
+     "onlineDate": "2026-01-27",
+     "activeDate": "2026-05-14",
+     "truncatedDescription": "Experience premier coastal living at Haven at Palm Valley, a luxury gated community of new construction homes in Ponte Vedra Beach, FL, offering expansive home designs in a secluded setting close to beautiful beaches and top-rated St. Johns schools",
+     "type": "CommunitySearchItem"
+    },
+    {
+     "@type": "CommunitySearchItem",
+     "options": [
+      {
+       "id": "27",
+       "name": "Turn Yext on for Future Community"
+      }
+     ],
+     "badgeText": "New Home Designs Now Available",
+     "position": 9,
+     "isMaster": false,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Iron-Branch",
+     "description": "Nestled amid farmland and lush open space, Iron Branch is a gated community in St. Augustine, FL, featuring gorgeous homes set on expansive 1.5-acre home sites. Choose from a selection of modern one- and two-story home designs with over 3,700 square feet, bright open living areas, gourmet kitchens, …(830)",
+     "name": "Iron Branch",
+     "distance": 29.943435352640204,
+     "title": "Surrounded by lush natural landscapes, Iron Branch is a gated community in St. Augustine, FL, offering 1.5-acre home sites, expansive home designs with options for RV garages and multi-gen suites, and sophisticated finishes to personalize your home.",
+     "lowestMatchingPrice": "1,224,995",
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/14923/images-resized/IronBranch_Flint_Pool_1_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/14923/images-resized/IronBranch_Flint_Pool_1_1800.jpg"
+       },
+       "multimediaId": 690045,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/14923/images-resized/IronBranch_Flint_Pool_1_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/14923/images-resized/IronBranch_Flint_Pool_1_920.jpg"
+       },
+       "description": "Expansive 1.5 acre homesites",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/14923/images-resized/IronBranch_Flint_Pool_1_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 594982,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/14923/logo-resized/IronBranch-Logo-V-BLK.svg"
+      },
+      "name": ""
+     },
+     "lat": "29.909977",
+     "lon": "-81.528438",
+     "communityId": 14923,
+     "state": "FL",
+     "city": "St. Augustine",
+     "county": "St. Johns",
+     "pricedFrom": "1,224,995",
+     "phone": "904-639-4406",
+     "headerTitle": "Surrounded by lush natural landscapes, Iron Branch is a gated community in St. Augustine, FL, offering 1.5-acre home sites, expansive home designs with options for RV garages and multi-gen suites, and sophisticated finishes to personalize your home",
+     "oscPhone": "844-871-7466",
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Luxury Home"
+     ],
+     "homeProperties": [
+      {
+       "minBed": 5,
+       "minBath": 5,
+       "minSqft": 3805,
+       "minHalfbath": 1,
+       "maxSqft": 3805,
+       "minGarage": "3",
+       "pricedFrom": 1599000,
+       "isQdh": true,
+       "name": "Arcadia Classic",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "12/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 5,
+       "minSqft": 4826,
+       "minHalfbath": 1,
+       "maxSqft": 4826,
+       "minGarage": "3",
+       "pricedFrom": 1699000,
+       "isQdh": true,
+       "name": "Andrea Farmhouse",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "10/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 3749,
+       "minHalfbath": 1,
+       "maxSqft": 3749,
+       "minGarage": "3",
+       "pricedFrom": 1224995,
+       "isQdh": false,
+       "name": "Arcadia",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4710,
+       "minHalfbath": 1,
+       "maxSqft": 4710,
+       "minGarage": "3",
+       "pricedFrom": 1355995,
+       "isQdh": false,
+       "name": "Beckingham",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 4389,
+       "minHalfbath": 1,
+       "maxSqft": 4389,
+       "minGarage": "3",
+       "pricedFrom": 1318995,
+       "isQdh": false,
+       "name": "Flint",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        2
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 4177,
+       "minHalfbath": 1,
+       "maxSqft": 4177,
+       "minGarage": "3",
+       "pricedFrom": 1261995,
+       "isQdh": false,
+       "name": "Andrea",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 5659,
+       "minHalfbath": 1,
+       "maxSqft": 5659,
+       "minGarage": "4",
+       "pricedFrom": 1599995,
+       "isQdh": false,
+       "name": "Ironcrest",
+       "maxBed": 5,
+       "maxBath": 6,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 5,
+       "minSqft": 4782,
+       "minHalfbath": 1,
+       "maxSqft": 4782,
+       "minGarage": "4",
+       "pricedFrom": 1421995,
+       "isQdh": false,
+       "name": "Highgrove",
+       "maxBed": 5,
+       "maxBath": 6,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      }
+     ],
+     "isFuture": false,
+     "tSelect": false,
+     "highriseList": [],
+     "qdhList": [],
+     "modelList": [],
+     "hasExternalDomain": false,
+     "isMinPrice": false,
+     "childPosition": 0,
+     "partOfMaster": false,
+     "hasQdh": true,
+     "contactAtOnceJde": "9296",
+     "citySearchURL": "https://www.tollbrothers.com/luxury-homes/St.-Augustine-FL",
+     "contactAtOnceRegion": 735,
+     "hasMatterport": true,
+     "hideScheduleTour": false,
+     "numQDH": 2,
+     "comingSoonQMICount": 0,
+     "zipCode": "32092",
+     "streetAddress": "346 Richland Manor Rd",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "schoolDistrict": "St. Johns",
+     "pBedLoc": [
+      1,
+      2
+     ],
+     "minBath": 4,
+     "maxBath": 6,
+     "minHalfBath": 1,
+     "maxHalfBath": 1,
+     "minBed": 4,
+     "maxBed": 5,
+     "minSqft": 3749,
+     "maxSqft": 5659,
+     "minGarage": "3",
+     "maxGarage": "4",
+     "prePlannedCount": 0,
+     "pMin": 1224995,
+     "pMax": 1699000,
+     "communityFilters": [],
+     "anticipatedOpeningDate": "2026-01-22",
+     "numModel": 6,
+     "selfGuided": false,
+     "onlineDate": "2025-08-23",
+     "activeDate": "2026-02-12",
+     "truncatedDescription": "Surrounded by lush natural landscapes, Iron Branch is a gated community in St. Augustine, FL, offering 1.5-acre home sites, expansive home designs with options for RV garages and multi-gen suites, and sophisticated finishes to personalize your home",
+     "type": "CommunitySearchItem"
+    },
+    {
+     "@type": "CommunitySearchItem",
+     "options": [],
+     "position": 10,
+     "isMaster": false,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Mariposa-at-EverRange",
+     "description": "Mariposa at EverRange is a new home community in Jacksonville, FL, situated in a highly anticipated master plan. These beautiful single- and two-story homes range from 2,105 to 2,899 square feet and offer 3 to 4 bedrooms, 2 to 3 bathrooms, plus options for flex rooms, lofts, and first-floor primary …(721)",
+     "name": "Mariposa at EverRange",
+     "distance": 16.621402294088334,
+     "title": "Mariposa at EverRange is a new home community in Jacksonville, FL, featuring beautiful single-family homes, most with scenic preserve and water views, all nestled in a vibrant, golf cart-friendly master plan with incredible amenities.",
+     "lowestMatchingPrice": "564,995",
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/15052/images-resized/Mariposa_at_EverRange_Ella_Farmhouse_Kitchen_1_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/15052/images-resized/Mariposa_at_EverRange_Ella_Farmhouse_Kitchen_1_1800.jpg"
+       },
+       "multimediaId": 704938,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/15052/images-resized/Mariposa_at_EverRange_Ella_Farmhouse_Kitchen_1_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/15052/images-resized/Mariposa_at_EverRange_Ella_Farmhouse_Kitchen_1_920.jpg"
+       },
+       "description": "Gourmet kitchens with ample counter and cabinet space",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/15052/images-resized/Mariposa_at_EverRange_Ella_Farmhouse_Kitchen_1_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 619948,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/15052/logo-resized/MariposaAtEverRange-Logo-BLK.svg"
+      },
+      "name": ""
+     },
+     "lat": "30.130928",
+     "lon": "-81.483888",
+     "communityId": 15052,
+     "state": "FL",
+     "city": "Jacksonville",
+     "county": "Duval",
+     "pricedFrom": "564,995",
+     "phone": "904-604-5237",
+     "headerTitle": "Mariposa at EverRange is a new home community in Jacksonville, FL, featuring beautiful single-family homes, most with scenic preserve and water views, all nestled in a vibrant, golf cart-friendly master plan with incredible amenities",
+     "oscPhone": "844-871-7466",
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Amenities/Resort"
+     ],
+     "homeProperties": [
+      {
+       "minBed": 3,
+       "minBath": 3,
+       "minSqft": 2107,
+       "minHalfbath": 1,
+       "maxSqft": 2107,
+       "minGarage": "2",
+       "pricedFrom": 659000,
+       "isQdh": true,
+       "name": "Sparrow Carolina",
+       "maxBed": 3,
+       "maxBath": 3,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "2/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 2890,
+       "minHalfbath": 0,
+       "maxSqft": 2890,
+       "minGarage": "2",
+       "pricedFrom": 765000,
+       "isQdh": true,
+       "name": "Ella Craftsman",
+       "maxBed": 4,
+       "maxBath": 4,
+       "maxGarage": "2",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 2609,
+       "minHalfbath": 1,
+       "maxSqft": 2609,
+       "minGarage": "2",
+       "pricedFrom": 719000,
+       "isQdh": true,
+       "name": "Sparrow Elite Craftsman",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 2896,
+       "minHalfbath": 0,
+       "maxSqft": 2896,
+       "minGarage": "2",
+       "pricedFrom": 829000,
+       "isQdh": true,
+       "name": "Caspian Carolina",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "2",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2026",
+       "pBedLoc": [
+        2
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 2,
+       "minSqft": 2105,
+       "minHalfbath": 0,
+       "maxSqft": 2105,
+       "minGarage": "2",
+       "pricedFrom": 564995,
+       "isQdh": false,
+       "name": "Sparrow",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "2",
+       "maxHalfbath": 0,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 3,
+       "minSqft": 2441,
+       "minHalfbath": 0,
+       "maxSqft": 2441,
+       "minGarage": "2",
+       "pricedFrom": 594995,
+       "isQdh": false,
+       "name": "Ella",
+       "maxBed": 4,
+       "maxBath": 4,
+       "maxGarage": "2",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 2609,
+       "minHalfbath": 0,
+       "maxSqft": 2609,
+       "minGarage": "2",
+       "pricedFrom": 619995,
+       "isQdh": false,
+       "name": "Sparrow Elite",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "2",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 2899,
+       "minHalfbath": 0,
+       "maxSqft": 2899,
+       "minGarage": "2",
+       "pricedFrom": 649995,
+       "isQdh": false,
+       "name": "Caspian",
+       "maxBed": 5,
+       "maxBath": 3,
+       "maxGarage": "2",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        2
+       ]
+      }
+     ],
+     "isFuture": false,
+     "tSelect": false,
+     "highriseList": [],
+     "qdhList": [],
+     "modelList": [],
+     "hasExternalDomain": false,
+     "isMinPrice": false,
+     "childPosition": 0,
+     "partOfMaster": false,
+     "hasQdh": true,
+     "contactAtOnceJde": "9626",
+     "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Jacksonville-FL",
+     "contactAtOnceRegion": 735,
+     "hasMatterport": true,
+     "hideScheduleTour": false,
+     "numQDH": 4,
+     "comingSoonQMICount": 0,
+     "zipCode": "32256",
+     "streetAddress": "12175 Mariposa Ave",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "schoolDistrict": "Duval",
+     "pBedLoc": [
+      1,
+      2
+     ],
+     "minBath": 2,
+     "maxBath": 4,
+     "minHalfBath": 0,
+     "maxHalfBath": 1,
+     "minBed": 3,
+     "maxBed": 5,
+     "minSqft": 2105,
+     "maxSqft": 2899,
+     "minGarage": "2",
+     "maxGarage": "2",
+     "prePlannedCount": 0,
+     "pMin": 564995,
+     "pMax": 829000,
+     "communityFilters": [
+      "Commuter Friendly",
+      "Integrated Retail",
+      "Master-planned Community",
+      "Serene Setting",
+      "Socially Active"
+     ],
+     "anticipatedOpeningDate": "2025-12-05",
+     "numModel": 4,
+     "selfGuided": false,
+     "onlineDate": "2025-09-24",
+     "activeDate": "2025-12-09",
+     "truncatedDescription": "Mariposa at EverRange is a new home community in Jacksonville, FL, featuring beautiful single-family homes, most with scenic preserve and water views, all nestled in a vibrant, golf cart-friendly master plan with incredible amenities",
+     "type": "CommunitySearchItem"
+    },
+    {
+     "@type": "CommunitySearchItem",
+     "options": [
+      {
+       "id": "24",
+       "name": "Turn HBQ on for Future Community"
+      },
+      {
+       "id": "104",
+       "name": "Disable Status for Site Plans"
+      }
+     ],
+     "position": 11,
+     "isMaster": false,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Maris-Cove",
+     "description": "Close enough to feel the breeze off the Intracoastal Waterway, Maris Cove brings true luxury living to a highly sought-after waterfront location with its exceptional blend of serenity, privacy, and convenience. This gated community of new homes in Yulee, FL, features modern, expansive single-family …(826)",
+     "name": "Maris Cove",
+     "distance": 22.293456235703477,
+     "title": "Ideally located in Nassau County along the Intracoastal Waterway, Maris Cove is a waterfront community of new homes in Yulee, FL, offering expansive, single-family home designs in a private, gated setting close to nearby beaches and top schools.",
+     "lowestMatchingPrice": "900,000",
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/15055/images-resized/shutterstock_1299962227_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/15055/images-resized/shutterstock_1299962227_1800.jpg"
+       },
+       "multimediaId": 694590,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/15055/images-resized/shutterstock_1299962227_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/15055/images-resized/shutterstock_1299962227_920.jpg"
+       },
+       "description": "Nearby scenic coastal access to the pristine beaches of Amelia Island",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/15055/images-resized/shutterstock_1299962227_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 694595,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/15055/logo-resized/MarisCove-Logo-V-BLK.svg"
+      },
+      "name": ""
+     },
+     "lat": "30.639649",
+     "lon": "-81.528223",
+     "communityId": 15055,
+     "state": "FL",
+     "city": "Yulee",
+     "county": "Nassau",
+     "pricedFrom": "Low $900,000s",
+     "phone": "844-871-7466",
+     "headerTitle": "Ideally located in Nassau County along the Intracoastal Waterway, Maris Cove is a waterfront community of new homes in Yulee, FL, offering expansive, single-family home designs in a private, gated setting close to nearby beaches and top schools",
+     "oscPhone": "844-871-7466",
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Future Community",
+      "Waterfront"
+     ],
+     "homeProperties": [
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 3389,
+       "minHalfbath": 1,
+       "maxSqft": 3389,
+       "minGarage": "3",
+       "pricedFrom": null,
+       "isQdh": false,
+       "name": "Julington",
+       "maxBed": 6,
+       "maxBath": 4,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 4,
+       "minSqft": 3999,
+       "minHalfbath": 1,
+       "maxSqft": 3999,
+       "minGarage": "3",
+       "pricedFrom": null,
+       "isQdh": false,
+       "name": "Delmonico",
+       "maxBed": 5,
+       "maxBath": 5,
+       "maxGarage": "4",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 3241,
+       "minHalfbath": 1,
+       "maxSqft": 3241,
+       "minGarage": "3",
+       "pricedFrom": null,
+       "isQdh": false,
+       "name": "Scarlett",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 5,
+       "minBath": 4,
+       "minSqft": 3432,
+       "minHalfbath": 0,
+       "maxSqft": 3432,
+       "minGarage": "3",
+       "pricedFrom": null,
+       "isQdh": false,
+       "name": "Mayport",
+       "maxBed": 6,
+       "maxBath": 5,
+       "maxGarage": "3",
+       "maxHalfbath": 0,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 2888,
+       "minHalfbath": 1,
+       "maxSqft": 2888,
+       "minGarage": "3",
+       "pricedFrom": null,
+       "isQdh": false,
+       "name": "Samuel",
+       "maxBed": 5,
+       "maxBath": 3,
+       "maxGarage": "3",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      }
+     ],
+     "isFuture": true,
+     "tSelect": false,
+     "highriseList": [],
+     "qdhList": [],
+     "modelList": [],
+     "hasExternalDomain": false,
+     "isMinPrice": false,
+     "childPosition": 0,
+     "partOfMaster": false,
+     "hasQdh": false,
+     "contactAtOnceJde": "9354",
+     "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Yulee-FL",
+     "contactAtOnceRegion": 735,
+     "hasMatterport": true,
+     "hideScheduleTour": false,
+     "numQDH": 0,
+     "comingSoonQMICount": 0,
+     "zipCode": "32097",
+     "streetAddress": "Blackrock Rd & Blackheath Park Dr",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "schoolDistrict": "Nassau",
+     "pBedLoc": [
+      1
+     ],
+     "minBath": 3,
+     "maxBath": 5,
+     "minHalfBath": 0,
+     "maxHalfBath": 1,
+     "minBed": 4,
+     "maxBed": 6,
+     "minSqft": 2888,
+     "maxSqft": 3999,
+     "minGarage": "3",
+     "maxGarage": "4",
+     "prePlannedCount": 0,
+     "communityFilters": [
+      "Gated",
+      "Large Home Sites",
+      "Nearby Beach Access",
+      "Top-Rated Education",
+      "Water Access"
+     ],
+     "anticipatedOpeningDate": "2026-11-30",
+     "numModel": 5,
+     "selfGuided": false,
+     "onlineDate": "2026-05-22",
+     "truncatedDescription": "Ideally located in Nassau County along the Intracoastal Waterway, Maris Cove is a waterfront community of new homes in Yulee, FL, offering expansive, single-family home designs in a private, gated setting close to nearby beaches and top schools",
+     "type": "CommunitySearchItem"
+    },
+    {
+     "@type": "MasterCommunitySearchItem",
+     "options": null,
+     "badgeText": null,
+     "badgeLink": null,
+     "position": 12,
+     "isMaster": true,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Mill-Creek-Forest",
+     "description": "Mill Creek Forest is a gated new home community in prestigious St. Johns, FL, that features modern one- and two-story homes on private, wooded home sites with access to resort-style amenities and beautiful lakeside views.",
+     "name": "Mill Creek Forest",
+     "distance": 19.51371769367087,
+     "title": "Mill Creek Forest is a gated new home community in prestigious St. Johns, FL, that features modern one- and two-story homes on private, wooded home sites with access to resort-style amenities and beautiful lakeside views.",
+     "lowestMatchingPrice": "0",
+     "visible": null,
+     "metroId": 810,
+     "metroName": "Jacksonville",
+     "cpRegion": "FL-NORTH",
+     "images": [
+      {
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/825/images-resized/Mill-Creek-Forest_Entrance-Monument_2_CC_RET_RGB_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/825/images-resized/Mill-Creek-Forest_Entrance-Monument_2_CC_RET_RGB_1800.jpg"
+       },
+       "multimediaId": 369286,
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/825/images-resized/Mill-Creek-Forest_Entrance-Monument_2_CC_RET_RGB_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/825/images-resized/Mill-Creek-Forest_Entrance-Monument_2_CC_RET_RGB_920.jpg"
+       },
+       "description": "Inviting community entrance",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/825/images-resized/Mill-Creek-Forest_Entrance-Monument_2_CC_RET_RGB_450.jpg"
+       },
+       "name": ""
+      }
+     ],
+     "logo": {
+      "multimediaId": 376992,
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/masters/825/logo-resized/MillCreekForest-Logo-bw.svg"
+      },
+      "name": ""
+     },
+     "lat": "30.053395",
+     "lon": "-81.596973",
+     "lowestPricedChild": null,
+     "communities": [
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 12,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Mill-Creek-Forest/Magnolia",
+       "description": "Located in St. Johns, Mill Creek Forest features spacious one- and two-story single-family home designs ranging from 2,457 to over 3,440 square feet. Home designs feature Craftsman, Coastal, and Farmhouse exteriors and offer 3-car garages and options for first-floor primary bedroom suites. Several h…(341)",
+       "name": "Mill Creek Forest - Magnolia",
+       "distance": 0,
+       "title": "Mill Creek Forest - Magnolia Collection features one- and two-story single-family home designs ranging from approximately 2,457 to 3,440 square feet with 3-car garages and options for first-floor primary bedroom suites.",
+       "lowestMatchingPrice": "689,000",
+       "metroId": 810,
+       "metroName": "Jacksonville",
+       "cpRegion": "FL-NORTH",
+       "images": [
+        {
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/13517/images/Bartram-Ranch_Hillcrest_Outdoor-Living_1_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/13517/images/Bartram-Ranch_Hillcrest_Outdoor-Living_1_1800.jpg"
+         },
+         "multimediaId": 227781,
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/13517/images/Bartram-Ranch_Hillcrest_Outdoor-Living_1_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/13517/images/Bartram-Ranch_Hillcrest_Outdoor-Living_1_920.jpg"
+         },
+         "description": "Outdoor living",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/13517/images/Bartram-Ranch_Hillcrest_Outdoor-Living_1_450.jpg"
+         }
+        }
+       ],
+       "lat": "30.053395",
+       "lon": "-81.596973",
+       "communityId": 13517,
+       "state": "FL",
+       "city": "St. Johns",
+       "county": "St. Johns",
+       "pricedFrom": "689,000",
+       "phone": "904-932-9855",
+       "headerTitle": "Mill Creek Forest - Magnolia Collection features one- and two-story single-family home designs ranging from approximately 2,457 to 3,440 square feet with 3-car garages and options for first-floor primary bedroom suites",
+       "oscPhone": "844-871-7466",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 5,
+         "minBath": 4,
+         "minSqft": 3682,
+         "minHalfbath": 0,
+         "maxSqft": 3682,
+         "minGarage": "3",
+         "pricedFrom": 799000,
+         "isQdh": true,
+         "name": "Alice Farmhouse",
+         "maxBed": 5,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "2/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2666,
+         "minHalfbath": 0,
+         "maxSqft": 2666,
+         "minGarage": "3",
+         "pricedFrom": 874000,
+         "isQdh": true,
+         "name": "Robin Farmhouse",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "10/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2866,
+         "minHalfbath": 0,
+         "maxSqft": 2866,
+         "minGarage": "3",
+         "pricedFrom": 689000,
+         "isQdh": true,
+         "name": "Egan Coastal",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "10/2026",
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 0,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "7532",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/St.-Johns-FL",
+       "contactAtOnceRegion": 735,
+       "hasMatterport": false,
+       "hideScheduleTour": false,
+       "numQDH": 3,
+       "comingSoonQMICount": 0,
+       "zipCode": "32259",
+       "streetAddress": "101 Bridgeton St",
+       "masterCommunityId": 825,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "St. Johns County",
+       "pBedLoc": [
+        1,
+        2
+       ],
+       "minBath": 3,
+       "maxBath": 4,
+       "minHalfBath": 0,
+       "maxHalfBath": 0,
+       "minBed": 4,
+       "maxBed": 5,
+       "minSqft": 2666,
+       "maxSqft": 3682,
+       "minGarage": "3",
+       "maxGarage": "3",
+       "mcname": "Mill Creek Forest",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Mill-Creek-Forest",
+       "prePlannedCount": 0,
+       "pMin": 689000,
+       "pMax": 874000,
+       "communityFilters": [
+        "Commuter Friendly",
+        "Gated",
+        "Smart Home Features",
+        "Top-Rated Education"
+       ],
+       "numModel": 0,
+       "selfGuided": false,
+       "onlineDate": "2020-09-23",
+       "activeDate": "2021-01-13",
+       "truncatedDescription": "Mill Creek Forest - Magnolia Collection features one- and two-story single-family home designs ranging from approximately 2,457 to 3,440 square feet with 3-car garages and options for first-floor primary bedroom suites",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 12,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Mill-Creek-Forest/Meadows",
+       "description": "Located in St. Johns, Mill Creek Forest showcases spacious one- and two-story single-family home designs ranging from 1,918 to 2,491 square feet, featuring Craftsman, Coastal, and Farmhouse exteriors. Several home sites will offer expansive preserve views.\n\nExperience the best of Florida’s lifestyle…(575)",
+       "name": "Mill Creek Forest - Meadows",
+       "distance": 0,
+       "title": "Located in St. Johns, Mill Creek Forest showcases spacious one- and two-story single-family home designs, ranging from 1,918 to 2,491 square feet, featuring Craftsman, Coastal, and Farmhouse exteriors.",
+       "lowestMatchingPrice": "0",
+       "metroId": 810,
+       "metroName": "Jacksonville",
+       "cpRegion": "FL-NORTH",
+       "images": [
+        {
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/13516/images-resized/Mill-Creek-Forest_Ella-Craftsman_Kitchen_CC_RGB_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/13516/images-resized/Mill-Creek-Forest_Ella-Craftsman_Kitchen_CC_RGB_1800.jpg"
+         },
+         "multimediaId": 365740,
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/13516/images-resized/Mill-Creek-Forest_Ella-Craftsman_Kitchen_CC_RGB_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/13516/images-resized/Mill-Creek-Forest_Ella-Craftsman_Kitchen_CC_RGB_920.jpg"
+         },
+         "description": "Well-designed kitchens with extra counter space",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/13516/images-resized/Mill-Creek-Forest_Ella-Craftsman_Kitchen_CC_RGB_450.jpg"
+         },
+         "name": ""
+        }
+       ],
+       "lat": "30.054499081521094",
+       "lon": "-81.6005996846791",
+       "communityId": 13516,
+       "state": "FL",
+       "city": "St. Johns",
+       "county": "St. Johns",
+       "pricedFrom": "",
+       "phone": "904-932-9855",
+       "headerTitle": "Located in St. Johns, Mill Creek Forest showcases spacious one- and two-story single-family home designs, ranging from 1,918 to 2,491 square feet, featuring Craftsman, Coastal, and Farmhouse exteriors",
+       "oscPhone": "844-871-7466",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "homeProperties": [],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 1,
+       "partOfMaster": true,
+       "hasQdh": false,
+       "contactAtOnceJde": "7531",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/St.-Johns-FL",
+       "contactAtOnceRegion": 735,
+       "hasMatterport": false,
+       "hideScheduleTour": false,
+       "numQDH": 0,
+       "comingSoonQMICount": 0,
+       "zipCode": "32259",
+       "streetAddress": "101 Bridgeton St",
+       "masterCommunityId": 825,
+       "stories": [
+        "0"
+       ],
+       "schoolDistrict": "St. Johns County",
+       "pBedLoc": [
+        1,
+        2
+       ],
+       "mcname": "Mill Creek Forest",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Mill-Creek-Forest",
+       "prePlannedCount": 0,
+       "pMin": 0,
+       "pMax": 0,
+       "communityFilters": [
+        "Commuter Friendly",
+        "Gated",
+        "Smart Home Features",
+        "Top-Rated Education"
+       ],
+       "numModel": 0,
+       "selfGuided": false,
+       "onlineDate": "2020-09-23",
+       "activeDate": "2021-01-13",
+       "truncatedDescription": "Located in St. Johns, Mill Creek Forest showcases spacious one- and two-story single-family home designs, ranging from 1,918 to 2,491 square feet, featuring Craftsman, Coastal, and Farmhouse exteriors",
+       "type": "CommunitySearchItem"
+      }
+     ],
+     "county": "St. Johns",
+     "pricedFrom": "Upper $600,000s",
+     "masterCommunityId": 825,
+     "schoolDistrict": "St. Johns County",
+     "stories": [
+      "0",
+      "1",
+      "2"
+     ],
+     "communityFilters": [],
+     "city": "St. Johns",
+     "truncatedDescription": "Mill Creek Forest is a gated new home community in prestigious St. Johns, FL, that features modern one- and two-story homes on private, wooded home sites with access to resort-style amenities and beautiful lakeside views.",
+     "numQDH": 3,
+     "pbedLoc": [
+      1,
+      2
+     ],
+     "pMin": 0,
+     "pMax": 874000,
+     "state": "FL",
+     "type": "MasterCommunitySearchItem"
+    },
+    "…(49 items total)"
+   ],
+   "suggested": [],
+   "searchStates": {
+    "FL": "Florida"
+   },
+   "city": null,
+   "megaSearchCity": null,
+   "megaSearchState": {},
+   "displayTitle": "New Construction Homes in Florida | Toll Brothers",
+   "displaySearchName": "Florida",
+   "displayStateFull": "Florida",
+   "displayStateAbbreviation": "FL",
+   "displayDataSearchType": "Drop Down",
+   "displayDataPageName": "Toll Brothers - Florida Search Page",
+   "displayMetaDescription": "Want to enjoy a luxury home in relaxing Florida? Search Toll Brothers new homes for sale in the covered locations like Orlando, Jacksonville & more.",
+   "displayHTag": "Florida Luxury New Home Communities",
+   "nf": false,
+   "searchParams": {
+    "validInput": true,
+    "locationOnly": false,
+    "incOnlyMetro": false,
+    "state": [
+     "FL"
+    ],
+    "ex_c_type": [
+     "Rental",
+     "Student Housing",
+     "Storybook",
+     "Storybook"
+    ],
+    "onlineOnly": true,
+    "incSuggest": "n",
+    "formerDecorated": false,
+    "bts": "y",
+    "decorated": "y",
+    "qdh": "y",
+    "hasPlanWalkthrough": "N",
+    "DAF": "N"
+   },
+   "contactAtOnceJde": "FLE",
+   "generalContactRegion": 14,
+   "keepMaster": false,
+   "qdhSearch": false,
+   "oscPhone": "855-776-8655",
+   "smsPhone": "855-776-8655",
+   "months": [
+    "09/2026",
+    "10/2026",
+    "11/2026",
+    "12/2026",
+    "01/2027",
+    "02/2027",
+    "03/2027",
+    "04/2027",
+    "…(12 items total)"
+   ],
+   "selectedDate": null,
+   "buildInPreposition": " in ",
+   "count": 89,
+   "acquireId": "FLE",
+   "allRegions": null,
+   "metros": {
+    "793": {
+     "region": {
+      "metro": "Boca Raton",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Boca Raton, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLE",
+      "metroId": 793,
+      "priority": 1,
+      "verticalOffset": 0,
+      "horizontalOffset": 55,
+      "coords": [
+       26.350519,
+       -80.089828
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": false,
+      "searchDisplayPriority": 7,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLE",
+      "acquireName": "FLE",
+      "hasForSale": true,
+      "hasActiveAdult": false
+     },
+     "count": 4
+    },
+    "810": {
+     "region": {
+      "metro": "Jacksonville",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Jacksonville, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLN",
+      "metroId": 810,
+      "priority": 1,
+      "verticalOffset": 0,
+      "horizontalOffset": 60,
+      "coords": [
+       30.3321838,
+       -81.655651
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 1,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLN",
+      "acquireName": "FLN",
+      "hasForSale": true,
+      "hasActiveAdult": true
+     },
+     "count": 28
+    },
+    "816": {
+     "region": {
+      "metro": "Naples",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Naples, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLW",
+      "metroId": 816,
+      "priority": 1,
+      "verticalOffset": 0,
+      "horizontalOffset": -40,
+      "coords": [
+       26.1421976,
+       -81.7942944
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 5,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLW",
+      "acquireName": "FLW",
+      "hasForSale": true,
+      "hasActiveAdult": true
+     },
+     "count": 12
+    },
+    "821": {
+     "region": {
+      "metro": "Orlando",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Orlando, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLC",
+      "metroId": 821,
+      "priority": 1,
+      "verticalOffset": 0,
+      "horizontalOffset": 0,
+      "coords": [
+       28.5421109,
+       -81.3790304
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 2,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLC",
+      "acquireName": "FLC",
+      "hasForSale": true,
+      "hasActiveAdult": true
+     },
+     "count": 22
+    },
+    "835": {
+     "region": {
+      "metro": "Sarasota",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Sarasota, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLT",
+      "metroId": 835,
+      "priority": 1,
+      "verticalOffset": -5,
+      "horizontalOffset": -50,
+      "coords": [
+       27.3364347,
+       -82.5306527
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 4,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLW",
+      "acquireName": "FLW",
+      "hasForSale": true,
+      "hasActiveAdult": false
+     },
+     "count": 6
+    },
+    "839": {
+     "region": {
+      "metro": "West Palm Beach",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "West Palm Beach, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLE",
+      "metroId": 839,
+      "priority": 1,
+      "verticalOffset": 20,
+      "horizontalOffset": 45,
+      "coords": [
+       26.7153425,
+       -80.0533746
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 6,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLE",
+      "acquireName": "FLE",
+      "hasForSale": true,
+      "hasActiveAdult": true
+     },
+     "count": 5
+    },
+    "1227": {
+     "region": {
+      "metro": "Tampa",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Tampa, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLT",
+      "metroId": 1227,
+      "priority": 1,
+      "verticalOffset": 5,
+      "horizontalOffset": -60,
+      "coords": [
+       27.9506,
+       -82.4572
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 4,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLW",
+      "acquireName": "FLW",
+      "hasForSale": true,
+      "hasActiveAdult": true
+     },
+     "count": 6
+    },
+    "4152": {
+     "region": {
+      "metro": "Palm Coast",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Palm Coast, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLN",
+      "metroId": 4152,
+      "priority": 1,
+      "verticalOffset": 0,
+      "horizontalOffset": 60,
+      "coords": [
+       29.5845,
+       -81.2079
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 1,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLN",
+      "acquireName": "FLN",
+      "hasForSale": true,
+      "hasActiveAdult": false
+     },
+     "count": 3
+    },
+    "29687": {
+     "region": {
+      "metro": "Panama City Beach",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Panama City Beach, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLN",
+      "metroId": 29687,
+      "priority": 1,
+      "verticalOffset": 0,
+      "horizontalOffset": 30,
+      "coords": [
+       30.1588,
+       -85.6602
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 1,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLN",
+      "acquireName": "FLN",
+      "hasForSale": true,
+      "hasActiveAdult": false
+     },
+     "count": 3
+    }
+   },
+   "virtualTourSearch": false,
+   "homeDesignSearch": false,
+   "orderDesc": false,
+   "events": [
+    {
+     "headline": {
+      "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+      "link": "/4.99",
+      "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+     },
+     "byline": {
+      "text": "Limited Time Only on Select Homes"
+     },
+     "formName": "TB299FHA_012026",
+     "slugName": "4.99",
+     "paragraphs": [
+      {
+       "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+      },
+      {
+       "text": "Your new home is waiting. Make your move today. "
+      }
+     ],
+     "graphs": [
+      {
+       "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+      }
+     ],
+     "bullets": [
+      {
+       "text": "500000"
+      },
+      {
+       "text": "Bullet 2"
+      }
+     ],
+     "color": "348266",
+     "endDate": "2026-10-30",
+     "eventType": "bannerEventNational",
+     "template": {
+      "text": "buydown-bluediamond"
+     },
+     "eventID": 10380
+    },
+    {
+     "headline": {
+      "text": "Step Inside to Experience the Difference*",
+      "link": "/national-open-house"
+     },
+     "cta": {
+      "text": "RSVP Today"
+     },
+     "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+     "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+     "formName": "NOH_2601",
+     "formCallback": "https://hello.tollbrothers.com/l/402642/2026-08-31/2cxmqc1",
+     "eventName": "National Open House Event",
+     "dateText": "SEPTEMBER 19-20",
+     "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 9/5/26 and 9/20/26, sign an agreement of sale, and close on the home. Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and …(770)",
+     "paragraphs": [
+      {
+       "text": "September 19 or September 20"
+      }
+     ],
+     "color": "8D714D",
+     "startDate": "2026-09-05",
+     "endDate": "2026-09-20",
+     "eventType": "nationalEvent",
+     "template": {
+      "text": "NOH"
+     },
+     "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/noh-autoresponse.jpg",
+     "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/02/tb_noh_landing_page_2602.svg",
+     "eventID": 10108
+    }
+   ],
+   "searchUrl": "/luxury-homes/Florida",
+   "searchTemplate": {
+    "name": "FL - Community",
+    "htag": "New Homes for Sale in Florida",
+    "title": "New Construction Homes for Sale in Florida by Toll Brothers",
+    "meta": "Want to enjoy a luxury home in relaxing Florida? Search Toll Brothers new homes for sale in the covered locations like Orlando, Jacksonville & more.",
+    "sections": [
+     {
+      "ordinal": 0,
+      "header": null,
+      "paragraphs": [
+       {
+        "text": "In Florida, resort style is a way of life. The Sunshine State provides the perfect backdrop for luxury living with its beautiful, warm climate, seemingly endless miles of coastline, and abundant outdoor activities, including golf, fishing, swimming, boating, and more. Toll Brothers is proud to offer…(624)",
+        "images": []
+       }
+      ],
+      "images": []
+     },
+     {
+      "ordinal": 1,
+      "header": {
+       "text": "New Construction Home Features in Florida",
+       "images": []
+      },
+      "paragraphs": [
+       {
+        "text": "Buyers of all types will find precisely what they're looking for, whether it's a new adventure or a life of leisure. New homes for sale in Florida's sought-after locations range from grand estate homes to low-maintenance townhomes to desirable single-story homes with spacious, open floor plans. Many…(687)",
+        "images": []
+       }
+      ],
+      "images": []
+     },
+     {
+      "ordinal": 2,
+      "header": {
+       "text": "Luxury Living in Florida",
+       "images": []
+      },
+      "paragraphs": [
+       {
+        "text": "West, central, northeast, and southeast-each region of Florida has its own unique feel with a desirable climate and a variety of activities and experiences for enjoyment all year round. From the pristine beaches and warm waters of the Gulf Coast to the glistening blue waves of the Atlantic Ocean and…(729)",
+        "images": []
+       }
+      ],
+      "images": []
+     },
+     {
+      "ordinal": 3,
+      "header": {
+       "text": "Buying a New Construction Home in Florida",
+       "images": []
+      },
+      "paragraphs": [
+       {
+        "text": "Florida boasts a gorgeous climate, year-round recreation, and a lifestyle to suit everyone, from coastal relaxation to big-city fun to small-town leisure. With no state income tax, it is the perfect choice for home buyers seeking luxury with a low cost of living. Florida's new construction home buye…(475)",
+        "images": []
+       }
+      ],
+      "images": []
+     }
+    ],
+    "images": [
+     {
+      "type": "image",
+      "url": "/search-seo/fl/2/hero_1920.webp",
+      "description": "Florida resort",
+      "representative": false,
+      "virtual": false
+     },
+     {
+      "type": "image",
+      "url": "/search-seo/fl/2/living_in_florida_920.webp",
+      "description": "Florida resort",
+      "representative": false,
+      "virtual": false
+     },
+     {
+      "type": "image",
+      "url": "/search-seo/fl/2/buying_in_florida_920.webp",
+      "description": "Florida home",
+      "representative": false,
+      "virtual": false
+     }
+    ],
+    "locationType": 4,
+    "searchType": 2
+   },
+   "modelSearch": false,
+   "hasQMI": true,
+   "hasModel": true,
+   "hasQdhItems": false,
+   "cpRegion": null,
+   "canonicalURL": "https://www.tollbrothers.com/luxury-homes/Florida",
+   "searchTitle": "New Construction Homes in Florida | Toll Brothers",
+   "mainHTag": "Florida New Homes for Sale"
+  },
+  "region": "Florida",
+  "myMetro": [
+   {
+    "name": "Florida",
+    "value": {
+     "hasCommunities": true,
+     "regions": [
+      {
+       "region": {
+        "metro": "Boca Raton",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Boca Raton, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLE",
+        "metroId": 793,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 55,
+        "coords": [
+         26.350519,
+         -80.089828
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": false,
+        "searchDisplayPriority": 7,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLE",
+        "acquireName": "FLE",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 4,
+       "regionUrl": "/luxury-homes/Boca-Raton-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Jacksonville",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Jacksonville, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLN",
+        "metroId": 810,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 60,
+        "coords": [
+         30.3321838,
+         -81.655651
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 1,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLN",
+        "acquireName": "FLN",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 28,
+       "regionUrl": "/luxury-homes/Jacksonville-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Naples",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Naples, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLW",
+        "metroId": 816,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": -40,
+        "coords": [
+         26.1421976,
+         -81.7942944
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 5,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLW",
+        "acquireName": "FLW",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 12,
+       "regionUrl": "/luxury-homes/Naples-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Orlando",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Orlando, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLC",
+        "metroId": 821,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 0,
+        "coords": [
+         28.5421109,
+         -81.3790304
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 2,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLC",
+        "acquireName": "FLC",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 22,
+       "regionUrl": "/luxury-homes/Orlando-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Palm Coast",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Palm Coast, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLN",
+        "metroId": 4152,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 60,
+        "coords": [
+         29.5845,
+         -81.2079
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 1,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLN",
+        "acquireName": "FLN",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 3,
+       "regionUrl": "/luxury-homes/Palm-Coast-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Panama City Beach",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Panama City Beach, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLN",
+        "metroId": 29687,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 30,
+        "coords": [
+         30.1588,
+         -85.6602
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 1,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLN",
+        "acquireName": "FLN",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 3,
+       "regionUrl": "/luxury-homes/Panama-City-Beach-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Sarasota",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Sarasota, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLT",
+        "metroId": 835,
+        "priority": 1,
+        "verticalOffset": -5,
+        "horizontalOffset": -50,
+        "coords": [
+         27.3364347,
+         -82.5306527
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 4,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLW",
+        "acquireName": "FLW",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 6,
+       "regionUrl": "/luxury-homes/Sarasota-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Tampa",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Tampa, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLT",
+        "metroId": 1227,
+        "priority": 1,
+        "verticalOffset": 5,
+        "horizontalOffset": -60,
+        "coords": [
+         27.9506,
+         -82.4572
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 4,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLW",
+        "acquireName": "FLW",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 6,
+       "regionUrl": "/luxury-homes/Tampa-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      "…(9 items total)"
+     ],
+     "hasRental": false,
+     "hasBTS": true,
+     "hasQdh": true,
+     "hasForSale": true,
+     "regionCount": 9,
+     "hasActiveAdult": true,
+     "url": "/luxury-homes/Florida"
+    }
+   }
+  ],
+  "isRental": false,
+  "isQMISearch": false,
+  "isModelSearch": false,
+  "isRegencySearch": false,
+  "isHomePropertiesSearch": true,
+  "robots": true
+ },
+ "__N_SSP": true
+}

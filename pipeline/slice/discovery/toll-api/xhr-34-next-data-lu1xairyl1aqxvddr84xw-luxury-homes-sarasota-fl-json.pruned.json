@@ -1,0 +1,3327 @@
+{
+ "pageProps": {
+  "componentType": "SearchComponent",
+  "eventSlug": null,
+  "isSearchPage": true,
+  "searchResults": {
+   "hasPerfect": false,
+   "hasSuggested": false,
+   "onlyQDHSearch": false,
+   "onlyBTSSearch": false,
+   "onlyDecoratedSearch": false,
+   "includePlans": false,
+   "isModelSearch": false,
+   "onlyRentalSearch": false,
+   "allSearch": false,
+   "stateSearch": false,
+   "countySearch": false,
+   "geoSearch": false,
+   "radialSearch": true,
+   "advanceSearch": false,
+   "jsonSearchParams": "{\"validInput\":true,\"locationOnly\":false,\"incOnlyMetro\":false,\"city\":\"Sarasota, FL\",\"ex_c_type\":[\"Rental\",\"Student Housing\",\"Storybook\",\"Storybook\"],\"radius\":50,\"onlineOnly\":true,\"incSuggest\":\"n\",\"formerDecorated\":false,\"metro\":[\"Sarasota, FL\"],\"bts\":\"y\",\"decorated\":\"y\",\"qdh\":\"y\",\"lat\":27.332107,\"lon…(348)",
+   "sortType": "default",
+   "perfect": [
+    {
+     "@type": "MasterCommunitySearchItem",
+     "options": null,
+     "badgeText": null,
+     "badgeLink": null,
+     "position": 1,
+     "isMaster": true,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+     "description": "The Isles at Lakewood Ranch is a luxury, gated community featuring unique architecture and resort-style amenities built with Toll Brothers' commitment to quality, value, and craftsmanship.",
+     "name": "The Isles at Lakewood Ranch",
+     "distance": 9.873810207069866,
+     "title": "The Isles at Lakewood Ranch is a luxury, gated community featuring unique architecture and resort-style amenities built with Toll Brothers' commitment to quality, value, and craftsmanship.",
+     "lowestMatchingPrice": "835,995",
+     "visible": null,
+     "metroId": 835,
+     "metroName": "Sarasota",
+     "cpRegion": "FL-TAMPA SARASOTA",
+     "images": [
+      {
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/765/images/DSC_1596-Edit1_CC_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/765/images/DSC_1596-Edit1_CC_920.jpg"
+       },
+       "multimediaId": 162013,
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/765/images/DSC_1596-Edit1_CC_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/765/images/DSC_1596-Edit1_CC_1800.jpg"
+       },
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/765/images/DSC_1596-Edit1_CC_450.jpg"
+       },
+       "description": "Coastal-inspired home designs"
+      }
+     ],
+     "logo": {
+      "multimediaId": 377015,
+      "name": "",
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/masters/765/logo-resized/106561-The-Isles-at-Lakewood-Ranch-Blue.svg"
+      }
+     },
+     "lat": "27.39",
+     "lon": "-82.36",
+     "lowestPricedChild": null,
+     "communities": [
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "32",
+         "name": "Show Directions on Future Community"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 1,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Captiva-Collection",
+       "description": "The Isles at Lakewood Ranch is a luxury community by Toll Brothers featuring single-family homes with exquisite architectural appointments, outstanding included features, and hundreds of options to personalize your dream home. Located in a highly desirable area of Lakewood Ranch, The Isles at Lakewo…(359)",
+       "name": "The Isles at Lakewood Ranch - Captiva Collection",
+       "distance": 0,
+       "title": "The Captiva Collection features the community's most luxurious homes with gourmet kitchens, spacious living areas, and elegant primary bedroom suites on oversized home sites.",
+       "lowestMatchingPrice": "1,484,000",
+       "metroId": 835,
+       "metroName": "Sarasota",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_920.jpg"
+         },
+         "multimediaId": 338743,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_1800.jpg"
+         },
+         "name": "",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/13004/images-resized/The-Isles_Aragon_3a_450.jpg"
+         }
+        }
+       ],
+       "lat": "27.39",
+       "lon": "-82.36",
+       "communityId": 13004,
+       "state": "FL",
+       "city": "Lakewood Ranch",
+       "county": "Manatee",
+       "pricedFrom": "1,484,000",
+       "phone": "941-313-7373",
+       "headerTitle": "The Captiva Collection features the community's most luxurious homes with gourmet kitchens, spacious living areas, and elegant primary bedroom suites on oversized home sites. The Isles at Lakewood",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 4,
+         "minBath": 5,
+         "minSqft": 4097,
+         "minHalfbath": 2,
+         "maxSqft": 4097,
+         "minGarage": "3",
+         "pricedFrom": 1484000,
+         "isQdh": true,
+         "name": "Maxwell Elite Island Colonial",
+         "maxBed": 4,
+         "maxBath": 5,
+         "maxGarage": "3",
+         "maxHalfbath": 2,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "6/2027",
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 0,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "6232",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Lakewood-Ranch-FL",
+       "contactAtOnceRegion": 736,
+       "hasMatterport": false,
+       "hideScheduleTour": false,
+       "numQDH": 1,
+       "comingSoonQMICount": 0,
+       "zipCode": "34202",
+       "streetAddress": "17523 Fairwinds Dr",
+       "masterCommunityId": 765,
+       "stories": [
+        "2"
+       ],
+       "schoolDistrict": "Manatee",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 5,
+       "maxBath": 5,
+       "minHalfBath": 2,
+       "maxHalfBath": 2,
+       "minBed": 4,
+       "maxBed": 4,
+       "minSqft": 4097,
+       "maxSqft": 4097,
+       "minGarage": "3",
+       "maxGarage": "3",
+       "mcname": "The Isles at Lakewood Ranch",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "pMin": 1484000,
+       "pMax": 1484000,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Integrated Retail",
+        "Master-planned Community",
+        "Top-Rated Education"
+       ],
+       "numModel": 0,
+       "selfGuided": true,
+       "onlineDate": "2018-09-13",
+       "activeDate": "2018-10-25",
+       "truncatedDescription": "The Captiva Collection features the community's most luxurious homes with gourmet kitchens, spacious living areas, and elegant primary bedroom suites on oversized home sites. The Isles at Lakewood",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "32",
+         "name": "Show Directions on Future Community"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 1,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch/Sanibel-Collection",
+       "description": "The Sanibel Collection at The Isles at Lakewood Ranch offers spacious home designs with hundreds of designer options to personalize your home. Enjoy an unparalleled lifestyle of luxury and convenience, with incredible amenities, shopping, and dining.\n\nThe Isles at Lakewood Ranch is a luxury communit…(611)",
+       "name": "The Isles at Lakewood Ranch - Sanibel Collection",
+       "distance": 9.873810207069866,
+       "title": "The Sanibel Collection includes one- and two-story home designs from 3,420 to over 3,700 square feet with flexible floor plans, expansive great rooms, and private primary suites.",
+       "lowestMatchingPrice": "835,995",
+       "metroId": 835,
+       "metroName": "Sarasota",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/13003/images-resized/014_Toll_12_3_18_Avery_conversion1_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/13003/images-resized/014_Toll_12_3_18_Avery_conversion1_920.jpg"
+         },
+         "multimediaId": 224208,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/13003/images-resized/014_Toll_12_3_18_Avery_conversion1_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/13003/images-resized/014_Toll_12_3_18_Avery_conversion1_1800.jpg"
+         },
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/13003/images-resized/014_Toll_12_3_18_Avery_conversion1_450.jpg"
+         },
+         "description": "Spa-inspired baths"
+        }
+       ],
+       "lat": "27.39",
+       "lon": "-82.36",
+       "communityId": 13003,
+       "state": "FL",
+       "city": "Lakewood Ranch",
+       "county": "Manatee",
+       "pricedFrom": "835,995",
+       "phone": "941-313-7373",
+       "headerTitle": "The Sanibel Collection includes one- and two-story home designs from 3,420 to over 3,700 square feet with flexible floor plans, expansive great rooms, and private primary suites. The Sanibel",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Luxury Home"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 2598,
+         "minHalfbath": 1,
+         "maxSqft": 2598,
+         "minGarage": "3",
+         "pricedFrom": 1149000,
+         "isQdh": true,
+         "name": "Lori Caribbean",
+         "maxBed": 3,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 2609,
+         "minHalfbath": 1,
+         "maxSqft": 2609,
+         "minGarage": "3",
+         "pricedFrom": 1293000,
+         "isQdh": true,
+         "name": "Lori Island Colonial",
+         "maxBed": 3,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "3/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 2609,
+         "minHalfbath": 1,
+         "maxSqft": 2609,
+         "minGarage": "3",
+         "pricedFrom": 1321000,
+         "isQdh": true,
+         "name": "Lori Island Colonial",
+         "maxBed": 3,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "3/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 5,
+         "minBath": 5,
+         "minSqft": 3671,
+         "minHalfbath": 1,
+         "maxSqft": 3671,
+         "minGarage": "3",
+         "pricedFrom": 1249000,
+         "isQdh": true,
+         "name": "Lori Elite Caribbean",
+         "maxBed": 5,
+         "maxBath": 5,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 4,
+         "minSqft": 3710,
+         "minHalfbath": 1,
+         "maxSqft": 3710,
+         "minGarage": "3",
+         "pricedFrom": 1567000,
+         "isQdh": true,
+         "name": "Lori Elite Antilles",
+         "maxBed": 4,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "6/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2767,
+         "minHalfbath": 1,
+         "maxSqft": 2767,
+         "minGarage": "3",
+         "pricedFrom": 1299000,
+         "isQdh": true,
+         "name": "Bianca Antilles",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "12/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 6,
+         "minBath": 4,
+         "minSqft": 3915,
+         "minHalfbath": 1,
+         "maxSqft": 3915,
+         "minGarage": "3",
+         "pricedFrom": 1417000,
+         "isQdh": true,
+         "name": "Bianca Elite Antilles",
+         "maxBed": 6,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "2/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 5,
+         "minBath": 3,
+         "minSqft": 3914,
+         "minHalfbath": 1,
+         "maxSqft": 3914,
+         "minGarage": "3",
+         "pricedFrom": 1560000,
+         "isQdh": true,
+         "name": "Bianca Elite Island Colonial",
+         "maxBed": 5,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "4/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        "…(15 items total)"
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 1,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "6231",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Lakewood-Ranch-FL",
+       "contactAtOnceRegion": 736,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 8,
+       "comingSoonQMICount": 0,
+       "zipCode": "34202",
+       "streetAddress": "17523 Fairwinds Dr",
+       "masterCommunityId": 765,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "Manatee",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 2,
+       "maxBath": 5,
+       "minHalfBath": 1,
+       "maxHalfBath": 1,
+       "minBed": 3,
+       "maxBed": 6,
+       "minSqft": 2589,
+       "maxSqft": 3915,
+       "minGarage": "2",
+       "maxGarage": "3",
+       "mcname": "The Isles at Lakewood Ranch",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/The-Isles-at-Lakewood-Ranch",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "pMin": 835995,
+       "pMax": 1567000,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Integrated Retail",
+        "Master-planned Community",
+        "Top-Rated Education"
+       ],
+       "numModel": 7,
+       "selfGuided": true,
+       "onlineDate": "2018-09-13",
+       "activeDate": "2018-10-25",
+       "truncatedDescription": "The Sanibel Collection includes one- and two-story home designs from 3,420 to over 3,700 square feet with flexible floor plans, expansive great rooms, and private primary suites. The Sanibel",
+       "type": "CommunitySearchItem"
+      }
+     ],
+     "county": "Manatee",
+     "pricedFrom": "Mid-$800,000s",
+     "masterCommunityId": 765,
+     "schoolDistrict": "Manatee",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "communityFilters": [],
+     "city": "Lakewood Ranch",
+     "truncatedDescription": "The Isles at Lakewood Ranch is a luxury, gated community featuring unique architecture and resort-style amenities built with Toll Brothers' commitment to quality, value, and craftsmanship.",
+     "numQDH": 9,
+     "pbedLoc": [
+      1
+     ],
+     "pMin": 835995,
+     "pMax": 1567000,
+     "state": "FL",
+     "type": "MasterCommunitySearchItem"
+    },
+    {
+     "@type": "MasterCommunitySearchItem",
+     "options": null,
+     "badgeText": null,
+     "badgeLink": null,
+     "position": 2,
+     "isMaster": true,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch",
+     "description": "Part of the desirable Lakewood Ranch communities, Monterey at Lakewood Ranch is a private, gated community from Toll Brothers that offers award-winning luxury home designs and exclusive amenities.",
+     "name": "Monterey at Lakewood Ranch",
+     "distance": 10.893298296254443,
+     "title": "Part of the desirable Lakewood Ranch communities, Monterey at Lakewood Ranch is a private, gated community from Toll Brothers that offers award-winning luxury home designs and exclusive amenities.",
+     "lowestMatchingPrice": "738,995",
+     "visible": null,
+     "metroId": 835,
+     "metroName": "Sarasota",
+     "cpRegion": "FL-TAMPA SARASOTA",
+     "images": [
+      {
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/911/images-resized/Monterey-at-LR-Shearwater_Centennial_LivingRoomA_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/911/images-resized/Monterey-at-LR-Shearwater_Centennial_LivingRoomA_920.jpg"
+       },
+       "multimediaId": 433672,
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/911/images-resized/Monterey-at-LR-Shearwater_Centennial_LivingRoomA_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/911/images-resized/Monterey-at-LR-Shearwater_Centennial_LivingRoomA_1800.jpg"
+       },
+       "name": "",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/911/images-resized/Monterey-at-LR-Shearwater_Centennial_LivingRoomA_450.jpg"
+       },
+       "description": "Open-concept great room with an abundance of natural light"
+      }
+     ],
+     "logo": {
+      "multimediaId": 377009,
+      "name": "",
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/masters/911/logo-resized/MontereyAtLakewoodRanch-Logo-V-BLK.svg"
+      }
+     },
+     "lat": "27.343609285998962",
+     "lon": "-82.32533689042893",
+     "lowestPricedChild": null,
+     "communities": [
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "45",
+         "name": "Combine Site Plans on Master Community Page"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 2,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch/Ardenna-Collection",
+       "description": "Monterey at Lakewood Ranch - Ardenna Collection offers bright, open single-family homes with personalization options to suit every lifestyle. Residents of this new community in Lakewood Ranch, Florida, will enjoy a modern, relaxed, nature-centric lifestyle centered around activities at the amenity c…(451)",
+       "name": "Monterey at Lakewood Ranch - Ardenna Collection",
+       "distance": 10.893298296254443,
+       "title": "Located in desirable Lakewood Ranch, FL, Monterey at Lakewood Ranch - Ardenna Collection is a new community offering a variety of single-family homes from 2,493–3,516 square feet with modern exteriors, open living spaces, and flex rooms.",
+       "lowestMatchingPrice": "738,995",
+       "metroId": 835,
+       "metroName": "Sarasota",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/14514/plans/264264/interiors-resized/Monterey-at-LR-Ardenna_Selby_KitchenA_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/14514/plans/264264/interiors-resized/Monterey-at-LR-Ardenna_Selby_KitchenA_920.jpg"
+         },
+         "multimediaId": 436875,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/14514/plans/264264/interiors-resized/Monterey-at-LR-Ardenna_Selby_KitchenA_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/14514/plans/264264/interiors-resized/Monterey-at-LR-Ardenna_Selby_KitchenA_1800.jpg"
+         },
+         "name": "",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/14514/plans/264264/interiors-resized/Monterey-at-LR-Ardenna_Selby_KitchenA_450.jpg"
+         },
+         "description": "Gourmet kitchens with casual dining areas and an abundance of storage space"
+        }
+       ],
+       "lat": "27.343609285998962",
+       "lon": "-82.32533689042893",
+       "communityId": 14514,
+       "state": "FL",
+       "city": "Lakewood Ranch",
+       "county": "Sarasota",
+       "pricedFrom": "738,995",
+       "phone": "941-279-4055",
+       "headerTitle": "Located in desirable Lakewood Ranch, FL, Monterey at Lakewood Ranch - Ardenna Collection is a new community offering a variety of single-family homes from 2,493–3,516 square feet with modern exteriors, open living spaces, and flex rooms",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Amenities/Resort"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2828,
+         "minHalfbath": 1,
+         "maxSqft": 2828,
+         "minGarage": "3",
+         "pricedFrom": 1362000,
+         "isQdh": true,
+         "name": "Selby Transitional",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "1/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2828,
+         "minHalfbath": 1,
+         "maxSqft": 2828,
+         "minGarage": "3",
+         "pricedFrom": 1125000,
+         "isQdh": true,
+         "name": "Selby Modern Ranch",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "2/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 4,
+         "minSqft": 3958,
+         "minHalfbath": 1,
+         "maxSqft": 3958,
+         "minGarage": "3",
+         "pricedFrom": 1524000,
+         "isQdh": true,
+         "name": "Breeze Prairie",
+         "maxBed": 4,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "2/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2828,
+         "minHalfbath": 1,
+         "maxSqft": 2828,
+         "minGarage": "3",
+         "pricedFrom": 804995,
+         "isQdh": false,
+         "name": "Selby",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 5,
+         "minBath": 4,
+         "minSqft": 3362,
+         "minHalfbath": 0,
+         "maxSqft": 3362,
+         "minGarage": "3",
+         "pricedFrom": 868995,
+         "isQdh": false,
+         "name": "Bearadise",
+         "maxBed": 5,
+         "maxBath": 6,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2517,
+         "minHalfbath": 1,
+         "maxSqft": 2517,
+         "minGarage": "3",
+         "pricedFrom": 738995,
+         "isQdh": false,
+         "name": "Rossi",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 3207,
+         "minHalfbath": 1,
+         "maxSqft": 3207,
+         "minGarage": "3",
+         "pricedFrom": 834995,
+         "isQdh": false,
+         "name": "Rossi Elite",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 4,
+         "minSqft": 3949,
+         "minHalfbath": 1,
+         "maxSqft": 3949,
+         "minGarage": "3",
+         "pricedFrom": 1010995,
+         "isQdh": false,
+         "name": "Breeze",
+         "maxBed": 5,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 0,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "6666",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Lakewood-Ranch-FL",
+       "contactAtOnceRegion": 734,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 3,
+       "comingSoonQMICount": 0,
+       "zipCode": "34240",
+       "streetAddress": "2637 Waterfront Cir",
+       "masterCommunityId": 911,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "Sarasota County",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 2,
+       "maxBath": 6,
+       "minHalfBath": 0,
+       "maxHalfBath": 1,
+       "minBed": 3,
+       "maxBed": 5,
+       "minSqft": 2517,
+       "maxSqft": 3958,
+       "minGarage": "3",
+       "maxGarage": "3",
+       "mcname": "Monterey at Lakewood Ranch",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "pMin": 738995,
+       "pMax": 1524000,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Large Home Sites",
+        "Master-planned Community",
+        "Serene Setting",
+        "Top-Rated Education"
+       ],
+       "numModel": 5,
+       "selfGuided": true,
+       "onlineDate": "2023-02-25",
+       "activeDate": "2024-02-06",
+       "truncatedDescription": "Located in desirable Lakewood Ranch, FL, Monterey at Lakewood Ranch - Ardenna Collection is a new community offering a variety of single-family homes from 2,493–3,516 square feet with modern exteriors, open living spaces, and flex rooms",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "24",
+         "name": "Turn HBQ on for Future Community"
+        }
+       ],
+       "position": 2,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch/Egret-Collection",
+       "description": "Monterey at Lakewood Ranch - Egret Collection is a new community of luxury homes in Lakewood Ranch, FL, that showcases all the beauty and excitement of a Florida lifestyle. Offering elegant single-family home designs on oversized 90-foot home sites, this community features expansive one- and two-sto…(734)",
+       "name": "Monterey at Lakewood Ranch - Egret Collection",
+       "distance": 0,
+       "title": "Monterey at Lakewood Ranch - Egret Collection is a new community of luxury homes in Lakewood Ranch, FL, offering expansive one- and two-story floor plans from 4,320 to 5,801 sq. ft. and access to exceptional master-planned amenities.",
+       "lowestMatchingPrice": "1,900,000",
+       "metroId": 835,
+       "metroName": "Sarasota",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/15136/images-resized/Monterey_Varen_BackExterior_2_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/15136/images-resized/Monterey_Varen_BackExterior_2_920.jpg"
+         },
+         "multimediaId": 714323,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/15136/images-resized/Monterey_Varen_BackExterior_2_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/15136/images-resized/Monterey_Varen_BackExterior_2_1800.jpg"
+         },
+         "name": "",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/15136/images-resized/Monterey_Varen_BackExterior_2_450.jpg"
+         },
+         "description": "Stunning outdoor living opportunities"
+        }
+       ],
+       "lat": "27.341596288761444",
+       "lon": "-82.32816734417818",
+       "communityId": 15136,
+       "state": "FL",
+       "city": "Lakewood Ranch",
+       "county": "Sarasota",
+       "pricedFrom": "The $1,900,000s",
+       "phone": "855-600-8655",
+       "headerTitle": "Monterey at Lakewood Ranch - Egret Collection is a new community of luxury homes in Lakewood Ranch, FL, offering expansive one- and two-story floor plans from 4,320 to 5,801 sq. ft. and access to exceptional master-planned amenities",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Future Community"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 5,
+         "minBath": 5,
+         "minSqft": 5801,
+         "minHalfbath": 1,
+         "maxSqft": 5801,
+         "minGarage": "4",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Varen",
+         "maxBed": 5,
+         "maxBath": 6,
+         "maxGarage": "4",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 5,
+         "minBath": 4,
+         "minSqft": 4320,
+         "minHalfbath": 1,
+         "maxSqft": 4320,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Cabris",
+         "maxBed": 6,
+         "maxBath": 6,
+         "maxGarage": "4",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 4,
+         "minSqft": 4531,
+         "minHalfbath": 1,
+         "maxSqft": 4531,
+         "minGarage": "3",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Corvella",
+         "maxBed": 6,
+         "maxBath": 7,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": true,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 1,
+       "partOfMaster": true,
+       "hasQdh": false,
+       "contactAtOnceJde": "9656",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Lakewood-Ranch-FL",
+       "contactAtOnceRegion": 734,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 0,
+       "comingSoonQMICount": 0,
+       "zipCode": "34240",
+       "streetAddress": "2637 Waterfront Cir",
+       "masterCommunityId": 911,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "Sarasota County",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 4,
+       "maxBath": 7,
+       "minHalfBath": 1,
+       "maxHalfBath": 1,
+       "minBed": 4,
+       "maxBed": 6,
+       "minSqft": 4320,
+       "maxSqft": 5801,
+       "minGarage": "3",
+       "maxGarage": "4",
+       "mcname": "Monterey at Lakewood Ranch",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "communityFilters": [
+        "Gated",
+        "Large Home Sites",
+        "Master-planned Community",
+        "Surrounding Views",
+        "Top-Rated Education"
+       ],
+       "anticipatedOpeningDate": "2026-05-25",
+       "numModel": 3,
+       "selfGuided": false,
+       "onlineDate": "2026-04-16",
+       "truncatedDescription": "Monterey at Lakewood Ranch - Egret Collection is a new community of luxury homes in Lakewood Ranch, FL, offering expansive one- and two-story floor plans from 4,320 to 5,801 sq. ft. and access to exceptional master-planned amenities",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "45",
+         "name": "Combine Site Plans on Master Community Page"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 2,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch/Shearwater-Collection",
+       "description": "The Shearwater Collection at Monterey at Lakewood Ranch offers beautiful home designs on generous home sites with thoughtfully included features and sophisticated options for personalization options. Residents of this new Lakewood Ranch community in Florida will enjoy a relaxed lifestyle centered ar…(500)",
+       "name": "Monterey at Lakewood Ranch - Shearwater Collection",
+       "distance": 0,
+       "title": "Monterey at Lakewood Ranch - Shearwater Collection is a new Lakewood Ranch community that features luxurious homes with gourmet kitchens, spacious living areas, and elegant primary bedroom suites.",
+       "lowestMatchingPrice": "957,995",
+       "metroId": 835,
+       "metroName": "Sarasota",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/14515/plans/264269/interiors-resized/Monterey-at-LR-Shearwater_Centennial_PoolDuskE_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/14515/plans/264269/interiors-resized/Monterey-at-LR-Shearwater_Centennial_PoolDuskE_920.jpg"
+         },
+         "multimediaId": 436893,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/14515/plans/264269/interiors-resized/Monterey-at-LR-Shearwater_Centennial_PoolDuskE_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/14515/plans/264269/interiors-resized/Monterey-at-LR-Shearwater_Centennial_PoolDuskE_1800.jpg"
+         },
+         "name": "",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/14515/plans/264269/interiors-resized/Monterey-at-LR-Shearwater_Centennial_PoolDuskE_450.jpg"
+         },
+         "description": "Inviting covered rear patios for year-round enjoyment"
+        }
+       ],
+       "lat": "27.343609285998962",
+       "lon": "-82.32533689042893",
+       "communityId": 14515,
+       "state": "FL",
+       "city": "Lakewood Ranch",
+       "county": "Sarasota",
+       "pricedFrom": "957,995",
+       "phone": "941-279-4055",
+       "headerTitle": "Monterey at Lakewood Ranch - Shearwater Collection is a new Lakewood Ranch community that features luxurious homes with gourmet kitchens, spacious living areas, and elegant primary bedroom suites",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Amenities/Resort"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 5,
+         "minBath": 5,
+         "minSqft": 5403,
+         "minHalfbath": 1,
+         "maxSqft": 5403,
+         "minGarage": "3",
+         "pricedFrom": 1879000,
+         "isQdh": true,
+         "name": "Dexter Transitional",
+         "maxBed": 5,
+         "maxBath": 5,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "1/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 5,
+         "minBath": 5,
+         "minSqft": 4616,
+         "minHalfbath": 1,
+         "maxSqft": 4616,
+         "minGarage": "3",
+         "pricedFrom": 2005000,
+         "isQdh": true,
+         "name": "Centennial Modern Ranch",
+         "maxBed": 5,
+         "maxBath": 5,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "3/2027",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 3291,
+         "minHalfbath": 1,
+         "maxSqft": 3291,
+         "minGarage": "3",
+         "pricedFrom": 957995,
+         "isQdh": false,
+         "name": "Ballast",
+         "maxBed": 5,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 3,
+         "minSqft": 3485,
+         "minHalfbath": 1,
+         "maxSqft": 3485,
+         "minGarage": "3",
+         "pricedFrom": 992995,
+         "isQdh": false,
+         "name": "Caladesi",
+         "maxBed": 4,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 5,
+         "minBath": 4,
+         "minSqft": 4987,
+         "minHalfbath": 1,
+         "maxSqft": 4987,
+         "minGarage": "3",
+         "pricedFrom": 1243995,
+         "isQdh": false,
+         "name": "Dexter",
+         "maxBed": 5,
+         "maxBath": 4,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          2
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 4061,
+         "minHalfbath": 1,
+         "maxSqft": 4061,
+         "minGarage": "3",
+         "pricedFrom": 1093995,
+         "isQdh": false,
+         "name": "Centennial",
+         "maxBed": 6,
+         "maxBath": 6,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 4,
+         "minSqft": 4528,
+         "minHalfbath": 1,
+         "maxSqft": 4528,
+         "minGarage": "3",
+         "pricedFrom": 1156995,
+         "isQdh": false,
+         "name": "Stoneybrook",
+         "maxBed": 6,
+         "maxBath": 6,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "2"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 2,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "6667",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Lakewood-Ranch-FL",
+       "contactAtOnceRegion": 734,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 2,
+       "comingSoonQMICount": 0,
+       "zipCode": "34240",
+       "streetAddress": "2637 Waterfront Cir",
+       "masterCommunityId": 911,
+       "stories": [
+        "1",
+        "2"
+       ],
+       "schoolDistrict": "Sarasota County",
+       "pBedLoc": [
+        1,
+        2
+       ],
+       "minBath": 3,
+       "maxBath": 6,
+       "minHalfBath": 1,
+       "maxHalfBath": 1,
+       "minBed": 3,
+       "maxBed": 6,
+       "minSqft": 3291,
+       "maxSqft": 5403,
+       "minGarage": "3",
+       "maxGarage": "3",
+       "mcname": "Monterey at Lakewood Ranch",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "pMin": 957995,
+       "pMax": 2005000,
+       "communityFilters": [
+        "Award-Winning",
+        "Gated",
+        "Large Home Sites",
+        "Master-planned Community",
+        "Serene Setting",
+        "Top-Rated Education"
+       ],
+       "numModel": 5,
+       "selfGuided": false,
+       "onlineDate": "2023-02-25",
+       "activeDate": "2024-02-06",
+       "truncatedDescription": "Monterey at Lakewood Ranch - Shearwater Collection is a new Lakewood Ranch community that features luxurious homes with gourmet kitchens, spacious living areas, and elegant primary bedroom suites",
+       "type": "CommunitySearchItem"
+      }
+     ],
+     "county": "Sarasota",
+     "pricedFrom": "Mid-$700,000s",
+     "masterCommunityId": 911,
+     "schoolDistrict": "Sarasota County",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "communityFilters": [],
+     "city": "Lakewood Ranch",
+     "truncatedDescription": "Part of the desirable Lakewood Ranch communities, Monterey at Lakewood Ranch is a private, gated community from Toll Brothers that offers award-winning luxury home designs and exclusive amenities.",
+     "numQDH": 5,
+     "pbedLoc": [
+      1,
+      2
+     ],
+     "pMin": 738995,
+     "pMax": 2005000,
+     "state": "FL",
+     "type": "MasterCommunitySearchItem"
+    },
+    {
+     "@type": "CommunitySearchItem",
+     "options": [],
+     "badgeText": "New Home Design Now Available",
+     "position": 3,
+     "isMaster": false,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Oakbend-Wellen-Park",
+     "description": "Find a beautiful retreat close to everything at Oakbend Wellen Park, a vibrant, gated, new home community in Venice, FL. A selection of airy one- and two-story home designs offer 1,872 to over 3,100 square feet, 3 to 6 bedrooms, 2.5 to 5.5 baths, gorgeous outdoor living spaces, and versatile optiona…(836)",
+     "name": "Oakbend Wellen Park",
+     "distance": 23.24272831330705,
+     "title": "Oakbend Wellen Park is an exclusive, gated community of new homes in Venice, FL, featuring spacious one- and two-story home designs with luxurious personalization options and resort-style amenities, all in a highly walkable location.",
+     "lowestMatchingPrice": "498,995",
+     "metroId": 835,
+     "metroName": "Sarasota",
+     "cpRegion": "FL-TAMPA SARASOTA",
+     "images": [
+      {
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/14906/images-resized/shutterstock_2605020709_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/14906/images-resized/shutterstock_2605020709_920.jpg"
+       },
+       "multimediaId": 565395,
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/14906/images-resized/shutterstock_2605020709_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/14906/images-resized/shutterstock_2605020709_1800.jpg"
+       },
+       "name": "",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/14906/images-resized/shutterstock_2605020709_450.jpg"
+       },
+       "description": "All trails lead to the Grand Lake in Wellen Park where you can enjoy miles of uninterrupted views"
+      }
+     ],
+     "logo": {
+      "multimediaId": 517880,
+      "name": "",
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/14906/logo-resized/OakbendWellenPark-Logo-V-BLK_v2.svg"
+      }
+     },
+     "lat": "27.034828170644396",
+     "lon": "-82.32514613479194",
+     "communityId": 14906,
+     "state": "FL",
+     "city": "Venice",
+     "county": "Sarasota",
+     "pricedFrom": "498,995",
+     "phone": "941-271-0958",
+     "headerTitle": "Oakbend Wellen Park is an exclusive, gated community of new homes in Venice, FL, featuring spacious one- and two-story home designs with luxurious personalization options and resort-style amenities, all in a highly walkable location",
+     "oscPhone": "855-600-8655",
+     "homeTypes": [
+      "Single Family"
+     ],
+     "communityTypes": [
+      "Amenities/Resort"
+     ],
+     "homeProperties": [
+      {
+       "minBed": 3,
+       "minBath": 2,
+       "minSqft": 2500,
+       "minHalfbath": 1,
+       "maxSqft": 2500,
+       "minGarage": "2",
+       "pricedFrom": 833000,
+       "isQdh": true,
+       "name": "Sandbar Transitional",
+       "maxBed": 3,
+       "maxBath": 2,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "1/2027",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 2,
+       "minSqft": 1872,
+       "minHalfbath": 0,
+       "maxSqft": 1872,
+       "minGarage": "2.5",
+       "pricedFrom": 659000,
+       "isQdh": true,
+       "name": "Sawgrass Modern Coastal",
+       "maxBed": 3,
+       "maxBath": 2,
+       "maxGarage": "2.5",
+       "maxHalfbath": 0,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": "9/2026",
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 2,
+       "minSqft": 2257,
+       "minHalfbath": 1,
+       "maxSqft": 2257,
+       "minGarage": "2.5",
+       "pricedFrom": 555995,
+       "isQdh": false,
+       "name": "Cove",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "2.5",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 2,
+       "minSqft": 2500,
+       "minHalfbath": 1,
+       "maxSqft": 2500,
+       "minGarage": "2",
+       "pricedFrom": 566995,
+       "isQdh": false,
+       "name": "Sandbar",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 2,
+       "minSqft": 2156,
+       "minHalfbath": 1,
+       "maxSqft": 2156,
+       "minGarage": "2",
+       "pricedFrom": 531995,
+       "isQdh": false,
+       "name": "Schooner",
+       "maxBed": 4,
+       "maxBath": 3,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "1"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 3143,
+       "minHalfbath": 1,
+       "maxSqft": 3143,
+       "minGarage": "2",
+       "pricedFrom": 636995,
+       "isQdh": false,
+       "name": "Windlass",
+       "maxBed": 6,
+       "maxBath": 5,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 4,
+       "minBath": 3,
+       "minSqft": 3146,
+       "minHalfbath": 1,
+       "maxSqft": 3146,
+       "minGarage": "2",
+       "pricedFrom": 647995,
+       "isQdh": false,
+       "name": "Ventara",
+       "maxBed": 5,
+       "maxBath": 4,
+       "maxGarage": "2",
+       "maxHalfbath": 1,
+       "stories": [
+        "2"
+       ],
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      },
+      {
+       "minBed": 3,
+       "minBath": 2,
+       "minSqft": 1886,
+       "minHalfbath": 0,
+       "maxSqft": 1886,
+       "minGarage": "2.5",
+       "pricedFrom": 498995,
+       "isQdh": false,
+       "name": "Sawgrass",
+       "maxBed": 3,
+       "maxBath": 2,
+       "maxGarage": "2.5",
+       "maxHalfbath": 0,
+       "stories": null,
+       "homeTypes": [
+        "Single-Family"
+       ],
+       "moveInDate": null,
+       "pBedLoc": [
+        1
+       ]
+      }
+     ],
+     "isFuture": false,
+     "tSelect": false,
+     "highriseList": [],
+     "qdhList": [],
+     "modelList": [],
+     "hasExternalDomain": false,
+     "isMinPrice": false,
+     "childPosition": 0,
+     "partOfMaster": false,
+     "hasQdh": true,
+     "contactAtOnceJde": "9237",
+     "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Venice-FL",
+     "contactAtOnceRegion": 736,
+     "hasMatterport": true,
+     "hideScheduleTour": false,
+     "numQDH": 2,
+     "comingSoonQMICount": 0,
+     "zipCode": "34293",
+     "streetAddress": "12324 Falling Leaf Pl",
+     "stories": [
+      "1",
+      "2"
+     ],
+     "schoolDistrict": "Sarasota County",
+     "pBedLoc": [
+      1
+     ],
+     "minBath": 2,
+     "maxBath": 5,
+     "minHalfBath": 0,
+     "maxHalfBath": 1,
+     "minBed": 3,
+     "maxBed": 6,
+     "minSqft": 1872,
+     "maxSqft": 3146,
+     "minGarage": "2",
+     "maxGarage": "2.5",
+     "prePlannedCount": 0,
+     "otherList": [],
+     "pMin": 498995,
+     "pMax": 833000,
+     "communityFilters": [
+      "Fitness Focused",
+      "Gated",
+      "Integrated Retail",
+      "Master-planned Community",
+      "Nearby Beach Access",
+      "Top-Rated Education"
+     ],
+     "anticipatedOpeningDate": "2025-10-10",
+     "numModel": 6,
+     "selfGuided": false,
+     "onlineDate": "2025-01-22",
+     "activeDate": "2025-10-11",
+     "truncatedDescription": "Oakbend Wellen Park is an exclusive, gated community of new homes in Venice, FL, featuring spacious one- and two-story home designs with luxurious personalization options and resort-style amenities, all in a highly walkable location",
+     "type": "CommunitySearchItem"
+    },
+    {
+     "@type": "MasterCommunitySearchItem",
+     "options": null,
+     "badgeText": null,
+     "badgeLink": null,
+     "position": 4,
+     "isMaster": true,
+     "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Regency-at-Waterset",
+     "description": "The only active-adult community within the Waterset master plan, Regency at Waterset is a 55+ gated community in Apollo Beach, FL, offering low-maintenance living and luxury home designs in a vibrant setting with exclusive resort-style amenities.",
+     "name": "Regency at Waterset",
+     "distance": 29.874235559994318,
+     "title": "The only active-adult community within the Waterset master plan, Regency at Waterset is a 55+ gated community in Apollo Beach, FL, offering low-maintenance living and luxury home designs in a vibrant setting with exclusive resort-style amenities.",
+     "lowestMatchingPrice": "329,000",
+     "visible": null,
+     "metroId": 1227,
+     "metroName": "Tampa",
+     "cpRegion": "FL-TAMPA SARASOTA",
+     "images": [
+      {
+       "s450": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/937/images-resized/shutterstock_1782290810-(2)_450.jpg"
+       },
+       "s920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/937/images-resized/shutterstock_1782290810-(2)_920.jpg"
+       },
+       "multimediaId": 484057,
+       "s1920": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/937/images-resized/shutterstock_1782290810-(2)_1920.jpg"
+       },
+       "s1800": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/937/images-resized/shutterstock_1782290810-(2)_1800.jpg"
+       },
+       "name": "",
+       "link": {
+        "link": "https://cdn.tollbrothers.com/communities/masters/937/images-resized/shutterstock_1782290810-(2)_450.jpg"
+       },
+       "description": "Enjoy true Florida living with close proximity to local beaches"
+      }
+     ],
+     "logo": {
+      "multimediaId": 428078,
+      "name": "",
+      "link": {
+       "link": "https://cdn.tollbrothers.com/communities/masters/937/logo-resized/RegencyAtWaterset_55-AA-Logo-V-BLK.svg"
+      }
+     },
+     "lat": "27.75211899190069",
+     "lon": "-82.396712822229",
+     "lowestPricedChild": null,
+     "communities": [
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "27",
+         "name": "Turn Yext on for Future Community"
+        },
+        {
+         "id": "45",
+         "name": "Combine Site Plans on Master Community Page"
+        },
+        {
+         "id": "67",
+         "name": "Show Mortgage Calculator"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 4,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Regency-at-Waterset/Teal-Collection",
+       "description": "Discover the ideal blend of luxury and lifestyle at Regency at Waterset - Teal Collection, set within the only 55+ low-maintenance community in the established Waterset master plan. Select from an array of villa home designs featuring distinctive architecture and premium options. Home designs range …(788)",
+       "name": "Regency at Waterset - Teal Collection",
+       "distance": 29.874235559994318,
+       "title": "Regency at Waterset - Teal Collection is a 55+ gated community in Apollo Beach, FL, offering low-maintenance living, resort-style amenities, and luxury villa home designs ranging from 1,602 to 1,801 sq. ft. with 2–3 bedrooms and 2 bathrooms.",
+       "lowestMatchingPrice": "329,000",
+       "metroId": 1227,
+       "metroName": "Tampa",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/14648/images-resized/Regency_at_Waterset_-_Tern__Tern_MasterBedRoom_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/14648/images-resized/Regency_at_Waterset_-_Tern__Tern_MasterBedRoom_920.jpg"
+         },
+         "multimediaId": 452195,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/14648/images-resized/Regency_at_Waterset_-_Tern__Tern_MasterBedRoom_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/14648/images-resized/Regency_at_Waterset_-_Tern__Tern_MasterBedRoom_1800.jpg"
+         },
+         "name": "",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/14648/images-resized/Regency_at_Waterset_-_Tern__Tern_MasterBedRoom_450.jpg"
+         },
+         "description": "Expansive primary bedroom suites"
+        }
+       ],
+       "lat": "27.75211899190069",
+       "lon": "-82.396712822229",
+       "communityId": 14648,
+       "state": "FL",
+       "city": "Apollo Beach",
+       "county": "Hillsborough",
+       "pricedFrom": "329,000",
+       "phone": "813-803-9958",
+       "headerTitle": "Regency at Waterset - Teal Collection is a 55+ gated community in Apollo Beach, FL, offering low-maintenance living, resort-style amenities, and luxury villa home designs ranging from 1,602 to 1,801 sq. ft. with 2–3 bedrooms and 2 bathrooms",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Duet"
+       ],
+       "communityTypes": [
+        "Active Adult"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 1601,
+         "minHalfbath": 0,
+         "maxSqft": 1601,
+         "minGarage": "2",
+         "pricedFrom": 349000,
+         "isQdh": true,
+         "name": "Dunlin Transitional",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Duet"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 2,
+         "minBath": 2,
+         "minSqft": 1602,
+         "minHalfbath": 0,
+         "maxSqft": 1602,
+         "minGarage": "2",
+         "pricedFrom": 329000,
+         "isQdh": true,
+         "name": "Dunlin Transitional",
+         "maxBed": 2,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Duet"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 1601,
+         "minHalfbath": 0,
+         "maxSqft": 1601,
+         "minGarage": "2",
+         "pricedFrom": 348000,
+         "isQdh": true,
+         "name": "Dunlin Transitional",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Duet"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 1801,
+         "minHalfbath": 0,
+         "maxSqft": 1801,
+         "minGarage": "2",
+         "pricedFrom": 379000,
+         "isQdh": true,
+         "name": "Tern Modern Coastal",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Duet"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 1801,
+         "minHalfbath": 0,
+         "maxSqft": 1801,
+         "minGarage": "2",
+         "pricedFrom": 358000,
+         "isQdh": true,
+         "name": "Tern Transitional",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Duet"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 2,
+         "minBath": 2,
+         "minSqft": 1601,
+         "minHalfbath": 0,
+         "maxSqft": 1601,
+         "minGarage": "2",
+         "pricedFrom": 381995,
+         "isQdh": false,
+         "name": "Dunlin",
+         "maxBed": 2,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Duet"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 1801,
+         "minHalfbath": 0,
+         "maxSqft": 1801,
+         "minGarage": "2",
+         "pricedFrom": 419995,
+         "isQdh": false,
+         "name": "Tern",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Duet"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 0,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "8444",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Apollo-Beach-FL",
+       "contactAtOnceRegion": 736,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 5,
+       "comingSoonQMICount": 0,
+       "zipCode": "33572",
+       "streetAddress": "5561 Freestone Cir",
+       "masterCommunityId": 937,
+       "stories": [
+        "1"
+       ],
+       "schoolDistrict": "",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 2,
+       "maxBath": 2,
+       "minHalfBath": 0,
+       "maxHalfBath": 0,
+       "minBed": 2,
+       "maxBed": 3,
+       "minSqft": 1601,
+       "maxSqft": 1801,
+       "minGarage": "2",
+       "maxGarage": "2",
+       "mcname": "Regency at Waterset",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Regency-at-Waterset",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "pMin": 329000,
+       "pMax": 419995,
+       "communityFilters": [
+        "Fitness Focused",
+        "Gated",
+        "Master-planned Community",
+        "Nearby Beach Access",
+        "Smart Home Features"
+       ],
+       "numModel": 2,
+       "selfGuided": true,
+       "onlineDate": "2024-02-01",
+       "activeDate": "2024-04-11",
+       "truncatedDescription": "Regency at Waterset - Teal Collection is a 55+ gated community in Apollo Beach, FL, offering low-maintenance living, resort-style amenities, and luxury villa home designs ranging from 1,602 to 1,801 sq. ft. with 2–3 bedrooms and 2 bathrooms",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "27",
+         "name": "Turn Yext on for Future Community"
+        },
+        {
+         "id": "45",
+         "name": "Combine Site Plans on Master Community Page"
+        },
+        {
+         "id": "67",
+         "name": "Show Mortgage Calculator"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 4,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Regency-at-Waterset/Vine-Collection",
+       "description": "Discover the epitome of luxury living at Regency at Waterset - Vine Collection. Ideally situated amid the pristine shores of Apollo Beach, FL, this gated, 55+ active-adult community features the ease of low-maintenance living and offers two-story home designs that range from 1,661 to 1,979 sq. ft. w…(735)",
+       "name": "Regency at Waterset - Vine Collection",
+       "distance": 0,
+       "title": "A premier 55+ gated community in Apollo Beach, FL, Regency at Waterset - Vine Collection offers low-maintenance living, resort amenities, and luxury single-family home designs ranging from 1,661 to 1,979 sq. ft. with 2 bedrooms and 2 bathrooms.",
+       "lowestMatchingPrice": "481,995",
+       "metroId": 1227,
+       "metroName": "Tampa",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/14649/images-resized/Regency_at_Waterset_Razorbill_GreatRoom_2_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/14649/images-resized/Regency_at_Waterset_Razorbill_GreatRoom_2_920.jpg"
+         },
+         "multimediaId": 564509,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/14649/images-resized/Regency_at_Waterset_Razorbill_GreatRoom_2_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/14649/images-resized/Regency_at_Waterset_Razorbill_GreatRoom_2_1800.jpg"
+         },
+         "name": "",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/14649/images-resized/Regency_at_Waterset_Razorbill_GreatRoom_2_450.jpg"
+         },
+         "description": "Modern great rooms made for entertaining friends and family"
+        }
+       ],
+       "lat": "27.75211899190069",
+       "lon": "-82.396712822229",
+       "communityId": 14649,
+       "state": "FL",
+       "city": "Apollo Beach",
+       "county": "Hillsborough",
+       "pricedFrom": "481,995",
+       "phone": "813-803-9958",
+       "headerTitle": "A premier 55+ gated community in Apollo Beach, FL, Regency at Waterset - Vine Collection offers low-maintenance living, resort amenities, and luxury single-family home designs ranging from 1,661 to 1,979 sq. ft. with 2 bedrooms and 2 bathrooms",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Active Adult"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2282,
+         "minHalfbath": 1,
+         "maxSqft": 2282,
+         "minGarage": "2",
+         "pricedFrom": 649000,
+         "isQdh": true,
+         "name": "Cove Transitional",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "12/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2500,
+         "minHalfbath": 1,
+         "maxSqft": 2500,
+         "minGarage": "2",
+         "pricedFrom": 698000,
+         "isQdh": true,
+         "name": "Sandbar Prairie",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "12/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 2,
+         "minBath": 2,
+         "minSqft": 1952,
+         "minHalfbath": 0,
+         "maxSqft": 1952,
+         "minGarage": "2",
+         "pricedFrom": 481995,
+         "isQdh": false,
+         "name": "Razorbill",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2257,
+         "minHalfbath": 1,
+         "maxSqft": 2257,
+         "minGarage": "2",
+         "pricedFrom": 519995,
+         "isQdh": false,
+         "name": "Cove",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "2",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2500,
+         "minHalfbath": 1,
+         "maxSqft": 2500,
+         "minGarage": "2",
+         "pricedFrom": 545995,
+         "isQdh": false,
+         "name": "Sandbar",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "2",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2156,
+         "minHalfbath": 1,
+         "maxSqft": 2156,
+         "minGarage": "2",
+         "pricedFrom": 505995,
+         "isQdh": false,
+         "name": "Schooner",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "2",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 1886,
+         "minHalfbath": 0,
+         "maxSqft": 1886,
+         "minGarage": "2.5",
+         "pricedFrom": null,
+         "isQdh": false,
+         "name": "Sawgrass",
+         "maxBed": 3,
+         "maxBath": 2,
+         "maxGarage": "2.5",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 1,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "8445",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Apollo-Beach-FL",
+       "contactAtOnceRegion": 736,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 2,
+       "comingSoonQMICount": 0,
+       "zipCode": "33572",
+       "streetAddress": "5561 Freestone Cir",
+       "masterCommunityId": 937,
+       "stories": [
+        "1"
+       ],
+       "schoolDistrict": "",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 2,
+       "maxBath": 3,
+       "minHalfBath": 0,
+       "maxHalfBath": 1,
+       "minBed": 2,
+       "maxBed": 4,
+       "minSqft": 1886,
+       "maxSqft": 2500,
+       "minGarage": "2",
+       "maxGarage": "2.5",
+       "mcname": "Regency at Waterset",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Regency-at-Waterset",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "pMin": 481995,
+       "pMax": 698000,
+       "communityFilters": [
+        "Fitness Focused",
+        "Gated",
+        "Master-planned Community",
+        "Nearby Beach Access",
+        "Smart Home Features"
+       ],
+       "numModel": 5,
+       "selfGuided": false,
+       "onlineDate": "2024-02-01",
+       "activeDate": "2024-04-11",
+       "truncatedDescription": "A premier 55+ gated community in Apollo Beach, FL, Regency at Waterset - Vine Collection offers low-maintenance living, resort amenities, and luxury single-family home designs ranging from 1,661 to 1,979 sq. ft. with 2 bedrooms and 2 bathrooms",
+       "type": "CommunitySearchItem"
+      },
+      {
+       "@type": "CommunitySearchItem",
+       "options": [
+        {
+         "id": "27",
+         "name": "Turn Yext on for Future Community"
+        },
+        {
+         "id": "45",
+         "name": "Combine Site Plans on Master Community Page"
+        },
+        {
+         "id": "67",
+         "name": "Show Mortgage Calculator"
+        },
+        {
+         "id": "93",
+         "name": "DYOH V2"
+        }
+       ],
+       "position": 4,
+       "isMaster": false,
+       "url": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Regency-at-Waterset/Wren-Collection",
+       "description": "Regency at Waterset - Wren Collection provides residents with a low-maintenance lifestyle in a prestigious and vibrant setting in Apollo Beach, FL. This gated enclave for active adults delivers the epitome of resort-style living, highlighted by an array of exceptional amenities just for Regency resi…(795)",
+       "name": "Regency at Waterset - Wren Collection",
+       "distance": 0,
+       "title": "Set within a luxury 55+ gated community in Apollo Beach, FL, Regency at Waterset - Wren Collection offers low-maintenance living, resort amenities, and single-family home designs ranging from 2,261 to 2,596 sq. ft. with 2–3 bedrooms and 2 bathrooms.",
+       "lowestMatchingPrice": "622,995",
+       "metroId": 1227,
+       "metroName": "Tampa",
+       "cpRegion": "FL-TAMPA SARASOTA",
+       "images": [
+        {
+         "s450": {
+          "link": "https://cdn.tollbrothers.com/communities/14650/images-resized/Regency_at_Waterset_Flora_Kitchen_1_450.jpg"
+         },
+         "s920": {
+          "link": "https://cdn.tollbrothers.com/communities/14650/images-resized/Regency_at_Waterset_Flora_Kitchen_1_920.jpg"
+         },
+         "multimediaId": 564530,
+         "s1920": {
+          "link": "https://cdn.tollbrothers.com/communities/14650/images-resized/Regency_at_Waterset_Flora_Kitchen_1_1920.jpg"
+         },
+         "s1800": {
+          "link": "https://cdn.tollbrothers.com/communities/14650/images-resized/Regency_at_Waterset_Flora_Kitchen_1_1800.jpg"
+         },
+         "name": "",
+         "link": {
+          "link": "https://cdn.tollbrothers.com/communities/14650/images-resized/Regency_at_Waterset_Flora_Kitchen_1_450.jpg"
+         },
+         "description": "Gourmet kitchens with casual dining areas and an abundance of storage space"
+        }
+       ],
+       "lat": "27.75211899190069",
+       "lon": "-82.396712822229",
+       "communityId": 14650,
+       "state": "FL",
+       "city": "Apollo Beach",
+       "county": "Hillsborough",
+       "pricedFrom": "622,995",
+       "phone": "813-803-9958",
+       "headerTitle": "Set within a luxury 55+ gated community in Apollo Beach, FL, Regency at Waterset - Wren Collection offers low-maintenance living, resort amenities, and single-family home designs ranging from 2,261 to 2,596 sq. ft. with 2–3 bedrooms and 2 bathrooms",
+       "oscPhone": "855-600-8655",
+       "homeTypes": [
+        "Single Family"
+       ],
+       "communityTypes": [
+        "Active Adult"
+       ],
+       "homeProperties": [
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2828,
+         "minHalfbath": 1,
+         "maxSqft": 2828,
+         "minGarage": "3",
+         "pricedFrom": 899000,
+         "isQdh": true,
+         "name": "Selby Modern Coastal",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "12/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2710,
+         "minHalfbath": 0,
+         "maxSqft": 2710,
+         "minGarage": "3",
+         "pricedFrom": 739000,
+         "isQdh": true,
+         "name": "Dune Transitional",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": "9/2026",
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2386,
+         "minHalfbath": 1,
+         "maxSqft": 2386,
+         "minGarage": "3",
+         "pricedFrom": 622995,
+         "isQdh": false,
+         "name": "Flora",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 3,
+         "minBath": 2,
+         "minSqft": 2595,
+         "minHalfbath": 1,
+         "maxSqft": 2595,
+         "minGarage": "3",
+         "pricedFrom": 640995,
+         "isQdh": false,
+         "name": "Sanderling",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2828,
+         "minHalfbath": 1,
+         "maxSqft": 2828,
+         "minGarage": "3",
+         "pricedFrom": 672995,
+         "isQdh": false,
+         "name": "Selby",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 1,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        },
+        {
+         "minBed": 4,
+         "minBath": 3,
+         "minSqft": 2710,
+         "minHalfbath": 0,
+         "maxSqft": 2710,
+         "minGarage": "3",
+         "pricedFrom": 655995,
+         "isQdh": false,
+         "name": "Dune",
+         "maxBed": 4,
+         "maxBath": 3,
+         "maxGarage": "3",
+         "maxHalfbath": 0,
+         "stories": [
+          "1"
+         ],
+         "homeTypes": [
+          "Single-Family"
+         ],
+         "moveInDate": null,
+         "pBedLoc": [
+          1
+         ]
+        }
+       ],
+       "isFuture": false,
+       "tSelect": false,
+       "highriseList": [],
+       "qdhList": [],
+       "modelList": [],
+       "hasExternalDomain": false,
+       "isMinPrice": false,
+       "childPosition": 2,
+       "partOfMaster": true,
+       "hasQdh": true,
+       "contactAtOnceJde": "8446",
+       "citySearchURL": "https://www.tollbrothers.com/luxury-homes/Apollo-Beach-FL",
+       "contactAtOnceRegion": 736,
+       "hasMatterport": true,
+       "hideScheduleTour": false,
+       "numQDH": 2,
+       "comingSoonQMICount": 0,
+       "zipCode": "33572",
+       "streetAddress": "5561 Freestone Cir",
+       "masterCommunityId": 937,
+       "stories": [
+        "1"
+       ],
+       "schoolDistrict": "",
+       "pBedLoc": [
+        1
+       ],
+       "minBath": 2,
+       "maxBath": 3,
+       "minHalfBath": 0,
+       "maxHalfBath": 1,
+       "minBed": 3,
+       "maxBed": 4,
+       "minSqft": 2386,
+       "maxSqft": 2828,
+       "minGarage": "3",
+       "maxGarage": "3",
+       "mcname": "Regency at Waterset",
+       "mcurl": "https://www.tollbrothers.com/luxury-homes-for-sale/Florida/Regency-at-Waterset",
+       "prePlannedCount": 0,
+       "otherList": [],
+       "pMin": 622995,
+       "pMax": 899000,
+       "communityFilters": [
+        "Fitness Focused",
+        "Gated",
+        "Master-planned Community",
+        "Nearby Beach Access",
+        "Smart Home Features"
+       ],
+       "numModel": 4,
+       "selfGuided": true,
+       "onlineDate": "2024-02-01",
+       "activeDate": "2024-04-11",
+       "truncatedDescription": "Set within a luxury 55+ gated community in Apollo Beach, FL, Regency at Waterset - Wren Collection offers low-maintenance living, resort amenities, and single-family home designs ranging from 2,261 to 2,596 sq. ft. with 2–3 bedrooms and 2 bathrooms",
+       "type": "CommunitySearchItem"
+      }
+     ],
+     "county": "Hillsborough",
+     "pricedFrom": "Low $300,000s",
+     "masterCommunityId": 937,
+     "schoolDistrict": null,
+     "stories": [
+      "1"
+     ],
+     "communityFilters": [],
+     "city": "Apollo Beach",
+     "truncatedDescription": "The only active-adult community within the Waterset master plan, Regency at Waterset is a 55+ gated community in Apollo Beach, FL, offering low-maintenance living and luxury home designs in a vibrant setting with exclusive resort-style amenities.",
+     "numQDH": 9,
+     "pbedLoc": [
+      1
+     ],
+     "pMin": 329000,
+     "pMax": 899000,
+     "state": "FL",
+     "type": "MasterCommunitySearchItem"
+    }
+   ],
+   "suggested": [],
+   "searchStates": {},
+   "city": "Sarasota, FL",
+   "megaSearchCity": "Sarasota",
+   "megaSearchState": {
+    "FL": "Florida"
+   },
+   "displayTitle": "New Homes For Sale in Sarasota, FL | Toll Brothers",
+   "displaySearchName": "Sarasota",
+   "displayStateFull": "Florida",
+   "displayStateAbbreviation": "FL",
+   "displayDataSearchType": "",
+   "displayDataPageName": "Toll Brothers - Florida Search Page",
+   "displayMetaDescription": "Toll Brothers offers community living with luxury amenities. Learn more about our new construction homes for sale in Sarasota, FL, & find your dream home now. ",
+   "displayHTag": "New Luxury Homes in the Sarasota, FL Area",
+   "nf": false,
+   "searchParams": {
+    "validInput": true,
+    "locationOnly": false,
+    "incOnlyMetro": false,
+    "city": "Sarasota, FL",
+    "ex_c_type": [
+     "Rental",
+     "Student Housing",
+     "Storybook",
+     "Storybook"
+    ],
+    "radius": 50,
+    "onlineOnly": true,
+    "incSuggest": "n",
+    "formerDecorated": false,
+    "metro": [
+     "Sarasota, FL"
+    ],
+    "bts": "y",
+    "decorated": "y",
+    "qdh": "y",
+    "lat": 27.332107,
+    "lon": -82.530323,
+    "hasPlanWalkthrough": "N",
+    "DAF": "N"
+   },
+   "contactAtOnceJde": "FLW",
+   "generalContactRegion": 11,
+   "keepMaster": false,
+   "qdhSearch": false,
+   "oscPhone": "855-600-8655",
+   "smsPhone": "855-600-8655",
+   "months": [
+    "09/2026",
+    "10/2026",
+    "11/2026",
+    "12/2026",
+    "01/2027",
+    "02/2027",
+    "03/2027",
+    "04/2027",
+    "…(12 items total)"
+   ],
+   "selectedDate": null,
+   "buildInPreposition": " in ",
+   "count": 9,
+   "acquireId": "FLW",
+   "allRegions": null,
+   "metros": {
+    "835": {
+     "region": {
+      "metro": "Sarasota",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Sarasota, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLT",
+      "metroId": 835,
+      "priority": 1,
+      "verticalOffset": -5,
+      "horizontalOffset": -50,
+      "coords": [
+       27.3364347,
+       -82.5306527
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 4,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLW",
+      "acquireName": "FLW",
+      "hasForSale": true,
+      "hasActiveAdult": false
+     },
+     "count": 6
+    },
+    "1227": {
+     "region": {
+      "metro": "Tampa",
+      "state": "FL",
+      "fullState": "Florida",
+      "stateCategory": "FL",
+      "fullName": "Tampa, FL",
+      "email": "flonlinesales@tollbrothers.com",
+      "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+      "metroProductId": "FLT",
+      "metroId": 1227,
+      "priority": 1,
+      "verticalOffset": 5,
+      "horizontalOffset": -60,
+      "coords": [
+       27.9506,
+       -82.4572
+      ],
+      "hasRental": false,
+      "hasBts": true,
+      "hasQdh": true,
+      "searchDisplayPriority": 4,
+      "showBubble": true,
+      "onlyMetroSearch": false,
+      "acquireId": "FLW",
+      "acquireName": "FLW",
+      "hasForSale": true,
+      "hasActiveAdult": true
+     },
+     "count": 3
+    }
+   },
+   "virtualTourSearch": false,
+   "homeDesignSearch": false,
+   "orderDesc": false,
+   "events": [
+    {
+     "headline": {
+      "text": "4.99% (5.24% APR)*\n30-Year Fixed",
+      "link": "/4.99",
+      "disclaimer": "Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and restrictions. Not to be combined with any other offer. Toll Brothers reserves the right to change or withdraw any offer at any time. Rate subject to limited availability on selec…(1345)"
+     },
+     "byline": {
+      "text": "Limited Time Only on Select Homes"
+     },
+     "formName": "TB299FHA_012026",
+     "slugName": "4.99",
+     "paragraphs": [
+      {
+       "text": "Choose a beautiful new Toll Brothers quick move-in home now and qualify for a special 4.99% (5.24% APR)* 30-year fixed-rate mortgage with as little as 10% down through Toll Brothers Mortgage Company. This offer is subject to mortgage rate availability and is limited to select quick move-in homes eli…(335)"
+      },
+      {
+       "text": "Your new home is waiting. Make your move today. "
+      }
+     ],
+     "graphs": [
+      {
+       "text": "[{\"rate\":4.99,\"apr\":5.24}]"
+      }
+     ],
+     "bullets": [
+      {
+       "text": "500000"
+      },
+      {
+       "text": "Bullet 2"
+      }
+     ],
+     "color": "348266",
+     "endDate": "2026-10-30",
+     "eventType": "bannerEventNational",
+     "template": {
+      "text": "buydown-bluediamond"
+     },
+     "eventID": 10380
+    },
+    {
+     "headline": {
+      "text": "Step Inside to Experience the Difference*",
+      "link": "/national-open-house"
+     },
+     "cta": {
+      "text": "RSVP Today"
+     },
+     "logoVertical": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+     "logoHorizontal": "https://cdn.tollbrothers.com/images/salesevent/2026/06/national-noh.svg",
+     "formName": "NOH_2601",
+     "formCallback": "https://hello.tollbrothers.com/l/402642/2026-08-31/2cxmqc1",
+     "eventName": "National Open House Event",
+     "dateText": "SEPTEMBER 19-20",
+     "disclaimer": "Offer, if any, is valid for new buyers who purchase a home in a participating community and deposit between 9/5/26 and 9/20/26, sign an agreement of sale, and close on the home. Offers, incentives, and seller contributions, if any, vary by community and are subject to certain terms, conditions, and …(770)",
+     "paragraphs": [
+      {
+       "text": "September 19 or September 20"
+      }
+     ],
+     "color": "8D714D",
+     "startDate": "2026-09-05",
+     "endDate": "2026-09-20",
+     "eventType": "nationalEvent",
+     "template": {
+      "text": "NOH"
+     },
+     "autoResponderImage": "https://cdn.tollbrothers.com/images/salesevent/2026/06/noh-autoresponse.jpg",
+     "landingPageImage": "https://cdn.tollbrothers.com/images/salesevent/2026/02/tb_noh_landing_page_2602.svg",
+     "eventID": 10108
+    }
+   ],
+   "searchUrl": "/luxury-homes/Sarasota-FL",
+   "searchTemplate": {
+    "name": "Sarasota, FL - Community",
+    "meta": "Toll Brothers offers community living with luxury amenities. Learn more about our new construction homes for sale in Sarasota, FL, & find your dream home now.",
+    "sections": [
+     {
+      "ordinal": 0,
+      "header": {
+       "text": "New Homes for Sale in Sarasota, FL",
+       "images": []
+      },
+      "paragraphs": [
+       {
+        "text": "Known for its fabulous beaches and thriving cultural environment, Sarasota is one of the most desirable areas in the country to buy your new construction home. Located on the southwestern coast of Florida, Sarasota is a resort city boasting communities with luxury amenities, an active arts scene, an…(688)",
+        "images": []
+       }
+      ],
+      "images": []
+     },
+     {
+      "ordinal": 1,
+      "header": {
+       "text": "Neighborhoods & Communities in Sarasota, FL",
+       "images": []
+      },
+      "paragraphs": [
+       {
+        "text": "The area of Sarasota offers plenty of neighborhood choices perfect for building your new construction home. Just east of Downtown Sarasota you can find excellent communities only 20 minutes away from all the action. Lakewood Ranch is a master-planned community surrounded by gorgeous views and offers…(1060)",
+        "images": []
+       }
+      ],
+      "images": []
+     },
+     {
+      "ordinal": 2,
+      "header": {
+       "text": "What to Expect Living in Sarasota, FL",
+       "images": []
+      },
+      "paragraphs": [
+       {
+        "text": "With amazing beaches, thriving arts and culture, and plenty of employment opportunities, building your new construction home in Sarasota is the easy choice. Known for a strong tourism economy, Sarasota is also home to a range of companies, including Boar's Head Provisions Company, Roper Technologies…(1254)",
+        "images": []
+       }
+      ],
+      "images": []
+     },
+     {
+      "ordinal": 3,
+      "header": {
+       "text": "Places and Activities in Sarasota, FL",
+       "images": []
+      },
+      "paragraphs": [
+       {
+        "text": "When you build a new construction home in Sarasota, you'll have plenty of activities to explore in the endless sunshine. With warm sunny summers and mild winters, you'll be able to participate in the Cultural Coast's activities all year round. Known for its Italian-style architecture, the area of Sa…(1318)",
+        "images": []
+       }
+      ],
+      "images": []
+     }
+    ],
+    "images": [
+     {
+      "type": "image",
+      "url": "/search-seo/sarasota-fl/2/banner_1680.webp",
+      "description": "Sarasota Bay",
+      "representative": false,
+      "virtual": false
+     },
+     {
+      "type": "image",
+      "url": "/search-seo/sarasota-fl/2/skyline_858.webp",
+      "description": "Sarasota, FL Skyline",
+      "representative": false,
+      "virtual": false
+     },
+     {
+      "type": "image",
+      "url": "/search-seo/sarasota-fl/2/bird_key_park_858.webp",
+      "description": "View from Bird Key Park in Sarasota Florida",
+      "representative": false,
+      "virtual": false
+     },
+     {
+      "type": "image",
+      "url": "/search-seo/sarasota-fl/2/venice_street_858.webp",
+      "description": "Venice Street in Sarasota Florida",
+      "representative": false,
+      "virtual": false
+     },
+     {
+      "type": "image",
+      "url": "/search-seo/sarasota-fl/2/lakewood_ranch_858.webp",
+      "description": "Lakewood Ranch Florida",
+      "representative": false,
+      "virtual": false
+     }
+    ],
+    "locationType": 1,
+    "searchType": 2
+   },
+   "modelSearch": false,
+   "hasQMI": true,
+   "hasModel": true,
+   "hasQdhItems": false,
+   "cpRegion": "FL-TAMPA SARASOTA",
+   "canonicalURL": "https://www.tollbrothers.com/luxury-homes/Sarasota-FL",
+   "searchTitle": "New Homes For Sale in Sarasota, FL | Toll Brothers",
+   "mainHTag": "New Homes for Sale in the Sarasota, FL Area"
+  },
+  "region": "Sarasota-FL",
+  "myMetro": [
+   {
+    "name": "Florida",
+    "value": {
+     "hasCommunities": true,
+     "regions": [
+      {
+       "region": {
+        "metro": "Boca Raton",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Boca Raton, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLE",
+        "metroId": 793,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 55,
+        "coords": [
+         26.350519,
+         -80.089828
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": false,
+        "searchDisplayPriority": 7,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLE",
+        "acquireName": "FLE",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 4,
+       "regionUrl": "/luxury-homes/Boca-Raton-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Jacksonville",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Jacksonville, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLN",
+        "metroId": 810,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 60,
+        "coords": [
+         30.3321838,
+         -81.655651
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 1,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLN",
+        "acquireName": "FLN",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 28,
+       "regionUrl": "/luxury-homes/Jacksonville-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Naples",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Naples, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLW",
+        "metroId": 816,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": -40,
+        "coords": [
+         26.1421976,
+         -81.7942944
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 5,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLW",
+        "acquireName": "FLW",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 12,
+       "regionUrl": "/luxury-homes/Naples-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Orlando",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Orlando, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLC",
+        "metroId": 821,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 0,
+        "coords": [
+         28.5421109,
+         -81.3790304
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 2,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLC",
+        "acquireName": "FLC",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 22,
+       "regionUrl": "/luxury-homes/Orlando-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Palm Coast",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Palm Coast, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLN",
+        "metroId": 4152,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 60,
+        "coords": [
+         29.5845,
+         -81.2079
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 1,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLN",
+        "acquireName": "FLN",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 3,
+       "regionUrl": "/luxury-homes/Palm-Coast-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Panama City Beach",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Panama City Beach, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLN",
+        "metroId": 29687,
+        "priority": 1,
+        "verticalOffset": 0,
+        "horizontalOffset": 30,
+        "coords": [
+         30.1588,
+         -85.6602
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 1,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLN",
+        "acquireName": "FLN",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 3,
+       "regionUrl": "/luxury-homes/Panama-City-Beach-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Sarasota",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Sarasota, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLT",
+        "metroId": 835,
+        "priority": 1,
+        "verticalOffset": -5,
+        "horizontalOffset": -50,
+        "coords": [
+         27.3364347,
+         -82.5306527
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 4,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLW",
+        "acquireName": "FLW",
+        "hasForSale": true,
+        "hasActiveAdult": false
+       },
+       "count": 6,
+       "regionUrl": "/luxury-homes/Sarasota-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      {
+       "region": {
+        "metro": "Tampa",
+        "state": "FL",
+        "fullState": "Florida",
+        "stateCategory": "FL",
+        "fullName": "Tampa, FL",
+        "email": "flonlinesales@tollbrothers.com",
+        "encryptedEmail": "EgMDAjMLHAoHCQkXAB8EBgkYBwAwAgkLFhZAARof",
+        "metroProductId": "FLT",
+        "metroId": 1227,
+        "priority": 1,
+        "verticalOffset": 5,
+        "horizontalOffset": -60,
+        "coords": [
+         27.9506,
+         -82.4572
+        ],
+        "hasRental": false,
+        "hasBts": true,
+        "hasQdh": true,
+        "searchDisplayPriority": 4,
+        "showBubble": true,
+        "onlyMetroSearch": false,
+        "acquireId": "FLW",
+        "acquireName": "FLW",
+        "hasForSale": true,
+        "hasActiveAdult": true
+       },
+       "count": 6,
+       "regionUrl": "/luxury-homes/Tampa-FL",
+       "stateUrl": "/luxury-homes/Florida",
+       "display": true
+      },
+      "…(9 items total)"
+     ],
+     "hasRental": false,
+     "hasBTS": true,
+     "hasQdh": true,
+     "hasForSale": true,
+     "regionCount": 9,
+     "hasActiveAdult": true,
+     "url": "/luxury-homes/Florida"
+    }
+   }
+  ],
+  "isRental": false,
+  "isQMISearch": false,
+  "isModelSearch": false,
+  "isRegencySearch": false,
+  "isHomePropertiesSearch": true,
+  "robots": true
+ },
+ "__N_SSP": true
+}
