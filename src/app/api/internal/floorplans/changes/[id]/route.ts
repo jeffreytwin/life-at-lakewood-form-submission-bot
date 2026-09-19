@@ -49,8 +49,23 @@ export async function PATCH(
     };
     const edited = new Set(record.userEditedFields ?? []);
     for (const field of EDITABLE_FIELDS) {
-      if (field in edits && edits[field] !== record[field]) {
-        record[field] = edits[field];
+      if (!(field in edits)) continue;
+      if (field === "sqft") {
+        // The form shows "3,908" and the record holds 3908: compare as numbers,
+        // or every save would mark an untouched value as an override.
+        const digits = String(edits.sqft ?? "").replace(/[^0-9]/g, "");
+        const parsed = digits ? parseInt(digits, 10) : null;
+        if (parsed !== (record.sqft ?? null)) {
+          record.sqft = parsed;
+          edited.add("sqft");
+        }
+        continue;
+      }
+      // A blank in the form is the same as nothing in the record.
+      const after = typeof edits[field] === "string" ? edits[field].trim() : edits[field];
+      const before = record[field] ?? "";
+      if (String(after ?? "") !== String(before)) {
+        record[field] = after === "" ? null : after;
         edited.add(field);
       }
     }
@@ -58,10 +73,6 @@ export async function PATCH(
     if (edited.has("priceDisplay") && typeof record.priceDisplay === "string") {
       const parsed = parseInt(record.priceDisplay.replace(/[^0-9]/g, ""), 10);
       record.price = Number.isFinite(parsed) ? parsed : null;
-    }
-    if (edited.has("sqft") && record.sqft != null) {
-      const parsed = parseInt(String(record.sqft).replace(/[^0-9]/g, ""), 10);
-      record.sqft = Number.isFinite(parsed) ? parsed : null;
     }
     // Gallery edits: reorder/remove only — every entry must come from the
     // originally scraped image set. Position 0 is the main image.

@@ -26,6 +26,16 @@ describe("classifyRoom", () => {
     expect(classifyRoom("Covered lanai off the great room")).toBe("outdoor");
   });
 
+  it("puts anything with a loft right after the stairs", () => {
+    expect(classifyRoom("Spacious loft overlooking the great room")).toBe("loft");
+    const { urls } = orderGallery([
+      { src: "https://cdn/bed.jpg", caption: "Secondary bedroom" },
+      { src: "https://cdn/loft.jpg", caption: "Versatile loft" },
+      { src: "https://cdn/stairs.jpg", caption: "Elegant staircase" },
+    ]);
+    expect(urls).toEqual(["https://cdn/stairs.jpg", "https://cdn/loft.jpg", "https://cdn/bed.jpg"]);
+  });
+
   it("names nothing when nothing is said", () => {
     expect(classifyRoom("Caribbean")).toBeNull();
     expect(classifyRoom("")).toBeNull();

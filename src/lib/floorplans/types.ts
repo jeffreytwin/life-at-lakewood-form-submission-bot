@@ -1,9 +1,9 @@
 /**
  * Where a gallery image sits in the order the sites show a plan's photos
  * (Jeff, 2026-09-18): the primary picture, then kitchen, living room,
- * dining room, pool and lanai, office, hallways, stairs, bedrooms,
- * bathrooms, laundry, closets, anything unplaced, and the extra exterior
- * options last.
+ * dining room, pool and lanai, office, hallways, stairs, then anything with
+ * a loft (right after the stairs, Jeff, 2026-09-19), bedrooms, bathrooms,
+ * laundry, closets, anything unplaced, and the extra exterior options last.
  */
 export const ROOM_ORDER = [
   "primary",
@@ -14,6 +14,7 @@ export const ROOM_ORDER = [
   "office",
   "hallway",
   "stairs",
+  "loft",
   "bedroom",
   "bathroom",
   "laundry",

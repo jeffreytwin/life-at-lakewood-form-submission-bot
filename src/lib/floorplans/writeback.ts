@@ -20,11 +20,18 @@ import {
   removeItem,
   importMediaFromUrl,
   mediaState,
+  WixApiError,
   type WixItemData,
 } from "@/lib/wix/client";
 import { wixImageUri } from "@/lib/listings/types";
 import { measureImageUrl, wixFileIdOf } from "@/lib/floorplans/media";
-import type { GalleryMeta } from "@/lib/floorplans/types";
+import { normKey, type GalleryMeta } from "@/lib/floorplans/types";
+
+/** A plan is builder + community + name (migration 065); the same trio keys the Wix row's syncKey. */
+const PLAN_IDENTITY = "site_id,community_id,builder_id,plan_key";
+
+/** Wix answers a write to an item deleted from the CMS with 404 WDE0073. */
+const isGoneFromWix = (error: unknown): boolean => error instanceof WixApiError && error.status === 404;
 
 interface ProposedRecord {
   planKey: string;
@@ -189,6 +196,8 @@ async function importRecordMedia(
   const photoUrls = galleryUrls(rec);
   const gallery = await importGallery(siteId, wixSiteId, photoUrls, rec.planKey, "photo", rec.galleryMeta ?? {});
   const blueprints = await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
+  // A drawing has no caption of its own; the site shows this one.
+  blueprints.items = blueprints.items.map((item) => ({ ...item, title: "Floor plan", alt: "Floor plan" }));
   // The still behind the virtual tour button; optional, so its failure only costs the still.
   const tourImage = rec.virtualTourImage
     ? await importImage(siteId, wixSiteId, rec.virtualTourImage, displayNameFor(rec.planKey, "tour", 1, rec.virtualTourImage))
@@ -228,12 +237,15 @@ function toWixData(
     floorPlanDescription: rec.description?.trim() || undefined,
     virtualTourLink: rec.virtualTourUrl?.trim() || undefined,
     ...(tourImage ? { virtualTourImageV2: tourImage } : {}),
-    // The main image is gallery position #1, always.
-    ...(gallery[0] ? { floorPlanImage: gallery[0].src } : {}),
-    ...(gallery.length ? { floorPlanImageGalleryLink: gallery } : {}),
+    // The main image is gallery position #1, always; a plan with drawings
+    // and no photos leads with its drawing rather than nothing.
+    ...(gallery[0] ?? blueprints[0] ? { floorPlanImage: (gallery[0] ?? blueprints[0]).src } : {}),
+    // The photo gallery ends with the drawings (Jeff, 2026-09-19); they
+    // also keep their own gallery for pages that show them apart.
+    ...(gallery.length || blueprints.length ? { floorPlanImageGalleryLink: [...gallery, ...blueprints] } : {}),
     ...(blueprints.length ? { floorPlanBluePrintGallery: blueprints } : {}),
     sourceUrl: rec.sourceUrl ?? undefined,
-    syncKey: rec.planKey,
+    syncKey: [normKey(builderName), normKey(communityName), rec.planKey].join("/"),
     lastSyncedAt: new Date().toISOString(),
   };
 }
@@ -305,7 +317,7 @@ export async function applyPendingChange(changeId: string): Promise<{
             last_seen_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
-          { onConflict: "site_id,plan_key" }
+          { onConflict: PLAN_IDENTITY }
         )
         .select("id")
         .single();
@@ -346,12 +358,23 @@ export async function applyPendingChange(changeId: string): Promise<{
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
       const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
-      await updateItem(
-        site.wix_site_id,
-        site.wix_collection_id,
-        change.wix_record_id,
-        toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage)
-      );
+      const data = toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage);
+      let wixRecordId: string = change.wix_record_id;
+      let recreatedAsDraft = false;
+      try {
+        await updateItem(site.wix_site_id, site.wix_collection_id, wixRecordId, data);
+      } catch (error) {
+        if (!isGoneFromWix(error)) throw error;
+        // The item was deleted from the CMS by hand (Jeff cleared the
+        // collection on 2026-09-19 and every approval 404ed). Re-create it
+        // rather than strand the plan; like any insert it lands as a draft
+        // while the site is in draft mode.
+        const asDraft = site.insert_publish_mode !== "published";
+        const item = await insertItem(site.wix_site_id, site.wix_collection_id, data, { asDraft });
+        wixRecordId = item.id;
+        recreatedAsDraft = asDraft;
+        logger.info("Floor plan item was gone from Wix; re-created", { changeId, planKey: change.plan_key, wixRecordId });
+      }
       await supabase
         .from("fp_floor_plans")
         .update({
@@ -360,29 +383,40 @@ export async function applyPendingChange(changeId: string): Promise<{
           sqft: rec.sqft,
           quick_move_in: rec.quickMoveIn,
           record: rec,
+          wix_record_id: wixRecordId,
           last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq("site_id", site.id)
+        .eq("community_id", community.id)
+        .eq("builder_id", builder.id)
         .eq("plan_key", change.plan_key);
+      const updateStatus = recreatedAsDraft ? "synced_draft" : "synced";
       await supabase
         .from("fp_pending_changes")
-        .update({ status: "synced", updated_at: new Date().toISOString() })
+        .update({ status: updateStatus, wix_record_id: wixRecordId, updated_at: new Date().toISOString() })
         .eq("id", changeId);
       await maybeCreateFollowUp(
         change.field_changed === "price" ? "price_changed" : "other_change",
         `${rec.name}: ${change.field_changed ?? "updated"} ${change.old_value ?? ""} → ${change.new_value ?? ""} — update the brand email`
       );
-      return { status: "synced" };
+      return { status: updateStatus };
     }
 
     if (change.change_type === "remove") {
       if (!change.wix_record_id) return fail("remove change has no wix_record_id");
-      await removeItem(site.wix_site_id, site.wix_collection_id, change.wix_record_id);
+      try {
+        await removeItem(site.wix_site_id, site.wix_collection_id, change.wix_record_id);
+      } catch (error) {
+        // Already gone from the CMS is the outcome wanted.
+        if (!isGoneFromWix(error)) throw error;
+      }
       await supabase
         .from("fp_floor_plans")
         .update({ removed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
         .eq("site_id", site.id)
+        .eq("community_id", community.id)
+        .eq("builder_id", builder.id)
         .eq("plan_key", change.plan_key);
       await supabase
         .from("fp_pending_changes")

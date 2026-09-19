@@ -22,6 +22,9 @@ export const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
   ["description", "description"],
 ];
 
+/** Fields shown with thousands separators in the queue ("3,908"), while the record keeps the number. */
+const NUMERIC_FIELDS = new Set<keyof NormalizedPlan>(["sqft"]);
+
 /** Fields too long to show or match whole; their queue values are a lead-in plus a digest, like galleries. */
 const LONG_TEXT_FIELDS = new Set<keyof NormalizedPlan>(["description"]);
 
@@ -109,7 +112,11 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
     const oldVal = current[field];
     const newVal = plan[field];
     if (String(oldVal ?? "") === String(newVal ?? "")) continue;
-    const show = LONG_TEXT_FIELDS.has(field) ? describeText : (v: unknown) => String(v ?? "");
+    const show = LONG_TEXT_FIELDS.has(field)
+      ? describeText
+      : NUMERIC_FIELDS.has(field)
+        ? (v: unknown) => (typeof v === "number" ? v.toLocaleString("en-US") : String(v ?? ""))
+        : (v: unknown) => String(v ?? "");
     changes.push({ field, label, oldValue: show(oldVal), newValue: show(newVal) });
   }
   for (const [field, label] of GALLERY_FIELDS) {

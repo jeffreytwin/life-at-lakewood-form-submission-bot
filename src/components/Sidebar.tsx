@@ -60,7 +60,10 @@ export default function Sidebar({
       fetch("/api/internal/floorplans/changes?status=pending&limit=200")
         .then((r) => r.json())
         .then((data) => {
-          if (Array.isArray(data)) setFloorPlanCount(data.length);
+          // One row per changed field comes back; the badge counts plans.
+          if (Array.isArray(data)) {
+            setFloorPlanCount(new Set(data.map((c) => `${c.site_id}|${c.community_id}|${c.builder_id}|${c.plan_key}`)).size);
+          }
         })
         .catch(() => {});
     }

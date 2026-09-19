@@ -1,9 +1,38 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
+
+interface GalleryMeta {
+  caption?: string | null;
+  room?: string | null;
+  kind?: string;
+}
+
+interface ProposedRecord {
+  name?: string;
+  priceDisplay?: string | null;
+  beds?: string;
+  baths?: string;
+  sqft?: number | null;
+  garages?: string | null;
+  homeType?: string | null;
+  quickMoveIn?: boolean;
+  sourceUrl?: string | null;
+  primaryImage?: string | null;
+  galleryImages?: string[];
+  blueprintImages?: string[];
+  galleryMeta?: Record<string, GalleryMeta>;
+  description?: string | null;
+  virtualTourUrl?: string | null;
+  userEditedFields?: string[];
+}
 
 interface PendingChange {
   id: string;
+  site_id: string;
+  community_id: string;
+  builder_id: string;
   change_type: "add" | "update" | "remove";
   plan_key: string;
   field_changed: string | null;
@@ -12,29 +41,15 @@ interface PendingChange {
   status: string;
   error_detail: string | null;
   created_at: string;
-  proposed_record: {
-    name?: string;
-    priceDisplay?: string | null;
-    beds?: string;
-    baths?: string;
-    sqft?: number | null;
-    garages?: string | null;
-    homeType?: string | null;
-    quickMoveIn?: boolean;
-    sourceUrl?: string | null;
-    primaryImage?: string | null;
-    galleryImages?: string[];
-    blueprintImages?: string[];
-    galleryMeta?: Record<string, { caption?: string | null; room?: string | null; kind?: string }>;
-    description?: string | null;
-    virtualTourUrl?: string | null;
-    userEditedFields?: string[];
-  } | null;
+  updated_at: string | null;
+  proposed_record: ProposedRecord | null;
   fp_sites: { domain: string; name: string } | null;
   fp_communities: { name: string } | null;
   fp_builders: { name: string } | null;
   fp_floor_plans: { id: string; starred: boolean } | null;
 }
+
+type Group = ChangeGroup<PendingChange>;
 
 interface FollowUpTask {
   id: string;
@@ -44,11 +59,121 @@ interface FollowUpTask {
   fp_floor_plans: { name: string; fp_sites: { domain: string } | null } | null;
 }
 
+interface Preview {
+  src: string;
+  caption?: string | null;
+}
+
 const CHANGE_LABEL: Record<PendingChange["change_type"], string> = {
   add: "New Plan",
   update: "Update",
   remove: "Remove",
 };
+
+/** "3908" reads as 3,908 wherever the queue shows square feet (rows queued before the diff formatted them). */
+function formatValue(field: string | null, value: string | null): string {
+  if (value == null) return "";
+  if (field === "sqft" && /^\d+$/.test(value)) return Number(value).toLocaleString("en-US");
+  return value;
+}
+
+function reorder<T>(list: T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
+
+const pendingIds = (g: Group) => g.rows.filter((r) => r.status === "pending").map((r) => r.id);
+
+/**
+ * One gallery in the edit overlay. Photos move by drag and drop or by the
+ * arrows; hovering shows the picture large (Jeff, 2026-09-19).
+ */
+function GalleryEditor({
+  label,
+  list,
+  setList,
+  meta,
+  isPhotos,
+  onPreview,
+}: {
+  label: string;
+  list: string[];
+  setList: (v: string[]) => void;
+  meta?: Record<string, GalleryMeta>;
+  isPhotos: boolean;
+  onPreview: (p: Preview | null) => void;
+}) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  if (list.length === 0) return null;
+  const move = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= list.length) return;
+    setList(reorder(list, index, target));
+  };
+  return (
+    <div className="form-group">
+      <label>{label}</label>
+      <p className="text-muted" style={{ fontSize: 11, margin: "0 0 6px" }}>
+        Drag a picture to where it belongs, or use the arrows. Hover to see it large.
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {list.map((url, i) => {
+          const m = meta?.[url];
+          return (
+            <div
+              key={url}
+              draggable
+              onDragStart={() => setDragIndex(i)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragIndex !== null && dragIndex !== i) setList(reorder(list, dragIndex, i));
+                setDragIndex(null);
+              }}
+              onDragEnd={() => setDragIndex(null)}
+              onMouseEnter={() => onPreview({ src: url, caption: m?.caption })}
+              onMouseLeave={() => onPreview(null)}
+              style={{ position: "relative", textAlign: "center", cursor: "grab", opacity: dragIndex === i ? 0.4 : 1 }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt=""
+                style={{
+                  width: 96, height: 64, objectFit: "cover", borderRadius: 6,
+                  border: i === 0 && isPhotos ? "2px solid var(--accent, #2563eb)" : "1px solid #ccc",
+                  display: "block",
+                }}
+              />
+              {i === 0 && isPhotos && (
+                <span className="text-sm" style={{ position: "absolute", top: 2, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", borderRadius: 4, padding: "0 4px" }}>
+                  main
+                </span>
+              )}
+              <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 2 }}>
+                <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => move(i, -1)} disabled={i === 0}>←</button>
+                <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => setList(list.filter((u) => u !== url))}>✕</button>
+                <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => move(i, 1)} disabled={i === list.length - 1}>→</button>
+              </div>
+              {isPhotos && m && (
+                <div
+                  className="text-muted"
+                  title={m.caption ?? ""}
+                  style={{ fontSize: 10, width: 96, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                  {m.room ?? "?"}
+                  {m.caption ? ` · ${m.caption}` : ""}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function FloorPlansPage() {
   const [changes, setChanges] = useState<PendingChange[]>([]);
@@ -58,7 +183,7 @@ export default function FloorPlansPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
-  const [editing, setEditing] = useState<PendingChange | null>(null);
+  const [editing, setEditing] = useState<Group | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
     priceDisplay: "",
@@ -73,6 +198,7 @@ export default function FloorPlansPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [editGallery, setEditGallery] = useState<string[]>([]);
   const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
+  const [preview, setPreview] = useState<Preview | null>(null);
 
   const [tasks, setTasks] = useState<FollowUpTask[]>([]);
 
@@ -112,44 +238,59 @@ export default function FloorPlansPage() {
     () => [...new Set(changes.map((c) => c.fp_sites?.domain).filter(Boolean))] as string[],
     [changes]
   );
-  const visible = useMemo(
-    () => changes.filter((c) => siteFilter === "all" || c.fp_sites?.domain === siteFilter),
+  // One row per plan: the queue holds one row per changed field.
+  const groups = useMemo(
+    () => groupChanges(changes.filter((c) => siteFilter === "all" || c.fp_sites?.domain === siteFilter)),
     [changes, siteFilter]
   );
+  const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0), [groups]);
 
-  async function act(id: string, action: "approve" | "reject") {
-    const change = changes.find((c) => c.id === id);
+  /** Approves or rejects every pending row of a plan; reports a failed write instead of hiding it in the Failed filter. */
+  async function act(group: Group, action: "approve" | "reject", quiet = false): Promise<boolean> {
+    const ids = pendingIds(group);
+    if (!ids.length) return true;
+    const starred = group.lead.fp_floor_plans?.starred;
     if (
+      !quiet &&
       action === "approve" &&
-      change?.fp_floor_plans?.starred &&
-      (change.change_type === "remove" || change.change_type === "update") &&
-      !confirm(
-        `⭐ This plan is used in a brand email. Approving this ${change.change_type} will create a follow-up task to update the email. Continue?`
-      )
+      starred &&
+      (group.kind === "remove" || group.kind === "update") &&
+      !confirm(`⭐ This plan is used in a brand email. Approving this ${group.kind} will create a follow-up task to update the email. Continue?`)
     ) {
-      return;
+      return false;
     }
-    setBusy((b) => new Set(b).add(id));
+    setBusy((b) => new Set(b).add(group.key));
     try {
-      await fetch(`/api/internal/floorplans/changes/${id}/${action}`, { method: "POST" });
+      const res = await fetch("/api/internal/floorplans/changes/bulk", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action, ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const detail = data?.results?.find((r: { error?: string | null }) => r.error)?.error ?? data?.error ?? `HTTP ${res.status}`;
+        if (!quiet) alert(`${action === "approve" ? "Approve" : "Reject"} failed for ${group.lead.proposed_record?.name ?? group.lead.plan_key}: ${detail}`);
+        return false;
+      }
+      return true;
     } finally {
       setBusy((b) => {
         const next = new Set(b);
-        next.delete(id);
+        next.delete(group.key);
         return next;
       });
-      fetchChanges();
+      if (!quiet) fetchChanges();
     }
   }
 
-  function openEdit(c: PendingChange) {
-    const rec = c.proposed_record ?? {};
+  function openEdit(group: Group) {
+    const rec = group.lead.proposed_record ?? {};
     setEditForm({
       name: rec.name ?? "",
       priceDisplay: rec.priceDisplay ?? "",
       beds: rec.beds ?? "",
       baths: rec.baths ?? "",
-      sqft: rec.sqft != null ? String(rec.sqft) : "",
+      sqft: rec.sqft != null ? rec.sqft.toLocaleString("en-US") : "",
       garages: rec.garages ?? "",
       homeType: rec.homeType ?? "",
       virtualTourUrl: rec.virtualTourUrl ?? "",
@@ -162,51 +303,50 @@ export default function FloorPlansPage() {
         : [];
     setEditGallery(gallery);
     setEditBlueprints(rec.blueprintImages ?? []);
-    setEditing(c);
+    setPreview(null);
+    setEditing(group);
   }
 
-  function moveImage(list: string[], setList: (v: string[]) => void, index: number, dir: -1 | 1) {
-    const next = [...list];
-    const target = index + dir;
-    if (target < 0 || target >= next.length) return;
-    [next[index], next[target]] = [next[target], next[index]];
-    setList(next);
-  }
-
-  async function saveEdit(approveAfter: boolean) {
+  /** Saves the edits onto every pending row of the plan, so whichever row is approved carries them. */
+  async function saveEdit() {
     if (!editing) return;
     setSavingEdit(true);
     try {
-      const res = await fetch(`/api/internal/floorplans/changes/${editing.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          record: { ...editForm, galleryImages: editGallery, blueprintImages: editBlueprints },
-        }),
-      });
-      if (res.ok && approveAfter) {
-        await fetch(`/api/internal/floorplans/changes/${editing.id}/approve`, { method: "POST" });
-      }
+      const record = { ...editForm, galleryImages: editGallery, blueprintImages: editBlueprints };
+      await Promise.all(
+        pendingIds(editing).map((id) =>
+          fetch(`/api/internal/floorplans/changes/${id}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ record }),
+          })
+        )
+      );
     } finally {
       setSavingEdit(false);
       setEditing(null);
+      setPreview(null);
       fetchChanges();
     }
   }
 
   async function bulkApprove() {
-    if (!confirm(`Approve all ${visible.length} visible changes? Approved adds are written to Wix as drafts.`)) return;
+    if (!confirm(`Approve all ${pendingGroups.length} visible plans? Approved new plans are written to Wix as drafts.`)) return;
     setBulkBusy(true);
+    const failed: string[] = [];
     try {
-      for (const c of visible) {
-        if (c.status !== "pending") continue;
-        await fetch(`/api/internal/floorplans/changes/${c.id}/approve`, { method: "POST" });
+      for (const g of pendingGroups) {
+        if (!(await act(g, "approve", true))) failed.push(g.lead.proposed_record?.name ?? g.lead.plan_key);
       }
     } finally {
       setBulkBusy(false);
       fetchChanges();
+      if (failed.length) alert(`${failed.length} plan(s) could not be written to Wix: ${failed.join(", ")}. See the Failed filter for details.`);
     }
   }
+
+  const detailLine = (rec: ProposedRecord | null) =>
+    `${rec?.priceDisplay ?? "—"}${rec?.beds ? ` · ${rec.beds} bd` : ""}${rec?.baths ? ` · ${rec.baths} ba` : ""}${rec?.sqft ? ` · ${rec.sqft.toLocaleString("en-US")} sqft` : ""}`;
 
   return (
     <div>
@@ -214,14 +354,14 @@ export default function FloorPlansPage() {
         <div>
           <h2>Floor Plan Changes</h2>
           <p className="text-muted">
-            Detected changes from builder websites. Approved new plans are written to the
+            Detected changes from builder websites, one row per plan. Approved new plans are written to the
             Floor Plans V2 collection as drafts — publish them in the Wix CMS to make them live.
             {" "}<a href="/dashboard/floor-plans/cutover">Cutover report →</a>
           </p>
         </div>
-        {statusFilter === "pending" && visible.some((c) => c.status === "pending") && (
+        {statusFilter === "pending" && pendingGroups.length > 0 && (
           <button className="btn btn-primary" onClick={bulkApprove} disabled={bulkBusy}>
-            {bulkBusy ? "Approving…" : `Approve All (${visible.filter((c) => c.status === "pending").length})`}
+            {bulkBusy ? "Approving…" : `Approve All (${pendingGroups.length})`}
           </button>
         )}
       </div>
@@ -277,7 +417,7 @@ export default function FloorPlansPage() {
         <div className="empty-state">Loading…</div>
       ) : error ? (
         <div className="empty-state">{error}</div>
-      ) : visible.length === 0 ? (
+      ) : groups.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">✓</div>
           No {statusFilter === "all" ? "" : statusFilter} floor plan changes.
@@ -298,16 +438,27 @@ export default function FloorPlansPage() {
                 </tr>
               </thead>
               <tbody>
-                {visible.map((c) => {
+                {groups.map((g) => {
+                  const c = g.lead;
                   const rec = c.proposed_record;
                   // The main image is the gallery's first photo; primaryImage is the first slice's field.
                   const thumb = rec?.galleryImages?.[0] ?? rec?.primaryImage ?? null;
                   const photoCount = rec?.galleryImages?.length ?? 0;
+                  const isPending = pendingIds(g).length > 0;
+                  const fieldRows = g.rows.filter((r) => r.change_type === "update" && r.field_changed);
+                  const failedRow = g.rows.find((r) => r.status === "failed" && r.error_detail);
                   return (
-                    <tr key={c.id}>
+                    <tr key={g.key}>
                       <td style={{ width: 92 }}>
                         {thumb ? (
-                          <a href={thumb} target="_blank" rel="noreferrer" title={photoCount ? `${photoCount} photos` : undefined}>
+                          <button
+                            type="button"
+                            title={isPending ? "Edit this plan before approving" : `${photoCount} photos`}
+                            onClick={() => (isPending ? openEdit(g) : window.open(thumb, "_blank", "noopener"))}
+                            onMouseEnter={() => setPreview({ src: thumb, caption: rec?.galleryMeta?.[thumb]?.caption })}
+                            onMouseLeave={() => setPreview(null)}
+                            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+                          >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={thumb}
@@ -315,17 +466,20 @@ export default function FloorPlansPage() {
                               style={{ width: 84, height: 56, objectFit: "cover", borderRadius: 6, display: "block" }}
                             />
                             {photoCount > 1 && <div className="text-muted" style={{ fontSize: 10 }}>{photoCount} photos</div>}
-                          </a>
+                          </button>
                         ) : (
                           <span className="text-muted text-sm">no image</span>
                         )}
                       </td>
                       <td>
-                        <span className={`badge ${c.change_type === "remove" ? "badge-danger" : c.change_type === "add" ? "badge-success" : "badge-warning"}`}>
-                          {CHANGE_LABEL[c.change_type]}
+                        <span className={`badge ${g.kind === "remove" ? "badge-danger" : g.kind === "add" ? "badge-success" : "badge-warning"}`}>
+                          {CHANGE_LABEL[g.kind]}
                         </span>
-                        {c.status !== "pending" && (
-                          <div className="text-muted text-sm">{c.status}</div>
+                        {g.kind === "update" && fieldRows.length > 0 && (
+                          <div className="text-muted text-sm">{fieldRows.length} field{fieldRows.length === 1 ? "" : "s"}</div>
+                        )}
+                        {g.status !== "pending" && (
+                          <div className="text-muted text-sm">{g.status}</div>
                         )}
                       </td>
                       <td>
@@ -366,20 +520,19 @@ export default function FloorPlansPage() {
                         )}
                       </td>
                       <td>
-                        {c.change_type === "update" && c.field_changed ? (
-                          <span>
-                            {c.field_changed}: <s className="text-muted">{c.old_value}</s> → <strong>{c.new_value}</strong>
-                          </span>
+                        {g.kind === "update" && fieldRows.length > 0 ? (
+                          <div className="text-sm">
+                            {fieldRows.map((r) => (
+                              <div key={r.id}>
+                                {r.field_changed}: <s className="text-muted">{formatValue(r.field_changed, r.old_value)}</s> → <strong>{formatValue(r.field_changed, r.new_value)}</strong>
+                              </div>
+                            ))}
+                          </div>
                         ) : (
-                          <span>
-                            {rec?.priceDisplay ?? "—"}
-                            {rec?.beds ? ` · ${rec.beds} bd` : ""}
-                            {rec?.baths ? ` · ${rec.baths} ba` : ""}
-                            {rec?.sqft ? ` · ${rec.sqft.toLocaleString()} sqft` : ""}
-                          </span>
+                          <span>{detailLine(rec)}</span>
                         )}
-                        {c.status === "failed" && c.error_detail && (
-                          <div className="text-muted text-sm">⚠ {c.error_detail}</div>
+                        {failedRow && (
+                          <div className="text-muted text-sm">⚠ {failedRow.error_detail}</div>
                         )}
                       </td>
                       <td className="text-sm">
@@ -389,29 +542,29 @@ export default function FloorPlansPage() {
                         </div>
                       </td>
                       <td className="text-muted text-sm">
-                        {new Date(c.created_at).toLocaleDateString()}
+                        {new Date(g.createdAt).toLocaleDateString()}
                       </td>
                       <td>
-                        {c.status === "pending" && (
+                        {isPending && (
                           <div style={{ display: "flex", gap: 8 }}>
                             <button
                               className="btn btn-primary"
-                              disabled={busy.has(c.id)}
-                              onClick={() => act(c.id, "approve")}
+                              disabled={busy.has(g.key)}
+                              onClick={() => act(g, "approve")}
                             >
-                              {busy.has(c.id) ? "…" : "Approve"}
+                              {busy.has(g.key) ? "…" : "Approve"}
                             </button>
                             <button
                               className="btn btn-secondary"
-                              disabled={busy.has(c.id)}
-                              onClick={() => openEdit(c)}
+                              disabled={busy.has(g.key)}
+                              onClick={() => openEdit(g)}
                             >
                               Edit
                             </button>
                             <button
                               className="btn btn-secondary"
-                              disabled={busy.has(c.id)}
-                              onClick={() => act(c.id, "reject")}
+                              disabled={busy.has(g.key)}
+                              onClick={() => act(g, "reject")}
                             >
                               Reject
                             </button>
@@ -428,12 +581,12 @@ export default function FloorPlansPage() {
       )}
 
       {editing && (
-        <div className="modal-overlay" onClick={() => setEditing(null)}>
+        <div className="modal-overlay" onClick={() => { setEditing(null); setPreview(null); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Edit before approving</h3>
             <p className="text-muted text-sm">
               Edited fields are marked as manual overrides — future scrapes will not
-              propose reverting them to the builder&apos;s values.
+              propose reverting them to the builder&apos;s values. Save here, then approve from the list.
             </p>
             {(
               [
@@ -465,66 +618,44 @@ export default function FloorPlansPage() {
                 onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
               />
             </div>
-            {(
-              [
-                ["Photo gallery (first image is the main image)", editGallery, setEditGallery],
-                ["Blueprints", editBlueprints, setEditBlueprints],
-              ] as const
-            ).map(([label, list, setList]) =>
-              list.length === 0 ? null : (
-                <div className="form-group" key={label}>
-                  <label>{label}</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {list.map((url, i) => (
-                      <div key={url} style={{ position: "relative", textAlign: "center" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={url}
-                          alt=""
-                          style={{
-                            width: 96, height: 64, objectFit: "cover", borderRadius: 6,
-                            border: i === 0 && list === editGallery ? "2px solid var(--accent, #2563eb)" : "1px solid #ccc",
-                            display: "block",
-                          }}
-                        />
-                        {i === 0 && list === editGallery && (
-                          <span className="text-sm" style={{ position: "absolute", top: 2, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", borderRadius: 4, padding: "0 4px" }}>
-                            main
-                          </span>
-                        )}
-                        <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 2 }}>
-                          <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => moveImage(list, setList, i, -1)} disabled={i === 0}>←</button>
-                          <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => setList(list.filter((u) => u !== url))}>✕</button>
-                          <button className="btn btn-secondary" style={{ padding: "0 6px" }} onClick={() => moveImage(list, setList, i, 1)} disabled={i === list.length - 1}>→</button>
-                        </div>
-                        {list === editGallery && editing.proposed_record?.galleryMeta?.[url] && (
-                          <div
-                            className="text-muted"
-                            title={editing.proposed_record.galleryMeta[url].caption ?? ""}
-                            style={{ fontSize: 10, width: 96, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                          >
-                            {editing.proposed_record.galleryMeta[url].room ?? "?"}
-                            {editing.proposed_record.galleryMeta[url].caption ? ` · ${editing.proposed_record.galleryMeta[url].caption}` : ""}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            )}
+            <GalleryEditor
+              label="Photo gallery (first image is the main image; blueprints follow the photos on the site)"
+              list={editGallery}
+              setList={setEditGallery}
+              meta={editing.lead.proposed_record?.galleryMeta}
+              isPhotos
+              onPreview={setPreview}
+            />
+            <GalleryEditor
+              label="Blueprints"
+              list={editBlueprints}
+              setList={setEditBlueprints}
+              isPhotos={false}
+              onPreview={setPreview}
+            />
             <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setEditing(null)} disabled={savingEdit}>
+              <button className="btn btn-secondary" onClick={() => { setEditing(null); setPreview(null); }} disabled={savingEdit}>
                 Cancel
               </button>
-              <button className="btn btn-secondary" onClick={() => saveEdit(false)} disabled={savingEdit}>
+              <button className="btn btn-primary" onClick={saveEdit} disabled={savingEdit}>
                 {savingEdit ? "Saving…" : "Save"}
-              </button>
-              <button className="btn btn-primary" onClick={() => saveEdit(true)} disabled={savingEdit}>
-                {savingEdit ? "Saving…" : "Save & Approve"}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {preview && (
+        <div
+          style={{
+            position: "fixed", right: 24, top: 80, zIndex: 3000, pointerEvents: "none",
+            background: "var(--bg-card, #16161a)", padding: 8, borderRadius: 10,
+            boxShadow: "0 10px 40px rgba(0,0,0,0.55)", maxWidth: 560,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview.src} alt="" style={{ maxWidth: 540, maxHeight: 420, display: "block", borderRadius: 6, objectFit: "contain" }} />
+          {preview.caption && <div className="text-sm" style={{ marginTop: 6 }}>{preview.caption}</div>}
         </div>
       )}
     </div>
