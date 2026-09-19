@@ -24,6 +24,7 @@ import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -249,6 +250,9 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
     return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
   }
+  // Each quick move-in learns its base plan; each base plan learns whether
+  // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
+  plans = linkQuickMoveIns(plans);
 
   const { data: canonical } = await supabase
     .from("fp_floor_plans")

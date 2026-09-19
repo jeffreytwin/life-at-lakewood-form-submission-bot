@@ -15,6 +15,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import {
+  getItem,
   insertItem,
   updateItem,
   removeItem,
@@ -23,6 +24,7 @@ import {
   WixApiError,
   type WixItemData,
 } from "@/lib/wix/client";
+import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
 import { wixImageUri } from "@/lib/listings/types";
 import { measureImageUrl, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta } from "@/lib/floorplans/types";
@@ -53,6 +55,10 @@ interface ProposedRecord {
   description?: string | null;
   virtualTourUrl?: string | null;
   virtualTourImage?: string | null;
+  /** Quick move-ins: the base plan (quick-move-ins.ts); base plans: whether any quick move-in of theirs is on offer. */
+  relatedPlanKey?: string | null;
+  relatedPlanName?: string | null;
+  hasQuickMoveIns?: boolean;
 }
 
 // A safety bound, not a policy: the freelancers' galleries run to 58 photos
@@ -193,13 +199,18 @@ async function importRecordMedia(
   wixSiteId: string,
   rec: ProposedRecord
 ): Promise<{ gallery: GalleryItem[]; blueprints: GalleryItem[]; tourImage: string | null }> {
-  const photoUrls = galleryUrls(rec);
+  // A quick move-in's row shows one picture and no drawings or tour
+  // (Wellen Park and Parrish keep those on the base plan), so only that
+  // picture is imported for it.
+  const photoUrls = rec.quickMoveIn ? galleryUrls(rec).slice(0, 1) : galleryUrls(rec);
   const gallery = await importGallery(siteId, wixSiteId, photoUrls, rec.planKey, "photo", rec.galleryMeta ?? {});
-  const blueprints = await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
+  const blueprints = rec.quickMoveIn
+    ? { items: [] as GalleryItem[], skipped: [] as string[] }
+    : await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
   // A drawing has no caption of its own; the site shows this one.
   blueprints.items = blueprints.items.map((item) => ({ ...item, title: "Floor plan", alt: "Floor plan" }));
   // The still behind the virtual tour button; optional, so its failure only costs the still.
-  const tourImage = rec.virtualTourImage
+  const tourImage = rec.virtualTourImage && !rec.quickMoveIn
     ? await importImage(siteId, wixSiteId, rec.virtualTourImage, displayNameFor(rec.planKey, "tour", 1, rec.virtualTourImage))
     : null;
   if (photoUrls.length && !gallery.items.length) {
@@ -215,26 +226,45 @@ async function importRecordMedia(
   return { gallery: gallery.items, blueprints: blueprints.items, tourImage };
 }
 
+/**
+ * The Wix row for a record. A base plan carries everything; a quick move-in
+ * carries its address, price, one picture, description and the name of its
+ * base plan, and nothing else, the way Wellen Park and Parrish keep them
+ * (docs/WIX_COLLECTIONS.md, "Quick move-ins").
+ */
 function toWixData(
   rec: ProposedRecord,
   communityName: string,
   builderName: string,
   gallery: GalleryItem[],
   blueprints: GalleryItem[],
-  tourImage: string | null = null
+  tourImage: string | null = null,
+  basePlanName: string | null = null
 ): WixItemData {
-  return {
+  const shared: WixItemData = {
     floorPlanName: rec.name,
     floorPlanPrice: rec.priceDisplay ?? undefined,
-    homeType: rec.homeType ?? undefined,
     village: communityName,
     builder: builderName,
+    floorPlanDescription: rec.description?.trim() || undefined,
+    sourceUrl: rec.sourceUrl ?? undefined,
+    syncKey: [normKey(builderName), normKey(communityName), rec.planKey].join("/"),
+    lastSyncedAt: new Date().toISOString(),
+  };
+  if (rec.quickMoveIn) {
+    return {
+      ...shared,
+      ...(gallery[0] ? { floorPlanImage: gallery[0].src } : {}),
+      relatedFloorPlanQuickMoveInOnly: basePlanName ?? rec.relatedPlanName ?? undefined,
+    };
+  }
+  return {
+    ...shared,
+    homeType: rec.homeType ?? undefined,
     bedrooms: rec.beds || undefined,
     bathrooms: rec.baths || undefined,
     garages: rec.garages ?? undefined,
     squareFeet: rec.sqft ? rec.sqft.toLocaleString("en-US") : undefined,
-    quickMoveInAvailable: rec.quickMoveIn,
-    floorPlanDescription: rec.description?.trim() || undefined,
     virtualTourLink: rec.virtualTourUrl?.trim() || undefined,
     ...(tourImage ? { virtualTourImageV2: tourImage } : {}),
     // The main image is gallery position #1, always; a plan with drawings
@@ -244,10 +274,40 @@ function toWixData(
     // also keep their own gallery for pages that show them apart.
     ...(gallery.length || blueprints.length ? { floorPlanImageGalleryLink: [...gallery, ...blueprints] } : {}),
     ...(blueprints.length ? { floorPlanBluePrintGallery: blueprints } : {}),
-    sourceUrl: rec.sourceUrl ?? undefined,
-    syncKey: [normKey(builderName), normKey(communityName), rec.planKey].join("/"),
-    lastSyncedAt: new Date().toISOString(),
+    // Whether quick move-ins of this plan are on offer: the flag, the banner
+    // text, the badge and the status dot, plus the price bracket tag.
+    ...basePlanMarkers(rec),
   };
+}
+
+/**
+ * The name the base plan's own row carries on the site, for a quick move-in's
+ * relatedFloorPlanQuickMoveInOnly: the canonical row's name (which keeps a
+ * rename made in the Hub), else the name the engine saw.
+ */
+async function basePlanNameOf(
+  scope: { site_id: string; community_id: string; builder_id: string },
+  rec: ProposedRecord
+): Promise<string | null> {
+  if (!rec.quickMoveIn) return null;
+  if (!rec.relatedPlanKey) return rec.relatedPlanName ?? null;
+  const { data } = await supabase
+    .from("fp_floor_plans")
+    .select("name")
+    .match({ ...scope, plan_key: rec.relatedPlanKey })
+    .is("removed_at", null)
+    .maybeSingle();
+  return data?.name ?? rec.relatedPlanName ?? null;
+}
+
+/**
+ * The fields of a Wix item the pipeline does not own, kept across an update:
+ * a Wix update replaces the whole item, so anything set by hand in the CMS
+ * (the builder and village references, score, notes) would go with it.
+ * System fields (_id, dates, publish status) are Wix's to set.
+ */
+function fieldsKeptFromWix(data: Record<string, unknown> | undefined): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => !key.startsWith("_")));
 }
 
 export async function applyPendingChange(changeId: string): Promise<{
@@ -286,6 +346,8 @@ export async function applyPendingChange(changeId: string): Promise<{
   }
 
   try {
+    const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
+
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
       const asDraft = site.insert_publish_mode !== "published";
@@ -293,7 +355,7 @@ export async function applyPendingChange(changeId: string): Promise<{
       const item = await insertItem(
         site.wix_site_id,
         site.wix_collection_id,
-        toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage),
+        toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage, await basePlanNameOf(scope, rec)),
         { asDraft }
       );
 
@@ -358,10 +420,17 @@ export async function applyPendingChange(changeId: string): Promise<{
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
       const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
-      const data = toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage);
       let wixRecordId: string = change.wix_record_id;
+      // Read first: the update sends the whole item back, with the fields
+      // the pipeline does not own carried over from what is there now.
+      const current = await getItem(site.wix_site_id, site.wix_collection_id, wixRecordId);
+      const data: WixItemData = {
+        ...fieldsKeptFromWix(current?.data),
+        ...toWixData(rec, community.name, builder.name, gallery, blueprints, tourImage, await basePlanNameOf(scope, rec)),
+      };
       let recreatedAsDraft = false;
       try {
+        if (!current) throw new WixApiError(404, "item not found", "GET item");
         await updateItem(site.wix_site_id, site.wix_collection_id, wixRecordId, data);
       } catch (error) {
         if (!isGoneFromWix(error)) throw error;
