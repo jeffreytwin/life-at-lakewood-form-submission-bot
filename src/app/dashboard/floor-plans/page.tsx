@@ -32,6 +32,8 @@ interface ProposedRecord {
   relatedPlanName?: string | null;
   relatedPlanMatch?: "extractor" | "plan-id" | "plan-name" | "unmatched";
   hasQuickMoveIns?: boolean;
+  /** A plan built from the quick move-ins named here, because the builder no longer lists it (stand-ins.ts). */
+  standInFor?: string[] | null;
   /** Set here in the Hub; the sites list high scores first. Required before a base plan is approved. */
   score?: number | null;
   userEditedFields?: string[];
@@ -233,6 +235,7 @@ export default function FloorPlansPage() {
     score: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [creatingPlan, setCreatingPlan] = useState(false);
   const [editGallery, setEditGallery] = useState<string[]>([]);
   const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -369,25 +372,64 @@ export default function FloorPlansPage() {
     setEditing(group);
   }
 
-  /** Saves the edits onto every pending row of the plan, so whichever row is approved carries them. */
+  /** Writes the form onto every pending row of the plan, so whichever row is approved carries the edits. */
+  async function persistEdits(group: Group) {
+    const record = { ...editForm, galleryImages: editGallery, blueprintImages: editBlueprints };
+    await Promise.all(
+      pendingIds(group).map((id) =>
+        fetch(`/api/internal/floorplans/changes/${id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ record }),
+        })
+      )
+    );
+  }
+
+  /** Saves the edits and closes the overlay. */
   async function saveEdit() {
     if (!editing) return;
     setSavingEdit(true);
     try {
-      const record = { ...editForm, galleryImages: editGallery, blueprintImages: editBlueprints };
-      await Promise.all(
-        pendingIds(editing).map((id) =>
-          fetch(`/api/internal/floorplans/changes/${id}`, {
-            method: "PATCH",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ record }),
-          })
-        )
-      );
+      await persistEdits(editing);
     } finally {
       setSavingEdit(false);
       setEditing(null);
       setPreview(null);
+      fetchChanges();
+    }
+  }
+
+  /**
+   * Creates the floor plan this quick move-in is built from, when the
+   * builder no longer lists it (Jeff, 2026-09-20): the edits are saved
+   * first so the plan takes the name typed here, then the plan is built from
+   * the home's page and queued as a new plan needing a score.
+   */
+  async function createStandIn() {
+    if (!editing) return;
+    const planName = editForm.relatedPlanName.trim();
+    if (!planName) return;
+    setCreatingPlan(true);
+    try {
+      await persistEdits(editing);
+      const res = await fetch(`/api/internal/floorplans/changes/${editing.lead.id}/stand-in`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ planName }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(`Could not create the floor plan: ${data?.error ?? `HTTP ${res.status}`}`);
+        return;
+      }
+      alert(
+        `Floor plan "${data.name}" is in the queue as a new plan (${data.photos} photos, ${data.drawings} drawings, built from ${(data.homes ?? []).join(", ")}). Give it a score, then approve it.`
+      );
+      setEditing(null);
+      setPreview(null);
+    } finally {
+      setCreatingPlan(false);
       fetchChanges();
     }
   }
@@ -645,12 +687,22 @@ export default function FloorPlansPage() {
                           <div className="text-muted text-sm">
                             Quick move-in{rec.relatedPlanName ? ` of ${rec.relatedPlanName}` : ""}
                             {rec.relatedPlanMatch === "unmatched" && (
-                              <span title="No base plan by this name in the run. Set it in the overlay."> · ⚠ base plan not found</span>
+                              <span
+                                style={{ color: "var(--warning)" }}
+                                title="No base plan by this name in the run. Set it in the overlay, or create the plan from this home there."
+                              >
+                                {" "}· ⚠ base plan not found
+                              </span>
                             )}
                           </div>
                         )}
                         {!rec?.quickMoveIn && rec?.hasQuickMoveIns && (
                           <div className="text-muted text-sm">Has quick move-ins</div>
+                        )}
+                        {(rec?.standInFor?.length ?? 0) > 0 && (
+                          <div className="text-muted text-sm" title="The builder no longer lists this plan; it is built from the home(s) named here and lasts as long as one is on offer.">
+                            Created from {rec?.standInFor?.join(", ")}
+                          </div>
                         )}
                         {rec?.virtualTourUrl && (
                           <div>
@@ -794,6 +846,28 @@ export default function FloorPlansPage() {
                   value={editForm.relatedPlanName}
                   onChange={(e) => setEditForm((f) => ({ ...f, relatedPlanName: e.target.value }))}
                 />
+                {editing.lead.proposed_record.relatedPlanMatch === "unmatched" && (
+                  <div className="text-sm" style={{ marginTop: 8 }}>
+                    <div style={{ color: "var(--warning)" }}>
+                      ⚠ No floor plan by this name in the run, so the site has nowhere to show this home.
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ marginTop: 6 }}
+                      disabled={creatingPlan || savingEdit || !editForm.relatedPlanName.trim()}
+                      onClick={createStandIn}
+                      title="Builds the floor plan from this home's page: every photo, the drawings, the description, the price. It lands in the queue as a new plan needing a score, and stays as long as a home of it is on offer."
+                    >
+                      {creatingPlan
+                        ? "Creating…"
+                        : `Create floor plan "${editForm.relatedPlanName.trim() || "…"}" from this home`}
+                    </button>
+                    <div className="text-muted" style={{ marginTop: 4 }}>
+                      Name the base plan above first if the builder gave none. The new plan needs a score before approval and leaves when the last home of it sells.
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             <div className="form-group">

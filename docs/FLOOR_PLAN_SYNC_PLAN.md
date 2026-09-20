@@ -210,6 +210,26 @@ nothing. No cutover report has ever been generated.
   snapshot build caches those collections and probes "The Isles". Rewrite
   (Settings → Builder Connections) fills the reference in on rows already
   published.
+- **A quick move-in can stand in for its floor plan** (Jeff, 2026-09-20):
+  quick move-ins only show on the sites under their plan, so a home of a
+  plan the builder no longer lists had nowhere to appear. In the queue's
+  edit overlay, an unmatched quick move-in (amber "base plan not found")
+  offers "Create floor plan '<name>' from this home". The decision is
+  remembered (`fp_stand_in_plans`, migration 069, keyed by the plan's name
+  so a second home of the plan counts too) and every Run rebuilds the plan
+  from the homes that name it (`stand-ins.ts`): the richest home's pictures
+  read from its own page, the drawings, the description, the specs, the
+  lowest of the homes' prices. It is queued as a new plan needing a score,
+  the homes are tied to it, and it follows the homes' changes as updates.
+  When the last home sells the plan leaves through the removal queue like
+  any other; a real plan of the same name, listed again, takes the same row.
+  Reset removes the rules with everything else.
+- **The virtual tour button is the site's own** (Jeff, 2026-09-20): a row
+  with a virtual tour link carries its site's button picture in
+  `virtualTourImageV2` (`site-assets.ts`: the one value the freelancers put
+  on every legacy row, per site), and the builder's still is no longer
+  imported for it; a site without a button keeps the still. Rewrite puts
+  the button on rows already published.
 
 **Known gaps, in the order they bite.**
 

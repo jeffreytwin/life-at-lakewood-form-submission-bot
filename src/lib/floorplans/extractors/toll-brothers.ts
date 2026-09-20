@@ -254,6 +254,17 @@ export function enrichPlanFromModelPage(plan: NormalizedPlan, data: unknown): No
   };
 }
 
+/**
+ * The plan with everything its own page adds (the captioned showcase, the
+ * drawings, the description, the tour): what a stand-in plan built from a
+ * quick move-in gets, so it carries every picture the home offers
+ * (stand-ins.ts). Unchanged without a page to read.
+ */
+export async function readTollPlanPage(plan: NormalizedPlan): Promise<NormalizedPlan> {
+  if (!plan.sourceUrl) return plan;
+  return enrichPlanFromModelPage(plan, await fetchNextData(plan.sourceUrl));
+}
+
 async function fetchNextData(url: string): Promise<unknown> {
   const res = await fetch(url, {
     headers: { "user-agent": UA, accept: "text/html" },

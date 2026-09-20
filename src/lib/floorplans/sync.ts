@@ -15,7 +15,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
-import { extractTollBrothers } from "@/lib/floorplans/extractors/toll-brothers";
+import { extractTollBrothers, readTollPlanPage } from "@/lib/floorplans/extractors/toll-brothers";
 import { extractWithClaude } from "@/lib/floorplans/extractors/claude-extract";
 import { extractLennar } from "@/lib/floorplans/extractors/lennar";
 import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
@@ -28,6 +28,7 @@ import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { standardizePlan } from "@/lib/floorplans/standardize";
+import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -114,7 +115,7 @@ async function setRunStatus(
 }
 
 /** Queue one change unless an identical one was rejected or already pending. */
-async function queueChange(args: {
+export async function queueChange(args: {
   siteId: string;
   communityId: string;
   builderId: string;
@@ -189,6 +190,40 @@ async function queueChange(args: {
   return true;
 }
 
+/** Engines that can read one plan's own page in full: what a stand-in plan built from a home gets (stand-ins.ts). */
+const PAGE_READERS: Record<string, (plan: NormalizedPlan) => Promise<NormalizedPlan>> = {
+  "Toll Brothers": readTollPlanPage,
+};
+
+/** The plan with everything its own page adds, when the builder's engine can read one; unchanged otherwise. */
+export async function readPlanInFull(builderName: string, plan: NormalizedPlan): Promise<NormalizedPlan> {
+  const reader = PAGE_READERS[builderName];
+  return reader ? reader(plan) : plan;
+}
+
+interface PlanScopeIds {
+  site_id: string;
+  community_id: string;
+  builder_id: string;
+}
+
+/**
+ * The stand-in rules for a connection (fp_stand_in_plans): the plans a
+ * person asked to build from their quick move-ins. A table that cannot be
+ * read costs the rules, never the run.
+ */
+export async function loadStandInRules(scope: PlanScopeIds): Promise<StandInRule[]> {
+  const { data, error } = await supabase
+    .from("fp_stand_in_plans")
+    .select("plan_key, plan_name, source_plan_key")
+    .match(scope);
+  if (error) {
+    logger.warn("Stand-in rules could not be read", { scope, error: error.message });
+    return [];
+  }
+  return (data ?? []).map((r) => ({ planKey: r.plan_key, planName: r.plan_name, sourcePlanKey: r.source_plan_key }));
+}
+
 export async function runConnection(connectionId: string): Promise<RunResult> {
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
@@ -259,6 +294,25 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   // quick move-in learns its base plan and each base plan learns whether
   // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
   plans = linkQuickMoveIns(plans.map(standardizePlan));
+  // A plan the builder no longer lists but a person asked to keep, built
+  // from its homes on offer (stand-ins.ts): each is read from the home's own
+  // page so it carries every picture, then linked like the rest.
+  const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
+  const standIns = withStandIns(plans, rules);
+  if (standIns.standIns.length) {
+    const filled = await Promise.all(
+      standIns.standIns.map(async (p) => {
+        try {
+          return await readPlanInFull(builder.name, p);
+        } catch (err) {
+          logger.warn("Stand-in plan page could not be read", { planKey: p.planKey, error: err instanceof Error ? err.message : String(err) });
+          return p;
+        }
+      })
+    );
+    const standInKeys = new Set(filled.map((p) => p.planKey));
+    plans = linkQuickMoveIns([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
+  }
 
   const { data: canonical } = await supabase
     .from("fp_floor_plans")

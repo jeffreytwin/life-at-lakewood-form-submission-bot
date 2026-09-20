@@ -203,6 +203,9 @@ on Lakewood), by exact title first, then by any title or name field of the
 collection's items; a name with no item behind it is logged and the row
 goes out without the reference. An update reads the Wix item first and sends back the fields
 the pipeline does not own, because Wix's update replaces the whole item.
+A row with a virtual tour link carries its site's button picture in
+`virtualTourImageV2` (`site-assets.ts`: the one value the freelancers put on
+every legacy row of each site), never the builder's still.
 
 ## Schemas compared across sites (2026-09-19)
 
