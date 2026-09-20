@@ -177,6 +177,11 @@ nothing. No cutover report has ever been generated.
   connection to Wix again under the current rules, keeping scores and
   edits: the repair for The Isles (16 plans, 16 drawings re-imported as
   PNG). It works within a time budget and continues across calls.
+- **Scores outlive the plans** (`fp_plan_scores`, migration 068). An
+  accidental Reset on The Isles removed its 16 plans and the seven scores
+  with them; now the queue's PATCH route remembers every score by plan
+  identity, the sync core puts it back on a plan it queues again, and
+  Reset leaves it alone. Reset also asks for the word RESET to be typed.
 
 **Known gaps, in the order they bite.**
 

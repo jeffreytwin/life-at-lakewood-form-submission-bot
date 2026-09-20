@@ -172,13 +172,12 @@ export default function BuildersSettingsPage() {
 
   async function resetConnection(b: Builder, c: Connection) {
     const where = `${b.name} at ${c.fp_communities?.name ?? "this community"}`;
-    if (
-      !confirm(
-        `Reset ${where}?\n\nThis removes every plan the pipeline holds for this connection from the site's Floor Plans V2 collection (drafts included) and from the Hub, with its pending changes and follow-ups, and clears its run history. Imported photos are kept and reused. The next Run starts from scratch.`
-      )
-    ) {
-      return;
-    }
+    // A Reset is a click away from Run and Rewrite and cannot be undone, so
+    // it asks for the word (Jeff hit it by accident on 2026-09-20).
+    const typed = prompt(
+      `Reset ${where}?\n\nThis removes every plan the pipeline holds for this connection from the site's Floor Plans V2 collection (drafts included) and from the Hub, with its pending changes and follow-ups, and clears its run history. Imported photos are kept and reused, and scores set in the Hub come back on the next Run.\n\nType RESET to confirm.`
+    );
+    if (typed !== "RESET") return;
     setRunning((s) => new Set(s).add(c.id));
     try {
       const res = await fetch(`/api/internal/floorplans/connections/${c.id}/reset`, { method: "POST" });
