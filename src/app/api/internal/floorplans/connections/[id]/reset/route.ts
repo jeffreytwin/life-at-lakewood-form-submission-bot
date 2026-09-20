@@ -17,7 +17,9 @@ export const maxDuration = 300;
  * from Supabase with its pending changes and follow-up tasks, and the
  * connection's run history is cleared. Imported photos stay in
  * fp_media_map and the Media Manager: the next run reuses them rather than
- * importing the same pictures twice. If any Wix removal fails, nothing is
+ * importing the same pictures twice; scores set in the Hub stay in
+ * fp_plan_scores and come back on the next Run (an accidental Reset on
+ * 2026-09-20 had cost the seven scores on The Isles). If any Wix removal fails, nothing is
  * deleted from Supabase, so a Wix item is never left behind untracked.
  */
 export async function POST(

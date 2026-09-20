@@ -37,7 +37,7 @@ export async function PATCH(
 
     const { data: change, error: loadError } = await supabase
       .from("fp_pending_changes")
-      .select("id, status, proposed_record, new_value")
+      .select("id, status, proposed_record, new_value, site_id, community_id, builder_id, plan_key")
       .eq("id", id)
       .maybeSingle();
     if (loadError) throw loadError;
@@ -104,6 +104,26 @@ export async function PATCH(
     }
 
     record.userEditedFields = [...edited];
+
+    // The score outlives the plan (fp_plan_scores): a Reset and the next
+    // Run bring it back rather than asking for it again.
+    if ("score" in edits) {
+      const identity = {
+        site_id: change.site_id,
+        community_id: change.community_id,
+        builder_id: change.builder_id,
+        plan_key: change.plan_key,
+      };
+      if (typeof record.score === "number") {
+        const { error: scoreError } = await supabase
+          .from("fp_plan_scores")
+          .upsert({ ...identity, score: record.score, updated_at: new Date().toISOString() }, { onConflict: "site_id,community_id,builder_id,plan_key" });
+        if (scoreError) throw scoreError;
+      } else {
+        const { error: scoreError } = await supabase.from("fp_plan_scores").delete().match(identity);
+        if (scoreError) throw scoreError;
+      }
+    }
 
     const { data: updated, error } = await supabase
       .from("fp_pending_changes")

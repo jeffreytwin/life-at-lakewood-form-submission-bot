@@ -26,6 +26,7 @@ import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
+import { withRememberedScore } from "@/lib/floorplans/scores";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -265,6 +266,13 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     .is("removed_at", null);
   const canonicalByKey = new Map((canonical ?? []).map((c) => [c.plan_key, c]));
   const scrapedKeys = new Set(plans.map((p) => p.planKey));
+  // Scores set in the Hub outlive the plans (a Reset removes those): a
+  // plan queued again comes back with the score it had.
+  const { data: rememberedRows } = await supabase
+    .from("fp_plan_scores")
+    .select("plan_key, score")
+    .match({ site_id: site.id, community_id: community.id, builder_id: builder.id });
+  const remembered = new Map((rememberedRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
 
   let queued = 0;
 
@@ -275,7 +283,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         await queueChange({
           siteId: site.id, communityId: community.id, builderId: builder.id,
           planKey: plan.planKey, changeType: "add", newValue: plan.priceDisplay,
-          proposedRecord: plan, runId,
+          proposedRecord: withRememberedScore(plan, remembered), runId,
         })
       ) queued += 1;
       continue;
@@ -290,7 +298,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       .update({ last_seen_at: new Date().toISOString() })
       .eq("id", existing.id);
     const current = (existing.record ?? {}) as CanonicalRecord;
-    const merged = mergeForUpdate(current, plan);
+    const merged = withRememberedScore(mergeForUpdate(current, plan), remembered);
     for (const change of fieldChanges(current, plan)) {
       if (
         await queueChange({
