@@ -88,10 +88,12 @@ export async function PATCH(
         edited.add(field);
       }
     }
-    // Keep the numeric price in sync when the display price was edited.
+    // Keep the numeric price in sync when the display price was edited; a
+    // typed price is the person's, no longer a quick move-in's stand-in.
     if (edited.has("priceDisplay") && typeof record.priceDisplay === "string") {
       const parsed = parseInt(record.priceDisplay.replace(/[^0-9]/g, ""), 10);
       record.price = Number.isFinite(parsed) ? parsed : null;
+      record.priceFromHome = null;
     }
     // Gallery edits: reorder/remove only — every entry must come from the
     // originally scraped image set. Position 0 is the main image.

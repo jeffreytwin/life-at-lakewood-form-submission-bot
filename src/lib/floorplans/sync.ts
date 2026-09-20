@@ -24,7 +24,7 @@ import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
-import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
+import { linkQuickMoveIns, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { standardizePlan } from "@/lib/floorplans/standardize";
@@ -302,7 +302,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   // the larger end of a bed or bath range; standardize.ts), then each
   // quick move-in learns its base plan and each base plan learns whether
   // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
-  plans = linkQuickMoveIns(plans.map(standardizePlan));
+  // A base plan the builder gave no price takes its cheapest quick
+  // move-in's until the builder prices it (Jeff, 2026-09-20).
+  const link = (list: NormalizedPlan[]) => withQuickMoveInPrices(linkQuickMoveIns(list));
+  plans = link(plans.map(standardizePlan));
   // A plan the builder no longer lists but a person asked to keep, built
   // from its homes on offer (stand-ins.ts): each is read from the home's own
   // page so it carries every picture, then linked like the rest.
@@ -320,7 +323,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       })
     );
     const standInKeys = new Set(filled.map((p) => p.planKey));
-    plans = linkQuickMoveIns([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
+    plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
   }
 
   const { data: canonical } = await supabase

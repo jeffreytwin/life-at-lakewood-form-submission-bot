@@ -34,6 +34,8 @@ interface ProposedRecord {
   hasQuickMoveIns?: boolean;
   /** A plan built from the quick move-ins named here, because the builder no longer lists it (stand-ins.ts). */
   standInFor?: string[] | null;
+  /** The quick move-in whose price this plan carries, the builder having given it none. */
+  priceFromHome?: string | null;
   /** Set here in the Hub; the sites list high scores first. Required before a base plan is approved. */
   score?: number | null;
   userEditedFields?: string[];
@@ -698,6 +700,11 @@ export default function FloorPlansPage() {
                         )}
                         {!rec?.quickMoveIn && rec?.hasQuickMoveIns && (
                           <div className="text-muted text-sm">Has quick move-ins</div>
+                        )}
+                        {rec?.priceFromHome && (
+                          <div className="text-muted text-sm" title="The builder gives this plan no price; it carries its cheapest quick move-in's until one arrives.">
+                            Price from {rec.priceFromHome}
+                          </div>
                         )}
                         {(rec?.standInFor?.length ?? 0) > 0 && (
                           <div className="text-muted text-sm" title="The builder no longer lists this plan; it is built from the home(s) named here and lasts as long as one is on offer.">

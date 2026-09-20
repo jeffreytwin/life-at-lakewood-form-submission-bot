@@ -248,6 +248,13 @@ nothing. No cutover report has ever been generated.
   (`rejectionStillApplies`, used by the sync core's rejection check): a
   plan rejected for having no price is queued again when it gets one, while
   a complete plan that was rejected stays rejected.
+- **A priceless base plan takes its cheapest quick move-in's price** (Jeff,
+  2026-09-20): until the builder prices the plan, it carries the lowest
+  price among its quick move-ins on offer (`withQuickMoveInPrices`, after
+  the linking), the queue says "Price from 17900 Palmiste Dr", and the price
+  tag follows. A price from the builder, or one typed in the overlay,
+  replaces it and clears the note; when the last priced home sells the plan
+  is priceless again and waits for a price before its next approval.
 
 **Known gaps, in the order they bite.**
 
