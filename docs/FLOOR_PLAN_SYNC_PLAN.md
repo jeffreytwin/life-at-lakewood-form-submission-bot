@@ -255,6 +255,17 @@ nothing. No cutover report has ever been generated.
   tag follows. A price from the builder, or one typed in the overlay,
   replaces it and clears the note; when the last priced home sells the plan
   is priceless again and waits for a price before its next approval.
+- **Three rules from the review of the first rows** (Jeff, 2026-09-20): a
+  quick move-in shows one picture, so its overlay shows only the primary
+  image (the rest of what the builder gave stays with the home, for a floor
+  plan created from it, and its Wix row already carried one picture);
+  garages are a whole number of cars, a half rounded down and the larger
+  end of a range (`standardGarages`, the builder's label kept in raw); and
+  a description that speaks as the plan's owner ("we", "our", "us") is
+  reworded in the third person by Claude, once per distinct text
+  (`description.ts`, `fp_description_rewrites`, migration 070), the
+  original kept in raw, and a plan whose description still speaks that way
+  is held back from approval until a person fixes it.
 
 **Known gaps, in the order they bite.**
 

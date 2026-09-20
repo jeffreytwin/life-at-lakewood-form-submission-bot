@@ -1,6 +1,7 @@
+import { speaksAsOwner } from "@/lib/floorplans/description";
+
 // What has to be true before a queued change goes to the site, beyond a
 // person saying yes. No IO here.
-
 /**
  * What a floor plan must carry before it is approved (Jeff, 2026-09-19 for
  * the score, 2026-09-20 for the rest): the sites filter and sort on these,
@@ -25,6 +26,8 @@ export function missingFields(record: unknown): string[] {
   const required = rec.quickMoveIn === true ? REQUIRED.slice(0, 1) : REQUIRED;
   const missing = required.filter(([key]) => !present(rec[key])).map(([, label]) => label);
   if (rec.quickMoveIn !== true && !(typeof rec.score === "number" && Number.isFinite(rec.score))) missing.push("a score");
+  // A description that speaks as the plan's owner reads as ours on the site (description.ts).
+  if (typeof rec.description === "string" && speaksAsOwner(rec.description)) missing.push('a description without "we" or "our"');
   return missing;
 }
 

@@ -46,14 +46,34 @@ export function largestInRange(text: string | null | undefined): string {
   return String(Math.max(...numbers.map(Number)));
 }
 
-/** The plan as the site files it: standard home type, one number for beds and baths. The builder's own label is kept in raw. */
+/**
+ * Garages as the sites show them: a whole number of cars, "2 car" (Jeff,
+ * 2026-09-20: never a half; 2.5 rounds down to 2; the larger end of a range,
+ * as with beds and baths). Nothing for nothing, and a label with no number
+ * in it ("Yes") is kept as it is for a person to fix.
+ */
+export function standardGarages(text: string | null | undefined): string | null {
+  const s = (text ?? "").trim();
+  if (!s) return null;
+  const numbers = s.match(/\d+(?:\.\d+)?/g);
+  if (!numbers) return s;
+  return `${Math.floor(Math.max(...numbers.map(Number)))} car`;
+}
+
+/** The plan as the site files it: standard home type, one number for beds and baths, whole-number garages. The builder's own labels are kept in raw. */
 export function standardizePlan(plan: NormalizedPlan): NormalizedPlan {
   const homeType = standardHomeType(plan.homeType);
+  const garages = standardGarages(plan.garages);
   return {
     ...plan,
     homeType,
     beds: largestInRange(plan.beds),
     baths: largestInRange(plan.baths),
-    raw: { ...(plan.raw ?? {}), ...(plan.homeType && homeType !== plan.homeType ? { homeTypeRaw: plan.homeType } : {}) },
+    garages,
+    raw: {
+      ...(plan.raw ?? {}),
+      ...(plan.homeType && homeType !== plan.homeType ? { homeTypeRaw: plan.homeType } : {}),
+      ...(plan.garages && garages !== plan.garages ? { garagesRaw: plan.garages } : {}),
+    },
   };
 }
