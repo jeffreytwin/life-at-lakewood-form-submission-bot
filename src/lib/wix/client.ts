@@ -336,6 +336,8 @@ export interface WixMediaFile {
   parentFolderId?: string;
   /** Wix's own word on the import: READY, PENDING, FAILED. Absent on older responses. */
   operationStatus?: string;
+  /** What Wix filed: IMAGE, VIDEO, VECTOR (an imported SVG), DOCUMENT... Only an IMAGE renders in an IMAGE field or a gallery. */
+  mediaType?: string;
   sizeInBytes?: string | number;
   /** The processed image. A file whose import fetch failed has an id but nothing here. */
   media?: { image?: { image?: { width?: number; height?: number }; width?: number; height?: number } };
@@ -365,6 +367,32 @@ export function mediaState(file: WixMediaFile): MediaState {
   const width = image.image?.width ?? image.width;
   const height = image.image?.height ?? image.height;
   return width && height && width > 0 && height > 0 ? "ready" : "broken";
+}
+
+/**
+ * mediaState, plus the one thing it cannot see: a file that is not an image
+ * at all. Wix files an imported SVG as vector art (mediaType VECTOR, a file
+ * id ending in .svg), which no IMAGE field or MEDIA_GALLERY can show; the
+ * CMS draws it as a broken slash (The Isles, 2026-09-20).
+ */
+export type MediaVerdict = MediaState | "not-image";
+
+export function mediaVerdict(file: WixMediaFile | null | undefined): MediaVerdict {
+  if (!file) return "unknown";
+  const type = typeof file.mediaType === "string" ? file.mediaType.toUpperCase() : null;
+  if (type && type !== "IMAGE") return "not-image";
+  return mediaState(file);
+}
+
+/** One Media Manager file by id, as Wix describes it now; null when Wix has no such file. */
+export async function getMediaFile(siteId: string, fileId: string): Promise<WixMediaFile | null> {
+  try {
+    const res = await wixRequest<{ file?: WixMediaFile }>(siteId, "GET", `/site-media/v1/files/${encodeURIComponent(fileId)}`);
+    return res?.file ?? null;
+  } catch (error) {
+    if (error instanceof WixApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 const FILE_PAGE = 100;

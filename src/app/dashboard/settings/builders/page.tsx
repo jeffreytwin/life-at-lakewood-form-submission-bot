@@ -124,6 +124,52 @@ export default function BuildersSettingsPage() {
     }
   }
 
+  /** Writes every plan of a connection to Wix again, in as many calls as the time budget needs. */
+  async function rewriteConnection(b: Builder, c: Connection) {
+    const where = `${b.name} at ${c.fp_communities?.name ?? "this community"}`;
+    if (
+      !confirm(
+        `Rewrite every plan of ${where} to Wix?\n\nEach plan's row is written again under the current rules: pictures re-imported where needed and verified with Wix before they are written, drawings as PNG. Scores and edits are kept. This is the repair for rows showing broken pictures.`
+      )
+    ) {
+      return;
+    }
+    setRunning((s) => new Set(s).add(c.id));
+    try {
+      const done: string[] = [];
+      const failed: string[] = [];
+      let remaining = 1;
+      for (let calls = 0; remaining > 0 && calls < 20; calls += 1) {
+        const res = await fetch(`/api/internal/floorplans/connections/${c.id}/rewrite`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ done }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(`Rewrite failed: ${data.error ?? res.status}`);
+          return;
+        }
+        for (const r of data.results ?? []) {
+          done.push(r.id);
+          if (r.status === "failed") failed.push(`${r.name}: ${r.error ?? "failed"}`);
+        }
+        remaining = data.remaining ?? 0;
+      }
+      alert(
+        `Rewrote ${done.length - failed.length} plan(s) of ${where}.` +
+          (failed.length ? `\n${failed.length} could not be written:\n${failed.join("\n")}` : "")
+      );
+    } finally {
+      setRunning((s) => {
+        const next = new Set(s);
+        next.delete(c.id);
+        return next;
+      });
+      fetchBuilders();
+    }
+  }
+
   async function resetConnection(b: Builder, c: Connection) {
     const where = `${b.name} at ${c.fp_communities?.name ?? "this community"}`;
     if (
@@ -375,6 +421,14 @@ export default function BuildersSettingsPage() {
                                   disabled={running.has(c.id)}
                                 >
                                   Reset
+                                </button>
+                                <button
+                                  className="btn btn-secondary"
+                                  title="Write every plan of this connection to Wix again: pictures re-imported where needed and verified, drawings as PNG; scores and edits kept"
+                                  onClick={() => rewriteConnection(b, c)}
+                                  disabled={!b.active || running.has(c.id)}
+                                >
+                                  Rewrite
                                 </button>
                               </div>
                             </td>
