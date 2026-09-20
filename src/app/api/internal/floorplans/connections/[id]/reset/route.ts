@@ -97,6 +97,8 @@ export async function POST(
     }
     const { error: scoresError } = await supabase.from("fp_plan_scores").delete().match(scope);
     if (scoresError) throw scoresError;
+    const { error: standInsError } = await supabase.from("fp_stand_in_plans").delete().match(scope);
+    if (standInsError) throw standInsError;
     const { data: changes, error: changesError } = await supabase
       .from("fp_pending_changes")
       .delete()

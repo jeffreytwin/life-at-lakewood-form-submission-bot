@@ -32,6 +32,7 @@ import {
   type WixDataItem,
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
+import { virtualTourButtonFor } from "@/lib/floorplans/site-assets";
 import { findItemNamed, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
 import { wixImageUri } from "@/lib/listings/types";
 import { measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
@@ -335,7 +336,8 @@ const toGalleryItem = (item: PendingGalleryItem): GalleryItem => ({
 async function importRecordMedia(
   siteId: string,
   wixSiteId: string,
-  rec: ProposedRecord
+  rec: ProposedRecord,
+  { tourStill = true }: { tourStill?: boolean } = {}
 ): Promise<{ gallery: GalleryItem[]; blueprints: GalleryItem[]; tourImage: string | null }> {
   // A quick move-in's row shows one picture and no drawings or tour
   // (Wellen Park and Parrish keep those on the base plan), so only that
@@ -347,8 +349,9 @@ async function importRecordMedia(
     : await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
   // A drawing has no caption of its own; the site shows this one.
   blueprints.items = blueprints.items.map((item) => ({ ...item, title: "Floor plan", alt: "Floor plan" }));
-  // The still behind the virtual tour button; optional, so its failure only costs the still.
-  const tour = rec.virtualTourImage && !rec.quickMoveIn
+  // The builder's still behind the virtual tour link, for a site without a
+  // button of its own (site-assets.ts); optional, so its failure only costs the still.
+  const tour = tourStill && rec.virtualTourImage && !rec.quickMoveIn
     ? await importImage(siteId, wixSiteId, rec.virtualTourImage, displayNameFor(rec.planKey, "tour", 1, rec.virtualTourImage))
     : null;
 
@@ -604,7 +607,7 @@ function fieldsKeptFromWix(data: Record<string, unknown> | undefined): Record<st
 
 /** The site, community and builder a plan belongs to, as the write needs them. */
 interface PlanScope {
-  site: { id: string; wix_site_id: string; wix_collection_id: string; insert_publish_mode: string | null };
+  site: { id: string; domain?: string | null; wix_site_id: string; wix_collection_id: string; insert_publish_mode: string | null };
   community: { id: string; name: string };
   builder: { id: string; name: string };
 }
@@ -622,7 +625,12 @@ async function writePlanToWix(
   wixRecordId: string | null
 ): Promise<{ wixRecordId: string; asDraft: boolean }> {
   const { site, community, builder } = scope;
-  const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
+  // A row with a virtual tour link carries its site's button picture (Jeff,
+  // 2026-09-20; site-assets.ts), the builder's still only on a site without one.
+  const button = virtualTourButtonFor(site.domain);
+  const media = await importRecordMedia(site.id, site.wix_site_id, rec, { tourStill: !button });
+  const { gallery, blueprints } = media;
+  const tourImage = rec.virtualTourUrl?.trim() ? (button ?? media.tourImage) : null;
   const ids = { site_id: site.id, community_id: community.id, builder_id: builder.id };
   const current = wixRecordId ? await getItem(site.wix_site_id, site.wix_collection_id, wixRecordId) : null;
   const data: WixItemData = {
@@ -678,7 +686,7 @@ export async function rewritePlan(planId: string): Promise<{ status: "synced" | 
   const { data: plan, error } = await supabase
     .from("fp_floor_plans")
     .select(
-      "id, plan_key, name, wix_record_id, record, fp_sites:site_id(id, wix_site_id, wix_collection_id, insert_publish_mode), fp_communities:community_id(id, name), fp_builders:builder_id(id, name)"
+      "id, plan_key, name, wix_record_id, record, fp_sites:site_id(id, domain, wix_site_id, wix_collection_id, insert_publish_mode), fp_communities:community_id(id, name), fp_builders:builder_id(id, name)"
     )
     .eq("id", planId)
     .single();

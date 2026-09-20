@@ -75,6 +75,12 @@ export interface NormalizedPlan {
   /** Base plans only: at least one quick move-in of this plan is on offer in this community. */
   hasQuickMoveIns?: boolean;
   /**
+   * A plan the builder no longer lists, built from the quick move-ins named
+   * here (stand-ins.ts): a person asked for it in the Hub, and it lasts as
+   * long as one of those homes is on offer.
+   */
+  standInFor?: string[] | null;
+  /**
    * Set by a person in the Hub, never by an engine: the sites list high
    * scores first (the freelancers used 1 to 10). Required before a base
    * plan is approved; a quick move-in carries none. Kept across runs.
