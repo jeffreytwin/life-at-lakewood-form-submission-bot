@@ -177,6 +177,17 @@ nothing. No cutover report has ever been generated.
   connection to Wix again under the current rules, keeping scores and
   edits: the repair for The Isles (16 plans, 16 drawings re-imported as
   PNG). It works within a time budget and continues across calls.
+- **Standard values** (`standardize.ts`, applied to every engine's output
+  before the diff): the home type is one of Single Family Home, Townhome,
+  Condominium, Coach Home, Attached Villa (a builder's own label is mapped
+  onto them and kept in `raw.homeTypeRaw`; an unplaceable label leaves the
+  field blank for the overlay's drop-down), and bedrooms and bathrooms are
+  one number, the larger end of any range ("3-4" is 4).
+- **An approval publishes.** Every site's `insert_publish_mode` is
+  'published' (2026-09-20): an approved plan is inserted as a published
+  item, and an approved update to a row that is still a draft replaces the
+  draft with a published item, since Wix will not flip a draft's status
+  through an update. Rewrite does the same for a whole connection.
 - **Scores outlive the plans** (`fp_plan_scores`, migration 068). An
   accidental Reset on The Isles removed its 16 plans and the seven scores
   with them; now the queue's PATCH route remembers every score by plan

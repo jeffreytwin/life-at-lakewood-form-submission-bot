@@ -27,6 +27,7 @@ import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorp
 import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
+import { standardizePlan } from "@/lib/floorplans/standardize";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -253,9 +254,11 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
     return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
   }
-  // Each quick move-in learns its base plan; each base plan learns whether
+  // Every plan reads the way the site files it (one of five home types,
+  // the larger end of a bed or bath range; standardize.ts), then each
+  // quick move-in learns its base plan and each base plan learns whether
   // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
-  plans = linkQuickMoveIns(plans);
+  plans = linkQuickMoveIns(plans.map(standardizePlan));
 
   const { data: canonical } = await supabase
     .from("fp_floor_plans")

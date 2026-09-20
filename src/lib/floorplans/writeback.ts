@@ -1,10 +1,12 @@
 // Write-back: applies an approved fp_pending_changes row to the site's
 // pipeline-operated Wix collection (FloorPlansV2).
 //
-// Adds land as Wix DRAFTS while the site's insert_publish_mode is 'draft' —
-// invisible on the live site until a human publishes them in the Wix CMS.
-// Success moves the row to synced_draft (or synced), failure to failed with
-// error_detail. The canonical fp_floor_plans row is upserted on success.
+// An approved plan is written as a PUBLISHED item (Jeff, 2026-09-20: an
+// approval is the publication; every site's insert_publish_mode is
+// 'published'). A site set back to 'draft' gets drafts, invisible on the
+// live site until a human publishes them in the Wix CMS. Success moves the
+// row to synced (or synced_draft), failure to failed with error_detail.
+// The canonical fp_floor_plans row is upserted on success.
 //
 // Photos: every image is fetched and measured before Wix imports it, because
 // a wix:image URI renders only with its origin dimensions (see media.ts).
@@ -561,7 +563,22 @@ async function writePlanToWix(
       refs: await referencesFor(site.wix_site_id, builder.name, community.name),
     }),
   };
+  const asDraft = site.insert_publish_mode !== "published";
   if (current && wixRecordId) {
+    const isDraft = String(current.data?._publishStatus ?? "").toUpperCase() === "DRAFT";
+    if (isDraft && !asDraft) {
+      // A draft cannot be published through an update (probe of 2026-07-02:
+      // _publishStatus stays DRAFT), so the draft is replaced by a published
+      // item with the same content; the row's id changes and is recorded.
+      try {
+        await removeItem(site.wix_site_id, site.wix_collection_id, wixRecordId);
+      } catch (error) {
+        if (!isGoneFromWix(error)) throw error;
+      }
+      const item = await insertItem(site.wix_site_id, site.wix_collection_id, data, { asDraft: false });
+      logger.info("Floor plan draft replaced by a published item", { planKey, from: wixRecordId, to: item.id });
+      return { wixRecordId: item.id, asDraft: false };
+    }
     try {
       await updateItem(site.wix_site_id, site.wix_collection_id, wixRecordId, data);
       return { wixRecordId, asDraft: false };
@@ -571,8 +588,7 @@ async function writePlanToWix(
   }
   // The item was deleted from the CMS by hand (Jeff cleared the collection
   // on 2026-09-19 and every approval 404ed), or was never there: insert,
-  // as a draft while the site is in draft mode.
-  const asDraft = site.insert_publish_mode !== "published";
+  // published, or as a draft while the site is in draft mode.
   const item = await insertItem(site.wix_site_id, site.wix_collection_id, data, { asDraft });
   if (wixRecordId) logger.info("Floor plan item was gone from Wix; re-created", { planKey, wixRecordId: item.id });
   return { wixRecordId: item.id, asDraft };
