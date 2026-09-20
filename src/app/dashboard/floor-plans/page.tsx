@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
+import { HOME_TYPES } from "@/lib/floorplans/standardize";
 
 interface GalleryMeta {
   caption?: string | null;
@@ -393,7 +394,7 @@ export default function FloorPlansPage() {
 
   /** Approves a set of plans one after another: every visible plan, or every quick move-in. */
   async function approveGroups(list: Group[], what: string) {
-    if (!confirm(`Approve ${list.length} ${what}? Approved new plans are written to Wix as drafts.`)) return;
+    if (!confirm(`Approve ${list.length} ${what}? Approved plans are written to Wix as published items.`)) return;
     setBulkBusy(true);
     const failed: string[] = [];
     const blocked: string[] = [];
@@ -425,8 +426,8 @@ export default function FloorPlansPage() {
         <div>
           <h2>Floor Plan Changes</h2>
           <p className="text-muted">
-            Detected changes from builder websites, one row per plan. Approved new plans are written to the
-            Floor Plans V2 collection as drafts — publish them in the Wix CMS to make them live.
+            Detected changes from builder websites, one row per plan. Approved plans are written to the
+            Floor Plans V2 collection as published items.
             {" "}<a href="/dashboard/floor-plans/cutover">Cutover report →</a>
           </p>
         </div>
@@ -456,7 +457,7 @@ export default function FloorPlansPage() {
           Status{" "}
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="form-input" style={{ width: "auto", display: "inline-block" }}>
             <option value="pending">Pending</option>
-            <option value="synced_draft">Synced (draft in Wix)</option>
+            <option value="synced_draft">Synced (older drafts in Wix)</option>
             <option value="synced">Synced</option>
             <option value="rejected">Rejected</option>
             <option value="failed">Failed</option>
@@ -753,11 +754,24 @@ export default function FloorPlansPage() {
             ).map(([field, label]) => (
               <div className="form-group" key={field}>
                 <label>{label}</label>
-                <input
-                  className="form-input"
-                  value={editForm[field]}
-                  onChange={(e) => setEditForm((f) => ({ ...f, [field]: e.target.value }))}
-                />
+                {field === "homeType" ? (
+                  <select
+                    className="form-input"
+                    value={editForm.homeType}
+                    onChange={(e) => setEditForm((f) => ({ ...f, homeType: e.target.value }))}
+                  >
+                    <option value="">(not set)</option>
+                    {HOME_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="form-input"
+                    value={editForm[field]}
+                    onChange={(e) => setEditForm((f) => ({ ...f, [field]: e.target.value }))}
+                  />
+                )}
               </div>
             ))}
             {!editing.lead.proposed_record?.quickMoveIn && (

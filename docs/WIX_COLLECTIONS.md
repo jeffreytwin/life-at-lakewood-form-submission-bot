@@ -253,6 +253,9 @@ Findings from the snapshot of 2026-09-19 19:38 UTC:
 
 ## Supabase seed state
 
-`fp_sites` seeded with the three sites (wix_site_id + legacy_collection_id),
-all in `insert_publish_mode = 'draft'`. `wix_collection_id` stays NULL until
-the new standardized collections are created in Phase 2.
+`fp_sites` seeded with the three sites (wix_site_id + legacy_collection_id);
+`wix_collection_id` is `FloorPlansV2` on all three since Phase 2. Since
+2026-09-20 every site is in `insert_publish_mode = 'published'`: an approval
+in the Hub is the publication, and a row still in DRAFT is replaced by a
+published item on its next approved write, because an update cannot flip
+`_publishStatus` (see above).

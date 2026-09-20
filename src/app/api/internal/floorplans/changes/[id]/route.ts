@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { HOME_TYPES, isHomeType } from "@/lib/floorplans/standardize";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,12 @@ export async function PATCH(
         }
         record.score = parsed;
         continue;
+      }
+      if (field === "homeType") {
+        const wanted = typeof edits.homeType === "string" ? edits.homeType.trim() : "";
+        if (wanted && !isHomeType(wanted)) {
+          return NextResponse.json({ error: `homeType must be one of: ${HOME_TYPES.join(", ")}` }, { status: 400 });
+        }
       }
       if (field === "sqft") {
         // The form shows "3,908" and the record holds 3908: compare as numbers,
