@@ -44,6 +44,14 @@ describe("approvalBlocker", () => {
     expect(missingFields(plan({ score: 7, sqft: 0 }))).toEqual(["square feet"]);
   });
 
+  it("holds a plan back while its description speaks as the builder", () => {
+    expect(approvalBlocker("add", plan({ score: 7, description: "Our Lori plan welcomes you home." }))).toBe(
+      'needs a description without "we" or "our" before approval (set it in the edit overlay)'
+    );
+    expect(approvalBlocker("add", plan({ score: 7, description: "The Lori plan welcomes you home." }))).toBeNull();
+    expect(approvalBlocker("add", plan({ quickMoveIn: true, description: "Contact us today." }))).toMatch(/description/);
+  });
+
   it("asks only a price of a quick move-in, and nothing of a removal", () => {
     expect(approvalBlocker("add", plan({ quickMoveIn: true }))).toBeNull();
     expect(approvalBlocker("add", plan({ quickMoveIn: true, beds: "", homeType: null }))).toBeNull();

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { HOME_TYPES, largestInRange, standardHomeType, standardizePlan } from "@/lib/floorplans/standardize";
+import { HOME_TYPES, largestInRange, standardGarages, standardHomeType, standardizePlan } from "@/lib/floorplans/standardize";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 describe("standardHomeType", () => {
@@ -69,5 +69,32 @@ describe("standardizePlan", () => {
 
   it("records nothing in raw when the label was already standard", () => {
     expect(standardizePlan({ ...plan, homeType: "Townhome" }).raw).toEqual({ masterPlanID: 14510 });
+  });
+});
+
+describe("standardGarages", () => {
+  it("is a whole number of cars, a half rounded down, the larger end of a range", () => {
+    expect(standardGarages("2.5 car")).toBe("2 car");
+    expect(standardGarages("3 car")).toBe("3 car");
+    expect(standardGarages("2-3")).toBe("3 car");
+    expect(standardGarages("2-car garage")).toBe("2 car");
+    expect(standardGarages("0")).toBe("0 car");
+  });
+
+  it("keeps a label with no number for a person to fix, and gives nothing for nothing", () => {
+    expect(standardGarages("Yes")).toBe("Yes");
+    expect(standardGarages(null)).toBeNull();
+    expect(standardGarages("  ")).toBeNull();
+  });
+
+  it("is applied by standardizePlan, the builder's label kept in raw", () => {
+    const plan: NormalizedPlan = {
+      planKey: "lori", name: "Lori", price: null, priceDisplay: null, beds: "3", baths: "3", sqft: null,
+      garages: "2.5 car", homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [],
+    };
+    const out = standardizePlan(plan);
+    expect(out.garages).toBe("2 car");
+    expect(out.raw?.garagesRaw).toBe("2.5 car");
+    expect(standardizePlan({ ...plan, garages: "3 car" }).raw?.garagesRaw).toBeUndefined();
   });
 });

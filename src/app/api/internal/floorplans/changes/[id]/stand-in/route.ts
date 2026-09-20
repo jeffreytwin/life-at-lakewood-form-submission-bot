@@ -7,6 +7,7 @@ import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { queueChange, readPlanInFull } from "@/lib/floorplans/sync";
+import { neutralizeDescriptions } from "@/lib/floorplans/description";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -119,6 +120,7 @@ export async function POST(
     } catch (err) {
       logger.warn("Stand-in plan page could not be read", { planKey, error: err instanceof Error ? err.message : String(err) });
     }
+    [plan] = await neutralizeDescriptions([plan], builderName);
     const { data: scoreRows } = await supabase.from("fp_plan_scores").select("plan_key, score").match(scope).eq("plan_key", planKey);
     const remembered = new Map((scoreRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
     const [linked] = linkQuickMoveIns([standardizePlan(plan), ...homes]);

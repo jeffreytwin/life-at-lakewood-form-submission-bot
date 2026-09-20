@@ -647,7 +647,7 @@ export default function FloorPlansPage() {
                               alt={rec?.name ?? c.plan_key}
                               style={{ width: 84, height: 56, objectFit: "cover", borderRadius: 6, display: "block" }}
                             />
-                            {photoCount > 1 && <div className="text-muted" style={{ fontSize: 10 }}>{photoCount} photos</div>}
+                            {photoCount > 1 && !rec?.quickMoveIn && <div className="text-muted" style={{ fontSize: 10 }}>{photoCount} photos</div>}
                           </button>
                         ) : (
                           <span className="text-muted text-sm">no image</span>
@@ -886,21 +886,43 @@ export default function FloorPlansPage() {
                 onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
               />
             </div>
-            <GalleryEditor
-              label="Photo gallery (first image is the main image; blueprints follow the photos on the site)"
-              list={editGallery}
-              setList={setEditGallery}
-              meta={editing.lead.proposed_record?.galleryMeta}
-              isPhotos
-              onPreview={setPreview}
-            />
-            <GalleryEditor
-              label="Blueprints"
-              list={editBlueprints}
-              setList={setEditBlueprints}
-              isPhotos={false}
-              onPreview={setPreview}
-            />
+            {editing.lead.proposed_record?.quickMoveIn ? (
+              // A quick move-in's row shows one picture (Jeff, 2026-09-20); the
+              // rest of what the builder gave stays with the home, for a floor
+              // plan created from it.
+              <div className="form-group">
+                <label>Primary image (the one picture a quick move-in shows)</label>
+                {editGallery[0] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={editGallery[0]} alt="" style={{ maxWidth: 320, maxHeight: 220, borderRadius: 6, display: "block", objectFit: "cover" }} />
+                ) : (
+                  <span className="text-muted text-sm">no image</span>
+                )}
+                {editGallery.length + editBlueprints.length > 1 && (
+                  <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+                    {editGallery.length + editBlueprints.length - 1} more picture(s) stay with the home, for a floor plan created from it.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <GalleryEditor
+                  label="Photo gallery (first image is the main image; blueprints follow the photos on the site)"
+                  list={editGallery}
+                  setList={setEditGallery}
+                  meta={editing.lead.proposed_record?.galleryMeta}
+                  isPhotos
+                  onPreview={setPreview}
+                />
+                <GalleryEditor
+                  label="Blueprints"
+                  list={editBlueprints}
+                  setList={setEditBlueprints}
+                  isPhotos={false}
+                  onPreview={setPreview}
+                />
+              </>
+            )}
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => { setEditing(null); setPreview(null); }} disabled={savingEdit}>
                 Cancel

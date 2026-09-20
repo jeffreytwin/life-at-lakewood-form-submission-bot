@@ -30,6 +30,7 @@ import { withRememberedScore } from "@/lib/floorplans/scores";
 import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
+import { neutralizeDescriptions } from "@/lib/floorplans/description";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -325,6 +326,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     const standInKeys = new Set(filled.map((p) => p.planKey));
     plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
   }
+
+  // A description that speaks as the builder ("we", "our") is reworded in
+  // the third person, once per text (description.ts).
+  plans = await neutralizeDescriptions(plans, builder.name);
 
   const { data: canonical } = await supabase
     .from("fp_floor_plans")
