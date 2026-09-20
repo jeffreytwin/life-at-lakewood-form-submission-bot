@@ -218,6 +218,62 @@ async function probeMediaDelete(site) {
   log(`${site.domain} delete probe: after -> ${after.status} state=${after.json?.file?.state ?? '?'} ${after.status !== 200 ? (after.text ?? '').slice(0, 160) : ''}`);
 }
 
+/**
+ * Finds a Toll Brothers community page the way discover-url.ts does, from
+ * the sandbox that cannot reach tollbrothers.com: every sitemap URL named
+ * for the community, then the first few read for their title and model
+ * counts, the pages in the site's market first (Monterey at Lakewood Ranch
+ * vs Toll's Monterey in California, 2026-09-20).
+ */
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+const normKey = (v) => String(v ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+async function fetchText(url) {
+  const res = await fetch(url, { headers: { 'user-agent': UA, accept: 'text/html,application/xml' }, redirect: 'follow', signal: AbortSignal.timeout(30_000) });
+  return { status: res.status, text: res.ok ? await res.text() : '' };
+}
+function countModels(container) {
+  if (!container) return { models: 0, qmis: 0 };
+  const lists = [container.homes?.models ?? [], ...(container.communities ?? []).map((c) => c?.homes?.models ?? [])];
+  const models = lists.flat();
+  return { models: models.filter((m) => m?.name && !m.isQMI).length, qmis: models.reduce((n, m) => n + (m?.qmis?.length ?? 0), 0) };
+}
+async function probeTollCommunity(communityName, regionKey) {
+  const key = normKey(communityName);
+  const locsOf = (xml) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
+  let locs = [];
+  for (const path of ['/sitemap.xml', '/sitemap_index.xml']) {
+    const res = await fetchText('https://www.tollbrothers.com' + path);
+    if (res.status !== 200) { log(`toll probe: ${path} -> ${res.status}`); continue; }
+    locs = locsOf(res.text);
+    if (locs.length && locs.every((l) => /\.xml(\?|$)/.test(l))) {
+      const children = locs;
+      locs = [];
+      for (const child of children.slice(0, 12)) {
+        const c = await fetchText(child);
+        if (c.status === 200) locs.push(...locsOf(c.text));
+      }
+    }
+    if (locs.length) break;
+  }
+  const named = locs.filter((u) => normKey(u).includes(key));
+  log(`toll probe "${communityName}": ${locs.length} sitemap urls, ${named.length} named for it: ${named.slice(0, 20).join(' | ')}`);
+  const ranked = [...named].sort((a, b) => (normKey(b).includes(regionKey) ? 1 : 0) - (normKey(a).includes(regionKey) ? 1 : 0) || a.length - b.length);
+  for (const url of ranked.slice(0, 4)) {
+    try {
+      const page = await fetchText(url);
+      const title = page.text.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ?? '?';
+      const m = page.text.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+      const data = m ? JSON.parse(m[1]) : null;
+      const pageData = data?.props?.pageProps?.pageData ?? {};
+      const master = countModels(pageData.masterCommunityComponent);
+      const comm = countModels(pageData.communityComponent);
+      log(`toll probe page ${url}: ${page.status} title="${title.slice(0, 80)}" nextData=${!!m} pageDataKeys=[${Object.keys(pageData).slice(0, 12).join(',')}] master=${master.models}/${master.qmis} community=${comm.models}/${comm.qmis}`);
+    } catch (err) {
+      log(`toll probe page ${url}: failed ${err?.message ?? err}`);
+    }
+  }
+}
+
 async function cacheItems(site, collectionId) {
   const items = [];
   for (let offset = 0; ; offset += 100) {
@@ -300,6 +356,13 @@ try {
         await probeReference(site, targets.villages, 'The Isles');
       } catch (err) {
         log(`${site.domain}: reference probe failed: ${err?.message ?? err}`);
+      }
+    }
+    if (site.domain === 'lifeatlakewood.com') {
+      try {
+        await probeTollCommunity('Monterey', 'lakewood-ranch');
+      } catch (err) {
+        log(`${site.domain}: toll probe failed: ${err?.message ?? err}`);
       }
     }
     try {

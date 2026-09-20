@@ -39,13 +39,52 @@ function nameKeys(communityName: string): string[] {
   return [...keys];
 }
 
-function score(url: string, keys: string[]): number {
+/**
+ * Keys for where the site is ("Lakewood Ranch" → lakewood-ranch), so a
+ * builder with a Monterey in California and one at Lakewood Ranch gives
+ * the Florida page (2026-09-20: Toll's short /regency/Monterey-CA outscored
+ * /luxury-homes-for-sale/Florida/Monterey-at-Lakewood-Ranch on length alone).
+ */
+function regionKeys(regionHints: string[]): string[] {
+  return [...new Set(regionHints.flatMap((h) => nameKeys(h)))];
+}
+
+function score(url: string, keys: string[], region: string[] = []): number {
   const u = normKey(url);
   let best = 0;
   for (const k of keys) {
     if (u.includes(k)) best = Math.max(best, k.length * 10 - url.length / 20);
   }
+  // A page in the site's own market outranks any other page of the name.
+  if (best > 0 && region.some((r) => u.includes(r))) best += 100;
   return best;
+}
+
+/** The candidate URLs for a community, best first: named for it, and in the site's market where the builder has several of the name. */
+export function rankCandidates(urls: string[], communityName: string, regionHints: string[] = []): string[] {
+  const keys = nameKeys(communityName);
+  const region = regionKeys(regionHints);
+  const scored = new Map<string, number>();
+  for (const url of urls) {
+    const s = score(url, keys, region);
+    if (s > 0) scored.set(url, Math.max(scored.get(url) ?? 0, s));
+  }
+  return [...scored.entries()].sort((a, b) => b[1] - a[1]).map(([u]) => u);
+}
+
+/**
+ * Whether a page is the community's own: it names the community, and,
+ * where the site's market is known, the market too (in the page or in the
+ * URL), so a same-named community elsewhere is passed over.
+ */
+export function pageIsCommunity(url: string, html: string, communityName: string, regionHints: string[] = []): boolean {
+  const lower = html.toLowerCase();
+  const nameParts = communityName.split(/\s*-\s*/);
+  const shortName = nameParts[nameParts.length - 1].toLowerCase();
+  if (!lower.includes(shortName)) return false;
+  if (!regionHints.length) return true;
+  const u = normKey(url);
+  return regionHints.some((h) => lower.includes(h.toLowerCase())) || regionKeys(regionHints).some((r) => u.includes(r));
 }
 
 async function sitemapUrls(baseUrl: string): Promise<string[]> {
@@ -70,15 +109,18 @@ async function sitemapUrls(baseUrl: string): Promise<string[]> {
 
 export async function discoverCommunityUrl(
   builder: { base_url: string | null; engine_config: Record<string, unknown> | null },
-  communityName: string
+  communityName: string,
+  /** Where the site is ("Lakewood Ranch"): a page in that market wins over a same-named community elsewhere. */
+  regionHints: string[] = []
 ): Promise<string | null> {
   if (!builder.base_url) return null;
   const keys = nameKeys(communityName);
+  const region = regionKeys(regionHints);
   const candidates = new Map<string, number>();
 
   const addCandidates = (urls: string[]) => {
     for (const url of urls) {
-      const s = score(url, keys);
+      const s = score(url, keys, region);
       if (s > 0) candidates.set(url, Math.max(candidates.get(url) ?? 0, s));
     }
   };
@@ -111,17 +153,15 @@ export async function discoverCommunityUrl(
   }
 
   const ranked = [...candidates.entries()].sort((a, b) => b[1] - a[1]).map(([u]) => u);
-  // Verify: the page must actually mention the community by name.
+  // Verify: the page must actually be the community's own (its name, and its market).
   for (const url of ranked.slice(0, 3)) {
     const html = await fetchText(url);
     if (!html) continue;
-    const lower = html.toLowerCase();
-    const nameParts = communityName.split(/\s*-\s*/);
-    const shortName = nameParts[nameParts.length - 1].toLowerCase();
-    if (lower.includes(shortName)) {
+    if (pageIsCommunity(url, html, communityName, regionHints)) {
       logger.info("Discovered community URL", { communityName, url });
       return url;
     }
+    logger.info("Skipped a page that is not the community's own", { communityName, url });
   }
   return null;
 }

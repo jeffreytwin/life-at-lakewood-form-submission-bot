@@ -228,7 +228,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
-      "id, active, extractor_params, last_plan_count, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, domain))"
+      "id, active, extractor_params, last_plan_count, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
     )
     .eq("id", connectionId)
     .single();
@@ -238,7 +238,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     id: string; name: string; active: boolean; extraction_method: string | null;
   };
   const community = conn.fp_communities as unknown as {
-    id: string; name: string; fp_sites: { id: string; domain: string };
+    id: string; name: string; fp_sites: { id: string; name: string | null; domain: string };
   };
   const site = community.fp_sites;
 
@@ -260,8 +260,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       .eq("id", builder.id)
       .single();
     const { discoverCommunityUrl } = await import("@/lib/floorplans/discover-url");
+    // The site's market ("Lakewood Ranch") keeps a same-named community
+    // elsewhere from being picked (Toll's Monterey in California, 2026-09-20).
     const url = builderRow
-      ? await discoverCommunityUrl(builderRow, community.name)
+      ? await discoverCommunityUrl(builderRow, community.name, site.name ? [site.name] : [])
       : null;
     if (!url) {
       await setRunStatus(conn.id, "could not auto-discover page URL — set it via Edit URL", null, true);
