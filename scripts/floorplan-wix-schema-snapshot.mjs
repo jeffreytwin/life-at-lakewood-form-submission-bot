@@ -1,5 +1,6 @@
 // Snapshots every active site's Wix collection schemas (Floor Plans V2, the
-// legacy FloorPlans, Builders, the villages collection) into
+// legacy FloorPlans, and the Builders and neighborhoods collections its
+// builder1 and villages reference fields point at) into
 // fp_collection_schemas, and caches the Floor Plans V2 items (drafts
 // included) in fp_legacy_items, so the three sites' V2 schemas can be
 // compared and standardized from a sandbox that holds no Wix credentials.
@@ -75,12 +76,53 @@ async function snapshotSchema(site, collectionId) {
   const col = res.json?.collection;
   if (res.status !== 200 || !col) {
     log(`${site.domain}/${collectionId}: schema lookup ${res.status} ${(res.text ?? '').slice(0, 200)}`);
-    return;
+    return null;
   }
   await upsert('fp_collection_schemas?on_conflict=site_id,collection_id', [
     { site_id: site.id, collection_id: collectionId, schema: col, captured_at: new Date().toISOString() },
   ]);
   log(`${site.domain}/${collectionId}: ${col.fields?.length ?? 0} fields, revision ${col.revision ?? '?'}`);
+  return col;
+}
+
+/**
+ * The collections a site's Floor Plans V2 builder1 and villages fields
+ * reference, as the write-back reads them (writeback.ts, referenceTargetsOf):
+ * Lakewood's villages points at AmenitiesbyVillage, Wellen Park's and
+ * Parrish's at HousesforSale-DynamicPages.
+ */
+function referenceTargets(v2Schema) {
+  const refOf = (key, fallback) =>
+    (v2Schema?.fields ?? []).find((f) => f.key === key)?.typeMetadata?.reference?.referencedCollectionId || fallback;
+  return { builder1: refOf('builder1', 'Builders'), villages: refOf('villages', VILLAGES_COLLECTION) };
+}
+
+/**
+ * Proves a neighborhood can be found in the collection the villages field
+ * points at, the way the write-back looks it up: by exact title, then by
+ * any title or name field across the collection. Logs what matched.
+ */
+async function probeReference(site, collectionId, name) {
+  const exact = await wix('POST', '/wix-data/v2/items/query', site.wix_site_id, {
+    dataCollectionId: collectionId,
+    query: { filter: { title: { $eq: name } }, paging: { limit: 5 } },
+  });
+  const hits = exact.json?.dataItems ?? [];
+  log(`${site.domain}/${collectionId} reference probe "${name}": title match ${exact.status} -> ${hits.map((it) => it.id).join(', ') || 'none'}`);
+  if (hits.length) return;
+  const norm = (v) => String(v ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const all = await wix('POST', '/wix-data/v2/items/query', site.wix_site_id, {
+    dataCollectionId: collectionId,
+    query: { paging: { limit: 100 } },
+    returnTotalCount: true,
+  });
+  const items = all.json?.dataItems ?? [];
+  const named = items.flatMap((it) =>
+    Object.entries(it.data ?? {})
+      .filter(([k, v]) => typeof v === 'string' && norm(v) === norm(name))
+      .map(([k]) => `${it.id} ${k}="${it.data.title ?? ''}"`)
+  );
+  log(`${site.domain}/${collectionId} reference probe "${name}": scanned ${items.length} of ${all.json?.pagingMetadata?.total ?? '?'}; fields carrying it: ${named.join('; ') || 'none'}`);
 }
 
 /**
@@ -158,6 +200,24 @@ async function probeMediaFiles(site) {
   }
 }
 
+/**
+ * Proves the Media Manager delete call a Reset relies on: imports a copy of
+ * a public photo, deletes it permanently by id, then asks for it again.
+ * The write-back's deleteMediaFiles (client.ts) makes the same call.
+ */
+async function probeMediaDelete(site) {
+  const source = 'https://static.wixstatic.com/media/d0be81_15ba1e35e6304eb09a11c9a16bed98d0~mv2.jpg';
+  const imported = await wix('POST', '/site-media/v1/files/import', site.wix_site_id, { url: source, displayName: 'fp-reset-probe.jpg' });
+  const fileId = imported.json?.file?.id;
+  log(`${site.domain} delete probe: import -> ${imported.status} id=${fileId ?? '?'} status=${imported.json?.file?.operationStatus ?? '?'}`);
+  if (!fileId) return;
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  const deleted = await wix('POST', '/site-media/v1/bulk/files/delete', site.wix_site_id, { fileIds: [fileId], permanent: true });
+  log(`${site.domain} delete probe: delete -> ${deleted.status} ${(deleted.text ?? '').slice(0, 200)}`);
+  const after = await wix('GET', `/site-media/v1/files/${encodeURIComponent(fileId)}`, site.wix_site_id);
+  log(`${site.domain} delete probe: after -> ${after.status} state=${after.json?.file?.state ?? '?'} ${after.status !== 200 ? (after.text ?? '').slice(0, 160) : ''}`);
+}
+
 async function cacheItems(site, collectionId) {
   const items = [];
   for (let offset = 0; ; offset += 100) {
@@ -210,7 +270,15 @@ try {
     } catch (err) {
       log(`${site.domain}/${v2}: applying the standard failed: ${err?.message ?? err}`);
     }
-    const collections = [...new Set([v2, site.legacy_collection_id ?? 'FloorPlans', 'Builders', VILLAGES_COLLECTION])];
+    let v2Schema = null;
+    try {
+      v2Schema = await snapshotSchema(site, v2);
+    } catch (err) {
+      log(`${site.domain}/${v2}: schema snapshot failed: ${err?.message ?? err}`);
+    }
+    const targets = referenceTargets(v2Schema);
+    log(`${site.domain}/${v2}: builder1 -> ${targets.builder1}, villages -> ${targets.villages}`);
+    const collections = [...new Set([site.legacy_collection_id ?? 'FloorPlans', targets.builder1, targets.villages, VILLAGES_COLLECTION])];
     for (const collectionId of collections) {
       try {
         await snapshotSchema(site, collectionId);
@@ -218,19 +286,33 @@ try {
         log(`${site.domain}/${collectionId}: schema snapshot failed: ${err?.message ?? err}`);
       }
     }
-    // The V2 items, and the Builders and villages items the reference
+    // The V2 items, and the Builders and neighborhoods items the reference
     // fields (builder1, villages) point at.
-    for (const collectionId of [v2, 'Builders', VILLAGES_COLLECTION]) {
+    for (const collectionId of [...new Set([v2, targets.builder1, targets.villages])]) {
       try {
         await cacheItems(site, collectionId);
       } catch (err) {
         log(`${site.domain}/${collectionId}: item cache failed: ${err?.message ?? err}`);
       }
     }
+    if (site.domain === 'lifeatlakewood.com') {
+      try {
+        await probeReference(site, targets.villages, 'The Isles');
+      } catch (err) {
+        log(`${site.domain}: reference probe failed: ${err?.message ?? err}`);
+      }
+    }
     try {
       await probeMediaFiles(site);
     } catch (err) {
       log(`${site.domain}: media probe failed: ${err?.message ?? err}`);
+    }
+    if (site.domain === 'lifeatlakewood.com') {
+      try {
+        await probeMediaDelete(site);
+      } catch (err) {
+        log(`${site.domain}: delete probe failed: ${err?.message ?? err}`);
+      }
     }
   }
 } catch (err) {

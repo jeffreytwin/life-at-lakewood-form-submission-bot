@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { alignedFields, describeFieldType, diffFields, type FieldSpec } from "@/lib/floorplans/collection-schema";
+import {
+  alignedFields,
+  describeFieldType,
+  diffFields,
+  findItemNamed,
+  referencedCollectionOf,
+  type FieldSpec,
+} from "@/lib/floorplans/collection-schema";
 
 const reference: FieldSpec[] = [
   { key: "_id", type: "TEXT", systemField: true },
@@ -79,5 +86,56 @@ describe("alignedFields", () => {
       type: "REFERENCE",
       typeMetadata: { reference: { referencedCollectionId: "Builders" } },
     });
+  });
+});
+
+describe("referencedCollectionOf", () => {
+  it("reads the referenced collection off a REFERENCE field, which differs by site", () => {
+    const lakewood: FieldSpec[] = [
+      { key: "villages", type: "REFERENCE", typeMetadata: { reference: { referencedCollectionId: "AmenitiesbyVillage" } } },
+    ];
+    expect(referencedCollectionOf(lakewood, "villages", "HousesforSale-DynamicPages")).toBe("AmenitiesbyVillage");
+    expect(referencedCollectionOf(reference, "builder1", "x")).toBe("Builders");
+  });
+
+  it("falls back when the field is missing, is not a reference, or names nothing", () => {
+    expect(referencedCollectionOf(reference, "villages", "HousesforSale-DynamicPages")).toBe("HousesforSale-DynamicPages");
+    expect(referencedCollectionOf([{ key: "villages", type: "TEXT" }], "villages", "HousesforSale-DynamicPages")).toBe(
+      "HousesforSale-DynamicPages"
+    );
+    const blank: FieldSpec[] = [{ key: "villages", type: "REFERENCE", typeMetadata: { reference: { referencedCollectionId: " " } } }];
+    expect(referencedCollectionOf(blank, "villages", "d")).toBe("d");
+  });
+});
+
+describe("findItemNamed", () => {
+  const items = [
+    { id: "lake-club", data: { title: "The Lake Club", nearbyVillage1: "The Isles" } },
+    { id: "isles", data: { title: "The Isles" } },
+    { id: "bayview", data: { title: "Isles at BayView", villageNameForFiltering: "Isles at Bayview" } },
+  ];
+
+  it("matches the normalized title first", () => {
+    expect(findItemNamed(items, "the isles")?.id).toBe("isles");
+    expect(findItemNamed(items, "Isles at Bayview")?.id).toBe("bayview");
+  });
+
+  it("falls back to another title or name field, never a nearby-village mention or a link", () => {
+    const named = [
+      { id: "a", data: { title: "Homes in The Isles", villageNameForFiltering: "The Isles", "link-villages-title": "/the-isles" } },
+      { id: "b", data: { title: "The Lake Club", nearbyVillage1: "The Isles" } },
+    ];
+    expect(findItemNamed(named, "The Isles")?.id).toBe("a");
+    expect(findItemNamed([named[1]], "The Isles")).toBeNull();
+  });
+
+  it("refuses an ambiguous or empty name", () => {
+    const twice = [
+      { id: "a", data: { villageName: "The Isles" } },
+      { id: "b", data: { neighborhoodName: "The Isles" } },
+    ];
+    expect(findItemNamed(twice, "The Isles")).toBeNull();
+    expect(findItemNamed(items, "")).toBeNull();
+    expect(findItemNamed(items, "Nowhere")).toBeNull();
   });
 });

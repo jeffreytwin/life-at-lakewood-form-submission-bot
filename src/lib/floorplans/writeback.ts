@@ -28,10 +28,13 @@ import {
   mediaVerdict,
   WixApiError,
   type WixItemData,
+  getDataCollection,
+  type WixDataItem,
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
+import { findItemNamed, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
 import { wixImageUri } from "@/lib/listings/types";
-import { measureImageUrl, rasterizeSvg, wixFileIdOf } from "@/lib/floorplans/media";
+import { measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta } from "@/lib/floorplans/types";
 
 /** A plan is builder + community + name (migration 065); the same trio keys the Wix row's syncKey. */
@@ -125,12 +128,9 @@ async function importGallery(
   return { items, skipped };
 }
 
-/** The bucket the listings engine's photos live in; a rendered drawing is stored there for Wix to fetch. */
-const RASTER_BUCKET = "photos";
-
 /** Stores a rendered drawing where Wix can fetch it and returns that URL; null when the store refused it. */
 async function storeRaster(siteId: string, contentHash: string, png: Uint8Array): Promise<string | null> {
-  const path = `floorplans/${siteId}/${contentHash}.png`;
+  const path = rasterStoragePath(siteId, contentHash);
   const { error } = await supabase.storage
     .from(RASTER_BUCKET)
     .upload(path, Buffer.from(png), { contentType: "image/png", upsert: true });
@@ -376,21 +376,67 @@ async function importRecordMedia(
   return { gallery: photos, blueprints: drawings, tourImage };
 }
 
-/** The Builders and villages collections the reference fields point at, as every site names them. */
-const BUILDERS_COLLECTION = "Builders";
-const VILLAGES_COLLECTION = "HousesforSale-DynamicPages";
+/**
+ * Where the builder1 and villages reference fields point when a site's
+ * schema cannot be read: the Builders collection, and the neighborhoods
+ * collection Wellen Park and Parrish use.
+ */
+const DEFAULT_REFERENCE_TARGETS: ReferenceTargets = { builder1: "Builders", villages: "HousesforSale-DynamicPages" };
 
-/** Wix item ids found by title, kept for the life of the process (a serverless invocation); only hits are kept. */
-const referenceCache = new Map<string, string>();
+interface ReferenceTargets {
+  builder1: string;
+  villages: string;
+}
+
+/** Reference targets per site collection, kept for the life of the process (a serverless invocation). */
+const targetsCache = new Map<string, ReferenceTargets>();
 
 /**
- * The _id of the item titled `title` in one of a site's collections, for the
+ * The collections a site's builder1 and villages fields reference, read
+ * from its Floor Plans V2 schema. They differ by site: Wellen Park and
+ * Parrish keep their neighborhoods in HousesforSale-DynamicPages, Lakewood
+ * in AmenitiesbyVillage, which is why every Isles row went out without its
+ * neighborhood on 2026-09-20 while the lookup searched the former. The
+ * defaults stand in when the schema cannot be read.
+ */
+async function referenceTargetsOf(wixSiteId: string, wixCollectionId: string): Promise<ReferenceTargets> {
+  const cacheKey = `${wixSiteId}|${wixCollectionId}`;
+  const cached = targetsCache.get(cacheKey);
+  if (cached) return cached;
+  try {
+    const collection = await getDataCollection(wixSiteId, wixCollectionId);
+    if (!collection) return { ...DEFAULT_REFERENCE_TARGETS };
+    const targets: ReferenceTargets = {
+      builder1: referencedCollectionOf(collection.fields, "builder1", DEFAULT_REFERENCE_TARGETS.builder1),
+      villages: referencedCollectionOf(collection.fields, "villages", DEFAULT_REFERENCE_TARGETS.villages),
+    };
+    targetsCache.set(cacheKey, targets);
+    return targets;
+  } catch (error) {
+    logger.warn("Wix schema lookup for the reference fields failed", {
+      collectionId: wixCollectionId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { ...DEFAULT_REFERENCE_TARGETS };
+  }
+}
+
+/** Wix item ids found by name, kept for the life of the process; only hits are kept. */
+const referenceCache = new Map<string, string>();
+
+/** The most items a name lookup reads when no title matches: the neighborhoods collections hold a few dozen. */
+const REFERENCE_SCAN_CAP = 500;
+
+/**
+ * The _id of the item named `title` in one of a site's collections, for the
  * builder1 and villages references every Wellen Park and Parrish row carries
- * (the Builders item "Toll Brothers", the village "The Isles"). An exact
+ * (the Builders item "Toll Brothers", the neighborhood "The Isles"). An exact
  * title first, then a contains-match whose normalized title is the same, or
- * the only match. Null when there is no such item or the lookup fails: the
- * row is then written without the reference, and one set by hand survives
- * the read-merge on update.
+ * the only match; then, since a collection may keep its name in another
+ * field, the collection read and matched on any title or name field
+ * (collection-schema.ts, findItemNamed). Null when there is no such item or
+ * the lookup fails: the row is then written without the reference, and one
+ * set by hand survives the read-merge on update.
  */
 async function referenceIdOf(wixSiteId: string, collectionId: string, title: string): Promise<string | null> {
   const wanted = title.trim();
@@ -405,9 +451,13 @@ async function referenceIdOf(wixSiteId: string, collectionId: string, title: str
       const same = loose.items.filter((it) => normKey(String(it.data?.title ?? "")) === normKey(wanted));
       items = same.length ? same : loose.items.length === 1 ? loose.items : [];
     }
+    if (!items.length) {
+      const found = findItemNamed(await queryItemsUpTo(wixSiteId, collectionId, REFERENCE_SCAN_CAP), wanted);
+      items = found ? [found] : [];
+    }
     const id = items[0]?.id ?? (typeof items[0]?.data?._id === "string" ? items[0].data._id : null);
     if (!id) {
-      logger.warn("No Wix item to reference by title", { collectionId, title: wanted });
+      logger.warn("No Wix item to reference by name", { collectionId, title: wanted });
       return null;
     }
     referenceCache.set(cacheKey, id);
@@ -422,16 +472,40 @@ async function referenceIdOf(wixSiteId: string, collectionId: string, title: str
   }
 }
 
+/** The first `cap` items of a collection, a page at a time. */
+async function queryItemsUpTo(wixSiteId: string, collectionId: string, cap: number): Promise<WixDataItem[]> {
+  const all: WixDataItem[] = [];
+  while (all.length < cap) {
+    const { items, total } = await queryItems(wixSiteId, collectionId, {
+      limit: Math.min(100, cap - all.length),
+      offset: all.length,
+    });
+    all.push(...items);
+    if (!items.length || all.length >= total) break;
+  }
+  return all;
+}
+
 interface PlanReferences {
   builderId: string | null;
   villageId: string | null;
 }
 
-/** The builder1 and villages references for a row: the site's Builders item and village page item, by name. */
-async function referencesFor(wixSiteId: string, builderName: string, communityName: string): Promise<PlanReferences> {
+/** A site as the reference lookups need it: where its Floor Plans V2 lives. */
+interface ReferenceSite {
+  wix_site_id: string;
+  wix_collection_id: string;
+}
+
+/**
+ * The builder1 and villages references for a row: the site's Builders item
+ * and neighborhood item, by name, in the collections its own schema points at.
+ */
+async function referencesFor(site: ReferenceSite, builderName: string, communityName: string): Promise<PlanReferences> {
+  const targets = await referenceTargetsOf(site.wix_site_id, site.wix_collection_id);
   const [builderId, villageId] = await Promise.all([
-    referenceIdOf(wixSiteId, BUILDERS_COLLECTION, builderName),
-    referenceIdOf(wixSiteId, VILLAGES_COLLECTION, communityName),
+    referenceIdOf(site.wix_site_id, targets.builder1, builderName),
+    referenceIdOf(site.wix_site_id, targets.villages, communityName),
   ]);
   return { builderId, villageId };
 }
@@ -560,7 +634,7 @@ async function writePlanToWix(
       blueprints,
       tourImage,
       basePlanName: await basePlanNameOf(ids, rec),
-      refs: await referencesFor(site.wix_site_id, builder.name, community.name),
+      refs: await referencesFor(site, builder.name, community.name),
     }),
   };
   const asDraft = site.insert_publish_mode !== "published";

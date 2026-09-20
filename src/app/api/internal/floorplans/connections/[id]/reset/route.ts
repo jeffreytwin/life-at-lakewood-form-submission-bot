@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { removeItem, WixApiError } from "@/lib/wix/client";
+import { releaseConnectionMedia } from "@/lib/floorplans/media-cleanup";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -14,13 +15,16 @@ export const maxDuration = 300;
  * 2026-09-19: "remove every floor plan we have in here and try again").
  * Every plan the pipeline holds for this builder in this community is
  * removed from the site's FloorPlansV2 collection (drafts included), then
- * from Supabase with its pending changes and follow-up tasks, and the
- * connection's run history is cleared. Imported photos stay in
- * fp_media_map and the Media Manager: the next run reuses them rather than
- * importing the same pictures twice; scores set in the Hub stay in
- * fp_plan_scores and come back on the next Run (an accidental Reset on
- * 2026-09-20 had cost the seven scores on The Isles). If any Wix removal fails, nothing is
- * deleted from Supabase, so a Wix item is never left behind untracked.
+ * from Supabase with everything the Hub knows about it: pending changes,
+ * follow-up tasks, plan links, scores, and the pictures it imported (their
+ * files leave the Media Manager, rendered drawings leave storage, their
+ * fp_media_map rows go), and the connection's run history is cleared. A
+ * Reset wipes everything (Jeff, 2026-09-20), so the next Run tests the
+ * whole path from the builder's site: fetch, render, import, verify. A
+ * picture another plan on the site still uses is kept. If any Wix item
+ * removal fails, nothing is deleted from Supabase, so a Wix item is never
+ * left behind untracked; a Media Manager file Wix would not delete is
+ * reported and the reset goes on.
  */
 export async function POST(
   _request: NextRequest,
@@ -80,12 +84,19 @@ export async function POST(
       );
     }
 
-    // Foreign keys: tasks reference plans and changes, changes reference plans.
+    // The pictures, while the plans and changes still say which ones are in scope.
+    const media = await releaseConnectionMedia(wix?.wix_site_id ?? null, scope);
+
+    // Foreign keys: tasks and links reference plans, changes reference plans.
     const planIds = (plans ?? []).map((p) => p.id);
     if (planIds.length) {
       const { error: tasksError } = await supabase.from("fp_follow_up_tasks").delete().in("floor_plan_id", planIds);
       if (tasksError) throw tasksError;
+      const { error: linksError } = await supabase.from("fp_plan_links").delete().in("floor_plan_id", planIds);
+      if (linksError) throw linksError;
     }
+    const { error: scoresError } = await supabase.from("fp_plan_scores").delete().match(scope);
+    if (scoresError) throw scoresError;
     const { data: changes, error: changesError } = await supabase
       .from("fp_pending_changes")
       .delete()
@@ -108,7 +119,15 @@ export async function POST(
       .eq("id", id);
     if (connError) throw connError;
 
-    const result = { plans: planIds.length, wixRemoved, changes: changes?.length ?? 0 };
+    const result = {
+      plans: planIds.length,
+      wixRemoved,
+      changes: changes?.length ?? 0,
+      photos: media.filesDeleted,
+      photosFailed: media.filesFailed.length,
+      photoRows: media.rows,
+      rasters: media.rasters,
+    };
     logger.info("Floor plan connection reset", { connectionId: id, ...result });
     return NextResponse.json(result);
   } catch (error) {

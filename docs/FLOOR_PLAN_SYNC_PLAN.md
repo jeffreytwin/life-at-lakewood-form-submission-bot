@@ -62,7 +62,7 @@ nothing. No cutover report has ever been generated.
   description. Where each piece lives: `pipeline/slice/DISCOVERY_NOTES.md`.
 - Settings → Builder Connections has **Reset**: removes a connection's
   plans from Floor Plans V2 (drafts included) and the Hub, clears its run
-  history, keeps the imported photos. This is how the ten Toll drafts get
+  history, and (since 2026-09-20) removes the imported pictures too. This is how the ten Toll drafts get
   replaced: Reset, then Run, then approve.
 - The run route allows 300 s, since a Toll community is now a page per plan.
 
@@ -188,11 +188,28 @@ nothing. No cutover report has ever been generated.
   item, and an approved update to a row that is still a draft replaces the
   draft with a published item, since Wix will not flip a draft's status
   through an update. Rewrite does the same for a whole connection.
-- **Scores outlive the plans** (`fp_plan_scores`, migration 068). An
-  accidental Reset on The Isles removed its 16 plans and the seven scores
-  with them; now the queue's PATCH route remembers every score by plan
-  identity, the sync core puts it back on a plan it queues again, and
-  Reset leaves it alone. Reset also asks for the word RESET to be typed.
+- **Scores are remembered apart from the plans** (`fp_plan_scores`,
+  migration 068): the queue's PATCH route records every score by plan
+  identity and the sync core puts it back on a plan it queues again, so a
+  plan the builder drops and later lists again keeps its score. Reset
+  asks for the word RESET to be typed.
+- **Reset wipes everything** (Jeff, 2026-09-20): the plans' Wix rows, the
+  pictures it imported (their files leave the Media Manager, rendered
+  drawings leave storage, `fp_media_map` rows go; a picture another plan
+  on the site still uses is kept), queued changes, follow-ups, plan links
+  and scores. The next Run starts from nothing and tests the whole path
+  from the builder's site: fetch, render, import, verify. An earlier
+  version kept the pictures and the scores; it no longer does.
+- **The Neighborhood reference follows the site's schema** (2026-09-20):
+  every Isles row was published without its `villages` reference because the
+  writer looked "The Isles" up in `HousesforSale-DynamicPages`, and on
+  Lakewood that field points at `AmenitiesbyVillage` (Wellen Park and Parrish
+  point at `HousesforSale-DynamicPages`). The writer now reads where
+  `builder1` and `villages` point from each site's Floor Plans V2 schema,
+  finds the item by exact title and then by any title or name field, and the
+  snapshot build caches those collections and probes "The Isles". Rewrite
+  (Settings → Builder Connections) fills the reference in on rows already
+  published.
 
 **Known gaps, in the order they bite.**
 
