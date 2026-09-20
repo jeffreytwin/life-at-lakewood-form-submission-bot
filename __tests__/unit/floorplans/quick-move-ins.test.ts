@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   linkQuickMoveIns,
+  withQuickMoveInPrices,
   priceTagOf,
   basePlanMarkers,
   QUICK_MOVE_IN_BADGE,
@@ -129,5 +130,39 @@ describe("fieldChanges for quick move-ins", () => {
     expect(fieldChanges(current, { ...current, hasQuickMoveIns: true })).toEqual([
       { field: "hasQuickMoveIns", label: "quick move-ins available", oldValue: "no", newValue: "yes" },
     ]);
+  });
+});
+
+describe("withQuickMoveInPrices", () => {
+  const priceless = plan({ planKey: "bianca", name: "Bianca", price: null, priceDisplay: null });
+  const homes = [
+    plan({ planKey: "17837-palmiste-dr", name: "17837 Palmiste Dr", quickMoveIn: true, relatedPlanName: "Bianca", price: 1_299_000, priceDisplay: "$1,299,000" }),
+    plan({ planKey: "17900-palmiste-dr", name: "17900 Palmiste Dr", quickMoveIn: true, relatedPlanName: "Bianca", price: 1_249_000, priceDisplay: "$1,249,000" }),
+    plan({ planKey: "1-nowhere-ln", name: "1 Nowhere Ln", quickMoveIn: true, relatedPlanName: "Bianca", price: null, priceDisplay: null }),
+  ];
+
+  it("gives a priceless base plan its cheapest quick move-in's price and says which home", () => {
+    const [bianca] = withQuickMoveInPrices(linkQuickMoveIns([priceless, ...homes]));
+    expect(bianca.price).toBe(1_249_000);
+    expect(bianca.priceDisplay).toBe("$1,249,000");
+    expect(bianca.priceFromHome).toBe("17900 Palmiste Dr");
+    expect(fieldChanges({ ...priceless, priceFromHome: null }, bianca).map((c) => c.label)).toEqual(["price", "quick move-ins available"]);
+  });
+
+  it("leaves a priced base plan alone and clears the marker once the builder prices the plan", () => {
+    const [lori] = withQuickMoveInPrices(linkQuickMoveIns([plan({}), ...homes]));
+    expect(lori.price).toBe(1_000_000);
+    expect(lori.priceFromHome).toBeNull();
+    const [bianca] = withQuickMoveInPrices(linkQuickMoveIns([{ ...priceless, price: 995_000, priceDisplay: "$995,000" }, ...homes]));
+    expect(bianca.priceFromHome).toBeNull();
+    expect(bianca.priceDisplay).toBe("$995,000");
+  });
+
+  it("gives nothing when no quick move-in of the plan has a price, and never touches a quick move-in", () => {
+    const out = withQuickMoveInPrices(linkQuickMoveIns([priceless, homes[2]]));
+    expect(out[0].price).toBeNull();
+    expect(out[0].priceFromHome).toBeNull();
+    expect(out[1]).toMatchObject({ price: null, priceDisplay: null });
+    expect(out[1].priceFromHome).toBeUndefined();
   });
 });

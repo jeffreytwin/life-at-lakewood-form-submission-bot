@@ -82,6 +82,33 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
   return linked.map((p) => (p.quickMoveIn ? p : { ...p, hasQuickMoveIns: (children.get(p.planKey) ?? 0) > 0 }));
 }
 
+const hasPrice = (p: NormalizedPlan): boolean =>
+  typeof p.price === "number" && Number.isFinite(p.price) && p.price > 0 && text(p.priceDisplay) !== "";
+
+/**
+ * A base plan the builder gave no price takes the price of its cheapest
+ * quick move-in until the builder prices it (Jeff, 2026-09-20), and says
+ * which home it came from. A plan with its own price carries none of that,
+ * so a price that arrives clears the marker on the next run. Runs after
+ * linkQuickMoveIns; pure.
+ */
+export function withQuickMoveInPrices(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const cheapest = new Map<string, NormalizedPlan>();
+  for (const p of plans) {
+    if (!p.quickMoveIn || !p.relatedPlanKey || !hasPrice(p)) continue;
+    const best = cheapest.get(p.relatedPlanKey);
+    if (!best || (p.price as number) < (best.price as number)) cheapest.set(p.relatedPlanKey, p);
+  }
+  return plans.map((p) => {
+    if (p.quickMoveIn) return p;
+    // Explicit null, so a marker on the canonical record is cleared by the merge.
+    if (hasPrice(p)) return { ...p, priceFromHome: null };
+    const home = cheapest.get(p.planKey);
+    if (!home) return { ...p, priceFromHome: null };
+    return { ...p, price: home.price, priceDisplay: home.priceDisplay, priceFromHome: home.name };
+  });
+}
+
 /**
  * The price bracket tag the site filters on: "$400s" for $419,990, "1M+"
  * from a million up, "Custom Pricing" when the builder gives no price

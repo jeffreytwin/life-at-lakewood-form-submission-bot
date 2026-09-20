@@ -24,11 +24,12 @@ import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
-import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
+import { linkQuickMoveIns, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
+import { rejectionStillApplies } from "@/lib/floorplans/approval";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -132,10 +133,13 @@ export async function queueChange(args: {
   const fieldKey = args.fieldChanged ?? null;
 
   // Rejections stick: an identical rejected change suppresses re-queueing.
-  // Identical = same plan + change type + field + proposed new value.
+  // Identical = same plan + change type + field + proposed new value. A
+  // rejected new plan comes back once the builder fills in something it
+  // lacked (approval.ts, rejectionStillApplies): a plan rejected for
+  // having no bedrooms is queued again when it has them.
   let rejectedQuery = supabase
     .from("fp_pending_changes")
-    .select("id")
+    .select("id, proposed_record")
     .eq("site_id", args.siteId)
     .eq("community_id", args.communityId)
     .eq("builder_id", args.builderId)
@@ -150,7 +154,10 @@ export async function queueChange(args: {
     ? rejectedQuery.is("new_value", null)
     : rejectedQuery.eq("new_value", args.newValue);
   const { data: rejected } = await rejectedQuery;
-  if ((rejected ?? []).length > 0) return false;
+  const stillRejected = (rejected ?? []).some(
+    (r) => args.changeType !== "add" || rejectionStillApplies(r.proposed_record, args.proposedRecord)
+  );
+  if (stillRejected) return false;
 
   // Dedupe against an existing pending row for the same logical change.
   let pendingQuery = supabase
@@ -295,7 +302,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   // the larger end of a bed or bath range; standardize.ts), then each
   // quick move-in learns its base plan and each base plan learns whether
   // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
-  plans = linkQuickMoveIns(plans.map(standardizePlan));
+  // A base plan the builder gave no price takes its cheapest quick
+  // move-in's until the builder prices it (Jeff, 2026-09-20).
+  const link = (list: NormalizedPlan[]) => withQuickMoveInPrices(linkQuickMoveIns(list));
+  plans = link(plans.map(standardizePlan));
   // A plan the builder no longer lists but a person asked to keep, built
   // from its homes on offer (stand-ins.ts): each is read from the home's own
   // page so it carries every picture, then linked like the rest.
@@ -313,7 +323,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       })
     );
     const standInKeys = new Set(filled.map((p) => p.planKey));
-    plans = linkQuickMoveIns([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
+    plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
   }
 
   const { data: canonical } = await supabase
