@@ -453,7 +453,7 @@ export default function FloorPlansPage() {
       setBulkBusy(false);
       fetchChanges();
       const notes: string[] = [];
-      if (blocked.length) notes.push(`${blocked.length} plan(s) still need a score and were left pending: ${blocked.join(", ")}.`);
+      if (blocked.length) notes.push(`${blocked.length} plan(s) still need something (a score, price, bedrooms, bathrooms, square feet, garages or home type) and were left pending: ${blocked.join(", ")}.`);
       if (failed.length) notes.push(`${failed.length} plan(s) could not be written to Wix: ${failed.join(", ")}. See the Failed filter for details.`);
       if (notes.length) alert(notes.join("\n"));
     }

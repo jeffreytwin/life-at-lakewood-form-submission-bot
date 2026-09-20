@@ -29,6 +29,7 @@ import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
+import { rejectionStillApplies } from "@/lib/floorplans/approval";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -132,10 +133,13 @@ export async function queueChange(args: {
   const fieldKey = args.fieldChanged ?? null;
 
   // Rejections stick: an identical rejected change suppresses re-queueing.
-  // Identical = same plan + change type + field + proposed new value.
+  // Identical = same plan + change type + field + proposed new value. A
+  // rejected new plan comes back once the builder fills in something it
+  // lacked (approval.ts, rejectionStillApplies): a plan rejected for
+  // having no bedrooms is queued again when it has them.
   let rejectedQuery = supabase
     .from("fp_pending_changes")
-    .select("id")
+    .select("id, proposed_record")
     .eq("site_id", args.siteId)
     .eq("community_id", args.communityId)
     .eq("builder_id", args.builderId)
@@ -150,7 +154,10 @@ export async function queueChange(args: {
     ? rejectedQuery.is("new_value", null)
     : rejectedQuery.eq("new_value", args.newValue);
   const { data: rejected } = await rejectedQuery;
-  if ((rejected ?? []).length > 0) return false;
+  const stillRejected = (rejected ?? []).some(
+    (r) => args.changeType !== "add" || rejectionStillApplies(r.proposed_record, args.proposedRecord)
+  );
+  if (stillRejected) return false;
 
   // Dedupe against an existing pending row for the same logical change.
   let pendingQuery = supabase

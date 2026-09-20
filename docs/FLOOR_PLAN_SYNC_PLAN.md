@@ -239,6 +239,15 @@ nothing. No cutover report has ever been generated.
   the market too (`discover-url.ts`, `rankCandidates` / `pageIsCommunity`).
   The snapshot build probes Toll's sitemap for Monterey and logs what each
   page carries.
+- **A plan needs its facts before approval** (Jeff, 2026-09-20): besides
+  the score, a base plan needs its price, bedrooms, bathrooms, square feet,
+  garages and home type (`approval.ts`, `missingFields`); a quick move-in
+  needs its price. The queue says what is missing and Approve waits; the
+  overlay is where it gets typed in. A rejected new plan comes back to the
+  queue once the builder fills in something it lacked
+  (`rejectionStillApplies`, used by the sync core's rejection check): a
+  plan rejected for having no price is queued again when it gets one, while
+  a complete plan that was rejected stays rejected.
 
 **Known gaps, in the order they bite.**
 
