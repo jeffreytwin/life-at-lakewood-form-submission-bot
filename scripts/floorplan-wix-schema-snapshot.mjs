@@ -135,6 +135,29 @@ async function applyStandard(site, collectionId) {
   );
 }
 
+/**
+ * Asks Wix about two of a site's imported pictures (a photo and an SVG
+ * drawing) by file id, and logs what the file endpoint says: media type,
+ * import status, the picture's size. The write-back's verification
+ * (writeback.ts, verifyImports) reads the same fields.
+ */
+async function probeMediaFiles(site) {
+  const rows = await supa(`fp_media_map?select=source_url,wix_media_id&site_id=eq.${site.id}&limit=300`);
+  const fileIdOf = (v) => {
+    const m = String(v ?? '').match(/^wix:image:\/\/v1\/([^/#?]+)\//);
+    return m ? m[1] : null;
+  };
+  const pick = (pred) => (rows ?? []).map((r) => fileIdOf(r.wix_media_id)).find((id) => id && pred(id));
+  const samples = [pick((id) => /\.svg$/i.test(id)), pick((id) => !/\.svg$/i.test(id))].filter(Boolean);
+  for (const fileId of samples) {
+    const res = await wix('GET', `/site-media/v1/files/${encodeURIComponent(fileId)}`, site.wix_site_id);
+    const f = res.json?.file ?? res.json ?? {};
+    log(
+      `${site.domain} media probe ${fileId}: ${res.status} keys=[${Object.keys(res.json ?? {}).join(',')}] fileKeys=[${Object.keys(f).slice(0, 20).join(',')}] mediaType=${f.mediaType} status=${f.operationStatus} image=${JSON.stringify(f.media?.image?.image ?? f.media?.image ?? null)?.slice(0, 160)} vector=${JSON.stringify(f.media?.vector ?? null)?.slice(0, 120)}`
+    );
+  }
+}
+
 async function cacheItems(site, collectionId) {
   const items = [];
   for (let offset = 0; ; offset += 100) {
@@ -203,6 +226,11 @@ try {
       } catch (err) {
         log(`${site.domain}/${collectionId}: item cache failed: ${err?.message ?? err}`);
       }
+    }
+    try {
+      await probeMediaFiles(site);
+    } catch (err) {
+      log(`${site.domain}: media probe failed: ${err?.message ?? err}`);
     }
   }
 } catch (err) {

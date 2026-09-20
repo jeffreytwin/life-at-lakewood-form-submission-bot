@@ -21,13 +21,15 @@ import {
   removeItem,
   queryItems,
   importMediaFromUrl,
+  getMediaFile,
   mediaState,
+  mediaVerdict,
   WixApiError,
   type WixItemData,
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
 import { wixImageUri } from "@/lib/listings/types";
-import { measureImageUrl, wixFileIdOf } from "@/lib/floorplans/media";
+import { measureImageUrl, rasterizeSvg, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta } from "@/lib/floorplans/types";
 
 /** A plan is builder + community + name (migration 065); the same trio keys the Wix row's syncKey. */
@@ -71,8 +73,19 @@ const MAX_GALLERY_IMAGES = 40;
 /** One MEDIA_GALLERY entry, in the shape the legacy collections carry; the caption rides as title and alt. */
 type GalleryItem = { type: "image"; src: string; title: string; alt?: string };
 
+/** A picture imported for a record, with what is needed to check on it before the row is written. */
+interface ImportedImage {
+  uri: string;
+  fileId: string;
+  sourceUrl: string;
+  /** Wix has been seen holding the picture (fp_media_map.verified_at); a fresh import starts false. */
+  verified: boolean;
+}
+
+type PendingGalleryItem = GalleryItem & { image: ImportedImage };
+
 interface GalleryImport {
-  items: GalleryItem[];
+  items: PendingGalleryItem[];
   /** Source URLs left out this time: unfetchable, unmeasurable, or refused by Wix. */
   skipped: string[];
 }
@@ -98,70 +111,115 @@ async function importGallery(
   suffix: string,
   meta: Record<string, GalleryMeta> = {}
 ): Promise<GalleryImport> {
-  const items: GalleryItem[] = [];
+  const items: PendingGalleryItem[] = [];
   const skipped: string[] = [];
   for (const [i, url] of urls.slice(0, MAX_GALLERY_IMAGES).entries()) {
     const displayName = displayNameFor(planKey, suffix, i + 1, url);
-    const uri = await importImage(siteId, wixSiteId, url, displayName);
+    const image = await importImage(siteId, wixSiteId, url, displayName);
     const caption = meta[url]?.caption?.trim();
-    if (uri) items.push({ type: "image", src: uri, title: caption || displayName, ...(caption ? { alt: caption } : {}) });
+    if (image) items.push({ type: "image", src: image.uri, title: caption || displayName, ...(caption ? { alt: caption } : {}), image });
     else skipped.push(url);
   }
   return { items, skipped };
 }
 
+/** The bucket the listings engine's photos live in; a rendered drawing is stored there for Wix to fetch. */
+const RASTER_BUCKET = "photos";
+
+/** Stores a rendered drawing where Wix can fetch it and returns that URL; null when the store refused it. */
+async function storeRaster(siteId: string, contentHash: string, png: Uint8Array): Promise<string | null> {
+  const path = `floorplans/${siteId}/${contentHash}.png`;
+  const { error } = await supabase.storage
+    .from(RASTER_BUCKET)
+    .upload(path, Buffer.from(png), { contentType: "image/png", upsert: true });
+  if (error) {
+    logger.warn("Rendered drawing could not be stored", { path, error: error.message });
+    return null;
+  }
+  return supabase.storage.from(RASTER_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** A Wix file id that names an SVG: Wix filed that import as vector art, which never renders in an IMAGE field or a gallery. */
+const isVectorFileId = (fileId: string): boolean => /\.svg$/i.test(fileId);
+
 /**
- * A renderable wix:image URI for one source photo, importing it into the
- * site's Media Manager on first sight. Null when the photo is left out:
- * it could not be fetched or measured, or Wix reported the import failed.
+ * A renderable wix:image URI for one source picture, importing it into the
+ * site's Media Manager on first sight. An SVG drawing is rendered to a PNG
+ * first (The Isles, 2026-09-20: Wix files an imported SVG as vector art,
+ * and every drawing showed as a broken slash); a vector import cached
+ * before then is re-imported the same way. Null when the picture is left
+ * out: it could not be fetched, measured or rendered, or Wix reported the
+ * import failed.
  */
 async function importImage(
   siteId: string,
   wixSiteId: string,
   sourceUrl: string,
   displayName: string
-): Promise<string | null> {
+): Promise<ImportedImage | null> {
   const { data: existing } = await supabase
     .from("fp_media_map")
-    .select("wix_media_id, width, height")
+    .select("wix_media_id, width, height, verified_at, media_type")
     .eq("site_id", siteId)
     .eq("source_url", sourceUrl)
     .maybeSingle();
   const cachedFileId = wixFileIdOf(existing?.wix_media_id);
+  const cachedIsVector = cachedFileId ? isVectorFileId(cachedFileId) || existing?.media_type === "VECTOR" : false;
+  const verified = Boolean(existing?.verified_at);
 
-  if (cachedFileId && existing?.width && existing?.height) {
-    return wixImageUri(cachedFileId, displayName, existing.width, existing.height);
+  if (cachedFileId && !cachedIsVector && existing?.width && existing?.height) {
+    const uri = wixImageUri(cachedFileId, displayName, existing.width, existing.height);
+    return uri ? { uri, fileId: cachedFileId, sourceUrl, verified } : null;
   }
 
-  // Not measured yet: a new photo, or one imported before its size was
-  // recorded (every import before migration 064). Measure first; a photo
-  // that cannot be sized is left out rather than written as a URI Wix
-  // refuses, which would take the whole gallery down with it.
+  // Not measured yet: a new picture, one imported before its size was
+  // recorded (every import before migration 064), or a vector to replace.
+  // A picture that cannot be sized is left out rather than written as a
+  // URI Wix refuses, which would take the whole gallery down with it.
   const measured = await measureImageUrl(sourceUrl);
   if (!measured) {
     logger.warn("Floor plan photo could not be fetched or measured; left out", { sourceUrl });
     return null;
   }
 
-  if (cachedFileId) {
+  if (cachedFileId && !cachedIsVector && !measured.svg) {
     // The same Wix file as before, now with its size on record.
     await supabase
       .from("fp_media_map")
       .update({ width: measured.width, height: measured.height, content_hash: measured.contentHash })
       .eq("site_id", siteId)
       .eq("source_url", sourceUrl);
-    return wixImageUri(cachedFileId, displayName, measured.width, measured.height);
+    const uri = wixImageUri(cachedFileId, displayName, measured.width, measured.height);
+    return uri ? { uri, fileId: cachedFileId, sourceUrl, verified } : null;
+  }
+
+  // A fresh import: the picture as served, or the drawing rendered to PNG.
+  let importUrl = sourceUrl;
+  let name = displayName;
+  let { width, height } = measured;
+  if (measured.svg) {
+    const raster = await rasterizeSvg(measured.data);
+    if (!raster) {
+      logger.warn("SVG drawing could not be rendered; left out", { sourceUrl });
+      return null;
+    }
+    const stored = await storeRaster(siteId, measured.contentHash, raster.png);
+    if (!stored) return null;
+    importUrl = stored;
+    name = displayName.replace(/\.svg$/i, ".png");
+    width = raster.width;
+    height = raster.height;
   }
 
   try {
-    const file = await importMediaFromUrl(wixSiteId, sourceUrl, displayName);
+    const file = await importMediaFromUrl(wixSiteId, importUrl, name);
     if (mediaState(file) === "broken") {
       // Wix answered the import with FAILED: an id with nothing behind it,
       // and caching it would make the broken thumbnail permanent.
       logger.warn("Wix reported the floor plan photo import failed; left out", { sourceUrl, fileId: file.id });
       return null;
     }
-    const uri = wixImageUri(file.id, displayName, measured.width, measured.height);
+    const uri = wixImageUri(file.id, name, width, height);
     if (!uri) return null;
     await supabase.from("fp_media_map").upsert(
       {
@@ -169,12 +227,14 @@ async function importImage(
         source_url: sourceUrl,
         wix_media_id: uri,
         content_hash: measured.contentHash,
-        width: measured.width,
-        height: measured.height,
+        width,
+        height,
+        verified_at: null,
+        media_type: null,
       },
       { onConflict: "site_id,source_url" }
     );
-    return uri;
+    return { uri, fileId: file.id, sourceUrl, verified: false };
   } catch (error) {
     // Image failure shouldn't block the record; sync without the image.
     logger.warn("Floor plan image import failed", {
@@ -185,17 +245,90 @@ async function importImage(
   }
 }
 
+/** Waits between looks at a fresh import: Wix usually has the bytes within seconds; the whole wait is about half a minute. */
+const VERIFY_WAITS_MS = [1500, 3000, 5000, 8000, 12000];
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Asks Wix about every picture the row is about to carry, and returns the
+ * file ids that must not be written: Wix's own fetch failed, the file is
+ * not an image (vector art), or it still was not there after the wait. A
+ * picture Wix is seen holding is marked verified and never asked about
+ * again; a failed or non-image one is forgotten, so the next approval
+ * imports it afresh. Nothing broken reaches a row (Jeff, 2026-09-20).
+ */
+async function verifyImports(siteId: string, wixSiteId: string, images: ImportedImage[]): Promise<Set<string>> {
+  const bad = new Set<string>();
+  let pending = images.filter((image) => !image.verified);
+  for (let round = 0; pending.length; round += 1) {
+    if (round > 0) {
+      if (round > VERIFY_WAITS_MS.length) break;
+      await sleep(VERIFY_WAITS_MS[round - 1]);
+    }
+    const still: ImportedImage[] = [];
+    for (const image of pending) {
+      let file: Awaited<ReturnType<typeof getMediaFile>>;
+      try {
+        file = await getMediaFile(wixSiteId, image.fileId);
+      } catch (error) {
+        logger.warn("Could not ask Wix about an import; trying again", {
+          fileId: image.fileId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        still.push(image);
+        continue;
+      }
+      const verdict = mediaVerdict(file);
+      // READY without a media block is Wix saying its fetch completed; that is enough.
+      const ready = verdict === "ready" || (verdict === "unknown" && String(file?.operationStatus ?? "").toUpperCase() === "READY");
+      if (ready) {
+        await supabase
+          .from("fp_media_map")
+          .update({ verified_at: new Date().toISOString(), media_type: file?.mediaType ?? "IMAGE" })
+          .eq("site_id", siteId)
+          .eq("source_url", image.sourceUrl);
+      } else if (verdict === "pending" || verdict === "unknown") {
+        still.push(image);
+      } else {
+        bad.add(image.fileId);
+        logger.warn("Wix holds no usable picture for the import; left out and forgotten", {
+          sourceUrl: image.sourceUrl,
+          fileId: image.fileId,
+          verdict,
+          mediaType: file?.mediaType ?? null,
+        });
+        await supabase.from("fp_media_map").delete().eq("site_id", siteId).eq("source_url", image.sourceUrl);
+      }
+    }
+    pending = still;
+  }
+  for (const image of pending) {
+    bad.add(image.fileId);
+    logger.warn("Wix had not fetched the picture in time; left out this time", { sourceUrl: image.sourceUrl, fileId: image.fileId });
+  }
+  return bad;
+}
+
 function galleryUrls(rec: ProposedRecord): string[] {
   const urls = rec.galleryImages ?? [];
   if (urls.length) return urls;
   return rec.primaryImage ? [rec.primaryImage] : [];
 }
 
+/** The gallery entry as written, without the bookkeeping. */
+const toGalleryItem = (item: PendingGalleryItem): GalleryItem => ({
+  type: item.type,
+  src: item.src,
+  title: item.title,
+  ...(item.alt ? { alt: item.alt } : {}),
+});
+
 /**
- * Both galleries for a record. Throws when the record lists photos and not
- * one could be imported, so an approval never inserts a photo-less plan or
- * wipes a live gallery over a transient failure; a partial gallery is
- * written and the rest logged.
+ * Both galleries and the tour still for a record, every picture verified
+ * with Wix before it is handed back. Throws when the record lists photos
+ * and not one could be imported and verified, so an approval never inserts
+ * a photo-less plan or wipes a live gallery over a transient failure; a
+ * partial gallery is written and the rest logged.
  */
 async function importRecordMedia(
   siteId: string,
@@ -208,25 +341,37 @@ async function importRecordMedia(
   const photoUrls = rec.quickMoveIn ? galleryUrls(rec).slice(0, 1) : galleryUrls(rec);
   const gallery = await importGallery(siteId, wixSiteId, photoUrls, rec.planKey, "photo", rec.galleryMeta ?? {});
   const blueprints = rec.quickMoveIn
-    ? { items: [] as GalleryItem[], skipped: [] as string[] }
+    ? { items: [] as PendingGalleryItem[], skipped: [] as string[] }
     : await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
   // A drawing has no caption of its own; the site shows this one.
   blueprints.items = blueprints.items.map((item) => ({ ...item, title: "Floor plan", alt: "Floor plan" }));
   // The still behind the virtual tour button; optional, so its failure only costs the still.
-  const tourImage = rec.virtualTourImage && !rec.quickMoveIn
+  const tour = rec.virtualTourImage && !rec.quickMoveIn
     ? await importImage(siteId, wixSiteId, rec.virtualTourImage, displayNameFor(rec.planKey, "tour", 1, rec.virtualTourImage))
     : null;
-  if (photoUrls.length && !gallery.items.length) {
-    throw new Error(`none of the ${photoUrls.length} photos could be imported (first: ${photoUrls[0]})`);
+
+  // Nothing goes on the row until Wix is seen holding it.
+  const bad = await verifyImports(siteId, wixSiteId, [
+    ...gallery.items.map((item) => item.image),
+    ...blueprints.items.map((item) => item.image),
+    ...(tour ? [tour] : []),
+  ]);
+  const photos = gallery.items.filter((item) => !bad.has(item.image.fileId)).map(toGalleryItem);
+  const drawings = blueprints.items.filter((item) => !bad.has(item.image.fileId)).map(toGalleryItem);
+  const tourImage = tour && !bad.has(tour.fileId) ? tour.uri : null;
+
+  if (photoUrls.length && !photos.length) {
+    throw new Error(`none of the ${photoUrls.length} photos could be imported and verified (first: ${photoUrls[0]})`);
   }
-  if (gallery.skipped.length || blueprints.skipped.length) {
+  if (gallery.skipped.length || blueprints.skipped.length || bad.size) {
     logger.warn("Floor plan write-back left images out", {
       planKey: rec.planKey,
       photosSkipped: gallery.skipped.length,
       blueprintsSkipped: blueprints.skipped.length,
+      unverified: bad.size,
     });
   }
-  return { gallery: gallery.items, blueprints: blueprints.items, tourImage };
+  return { gallery: photos, blueprints: drawings, tourImage };
 }
 
 /** The Builders and villages collections the reference fields point at, as every site names them. */
@@ -381,6 +526,94 @@ function fieldsKeptFromWix(data: Record<string, unknown> | undefined): Record<st
   return Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => !key.startsWith("_")));
 }
 
+/** The site, community and builder a plan belongs to, as the write needs them. */
+interface PlanScope {
+  site: { id: string; wix_site_id: string; wix_collection_id: string; insert_publish_mode: string | null };
+  community: { id: string; name: string };
+  builder: { id: string; name: string };
+}
+
+/**
+ * Writes a record to its Wix row: media imported and verified first, the
+ * row read so fields the pipeline does not own survive, and an item Wix no
+ * longer has re-created (as a draft in draft mode), like a first insert.
+ * Returns the row's id and whether it was inserted as a draft.
+ */
+async function writePlanToWix(
+  scope: PlanScope,
+  planKey: string,
+  rec: ProposedRecord,
+  wixRecordId: string | null
+): Promise<{ wixRecordId: string; asDraft: boolean }> {
+  const { site, community, builder } = scope;
+  const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
+  const ids = { site_id: site.id, community_id: community.id, builder_id: builder.id };
+  const current = wixRecordId ? await getItem(site.wix_site_id, site.wix_collection_id, wixRecordId) : null;
+  const data: WixItemData = {
+    ...fieldsKeptFromWix(current?.data),
+    ...toWixData(rec, {
+      communityName: community.name,
+      builderName: builder.name,
+      gallery,
+      blueprints,
+      tourImage,
+      basePlanName: await basePlanNameOf(ids, rec),
+      refs: await referencesFor(site.wix_site_id, builder.name, community.name),
+    }),
+  };
+  if (current && wixRecordId) {
+    try {
+      await updateItem(site.wix_site_id, site.wix_collection_id, wixRecordId, data);
+      return { wixRecordId, asDraft: false };
+    } catch (error) {
+      if (!isGoneFromWix(error)) throw error;
+    }
+  }
+  // The item was deleted from the CMS by hand (Jeff cleared the collection
+  // on 2026-09-19 and every approval 404ed), or was never there: insert,
+  // as a draft while the site is in draft mode.
+  const asDraft = site.insert_publish_mode !== "published";
+  const item = await insertItem(site.wix_site_id, site.wix_collection_id, data, { asDraft });
+  if (wixRecordId) logger.info("Floor plan item was gone from Wix; re-created", { planKey, wixRecordId: item.id });
+  return { wixRecordId: item.id, asDraft };
+}
+
+/**
+ * Writes one canonical plan to Wix again under the current rules (pictures
+ * re-imported where needed and verified, drawings as PNG), keeping its
+ * score and edits: the repair for a row written with a picture Wix could
+ * not show. Settings → Builder Connections → Rewrite runs it per plan.
+ */
+export async function rewritePlan(planId: string): Promise<{ status: "synced" | "synced_draft" | "failed"; name: string; error?: string }> {
+  const { data: plan, error } = await supabase
+    .from("fp_floor_plans")
+    .select(
+      "id, plan_key, name, wix_record_id, record, fp_sites:site_id(id, wix_site_id, wix_collection_id, insert_publish_mode), fp_communities:community_id(id, name), fp_builders:builder_id(id, name)"
+    )
+    .eq("id", planId)
+    .single();
+  if (error || !plan) return { status: "failed", name: planId, error: error?.message ?? "plan not found" };
+  const site = plan.fp_sites as unknown as PlanScope["site"] | null;
+  const community = plan.fp_communities as unknown as PlanScope["community"] | null;
+  const builder = plan.fp_builders as unknown as PlanScope["builder"] | null;
+  if (!site?.wix_site_id || !site.wix_collection_id || !community || !builder) {
+    return { status: "failed", name: plan.name, error: "plan is missing its site, community or builder" };
+  }
+  const rec = { ...(plan.record as ProposedRecord), planKey: plan.plan_key };
+  try {
+    const { wixRecordId, asDraft } = await writePlanToWix({ site, community, builder }, plan.plan_key, rec, plan.wix_record_id);
+    await supabase
+      .from("fp_floor_plans")
+      .update({ wix_record_id: wixRecordId, updated_at: new Date().toISOString() })
+      .eq("id", plan.id);
+    return { status: asDraft ? "synced_draft" : "synced", name: plan.name };
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    logger.error("Floor plan rewrite failed", { planId, name: plan.name, detail });
+    return { status: "failed", name: plan.name, error: detail };
+  }
+}
+
 export async function applyPendingChange(changeId: string): Promise<{
   status: string;
   error?: string;
@@ -417,26 +650,9 @@ export async function applyPendingChange(changeId: string): Promise<{
   }
 
   try {
-    const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
-
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
-      const asDraft = site.insert_publish_mode !== "published";
-      const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
-      const item = await insertItem(
-        site.wix_site_id,
-        site.wix_collection_id,
-        toWixData(rec, {
-          communityName: community.name,
-          builderName: builder.name,
-          gallery,
-          blueprints,
-          tourImage,
-          basePlanName: await basePlanNameOf(scope, rec),
-          refs: await referencesFor(site.wix_site_id, builder.name, community.name),
-        }),
-        { asDraft }
-      );
+      const { wixRecordId: itemId, asDraft } = await writePlanToWix({ site, community, builder }, change.plan_key, rec, null);
 
       const { data: plan, error: planError } = await supabase
         .from("fp_floor_plans")
@@ -446,7 +662,7 @@ export async function applyPendingChange(changeId: string): Promise<{
             community_id: community.id,
             builder_id: builder.id,
             plan_key: change.plan_key,
-            wix_record_id: item.id,
+            wix_record_id: itemId,
             name: rec.name,
             price: rec.price,
             beds: parseFloat(rec.beds) || null,
@@ -469,7 +685,7 @@ export async function applyPendingChange(changeId: string): Promise<{
         .from("fp_pending_changes")
         .update({
           status: newStatus,
-          wix_record_id: item.id,
+          wix_record_id: itemId,
           floor_plan_id: plan.id,
           updated_at: new Date().toISOString(),
         })
@@ -498,39 +714,12 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
-      const { gallery, blueprints, tourImage } = await importRecordMedia(site.id, site.wix_site_id, rec);
-      let wixRecordId: string = change.wix_record_id;
-      // Read first: the update sends the whole item back, with the fields
-      // the pipeline does not own carried over from what is there now.
-      const current = await getItem(site.wix_site_id, site.wix_collection_id, wixRecordId);
-      const data: WixItemData = {
-        ...fieldsKeptFromWix(current?.data),
-        ...toWixData(rec, {
-          communityName: community.name,
-          builderName: builder.name,
-          gallery,
-          blueprints,
-          tourImage,
-          basePlanName: await basePlanNameOf(scope, rec),
-          refs: await referencesFor(site.wix_site_id, builder.name, community.name),
-        }),
-      };
-      let recreatedAsDraft = false;
-      try {
-        if (!current) throw new WixApiError(404, "item not found", "GET item");
-        await updateItem(site.wix_site_id, site.wix_collection_id, wixRecordId, data);
-      } catch (error) {
-        if (!isGoneFromWix(error)) throw error;
-        // The item was deleted from the CMS by hand (Jeff cleared the
-        // collection on 2026-09-19 and every approval 404ed). Re-create it
-        // rather than strand the plan; like any insert it lands as a draft
-        // while the site is in draft mode.
-        const asDraft = site.insert_publish_mode !== "published";
-        const item = await insertItem(site.wix_site_id, site.wix_collection_id, data, { asDraft });
-        wixRecordId = item.id;
-        recreatedAsDraft = asDraft;
-        logger.info("Floor plan item was gone from Wix; re-created", { changeId, planKey: change.plan_key, wixRecordId });
-      }
+      const { wixRecordId, asDraft: recreatedAsDraft } = await writePlanToWix(
+        { site, community, builder },
+        change.plan_key,
+        rec,
+        change.wix_record_id
+      );
       await supabase
         .from("fp_floor_plans")
         .update({

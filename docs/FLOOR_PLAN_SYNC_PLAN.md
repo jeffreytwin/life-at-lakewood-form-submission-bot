@@ -159,13 +159,30 @@ nothing. No cutover report has ever been generated.
   shape while still returning most of its plans (wrong prices, missing
   photos) reads as "ok"; the review queue is the check for that.
 
+**Update 2026-09-20 (broken drawings on The Isles; nothing broken is written again).**
+
+- Every base plan's gallery on The Isles ended in one broken slash per
+  floor plan drawing. Toll serves its drawings as SVG; Wix files a URL
+  import of an SVG as vector art (mediaType VECTOR, file id ending in
+  `.svg`), which no IMAGE field or gallery can show. Drawings are now
+  rendered to PNG before import (`media.ts`, `rasterizeSvg`; stored in the
+  `photos` bucket and imported from there), and a vector import already in
+  `fp_media_map` is re-imported that way.
+- **Every picture is verified with Wix before its row is written**
+  (`writeback.ts`, `verifyImports`; migration 067 `verified_at`,
+  `media_type`): Wix must report the file READY as an IMAGE with a size;
+  a failed or non-image file is left out and forgotten; a plan whose
+  photos all fail is not written, and the approval fails with the reason.
+- Settings → Builder Connections → **Rewrite** writes every plan of a
+  connection to Wix again under the current rules, keeping scores and
+  edits: the repair for The Isles (16 plans, 16 drawings re-imported as
+  PNG). It works within a time budget and continues across calls.
+
 **Known gaps, in the order they bite.**
 
-1. Imports are not verified after the fact. Wix's URL import is
-   asynchronous; the write-back now drops an import Wix reports FAILED at
-   once, but a fetch that fails later leaves an id with no picture behind
-   it. The listings engine's `verified_at` pass (migration 053) is the
-   model; it needs a background job, which the approve request is not.
+1. Closed 2026-09-20: every import is verified with Wix (READY, an IMAGE,
+   a size) before its row is written, inside the approval; see the update
+   above.
 2. Most extractors capture list-page images only: Lennar hero and
    elevations, Taylor Morrison 1 elevation, Mattamy and the MPC aggregator
    1 card image, the Claude engine whatever the list page shows. Only

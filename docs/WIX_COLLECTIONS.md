@@ -125,6 +125,23 @@ Verified item lifecycle (probe run 2026-07-02, test items cleaned up):
   `{type: "image", src, title}`; the legacy collections also carry `alt`,
   `slug`, `fileName` and `settings.{width,height,focalPoint}`, which the CMS
   fills in itself.
+- **An imported SVG is vector art, not an image.** Wix files a URL import
+  of an SVG with mediaType VECTOR and a file id ending in `.svg`; an IMAGE
+  field or MEDIA_GALLERY entry pointing at it renders as the CMS's broken
+  slash. Found on The Isles 2026-09-20: every base plan's gallery ended in
+  one slash per drawing, because Toll serves its floor plan drawings as
+  SVG. The write-back now renders a drawing to a PNG (sharp, 1600 px wide,
+  white background), stores it in the `photos` bucket and imports that; a
+  vector import cached in `fp_media_map` is re-imported the same way. The
+  legacy collections' 43 Lakewood drawings are all JPGs.
+- **Every picture is verified with Wix before its row is written**
+  (migration 067). After importing, the write-back asks
+  `GET /site-media/v1/files/{fileId}` about each fresh import until Wix
+  reports it READY as an IMAGE with a size (about half a minute at most),
+  records `verified_at`, and leaves out, and forgets, anything Wix failed
+  to fetch or filed as something other than an image. A plan whose photos
+  all fail verification is not written at all; the approval fails with the
+  reason instead.
 
 ## Quick move-ins: how Wellen Park and Parrish file them (read 2026-09-19)
 

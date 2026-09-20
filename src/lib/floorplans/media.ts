@@ -34,6 +34,62 @@ export interface ImageMeasurement extends ImageSize {
   /** sha256 of the bytes, for fp_media_map.content_hash. */
   contentHash: string;
   bytes: number;
+  /** The bytes themselves, for a caller that has to transform them before import. */
+  data: Uint8Array;
+  /**
+   * An SVG. Wix files an imported SVG as vector art, which no IMAGE field
+   * or MEDIA_GALLERY can show (every drawing on The Isles was a broken
+   * slash, 2026-09-20), so a drawing is rendered to a PNG before import.
+   */
+  svg: boolean;
+}
+
+export interface FetchedImage {
+  data: Uint8Array;
+  contentType: string | null;
+}
+
+/** Whether these bytes are an SVG document, by content type, by the URL's extension, or by the document's own root element. */
+export function isSvg(data: Uint8Array, contentType?: string | null, url?: string | null): boolean {
+  if (contentType && /svg/i.test(contentType)) return true;
+  if (url) {
+    try {
+      if (/\.svg$/i.test(new URL(url).pathname)) return true;
+    } catch {
+      // not a URL; the bytes decide
+    }
+  }
+  const head = new TextDecoder("utf-8", { fatal: false }).decode(data.subarray(0, 1024)).trimStart();
+  return /^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*(<!DOCTYPE[^>]*>\s*)?<svg[\s>]/i.test(head);
+}
+
+/** The width a drawing is rendered at: legible on a page, quick for Wix to fetch. */
+export const RASTER_WIDTH = 1600;
+
+export interface Raster {
+  png: Uint8Array;
+  width: number;
+  height: number;
+}
+
+/**
+ * Renders an SVG to a PNG of about RASTER_WIDTH pixels wide on a white
+ * background (drawings are line art on nothing). Null when sharp cannot
+ * read it as an SVG.
+ */
+export async function rasterizeSvg(data: Uint8Array, targetWidth = RASTER_WIDTH): Promise<Raster | null> {
+  try {
+    const meta = await sharp(Buffer.from(data)).metadata();
+    if (!meta.width || !meta.height) return null;
+    // sharp renders vectors at 72 dpi by default; the density scales the page.
+    const density = Math.max(1, Math.min(2400, (72 * targetWidth) / meta.width));
+    const png = await sharp(Buffer.from(data), { density }).flatten({ background: "#ffffff" }).png().toBuffer();
+    const out = await sharp(png).metadata();
+    if (!out.width || !out.height) return null;
+    return { png: new Uint8Array(png), width: out.width, height: out.height };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -65,8 +121,22 @@ export interface MeasureDeps {
  * body too large to be a photo, or bytes sharp cannot decode.
  */
 export async function measureImageUrl(url: string, deps: MeasureDeps = {}): Promise<ImageMeasurement | null> {
+  const fetched = await fetchImage(url, deps);
+  if (!fetched) return null;
+  const size = await measureImageBytes(fetched.data);
+  if (!size) return null;
+  return {
+    ...size,
+    contentHash: createHash("sha256").update(fetched.data).digest("hex"),
+    bytes: fetched.data.byteLength,
+    data: fetched.data,
+    svg: isSvg(fetched.data, fetched.contentType, url),
+  };
+}
+
+/** Fetches one builder image's bytes; null when the URL does not answer with an image of a sane size. */
+export async function fetchImage(url: string, deps: MeasureDeps = {}): Promise<FetchedImage | null> {
   const fetchImpl = deps.fetchImpl ?? fetch;
-  let bytes: Uint8Array;
   try {
     const res = await fetchImpl(url, {
       headers: { "user-agent": UA, accept: "image/*,*/*;q=0.5" },
@@ -78,18 +148,12 @@ export async function measureImageUrl(url: string, deps: MeasureDeps = {}): Prom
     if (type && !type.startsWith("image/") && !type.startsWith("application/octet-stream")) return null;
     const declared = Number(res.headers.get("content-length"));
     if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) return null;
-    bytes = new Uint8Array(await res.arrayBuffer());
+    const data = new Uint8Array(await res.arrayBuffer());
+    if (!data.byteLength || data.byteLength > MAX_IMAGE_BYTES) return null;
+    return { data, contentType: type || null };
   } catch {
     return null;
   }
-  if (!bytes.byteLength || bytes.byteLength > MAX_IMAGE_BYTES) return null;
-  const size = await measureImageBytes(bytes);
-  if (!size) return null;
-  return {
-    ...size,
-    contentHash: createHash("sha256").update(bytes).digest("hex"),
-    bytes: bytes.byteLength,
-  };
 }
 
 /**
