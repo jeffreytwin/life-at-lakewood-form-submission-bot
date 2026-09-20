@@ -63,6 +63,52 @@ export function isSvg(data: Uint8Array, contentType?: string | null, url?: strin
   return /^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*(<!DOCTYPE[^>]*>\s*)?<svg[\s>]/i.test(head);
 }
 
+/** Whether a URL names an SVG by its path. */
+export function isSvgUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    return /\.svg$/i.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
+
+/** The bucket the listings engine's photos live in; a rendered drawing is stored there for Wix to fetch. */
+export const RASTER_BUCKET = "photos";
+
+/** Where a rendered drawing is stored, by the SVG's content hash, so the same drawing is rendered once per site. */
+export const rasterStoragePath = (siteId: string, contentHash: string): string => `floorplans/${siteId}/${contentHash}.png`;
+
+interface MediaRecord {
+  galleryImages?: unknown;
+  blueprintImages?: unknown;
+  primaryImage?: unknown;
+  virtualTourImage?: unknown;
+}
+
+/** Every source URL a record's pictures come from: the photos, the drawings, the first slice's main image, the tour still. */
+export function mediaUrlsOf(record: unknown): string[] {
+  const r = (record ?? {}) as MediaRecord;
+  const out: string[] = [];
+  for (const list of [r.galleryImages, r.blueprintImages]) {
+    if (!Array.isArray(list)) continue;
+    for (const u of list) if (typeof u === "string" && u) out.push(u);
+  }
+  for (const u of [r.primaryImage, r.virtualTourImage]) if (typeof u === "string" && u) out.push(u);
+  return out;
+}
+
+/**
+ * The source URLs a connection's pictures came from that no other plan on
+ * the site uses, so their Wix files can go without breaking anyone else's
+ * row. A builder can serve one photo for a plan in two communities.
+ */
+export function urlsToRelease(inScope: Iterable<string>, usedElsewhere: ReadonlySet<string>): string[] {
+  const out = new Set<string>();
+  for (const u of inScope) if (u && !usedElsewhere.has(u)) out.add(u);
+  return [...out];
+}
+
 /** The width a drawing is rendered at: legible on a page, quick for Wix to fetch. */
 export const RASTER_WIDTH = 1600;
 

@@ -175,7 +175,7 @@ export default function BuildersSettingsPage() {
     // A Reset is a click away from Run and Rewrite and cannot be undone, so
     // it asks for the word (Jeff hit it by accident on 2026-09-20).
     const typed = prompt(
-      `Reset ${where}?\n\nThis removes every plan the pipeline holds for this connection from the site's Floor Plans V2 collection (drafts included) and from the Hub, with its pending changes and follow-ups, and clears its run history. Imported photos are kept and reused, and scores set in the Hub come back on the next Run.\n\nType RESET to confirm.`
+      `Reset ${where}?\n\nThis removes every plan the pipeline holds for this connection from the site's Floor Plans V2 collection, its imported pictures from the site's Media Manager, and everything the Hub knows about these plans: queued changes, follow-ups, scores, photo records. Nothing is kept. The next Run starts from nothing and tests the whole path from the builder's site.\n\nType RESET to confirm.`
     );
     if (typed !== "RESET") return;
     setRunning((s) => new Set(s).add(c.id));
@@ -183,7 +183,12 @@ export default function BuildersSettingsPage() {
       const res = await fetch(`/api/internal/floorplans/connections/${c.id}/reset`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) alert(`Reset failed: ${data.error ?? res.status}`);
-      else alert(`Reset ${where}: ${data.plans ?? 0} plans removed (${data.wixRemoved ?? 0} from Wix), ${data.changes ?? 0} queued changes cleared.`);
+      else
+        alert(
+          `Reset ${where}: ${data.plans ?? 0} plans removed (${data.wixRemoved ?? 0} from Wix), ${data.changes ?? 0} queued changes cleared, ${data.photos ?? 0} pictures removed from the Media Manager` +
+            (data.photosFailed ? ` (${data.photosFailed} could not be removed; see the log)` : "") +
+            `.`
+        );
     } finally {
       setRunning((s) => {
         const next = new Set(s);

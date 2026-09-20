@@ -6,6 +6,8 @@
 // can be tested on their own; the Hub's Settings → Sites page and its align
 // route do the fetching and the PUT.
 
+import { normKey } from "@/lib/floorplans/types";
+
 export interface FieldSpec {
   key: string;
   type?: string;
@@ -124,4 +126,54 @@ export function alignedFields(
   const added = add ? diff.missing.map((f) => f.key) : [];
   if (add) for (const f of diff.missing) fields.push(fieldToAdd(f));
   return { fields, added, removed: [...removeKeys], relabeled: [...relabel.keys()] };
+}
+
+/**
+ * The collection a REFERENCE field points at (`typeMetadata.reference.
+ * referencedCollectionId`), or `fallback` when the field is missing or is
+ * not a reference. The target differs by site: Lakewood's `villages` points
+ * at `AmenitiesbyVillage`, Wellen Park's and Parrish's at
+ * `HousesforSale-DynamicPages`.
+ */
+export function referencedCollectionOf(fields: FieldSpec[], key: string, fallback: string): string {
+  const field = fields.find((f) => f.key === key);
+  const meta = field?.typeMetadata as { reference?: { referencedCollectionId?: unknown } } | undefined;
+  const ref = meta?.reference?.referencedCollectionId;
+  return typeof ref === "string" && ref.trim() ? ref.trim() : fallback;
+}
+
+/** A Wix item as the name lookups see it. */
+export interface NamedItem {
+  id?: string;
+  data?: Record<string, unknown>;
+}
+
+/**
+ * The fields an item may be named in besides its title: its other title or
+ * name fields (a village page's villageNameForFiltering), never a link or a
+ * nearby-village mention, which would tie a row to the wrong neighborhood.
+ */
+const NAME_FIELD = /title|name/i;
+
+/**
+ * The item named `wanted`: by normalized title first, else by any other
+ * title or name field when exactly one item carries the name that way. Null
+ * when none does, or several do.
+ */
+export function findItemNamed<T extends NamedItem>(items: T[], wanted: string): T | null {
+  const key = normKey(wanted);
+  if (!key) return null;
+  const byTitle = items.find((it) => normKey(String(it.data?.title ?? "")) === key);
+  if (byTitle) return byTitle;
+  const byName = items.filter((it) =>
+    Object.entries(it.data ?? {}).some(
+      ([field, value]) =>
+        !field.startsWith("_") &&
+        !field.startsWith("link-") &&
+        NAME_FIELD.test(field) &&
+        typeof value === "string" &&
+        normKey(value) === key
+    )
+  );
+  return byName.length === 1 ? byName[0] : null;
 }

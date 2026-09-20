@@ -14,8 +14,13 @@ for the standardized schema, and the per-site field maps.
 | lifeinlongboatkey.com | `8b20e921-5b70-4428-8fcd-8c8ef3bad3ab` | none (listings engine site; see `LISTINGS_ENGINE_PLAN.md`) | |
 
 All three sites also carry `Builders` and a villages/neighborhoods collection
-(`HousesforSale-DynamicPages`: "Dynamic Village Pages" on Lakewood,
-"Neighborhoods" on Wellen/Parrish) that the Floorplans reference fields point at.
+that the Floorplans reference fields point at. Where the Floor Plans V2
+`villages` reference points differs by site: `HousesforSale-DynamicPages`
+("Neighborhoods") on Wellen Park and Parrish, `AmenitiesbyVillage` on
+Lakewood, whose `HousesforSale-DynamicPages` ("Dynamic Village Pages") holds
+two items (found 2026-09-20, when every Isles row went out without its
+neighborhood). The write-back reads the target from each site's V2 schema
+rather than assuming one.
 
 Key API facts confirmed:
 - One account-level API key + `wix-site-id` header works across all four sites
@@ -191,10 +196,12 @@ the plan's name; its Wix row is the address, price, builder, village, one
 picture, description and `relatedFloorPlanQuickMoveInOnly`. A base plan
 record carries `hasQuickMoveIns`, written as the four markers plus the price
 tag. Every row also carries the `builder1` and `villages` references,
-looked up by title in the site's Builders collection ("Toll Brothers") and
-its villages collection (`HousesforSale-DynamicPages`, "The Isles"); a
-name with no item behind it is logged and the row goes out without the
-reference. An update reads the Wix item first and sends back the fields
+looked up by name in the collections the site's own V2 schema points at
+(Builders, "Toll Brothers"; the neighborhoods collection, "The Isles":
+`HousesforSale-DynamicPages` on Wellen Park and Parrish, `AmenitiesbyVillage`
+on Lakewood), by exact title first, then by any title or name field of the
+collection's items; a name with no item behind it is logged and the row
+goes out without the reference. An update reads the Wix item first and sends back the fields
 the pipeline does not own, because Wix's update replaces the whole item.
 
 ## Schemas compared across sites (2026-09-19)

@@ -384,6 +384,50 @@ export function mediaVerdict(file: WixMediaFile | null | undefined): MediaVerdic
   return mediaState(file);
 }
 
+export interface MediaDeletion {
+  deleted: string[];
+  failed: { fileId: string; error: string }[];
+}
+
+/**
+ * Deletes Media Manager files by id (POST /site-media/v1/bulk/files/delete,
+ * permanently by default). A batch that fails is retried one file at a
+ * time, and a file Wix no longer has counts as deleted. Used by a
+ * connection Reset, which takes the pictures it imported with it (Jeff,
+ * 2026-09-20: a Reset wipes everything, so the next Run tests the whole
+ * path from the builder's site).
+ */
+export async function deleteMediaFiles(
+  siteId: string,
+  fileIds: string[],
+  { permanent = true }: { permanent?: boolean } = {}
+): Promise<MediaDeletion> {
+  const result: MediaDeletion = { deleted: [], failed: [] };
+  for (let i = 0; i < fileIds.length; i += 100) {
+    const batch = fileIds.slice(i, i + 100);
+    try {
+      await wixRequest(siteId, "POST", "/site-media/v1/bulk/files/delete", { fileIds: batch, permanent });
+      result.deleted.push(...batch);
+      continue;
+    } catch {
+      // One id Wix does not know can fail the batch; the rest still go.
+    }
+    for (const fileId of batch) {
+      try {
+        await wixRequest(siteId, "POST", "/site-media/v1/bulk/files/delete", { fileIds: [fileId], permanent });
+        result.deleted.push(fileId);
+      } catch (error) {
+        if (error instanceof WixApiError && error.status === 404) {
+          result.deleted.push(fileId);
+          continue;
+        }
+        result.failed.push({ fileId, error: (error instanceof Error ? error.message : String(error)).slice(0, 200) });
+      }
+    }
+  }
+  return result;
+}
+
 /** One Media Manager file by id, as Wix describes it now; null when Wix has no such file. */
 export async function getMediaFile(siteId: string, fileId: string): Promise<WixMediaFile | null> {
   try {
