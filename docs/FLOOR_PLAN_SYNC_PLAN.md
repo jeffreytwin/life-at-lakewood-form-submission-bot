@@ -230,6 +230,15 @@ nothing. No cutover report has ever been generated.
   on every legacy row, per site), and the builder's still is no longer
   imported for it; a site without a button keeps the still. Rewrite puts
   the button on rows already published.
+- **URL discovery prefers the site's market** (2026-09-20): Monterey's
+  connection had been pointed at Toll's Regency at Monterey in California
+  (`/regency/Monterey-CA`, the shortest sitemap URL named "monterey"), so
+  every Run failed with "no models found". Discovery now boosts a candidate
+  whose URL carries the site's name (`lakewood-ranch`) and accepts a page
+  only when it names the community and, where the site's market is known,
+  the market too (`discover-url.ts`, `rankCandidates` / `pageIsCommunity`).
+  The snapshot build probes Toll's sitemap for Monterey and logs what each
+  page carries.
 
 **Known gaps, in the order they bite.**
 
