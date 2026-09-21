@@ -15,7 +15,8 @@ export const isHomeType = (value: unknown): value is HomeType => HOME_TYPES.incl
  * The standard home type a builder's label means, or null when the label
  * says nothing recognizable (the Hub then asks for it). Order matters:
  * "Townhome" before the "home" fallback, "Coach Home" before the
- * condominium words, villas before the single-family fallback.
+ * condominium words, "detached" before the villa words (a detached villa
+ * is a single-family home), villas before the single-family fallback.
  */
 export function standardHomeType(raw: string | null | undefined): HomeType | null {
   const t = (raw ?? "")
@@ -25,9 +26,11 @@ export function standardHomeType(raw: string | null | undefined): HomeType | nul
     .trim();
   if (!t) return null;
   if (isHomeType(raw?.trim())) return raw!.trim() as HomeType;
-  if (/\b(town ?homes?|town ?houses?|row ?homes?|row ?houses?)\b/.test(t)) return "Townhome";
+  if (/\b(town ?homes?|town ?houses?|towns|row ?homes?|row ?houses?)\b/.test(t)) return "Townhome";
   if (/\b(coach|carriage)\b/.test(t)) return "Coach Home";
   if (/\bcondo/.test(t) || /\b(flats?|apartments?)\b/.test(t)) return "Condominium";
+  // A "detached villa" (Taylor Morrison's Detached Villa Golf Collection) stands alone: single-family.
+  if (/\bdetached\b/.test(t)) return "Single Family Home";
   if (/\bvillas?\b|\bduplex\b|\bpaired\b|\btwin\b/.test(t)) return "Attached Villa";
   if (/single|detached|estate|\bsfh\b|\bhomes?\b|\bhouses?\b/.test(t)) return "Single Family Home";
   return null;

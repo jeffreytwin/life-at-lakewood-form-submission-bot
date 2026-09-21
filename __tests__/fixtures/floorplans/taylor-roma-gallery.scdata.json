@@ -1,0 +1,199 @@
+{
+ "modelae25553591264636abe20aca1257fc64": {
+  "profile": [
+   {
+    "url": "/mytm",
+    "text": "Sign In"
+   }
+  ],
+  "logo": {
+   "url": "/",
+   "imgSrc": "/-/media/sites/tm/homes/corporate/logos/tm_logo_desktop.svg",
+   "alt": "Taylor Morrison Logo"
+  }
+ },
+ "model6828ec9252044c4f8f8a9def30b91183": {
+  "header": {
+   "title": "Roma ",
+   "subTitle": "GALLERY"
+  },
+  "featuredImage": {
+   "Src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/ROMACOAAsch5159bc29828c9c4ce9a20c60392410254b?v=600f6c26",
+   "Alt": "Coastal Exterior A"
+  },
+  "photos": [
+   {
+    "header": "Virtual Tour",
+    "subhead": "",
+    "isTour": true,
+    "vidSrc": "https://my.matterport.com/show/?m=HQbhXvSWEWt",
+    "image": {
+     "src": "",
+     "alt": "",
+     "srcSet": null
+    }
+   }
+  ],
+  "imagesByCategory": [
+   {
+    "title": "Virtual Tour",
+    "images": [
+     {
+      "header": "Virtual Tour",
+      "subhead": "",
+      "vidSrc": "https://my.matterport.com/show/?m=HQbhXvSWEWt",
+      "isTour": true,
+      "image": {
+       "src": "",
+       "alt": ""
+      }
+     }
+    ]
+   },
+   {
+    "title": "Interior",
+    "images": [
+     {
+      "header": "Interior",
+      "subhead": "Esp at Azario LWR Roma 7750-16x9",
+      "image": {
+       "src": "/-/media/sites/tm/homes/florida/sarasota/master-plans/r/roma/interior/esplanade-at-azario/esp-at-azario-lwr-roma-7750-16x9.jpg?mw=900&hash=A7750",
+       "alt": "Esp at Azario LWR Roma 7750-16x9",
+       "srcSet": [
+        {
+         "src": "/-/media/sites/tm/homes/florida/sarasota/master-plans/r/roma/interior/esplanade-at-azario/esp-at-azario-lwr-roma-7750-16x9.jpg?mw=600&hash=B7750",
+         "dpr": null,
+         "descriptor": "600w"
+        },
+        {
+         "src": "/-/media/sites/tm/homes/florida/sarasota/master-plans/r/roma/interior/esplanade-at-azario/esp-at-azario-lwr-roma-7750-16x9.jpg?mw=1800&hash=C7750",
+         "dpr": null,
+         "descriptor": "1800w"
+        }
+       ]
+      },
+      "caption": "",
+      "isVertical": false
+     },
+     {
+      "header": "Interior",
+      "subhead": "Esp at Azario LWR Roma 8063-16x9",
+      "image": {
+       "src": "/-/media/sites/tm/homes/florida/sarasota/master-plans/r/roma/interior/esplanade-at-azario/esp-at-azario-lwr-roma-8063-16x9.jpg?mw=900&hash=A8063",
+       "alt": "Esp at Azario LWR Roma 8063-16x9",
+       "srcSet": null
+      },
+      "caption": "",
+      "isVertical": false
+     },
+     {
+      "header": "Interior",
+      "subhead": "Esp at Azario LWR Roma 8382-16x9",
+      "image": {
+       "src": "/-/media/sites/tm/homes/florida/sarasota/master-plans/r/roma/interior/esplanade-at-azario/esp-at-azario-lwr-roma-8382-16x9.jpg?mw=900&hash=A8382",
+       "alt": "Esp at Azario LWR Roma 8382-16x9",
+       "srcSet": null
+      },
+      "caption": "",
+      "isVertical": false
+     },
+     {
+      "header": "Interior",
+      "subhead": "Esp at Azario LWR Roma 8403-16x9",
+      "image": {
+       "src": "/-/media/sites/tm/homes/florida/sarasota/master-plans/r/roma/interior/esplanade-at-azario/esp-at-azario-lwr-roma-8403-16x9.jpg?mw=900&hash=A8403",
+       "alt": "Esp at Azario LWR Roma 8403-16x9",
+       "srcSet": null
+      },
+      "caption": "",
+      "isVertical": false
+     }
+    ]
+   },
+   {
+    "title": "Exteriors",
+    "images": [
+     {
+      "header": "Exteriors",
+      "subhead": "Coastal Exterior A",
+      "image": {
+       "src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/ROMACOAAsch5159bc29828c9c4ce9a20c60392410254b?v=600f6c26",
+       "alt": "Coastal Exterior A",
+       "srcSet": null
+      },
+      "caption": "",
+      "isVertical": false
+     },
+     {
+      "header": "Exteriors",
+      "subhead": "Mediterranean Exterior A",
+      "image": {
+       "src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/ROMAMEDAsch9709fa2b90b9e4b37a3f9df5322db8ea0?v=2314f09a",
+       "alt": "Mediterranean Exterior A",
+       "srcSet": null
+      },
+      "caption": "",
+      "isVertical": false
+     }
+    ]
+   },
+   {
+    "title": "Design Collections",
+    "images": [
+     {
+      "header": "Design Collections",
+      "subhead": "Concerto",
+      "image": {
+       "src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/5bb140ca53cb47e486ea07824317c4ea?v=7261ff66",
+       "alt": "3.0Canvas_FLClassicConcertoV2.JPG"
+      },
+      "isVertical": false
+     },
+     {
+      "header": "Design Collections",
+      "subhead": "Encore",
+      "image": {
+       "src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/8f4950e5b9a54af29871564c3ea113ac?v=8621ab24",
+       "alt": "3.0Canvas_FLClassicEncoreV2.JPG"
+      },
+      "isVertical": false
+     }
+    ]
+   },
+   {
+    "title": "Floor Plan",
+    "images": [
+     {
+      "header": "Floor Plan",
+      "subhead": "Roma-FirstFloor",
+      "image": {
+       "src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/Roma-FirstFloor0c5e?v=1",
+       "alt": "Roma-FirstFloor",
+       "srcSet": null
+      },
+      "caption": "",
+      "isVertical": false
+     },
+     {
+      "header": "Floor Plan",
+      "subhead": "Roma-Options",
+      "image": {
+       "src": "https://tmi-p-001.sitecorecontenthub.cloud/api/public/content/Roma-Options0c5e?v=2",
+       "alt": "Roma-Options",
+       "srcSet": null
+      },
+      "caption": "",
+      "isVertical": false
+     }
+    ]
+   }
+  ]
+ },
+ "model_endpoints": {
+  "UserInfo": {
+   "controller": "UserController",
+   "action": "UserInfo",
+   "area": "common"
+  }
+ }
+}

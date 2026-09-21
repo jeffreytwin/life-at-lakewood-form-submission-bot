@@ -331,6 +331,40 @@ nothing. No cutover report has ever been generated.
   comes first, and the 16 rows this hit (17837 Palmiste Dr, 19120 Wisdom
   Ln and the rest) were set to synced by hand.
 
+- **A connection can be removed** (Jeff, 2026-09-21: sold-out
+  neighborhoods): Settings → Builder Connections has Remove where Rewrite
+  was. It asks for the word REMOVE, does everything Reset does
+  (`connection-clear.ts`: the plans leave Floor Plans V2, the pictures
+  leave the Media Manager, the Hub forgets the plans) and then deletes the
+  connection (`DELETE /api/internal/floorplans/connections/:id`). The
+  community and builder rows stay. Rewrite and `rewritePlan` are gone;
+  Reset and Run cover that repair. The Townhomes at Azario, sold out, was
+  removed by hand the same day (it had never run).
+- **The "Builder sites needing attention" banner can be dismissed** (Jeff,
+  2026-09-21), one connection at a time or all at once. The dismissal is
+  recorded on the connection (`attention_dismissed_at`, migration 071,
+  applied to production) and holds until a newer run of it fails; a Reset
+  clears it. The nightly digest still names failing connections.
+- **Taylor Morrison, filled in** (Jeff, 2026-09-21, from Esplanade at
+  Azario): the collection a plan belongs to sets its home type ("Twin
+  Villa Collection" is attached villas, "The Towns at …" townhomes, the
+  rest single-family), the listing's `virtualTourLink` is the tour, the
+  listing's description comes along, and every base plan's /gallery page
+  is read on each run: "Interior" and "Exteriors" as photos in the sites'
+  order (exteriors last, captions only when the builder gave a real one),
+  "Floor Plan" pictures as drawings, the "Virtual Tour" entry as the tour
+  when the listing had none, and nothing from "Design Collections". The
+  same reader builds stand-in plans from a home's page. Quick move-ins
+  keep their one listing photo. The Azario rows queued before this carry
+  one photo each; a Run refreshes them in place. The builder's pages as
+  probed on 2026-09-21: Azario 10 plans (8 with a tour; Twin Villa,
+  Detached Villa Golf, 52' and 62' Golf collections), Firethorn 37 plans
+  (26 with a tour, five Journey and Adventure series), The Towns at
+  Firethorn 4 plans (16' and 20' collections, townhomes by the community's
+  name). Esplanade at Wellen Park's address, which the Hub could not
+  discover, is set from Jeff:
+  `https://www.taylormorrison.com/fl/sarasota/englewood/esplanade-at-wellen-park`.
+
 **Known gaps, in the order they bite.**
 
 1. Closed 2026-09-20: every import is verified with Wix (READY, an IMAGE,

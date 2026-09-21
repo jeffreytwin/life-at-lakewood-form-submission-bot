@@ -281,6 +281,20 @@ export default function FloorPlansPage() {
     fetchHealth();
   }, [fetchHealth]);
 
+  /** Hides the named connections from the banner until a newer run of theirs fails (Jeff, 2026-09-21). */
+  async function dismissAttention(ids: string[]) {
+    await Promise.all(
+      ids.map((id) =>
+        fetch(`/api/internal/floorplans/connections/${id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ dismissAttention: true }),
+        })
+      )
+    );
+    fetchHealth();
+  }
+
   const fetchChanges = useCallback(() => {
     fetch(`/api/internal/floorplans/changes?status=${statusFilter}`)
       .then((r) => r.json())
@@ -645,20 +659,42 @@ export default function FloorPlansPage() {
 
       {troubled.length > 0 && (
         <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid #ef4444" }}>
-          <strong>⚠ Builder sites needing attention</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <strong style={{ flex: 1 }}>⚠ Builder sites needing attention</strong>
+            {troubled.length > 1 && (
+              <button
+                className="btn btn-secondary"
+                style={{ padding: "2px 10px" }}
+                onClick={() => dismissAttention(troubled.map((t) => t.id))}
+                title="Hides all of these until a newer run of theirs fails"
+              >
+                Dismiss all
+              </button>
+            )}
+          </div>
           <p className="text-muted text-sm" style={{ margin: "4px 0 0" }}>
             These connections failed their last run: an error, no plans at all, or far fewer plans than last time.
             Nothing is removed from a site on such a run. Open the builder&apos;s page to see what changed, then Run again
-            from Builder Connections; a fixed page clears this on its next good run.
+            from Builder Connections; a fixed page clears this on its next good run. Dismiss hides one until a newer run of it fails.
           </p>
           {troubled.map((t) => (
-            <div key={t.id} className="text-sm" style={{ marginTop: 8 }}>
-              <strong>{t.builder} · {t.community}</strong>
-              <span className="text-muted">
-                {" "}· {t.domain} · {t.failures} run{t.failures === 1 ? "" : "s"} in a row
-                {t.lastRunAt ? ` · ${new Date(t.lastRunAt).toLocaleString()}` : ""}
-              </span>
-              <div className="text-muted">{t.status}</div>
+            <div key={t.id} className="text-sm" style={{ marginTop: 8, display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <strong>{t.builder} · {t.community}</strong>
+                <span className="text-muted">
+                  {" "}· {t.domain} · {t.failures} run{t.failures === 1 ? "" : "s"} in a row
+                  {t.lastRunAt ? ` · ${new Date(t.lastRunAt).toLocaleString()}` : ""}
+                </span>
+                <div className="text-muted">{t.status}</div>
+              </div>
+              <button
+                className="btn btn-secondary"
+                style={{ padding: "2px 10px" }}
+                onClick={() => dismissAttention([t.id])}
+                title="Hides this until a newer run of it fails"
+              >
+                Dismiss
+              </button>
             </div>
           ))}
           <div style={{ marginTop: 8 }}>
@@ -967,7 +1003,7 @@ export default function FloorPlansPage() {
                         key={n}
                         type="button"
                         className={`btn ${chosen ? "btn-primary" : "btn-secondary"}`}
-                        style={{ minWidth: 40, padding: "4px 0" }}
+                        style={{ minWidth: 40, padding: "4px 0", textAlign: "center", justifyContent: "center" }}
                         aria-pressed={chosen}
                         title={n === 11 ? "Puts this plan first on the site" : `Score ${n}`}
                         onClick={() => setEditForm((f) => ({ ...f, score: chosen ? "" : String(n) }))}

@@ -1,12 +1,27 @@
 // Taylor Morrison extractor (json_api): community pages inline their full
 // dataset as `window.TM.client.scDataStore.data = {…}` — the floor-plans
 // page carries floorPlansListDataArray (base plans, price/spec ranges,
-// series collections, photos) and the available-homes page carries
-// availableHomesList.sections[].homes[] (QMIs with address, price, specs,
-// ready dates). Plain fetch reads both pages fine; no Playwright needed.
-// Structure captured in pipeline/slice/discovery/round7/taylor-*.
+// series collections, one photo, the virtual tour link, the description)
+// and the available-homes page carries availableHomesList.sections[].homes[]
+// (QMIs with address, price, specs, ready dates, their collection). Plain
+// fetch reads both pages fine; no Playwright needed. Structure captured in
+// pipeline/slice/discovery/round7/taylor-*.
+//
+// The collection a plan belongs to says what it is (Jeff, 2026-09-21, at
+// Esplanade at Azario): the "Twin Villa Collection" holds attached villas,
+// everything else is single-family, and a townhome community says so in
+// its own name.
+//
+// The listing carries one small photo per plan. The plan's own /gallery
+// page (the plan page holds a shorter copy) files every picture by
+// category: "Virtual Tour" (the Matterport link), "Interior", "Exteriors",
+// "Floor Plan" (the drawings) and "Design Collections" (finish packages,
+// left out on Jeff's word). Each base plan's gallery page is read on every
+// run; a quick move-in keeps its listing photo.
 
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
+import { standardHomeType, type HomeType } from "@/lib/floorplans/standardize";
+import { orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
@@ -17,6 +32,7 @@ interface TmLink {
 
 interface TmFloorPlan {
   floorPlanName?: string;
+  virtualTourLink?: string;
   minPrice?: number;
   minWasPrice?: number;
   priceOverrideText?: string;
@@ -43,6 +59,8 @@ interface TmFloorPlan {
 
 interface TmHome {
   address?: string;
+  floorPlan?: string;
+  floorPlanCollection?: string;
   homeSite?: string;
   isComingSoon?: boolean;
   homeReserved?: boolean;
@@ -100,6 +118,33 @@ const imgSrc = (tag: string, origin: string): string | null => {
 const abs = (url: string | undefined, origin: string): string | null =>
   url ? (url.startsWith("http") ? url : origin + url) : null;
 
+/** The tour link as the sites use it: Matterport's "show?m=" form becomes "show/?m="; other links are kept as they came. */
+export function tourUrl(link: string | null | undefined): string | null {
+  const s = (link ?? "").trim();
+  if (!/^https?:\/\//i.test(s)) return null;
+  return s.replace(/^(https?:\/\/my\.matterport\.com\/show)\?/i, "$1/?");
+}
+
+/** The home type a collection or community name says; single-family when neither says anything. */
+export function homeTypeOf(collectionName: string | null | undefined, communityName: string | null | undefined): HomeType {
+  return standardHomeType(collectionName) ?? standardHomeType(communityName) ?? "Single Family Home";
+}
+
+/** Marketing copy without its markup. */
+const plainText = (html: string | null | undefined): string | null => {
+  const text = (html ?? "")
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/p>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;|&rsquo;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+  return text || null;
+};
+
 function baths(minFull?: string | number, maxFull?: string | number, minHalf?: number, maxHalf?: number): string {
   const lo = minFull != null ? Number(minFull) + ((minHalf ?? 0) > 0 ? 0.5 : 0) : null;
   const hi = maxFull != null ? Number(maxFull) + ((maxHalf ?? 0) > 0 ? 0.5 : 0) : null;
@@ -118,6 +163,7 @@ export function plansFromScData(
   for (const entry of Object.values(scData)) {
     if (!entry || typeof entry !== "object") continue;
     const e = entry as {
+      communityName?: string;
       floorPlansListDataArray?: TmFloorPlan[];
       floorPlanCollections?: { id?: string; name?: string }[];
       availableHomesList?: { sections?: { sectionLabel?: string; homes?: TmHome[] }[] };
@@ -125,6 +171,7 @@ export function plansFromScData(
     for (const c of e.floorPlanCollections ?? []) {
       if (c?.id && c?.name) seriesNames.set(c.id, c.name);
     }
+    const communityName = (e.communityName ?? "").trim() || null;
 
     for (const fp of e.floorPlansListDataArray ?? []) {
       if (!fp || typeof fp !== "object") continue;
@@ -133,6 +180,7 @@ export function plansFromScData(
       const photos = (fp.floorPlanPhotosArray ?? [])
         .map((t) => (typeof t === "string" ? imgSrc(t, origin) : null))
         .filter((u, i, a): u is string => Boolean(u) && a.indexOf(u) === i);
+      const series = fp.floorPlanCollection ? seriesNames.get(fp.floorPlanCollection) ?? null : null;
       out.push({
         planKey: normKey(name),
         name,
@@ -142,14 +190,16 @@ export function plansFromScData(
         baths: baths(fp.minFullBath, fp.maxFullBath, fp.minHalfBath, fp.maxHalfBath),
         sqft: typeof fp.minSqFt === "number" ? fp.minSqFt : null,
         garages: fp.minGarage != null ? `${range(fp.minGarage, fp.maxGarage)} car` : null,
-        homeType: null,
+        homeType: homeTypeOf(series, communityName),
         quickMoveIn: false,
         comingSoon: /coming soon|interest list/i.test(fp.priceOverrideText ?? ""),
         sourceUrl: abs(fp.floorPlanDetailsLink?.Url, origin),
         galleryImages: photos,
         blueprintImages: [],
+        description: plainText(fp.floorPlanDescription),
+        virtualTourUrl: tourUrl(fp.virtualTourLink),
         raw: {
-          series: fp.floorPlanCollection ? seriesNames.get(fp.floorPlanCollection) ?? null : null,
+          series,
           stories: range(fp.minStory, fp.maxStory) || null,
           hasModelHome: fp.floorPlanHasModelHome ?? null,
           availableHomes: fp.AvailableHomesTotal ?? null,
@@ -166,6 +216,7 @@ export function plansFromScData(
         const link = home.viewHomeLink?.Url ?? "";
         const relatedPlan = link.match(/\/floor-plans\/([^/]+)\//)?.[1] ?? null;
         const photo = home.photo?.Src ? abs(home.photo.Src, origin) : null;
+        const series = home.floorPlanCollection ? seriesNames.get(home.floorPlanCollection) ?? null : null;
         out.push({
           planKey: normKey(address),
           name: address,
@@ -180,7 +231,7 @@ export function plansFromScData(
               : "",
           sqft: typeof home.sqft === "number" ? home.sqft : null,
           garages: home.garages != null ? `${home.garages} car` : null,
-          homeType: null,
+          homeType: homeTypeOf(series, (home.community_Name ?? "").trim() || communityName),
           quickMoveIn: true,
           comingSoon: home.isComingSoon === true,
           sourceUrl: abs(link, origin),
@@ -188,6 +239,8 @@ export function plansFromScData(
           blueprintImages: [],
           raw: {
             relatedPlan,
+            relatedPlanName: (home.floorPlan ?? "").trim() || null,
+            series,
             homeSite: home.homeSite ?? null,
             readyDate: home.readyDate ?? null,
             reserved: home.homeReserved ?? null,
@@ -197,6 +250,138 @@ export function plansFromScData(
       }
     }
   }
+  return out;
+}
+
+interface TmGalleryImage {
+  header?: string;
+  subhead?: string;
+  caption?: string;
+  isTour?: boolean;
+  vidSrc?: string;
+  image?: { src?: string; alt?: string; srcSet?: { src?: string; descriptor?: string }[] | null } | null;
+}
+
+interface TmGalleryCategory {
+  title?: string;
+  images?: TmGalleryImage[];
+}
+
+/** The finish-package pictures a plan page shows under "Design Collections"; never a plan's own. */
+const DESIGN_COLLECTIONS = /design collections?/i;
+
+/** The largest rendition offered, else the picture as given; absolute. */
+function bestImageSrc(im: TmGalleryImage, origin: string): string | null {
+  const renditions = (im.image?.srcSet ?? [])
+    .map((r) => ({ src: r?.src ?? "", width: parseInt((r?.descriptor ?? "").replace(/\D/g, ""), 10) || 0 }))
+    .filter((r) => r.src);
+  renditions.sort((a, b) => b.width - a.width);
+  const src = (renditions[0]?.src || im.image?.src || "").replace(/&amp;/g, "&").trim();
+  return src ? abs(src, origin) : null;
+}
+
+/** The builder's caption, unless it is only the file's name ("Esp at Azario LWR Roma 7750-16x9"). */
+function captionOf(im: TmGalleryImage): string | null {
+  const text = (im.caption ?? "").trim() || (im.subhead ?? "").trim();
+  if (!text || /\b16x9\b|\d{3,}|\.(jpe?g|png|webp)$/i.test(text)) return null;
+  return text;
+}
+
+export interface TaylorGallery {
+  photos: GalleryInput[];
+  blueprints: string[];
+  tour: string | null;
+}
+
+/**
+ * The plan's pictures as its gallery page files them, or null when the
+ * page's data holds no gallery: interiors and exteriors as photos (the
+ * exteriors marked so they trail), the "Floor Plan" drawings as blueprints,
+ * the "Virtual Tour" entry's link as the tour, and nothing from "Design
+ * Collections". Exported for tests.
+ */
+export function galleryFromScData(scData: Record<string, unknown>, origin: string): TaylorGallery | null {
+  for (const entry of Object.values(scData)) {
+    if (!entry || typeof entry !== "object") continue;
+    const e = entry as { photos?: TmGalleryImage[]; imagesByCategory?: TmGalleryCategory[] };
+    const categories: TmGalleryCategory[] = Array.isArray(e.imagesByCategory) && e.imagesByCategory.length
+      ? e.imagesByCategory
+      : Array.isArray(e.photos) && e.photos.length
+        ? [{ title: "", images: e.photos }]
+        : [];
+    if (!categories.length) continue;
+    const photos: GalleryInput[] = [];
+    const blueprints: string[] = [];
+    let tour: string | null = null;
+    for (const cat of categories) {
+      const title = (cat?.title ?? "").trim();
+      for (const im of cat?.images ?? []) {
+        if (!im || typeof im !== "object") continue;
+        const section = title || (im.header ?? "").trim();
+        if (DESIGN_COLLECTIONS.test(section) || DESIGN_COLLECTIONS.test(im.header ?? "")) continue;
+        if (im.isTour || /virtual tour/i.test(section)) {
+          tour = tour ?? tourUrl(im.vidSrc);
+          continue;
+        }
+        const src = bestImageSrc(im, origin);
+        if (!src) continue;
+        if (/floor ?plans?/i.test(section)) {
+          if (!blueprints.includes(src)) blueprints.push(src);
+          continue;
+        }
+        const exterior = /exterior|elevation/i.test(section);
+        photos.push({ src, kind: exterior ? "exterior" : "photo", caption: captionOf(im) });
+      }
+    }
+    return { photos, blueprints, tour };
+  }
+  return null;
+}
+
+/**
+ * The plan with everything its own pages add: the gallery page's pictures
+ * in the sites' order, the drawings, the tour. The plan page is read when
+ * there is no gallery page. A page that cannot be read leaves the plan as
+ * the listing had it. Also the page reader for stand-in plans built from a
+ * quick move-in (sync.ts), whose home page files its pictures the same way.
+ */
+export async function readTaylorPlanPage(plan: NormalizedPlan): Promise<NormalizedPlan> {
+  if (!plan.sourceUrl) return plan;
+  const origin = new URL(plan.sourceUrl).origin;
+  const base = plan.sourceUrl.replace(/\/gallery\/?$/, "").replace(/\/$/, "");
+  let gallery: TaylorGallery | null = null;
+  for (const url of [`${base}/gallery`, base]) {
+    const scData = await fetchScData(url).catch(() => null);
+    const found = scData ? galleryFromScData(scData, origin) : null;
+    if (found && (found.photos.length || found.blueprints.length)) {
+      gallery = found;
+      break;
+    }
+    if (found && !gallery) gallery = found;
+  }
+  if (!gallery) return plan;
+  const ordered = orderGallery(gallery.photos.length ? gallery.photos : plan.galleryImages.map((src) => ({ src })));
+  return {
+    ...plan,
+    galleryImages: ordered.urls.length ? ordered.urls : plan.galleryImages,
+    galleryMeta: ordered.meta,
+    blueprintImages: gallery.blueprints.length ? gallery.blueprints : plan.blueprintImages,
+    virtualTourUrl: plan.virtualTourUrl ?? gallery.tour,
+  };
+}
+
+/** Runs `fn` over the items a few at a time, keeping order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]);
+      }
+    })
+  );
   return out;
 }
 
@@ -228,5 +413,8 @@ export async function extractTaylorMorrison(params: { url?: string }): Promise<N
       if (!byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
     }
   }
-  return [...byKey.values()];
+  // Each base plan's gallery page: the supporting pictures, the drawings,
+  // the tour (Jeff, 2026-09-21). A quick move-in keeps its one photo.
+  const plans = [...byKey.values()];
+  return mapLimit(plans, 4, (plan) => (plan.quickMoveIn ? Promise.resolve(plan) : readTaylorPlanPage(plan)));
 }

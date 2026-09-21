@@ -124,42 +124,28 @@ export default function BuildersSettingsPage() {
     }
   }
 
-  /** Writes every plan of a connection to Wix again, in as many calls as the time budget needs. */
-  async function rewriteConnection(b: Builder, c: Connection) {
+  /**
+   * Deletes a connection for good, the way a sold-out neighborhood leaves
+   * (Jeff, 2026-09-21): its plans leave the site and the Hub, then the
+   * connection itself. It asks for the word, as Reset does.
+   */
+  async function removeConnection(b: Builder, c: Connection) {
     const where = `${b.name} at ${c.fp_communities?.name ?? "this community"}`;
-    if (
-      !confirm(
-        `Rewrite every plan of ${where} to Wix?\n\nEach plan's row is written again under the current rules: pictures re-imported where needed and verified with Wix before they are written, drawings as PNG. Scores and edits are kept. This is the repair for rows showing broken pictures.`
-      )
-    ) {
-      return;
-    }
+    const typed = prompt(
+      `Remove ${where}?\n\nThis removes every plan the pipeline holds for this connection from the site's Floor Plans V2 collection and its imported pictures from the site's Media Manager, clears everything the Hub knows about these plans (queued changes, follow-ups, scores, photo records), and deletes the connection itself. Nothing is kept and it cannot be undone; this is how a sold-out neighborhood leaves.\n\nType REMOVE to confirm.`
+    );
+    if (typed !== "REMOVE") return;
     setRunning((s) => new Set(s).add(c.id));
     try {
-      const done: string[] = [];
-      const failed: string[] = [];
-      let remaining = 1;
-      for (let calls = 0; remaining > 0 && calls < 20; calls += 1) {
-        const res = await fetch(`/api/internal/floorplans/connections/${c.id}/rewrite`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ done }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          alert(`Rewrite failed: ${data.error ?? res.status}`);
-          return;
-        }
-        for (const r of data.results ?? []) {
-          done.push(r.id);
-          if (r.status === "failed") failed.push(`${r.name}: ${r.error ?? "failed"}`);
-        }
-        remaining = data.remaining ?? 0;
-      }
-      alert(
-        `Rewrote ${done.length - failed.length} plan(s) of ${where}.` +
-          (failed.length ? `\n${failed.length} could not be written:\n${failed.join("\n")}` : "")
-      );
+      const res = await fetch(`/api/internal/floorplans/connections/${c.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) alert(`Remove failed: ${data.error ?? res.status}`);
+      else
+        alert(
+          `Removed ${where}: ${data.plans ?? 0} plans removed (${data.wixRemoved ?? 0} from Wix), ${data.changes ?? 0} queued changes cleared, ${data.photos ?? 0} pictures removed from the Media Manager` +
+            (data.photosFailed ? ` (${data.photosFailed} could not be removed; see the log)` : "") +
+            `.`
+        );
     } finally {
       setRunning((s) => {
         const next = new Set(s);
@@ -172,7 +158,7 @@ export default function BuildersSettingsPage() {
 
   async function resetConnection(b: Builder, c: Connection) {
     const where = `${b.name} at ${c.fp_communities?.name ?? "this community"}`;
-    // A Reset is a click away from Run and Rewrite and cannot be undone, so
+    // A Reset is a click away from Run and Remove and cannot be undone, so
     // it asks for the word (Jeff hit it by accident on 2026-09-20).
     const typed = prompt(
       `Reset ${where}?\n\nThis removes every plan the pipeline holds for this connection from the site's Floor Plans V2 collection, its imported pictures from the site's Media Manager, and everything the Hub knows about these plans: queued changes, follow-ups, scores, photo records. Nothing is kept. The next Run starts from nothing and tests the whole path from the builder's site.\n\nType RESET to confirm.`
@@ -428,11 +414,12 @@ export default function BuildersSettingsPage() {
                                 </button>
                                 <button
                                   className="btn btn-secondary"
-                                  title="Write every plan of this connection to Wix again: pictures re-imported where needed and verified, drawings as PNG; scores and edits kept"
-                                  onClick={() => rewriteConnection(b, c)}
-                                  disabled={!b.active || running.has(c.id)}
+                                  style={{ padding: "2px 10px" }}
+                                  title="Remove this connection for good: its plans leave the site and the Hub, then the connection goes (a sold-out neighborhood)"
+                                  onClick={() => removeConnection(b, c)}
+                                  disabled={running.has(c.id)}
                                 >
-                                  Rewrite
+                                  Remove
                                 </button>
                               </div>
                             </td>

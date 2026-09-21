@@ -104,29 +104,6 @@ function referenceTargets(v2Schema) {
  * points at, the way the write-back looks it up: by exact title, then by
  * any title or name field across the collection. Logs what matched.
  */
-async function probeReference(site, collectionId, name) {
-  const exact = await wix('POST', '/wix-data/v2/items/query', site.wix_site_id, {
-    dataCollectionId: collectionId,
-    query: { filter: { title: { $eq: name } }, paging: { limit: 5 } },
-  });
-  const hits = exact.json?.dataItems ?? [];
-  log(`${site.domain}/${collectionId} reference probe "${name}": title match ${exact.status} -> ${hits.map((it) => it.id).join(', ') || 'none'}`);
-  if (hits.length) return;
-  const norm = (v) => String(v ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const all = await wix('POST', '/wix-data/v2/items/query', site.wix_site_id, {
-    dataCollectionId: collectionId,
-    query: { paging: { limit: 100 } },
-    returnTotalCount: true,
-  });
-  const items = all.json?.dataItems ?? [];
-  const named = items.flatMap((it) =>
-    Object.entries(it.data ?? {})
-      .filter(([k, v]) => typeof v === 'string' && norm(v) === norm(name))
-      .map(([k]) => `${it.id} ${k}="${it.data.title ?? ''}"`)
-  );
-  log(`${site.domain}/${collectionId} reference probe "${name}": scanned ${items.length} of ${all.json?.pagingMetadata?.total ?? '?'}; fields carrying it: ${named.join('; ') || 'none'}`);
-}
-
 /**
  * Brings a site's Floor Plans V2 up to the standard: labels aligned and
  * missing fields added, never a removal or a type change (Wix cannot
@@ -186,41 +163,11 @@ async function applyStandard(site, collectionId) {
  * import status, the picture's size. The write-back's verification
  * (writeback.ts, verifyImports) reads the same fields.
  */
-async function probeMediaFiles(site) {
-  const rows = await supa(`fp_media_map?select=source_url,wix_media_id&site_id=eq.${site.id}&limit=300`);
-  const fileIdOf = (v) => {
-    const m = String(v ?? '').match(/^wix:image:\/\/v1\/([^/#?]+)\//);
-    return m ? m[1] : null;
-  };
-  const pick = (pred) => (rows ?? []).map((r) => fileIdOf(r.wix_media_id)).find((id) => id && pred(id));
-  const samples = [pick((id) => /\.svg$/i.test(id)), pick((id) => !/\.svg$/i.test(id))].filter(Boolean);
-  for (const fileId of samples) {
-    const res = await wix('GET', `/site-media/v1/files/${encodeURIComponent(fileId)}`, site.wix_site_id);
-    const f = res.json?.file ?? res.json ?? {};
-    log(
-      `${site.domain} media probe ${fileId}: ${res.status} keys=[${Object.keys(res.json ?? {}).join(',')}] fileKeys=[${Object.keys(f).slice(0, 20).join(',')}] mediaType=${f.mediaType} status=${f.operationStatus} image=${JSON.stringify(f.media?.image?.image ?? f.media?.image ?? null)?.slice(0, 160)} vector=${JSON.stringify(f.media?.vector ?? null)?.slice(0, 120)}`
-    );
-  }
-}
-
 /**
  * Proves the Media Manager delete call a Reset relies on: imports a copy of
  * a public photo, deletes it permanently by id, then asks for it again.
  * The write-back's deleteMediaFiles (client.ts) makes the same call.
  */
-async function probeMediaDelete(site) {
-  const source = 'https://static.wixstatic.com/media/d0be81_15ba1e35e6304eb09a11c9a16bed98d0~mv2.jpg';
-  const imported = await wix('POST', '/site-media/v1/files/import', site.wix_site_id, { url: source, displayName: 'fp-reset-probe.jpg' });
-  const fileId = imported.json?.file?.id;
-  log(`${site.domain} delete probe: import -> ${imported.status} id=${fileId ?? '?'} status=${imported.json?.file?.operationStatus ?? '?'}`);
-  if (!fileId) return;
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  const deleted = await wix('POST', '/site-media/v1/bulk/files/delete', site.wix_site_id, { fileIds: [fileId], permanent: true });
-  log(`${site.domain} delete probe: delete -> ${deleted.status} ${(deleted.text ?? '').slice(0, 200)}`);
-  const after = await wix('GET', `/site-media/v1/files/${encodeURIComponent(fileId)}`, site.wix_site_id);
-  log(`${site.domain} delete probe: after -> ${after.status} state=${after.json?.file?.state ?? '?'} ${after.status !== 200 ? (after.text ?? '').slice(0, 160) : ''}`);
-}
-
 /**
  * Finds a Toll Brothers community page the way discover-url.ts does, from
  * the sandbox that cannot reach tollbrothers.com: every sitemap URL named
@@ -234,45 +181,101 @@ async function fetchText(url) {
   const res = await fetch(url, { headers: { 'user-agent': UA, accept: 'text/html,application/xml' }, redirect: 'follow', signal: AbortSignal.timeout(30_000) });
   return { status: res.status, text: res.ok ? await res.text() : '' };
 }
-function countModels(container) {
-  if (!container) return { models: 0, qmis: 0 };
-  const lists = [container.homes?.models ?? [], ...(container.communities ?? []).map((c) => c?.homes?.models ?? [])];
-  const models = lists.flat();
-  return { models: models.filter((m) => m?.name && !m.isQMI).length, qmis: models.reduce((n, m) => n + (m?.qmis?.length ?? 0), 0) };
-}
-async function probeTollCommunity(communityName, regionKey) {
-  const key = normKey(communityName);
-  const locsOf = (xml) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
-  let locs = [];
-  for (const path of ['/sitemap.xml', '/sitemap_index.xml']) {
-    const res = await fetchText('https://www.tollbrothers.com' + path);
-    if (res.status !== 200) { log(`toll probe: ${path} -> ${res.status}`); continue; }
-    locs = locsOf(res.text);
-    if (locs.length && locs.every((l) => /\.xml(\?|$)/.test(l))) {
-      const children = locs;
-      locs = [];
-      for (const child of children.slice(0, 12)) {
-        const c = await fetchText(child);
-        if (c.status === 200) locs.push(...locsOf(c.text));
-      }
-    }
-    if (locs.length) break;
+
+/** The balanced JSON object that starts at the first "{" after `marker`, or null. */
+function jsonAfter(html, marker) {
+  const at = html.indexOf(marker);
+  if (at < 0) return null;
+  const start = html.indexOf('{', at);
+  if (start < 0) return null;
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < html.length; i++) {
+    const ch = html[i];
+    if (esc) { esc = false; continue; }
+    if (ch === '\\') { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === '{') depth += 1;
+    else if (ch === '}') { depth -= 1; if (depth === 0) return html.slice(start, i + 1); }
   }
-  const named = locs.filter((u) => normKey(u).includes(key));
-  log(`toll probe "${communityName}": ${locs.length} sitemap urls, ${named.length} named for it: ${named.slice(0, 20).join(' | ')}`);
-  const ranked = [...named].sort((a, b) => (normKey(b).includes(regionKey) ? 1 : 0) - (normKey(a).includes(regionKey) ? 1 : 0) || a.length - b.length);
-  for (const url of ranked.slice(0, 4)) {
+  return null;
+}
+const scDataOf = (html) => {
+  const raw = jsonAfter(html, 'scDataStore.data =') ?? jsonAfter(html, 'scDataStore.data=');
+  try { return raw ? JSON.parse(raw) : null; } catch { return null; }
+};
+
+/** The categories a Taylor Morrison plan's gallery page files its pictures under, with a sample of each. */
+async function probeTaylorGallery(planUrl) {
+  for (const url of [`${planUrl}/gallery`, planUrl]) {
+    const page = await fetchText(url);
+    const d = page.status === 200 ? scDataOf(page.text) : null;
+    if (!d) { log(`taylor gallery ${url}: ${page.status} scData=${!!d}`); continue; }
+    const entry = Object.values(d).find((e) => e && typeof e === 'object' && (Array.isArray(e.imagesByCategory) || Array.isArray(e.photos)));
+    if (!entry) { log(`taylor gallery ${url}: no gallery entry`); continue; }
+    const cats = Array.isArray(entry.imagesByCategory) && entry.imagesByCategory.length ? entry.imagesByCategory : [{ title: '(photos)', images: entry.photos ?? [] }];
+    log(`taylor gallery ${url}: ${cats.map((c) => `${c?.title} x${(c?.images ?? []).length}`).join(' | ')}`);
+    for (const c of cats) {
+      const im = (c?.images ?? [])[0];
+      if (im) log(`taylor gallery ${url} "${c?.title}" first: header=${im.header ?? ''} subhead=${im.subhead ?? ''} tour=${im.vidSrc ?? ''} src=${(im.image?.src ?? '').slice(0, 160)} srcSet=${(im.image?.srcSet ?? []).map((r) => r?.descriptor).join(',')}`);
+    }
+    return;
+  }
+}
+
+/**
+ * Every Taylor Morrison connection (Jeff, 2026-09-21: "analyze and fix the
+ * Taylor Morrison connections we have"): what each listing carries, and the
+ * first plan's gallery page.
+ */
+async function probeTaylorListing(base) {
+  const list = await fetchText(`${base}/floor-plans`);
+  const data = list.status === 200 ? scDataOf(list.text) : null;
+  if (!data) { log(`taylor listing ${base}: floor-plans ${list.status} scData=${!!data}`); return; }
+  let firstPlanUrl = null;
+  let listed = false;
+  for (const e of Object.values(data)) {
+    if (!e || typeof e !== 'object' || !Array.isArray(e.floorPlansListDataArray)) continue;
+    listed = true;
+    const plans = e.floorPlansListDataArray.filter((p) => p && typeof p === 'object');
+    const colls = new Map((e.floorPlanCollections ?? []).map((c) => [c?.id, c?.name]));
+    const byColl = new Map();
+    for (const p of plans) {
+      const name = colls.get(p.floorPlanCollection) ?? '(none)';
+      byColl.set(name, (byColl.get(name) ?? 0) + 1);
+    }
+    const tours = plans.filter((p) => p.virtualTourLink).length;
+    log(`taylor listing ${base}: community "${e.communityName ?? ''}", ${plans.length} plans, ${tours} with a tour, collections: ${[...byColl].map(([n, c]) => `${n} x${c}`).join(' | ')}`);
+    firstPlanUrl = plans[0]?.floorPlanDetailsLink?.Url ? new URL(base).origin + plans[0].floorPlanDetailsLink.Url : null;
+  }
+  if (!listed) {
+    // A wrong address on this site is a 200 page without plan data.
+    const title = list.text.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ?? '?';
+    log(`taylor listing ${base}: floor-plans 200 but no floor plan data; title="${title.slice(0, 120)}"`);
+    return;
+  }
+  const homes = await fetchText(`${base}/available-homes`);
+  const hd = homes.status === 200 ? scDataOf(homes.text) : null;
+  for (const e of Object.values(hd ?? {})) {
+    if (!e || typeof e !== 'object' || !e.availableHomesList) continue;
+    log(`taylor listing ${base}: homes ${(e.availableHomesList.sections ?? []).map((s) => `${s?.sectionLabel} x${(s?.homes ?? []).length}`).join(' | ')}`);
+  }
+  if (!hd) log(`taylor listing ${base}: available-homes ${homes.status}`);
+  if (firstPlanUrl) await probeTaylorGallery(firstPlanUrl);
+}
+
+async function probeTaylorConnections() {
+  for (const base of [
+    'https://www.taylormorrison.com/fl/sarasota/lakewood-ranch/esplanade-at-azario-lakewood-ranch',
+    'https://www.taylormorrison.com/fl/tampa/parrish/firethorn',
+    'https://www.taylormorrison.com/fl/tampa/parrish/the-towns-at-firethorn',
+    'https://www.taylormorrison.com/fl/sarasota/englewood/esplanade-at-wellen-park',
+  ]) {
     try {
-      const page = await fetchText(url);
-      const title = page.text.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ?? '?';
-      const m = page.text.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-      const data = m ? JSON.parse(m[1]) : null;
-      const pageData = data?.props?.pageProps?.pageData ?? {};
-      const master = countModels(pageData.masterCommunityComponent);
-      const comm = countModels(pageData.communityComponent);
-      log(`toll probe page ${url}: ${page.status} title="${title.slice(0, 80)}" nextData=${!!m} pageDataKeys=[${Object.keys(pageData).slice(0, 12).join(',')}] master=${master.models}/${master.qmis} community=${comm.models}/${comm.qmis}`);
+      log(`taylor listing ${base}: probing`);
+      await probeTaylorListing(base);
     } catch (err) {
-      log(`toll probe page ${url}: failed ${err?.message ?? err}`);
+      log(`taylor listing ${base}: failed ${err?.message ?? err}`);
     }
   }
 }
@@ -356,28 +359,9 @@ try {
     }
     if (site.domain === 'lifeatlakewood.com') {
       try {
-        await probeReference(site, targets.villages, 'The Isles');
+        await probeTaylorConnections();
       } catch (err) {
-        log(`${site.domain}: reference probe failed: ${err?.message ?? err}`);
-      }
-    }
-    if (site.domain === 'lifeatlakewood.com') {
-      try {
-        await probeTollCommunity('Monterey', 'lakewood-ranch');
-      } catch (err) {
-        log(`${site.domain}: toll probe failed: ${err?.message ?? err}`);
-      }
-    }
-    try {
-      await probeMediaFiles(site);
-    } catch (err) {
-      log(`${site.domain}: media probe failed: ${err?.message ?? err}`);
-    }
-    if (site.domain === 'lifeatlakewood.com') {
-      try {
-        await probeMediaDelete(site);
-      } catch (err) {
-        log(`${site.domain}: delete probe failed: ${err?.message ?? err}`);
+        log(`${site.domain}: taylor probe failed: ${err?.message ?? err}`);
       }
     }
   }

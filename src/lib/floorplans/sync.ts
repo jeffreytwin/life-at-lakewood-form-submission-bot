@@ -19,7 +19,7 @@ import { extractTollBrothers, readTollPlanPage } from "@/lib/floorplans/extracto
 import { extractWithClaude } from "@/lib/floorplans/extractors/claude-extract";
 import { extractLennar } from "@/lib/floorplans/extractors/lennar";
 import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
-import { extractTaylorMorrison } from "@/lib/floorplans/extractors/taylor-morrison";
+import { extractTaylorMorrison, readTaylorPlanPage } from "@/lib/floorplans/extractors/taylor-morrison";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
@@ -202,6 +202,7 @@ export async function queueChange(args: {
 /** Engines that can read one plan's own page in full: what a stand-in plan built from a home gets (stand-ins.ts). */
 const PAGE_READERS: Record<string, (plan: NormalizedPlan) => Promise<NormalizedPlan>> = {
   "Toll Brothers": readTollPlanPage,
+  "Taylor Morrison": readTaylorPlanPage,
 };
 
 /** The plan with everything its own page adds, when the builder's engine can read one; unchanged otherwise. */
