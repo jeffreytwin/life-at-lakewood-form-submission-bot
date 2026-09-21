@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { galleryFromScData, homeTypeOf, plansFromScData, tourUrl } from "@/lib/floorplans/extractors/taylor-morrison";
-import { orderGallery } from "@/lib/floorplans/gallery-order";
+import { galleryFromScData, homeTypeOf, markHero, plansFromScData, tourUrl, withListingHero } from "@/lib/floorplans/extractors/taylor-morrison";
+import { orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 
 // Real scDataStore.data dumps from the Firethorn community pages
 // (round-7 discovery; pruned — arrays capped, long strings truncated).
@@ -92,7 +92,9 @@ describe("galleryFromScData (Taylor Morrison)", () => {
     const srcs = gallery.photos.map((p) => p.src);
     expect(srcs).toHaveLength(6);
     expect(srcs.some((s) => /5bb140ca|8f4950e5/.test(s))).toBe(false);
-    expect(gallery.photos.filter((p) => p.kind === "exterior").map((p) => p.caption)).toEqual(["Coastal Exterior A", "Mediterranean Exterior A"]);
+    // The first exterior leads as the hero; the rest still trail.
+    expect(gallery.photos.filter((p) => p.kind === "primary").map((p) => p.caption)).toEqual(["Coastal Exterior A"]);
+    expect(gallery.photos.filter((p) => p.kind === "exterior").map((p) => p.caption)).toEqual(["Mediterranean Exterior A"]);
     // A caption that is only the file's name is no caption.
     expect(gallery.photos.filter((p) => p.kind === "photo").every((p) => p.caption === null)).toBe(true);
   });
@@ -109,10 +111,78 @@ describe("galleryFromScData (Taylor Morrison)", () => {
     expect(gallery.tour).toBe("https://my.matterport.com/show/?m=HQbhXvSWEWt");
   });
 
-  it("orders for the sites with the exteriors last", () => {
+  it("orders for the sites led by the house, with the extra exteriors last", () => {
     const ordered = orderGallery(gallery.photos);
     expect(ordered.urls).toHaveLength(6);
-    expect(ordered.urls.slice(-2).every((u) => /ROMACOAA|ROMAMEDA/.test(u))).toBe(true);
+    expect(ordered.urls[0]).toContain("ROMACOAA");
+    expect(ordered.meta[ordered.urls[0]].kind).toBe("primary");
+    expect(ordered.urls[5]).toContain("ROMAMEDA");
     expect(ordered.meta[ordered.urls[5]].kind).toBe("exterior");
+  });
+});
+
+describe("markHero (Taylor Morrison)", () => {
+  const photo = (src: string, kind: GalleryInput["kind"], caption: string | null = null): GalleryInput =>
+    ({ src, kind, caption });
+
+  it("leads with the front-exterior photo over the elevation renderings", () => {
+    const photos = [
+      photo("https://tm.com/alta-model-17-kitchen.jpg", "photo"),
+      photo("https://tm.com/alta/exterior/alta_a_modern-mediterranean_sch_mm-1.jpg", "exterior", "Alta Modern Mediterranean"),
+      photo("https://tm.com/alta-model-2-ps-front-exterior.jpg", "exterior", "Modern Mediterranean Exterior"),
+    ];
+    expect(markHero(photos)).toBe(true);
+    expect(photos.filter((p) => p.kind === "primary").map((p) => p.src)).toEqual([
+      "https://tm.com/alta-model-2-ps-front-exterior.jpg",
+    ]);
+    // The rendering keeps its place at the back.
+    expect(photos[1].kind).toBe("exterior");
+  });
+
+  it("falls back to the first picture filed under Exteriors", () => {
+    const photos = [
+      photo("https://tm.com/cascata-7066-kitchen.jpg", "photo"),
+      photo("https://tm.com/cascata_coastal_sch_co-1.jpg", "exterior", "Coastal Elevation"),
+      photo("https://tm.com/cascata_farmhouse_sch_fh-1.jpg", "exterior", "Farmhouse Elevation"),
+    ];
+    expect(markHero(photos)).toBe(true);
+    expect(photos[1].kind).toBe("primary");
+    expect(photos[2].kind).toBe("exterior");
+  });
+
+  it("marks nothing when the gallery offers no exterior at all", () => {
+    const photos = [photo("https://tm.com/roma-kitchen.jpg", "photo"), photo("https://tm.com/roma-living.jpg", "photo")];
+    expect(markHero(photos)).toBe(false);
+    expect(photos.every((p) => p.kind === "photo")).toBe(true);
+  });
+});
+
+describe("withListingHero (Taylor Morrison)", () => {
+  const gallery = (): GalleryInput[] => [
+    { src: "https://tm.com/r/roma/interior/esp-roma-7750-16x9.jpg?mw=900&hash=A7750", kind: "photo", caption: null },
+    { src: "https://tm.com/r/roma/interior/esp-roma-8063-16x9.jpg?mw=900&hash=A8063", kind: "photo", caption: null },
+  ];
+
+  it("promotes the card picture where it stands when the gallery already has it in another rendition", () => {
+    const photos = gallery();
+    const out = withListingHero(photos, "https://tm.com/r/roma/interior/esp-roma-7750-16x9.jpg?mw=1800&hash=C7750");
+    expect(out).toHaveLength(2);
+    expect(out[0].kind).toBe("primary");
+    expect(out[1].kind).toBe("photo");
+  });
+
+  it("leads with the card picture when the gallery does not carry it", () => {
+    const out = withListingHero(gallery(), "https://tm.com/r/roma/exterior/roma-card.jpg");
+    expect(out).toHaveLength(3);
+    expect(out[0]).toMatchObject({ src: "https://tm.com/r/roma/exterior/roma-card.jpg", kind: "primary" });
+  });
+
+  it("leaves a gallery that already named its hero alone", () => {
+    const photos: GalleryInput[] = [{ src: "https://tm.com/front-exterior.jpg", kind: "primary", caption: null }, ...gallery()];
+    expect(withListingHero(photos, "https://tm.com/r/roma/exterior/roma-card.jpg")).toHaveLength(3);
+  });
+
+  it("is a no-op for a plan whose listing gave no picture", () => {
+    expect(withListingHero(gallery(), undefined)).toHaveLength(2);
   });
 });

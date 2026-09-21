@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import FloorPlanTabs from "../tabs";
 
 interface Alert {
   id: string;
@@ -136,11 +137,11 @@ export default function CampaignPage() {
             The floor plans the email drip campaign talks about. When one of them changes on a site (its name, price,
             neighborhood, availability or quick move-ins), an alert appears here and next to Floor Plans, the character
             says so, and the frontlines agent gets a text, so the marketing can be changed to match.
-            {" "}<a href="/dashboard/floor-plans">Floor plan changes →</a>
           </p>
         </div>
         {openAlerts > 0 && <span className="badge badge-warning">⚑ {openAlerts} open alert{openAlerts === 1 ? "" : "s"}</span>}
       </div>
+      <FloorPlanTabs />
 
       <div className="card" style={{ marginBottom: 16 }}>
         <label>

@@ -6,6 +6,7 @@ import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
 import { HOME_TYPES } from "@/lib/floorplans/standardize";
 import { siteColors } from "@/app/dashboard/listings/format";
+import FloorPlanTabs from "./tabs";
 
 interface GalleryMeta {
   caption?: string | null;
@@ -224,6 +225,7 @@ export default function FloorPlansPage() {
   const [changes, setChanges] = useState<PendingChange[]>([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [siteFilter, setSiteFilter] = useState("all");
+  const [builderFilter, setBuilderFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState<"all" | "plans" | "qmi">("all");
   const [troubled, setTroubled] = useState<TroubledConnection[]>([]);
   const coarse = useCoarsePointer();
@@ -318,10 +320,23 @@ export default function FloorPlansPage() {
     () => [...new Set(changes.map((c) => c.fp_sites?.domain).filter(Boolean))] as string[],
     [changes]
   );
+  // The builders with something in the queue, so a run of one builder can
+  // be worked through on its own (Jeff, 2026-09-21).
+  const builders = useMemo(
+    () => [...new Set(changes.map((c) => c.fp_builders?.name).filter(Boolean))].sort() as string[],
+    [changes]
+  );
   // One row per plan: the queue holds one row per changed field.
   const siteGroups = useMemo(
-    () => groupChanges(changes.filter((c) => siteFilter === "all" || c.fp_sites?.domain === siteFilter)),
-    [changes, siteFilter]
+    () =>
+      groupChanges(
+        changes.filter(
+          (c) =>
+            (siteFilter === "all" || c.fp_sites?.domain === siteFilter) &&
+            (builderFilter === "all" || c.fp_builders?.name === builderFilter)
+        )
+      ),
+    [changes, siteFilter, builderFilter]
   );
   // Floor plans only, quick move-ins only, or both (Jeff, 2026-09-19).
   const groups = useMemo(
@@ -588,7 +603,6 @@ export default function FloorPlansPage() {
           <p className="text-muted">
             Detected changes from builder websites, one row per plan. Approved plans are written to the
             Floor Plans V2 collection as published items.
-            {" "}<a href="/dashboard/floor-plans/campaign">Email campaign →</a>
           </p>
         </div>
         {statusFilter === "pending" && (approvingCount > 0 || pendingGroups.length > 0 || pendingQuickMoveIns.length > 0) && (
@@ -607,7 +621,7 @@ export default function FloorPlansPage() {
                 className="btn btn-secondary"
                 onClick={() => approveGroups(pendingQuickMoveIns, "quick move-ins")}
                 disabled={bulkBusy}
-                title="Every pending quick move-in on the selected site(s), whatever the view shows"
+                title="Every pending quick move-in the site and builder filters allow, whatever the view shows"
               >
                 {bulkBusy ? "Approving…" : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
               </button>
@@ -620,8 +634,9 @@ export default function FloorPlansPage() {
           </div>
         )}
       </div>
+      <FloorPlanTabs />
 
-      <div className="card" style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center" }}>
+      <div className="card" style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <label>
           Status{" "}
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="form-input" style={{ width: "auto", display: "inline-block" }}>
@@ -639,6 +654,20 @@ export default function FloorPlansPage() {
             <option value="all">All sites</option>
             {sites.map((s) => (
               <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Builder{" "}
+          <select
+            value={builderFilter}
+            onChange={(e) => setBuilderFilter(e.target.value)}
+            className="form-input"
+            style={{ width: "auto", display: "inline-block" }}
+          >
+            <option value="all">All builders</option>
+            {builders.map((b) => (
+              <option key={b} value={b}>{b}</option>
             ))}
           </select>
         </label>
@@ -706,7 +735,7 @@ export default function FloorPlansPage() {
       {tasks.length > 0 && (
         <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid #f59e0b" }}>
           <strong>⚑ Email campaign alerts</strong>
-          <span className="text-muted text-sm"> · tracked floor plans that changed on a site. <a href="/dashboard/floor-plans/campaign">Email campaign →</a></span>
+          <span className="text-muted text-sm"> · tracked floor plans that changed on a site, listed under Email Campaign.</span>
           {tasks.map((t) => (
             <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
               <span className="text-sm" style={{ flex: 1 }}>
