@@ -150,10 +150,75 @@ describe("markHero (Taylor Morrison)", () => {
     expect(photos[2].kind).toBe("exterior");
   });
 
+  it("passes over an interior Taylor filed under Exteriors", () => {
+    // 13304 Santini Circle leads its Exteriors category with a living room.
+    const photos = [
+      photo("https://tm.com/ibis-model-16-ps-kitchen.jpg", "photo"),
+      photo("https://tm.com/ibis-model-11-ps-living.jpg", "exterior"),
+      photo("https://tm.com/content/IBISCOAAsch514a2e96.jpg", "exterior", "Coastal Exterior A"),
+    ];
+    expect(markHero(photos)).toBe(true);
+    expect(photos[2].kind).toBe("primary");
+    expect(photos[1].kind).toBe("exterior");
+  });
+
+  it("takes the first of them when every exterior names a room", () => {
+    const photos = [
+      photo("https://tm.com/ibis-model-11-ps-living.jpg", "exterior"),
+      photo("https://tm.com/ibis-model-17-kitchen.jpg", "exterior"),
+    ];
+    expect(markHero(photos)).toBe(true);
+    expect(photos[0].kind).toBe("primary");
+  });
+
   it("marks nothing when the gallery offers no exterior at all", () => {
     const photos = [photo("https://tm.com/roma-kitchen.jpg", "photo"), photo("https://tm.com/roma-living.jpg", "photo")];
     expect(markHero(photos)).toBe(false);
     expect(photos.every((p) => p.kind === "photo")).toBe(true);
+  });
+});
+
+describe("galleryFromScData on a quick move-in's own page (Taylor Morrison)", () => {
+  // The shape a home page carries (probed on the Ibis homes at Esplanade
+  // at Wellen Park): the model's pictures as Representation Photos, an
+  // Exteriors category, the finish package, the drawings.
+  const homePage = {
+    model1: {
+      imagesByCategory: [
+        { title: "Virtual Tour", images: [] },
+        {
+          title: "Exteriors",
+          images: [
+            { image: { src: "/-/media/i/ibis/esp-skye-coastal/ibis-model-11-ps-living.jpg" } },
+            { image: { src: "/api/public/content/IBISCOAAsch514a2e96" }, caption: "Coastal Exterior A" },
+          ],
+        },
+        { title: "Design Collection", images: [{ image: { src: "/-/media/canvas4-classic-symphony1.jpg" } }] },
+        {
+          title: "Representation Photos",
+          images: [
+            { image: { src: "/-/media/i/ibis/esp-skye-coastal/ibis-model-17-kitchen.jpg" } },
+            { image: { src: "/-/media/i/ibis/esp-skye-coastal/ibis-model-35-ps-bathroom.jpg" } },
+          ],
+        },
+        { title: "Floor Plan", images: [{ image: { src: "/api/public/content/Ibis-FirstFloor" } }] },
+      ],
+    },
+  };
+
+  it("leads the home with the house, not with the room Taylor filed under Exteriors", () => {
+    const gallery = galleryFromScData(homePage, ORIGIN)!;
+    const ordered = orderGallery(gallery.photos);
+    expect(ordered.urls[0]).toContain("IBISCOAAsch");
+    expect(ordered.meta[ordered.urls[0]].kind).toBe("primary");
+  });
+
+  it("keeps the representation photos, files the drawings, and skips the finish package", () => {
+    const gallery = galleryFromScData(homePage, ORIGIN)!;
+    expect(gallery.photos).toHaveLength(4);
+    expect(gallery.photos.some((p) => /symphony/.test(p.src))).toBe(false);
+    expect(gallery.blueprints).toHaveLength(1);
+    expect(gallery.blueprints[0]).toContain("Ibis-FirstFloor");
   });
 });
 
