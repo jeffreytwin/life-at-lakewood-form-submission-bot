@@ -2,6 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { HOME_TYPES, isHomeType } from "@/lib/floorplans/standardize";
+import { normKey } from "@/lib/floorplans/types";
+
+/**
+ * Whether a base plan of this name exists for the scope: live, or waiting
+ * in the queue. A quick move-in given such a name is tied to it; one given
+ * a name nobody has stays unmatched and waits for the plan to be created
+ * (the overlay's "Create floor plan" button).
+ */
+async function basePlanExists(scope: { site_id: string; community_id: string; builder_id: string }, planKey: string): Promise<boolean> {
+  const { data: live } = await supabase
+    .from("fp_floor_plans")
+    .select("id")
+    .match(scope)
+    .eq("plan_key", planKey)
+    .eq("quick_move_in", false)
+    .is("removed_at", null)
+    .limit(1);
+  if (live?.length) return true;
+  const { data: queued } = await supabase
+    .from("fp_pending_changes")
+    .select("id, proposed_record")
+    .match(scope)
+    .eq("plan_key", planKey)
+    .eq("status", "pending")
+    .limit(5);
+  return (queued ?? []).some((q) => (q.proposed_record as { quickMoveIn?: boolean } | null)?.quickMoveIn !== true);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +140,20 @@ export async function PATCH(
     }
 
     record.userEditedFields = [...edited];
+
+    // A quick move-in's base plan, as typed: tied to the plan when the site
+    // has one by that name, else left unmatched for a plan to be created.
+    if (record.quickMoveIn === true && "relatedPlanName" in edits) {
+      const key = normKey(String(record.relatedPlanName ?? ""));
+      const scope = { site_id: change.site_id, community_id: change.community_id, builder_id: change.builder_id };
+      if (key && (await basePlanExists(scope, key))) {
+        record.relatedPlanKey = key;
+        record.relatedPlanMatch = "plan-name";
+      } else {
+        record.relatedPlanKey = null;
+        record.relatedPlanMatch = "unmatched";
+      }
+    }
 
     // The score outlives the plan (fp_plan_scores): a Reset and the next
     // Run bring it back rather than asking for it again.

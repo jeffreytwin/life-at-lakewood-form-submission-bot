@@ -44,6 +44,8 @@ function getMessage(event: LeadEvent): string {
       return "Colonel! Just got word the email was sent! You're pretty good...";
     case "listings_alert":
       return "Colonel! Something's wrong over in the listings. Take a look at the Listings area when you get a chance.";
+    case "floorplan_campaign":
+      return "Colonel! A floor plan in the email campaign just changed. Check Floor Plans → Email campaign and get the marketing in line.";
   }
 }
 

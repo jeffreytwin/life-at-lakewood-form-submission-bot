@@ -44,6 +44,8 @@ function getMessage(event: LeadEvent): string {
       return "The message has been delivered, Colonel. Beautiful.";
     case "listings_alert":
       return "Trouble on the listings side, Colonel. Take a look at the Listings area — even the finest revolver needs cleaning.";
+    case "floorplan_campaign":
+      return "A floor plan in the email campaign has changed, Colonel. Floor Plans → Email campaign. Do keep the marketing honest.";
   }
 }
 

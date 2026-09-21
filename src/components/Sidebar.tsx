@@ -27,6 +27,7 @@ export default function Sidebar({
   const [draftCount, setDraftCount] = useState(0);
   const [floorPlanCount, setFloorPlanCount] = useState(0);
   const [listingErrorCount, setListingErrorCount] = useState(0);
+  const [campaignAlertCount, setCampaignAlertCount] = useState(0);
 
   useEffect(() => {
     return onFailedCount(setFailedBadge);
@@ -69,6 +70,21 @@ export default function Sidebar({
     }
     fetchFloorPlanCount();
     const interval = setInterval(fetchFloorPlanCount, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll for open email campaign alerts: a tracked floor plan changed on a site
+  useEffect(() => {
+    function fetchCampaignAlerts() {
+      fetch("/api/internal/floorplans/tasks")
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data)) setCampaignAlertCount(data.length);
+        })
+        .catch(() => {});
+    }
+    fetchCampaignAlerts();
+    const interval = setInterval(fetchCampaignAlerts, 30_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -131,6 +147,15 @@ export default function Sidebar({
                 )}
                 {item.href === "/dashboard/floor-plans" && floorPlanCount > 0 && (
                   <span className="nav-badge">{floorPlanCount}</span>
+                )}
+                {item.href === "/dashboard/floor-plans" && campaignAlertCount > 0 && (
+                  <span
+                    className="nav-badge"
+                    style={{ right: floorPlanCount > 0 ? 40 : 10, background: "var(--warning, #b45309)" }}
+                    title="Email campaign alerts: a tracked floor plan changed"
+                  >
+                    ⚑{campaignAlertCount}
+                  </span>
                 )}
                 {item.href === "/dashboard/listings" && listingErrorCount > 0 && (
                   <span className="nav-badge">{listingErrorCount}</span>

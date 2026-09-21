@@ -44,6 +44,8 @@ function getMessage(event: LeadEvent): string {
       return "Delivered, Colonel. Another mark.";
     case "listings_alert":
       return "Something has failed in the listings, Colonel. Go and look at the Listings area — it will not fix itself.";
+    case "floorplan_campaign":
+      return "A floor plan in the email campaign has changed, Colonel. Floor Plans → Email campaign. The marketing will not correct itself.";
   }
 }
 
