@@ -25,6 +25,15 @@ const HEADERS = {
 
 const COMMUNITY = 'https://simplydwellhomes.com/community/broadleaf/';
 
+// The plan detail pages the community page links to as "View". The first
+// pass showed the community page itself carries one exterior elevation per
+// plan and no tours, so these are where interiors, copy and tours would be.
+const PLAN_PAGES = [
+  'https://simplydwellhomes.com/new-homes/broadleaf/cypress/',
+  'https://simplydwellhomes.com/new-homes/broadleaf/hawthorn-broadleaf/',
+  'https://simplydwellhomes.com/new-homes/broadleaf/jasmine-2/',
+];
+
 /** Same shape the fetch_claude engine feeds Claude (claude-extract.ts). */
 function distill(html, baseUrl) {
   const abs = (u) => {
@@ -78,7 +87,7 @@ async function read(label, url) {
     );
     console.log(`FP-SDWELL: ${label} tours-in-distilled=${JSON.stringify(tours.slice(0, 6))}`);
     console.log(`FP-SDWELL: ${label} tours-in-raw-html=${JSON.stringify(rawTours.slice(0, 6))}`);
-    console.log(`FP-SDWELL: ${label} images=${JSON.stringify(imgs.slice(0, 25))}`);
+    console.log(`FP-SDWELL: ${label} images=${JSON.stringify(imgs.slice(0, 60))}`);
     return { html, text, links };
   } catch (err) {
     console.log(
@@ -91,23 +100,20 @@ async function read(label, url) {
 const community = await read('community-page', COMMUNITY);
 
 if (community) {
-  // Whole text of the page the connection actually reads, so the plan rows
-  // and any per-plan copy can be read off the log.
-  for (let i = 0; i < community.text.length; i += 1500) {
-    console.log(`FP-SDWELL: community-page text[${i}]= ${JSON.stringify(community.text.slice(i, i + 1500))}`);
-  }
+  // Every "View" link, to confirm the plan pages below are the ones this
+  // page sends a reader to.
+  const planLinks = [...new Set(community.links.filter((u) => /simplydwellhomes\.com\/new-homes\//i.test(u)))];
+  console.log(`FP-SDWELL: community-page plan-links=${planLinks.length} ${JSON.stringify(planLinks.slice(0, 6))}`);
+}
 
-  // Plan detail pages: whatever this community page links to that looks
-  // like a plan, deduped, first two.
-  const planLinks = [...new Set(community.links.filter((u) => /simplydwellhomes\.com\/(floor-?plan|plan|home|model)/i.test(u)))];
-  console.log(`FP-SDWELL: plan-links-found=${planLinks.length} ${JSON.stringify(planLinks.slice(0, 8))}`);
-
-  for (const [i, url] of planLinks.slice(0, 2).entries()) {
-    const plan = await read(`plan-${i + 1}`, url);
-    if (!plan) continue;
-    for (let j = 0; j < plan.text.length; j += 1500) {
-      console.log(`FP-SDWELL: plan-${i + 1} text[${j}]= ${JSON.stringify(plan.text.slice(j, j + 1500))}`);
-    }
+// The first plan page in full: what one plan's own page offers a scrape.
+for (const [i, url] of PLAN_PAGES.entries()) {
+  const label = `plan-${i + 1}`;
+  const plan = await read(label, url);
+  if (!plan) continue;
+  if (i > 0) continue; // counts and image/tour lists are enough for the rest
+  for (let j = 0; j < plan.text.length; j += 1500) {
+    console.log(`FP-SDWELL: ${label} text[${j}]= ${JSON.stringify(plan.text.slice(j, j + 1500))}`);
   }
 }
 console.log('FP-SDWELL: done');
