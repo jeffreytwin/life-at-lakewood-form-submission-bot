@@ -243,7 +243,11 @@ async function importImage(
     );
     return { uri, fileId: file.id, sourceUrl, verified: false };
   } catch (error) {
-    // Image failure shouldn't block the record; sync without the image.
+    // A picture Wix refused for its own reasons — throttled after every
+    // retry, or a spell of 5xx — is not a bad picture, and a row must not
+    // go out short of it (Jeff, 2026-09-21). Everything else is the
+    // picture's own fault and only costs the picture.
+    if (error instanceof WixApiError && (error.rateLimited || error.status >= 500)) throw error;
     logger.warn("Floor plan image import failed", {
       sourceUrl,
       error: error instanceof Error ? error.message : String(error),
