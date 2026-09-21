@@ -82,6 +82,12 @@ for (const [label, url] of PLANS) {
     // A script-held payload is invisible to the engine, so say whether one exists.
     const jsonScripts = [...html.matchAll(/<script[^>]*type=["']application\/json["'][^>]*>([\s\S]{0,120})/gi)].map((m) => m[1].trim().slice(0, 100));
     console.log(`FP-STOCKPLAN: ${label} json-scripts=${jsonScripts.length} ${JSON.stringify(jsonScripts.slice(0, 3))}`);
+    // The tours ride in the React payload, so the gallery's other pictures
+    // may too: every picture URL the raw HTML holds, against the 30 the
+    // page renders. Matterport links too, since that is where they were.
+    const pictures = [...new Set([...html.matchAll(/https:\\?\/\\?\/fabrik\.blob\.core\.windows\.net\/public\/[A-Za-z0-9-]+_(?:lg|sm)\.(?:jpg|png|webp)/g)].map((m) => m[0].replace(/\\/g, '')))];
+    const payloadTours = [...new Set([...html.matchAll(/https:\\?\/\\?\/my\.matterport\.com\/show\/\?m=[A-Za-z0-9]+/g)].map((m) => m[0].replace(/\\/g, '')))];
+    console.log(`FP-STOCKPLAN: ${label} pictures-in-raw=${pictures.length} tours-in-raw=${JSON.stringify(payloadTours)}`);
   } catch (err) {
     console.log(`FP-STOCKPLAN: ${label} -> ERROR ${String(err?.cause?.message ?? err?.message ?? err)} (${Date.now() - started}ms)`);
   }
