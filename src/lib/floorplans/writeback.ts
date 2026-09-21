@@ -773,6 +773,18 @@ export async function applyPendingChange(changeId: string): Promise<{
   }
 
   try {
+    // Email campaign (campaign.ts): a change to a tracked plan, or to a
+    // quick move-in of one, raises an alert so the marketing can follow.
+    const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
+    async function alertCampaign(taskType: CampaignTaskType, detail: string, rec: ProposedRecord | null, homeDetail?: string) {
+      const own = change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
+      await alertIfTracked(own, taskType, detail, change.id);
+      const isHome = rec?.quickMoveIn ?? own?.quick_move_in ?? false;
+      if (!isHome) return;
+      const base = await basePlanOf(scope, rec?.relatedPlanKey ?? own?.record?.relatedPlanKey ?? null);
+      await alertIfTracked(base, "other_change", homeDetail ?? detail, change.id);
+    }
+
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
       const { wixRecordId: itemId, asDraft, urlSlug } = await writePlanToWix({ site, community, builder }, change.plan_key, rec, null);
@@ -822,18 +834,6 @@ export async function applyPendingChange(changeId: string): Promise<{
         );
       }
       return { status: newStatus };
-    }
-
-    // Email campaign (campaign.ts): a change to a tracked plan, or to a
-    // quick move-in of one, raises an alert so the marketing can follow.
-    const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
-    async function alertCampaign(taskType: CampaignTaskType, detail: string, rec: ProposedRecord | null, homeDetail?: string) {
-      const own = change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
-      await alertIfTracked(own, taskType, detail, change.id);
-      const isHome = rec?.quickMoveIn ?? own?.quick_move_in ?? false;
-      if (!isHome) return;
-      const base = await basePlanOf(scope, rec?.relatedPlanKey ?? own?.record?.relatedPlanKey ?? null);
-      await alertIfTracked(base, "other_change", homeDetail ?? detail, change.id);
     }
 
     if (change.change_type === "update") {

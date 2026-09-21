@@ -83,10 +83,11 @@ describe("the score across runs", () => {
 });
 
 describe("the standard Floor Plans V2 schema", () => {
-  it("has 32 distinct data fields, Neighborhood wording, and references to the Builders and villages collections", () => {
+  it("has 29 distinct data fields, Neighborhood wording, and references to the Builders and villages collections", () => {
     const keys = STANDARD_FLOOR_PLAN_FIELDS.map((f) => f.key);
-    expect(keys).toHaveLength(32);
-    expect(new Set(keys).size).toBe(32);
+    expect(keys).toHaveLength(29);
+    expect(new Set(keys).size).toBe(29);
+    expect(keys.some((k) => k.startsWith("estimated"))).toBe(false);
     expect(keys.some((k) => k.startsWith("_"))).toBe(false);
     for (const f of STANDARD_FLOOR_PLAN_FIELDS) {
       expect(f.displayName).toBeTruthy();

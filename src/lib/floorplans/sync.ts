@@ -31,6 +31,7 @@ import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions } from "@/lib/floorplans/description";
+import { withScrapedPictures } from "@/lib/floorplans/pictures";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -168,7 +169,7 @@ export async function queueChange(args: {
     .eq("community_id", args.communityId)
     .eq("builder_id", args.builderId)
     .eq("plan_key", args.planKey)
-    .eq("status", "pending");
+    .in("status", ["pending", "approving"]);
   pendingQuery = fieldKey === null
     ? pendingQuery.is("field_changed", null)
     : pendingQuery.eq("field_changed", fieldKey);
@@ -357,7 +358,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         await queueChange({
           siteId: site.id, communityId: community.id, builderId: builder.id,
           planKey: plan.planKey, changeType: "add", newValue: plan.priceDisplay,
-          proposedRecord: withRememberedScore(plan, remembered), runId,
+          proposedRecord: withScrapedPictures(withRememberedScore(plan, remembered), plan), runId,
         })
       ) queued += 1;
       continue;
@@ -372,7 +373,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       .update({ last_seen_at: new Date().toISOString() })
       .eq("id", existing.id);
     const current = (existing.record ?? {}) as CanonicalRecord;
-    const merged = withRememberedScore(mergeForUpdate(current, plan), remembered);
+    const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan), remembered), plan);
     for (const change of fieldChanges(current, plan)) {
       if (
         await queueChange({

@@ -6,6 +6,7 @@ import { homesOfPlan, standInPlan, type StandInRule } from "@/lib/floorplans/sta
 import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withRememberedScore } from "@/lib/floorplans/scores";
+import { withScrapedPictures } from "@/lib/floorplans/pictures";
 import { queueChange, readPlanInFull } from "@/lib/floorplans/sync";
 import { neutralizeDescriptions } from "@/lib/floorplans/description";
 
@@ -124,7 +125,7 @@ export async function POST(
     const { data: scoreRows } = await supabase.from("fp_plan_scores").select("plan_key, score").match(scope).eq("plan_key", planKey);
     const remembered = new Map((scoreRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
     const [linked] = linkQuickMoveIns([standardizePlan(plan), ...homes]);
-    const proposed = withRememberedScore(linked, remembered);
+    const proposed = withScrapedPictures(withRememberedScore(linked, remembered), linked);
     const queued = await queueChange({
       siteId: scope.site_id, communityId: scope.community_id, builderId: scope.builder_id,
       planKey, changeType: "add", newValue: proposed.priceDisplay,
