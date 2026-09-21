@@ -270,6 +270,61 @@ interface TmGalleryCategory {
 /** The finish-package pictures a plan page shows under "Design Collections"; never a plan's own. */
 const DESIGN_COLLECTIONS = /design collections?/i;
 
+/**
+ * A photo of the house from the street, which Taylor names for what it is
+ * ("…-alta-model-2-ps-front-exterior.jpg"). The schematic elevations it
+ * files beside them ("…alta_a_modern-mediterranean_sch_mm-1.jpg") are
+ * renderings, so they are the fallback hero, not the first choice.
+ */
+const FRONT_EXTERIOR = /front[\s_-]?exterior|exterior[\s_-]?front/i;
+
+/**
+ * Marks the picture the sites lead with, and says whether it found one.
+ *
+ * Room order keeps every exterior last so a plan's extra elevations trail
+ * (gallery-order.ts), which leaves the lead to whatever room ranks first —
+ * the kitchen — unless one picture is marked the primary, the way Toll
+ * Brothers marks each model's headshot. Taylor names no hero, so its own
+ * front-exterior photo takes the slot, and failing that the first picture
+ * it files under Exteriors (Jeff, 2026-09-21: plans with exteriors were
+ * leading with an interior). Mutates in place; exported for tests.
+ */
+export function markHero(photos: GalleryInput[]): boolean {
+  const hero =
+    photos.find((p) => FRONT_EXTERIOR.test(`${p.src} ${p.caption ?? ""}`)) ??
+    photos.find((p) => p.kind === "exterior");
+  if (!hero) return false;
+  hero.kind = "primary";
+  return true;
+}
+
+/**
+ * The listing's own card picture as the hero, for a plan whose gallery
+ * page offers no exterior at all: it is the builder's pick and the only
+ * lead on offer. The same picture in another rendition is promoted where
+ * it stands rather than repeated — Taylor serves one file at several
+ * widths ("…-7750-16x9.jpg?mw=1800" and "?mw=900"). Exported for tests.
+ */
+export function withListingHero(
+  photos: GalleryInput[],
+  listingHero: string | undefined
+): GalleryInput[] {
+  if (!listingHero || photos.some((p) => p.kind === "primary")) return photos;
+  const samePicture = (a: string, b: string) => {
+    try {
+      return new URL(a).pathname === new URL(b).pathname;
+    } catch {
+      return a === b;
+    }
+  };
+  const already = photos.find((p) => samePicture(p.src, listingHero));
+  if (already) {
+    already.kind = "primary";
+    return photos;
+  }
+  return [{ src: listingHero, kind: "primary", caption: null }, ...photos];
+}
+
 /** The largest rendition offered, else the picture as given; absolute. */
 function bestImageSrc(im: TmGalleryImage, origin: string): string | null {
   const renditions = (im.image?.srcSet ?? [])
@@ -333,6 +388,7 @@ export function galleryFromScData(scData: Record<string, unknown>, origin: strin
         photos.push({ src, kind: exterior ? "exterior" : "photo", caption: captionOf(im) });
       }
     }
+    markHero(photos);
     return { photos, blueprints, tour };
   }
   return null;
@@ -360,7 +416,8 @@ export async function readTaylorPlanPage(plan: NormalizedPlan): Promise<Normaliz
     if (found && !gallery) gallery = found;
   }
   if (!gallery) return plan;
-  const ordered = orderGallery(gallery.photos.length ? gallery.photos : plan.galleryImages.map((src) => ({ src })));
+  const photos = gallery.photos.length ? gallery.photos : plan.galleryImages.map((src) => ({ src }));
+  const ordered = orderGallery(withListingHero(photos, plan.galleryImages[0]));
   return {
     ...plan,
     galleryImages: ordered.urls.length ? ordered.urls : plan.galleryImages,
