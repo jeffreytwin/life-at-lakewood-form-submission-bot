@@ -104,29 +104,6 @@ function referenceTargets(v2Schema) {
  * points at, the way the write-back looks it up: by exact title, then by
  * any title or name field across the collection. Logs what matched.
  */
-async function probeReference(site, collectionId, name) {
-  const exact = await wix('POST', '/wix-data/v2/items/query', site.wix_site_id, {
-    dataCollectionId: collectionId,
-    query: { filter: { title: { $eq: name } }, paging: { limit: 5 } },
-  });
-  const hits = exact.json?.dataItems ?? [];
-  log(`${site.domain}/${collectionId} reference probe "${name}": title match ${exact.status} -> ${hits.map((it) => it.id).join(', ') || 'none'}`);
-  if (hits.length) return;
-  const norm = (v) => String(v ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const all = await wix('POST', '/wix-data/v2/items/query', site.wix_site_id, {
-    dataCollectionId: collectionId,
-    query: { paging: { limit: 100 } },
-    returnTotalCount: true,
-  });
-  const items = all.json?.dataItems ?? [];
-  const named = items.flatMap((it) =>
-    Object.entries(it.data ?? {})
-      .filter(([k, v]) => typeof v === 'string' && norm(v) === norm(name))
-      .map(([k]) => `${it.id} ${k}="${it.data.title ?? ''}"`)
-  );
-  log(`${site.domain}/${collectionId} reference probe "${name}": scanned ${items.length} of ${all.json?.pagingMetadata?.total ?? '?'}; fields carrying it: ${named.join('; ') || 'none'}`);
-}
-
 /**
  * Brings a site's Floor Plans V2 up to the standard: labels aligned and
  * missing fields added, never a removal or a type change (Wix cannot
@@ -186,41 +163,11 @@ async function applyStandard(site, collectionId) {
  * import status, the picture's size. The write-back's verification
  * (writeback.ts, verifyImports) reads the same fields.
  */
-async function probeMediaFiles(site) {
-  const rows = await supa(`fp_media_map?select=source_url,wix_media_id&site_id=eq.${site.id}&limit=300`);
-  const fileIdOf = (v) => {
-    const m = String(v ?? '').match(/^wix:image:\/\/v1\/([^/#?]+)\//);
-    return m ? m[1] : null;
-  };
-  const pick = (pred) => (rows ?? []).map((r) => fileIdOf(r.wix_media_id)).find((id) => id && pred(id));
-  const samples = [pick((id) => /\.svg$/i.test(id)), pick((id) => !/\.svg$/i.test(id))].filter(Boolean);
-  for (const fileId of samples) {
-    const res = await wix('GET', `/site-media/v1/files/${encodeURIComponent(fileId)}`, site.wix_site_id);
-    const f = res.json?.file ?? res.json ?? {};
-    log(
-      `${site.domain} media probe ${fileId}: ${res.status} keys=[${Object.keys(res.json ?? {}).join(',')}] fileKeys=[${Object.keys(f).slice(0, 20).join(',')}] mediaType=${f.mediaType} status=${f.operationStatus} image=${JSON.stringify(f.media?.image?.image ?? f.media?.image ?? null)?.slice(0, 160)} vector=${JSON.stringify(f.media?.vector ?? null)?.slice(0, 120)}`
-    );
-  }
-}
-
 /**
  * Proves the Media Manager delete call a Reset relies on: imports a copy of
  * a public photo, deletes it permanently by id, then asks for it again.
  * The write-back's deleteMediaFiles (client.ts) makes the same call.
  */
-async function probeMediaDelete(site) {
-  const source = 'https://static.wixstatic.com/media/d0be81_15ba1e35e6304eb09a11c9a16bed98d0~mv2.jpg';
-  const imported = await wix('POST', '/site-media/v1/files/import', site.wix_site_id, { url: source, displayName: 'fp-reset-probe.jpg' });
-  const fileId = imported.json?.file?.id;
-  log(`${site.domain} delete probe: import -> ${imported.status} id=${fileId ?? '?'} status=${imported.json?.file?.operationStatus ?? '?'}`);
-  if (!fileId) return;
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  const deleted = await wix('POST', '/site-media/v1/bulk/files/delete', site.wix_site_id, { fileIds: [fileId], permanent: true });
-  log(`${site.domain} delete probe: delete -> ${deleted.status} ${(deleted.text ?? '').slice(0, 200)}`);
-  const after = await wix('GET', `/site-media/v1/files/${encodeURIComponent(fileId)}`, site.wix_site_id);
-  log(`${site.domain} delete probe: after -> ${after.status} state=${after.json?.file?.state ?? '?'} ${after.status !== 200 ? (after.text ?? '').slice(0, 160) : ''}`);
-}
-
 /**
  * Finds a Toll Brothers community page the way discover-url.ts does, from
  * the sandbox that cannot reach tollbrothers.com: every sitemap URL named
@@ -234,49 +181,96 @@ async function fetchText(url) {
   const res = await fetch(url, { headers: { 'user-agent': UA, accept: 'text/html,application/xml' }, redirect: 'follow', signal: AbortSignal.timeout(30_000) });
   return { status: res.status, text: res.ok ? await res.text() : '' };
 }
-function countModels(container) {
-  if (!container) return { models: 0, qmis: 0 };
-  const lists = [container.homes?.models ?? [], ...(container.communities ?? []).map((c) => c?.homes?.models ?? [])];
-  const models = lists.flat();
-  return { models: models.filter((m) => m?.name && !m.isQMI).length, qmis: models.reduce((n, m) => n + (m?.qmis?.length ?? 0), 0) };
+
+/** The balanced JSON object that starts at the first "{" after `marker`, or null. */
+function jsonAfter(html, marker) {
+  const at = html.indexOf(marker);
+  if (at < 0) return null;
+  const start = html.indexOf('{', at);
+  if (start < 0) return null;
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < html.length; i++) {
+    const ch = html[i];
+    if (esc) { esc = false; continue; }
+    if (ch === '\\') { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === '{') depth += 1;
+    else if (ch === '}') { depth -= 1; if (depth === 0) return html.slice(start, i + 1); }
+  }
+  return null;
 }
-async function probeTollCommunity(communityName, regionKey) {
-  const key = normKey(communityName);
-  const locsOf = (xml) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
-  let locs = [];
-  for (const path of ['/sitemap.xml', '/sitemap_index.xml']) {
-    const res = await fetchText('https://www.tollbrothers.com' + path);
-    if (res.status !== 200) { log(`toll probe: ${path} -> ${res.status}`); continue; }
-    locs = locsOf(res.text);
-    if (locs.length && locs.every((l) => /\.xml(\?|$)/.test(l))) {
-      const children = locs;
-      locs = [];
-      for (const child of children.slice(0, 12)) {
-        const c = await fetchText(child);
-        if (c.status === 200) locs.push(...locsOf(c.text));
+const scDataOf = (html) => {
+  const raw = jsonAfter(html, 'scDataStore.data =') ?? jsonAfter(html, 'scDataStore.data=');
+  try { return raw ? JSON.parse(raw) : null; } catch { return null; }
+};
+
+/**
+ * Taylor Morrison, one community and one plan of it (Jeff, 2026-09-21): what
+ * the floor-plans listing carries per plan (collection, photos, tour), what
+ * the available-homes listing says about each home's collection, and how
+ * the plan's own page and its /gallery page hold the supporting pictures,
+ * their sections ("Design Collections" must be left out) and the tour.
+ */
+async function probeTaylorCommunity(base, planSlug) {
+  const list = await fetchText(`${base}/floor-plans`);
+  const listData = list.status === 200 ? scDataOf(list.text) : null;
+  log(`taylor probe ${base}/floor-plans: ${list.status} scData=${!!listData}`);
+  for (const [k, e] of Object.entries(listData ?? {})) {
+    if (!e || typeof e !== 'object') continue;
+    if (Array.isArray(e.floorPlanCollections)) log(`taylor probe collections (${k}, community "${e.communityName ?? ''}"): ${e.floorPlanCollections.map((c) => `${c?.id}=${c?.name}`).join(' | ')}`);
+    for (const p of e.floorPlansListDataArray ?? []) {
+      if (!p || typeof p !== 'object') continue;
+      log(`taylor probe plan "${p.floorPlanName}" | coll=${p.floorPlanCollection} | photos=${(p.floorPlanPhotosArray ?? []).length} | tour=${p.virtualTourLink ?? ''} | tourText=${p.floorPlanVirtualTourLinkText ?? ''} | link=${p.floorPlanDetailsLink?.Url ?? ''} | build=${p.floorPlanBuildPlanLink?.Url ?? ''}`);
+    }
+  }
+  const homes = await fetchText(`${base}/available-homes`);
+  const homesData = homes.status === 200 ? scDataOf(homes.text) : null;
+  log(`taylor probe ${base}/available-homes: ${homes.status} scData=${!!homesData}`);
+  for (const e of Object.values(homesData ?? {})) {
+    if (!e || typeof e !== 'object' || !e.availableHomesList) continue;
+    for (const section of e.availableHomesList.sections ?? []) {
+      log(`taylor probe homes section "${section?.sectionLabel}": ${(section?.homes ?? []).slice(0, 12).map((h) => `${h?.address} [plan=${h?.floorPlan} coll=${h?.floorPlanCollection} link=${h?.viewHomeLink?.Url ?? ''}]`).join(' | ')}`);
+    }
+  }
+  for (const path of [`${base}/floor-plans/${planSlug}`, `${base}/floor-plans/${planSlug}/gallery`]) {
+    const page = await fetchText(path);
+    log(`taylor probe page ${path}: ${page.status} len=${page.text.length}`);
+    if (page.status !== 200) continue;
+    const html = page.text;
+    const heads = [...html.matchAll(/<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/gi)].map((m) => m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    log(`taylor probe headings: ${heads.slice(0, 40).join(' | ')}`);
+    const tabs = [...html.matchAll(/(?:data-tab|data-target|data-bs-target|role="tab"[^>]*>|class="[^"]*tab[^"]*"[^>]*>)\s*([^<]{2,60})</gi)].map((m) => m[1].trim());
+    log(`taylor probe tab-ish labels: ${[...new Set(tabs)].slice(0, 40).join(' | ')}`);
+    const tours = [...new Set([...html.matchAll(/https?:\/\/(?:my\.)?matterport\.com\/[^"'\s<>]+/g)].map((m) => m[0]))];
+    log(`taylor probe tours: ${tours.join(' | ')}`);
+    const media = [...new Set([...html.matchAll(/\/-\/media\/[^"'\s)?]+/g)].map((m) => m[0]))];
+    log(`taylor probe media urls: ${media.length}; first: ${media.slice(0, 10).join(' | ')}`);
+    const dcAt = html.search(/design collections?/i);
+    if (dcAt >= 0) log(`taylor probe "Design Collections" context: ${html.slice(Math.max(0, dcAt - 600), dcAt + 900).replace(/\s+/g, ' ')}`);
+    const d = scDataOf(html);
+    if (!d) { log('taylor probe: no scDataStore on this page'); continue; }
+    for (const [k, e] of Object.entries(d)) {
+      if (!e || typeof e !== 'object') continue;
+      const keys = Object.keys(e);
+      log(`taylor probe entry ${k}: keys=[${keys.slice(0, 60).join(',')}]`);
+      for (const key of keys) {
+        const v = e[key];
+        if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object') log(`taylor probe entry ${k}.${key}: ${v.length} items, first=${JSON.stringify(v[0]).slice(0, 700)}`);
+        else if (Array.isArray(v) && v.length) log(`taylor probe entry ${k}.${key}: ${v.length} items, first=${String(v[0]).slice(0, 300)}`);
+        else if (v && typeof v === 'object') log(`taylor probe entry ${k}.${key}: object=${JSON.stringify(v).slice(0, 500)}`);
       }
     }
-    if (locs.length) break;
-  }
-  const named = locs.filter((u) => normKey(u).includes(key));
-  log(`toll probe "${communityName}": ${locs.length} sitemap urls, ${named.length} named for it: ${named.slice(0, 20).join(' | ')}`);
-  const ranked = [...named].sort((a, b) => (normKey(b).includes(regionKey) ? 1 : 0) - (normKey(a).includes(regionKey) ? 1 : 0) || a.length - b.length);
-  for (const url of ranked.slice(0, 4)) {
-    try {
-      const page = await fetchText(url);
-      const title = page.text.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ?? '?';
-      const m = page.text.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-      const data = m ? JSON.parse(m[1]) : null;
-      const pageData = data?.props?.pageProps?.pageData ?? {};
-      const master = countModels(pageData.masterCommunityComponent);
-      const comm = countModels(pageData.communityComponent);
-      log(`toll probe page ${url}: ${page.status} title="${title.slice(0, 80)}" nextData=${!!m} pageDataKeys=[${Object.keys(pageData).slice(0, 12).join(',')}] master=${master.models}/${master.qmis} community=${comm.models}/${comm.qmis}`);
-    } catch (err) {
-      log(`toll probe page ${url}: failed ${err?.message ?? err}`);
+    // The picture-carrying entries in full, in slices a log line can hold.
+    let n = 0;
+    for (const [k, e] of Object.entries(d)) {
+      const json = JSON.stringify(e);
+      if (!/-\/media\/|matterport/i.test(json)) continue;
+      log(`taylor probe dump ${k}: ${json.length} chars`);
+      for (let i = 0; i < json.length && n < 40; i += 1400, n += 1) log(`taylor probe dump ${k}[${i}]: ${json.slice(i, i + 1400)}`);
     }
   }
 }
-
 async function cacheItems(site, collectionId) {
   const items = [];
   for (let offset = 0; ; offset += 100) {
@@ -356,28 +350,9 @@ try {
     }
     if (site.domain === 'lifeatlakewood.com') {
       try {
-        await probeReference(site, targets.villages, 'The Isles');
+        await probeTaylorCommunity('https://www.taylormorrison.com/fl/sarasota/lakewood-ranch/esplanade-at-azario-lakewood-ranch', 'roma');
       } catch (err) {
-        log(`${site.domain}: reference probe failed: ${err?.message ?? err}`);
-      }
-    }
-    if (site.domain === 'lifeatlakewood.com') {
-      try {
-        await probeTollCommunity('Monterey', 'lakewood-ranch');
-      } catch (err) {
-        log(`${site.domain}: toll probe failed: ${err?.message ?? err}`);
-      }
-    }
-    try {
-      await probeMediaFiles(site);
-    } catch (err) {
-      log(`${site.domain}: media probe failed: ${err?.message ?? err}`);
-    }
-    if (site.domain === 'lifeatlakewood.com') {
-      try {
-        await probeMediaDelete(site);
-      } catch (err) {
-        log(`${site.domain}: delete probe failed: ${err?.message ?? err}`);
+        log(`${site.domain}: taylor probe failed: ${err?.message ?? err}`);
       }
     }
   }
