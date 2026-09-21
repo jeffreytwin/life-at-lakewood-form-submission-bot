@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/floorplan-wix-schema-snapshot.mjs && node scripts/floorplan-wix-phase2.mjs && node scripts/floorplan-egress-probe.mjs && node scripts/floorplan-taylor-qmi-probe.mjs && node scripts/listings-wix-phase1.mjs && node scripts/listings-engine-phase2.mjs && node scripts/listings-wellen-probe.mjs && node scripts/listings-lakewood-probe.mjs",
+    "prebuild": "node scripts/floorplan-wix-schema-snapshot.mjs && node scripts/floorplan-wix-phase2.mjs && node scripts/floorplan-egress-probe.mjs && node scripts/listings-wix-phase1.mjs && node scripts/listings-engine-phase2.mjs && node scripts/listings-wellen-probe.mjs && node scripts/listings-lakewood-probe.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

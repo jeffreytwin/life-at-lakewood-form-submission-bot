@@ -21,7 +21,7 @@
 
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 import { standardHomeType, type HomeType } from "@/lib/floorplans/standardize";
-import { orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
+import { classifyRoom, fileNameWords, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
@@ -290,9 +290,19 @@ const FRONT_EXTERIOR = /front[\s_-]?exterior|exterior[\s_-]?front/i;
  * leading with an interior). Mutates in place; exported for tests.
  */
 export function markHero(photos: GalleryInput[]): boolean {
+  // Taylor files the odd interior under Exteriors — 13304 Santini Circle
+  // leads that category with a living room — so a picture that names a
+  // room of its own is passed over for the next one, and taken only if
+  // every candidate does.
+  const namesAnInterior = (p: GalleryInput) => {
+    const room = classifyRoom(fileNameWords(p.src)) ?? classifyRoom(p.caption ?? "");
+    return room != null && room !== "exterior";
+  };
+  const exteriors = photos.filter((p) => p.kind === "exterior");
   const hero =
     photos.find((p) => FRONT_EXTERIOR.test(`${p.src} ${p.caption ?? ""}`)) ??
-    photos.find((p) => p.kind === "exterior");
+    exteriors.find((p) => !namesAnInterior(p)) ??
+    exteriors[0];
   if (!hero) return false;
   hero.kind = "primary";
   return true;
@@ -470,8 +480,13 @@ export async function extractTaylorMorrison(params: { url?: string }): Promise<N
       if (!byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
     }
   }
-  // Each base plan's gallery page: the supporting pictures, the drawings,
-  // the tour (Jeff, 2026-09-21). A quick move-in keeps its one photo.
+  // Every plan's own page: the supporting pictures, the drawings, the tour
+  // (Jeff, 2026-09-21). A quick move-in's home page files its pictures the
+  // same way, and the one photo the available-homes card gives it is
+  // whichever of the base plan's pictures Taylor put on the card — a
+  // kitchen or a living room as often as the house (Jeff, 2026-09-21), so
+  // its page is read too. A home page with no gallery leaves the home as
+  // the card had it, that card photo leading as the hero.
   const plans = [...byKey.values()];
-  return mapLimit(plans, 4, (plan) => (plan.quickMoveIn ? Promise.resolve(plan) : readTaylorPlanPage(plan)));
+  return mapLimit(plans, 4, (plan) => readTaylorPlanPage(plan));
 }
