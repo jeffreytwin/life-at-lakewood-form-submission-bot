@@ -4,9 +4,17 @@ import { logger } from "@/lib/shared/logger";
 import { applyPendingChange } from "@/lib/floorplans/writeback";
 import { groupChanges } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
+import { releaseStaleApproving } from "@/lib/floorplans/approving";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
+
+/**
+ * Plans are written for this long in one request; the rest go back to
+ * pending and come back as `remaining`. Two minutes short of maxDuration,
+ * so the plan started last still finishes inside the function's life.
+ */
+const BUDGET_MS = 180_000;
 
 /**
  * POST /api/internal/floorplans/changes/bulk
@@ -20,8 +28,17 @@ export const maxDuration = 300;
  * plan the same outcome. A plan that cannot be approved yet (a base plan
  * without a score, approval.ts) stays pending and comes back as "blocked";
  * 409 when nothing could be approved at all.
+ *
+ * Every approvable row is marked "approving" first, so the queue shows it
+ * locked (no Edit, no Reject) while the writes run, and the writes run
+ * here on the server whether or not the page that asked is still open
+ * (Jeff, 2026-09-21). Plans are written one after another within a time
+ * budget; what did not fit goes back to pending and is returned as
+ * `remaining` for the page to send again.
  */
 export async function POST(request: NextRequest) {
+  // Rows this request locked; released if it dies before writing them.
+  let locked: string[] = [];
   try {
     const body = await request.json().catch(() => null);
     const action = body?.action;
@@ -46,13 +63,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ rejected: data?.length ?? 0 });
     }
 
+    // A row a dead request left locked goes back to the queue (approving.ts).
+    await releaseStaleApproving();
+
     const { data: rows, error: loadError } = await supabase
       .from("fp_pending_changes")
       .select("id, site_id, community_id, builder_id, plan_key, change_type, status, created_at, updated_at, proposed_record")
       .in("id", ids)
       .eq("status", "pending");
     if (loadError) throw loadError;
-    if (!rows?.length) return NextResponse.json({ results: [] });
+    if (!rows?.length) return NextResponse.json({ results: [], remaining: [] });
 
     const results: { planKey: string; rows: number; status: string; error: string | null }[] = [];
     const approvable: ReturnType<typeof groupChanges<(typeof rows)[number]>> = [];
@@ -61,16 +81,31 @@ export async function POST(request: NextRequest) {
       if (blocker) results.push({ planKey: group.lead.plan_key, rows: group.rows.length, status: "blocked", error: blocker });
       else approvable.push(group);
     }
-    if (!approvable.length) return NextResponse.json({ results }, { status: 409 });
+    if (!approvable.length) return NextResponse.json({ results, remaining: [] }, { status: 409 });
 
-    const { error: approveError } = await supabase
+    // Locked first, all of them, so nothing is edited or rejected under a write.
+    locked = approvable.flatMap((g) => g.rows.map((r) => r.id));
+    const { error: lockError } = await supabase
       .from("fp_pending_changes")
-      .update({ status: "approved", updated_at: now })
-      .in("id", approvable.flatMap((g) => g.rows.map((r) => r.id)))
+      .update({ status: "approving", updated_at: now })
+      .in("id", locked)
       .eq("status", "pending");
-    if (approveError) throw approveError;
+    if (lockError) throw lockError;
 
+    const started = Date.now();
+    const remaining: string[] = [];
     for (const group of approvable) {
+      const groupIds = group.rows.map((r) => r.id);
+      if (Date.now() - started > BUDGET_MS) {
+        remaining.push(...groupIds);
+        continue;
+      }
+      const { error: approveError } = await supabase
+        .from("fp_pending_changes")
+        .update({ status: "approved", updated_at: new Date().toISOString() })
+        .in("id", groupIds)
+        .eq("status", "approving");
+      if (approveError) throw approveError;
       const outcome = await applyPendingChange(group.lead.id);
       const rest = group.rows.filter((r) => r.id !== group.lead.id);
       if (rest.length) {
@@ -93,12 +128,28 @@ export async function POST(request: NextRequest) {
       }
       results.push({ planKey: group.lead.plan_key, rows: group.rows.length, status: outcome.status, error: outcome.error ?? null });
     }
+    if (remaining.length) {
+      await supabase
+        .from("fp_pending_changes")
+        .update({ status: "pending", updated_at: new Date().toISOString() })
+        .in("id", remaining)
+        .eq("status", "approving");
+    }
     const failed = results.some((r) => r.status === "failed");
-    return NextResponse.json({ results }, { status: failed ? 502 : 200 });
+    return NextResponse.json({ results, remaining }, { status: failed ? 502 : 200 });
   } catch (error) {
     logger.error("Bulk floor plan change action failed", {
       error: error instanceof Error ? error.message : String(error),
     });
+    if (locked.length) {
+      // Whatever was locked and never written goes back to the queue now, not in ten minutes.
+      await supabase
+        .from("fp_pending_changes")
+        .update({ status: "pending", updated_at: new Date().toISOString() })
+        .in("id", locked)
+        .eq("status", "approving")
+        .then(() => undefined, () => undefined);
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

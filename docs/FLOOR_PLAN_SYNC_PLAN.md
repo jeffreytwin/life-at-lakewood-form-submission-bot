@@ -293,6 +293,43 @@ nothing. No cutover report has ever been generated.
   `campaign-text.ts`), the Floor Plans nav item shows an amber flag with
   the count, and the character says so (`CampaignAlertMonitor`). An alert
   is cleared with "Marketing updated".
+- **Approvals run on the server, and the queue shows them running** (Jeff,
+  2026-09-21): Approve and Approve All send the rows in one request (whole
+  plans per request, up to the bulk route's 200 rows). The route locks
+  them as `approving` first, so the list shows "Approving…" with no Edit,
+  Reject or overlay under a write, and writes the plans one after another
+  for up to three minutes whether or not the page stays open. The page
+  re-reads the queue every few seconds while any row is being written, so
+  each plan leaves the list as its write finishes; what did not fit in the
+  budget comes back as `remaining` and the page sends it again. A row a
+  dead request left locked goes back to pending after ten minutes.
+- **The score is picked, not typed** (Jeff, 2026-09-21): the overlay shows
+  the numbers 1 to 11 as buttons (1 to 10 as the freelancers used it, 11
+  for a plan that must come first); the PATCH route accepts nothing else.
+- **The builder's pictures can be brought back** (Jeff, 2026-09-21): each
+  queued record keeps the builder's picture sets beside the edited ones
+  (`scrapedGalleryImages`, `scrapedBlueprintImages`; `pictures.ts` stamps
+  them at queue time, the PATCH route on older rows), and the overlay's
+  "Restore the builder's pictures" puts them back and drops the gallery
+  override marks.
+- **Three fields retired from the standard schema** (Jeff, 2026-09-21):
+  `estimatedBuildTime`, `estimatedBuildTimeTags` and
+  `estimatedUpgradesOrChanges` are gone from
+  `standard-floor-plan-schema.json` (29 fields now) and the snapshot build
+  removes them from every site's V2 collection (`RETIRED_FIELDS` in
+  `scripts/floorplan-wix-schema-snapshot.mjs`).
+- **The cutover report is gone** (Jeff, 2026-09-21): its page, route,
+  module and nightly step were removed; the legacy collections stay as
+  they are, and the `fp_field_maps` table stays for the editorial port.
+- **Email Campaign has its own place in the sidebar** (Jeff, 2026-09-21),
+  with the alert count on it.
+- **Fixed 2026-09-21: quick move-in approvals failed with "Cannot access
+  't' before initialization".** The campaign-alert helper in
+  `applyPendingChange` (`writeback.ts`) was declared after the add branch
+  that called it; the Wix row and the canonical plan had been written by
+  then, so the rows were marked failed with the plan live. The helper now
+  comes first, and the 16 rows this hit (17837 Palmiste Dr, 19120 Wisdom
+  Ln and the rest) were set to synced by hand.
 
 **Known gaps, in the order they bite.**
 
@@ -397,7 +434,6 @@ NIGHTLY (GitHub Actions cron)
     apply removal guards (see Guardrails)
     upsert into pending_changes (status=pending)
   after all rows: send digest notification ("N changes await review")
-  nightly cross-collection cutover report per site (new vs legacy, field-mapped)
 
 REVIEW (Hub — this repo, on Vercel)
   "Floor Plans" view: pending changes table, filter by site/community/builder
@@ -428,7 +464,7 @@ cutover safe and future sites cheap.
 - `id` pk, `name`, `domain`
 - `wix_site_id` (Wix API keys are account-level; one key + per-site ID header)
 - `wix_collection_id` (the NEW collection)
-- `legacy_collection_id` (read-only; used only by the cutover report)
+- `legacy_collection_id` (read-only; kept for reference, the cutover report is gone)
 - `active` bool
 
 ### `fp_communities`
@@ -486,7 +522,7 @@ cutover safe and future sites cheap.
 
 ### `fp_field_maps` (per-site legacy → standard mapping)
 - `id` pk, `site_id` fk, `legacy_field_key`, `standard_field_key`, `transform` nullable
-- Powers the cutover report and the one-time editorial port.
+- Powers the one-time editorial port (the cutover report it also fed was removed on 2026-09-21).
 
 ### Settings (existing Hub settings mechanism)
 - `insert_publish_mode`: `draft` (default) | `published` — controls whether approved
@@ -630,9 +666,8 @@ private collections.
 one injected failure correctly caught and surfaced.
 
 ### Phase 6 — Cutover, per site
-- Nightly **cutover report** (running since Phase 4): new collection vs legacy,
-  field-mapped, per site. Go signal: several consecutive weeks where every
-  disagreement is a legacy error, not a pipeline error.
+- The nightly cutover report once planned here was built and then removed
+  (Jeff, 2026-09-21); the go signal is Jeff's review of the V2 collections.
 - Pre-swap checklist per site:
   1. Inventory every consumer of the legacy collection (repeaters, community pages,
      dynamic item pages, datasets, Velo code querying by ID). If dynamic floor plan

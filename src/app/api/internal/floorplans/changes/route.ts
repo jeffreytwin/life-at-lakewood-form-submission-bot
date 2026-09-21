@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { releaseStaleApproving } from "@/lib/floorplans/approving";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,14 @@ export async function GET(request: NextRequest) {
       )
       .order("created_at", { ascending: false })
       .limit(limit);
-    if (status !== "all") query = query.eq("status", status);
+    // A row being approved is still the queue's: shown locked until the write
+    // lands, or released here when the request writing it died (approving.ts).
+    if (status === "pending") {
+      await releaseStaleApproving();
+      query = query.in("status", ["pending", "approving"]);
+    } else if (status !== "all") {
+      query = query.eq("status", status);
+    }
 
     const { data, error } = await query;
     if (error) throw error;

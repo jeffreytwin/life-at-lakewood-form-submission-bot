@@ -26,6 +26,9 @@ interface ProposedRecord {
   primaryImage?: string | null;
   galleryImages?: string[];
   blueprintImages?: string[];
+  /** The builder's own picture sets, kept beside the edited ones so a picture removed by mistake can be brought back. */
+  scrapedGalleryImages?: string[];
+  scrapedBlueprintImages?: string[];
   galleryMeta?: Record<string, GalleryMeta>;
   description?: string | null;
   virtualTourUrl?: string | null;
@@ -100,6 +103,11 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
 
 const pendingIds = (g: Group) => g.rows.filter((r) => r.status === "pending").map((r) => r.id);
 const isQuickMoveIn = (g: Group) => g.lead.proposed_record?.quickMoveIn === true;
+
+/** 1 to 10 as the freelancers used it; 11 for a plan that must come first on the site (Jeff, 2026-09-21). */
+const SCORES = Array.from({ length: 11 }, (_, i) => i + 1);
+/** The bulk route takes this many rows per request. */
+const MAX_IDS_PER_REQUEST = 200;
 
 /**
  * Phones and tablets: there is no hover, and a press-and-hold starts a
@@ -239,6 +247,7 @@ export default function FloorPlansPage() {
   });
   const [savingEdit, setSavingEdit] = useState(false);
   const [creatingPlan, setCreatingPlan] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [editGallery, setEditGallery] = useState<string[]>([]);
   const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -310,6 +319,17 @@ export default function FloorPlansPage() {
     () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g)),
     [siteGroups]
   );
+  // Plans the server is writing right now; each leaves the list as its write finishes.
+  const approvingCount = useMemo(() => siteGroups.filter((g) => g.status === "approving").length, [siteGroups]);
+  const approvingInView = useMemo(() => changes.some((c) => c.status === "approving"), [changes]);
+  // The writes run on the server (Jeff, 2026-09-21), so the queue is
+  // re-read while any row is being written: after Approve All here, and
+  // again when the page is opened while a write started elsewhere still runs.
+  useEffect(() => {
+    if (!approvingInView || bulkBusy) return;
+    const timer = setInterval(fetchChanges, 5000);
+    return () => clearInterval(timer);
+  }, [approvingInView, bulkBusy, fetchChanges]);
 
   /** Approves or rejects every pending row of a plan; reports a failed write instead of hiding it in the Failed filter. */
   async function act(group: Group, action: "approve" | "reject", quiet = false): Promise<boolean> {
@@ -404,6 +424,40 @@ export default function FloorPlansPage() {
   }
 
   /**
+   * Brings back every picture the builder gave (Jeff, 2026-09-21: "in case
+   * the user accidentally removes an image"): the queue's PATCH route puts
+   * the builder's sets back on every pending row of the plan and drops the
+   * gallery override marks, and the overlay shows them at once.
+   */
+  async function restorePictures() {
+    if (!editing) return;
+    setRestoring(true);
+    try {
+      let restored: ProposedRecord | null = null;
+      for (const id of pendingIds(editing)) {
+        const res = await fetch(`/api/internal/floorplans/changes/${id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ record: { restorePictures: true } }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(`Could not restore the pictures: ${data?.error ?? `HTTP ${res.status}`}`);
+          return;
+        }
+        if (!restored) restored = (data?.proposed_record as ProposedRecord | null) ?? null;
+      }
+      if (restored) {
+        setEditGallery(restored.galleryImages?.length ? restored.galleryImages : restored.primaryImage ? [restored.primaryImage] : []);
+        setEditBlueprints(restored.blueprintImages ?? []);
+      }
+    } finally {
+      setRestoring(false);
+      fetchChanges();
+    }
+  }
+
+  /**
    * Creates the floor plan this quick move-in is built from, when the
    * builder no longer lists it (Jeff, 2026-09-20): the edits are saved
    * first so the plan takes the name typed here, then the plan is built from
@@ -437,30 +491,77 @@ export default function FloorPlansPage() {
     }
   }
 
-  /** Approves a set of plans one after another: every visible plan, or every quick move-in. */
+  /**
+   * Approves a set of plans: every visible plan, or every quick move-in.
+   * One request carries them all (whole plans per request, up to the bulk
+   * route's cap); the server locks their rows as "approving" and writes the
+   * plans one after another whether or not this page stays open (Jeff,
+   * 2026-09-21), and the list is re-read as it runs so each plan leaves as
+   * it is written. What did not fit in the server's time budget comes back
+   * as `remaining` and is sent again from here.
+   */
   async function approveGroups(list: Group[], what: string) {
     if (!confirm(`Approve ${list.length} ${what}? Approved plans are written to Wix as published items.`)) return;
+    const names = new Map<string, string>();
+    const blocked = new Set<string>();
+    const slices: string[][] = [];
+    for (const g of list) {
+      const name = g.lead.proposed_record?.name ?? g.lead.plan_key;
+      names.set(g.lead.plan_key, name);
+      if (approvalBlocker(g.kind, g.lead.proposed_record)) blocked.add(name);
+      else if (pendingIds(g).length) slices.push(pendingIds(g));
+    }
     setBulkBusy(true);
-    const failed: string[] = [];
-    const blocked: string[] = [];
+    const poll = setInterval(fetchChanges, 3000);
+    const failed = new Set<string>();
+    let requestError: string | null = null;
     try {
-      for (const g of list) {
-        const name = g.lead.proposed_record?.name ?? g.lead.plan_key;
-        if (approvalBlocker(g.kind, g.lead.proposed_record)) {
-          blocked.push(name);
-          continue;
+      while (slices.length) {
+        // Whole plans per request, so no plan's rows are split across two.
+        const ids: string[] = [];
+        while (slices.length && ids.length + slices[0].length <= MAX_IDS_PER_REQUEST) ids.push(...slices.shift()!);
+        if (!ids.length) ids.push(...slices.shift()!);
+        const res = await fetch("/api/internal/floorplans/changes/bulk", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "approve", ids }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!Array.isArray(data?.results)) {
+          requestError = data?.error ?? `HTTP ${res.status}`;
+          break;
         }
-        if (!(await act(g, "approve", true))) failed.push(name);
+        for (const r of data.results as { planKey: string; status: string; error: string | null }[]) {
+          if (r.status === "failed") failed.add(names.get(r.planKey) ?? r.planKey);
+          else if (r.status === "blocked") blocked.add(names.get(r.planKey) ?? r.planKey);
+        }
+        const remaining = (Array.isArray(data.remaining) ? data.remaining : []).filter((x: unknown): x is string => typeof x === "string");
+        if (remaining.length >= ids.length) {
+          requestError = "the server made no progress";
+          break;
+        }
+        if (remaining.length) slices.unshift(remaining);
       }
+    } catch (e) {
+      requestError = e instanceof Error ? e.message : String(e);
     } finally {
+      clearInterval(poll);
       setBulkBusy(false);
       fetchChanges();
       const notes: string[] = [];
-      if (blocked.length) notes.push(`${blocked.length} plan(s) still need something (a score, price, bedrooms, bathrooms, square feet, garages or home type) and were left pending: ${blocked.join(", ")}.`);
-      if (failed.length) notes.push(`${failed.length} plan(s) could not be written to Wix: ${failed.join(", ")}. See the Failed filter for details.`);
+      if (blocked.size) notes.push(`${blocked.size} plan(s) still need something (a score, price, bedrooms, bathrooms, square feet, garages, home type, or a floor plan for a quick move-in) and were left pending: ${[...blocked].join(", ")}.`);
+      if (failed.size) notes.push(`${failed.size} plan(s) could not be written to Wix: ${[...failed].join(", ")}. See the Failed filter for details.`);
+      if (requestError) notes.push(`The approval request failed (${requestError}). Plans the server had started are still being written and leave the list as they finish; whatever is still pending can be approved again.`);
       if (notes.length) alert(notes.join("\n"));
     }
   }
+
+  // Whether the plan in the overlay has builder pictures to bring back.
+  const editRec = editing?.lead.proposed_record ?? null;
+  const restorable =
+    (editRec?.scrapedGalleryImages ?? editRec?.galleryImages ?? []).length +
+      (editRec?.scrapedBlueprintImages ?? editRec?.blueprintImages ?? []).length >
+    0;
 
   const detailLine = (rec: ProposedRecord | null) =>
     `${rec?.priceDisplay ?? "—"}${rec?.beds ? ` · ${rec.beds} bd` : ""}${rec?.baths ? ` · ${rec.baths} ba` : ""}${rec?.sqft ? ` · ${rec.sqft.toLocaleString("en-US")} sqft` : ""}${typeof rec?.score === "number" ? ` · score ${rec.score}` : ""}`;
@@ -474,11 +575,19 @@ export default function FloorPlansPage() {
             Detected changes from builder websites, one row per plan. Approved plans are written to the
             Floor Plans V2 collection as published items.
             {" "}<a href="/dashboard/floor-plans/campaign">Email campaign →</a>
-            {" · "}<a href="/dashboard/floor-plans/cutover">Cutover report →</a>
           </p>
         </div>
-        {statusFilter === "pending" && (pendingGroups.length > 0 || pendingQuickMoveIns.length > 0) && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {statusFilter === "pending" && (approvingCount > 0 || pendingGroups.length > 0 || pendingQuickMoveIns.length > 0) && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {approvingCount > 0 && (
+              <span
+                className="text-sm"
+                style={{ color: "var(--warning, #b45309)" }}
+                title="The writes run on the server; leaving this page does not stop them. Each plan leaves the list as its write finishes."
+              >
+                Writing {approvingCount} plan{approvingCount === 1 ? "" : "s"} to Wix…
+              </span>
+            )}
             {pendingQuickMoveIns.length > 0 && (
               <button
                 className="btn btn-secondary"
@@ -665,7 +774,15 @@ export default function FloorPlansPage() {
                         {g.kind === "update" && fieldRows.length > 0 && (
                           <div className="text-muted text-sm">{fieldRows.length} field{fieldRows.length === 1 ? "" : "s"}</div>
                         )}
-                        {g.status !== "pending" && (
+                        {g.status === "approving" ? (
+                          <div
+                            className="text-sm"
+                            style={{ color: "var(--warning, #b45309)" }}
+                            title="Being written to Wix on the server; it leaves the list when done, wherever you go in the Hub."
+                          >
+                            Approving…
+                          </div>
+                        ) : g.status !== "pending" && (
                           <div className="text-muted text-sm">{g.status}</div>
                         )}
                       </td>
@@ -841,14 +958,28 @@ export default function FloorPlansPage() {
             ))}
             {!editing.lead.proposed_record?.quickMoveIn && (
               <div className="form-group">
-                <label>Score (required before approval; the sites list high scores first; 1 to 10 as the freelancers used it)</label>
-                <input
-                  className="form-input"
-                  type="number"
-                  step={1}
-                  value={editForm.score}
-                  onChange={(e) => setEditForm((f) => ({ ...f, score: e.target.value }))}
-                />
+                <label>Score (required before approval; the sites list high scores first: 1 to 10 as the freelancers used it, 11 for a plan that must come first)</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {SCORES.map((n) => {
+                    const chosen = editForm.score === String(n);
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        className={`btn ${chosen ? "btn-primary" : "btn-secondary"}`}
+                        style={{ minWidth: 40, padding: "4px 0" }}
+                        aria-pressed={chosen}
+                        title={n === 11 ? "Puts this plan first on the site" : `Score ${n}`}
+                        onClick={() => setEditForm((f) => ({ ...f, score: chosen ? "" : String(n) }))}
+                      >
+                        {n}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+                  {editForm.score ? `Score ${editForm.score}. Click it again to clear it.` : "No score yet."}
+                </div>
               </div>
             )}
             {editing.lead.proposed_record?.quickMoveIn && (
@@ -927,6 +1058,22 @@ export default function FloorPlansPage() {
                   isPhotos={false}
                   onPreview={setPreview}
                 />
+                {restorable && (
+                  <div className="form-group">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      disabled={restoring || savingEdit}
+                      onClick={restorePictures}
+                      title="Every photo and drawing the builder gave comes back, in the builder's order, saved at once."
+                    >
+                      {restoring ? "Restoring…" : "↻ Restore the builder's pictures"}
+                    </button>
+                    <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+                      For a picture removed by mistake: brings back everything the builder gave, saved at once.
+                    </div>
+                  </div>
+                )}
               </>
             )}
             <div className="modal-actions">

@@ -74,6 +74,9 @@ export interface NormalizedPlan {
   relatedPlanMatch?: RelatedPlanMatch;
   /** Base plans only: at least one quick move-in of this plan is on offer in this community. */
   hasQuickMoveIns?: boolean;
+  /** The builder's picture sets as last scraped, kept so a removed picture can be restored (pictures.ts). */
+  scrapedGalleryImages?: string[];
+  scrapedBlueprintImages?: string[];
   /**
    * The row's page address on the site, unique per site (Jeff, 2026-09-21:
    * builders share plan names, and a builder reuses a name across

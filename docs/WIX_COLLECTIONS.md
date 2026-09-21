@@ -249,7 +249,11 @@ Findings from the snapshot of 2026-09-19 19:38 UTC:
   data fields plus Parrish's three estimate fields, the blueprint gallery
   and `syncKey`, `sourceUrl`, `lastSyncedAt`. Parrish's publish and
   unpublish dates and `score1` were dropped on purpose (Wix's own
-  draft/publish state and one numeric `score` replace them).
+  draft/publish state and one numeric `score` replace them). Since
+  2026-09-21 the three estimate fields (`estimatedBuildTime`,
+  `estimatedBuildTimeTags`, `estimatedUpgradesOrChanges`) are gone from
+  the standard and the snapshot build removes them from every site's V2;
+  V2 is 29 fields with `urlSlug`.
 - **What a person sees differ in the CMS is the labels.** V2's labels are
   the raw keys ("FloorPlanImage", "RelatedFloorPlanQuickMoveInOnly"); the
   legacy collections read "Primary Image", "Primary Image + Rest of

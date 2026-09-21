@@ -84,8 +84,9 @@ export async function PATCH(
         // A person's number, not a builder value: it never counts as an override.
         const raw = String(edits.score ?? "").trim();
         const parsed = raw === "" ? null : Number(raw);
-        if (parsed !== null && !Number.isFinite(parsed)) {
-          return NextResponse.json({ error: "score must be a number" }, { status: 400 });
+        // 1 to 10 as the freelancers used it, 11 for a plan that must come first (Jeff, 2026-09-21).
+        if (parsed !== null && (!Number.isInteger(parsed) || parsed < 1 || parsed > 11)) {
+          return NextResponse.json({ error: "score must be a whole number from 1 to 11" }, { status: 400 });
         }
         record.score = parsed;
         continue;
@@ -122,14 +123,27 @@ export async function PATCH(
       record.price = Number.isFinite(parsed) ? parsed : null;
       record.priceFromHome = null;
     }
+    // The builder's own picture sets are kept beside the record (pictures.ts
+    // stamps them at queue time; older rows get them here, before any edit),
+    // so a picture removed by mistake can be brought back.
+    if (!Array.isArray(record.scrapedGalleryImages)) record.scrapedGalleryImages = [...((record.galleryImages as string[]) ?? [])];
+    if (!Array.isArray(record.scrapedBlueprintImages)) record.scrapedBlueprintImages = [...((record.blueprintImages as string[]) ?? [])];
+    if (edits.restorePictures === true) {
+      record.galleryImages = [...(record.scrapedGalleryImages as string[])];
+      record.blueprintImages = [...(record.scrapedBlueprintImages as string[])];
+      edited.delete("galleryImages");
+      edited.delete("blueprintImages");
+    }
     // Gallery edits: reorder/remove only — every entry must come from the
-    // originally scraped image set. Position 0 is the main image.
+    // builder's picture set. Position 0 is the main image.
     for (const galleryField of ["galleryImages", "blueprintImages"] as const) {
       const proposed = edits[galleryField];
       if (!Array.isArray(proposed)) continue;
       const original = new Set([
         ...((record.galleryImages as string[]) ?? []),
         ...((record.blueprintImages as string[]) ?? []),
+        ...((record.scrapedGalleryImages as string[]) ?? []),
+        ...((record.scrapedBlueprintImages as string[]) ?? []),
         ...((record.primaryImage ? [record.primaryImage as string] : [])),
       ]);
       const cleaned = proposed.filter((u): u is string => typeof u === "string" && original.has(u));

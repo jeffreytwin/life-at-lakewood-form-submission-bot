@@ -13,6 +13,8 @@
 import { readFileSync } from 'node:fs';
 
 const BRANCHES = new Set(['claude/nice-bell-3c6qob']);
+// Fields every site's Floor Plans V2 drops (Jeff, 2026-09-21); removing a field deletes its data.
+const RETIRED_FIELDS = new Set(['estimatedBuildTime', 'estimatedBuildTimeTags', 'estimatedUpgradesOrChanges']);
 const VILLAGES_COLLECTION = 'HousesforSale-DynamicPages';
 // The one schema every site's Floor Plans V2 carries (src/lib/floorplans/standard-schema.ts).
 const STANDARD = JSON.parse(
@@ -139,7 +141,8 @@ async function applyStandard(site, collectionId) {
     log(`${site.domain}/${collectionId}: cannot apply the standard, lookup ${res.status}`);
     return;
   }
-  const fields = (col.fields ?? []).map((f) => ({ ...f }));
+  const removed = (col.fields ?? []).filter((f) => RETIRED_FIELDS.has(f.key)).map((f) => f.key);
+  const fields = (col.fields ?? []).filter((f) => !RETIRED_FIELDS.has(f.key)).map((f) => ({ ...f }));
   const byKey = new Map(fields.map((f) => [f.key, f]));
   const added = [];
   const relabeled = [];
@@ -165,13 +168,13 @@ async function applyStandard(site, collectionId) {
       relabeled.push(std.key);
     }
   }
-  if (!added.length && !relabeled.length) {
+  if (!added.length && !relabeled.length && !removed.length) {
     log(`${site.domain}/${collectionId}: already carries the standard${skipped.length ? ` (left alone: ${skipped.join('; ')})` : ''}`);
     return;
   }
   const put = await wix('PUT', '/wix-data/v2/collections', site.wix_site_id, { collection: { ...col, fields } });
   log(
-    `${site.domain}/${collectionId}: apply the standard -> ${put.status}; added [${added.join(', ')}], relabeled ${relabeled.length}` +
+    `${site.domain}/${collectionId}: apply the standard -> ${put.status}; added [${added.join(', ')}], removed [${removed.join(', ')}], relabeled ${relabeled.length}` +
       (skipped.length ? `, left alone: ${skipped.join('; ')}` : '') +
       (put.status !== 200 ? ` ${(put.text ?? '').slice(0, 300)}` : '')
   );
