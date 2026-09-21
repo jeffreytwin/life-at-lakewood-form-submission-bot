@@ -73,12 +73,13 @@ describe("standardizePlan", () => {
 });
 
 describe("standardGarages", () => {
-  it("is a whole number of cars, a half rounded down, the larger end of a range", () => {
-    expect(standardGarages("2.5 car")).toBe("2 car");
+  it("keeps the builder's number of cars as it is, a half included, the larger end of a range", () => {
+    expect(standardGarages("2.5 car")).toBe("2.5 car");
     expect(standardGarages("3 car")).toBe("3 car");
     expect(standardGarages("2-3")).toBe("3 car");
     expect(standardGarages("2-car garage")).toBe("2 car");
     expect(standardGarages("0")).toBe("0 car");
+    expect(standardGarages("3.0")).toBe("3 car");
   });
 
   it("keeps a label with no number for a person to fix, and gives nothing for nothing", () => {
@@ -92,9 +93,10 @@ describe("standardGarages", () => {
       planKey: "lori", name: "Lori", price: null, priceDisplay: null, beds: "3", baths: "3", sqft: null,
       garages: "2.5 car", homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [],
     };
-    const out = standardizePlan(plan);
-    expect(out.garages).toBe("2 car");
-    expect(out.raw?.garagesRaw).toBe("2.5 car");
-    expect(standardizePlan({ ...plan, garages: "3 car" }).raw?.garagesRaw).toBeUndefined();
+    const out = standardizePlan({ ...plan, garages: "2.5-car garage" });
+    expect(out.garages).toBe("2.5 car");
+    expect(out.raw?.garagesRaw).toBe("2.5-car garage");
+    expect(standardizePlan(plan).garages).toBe("2.5 car");
+    expect(standardizePlan(plan).raw?.garagesRaw).toBeUndefined();
   });
 });
