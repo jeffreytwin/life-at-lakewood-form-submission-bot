@@ -48,6 +48,9 @@ describe("plansFromScData (Taylor Morrison)", () => {
 
   it("files plans by their collection: twin villas are attached villas, towns are townhomes, the rest single-family", () => {
     expect(homeTypeOf("Twin Villa Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Attached Villa");
+    expect(homeTypeOf("Detached Villa Golf Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Single Family Home");
+    expect(homeTypeOf("62' Golf Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Single Family Home");
+    expect(homeTypeOf("16' Collection", "The Towns at Firethorn")).toBe("Townhome");
     expect(homeTypeOf("Signature Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Single Family Home");
     expect(homeTypeOf("50' Journey Series", "Firethorn")).toBe("Single Family Home");
     expect(homeTypeOf(null, "The Towns at Firethorn")).toBe("Townhome");

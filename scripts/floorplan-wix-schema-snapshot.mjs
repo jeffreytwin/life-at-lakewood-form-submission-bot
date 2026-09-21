@@ -234,8 +234,10 @@ async function probeTaylorListing(base) {
   const data = list.status === 200 ? scDataOf(list.text) : null;
   if (!data) { log(`taylor listing ${base}: floor-plans ${list.status} scData=${!!data}`); return; }
   let firstPlanUrl = null;
+  let listed = false;
   for (const e of Object.values(data)) {
     if (!e || typeof e !== 'object' || !Array.isArray(e.floorPlansListDataArray)) continue;
+    listed = true;
     const plans = e.floorPlansListDataArray.filter((p) => p && typeof p === 'object');
     const colls = new Map((e.floorPlanCollections ?? []).map((c) => [c?.id, c?.name]));
     const byColl = new Map();
@@ -246,6 +248,12 @@ async function probeTaylorListing(base) {
     const tours = plans.filter((p) => p.virtualTourLink).length;
     log(`taylor listing ${base}: community "${e.communityName ?? ''}", ${plans.length} plans, ${tours} with a tour, collections: ${[...byColl].map(([n, c]) => `${n} x${c}`).join(' | ')}`);
     firstPlanUrl = plans[0]?.floorPlanDetailsLink?.Url ? new URL(base).origin + plans[0].floorPlanDetailsLink.Url : null;
+  }
+  if (!listed) {
+    // A wrong address on this site is a 200 page without plan data.
+    const title = list.text.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ?? '?';
+    log(`taylor listing ${base}: floor-plans 200 but no floor plan data; title="${title.slice(0, 120)}"`);
+    return;
   }
   const homes = await fetchText(`${base}/available-homes`);
   const hd = homes.status === 200 ? scDataOf(homes.text) : null;
@@ -258,6 +266,14 @@ async function probeTaylorListing(base) {
 }
 
 async function probeTaylorFind(word) {
+  // The area pages link every community the builder sells there.
+  for (const area of ['/fl/sarasota', '/fl/sarasota/venice', '/fl/sarasota/north-port', '/fl/tampa']) {
+    const page = await fetchText('https://www.taylormorrison.com' + area);
+    const hrefs = [...new Set([...page.text.matchAll(/href="([^"]*)"/gi)].map((m) => m[1]).filter((h) => normKey(h).includes(word)))];
+    log(`taylor find "${word}" on ${area}: ${page.status}, ${hrefs.length} links: ${hrefs.slice(0, 12).join(' | ')}`);
+  }
+  const robots = await fetchText('https://www.taylormorrison.com/robots.txt');
+  log(`taylor find robots.txt: ${robots.status} ${robots.text.split('\n').filter((l) => /sitemap/i.test(l)).join(' | ').slice(0, 300)}`);
   const locsOf = (xml) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
   let locs = [];
   for (const path of ['/sitemap.xml', '/sitemap_index.xml', '/sitemap-index.xml']) {
@@ -285,8 +301,10 @@ async function probeTaylorConnections() {
     'https://www.taylormorrison.com/fl/tampa/parrish/the-towns-at-firethorn',
     'https://www.taylormorrison.com/fl/sarasota/venice/esplanade-at-wellen-park',
     'https://www.taylormorrison.com/fl/sarasota/north-port/esplanade-at-wellen-park',
+    'https://www.taylormorrison.com/fl/sarasota/wellen-park/esplanade-at-wellen-park',
   ]) {
     try {
+      log(`taylor listing ${base}: probing`);
       await probeTaylorListing(base);
     } catch (err) {
       log(`taylor listing ${base}: failed ${err?.message ?? err}`);
