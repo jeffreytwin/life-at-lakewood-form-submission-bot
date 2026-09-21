@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { rewriteKey, speaksAsOwner } from "@/lib/floorplans/description";
+import { describePlan, neighborhoodName, rewriteKey, speaksAsOwner, withDescriptions } from "@/lib/floorplans/description";
+import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 describe("speaksAsOwner", () => {
   it("hears the builder speaking as the owner: we, our, us and their contractions, as whole words", () => {
@@ -23,5 +24,82 @@ describe("rewriteKey", () => {
     expect(rewriteKey("Toll Brothers", "Our Lori plan.")).not.toBe(rewriteKey("Lennar", "Our Lori plan."));
     expect(rewriteKey("Toll Brothers", "Our Lori plan.")).not.toBe(rewriteKey("Toll Brothers", "Our Lori plan"));
     expect(rewriteKey("Toll Brothers", "x")).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe("neighborhoodName", () => {
+  it("names the neighborhood the way a sentence would", () => {
+    expect(neighborhoodName("Waterside - Wild Blue")).toBe("Wild Blue");
+    expect(neighborhoodName("Esplanade at Wellen Park")).toBe("Esplanade at Wellen Park");
+    expect(neighborhoodName("Broadleaf")).toBe("Broadleaf");
+  });
+});
+
+describe("describePlan", () => {
+  const plan = (over: Partial<NormalizedPlan> = {}): NormalizedPlan => ({
+    planKey: "wyndam-iv",
+    name: "Wyndam IV",
+    price: 1929990,
+    priceDisplay: "$1,929,990",
+    beds: "4",
+    baths: "4.5",
+    sqft: 4477,
+    garages: "4 car",
+    homeType: "Single Family Home",
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl: null,
+    galleryImages: [],
+    blueprintImages: [],
+    ...over,
+  });
+
+  it("writes the plan's own sentence from its fields", () => {
+    expect(describePlan(plan(), "Waterside - Wild Blue")).toBe(
+      "The Wyndam IV is available to be built in Wild Blue. The price shown is the base price. This plan features 4 Bedrooms, 4.5 Baths and a 4 car garage."
+    );
+  });
+
+  it("leaves out a feature the builder left blank rather than writing a blank", () => {
+    expect(describePlan(plan({ garages: null }), "Broadleaf")).toBe(
+      "The Wyndam IV is available to be built in Broadleaf. The price shown is the base price. This plan features 4 Bedrooms and 4.5 Baths."
+    );
+    expect(describePlan(plan({ beds: "", baths: "", garages: null }), "Broadleaf")).toBe(
+      "The Wyndam IV is available to be built in Broadleaf. The price shown is the base price."
+    );
+  });
+});
+
+describe("withDescriptions", () => {
+  const base: NormalizedPlan = {
+    planKey: "wyndam-iv",
+    name: "Wyndam IV",
+    price: null,
+    priceDisplay: null,
+    beds: "4",
+    baths: "4",
+    sqft: null,
+    garages: "3 car",
+    homeType: null,
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl: null,
+    galleryImages: [],
+    blueprintImages: [],
+  };
+
+  it("fills in only the base plans the builder left without one", () => {
+    const [written, kept, home] = withDescriptions(
+      [
+        base,
+        { ...base, planKey: "kept", description: "The builder's own words." },
+        { ...base, planKey: "13300-santini-circle", name: "13300 Santini Circle", quickMoveIn: true },
+      ],
+      "Waterside - Wild Blue"
+    );
+    expect(written.description).toContain("is available to be built in Wild Blue");
+    expect(kept.description).toBe("The builder's own words.");
+    // A quick move-in is a house on a lot, not a plan to be built.
+    expect(home.description).toBeUndefined();
   });
 });

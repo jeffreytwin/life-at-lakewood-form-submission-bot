@@ -124,3 +124,51 @@ export async function neutralizeDescriptions(plans: NormalizedPlan[], builderNam
   }
   return out;
 }
+
+/**
+ * The neighborhood as a sentence names it: the part after the site's area
+ * where a community carries one ("Waterside - Wild Blue" is Wild Blue),
+ * the whole name otherwise ("Esplanade at Wellen Park", "Broadleaf").
+ */
+export function neighborhoodName(communityName: string): string {
+  const parts = communityName.split(/\s*-\s*/).map((p) => p.trim()).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : communityName.trim();
+}
+
+/**
+ * What a plan says for itself when its builder says nothing (Jeff,
+ * 2026-09-21: Stock Luxury Homes writes no descriptions at all). Built
+ * from the plan's own standardized fields, so it reads the way the rest of
+ * the row does. A clause whose field the builder left blank is left out
+ * rather than written as a blank, and a plan with none of the three says
+ * only where it can be built.
+ *
+ * Base plans only: a quick move-in is a house standing on a lot, not a
+ * plan "available to be built".
+ */
+export function describePlan(plan: NormalizedPlan, communityName: string): string {
+  const features: string[] = [];
+  if (plan.beds.trim()) features.push(`${plan.beds.trim()} Bedrooms`);
+  if (plan.baths.trim()) features.push(`${plan.baths.trim()} Baths`);
+  const cars = plan.garages?.match(/\d+(?:\.\d+)?/)?.[0];
+  if (cars) features.push(`a ${cars} car garage`);
+  const sentences = [
+    `The ${plan.name} is available to be built in ${neighborhoodName(communityName)}.`,
+    "The price shown is the base price.",
+  ];
+  if (features.length) {
+    const listed =
+      features.length > 1 ? `${features.slice(0, -1).join(", ")} and ${features[features.length - 1]}` : features[0];
+    sentences.push(`This plan features ${listed}.`);
+  }
+  return sentences.join(" ");
+}
+
+/** Gives every base plan the builder left without a description one of its own (describePlan). No IO. */
+export function withDescriptions(plans: NormalizedPlan[], communityName: string): NormalizedPlan[] {
+  return plans.map((plan) =>
+    plan.quickMoveIn || plan.description?.trim()
+      ? plan
+      : { ...plan, description: describePlan(plan, communityName) }
+  );
+}

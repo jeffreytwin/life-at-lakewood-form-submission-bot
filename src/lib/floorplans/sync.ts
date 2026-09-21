@@ -30,7 +30,7 @@ import { withRememberedScore } from "@/lib/floorplans/scores";
 import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
-import { neutralizeDescriptions } from "@/lib/floorplans/description";
+import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
 import { withScrapedPictures } from "@/lib/floorplans/pictures";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
@@ -329,8 +329,11 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
   }
 
-  // A description that speaks as the builder ("we", "our") is reworded in
+  // A base plan whose builder writes no description gets one from its own
+  // fields (Jeff, 2026-09-21: Stock Luxury Homes writes none at all), and
+  // a description that speaks as the builder ("we", "our") is reworded in
   // the third person, once per text (description.ts).
+  plans = withDescriptions(plans, community.name);
   plans = await neutralizeDescriptions(plans, builder.name);
 
   const { data: canonical } = await supabase
