@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
 import { describeCoverage } from "@/lib/floorplans/coverage";
-import { troubledConnections } from "@/lib/floorplans/health";
+import { attentionDismissed, troubledConnections } from "@/lib/floorplans/health";
+
+describe("attentionDismissed", () => {
+  it("holds while the dismissal is newer than the last run, and lapses when a newer run fails", () => {
+    expect(attentionDismissed({ attention_dismissed_at: null, last_run_at: "2026-09-21T18:00:00Z" })).toBe(false);
+    expect(attentionDismissed({ attention_dismissed_at: "2026-09-21T18:05:00Z", last_run_at: "2026-09-21T18:00:00Z" })).toBe(true);
+    expect(attentionDismissed({ attention_dismissed_at: "2026-09-21T18:05:00Z", last_run_at: "2026-09-21T19:00:00Z" })).toBe(false);
+    expect(attentionDismissed({ attention_dismissed_at: "2026-09-21T18:05:00Z", last_run_at: null })).toBe(true);
+  });
+});
 
 describe("describeCoverage", () => {
   it("accepts a first run, a steady count, and a modest drop", () => {
@@ -25,6 +34,7 @@ describe("troubledConnections", () => {
       fp_builder_communities: [
         { id: "a", active: true, last_run_at: "2026-09-19T18:10:00Z", last_run_status: "zero results (treated as failure)", consecutive_failures: 3, fp_communities: { name: "The Isles", fp_sites: { domain: "lifeatlakewood.com" } } },
         { id: "b", active: true, last_run_at: "2026-09-19T18:10:00Z", last_run_status: "ok: 12 plans, 0 changes queued", consecutive_failures: 0, fp_communities: { name: "Monterey", fp_sites: { domain: "lifeatlakewood.com" } } },
+        { id: "e", active: true, last_run_at: "2026-09-19T18:10:00Z", last_run_status: "error: 500", consecutive_failures: 2, attention_dismissed_at: "2026-09-19T18:30:00Z", fp_communities: { name: "Dismissed Place", fp_sites: { domain: "lifeatlakewood.com" } } },
         { id: "c", active: false, last_run_at: null, last_run_status: "error: 403", consecutive_failures: 5, fp_communities: { name: "Paused Place", fp_sites: { domain: "lifeatlakewood.com" } } },
       ],
     },

@@ -25,7 +25,7 @@ export function standardHomeType(raw: string | null | undefined): HomeType | nul
     .trim();
   if (!t) return null;
   if (isHomeType(raw?.trim())) return raw!.trim() as HomeType;
-  if (/\b(town ?homes?|town ?houses?|row ?homes?|row ?houses?)\b/.test(t)) return "Townhome";
+  if (/\b(town ?homes?|town ?houses?|towns|row ?homes?|row ?houses?)\b/.test(t)) return "Townhome";
   if (/\b(coach|carriage)\b/.test(t)) return "Coach Home";
   if (/\bcondo/.test(t) || /\b(flats?|apartments?)\b/.test(t)) return "Condominium";
   if (/\bvillas?\b|\bduplex\b|\bpaired\b|\btwin\b/.test(t)) return "Attached Villa";

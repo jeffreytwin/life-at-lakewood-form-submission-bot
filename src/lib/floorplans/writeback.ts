@@ -701,42 +701,6 @@ async function writePlanToWix(
   return { wixRecordId: item.id, asDraft, urlSlug };
 }
 
-/**
- * Writes one canonical plan to Wix again under the current rules (pictures
- * re-imported where needed and verified, drawings as PNG), keeping its
- * score and edits: the repair for a row written with a picture Wix could
- * not show. Settings → Builder Connections → Rewrite runs it per plan.
- */
-export async function rewritePlan(planId: string): Promise<{ status: "synced" | "synced_draft" | "failed"; name: string; error?: string }> {
-  const { data: plan, error } = await supabase
-    .from("fp_floor_plans")
-    .select(
-      "id, plan_key, name, wix_record_id, record, fp_sites:site_id(id, domain, wix_site_id, wix_collection_id, insert_publish_mode), fp_communities:community_id(id, name), fp_builders:builder_id(id, name)"
-    )
-    .eq("id", planId)
-    .single();
-  if (error || !plan) return { status: "failed", name: planId, error: error?.message ?? "plan not found" };
-  const site = plan.fp_sites as unknown as PlanScope["site"] | null;
-  const community = plan.fp_communities as unknown as PlanScope["community"] | null;
-  const builder = plan.fp_builders as unknown as PlanScope["builder"] | null;
-  if (!site?.wix_site_id || !site.wix_collection_id || !community || !builder) {
-    return { status: "failed", name: plan.name, error: "plan is missing its site, community or builder" };
-  }
-  const rec = { ...(plan.record as ProposedRecord), planKey: plan.plan_key };
-  try {
-    const { wixRecordId, asDraft, urlSlug } = await writePlanToWix({ site, community, builder }, plan.plan_key, rec, plan.wix_record_id);
-    await supabase
-      .from("fp_floor_plans")
-      .update({ wix_record_id: wixRecordId, record: { ...rec, urlSlug }, updated_at: new Date().toISOString() })
-      .eq("id", plan.id);
-    return { status: asDraft ? "synced_draft" : "synced", name: plan.name };
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    logger.error("Floor plan rewrite failed", { planId, name: plan.name, detail });
-    return { status: "failed", name: plan.name, error: detail };
-  }
-}
-
 export async function applyPendingChange(changeId: string): Promise<{
   status: string;
   error?: string;

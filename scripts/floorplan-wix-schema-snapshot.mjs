@@ -205,72 +205,100 @@ const scDataOf = (html) => {
   try { return raw ? JSON.parse(raw) : null; } catch { return null; }
 };
 
-/**
- * Taylor Morrison, one community and one plan of it (Jeff, 2026-09-21): what
- * the floor-plans listing carries per plan (collection, photos, tour), what
- * the available-homes listing says about each home's collection, and how
- * the plan's own page and its /gallery page hold the supporting pictures,
- * their sections ("Design Collections" must be left out) and the tour.
- */
-async function probeTaylorCommunity(base, planSlug) {
-  const list = await fetchText(`${base}/floor-plans`);
-  const listData = list.status === 200 ? scDataOf(list.text) : null;
-  log(`taylor probe ${base}/floor-plans: ${list.status} scData=${!!listData}`);
-  for (const [k, e] of Object.entries(listData ?? {})) {
-    if (!e || typeof e !== 'object') continue;
-    if (Array.isArray(e.floorPlanCollections)) log(`taylor probe collections (${k}, community "${e.communityName ?? ''}"): ${e.floorPlanCollections.map((c) => `${c?.id}=${c?.name}`).join(' | ')}`);
-    for (const p of e.floorPlansListDataArray ?? []) {
-      if (!p || typeof p !== 'object') continue;
-      log(`taylor probe plan "${p.floorPlanName}" | coll=${p.floorPlanCollection} | photos=${(p.floorPlanPhotosArray ?? []).length} | tour=${p.virtualTourLink ?? ''} | tourText=${p.floorPlanVirtualTourLinkText ?? ''} | link=${p.floorPlanDetailsLink?.Url ?? ''} | build=${p.floorPlanBuildPlanLink?.Url ?? ''}`);
+/** The categories a Taylor Morrison plan's gallery page files its pictures under, with a sample of each. */
+async function probeTaylorGallery(planUrl) {
+  for (const url of [`${planUrl}/gallery`, planUrl]) {
+    const page = await fetchText(url);
+    const d = page.status === 200 ? scDataOf(page.text) : null;
+    if (!d) { log(`taylor gallery ${url}: ${page.status} scData=${!!d}`); continue; }
+    const entry = Object.values(d).find((e) => e && typeof e === 'object' && (Array.isArray(e.imagesByCategory) || Array.isArray(e.photos)));
+    if (!entry) { log(`taylor gallery ${url}: no gallery entry`); continue; }
+    const cats = Array.isArray(entry.imagesByCategory) && entry.imagesByCategory.length ? entry.imagesByCategory : [{ title: '(photos)', images: entry.photos ?? [] }];
+    log(`taylor gallery ${url}: ${cats.map((c) => `${c?.title} x${(c?.images ?? []).length}`).join(' | ')}`);
+    for (const c of cats) {
+      const im = (c?.images ?? [])[0];
+      if (im) log(`taylor gallery ${url} "${c?.title}" first: header=${im.header ?? ''} subhead=${im.subhead ?? ''} tour=${im.vidSrc ?? ''} src=${(im.image?.src ?? '').slice(0, 160)} srcSet=${(im.image?.srcSet ?? []).map((r) => r?.descriptor).join(',')}`);
     }
-  }
-  const homes = await fetchText(`${base}/available-homes`);
-  const homesData = homes.status === 200 ? scDataOf(homes.text) : null;
-  log(`taylor probe ${base}/available-homes: ${homes.status} scData=${!!homesData}`);
-  for (const e of Object.values(homesData ?? {})) {
-    if (!e || typeof e !== 'object' || !e.availableHomesList) continue;
-    for (const section of e.availableHomesList.sections ?? []) {
-      log(`taylor probe homes section "${section?.sectionLabel}": ${(section?.homes ?? []).slice(0, 12).map((h) => `${h?.address} [plan=${h?.floorPlan} coll=${h?.floorPlanCollection} link=${h?.viewHomeLink?.Url ?? ''}]`).join(' | ')}`);
-    }
-  }
-  for (const path of [`${base}/floor-plans/${planSlug}`, `${base}/floor-plans/${planSlug}/gallery`]) {
-    const page = await fetchText(path);
-    log(`taylor probe page ${path}: ${page.status} len=${page.text.length}`);
-    if (page.status !== 200) continue;
-    const html = page.text;
-    const heads = [...html.matchAll(/<h[1-4][^>]*>([\s\S]*?)<\/h[1-4]>/gi)].map((m) => m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()).filter(Boolean);
-    log(`taylor probe headings: ${heads.slice(0, 40).join(' | ')}`);
-    const tabs = [...html.matchAll(/(?:data-tab|data-target|data-bs-target|role="tab"[^>]*>|class="[^"]*tab[^"]*"[^>]*>)\s*([^<]{2,60})</gi)].map((m) => m[1].trim());
-    log(`taylor probe tab-ish labels: ${[...new Set(tabs)].slice(0, 40).join(' | ')}`);
-    const tours = [...new Set([...html.matchAll(/https?:\/\/(?:my\.)?matterport\.com\/[^"'\s<>]+/g)].map((m) => m[0]))];
-    log(`taylor probe tours: ${tours.join(' | ')}`);
-    const media = [...new Set([...html.matchAll(/\/-\/media\/[^"'\s)?]+/g)].map((m) => m[0]))];
-    log(`taylor probe media urls: ${media.length}; first: ${media.slice(0, 10).join(' | ')}`);
-    const dcAt = html.search(/design collections?/i);
-    if (dcAt >= 0) log(`taylor probe "Design Collections" context: ${html.slice(Math.max(0, dcAt - 600), dcAt + 900).replace(/\s+/g, ' ')}`);
-    const d = scDataOf(html);
-    if (!d) { log('taylor probe: no scDataStore on this page'); continue; }
-    for (const [k, e] of Object.entries(d)) {
-      if (!e || typeof e !== 'object') continue;
-      const keys = Object.keys(e);
-      log(`taylor probe entry ${k}: keys=[${keys.slice(0, 60).join(',')}]`);
-      for (const key of keys) {
-        const v = e[key];
-        if (Array.isArray(v) && v.length && v[0] && typeof v[0] === 'object') log(`taylor probe entry ${k}.${key}: ${v.length} items, first=${JSON.stringify(v[0]).slice(0, 700)}`);
-        else if (Array.isArray(v) && v.length) log(`taylor probe entry ${k}.${key}: ${v.length} items, first=${String(v[0]).slice(0, 300)}`);
-        else if (v && typeof v === 'object') log(`taylor probe entry ${k}.${key}: object=${JSON.stringify(v).slice(0, 500)}`);
-      }
-    }
-    // The picture-carrying entries in full, in slices a log line can hold.
-    let n = 0;
-    for (const [k, e] of Object.entries(d)) {
-      const json = JSON.stringify(e);
-      if (!/-\/media\/|matterport/i.test(json)) continue;
-      log(`taylor probe dump ${k}: ${json.length} chars`);
-      for (let i = 0; i < json.length && n < 40; i += 1400, n += 1) log(`taylor probe dump ${k}[${i}]: ${json.slice(i, i + 1400)}`);
-    }
+    return;
   }
 }
+
+/**
+ * Every Taylor Morrison connection (Jeff, 2026-09-21: "analyze and fix the
+ * Taylor Morrison connections we have"): what each listing carries, and the
+ * first plan's gallery page. A community whose URL the Hub lacks is looked
+ * for in the builder's sitemap.
+ */
+async function probeTaylorListing(base) {
+  const list = await fetchText(`${base}/floor-plans`);
+  const data = list.status === 200 ? scDataOf(list.text) : null;
+  if (!data) { log(`taylor listing ${base}: floor-plans ${list.status} scData=${!!data}`); return; }
+  let firstPlanUrl = null;
+  for (const e of Object.values(data)) {
+    if (!e || typeof e !== 'object' || !Array.isArray(e.floorPlansListDataArray)) continue;
+    const plans = e.floorPlansListDataArray.filter((p) => p && typeof p === 'object');
+    const colls = new Map((e.floorPlanCollections ?? []).map((c) => [c?.id, c?.name]));
+    const byColl = new Map();
+    for (const p of plans) {
+      const name = colls.get(p.floorPlanCollection) ?? '(none)';
+      byColl.set(name, (byColl.get(name) ?? 0) + 1);
+    }
+    const tours = plans.filter((p) => p.virtualTourLink).length;
+    log(`taylor listing ${base}: community "${e.communityName ?? ''}", ${plans.length} plans, ${tours} with a tour, collections: ${[...byColl].map(([n, c]) => `${n} x${c}`).join(' | ')}`);
+    firstPlanUrl = plans[0]?.floorPlanDetailsLink?.Url ? new URL(base).origin + plans[0].floorPlanDetailsLink.Url : null;
+  }
+  const homes = await fetchText(`${base}/available-homes`);
+  const hd = homes.status === 200 ? scDataOf(homes.text) : null;
+  for (const e of Object.values(hd ?? {})) {
+    if (!e || typeof e !== 'object' || !e.availableHomesList) continue;
+    log(`taylor listing ${base}: homes ${(e.availableHomesList.sections ?? []).map((s) => `${s?.sectionLabel} x${(s?.homes ?? []).length}`).join(' | ')}`);
+  }
+  if (!hd) log(`taylor listing ${base}: available-homes ${homes.status}`);
+  if (firstPlanUrl) await probeTaylorGallery(firstPlanUrl);
+}
+
+async function probeTaylorFind(word) {
+  const locsOf = (xml) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
+  let locs = [];
+  for (const path of ['/sitemap.xml', '/sitemap_index.xml', '/sitemap-index.xml']) {
+    const res = await fetchText('https://www.taylormorrison.com' + path);
+    if (res.status !== 200) { log(`taylor find: ${path} -> ${res.status}`); continue; }
+    locs = locsOf(res.text);
+    if (locs.length && locs.every((l) => /\.xml(\?|$)/.test(l))) {
+      const children = locs;
+      locs = [];
+      for (const child of children.slice(0, 20)) {
+        const c = await fetchText(child);
+        if (c.status === 200) locs.push(...locsOf(c.text));
+      }
+    }
+    if (locs.length) break;
+  }
+  const named = locs.filter((u) => normKey(u).includes(word));
+  log(`taylor find "${word}": ${locs.length} sitemap urls, ${named.length} named for it: ${named.slice(0, 20).join(' | ')}`);
+}
+
+async function probeTaylorConnections() {
+  for (const base of [
+    'https://www.taylormorrison.com/fl/sarasota/lakewood-ranch/esplanade-at-azario-lakewood-ranch',
+    'https://www.taylormorrison.com/fl/tampa/parrish/firethorn',
+    'https://www.taylormorrison.com/fl/tampa/parrish/the-towns-at-firethorn',
+    'https://www.taylormorrison.com/fl/sarasota/venice/esplanade-at-wellen-park',
+    'https://www.taylormorrison.com/fl/sarasota/north-port/esplanade-at-wellen-park',
+  ]) {
+    try {
+      await probeTaylorListing(base);
+    } catch (err) {
+      log(`taylor listing ${base}: failed ${err?.message ?? err}`);
+    }
+  }
+  try {
+    await probeTaylorFind('wellen');
+  } catch (err) {
+    log(`taylor find failed: ${err?.message ?? err}`);
+  }
+}
+
 async function cacheItems(site, collectionId) {
   const items = [];
   for (let offset = 0; ; offset += 100) {
@@ -350,7 +378,7 @@ try {
     }
     if (site.domain === 'lifeatlakewood.com') {
       try {
-        await probeTaylorCommunity('https://www.taylormorrison.com/fl/sarasota/lakewood-ranch/esplanade-at-azario-lakewood-ranch', 'roma');
+        await probeTaylorConnections();
       } catch (err) {
         log(`${site.domain}: taylor probe failed: ${err?.message ?? err}`);
       }

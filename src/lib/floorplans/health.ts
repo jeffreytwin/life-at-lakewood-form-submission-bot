@@ -3,7 +3,8 @@
 // failed (an error, no plans, or far fewer plans than last time, see
 // coverage.ts). Shown as a banner on the Floor Plans page, since that is
 // the page a person opens; the details live in Settings → Builder
-// Connections. No IO here.
+// Connections. A dismissed one (Jeff, 2026-09-21) stays out of the banner
+// until a newer run of it fails. No IO here.
 
 export interface ConnectionHealthInput {
   id: string;
@@ -11,6 +12,8 @@ export interface ConnectionHealthInput {
   last_run_at: string | null;
   last_run_status: string | null;
   consecutive_failures: number;
+  /** When a person dismissed it from the banner; a failing run after that brings it back. */
+  attention_dismissed_at?: string | null;
   fp_communities?: { name: string; fp_sites?: { domain: string } | null } | null;
 }
 
@@ -30,13 +33,20 @@ export interface TroubledConnection {
   lastRunAt: string | null;
 }
 
-/** Active connections of active builders whose last run failed, worst first. */
+/** Whether the connection's failure was dismissed after its last run. */
+export function attentionDismissed(c: Pick<ConnectionHealthInput, "attention_dismissed_at" | "last_run_at">): boolean {
+  if (!c.attention_dismissed_at) return false;
+  if (!c.last_run_at) return true;
+  return Date.parse(c.attention_dismissed_at) >= Date.parse(c.last_run_at);
+}
+
+/** Active connections of active builders whose last run failed and nobody dismissed, worst first. */
 export function troubledConnections(builders: BuilderHealthInput[]): TroubledConnection[] {
   const out: TroubledConnection[] = [];
   for (const b of builders) {
     if (!b.active) continue;
     for (const c of b.fp_builder_communities ?? []) {
-      if (!c.active || !(c.consecutive_failures > 0)) continue;
+      if (!c.active || !(c.consecutive_failures > 0) || attentionDismissed(c)) continue;
       out.push({
         id: c.id,
         builder: b.name,
