@@ -255,16 +255,49 @@ describe("runs and open errors", () => {
 });
 
 describe("neighborhood slugs and change-log paging", () => {
+  // A create with no first tag asks whether the site uses tags at all before
+  // it inserts, so the insert is the second call. count 0 = this site does
+  // not use them, which is Longboat Key.
+  const noTagsOnSite: Result = { count: 0, data: null };
+
   it("derives the Wix slug from the page URL when none is given", async () => {
-    enqueue("ls_villages", { data: { id: "v1", name: "Bay Isles" } });
+    enqueue("ls_villages", noTagsOnSite, { data: { id: "v1", name: "Bay Isles" } });
     await createVillage({ siteId: "s1", name: "Bay Isles", page_url: " https://www.lifeinlongboatkey.com/villages/bay-isles " });
-    expect(calls[0].ops[0]).toBe('insert({"site_id":"s1","name":"Bay Isles","wix_slug":"bay-isles","page_url":"https://www.lifeinlongboatkey.com/villages/bay-isles","wix_item_id":null})');
+    expect(calls[1].ops[0]).toBe('insert({"site_id":"s1","name":"Bay Isles","wix_slug":"bay-isles","page_url":"https://www.lifeinlongboatkey.com/villages/bay-isles","wix_item_id":null,"display":{}})');
   });
 
   it("leaves the slug empty without a page URL", async () => {
-    enqueue("ls_villages", { data: { id: "v1", name: "Bay Isles" } });
+    enqueue("ls_villages", noTagsOnSite, { data: { id: "v1", name: "Bay Isles" } });
     await createVillage({ siteId: "s1", name: "Bay Isles" });
-    expect(calls[0].ops[0]).toContain('"wix_slug":null');
+    expect(calls[1].ops[0]).toContain('"wix_slug":null');
+  });
+
+  /**
+   * Jeff, 2026-09-21: Amber Creek was added from the Hub and its listing
+   * cards would have drawn with no amenity pills, because creating a
+   * neighborhood never set them and nothing in the Hub could. The first slot
+   * is now required -- but only where the location already uses tags, since
+   * Life in Longboat Key has 105 neighborhoods, no stored tags, and cards
+   * that show them anyway from somewhere else.
+   */
+  it("keeps a neighborhood off a tag-using location until it has a first tag", async () => {
+    enqueue("ls_villages", { count: 37, data: null });
+    await expect(createVillage({ siteId: "s1", name: "Amber Creek" })).rejects.toThrow("at least the first one");
+    // Refused before it wrote anything: the count query, and no insert.
+    expect(calls).toHaveLength(1);
+    expect(calls[0].ops.some((op) => op.startsWith("insert("))).toBe(false);
+  });
+
+  it("stores the tags it was given, and does not ask whether the location uses them", async () => {
+    enqueue("ls_villages", { data: { id: "v2", name: "Amber Creek" } });
+    await createVillage({
+      siteId: "s1",
+      name: "Amber Creek",
+      tags: { blueTag1: " https://static.wixstatic.com/blue.png ", greenTag1: "https://static.wixstatic.com/green.png", purpleTag1: "" },
+    });
+    expect(calls).toHaveLength(1);
+    // Trimmed, the blank slot left out, and nothing but the three tag keys.
+    expect(calls[0].ops[0]).toContain('"display":{"blueTag1":"https://static.wixstatic.com/blue.png","greenTag1":"https://static.wixstatic.com/green.png"}');
   });
 
   it("pages entries back from a timestamp and looks runs up by key", async () => {

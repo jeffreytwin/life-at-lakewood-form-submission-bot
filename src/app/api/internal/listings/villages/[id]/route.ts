@@ -4,7 +4,13 @@ import { deleteVillage, updateVillage } from "@/lib/listings/hub";
 
 export const dynamic = "force-dynamic";
 
-/** PATCH /api/internal/listings/villages/:id — Body: { name?, wix_slug?, page_url?, wix_item_id?, active? } */
+/**
+ * PATCH /api/internal/listings/villages/:id
+ * Body: { name?, wix_slug?, page_url?, wix_item_id?, active?, tags? }
+ *
+ * `tags` is { blueTag1?, purpleTag1?, greenTag1? }, merged into the village's
+ * display rather than replacing it; a blank slot clears that one pill.
+ */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const denied = authorizeEngineRequest(request);
   if (denied) return denied;

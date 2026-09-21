@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/internal/listings/villages
- * Body: { siteId, name, wix_slug?, page_url?, wix_item_id? }
+ * Body: { siteId, name, wix_slug?, page_url?, wix_item_id?, tags? }
+ *
+ * `tags` is { blueTag1?, purpleTag1?, greenTag1? }: the amenity pill images
+ * the neighborhood puts on every one of its listing cards.
  *
  * The village page itself lives on the Wix site; this records the name
  * the engine writes, the page it links to, and the row it references.

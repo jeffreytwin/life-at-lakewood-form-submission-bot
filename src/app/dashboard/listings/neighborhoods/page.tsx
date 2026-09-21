@@ -20,9 +20,21 @@ interface Term {
   exclude_term: string | null;
 }
 
+/**
+ * The amenity pills a neighborhood puts on every one of its listing cards.
+ * Whole pre-rendered images -- icon and wording baked in -- held on the
+ * neighborhood and copied onto each listing by the engine. Left to right as
+ * the card draws them.
+ */
+const TAG_SLOTS = ["blueTag1", "purpleTag1", "greenTag1"] as const;
+type TagSlot = (typeof TAG_SLOTS)[number];
+const SLOT_LABEL: Record<TagSlot, string> = { blueTag1: "First tag", purpleTag1: "Second tag", greenTag1: "Third tag" };
+type TagValues = Record<TagSlot, string>;
+
 interface Neighborhood {
   id: string;
   name: string;
+  display?: Record<string, unknown> | null;
   wix_slug: string | null;
   wix_item_id: string | null;
   page_url: string | null;
@@ -56,9 +68,20 @@ interface NeighborhoodForm {
   name: string;
   page_url: string;
   wix_item_id: string;
+  /** Sent as-is: the API merges these into the neighborhood's display. */
+  tags: TagValues;
 }
 
-const emptyForm = (): NeighborhoodForm => ({ name: "", page_url: "", wix_item_id: "" });
+const emptyTags = (): TagValues => ({ blueTag1: "", purpleTag1: "", greenTag1: "" });
+const emptyForm = (): NeighborhoodForm => ({ name: "", page_url: "", wix_item_id: "", tags: emptyTags() });
+
+/** A neighborhood's stored tags, as form values. */
+function tagsOf(v: Neighborhood): TagValues {
+  const display = (v.display ?? {}) as Record<string, unknown>;
+  const out = emptyTags();
+  for (const slot of TAG_SLOTS) if (typeof display[slot] === "string") out[slot] = display[slot] as string;
+  return out;
+}
 
 export default function ListingsNeighborhoodsPage() {
   // useSearchParams needs a Suspense boundary on a statically rendered page.
@@ -153,6 +176,26 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
   const [unmatchedError, setUnmatchedError] = useState<string | null>(null);
   const [showUnmatched, setShowUnmatched] = useState(false);
   const [attach, setAttach] = useState<Record<string, { villageId: string; term: string }>>({});
+
+  /**
+   * What each slot already draws on this site. The images are opaque URLs --
+   * the wording is inside the picture -- so the picker shows the pictures
+   * themselves rather than a dropdown of hashes nobody can read.
+   */
+  const tagOptions = ((): Record<TagSlot, string[]> => {
+    const out: Record<TagSlot, string[]> = { blueTag1: [], purpleTag1: [], greenTag1: [] };
+    for (const slot of TAG_SLOTS) {
+      const seen = new Set<string>();
+      for (const v of neighborhoods ?? []) {
+        const url = tagsOf(v)[slot];
+        if (url) seen.add(url);
+      }
+      out[slot] = [...seen].sort();
+    }
+    return out;
+  })();
+  /** A site with no tags anywhere does not use the feature; Longboat Key is one. */
+  const siteUsesTags = TAG_SLOTS.some((slot) => tagOptions[slot].length > 0);
 
   const loadUnmatched = useCallback(() => {
     return fetch(`/api/internal/listings/villages/unmatched?siteId=${encodeURIComponent(site.id)}`)
@@ -350,7 +393,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                 link to (its last part is the page slug); the Wix item id is the neighborhood&apos;s row id in the site&apos;s
                 dynamic-pages collection (the reference field).
               </p>
-              <NeighborhoodFields form={form} onChange={setForm} />
+              <NeighborhoodFields form={form} onChange={setForm} tagOptions={tagOptions} siteUsesTags={siteUsesTags} />
               <div className="modal-actions">
                 <button className="btn btn-primary" disabled={busy !== null || !form.name.trim()} onClick={createNeighborhood}>
                   {busy === "new" ? "Saving…" : "Create"}
@@ -378,11 +421,30 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                   {visible.map((v) => {
                     const input = termInputs[v.id] ?? { term: "", street: "", exclude: "" };
                     const hasListings = v.liveListings + v.stagedListings > 0;
+                    // Every listing card in a neighborhood with no first tag
+                    // draws with a gap where the pills go. It is invisible
+                    // until the neighborhood matches something, so say it here.
+                    const missingTag = siteUsesTags && !tagsOf(v).blueTag1;
                     return (
                       <tr key={v.id} style={v.active ? undefined : { opacity: 0.6 }}>
                         <td style={{ minWidth: 200 }}>
                           <strong>{v.name}</strong>
                           {!v.active && <span className="badge badge-muted" style={{ marginLeft: 6 }}>inactive</span>}
+                          {missingTag && (
+                            <span
+                              className="badge badge-warning"
+                              style={{ marginLeft: 6 }}
+                              title="No amenity tags: every listing card in this neighborhood draws without them. Edit it to pick one."
+                            >
+                              no tags
+                            </span>
+                          )}
+                          <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 4 }}>
+                            {TAG_SLOTS.map((slot) => {
+                              const url = tagsOf(v)[slot];
+                              return url ? <img key={slot} src={url} alt="" style={{ height: 20, display: "block" }} /> : null;
+                            })}
+                          </div>
                           <div className="text-muted text-sm">
                             {v.page_url ? (
                               <a href={v.page_url} target="_blank" rel="noreferrer">{v.wix_slug ?? "page"} ↗</a>
@@ -460,7 +522,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
                               onClick={() =>
                                 setEditing({
                                   id: v.id,
-                                  form: { name: v.name, page_url: v.page_url ?? "", wix_item_id: v.wix_item_id ?? "" },
+                                  form: { name: v.name, page_url: v.page_url ?? "", wix_item_id: v.wix_item_id ?? "", tags: tagsOf(v) },
                                 })
                               }
                             >
@@ -608,7 +670,7 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
               <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <h3>Edit neighborhood</h3>
                 <p className="text-muted text-sm">Renaming changes the neighborhood name every listing shows; the rows are rewritten on the next run.</p>
-                <NeighborhoodFields form={editing.form} onChange={(next) => setEditing({ id: editing.id, form: next })} />
+                <NeighborhoodFields form={editing.form} onChange={(next) => setEditing({ id: editing.id, form: next })} tagOptions={tagOptions} siteUsesTags={siteUsesTags} />
                 <div className="modal-actions">
                   <button className="btn btn-secondary" onClick={() => setEditing(null)} disabled={busy !== null}>
                     Cancel
@@ -626,7 +688,18 @@ function LocationSection({ site, open, onToggle }: { site: SiteOption; open: boo
   );
 }
 
-function NeighborhoodFields({ form, onChange }: { form: NeighborhoodForm; onChange: (form: NeighborhoodForm) => void }) {
+function NeighborhoodFields({
+  form,
+  onChange,
+  tagOptions,
+  siteUsesTags,
+}: {
+  form: NeighborhoodForm;
+  onChange: (form: NeighborhoodForm) => void;
+  tagOptions: Record<TagSlot, string[]>;
+  siteUsesTags: boolean;
+}) {
+  const setTag = (slot: TagSlot, url: string) => onChange({ ...form, tags: { ...form.tags, [slot]: url } });
   return (
     <>
       {(
@@ -641,6 +714,63 @@ function NeighborhoodFields({ form, onChange }: { form: NeighborhoodForm; onChan
           <input className="form-input" value={form[field]} onChange={(e) => onChange({ ...form, [field]: e.target.value })} />
         </div>
       ))}
+
+      {siteUsesTags && (
+        <div className="form-group">
+          <label>Amenity tags</label>
+          <p className="text-muted text-sm" style={{ marginTop: 0 }}>
+            Shown on every listing card in this neighborhood, left to right. The wording is inside each image, so pick the picture.
+            The first one is required: a card with a gap there looks broken.
+          </p>
+          {TAG_SLOTS.map((slot) => {
+            const chosen = form.tags[slot];
+            return (
+              <div key={slot} style={{ marginBottom: 14 }}>
+                <div className="text-sm" style={{ marginBottom: 6 }}>
+                  {SLOT_LABEL[slot]}
+                  {slot === "blueTag1" && <span style={{ color: "var(--danger)" }}> *</span>}
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    aria-pressed={!chosen}
+                    onClick={() => setTag(slot, "")}
+                    style={!chosen ? { borderColor: "var(--accent)" } : undefined}
+                  >
+                    None
+                  </button>
+                  {tagOptions[slot].map((url) => (
+                    <button
+                      key={url}
+                      type="button"
+                      aria-pressed={chosen === url}
+                      onClick={() => setTag(slot, url)}
+                      title="Use this tag"
+                      style={{
+                        padding: 3,
+                        background: "transparent",
+                        cursor: "pointer",
+                        borderRadius: 6,
+                        border: `2px solid ${chosen === url ? "var(--accent)" : "transparent"}`,
+                        lineHeight: 0,
+                      }}
+                    >
+                      <img src={url} alt="" style={{ height: 26, display: "block" }} />
+                    </button>
+                  ))}
+                </div>
+                <input
+                  className="form-input"
+                  placeholder="or paste an image URL for a tag this location has not used before"
+                  value={chosen}
+                  onChange={(e) => setTag(slot, e.target.value)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }
