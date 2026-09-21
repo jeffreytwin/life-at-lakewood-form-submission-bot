@@ -68,10 +68,20 @@ for (const [label, url] of PLANS) {
     );
     console.log(`FP-STOCKPLAN: ${label} says-garage=${/garage/i.test(text)} tours-in-text=${JSON.stringify(tours.slice(0, 8))}`);
     console.log(`FP-STOCKPLAN: ${label} iframes=${JSON.stringify(iframes.slice(0, 8))}`);
-    console.log(`FP-STOCKPLAN: ${label} images=${JSON.stringify(imgs.slice(0, 40))}`);
-    for (let i = 0; i < text.length; i += 1500) {
-      console.log(`FP-STOCKPLAN: ${label} text[${i}]= ${JSON.stringify(text.slice(i, i + 1500))}`);
+    console.log(`FP-STOCKPLAN: ${label} images-distilled=${imgs.length} images-raw=${(html.match(/<img\b/gi) ?? []).length}`);
+    // The tours open from JavaScript, so look where distillation cannot:
+    // every data- attribute naming a tour, and the neighbourhood of the
+    // word in the raw HTML.
+    const dataAttrs = [...new Set([...html.matchAll(/(data-[a-z-]+)=["']([^"']{6,200})["']/gi)]
+      .filter((m) => /tour|matterport|panorama|360|video|modal|lightbox|gallery/i.test(`${m[1]} ${m[2]}`))
+      .map((m) => `${m[1]}=${m[2].slice(0, 120)}`))];
+    console.log(`FP-STOCKPLAN: ${label} data-attrs=${JSON.stringify(dataAttrs.slice(0, 12))}`);
+    for (const m of [...html.matchAll(/tour/gi)].slice(0, 6)) {
+      console.log(`FP-STOCKPLAN: ${label} near-tour[${m.index}]= ${JSON.stringify(html.slice(Math.max(0, m.index - 220), m.index + 220))}`);
     }
+    // A script-held payload is invisible to the engine, so say whether one exists.
+    const jsonScripts = [...html.matchAll(/<script[^>]*type=["']application\/json["'][^>]*>([\s\S]{0,120})/gi)].map((m) => m[1].trim().slice(0, 100));
+    console.log(`FP-STOCKPLAN: ${label} json-scripts=${jsonScripts.length} ${JSON.stringify(jsonScripts.slice(0, 3))}`);
   } catch (err) {
     console.log(`FP-STOCKPLAN: ${label} -> ERROR ${String(err?.cause?.message ?? err?.message ?? err)} (${Date.now() - started}ms)`);
   }
