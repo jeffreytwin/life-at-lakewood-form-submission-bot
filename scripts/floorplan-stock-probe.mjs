@@ -75,7 +75,13 @@ for (const [slug, url] of TARGETS) {
         `${prices} prices, ${sqft} sizes, ${beds} beds, ${imgs} images, ${Date.now() - started}ms)`
     );
     console.log(`FP-STOCK: ${slug} names-community=${/wild blue/i.test(text)} names-market=${/lakewood ranch/i.test(text)} under-500-chars=${text.length < 500}`);
-    console.log(`FP-STOCK: ${slug} text= ${JSON.stringify(text.slice(0, 1200))}`);
+    // The whole distilled text, in chunks a log line survives: the counts
+    // above say a page carries plan data, but only the text says how many
+    // plans and with which fields — and that is what decides whether a run
+    // clears the 60% coverage floor against the 20 plans on the site today.
+    for (let i = 0; i < text.length; i += 1500) {
+      console.log(`FP-STOCK: ${slug} text[${i}]= ${JSON.stringify(text.slice(i, i + 1500))}`);
+    }
   } catch (err) {
     console.log(
       `FP-STOCK: ${slug} -> ERROR ${String(err?.cause?.message ?? err?.message ?? err)} (${Date.now() - started}ms)`
