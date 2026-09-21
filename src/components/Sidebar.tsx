@@ -10,7 +10,6 @@ const navItems = [
   { href: "/dashboard/leads", label: "Form Submissions", icon: "\u2630" },
   { href: "/dashboard/email-hub/drafts", label: "Email", icon: "\u2709" },
   { href: "/dashboard/floor-plans", label: "Floor Plans", icon: "\u25A6" },
-  { href: "/dashboard/floor-plans/campaign", label: "Email Campaign", icon: "\u2691" },
   { href: "/dashboard/listings", label: "Listings", icon: "\u2616" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
 ];
@@ -111,8 +110,8 @@ export default function Sidebar({
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === href;
-    // The campaign has its own item, so Floor Plans is not lit for it.
-    if (href === "/dashboard/floor-plans") return (pathname?.startsWith(href) ?? false) && !pathname?.startsWith("/dashboard/floor-plans/campaign");
+    // The campaign is a tab of Floor Plans (Jeff, 2026-09-21), so Floor
+    // Plans is lit for it too.
     return pathname?.startsWith(href) ?? false;
   }
 
@@ -151,11 +150,11 @@ export default function Sidebar({
                 {item.href === "/dashboard/floor-plans" && floorPlanCount > 0 && (
                   <span className="nav-badge">{floorPlanCount}</span>
                 )}
-                {item.href === "/dashboard/floor-plans/campaign" && campaignAlertCount > 0 && (
+                {item.href === "/dashboard/floor-plans" && campaignAlertCount > 0 && (
                   <span
                     className="nav-badge"
                     style={{ background: "var(--warning, #b45309)" }}
-                    title="Email campaign alerts: a tracked floor plan changed"
+                    title="Email campaign alerts: a tracked floor plan changed — see the Email Campaign tab"
                   >
                     {campaignAlertCount}
                   </span>

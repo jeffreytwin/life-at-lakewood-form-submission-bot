@@ -252,16 +252,47 @@ describe("wix client bulk writes", () => {
     expect(result.results[1].error?.code).toBe("WDE0109");
   });
 
-  it("throws a WixApiError carrying the retry-after on a 429", async () => {
-    respond = () => jsonResponse({ message: "throttled" }, 429, { "retry-after": "7" });
+  it("waits a throttled call out, and reports the 429 only once the tries run out", async () => {
+    // Wix throttles at 200 requests a minute and answers with an HTML
+    // page carrying no Retry-After of its own (Jeff, 2026-09-21).
+    let calls = 0;
+    respond = () => {
+      calls += 1;
+      return jsonResponse({ message: "throttled" }, 429, { "retry-after": "7" });
+    };
+    vi.useFakeTimers();
+    try {
+      const attempt = bulkInsertItems("site-1", "col", [{ _id: "MFRA1" }]).catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(60_000);
+      const error = await attempt;
 
-    const attempt = bulkInsertItems("site-1", "col", [{ _id: "MFRA1" }]);
+      expect(error).toBeInstanceOf(WixApiError);
+      expect((error as WixApiError).status).toBe(429);
+      expect((error as WixApiError).rateLimited).toBe(true);
+      expect((error as WixApiError).retryAfterSeconds).toBe(7);
+      // Tried, waited, tried again — four times over before giving up.
+      expect(calls).toBe(4);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 
-    await expect(attempt).rejects.toBeInstanceOf(WixApiError);
-    await attempt.catch((error: WixApiError) => {
-      expect(error.status).toBe(429);
-      expect(error.rateLimited).toBe(true);
-      expect(error.retryAfterSeconds).toBe(7);
-    });
+  it("gives a throttled call back its answer when Wix relents", async () => {
+    let calls = 0;
+    respond = () => {
+      calls += 1;
+      return calls === 1
+        ? jsonResponse({ message: "throttled" }, 429, { "retry-after": "2" })
+        : jsonResponse({ results: [{ itemMetadata: { _id: "MFRA1" } }] });
+    };
+    vi.useFakeTimers();
+    try {
+      const attempt = bulkInsertItems("site-1", "col", [{ _id: "MFRA1" }]);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await attempt;
+      expect(calls).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

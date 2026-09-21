@@ -51,35 +51,94 @@ function apiKey(): string {
   return key;
 }
 
+/**
+ * Wix allows 200 requests a minute per app instance, and answers the
+ * 201st with an HTML 429 carrying no Retry-After. Approving a builder's
+ * run imports a picture per request — thirty plans of twenty pictures is
+ * six hundred — so calls are spaced to stay under the rate rather than
+ * discovering it (Jeff, 2026-09-21: Ibis and Marino reached Wix with one
+ * picture each of nineteen and twenty-seven, 170 imports refused).
+ */
+const RATE_PER_MINUTE = 150;
+const SPACING_MS = 60_000 / RATE_PER_MINUTE;
+/** Calls that may go at once before the spacing bites, so a page's few reads never wait. Kept low enough that the burst and the first minute's spacing together stay under Wix's 200. */
+const BURST = 30;
+const MAX_ATTEMPTS = 4;
+
+/**
+ * When this call may go, and when the one after it may: a token bucket,
+ * written as the time the next call is owed. An idle spell earns a burst
+ * back, up to BURST calls' worth, so a page's handful of reads go at once.
+ * Pure, for the tests.
+ */
+export function nextTurn(now: number, owed: number): { at: number; owed: number } {
+  // What the client is owed may lag behind now by a burst's worth: that
+  // lag is the credit an idle spell earns.
+  const earned = Math.max(owed, now - BURST * SPACING_MS);
+  return { at: Math.max(now, earned), owed: earned + SPACING_MS };
+}
+
+// A monotonic clock, and not the one tests mock when they pin Date.now().
+let owedAt = 0;
+/** Waits for this call's turn in the rate, and takes it. */
+async function takeSlot(): Promise<void> {
+  const now = performance.now();
+  const turn = nextTurn(now, owedAt);
+  owedAt = turn.owed;
+  // Under test the rate is arithmetic, not a wait: nextTurn is tested directly.
+  if (turn.at > now && !process.env.VITEST) {
+    await new Promise((resolve) => setTimeout(resolve, turn.at - now));
+  }
+}
+
+/** How long to wait before trying again: what Wix asked for, else backing off. */
+function retryDelayMs(error: WixApiError, attempt: number): number {
+  if (error.retryAfterSeconds != null) return Math.min(error.retryAfterSeconds, 30) * 1000;
+  return Math.min(1000 * 2 ** (attempt - 1), 8000) + Math.floor(Math.random() * 250);
+}
+
 async function wixRequest<T>(
   siteId: string,
   method: string,
   path: string,
   body?: unknown
 ): Promise<T> {
-  const res = await fetch(`${WIX_API_BASE}${path}`, {
-    method,
-    headers: {
-      authorization: apiKey(),
-      "wix-site-id": siteId,
-      "content-type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(30_000),
-  });
-  const text = await res.text();
-  if (!res.ok) {
+  for (let attempt = 1; ; attempt++) {
+    await takeSlot();
+    const res = await fetch(`${WIX_API_BASE}${path}`, {
+      method,
+      headers: {
+        authorization: apiKey(),
+        "wix-site-id": siteId,
+        "content-type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(30_000),
+    });
+    const text = await res.text();
+    if (res.ok) return (text ? JSON.parse(text) : null) as T;
+
     const retryAfter = res.headers.get("retry-after");
+    const error = new WixApiError(res.status, text, `${method} ${path}`, retryAfter);
+    // A throttled or briefly broken Wix is waited out, not reported as a
+    // picture that cannot be imported.
+    const worthRetrying = error.rateLimited || res.status >= 500;
+    if (worthRetrying && attempt < MAX_ATTEMPTS) {
+      const wait = retryDelayMs(error, attempt);
+      logger.warn("Wix API request throttled; waiting", { method, path, status: res.status, retryAfter, attempt, wait });
+      await new Promise((resolve) => setTimeout(resolve, wait));
+      continue;
+    }
     logger.error("Wix API request failed", {
       method,
       path,
       status: res.status,
       retryAfter,
+      attempts: attempt,
       body: text.slice(0, 500),
     });
-    throw new WixApiError(res.status, text, `${method} ${path}`, retryAfter);
+    throw error;
   }
-  return (text ? JSON.parse(text) : null) as T;
 }
 
 export interface WixCollectionField {

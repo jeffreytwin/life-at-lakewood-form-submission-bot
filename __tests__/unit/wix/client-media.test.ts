@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { envelopeShape, listMediaFiles } from "@/lib/wix/client";
+import { envelopeShape, listMediaFiles, nextTurn } from "@/lib/wix/client";
 
 /**
  * The Media Manager folder listing is the one Wix call whose cost grows with
@@ -257,5 +257,40 @@ describe("wix media folder listing", () => {
       "files[1]",
       "nextCursor{cursors{next},hasNext:boolean}",
     ]);
+  });
+});
+
+describe("nextTurn (the Wix rate)", () => {
+  // Wix allows 200 requests a minute and answers the 201st with a 429
+  // (Jeff, 2026-09-21: 170 picture imports refused in one Approve All).
+  const SPACING = 400;
+
+  it("lets a burst through when the client has been idle", () => {
+    let owed = 0;
+    let at = 0;
+    for (let i = 0; i < 30; i++) {
+      const turn = nextTurn(100_000, owed);
+      owed = turn.owed;
+      at = turn.at;
+      expect(at).toBe(100_000); // no wait yet
+    }
+    // The burst spent, the calls after it wait their spacing.
+    owed = nextTurn(100_000, owed).owed;
+    expect(nextTurn(100_000, owed).at).toBeGreaterThan(100_000);
+  });
+
+  it("spaces the calls that follow the burst", () => {
+    let owed = 0;
+    for (let i = 0; i < 40; i++) owed = nextTurn(0, owed).owed;
+    const turn = nextTurn(0, owed);
+    // Forty calls in, each one is owed its spacing from the last.
+    expect(turn.at - 0).toBeGreaterThan(SPACING * 9);
+  });
+
+  it("earns the burst back over an idle minute", () => {
+    let owed = 0;
+    for (let i = 0; i < 200; i++) owed = nextTurn(0, owed).owed;
+    // A minute later the client may burst again rather than serving a backlog.
+    expect(nextTurn(120_000, owed).at).toBe(120_000);
   });
 });
