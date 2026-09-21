@@ -143,9 +143,70 @@ async function loadVillage(id: string): Promise<LsVillage> {
   return data as LsVillage;
 }
 
-export async function createVillage(input: { siteId: unknown; name: unknown; wix_slug?: unknown; page_url?: unknown; wix_item_id?: unknown }): Promise<LsVillage> {
+/**
+ * The amenity pills a neighborhood puts on every one of its listing cards.
+ *
+ * They are whole pre-rendered images -- the icon and the wording are baked in
+ * -- held on the village and copied onto each listing record by
+ * buildListingRecord. Three slots, left to right as the card draws them.
+ *
+ * Only these three keys are ever written from the Hub. `display` also carries
+ * villageSortHelp and the import's `order`, which the form knows nothing
+ * about, so a save merges rather than replaces.
+ */
+export const TAG_SLOTS = ["blueTag1", "purpleTag1", "greenTag1"] as const;
+export type TagSlot = (typeof TAG_SLOTS)[number];
+
+/** The tag fields of a patch, validated; undefined for any slot left alone. */
+function readTags(input: { tags?: unknown }): Partial<Record<TagSlot, string | null>> {
+  if (input.tags === undefined) return {};
+  if (input.tags === null || typeof input.tags !== "object" || Array.isArray(input.tags)) {
+    throw new HubError("tags must be an object");
+  }
+  const raw = input.tags as Record<string, unknown>;
+  const out: Partial<Record<TagSlot, string | null>> = {};
+  for (const slot of TAG_SLOTS) {
+    const value = optionalText(raw[slot], slot, 1000);
+    if (value !== undefined) out[slot] = value;
+  }
+  return out;
+}
+
+/**
+ * Whether this site puts tags on its cards at all, answered from what it
+ * already does rather than from a setting.
+ *
+ * Life in Longboat Key has 105 neighborhoods and not one stored tag, yet its
+ * cards show them -- that site gets them some other way. Requiring a first
+ * tag there would block every save on a site the rule does not apply to, so
+ * the rule turns itself on only where the site is already using the feature.
+ */
+async function siteUsesTags(siteId: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from("ls_villages")
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", siteId)
+    .not("display->>blueTag1", "is", null);
+  if (error) throw new HubError(`check site tags: ${errorMessage(error)}`, 500);
+  return (count ?? 0) > 0;
+}
+
+/** The first slot is what the leftmost pill draws; a card with a gap there looks broken. */
+async function requireFirstTag(siteId: string, merged: Record<string, unknown>): Promise<void> {
+  if (merged.blueTag1) return;
+  if (!(await siteUsesTags(siteId))) return;
+  throw new HubError("This location's listing cards show amenity tags, so a neighborhood needs at least the first one");
+}
+
+export async function createVillage(input: { siteId: unknown; name: unknown; wix_slug?: unknown; page_url?: unknown; wix_item_id?: unknown; tags?: unknown }): Promise<LsVillage> {
   if (typeof input.siteId !== "string" || !input.siteId) throw new HubError("siteId is required");
   const page_url = optionalText(input.page_url, "Page URL") ?? null;
+  // A village made here used to get no display at all, so its listings drew
+  // with no amenity pills and nothing in the Hub could add them: Amber Creek
+  // on Life At Lakewood, and three on Life At Parrish, were created that way.
+  const display: Record<string, unknown> = {};
+  for (const [slot, value] of Object.entries(readTags(input))) if (value) display[slot] = value;
+  await requireFirstTag(input.siteId, display);
   const row = {
     site_id: input.siteId,
     name: validateVillageName(input.name),
@@ -153,6 +214,7 @@ export async function createVillage(input: { siteId: unknown; name: unknown; wix
     wix_slug: optionalText(input.wix_slug, "Wix slug", 200) ?? slugOf(page_url),
     page_url,
     wix_item_id: optionalText(input.wix_item_id, "Wix item id", 200) ?? null,
+    display,
   };
   const { data, error } = await supabase.from("ls_villages").insert(row).select("*").single();
   if (error) {
@@ -162,8 +224,21 @@ export async function createVillage(input: { siteId: unknown; name: unknown; wix
   return data as LsVillage;
 }
 
-export async function updateVillage(id: string, patch: { name?: unknown; wix_slug?: unknown; page_url?: unknown; wix_item_id?: unknown; active?: unknown }): Promise<LsVillage> {
+export async function updateVillage(id: string, patch: { name?: unknown; wix_slug?: unknown; page_url?: unknown; wix_item_id?: unknown; active?: unknown; tags?: unknown }): Promise<LsVillage> {
   const updates: Record<string, unknown> = {};
+  const tags = readTags(patch);
+  if (Object.keys(tags).length) {
+    // Merge: display also holds villageSortHelp and the import's order, and
+    // the form has no idea they exist. A blank slot clears that one pill.
+    const village = await loadVillage(id);
+    const display = { ...((village.display ?? {}) as Record<string, unknown>) };
+    for (const [slot, value] of Object.entries(tags)) {
+      if (value) display[slot] = value;
+      else delete display[slot];
+    }
+    await requireFirstTag(village.site_id, display);
+    updates.display = display;
+  }
   if (patch.name !== undefined) updates.name = validateVillageName(patch.name);
   const slug = optionalText(patch.wix_slug, "Wix slug", 200);
   if (slug !== undefined) updates.wix_slug = slug;

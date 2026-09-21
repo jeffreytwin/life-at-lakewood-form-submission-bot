@@ -373,6 +373,29 @@ title }`), `virtualTourUrl`, `listingAgentName`, `listingAgentCompany`,
 `propertyAddressGoogleMaps`, `location`, `dateOfMlsPull`,
 `mlsModificationTimestamp`, `published`.
 
+**Amenity tags (`blueTag1`, `purpleTag1`, `greenTag1`).** Whole pre-rendered
+images -- the icon and the wording are inside the picture -- held on the
+NEIGHBORHOOD in `ls_villages.display` and copied onto every listing in it by
+`buildListingRecord`. That is why all three Lorraine Lakes cards carry the
+same trio. They arrived through `importVillagesFromWix`, which read them from
+each site's own Villages collection, and until 2026-09-21 nothing else ever
+wrote them: a neighborhood added from the Hub got `display = {}` and its cards
+drew bare, with no way to fix it short of SQL. Amber Creek on Life At
+Lakewood, and three on Life At Parrish, were created that way. The Hub now
+picks them, requires the first slot, and flags a neighborhood that has none.
+
+The three slots hold disjoint sets of images -- 5 + 6 + 3 distinct on Life At
+Lakewood, and 14 distinct in total -- so each slot is offered only what that
+slot already draws.
+
+**Life in Longboat Key does not use this.** It has 105 neighborhoods, not one
+stored tag, and listing cards that show tags anyway, so that site gets them
+somewhere other than the listing record -- most likely its repeater joins the
+villages collection directly. Its page code has never been read, so this is
+inference. It is the reason the required-first-tag rule asks whether a site
+already uses tags rather than applying everywhere: a blanket rule would block
+every save on all 105.
+
 ### Event kinds and alert codes (carry over unchanged)
 
 Kinds: `insert`, `update`, `delete`, `unstage`, `restage`, `promote`,
