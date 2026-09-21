@@ -33,6 +33,8 @@ import {
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
 import { virtualTourButtonFor } from "@/lib/floorplans/site-assets";
+import { alertIfTracked, basePlanOf, planRow, type CampaignTaskType } from "@/lib/floorplans/campaign";
+import { fieldChangeDetail, homeChangeDetail } from "@/lib/floorplans/campaign-text";
 import { findItemNamed, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
 import { wixImageUri } from "@/lib/listings/types";
 import { measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
@@ -47,6 +49,8 @@ const isGoneFromWix = (error: unknown): boolean => error instanceof WixApiError 
 interface ProposedRecord {
   planKey: string;
   name: string;
+  /** The row's page address on the site, given on the first write (planSlug). */
+  urlSlug?: string | null;
   price: number | null;
   priceDisplay: string | null;
   beds: string;
@@ -513,9 +517,23 @@ async function referencesFor(site: ReferenceSite, builderName: string, community
   return { builderId, villageId };
 }
 
+/**
+ * The row's page address, unique per site: the plan's name with its
+ * neighborhood and builder ("lori-the-isles-toll-brothers"), since builders
+ * share plan names and a builder reuses a name across communities (Jeff,
+ * 2026-09-21; the freelancers hand-suffixed "concord-33", "elston-plan").
+ * Given once, on the first write, and kept afterwards so a rename never
+ * moves a page.
+ */
+export function planSlug(planName: string, communityName: string, builderName: string): string {
+  return normKey(`${planName} ${communityName} ${builderName}`);
+}
+
 interface WixRowContext {
   communityName: string;
   builderName: string;
+  /** The row's page address (planSlug), the one it already has first. */
+  urlSlug: string;
   gallery: GalleryItem[];
   blueprints: GalleryItem[];
   tourImage: string | null;
@@ -532,9 +550,10 @@ interface WixRowContext {
  * village as text and as references.
  */
 function toWixData(rec: ProposedRecord, ctx: WixRowContext): WixItemData {
-  const { communityName, builderName, gallery, blueprints, tourImage, basePlanName, refs } = ctx;
+  const { communityName, builderName, gallery, blueprints, tourImage, basePlanName, refs, urlSlug } = ctx;
   const shared: WixItemData = {
     floorPlanName: rec.name,
+    urlSlug,
     floorPlanPrice: rec.priceDisplay ?? undefined,
     village: communityName,
     builder: builderName,
@@ -623,7 +642,7 @@ async function writePlanToWix(
   planKey: string,
   rec: ProposedRecord,
   wixRecordId: string | null
-): Promise<{ wixRecordId: string; asDraft: boolean }> {
+): Promise<{ wixRecordId: string; asDraft: boolean; urlSlug: string }> {
   const { site, community, builder } = scope;
   // A row with a virtual tour link carries its site's button picture (Jeff,
   // 2026-09-20; site-assets.ts), the builder's still only on a site without one.
@@ -633,6 +652,11 @@ async function writePlanToWix(
   const tourImage = rec.virtualTourUrl?.trim() ? (button ?? media.tourImage) : null;
   const ids = { site_id: site.id, community_id: community.id, builder_id: builder.id };
   const current = wixRecordId ? await getItem(site.wix_site_id, site.wix_collection_id, wixRecordId) : null;
+  // The page address the row already has wins, so a rename never moves a page.
+  const urlSlug =
+    (typeof rec.urlSlug === "string" && rec.urlSlug.trim()) ||
+    (typeof current?.data?.urlSlug === "string" && current.data.urlSlug.trim()) ||
+    planSlug(rec.name, community.name, builder.name);
   const data: WixItemData = {
     ...fieldsKeptFromWix(current?.data),
     ...toWixData(rec, {
@@ -643,6 +667,7 @@ async function writePlanToWix(
       tourImage,
       basePlanName: await basePlanNameOf(ids, rec),
       refs: await referencesFor(site, builder.name, community.name),
+      urlSlug,
     }),
   };
   const asDraft = site.insert_publish_mode !== "published";
@@ -659,11 +684,11 @@ async function writePlanToWix(
       }
       const item = await insertItem(site.wix_site_id, site.wix_collection_id, data, { asDraft: false });
       logger.info("Floor plan draft replaced by a published item", { planKey, from: wixRecordId, to: item.id });
-      return { wixRecordId: item.id, asDraft: false };
+      return { wixRecordId: item.id, asDraft: false, urlSlug };
     }
     try {
       await updateItem(site.wix_site_id, site.wix_collection_id, wixRecordId, data);
-      return { wixRecordId, asDraft: false };
+      return { wixRecordId, asDraft: false, urlSlug };
     } catch (error) {
       if (!isGoneFromWix(error)) throw error;
     }
@@ -673,7 +698,7 @@ async function writePlanToWix(
   // published, or as a draft while the site is in draft mode.
   const item = await insertItem(site.wix_site_id, site.wix_collection_id, data, { asDraft });
   if (wixRecordId) logger.info("Floor plan item was gone from Wix; re-created", { planKey, wixRecordId: item.id });
-  return { wixRecordId: item.id, asDraft };
+  return { wixRecordId: item.id, asDraft, urlSlug };
 }
 
 /**
@@ -699,10 +724,10 @@ export async function rewritePlan(planId: string): Promise<{ status: "synced" | 
   }
   const rec = { ...(plan.record as ProposedRecord), planKey: plan.plan_key };
   try {
-    const { wixRecordId, asDraft } = await writePlanToWix({ site, community, builder }, plan.plan_key, rec, plan.wix_record_id);
+    const { wixRecordId, asDraft, urlSlug } = await writePlanToWix({ site, community, builder }, plan.plan_key, rec, plan.wix_record_id);
     await supabase
       .from("fp_floor_plans")
-      .update({ wix_record_id: wixRecordId, updated_at: new Date().toISOString() })
+      .update({ wix_record_id: wixRecordId, record: { ...rec, urlSlug }, updated_at: new Date().toISOString() })
       .eq("id", plan.id);
     return { status: asDraft ? "synced_draft" : "synced", name: plan.name };
   } catch (err) {
@@ -750,7 +775,8 @@ export async function applyPendingChange(changeId: string): Promise<{
   try {
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
-      const { wixRecordId: itemId, asDraft } = await writePlanToWix({ site, community, builder }, change.plan_key, rec, null);
+      const { wixRecordId: itemId, asDraft, urlSlug } = await writePlanToWix({ site, community, builder }, change.plan_key, rec, null);
+      rec.urlSlug = urlSlug;
 
       const { data: plan, error: planError } = await supabase
         .from("fp_floor_plans")
@@ -788,36 +814,38 @@ export async function applyPendingChange(changeId: string): Promise<{
           updated_at: new Date().toISOString(),
         })
         .eq("id", changeId);
+      if (rec.quickMoveIn) {
+        await alertCampaign(
+          "other_change",
+          homeChangeDetail(rec.name, rec.relatedPlanName, `now offered${rec.priceDisplay ? ` at ${rec.priceDisplay}` : ""}`),
+          rec
+        );
+      }
       return { status: newStatus };
     }
 
-    // Starred-plan follow-up: the brand email lives outside Wix, so changes
-    // to starred plans create a persistent task after sync.
-    async function maybeCreateFollowUp(taskType: string, detail: string) {
-      if (!change.floor_plan_id) return;
-      const { data: plan } = await supabase
-        .from("fp_floor_plans")
-        .select("starred")
-        .eq("id", change.floor_plan_id)
-        .single();
-      if (!plan?.starred) return;
-      await supabase.from("fp_follow_up_tasks").insert({
-        floor_plan_id: change.floor_plan_id,
-        pending_change_id: change.id,
-        task_type: taskType,
-        detail,
-      });
+    // Email campaign (campaign.ts): a change to a tracked plan, or to a
+    // quick move-in of one, raises an alert so the marketing can follow.
+    const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
+    async function alertCampaign(taskType: CampaignTaskType, detail: string, rec: ProposedRecord | null, homeDetail?: string) {
+      const own = change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
+      await alertIfTracked(own, taskType, detail, change.id);
+      const isHome = rec?.quickMoveIn ?? own?.quick_move_in ?? false;
+      if (!isHome) return;
+      const base = await basePlanOf(scope, rec?.relatedPlanKey ?? own?.record?.relatedPlanKey ?? null);
+      await alertIfTracked(base, "other_change", homeDetail ?? detail, change.id);
     }
 
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       const rec = change.proposed_record as ProposedRecord;
-      const { wixRecordId, asDraft: recreatedAsDraft } = await writePlanToWix(
+      const { wixRecordId, asDraft: recreatedAsDraft, urlSlug } = await writePlanToWix(
         { site, community, builder },
         change.plan_key,
         rec,
         change.wix_record_id
       );
+      rec.urlSlug = urlSlug;
       await supabase
         .from("fp_floor_plans")
         .update({
@@ -839,9 +867,11 @@ export async function applyPendingChange(changeId: string): Promise<{
         .from("fp_pending_changes")
         .update({ status: updateStatus, wix_record_id: wixRecordId, updated_at: new Date().toISOString() })
         .eq("id", changeId);
-      await maybeCreateFollowUp(
+      await alertCampaign(
         change.field_changed === "price" ? "price_changed" : "other_change",
-        `${rec.name}: ${change.field_changed ?? "updated"} ${change.old_value ?? ""} → ${change.new_value ?? ""} — update the brand email`
+        fieldChangeDetail(rec.name, change.field_changed, change.old_value, change.new_value),
+        rec,
+        homeChangeDetail(rec.name, rec.relatedPlanName, `${change.field_changed ?? "updated"} ${change.old_value ?? "—"} → ${change.new_value ?? "—"}`)
       );
       return { status: updateStatus };
     }
@@ -865,9 +895,12 @@ export async function applyPendingChange(changeId: string): Promise<{
         .from("fp_pending_changes")
         .update({ status: "synced", updated_at: new Date().toISOString() })
         .eq("id", changeId);
-      await maybeCreateFollowUp(
+      const gone = change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
+      await alertCampaign(
         "plan_removed",
-        `${change.plan_key} was removed by the builder — pick a replacement for the brand email`
+        `${gone?.name ?? change.plan_key} was removed by the builder; pick a replacement`,
+        null,
+        homeChangeDetail(gone?.name ?? change.plan_key, gone?.record?.relatedPlanName, "no longer offered")
       );
       return { status: "synced" };
     }

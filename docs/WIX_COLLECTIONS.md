@@ -203,6 +203,11 @@ on Lakewood), by exact title first, then by any title or name field of the
 collection's items; a name with no item behind it is logged and the row
 goes out without the reference. An update reads the Wix item first and sends back the fields
 the pipeline does not own, because Wix's update replaces the whole item.
+Every row carries `urlSlug` ("URL Slug"), unique per site: the plan's name
+with its neighborhood and builder ("lori-the-isles-toll-brothers"), given
+on the first write and kept through renames. The V2 dynamic page should
+take its address from this field; the legacy collections derived theirs
+from `floorPlanName` and the freelancers hand-suffixed duplicates.
 A row with a virtual tour link carries its site's button picture in
 `virtualTourImageV2` (`site-assets.ts`: the one value the freelancers put on
 every legacy row of each site), never the builder's still.

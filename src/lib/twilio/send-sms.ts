@@ -356,3 +356,18 @@ export async function sendUnclearResponseNotification(
 
   return message.sid;
 }
+
+/**
+ * Texts the frontlines agent that a floor plan in the email drip campaign
+ * changed on a site (Jeff, 2026-09-21), so the marketing can be changed to
+ * match. The body is written by floorplans/campaign-text.ts.
+ */
+export async function sendCampaignAlert(frontlinesPhone: string, body: string): Promise<string> {
+  const message = await getTwilioClient().messages.create({
+    to: frontlinesPhone,
+    from: getTwilioPhoneNumber(),
+    body,
+  });
+  logger.info("Email campaign alert SMS sent", { to: frontlinesPhone, messageSid: message.sid });
+  return message.sid;
+}

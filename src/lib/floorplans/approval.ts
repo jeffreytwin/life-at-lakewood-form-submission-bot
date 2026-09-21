@@ -26,6 +26,11 @@ export function missingFields(record: unknown): string[] {
   const required = rec.quickMoveIn === true ? REQUIRED.slice(0, 1) : REQUIRED;
   const missing = required.filter(([key]) => !present(rec[key])).map(([, label]) => label);
   if (rec.quickMoveIn !== true && !(typeof rec.score === "number" && Number.isFinite(rec.score))) missing.push("a score");
+  // A quick move-in shows on the sites only under its floor plan (Jeff, 2026-09-21):
+  // one the run does not know needs a plan created from it, or named, first.
+  if (rec.quickMoveIn === true && rec.relatedPlanMatch === "unmatched") {
+    missing.push("a floor plan to file it under (create one from this home, or name one the site has)");
+  }
   // A description that speaks as the plan's owner reads as ours on the site (description.ts).
   if (typeof rec.description === "string" && speaksAsOwner(rec.description)) missing.push('a description without "we" or "our"');
   return missing;

@@ -75,6 +75,13 @@ export interface NormalizedPlan {
   /** Base plans only: at least one quick move-in of this plan is on offer in this community. */
   hasQuickMoveIns?: boolean;
   /**
+   * The row's page address on the site, unique per site (Jeff, 2026-09-21:
+   * builders share plan names, and a builder reuses a name across
+   * communities): the plan's name, its neighborhood and its builder, given
+   * on the first write and kept through renames (writeback.ts, planSlug).
+   */
+  urlSlug?: string | null;
+  /**
    * Base plans only: the quick move-in whose price the plan carries because
    * the builder gave the plan none (quick-move-ins.ts, withQuickMoveInPrices).
    * Null once the builder prices the plan itself.

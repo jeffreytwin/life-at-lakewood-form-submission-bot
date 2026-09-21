@@ -52,6 +52,13 @@ describe("approvalBlocker", () => {
     expect(approvalBlocker("add", plan({ quickMoveIn: true, description: "Contact us today." }))).toMatch(/description/);
   });
 
+  it("holds a quick move-in back until it has a floor plan to file under", () => {
+    expect(approvalBlocker("add", plan({ quickMoveIn: true, relatedPlanMatch: "unmatched", relatedPlanName: "Kingsdale" }))).toBe(
+      "needs a floor plan to file it under (create one from this home, or name one the site has) before approval (set it in the edit overlay)"
+    );
+    expect(approvalBlocker("add", plan({ quickMoveIn: true, relatedPlanMatch: "plan-id", relatedPlanKey: "lori" }))).toBeNull();
+  });
+
   it("asks only a price of a quick move-in, and nothing of a removal", () => {
     expect(approvalBlocker("add", plan({ quickMoveIn: true }))).toBeNull();
     expect(approvalBlocker("add", plan({ quickMoveIn: true, beds: "", homeType: null }))).toBeNull();
@@ -76,10 +83,10 @@ describe("the score across runs", () => {
 });
 
 describe("the standard Floor Plans V2 schema", () => {
-  it("has 31 distinct data fields, Neighborhood wording, and references to the Builders and villages collections", () => {
+  it("has 32 distinct data fields, Neighborhood wording, and references to the Builders and villages collections", () => {
     const keys = STANDARD_FLOOR_PLAN_FIELDS.map((f) => f.key);
-    expect(keys).toHaveLength(31);
-    expect(new Set(keys).size).toBe(31);
+    expect(keys).toHaveLength(32);
+    expect(new Set(keys).size).toBe(32);
     expect(keys.some((k) => k.startsWith("_"))).toBe(false);
     for (const f of STANDARD_FLOOR_PLAN_FIELDS) {
       expect(f.displayName).toBeTruthy();
@@ -90,6 +97,7 @@ describe("the standard Floor Plans V2 schema", () => {
     expect(describeFieldType(byKey.villages)).toBe("REFERENCE→HousesforSale-DynamicPages");
     expect(describeFieldType(byKey.builder1)).toBe("REFERENCE→Builders");
     expect(byKey.village.displayName).toBe("Neighborhood");
+    expect(byKey.urlSlug.type).toBe("TEXT");
     expect(byKey.score.type).toBe("NUMBER");
     expect(byKey.relatedFloorPlanQuickMoveInOnly.displayName).toBe("Related Floor Plan (Quick Move-In Only)");
   });

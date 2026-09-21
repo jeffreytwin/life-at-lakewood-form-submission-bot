@@ -5,6 +5,7 @@ import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
 import { HOME_TYPES } from "@/lib/floorplans/standardize";
+import { siteColors } from "@/app/dashboard/listings/format";
 
 interface GalleryMeta {
   caption?: string | null;
@@ -320,7 +321,7 @@ export default function FloorPlansPage() {
       action === "approve" &&
       starred &&
       (group.kind === "remove" || group.kind === "update") &&
-      !confirm(`⭐ This plan is used in a brand email. Approving this ${group.kind} will create a follow-up task to update the email. Continue?`)
+      !confirm(`⭐ This plan is in the email drip campaign. Approving this ${group.kind} raises a campaign alert and texts the frontlines agent to update the marketing. Continue?`)
     ) {
       return false;
     }
@@ -472,7 +473,8 @@ export default function FloorPlansPage() {
           <p className="text-muted">
             Detected changes from builder websites, one row per plan. Approved plans are written to the
             Floor Plans V2 collection as published items.
-            {" "}<a href="/dashboard/floor-plans/cutover">Cutover report →</a>
+            {" "}<a href="/dashboard/floor-plans/campaign">Email campaign →</a>
+            {" · "}<a href="/dashboard/floor-plans/cutover">Cutover report →</a>
           </p>
         </div>
         {statusFilter === "pending" && (pendingGroups.length > 0 || pendingQuickMoveIns.length > 0) && (
@@ -558,7 +560,8 @@ export default function FloorPlansPage() {
 
       {tasks.length > 0 && (
         <div className="card" style={{ marginBottom: 16, borderLeft: "3px solid #f59e0b" }}>
-          <strong>⭐ Brand email follow-ups</strong>
+          <strong>⚑ Email campaign alerts</strong>
+          <span className="text-muted text-sm"> · tracked floor plans that changed on a site. <a href="/dashboard/floor-plans/campaign">Email campaign →</a></span>
           {tasks.map((t) => (
             <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
               <span className="text-sm" style={{ flex: 1 }}>
@@ -616,6 +619,8 @@ export default function FloorPlansPage() {
                   const failedRow = g.rows.find((r) => r.status === "failed" && r.error_detail);
                   // A base plan waits for its score before Approve is offered (approval.ts).
                   const blocker = isPending ? approvalBlocker(g.kind, rec) : null;
+                  // Each row wears its site's colour, as the Listings section does (Jeff, 2026-09-21).
+                  const colors = siteColors(c.fp_sites?.domain);
                   return (
                     <tr
                       key={g.key}
@@ -626,10 +631,10 @@ export default function FloorPlansPage() {
                         if ((e.target as HTMLElement).closest("a, button, input, select, textarea")) return;
                         openEdit(g);
                       }}
-                      style={isPending ? { cursor: "pointer" } : undefined}
+                      style={{ ...(isPending ? { cursor: "pointer" } : {}), ...(colors ? { background: colors.tint } : {}) }}
                       title={isPending ? "Click to edit this plan before approving" : undefined}
                     >
-                      <td style={{ width: 92 }}>
+                      <td style={{ width: 92, ...(colors ? { borderLeft: `3px solid ${colors.accent}` } : {}) }}>
                         {thumb ? (
                           <button
                             type="button"
@@ -668,7 +673,7 @@ export default function FloorPlansPage() {
                         <strong>{rec?.name ?? c.plan_key}</strong>
                         {c.fp_floor_plans && (
                           <button
-                            title={c.fp_floor_plans.starred ? "Used in brand email — click to unstar" : "Star: mark as used in a brand email"}
+                            title={c.fp_floor_plans.starred ? "In the email drip campaign — click to stop tracking it" : "Track this plan in the email drip campaign"}
                             onClick={async () => {
                               await fetch(`/api/internal/floorplans/plans/${c.fp_floor_plans!.id}/star`, {
                                 method: "POST",
@@ -688,14 +693,6 @@ export default function FloorPlansPage() {
                         {rec?.quickMoveIn && (
                           <div className="text-muted text-sm">
                             Quick move-in{rec.relatedPlanName ? ` of ${rec.relatedPlanName}` : ""}
-                            {rec.relatedPlanMatch === "unmatched" && (
-                              <span
-                                style={{ color: "var(--warning)" }}
-                                title="No base plan by this name in the run. Set it in the overlay, or create the plan from this home there."
-                              >
-                                {" "}· ⚠ base plan not found
-                              </span>
-                            )}
                           </div>
                         )}
                         {!rec?.quickMoveIn && rec?.hasQuickMoveIns && (
@@ -741,12 +738,21 @@ export default function FloorPlansPage() {
                         {failedRow && (
                           <div className="text-muted text-sm">⚠ {failedRow.error_detail}</div>
                         )}
+                        {rec?.quickMoveIn && rec.relatedPlanMatch === "unmatched" && !blocker && (
+                          <div
+                            className="text-sm"
+                            style={{ color: "var(--warning, #b45309)" }}
+                            title="No base plan by this name in the run. Set it in the overlay, or create the plan from this home there."
+                          >
+                            ⚠ base plan not found
+                          </div>
+                        )}
                         {blocker && (
                           <div className="text-sm" style={{ color: "var(--warning, #b45309)" }}>⚠ {blocker}</div>
                         )}
                       </td>
                       <td className="text-sm">
-                        {c.fp_sites?.domain}
+                        <span style={colors ? { color: colors.solid } : undefined}>{c.fp_sites?.domain}</span>
                         <div className="text-muted">
                           {c.fp_communities?.name} · {c.fp_builders?.name}
                         </div>

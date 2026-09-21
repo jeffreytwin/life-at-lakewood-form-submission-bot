@@ -268,6 +268,31 @@ nothing. No cutover report has ever been generated.
   (`description.ts`, `fp_description_rewrites`, migration 070), the
   original kept in raw, and a plan whose description still speaks that way
   is held back from approval until a person fixes it.
+- **A quick move-in needs its floor plan before approval** (Jeff,
+  2026-09-21): one the run could not tie to a plan is held back until a
+  plan is created from it or an existing one is named; a name typed in the
+  overlay is checked against the site's live and queued plans and ties the
+  home when one matches (`approval.ts`, the queue's PATCH route).
+- **Every row carries a unique page address** (Jeff, 2026-09-21): builders
+  share plan names and a builder reuses a name across communities, and the
+  freelancers hand-suffixed the legacy slugs ("concord-33", "elston-plan").
+  The standard schema now has `urlSlug` ("URL Slug", added to every site's
+  V2 by the snapshot build or Settings → Sites), filled on the first write
+  with the plan's name, neighborhood and builder
+  ("lori-the-isles-toll-brothers", `planSlug` in `writeback.ts`) and kept
+  through renames so a page never moves. The V2 dynamic page should take
+  its address from this field.
+- **The email drip campaign's floor plans** (Jeff, 2026-09-21): the
+  starred plans are the tracked ones, and Floor Plans → Email campaign
+  (`/dashboard/floor-plans/campaign`) lists them with what the site shows
+  (price, specs, availability and the quick move-ins under each, page
+  address, links), adds one by name and removes one. When an approval
+  changes a tracked plan, or a quick move-in of one is added, changed or
+  removed, an alert is recorded (`fp_follow_up_tasks`, `campaign.ts`),
+  the frontlines agent is texted (`sendCampaignAlert`, the words in
+  `campaign-text.ts`), the Floor Plans nav item shows an amber flag with
+  the count, and the character says so (`CampaignAlertMonitor`). An alert
+  is cleared with "Marketing updated".
 
 **Known gaps, in the order they bite.**
 

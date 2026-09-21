@@ -1,5 +1,6 @@
 [
   { "key": "floorPlanName", "displayName": "Floor Plan Name", "type": "TEXT" },
+  { "key": "urlSlug", "displayName": "URL Slug", "type": "TEXT" },
   { "key": "floorPlanPrice", "displayName": "Floor Plan Price", "type": "TEXT" },
   { "key": "floorPlanPriceTags", "displayName": "Floor Plan Price (Tags)", "type": "ARRAY_STRING" },
   { "key": "homeType", "displayName": "Home Type", "type": "TEXT" },
