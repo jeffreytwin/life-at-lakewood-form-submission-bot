@@ -259,8 +259,10 @@ nothing. No cutover report has ever been generated.
   quick move-in shows one picture, so its overlay shows only the primary
   image (the rest of what the builder gave stays with the home, for a floor
   plan created from it, and its Wix row already carried one picture);
-  garages are a whole number of cars, a half rounded down and the larger
-  end of a range (`standardGarages`, the builder's label kept in raw); and
+  garages read "N car" with the builder's number kept as it is, a half
+  included ("2.5 car"; Jeff, 2026-09-21, reversing the rounding of the day
+  before) and the larger end of a range (`standardGarages`, the builder's
+  label kept in raw); and
   a description that speaks as the plan's owner ("we", "our", "us") is
   reworded in the third person by Claude, once per distinct text
   (`description.ts`, `fp_description_rewrites`, migration 070), the
