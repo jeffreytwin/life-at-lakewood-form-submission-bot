@@ -356,7 +356,14 @@ nothing. No cutover report has ever been generated.
   when the listing had none, and nothing from "Design Collections". The
   same reader builds stand-in plans from a home's page. Quick move-ins
   keep their one listing photo. The Azario rows queued before this carry
-  one photo each; a Run refreshes them in place.
+  one photo each; a Run refreshes them in place. The builder's pages as
+  probed on 2026-09-21: Azario 10 plans (8 with a tour; Twin Villa,
+  Detached Villa Golf, 52' and 62' Golf collections), Firethorn 37 plans
+  (26 with a tour, five Journey and Adventure series), The Towns at
+  Firethorn 4 plans (16' and 20' collections, townhomes by the community's
+  name). Esplanade at Wellen Park's address, which the Hub could not
+  discover, is set from Jeff:
+  `https://www.taylormorrison.com/fl/sarasota/englewood/esplanade-at-wellen-park`.
 
 **Known gaps, in the order they bite.**
 

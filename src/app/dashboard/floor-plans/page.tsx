@@ -1003,7 +1003,7 @@ export default function FloorPlansPage() {
                         key={n}
                         type="button"
                         className={`btn ${chosen ? "btn-primary" : "btn-secondary"}`}
-                        style={{ minWidth: 40, padding: "4px 0" }}
+                        style={{ minWidth: 40, padding: "4px 0", textAlign: "center", justifyContent: "center" }}
                         aria-pressed={chosen}
                         title={n === 11 ? "Puts this plan first on the site" : `Score ${n}`}
                         onClick={() => setEditForm((f) => ({ ...f, score: chosen ? "" : String(n) }))}

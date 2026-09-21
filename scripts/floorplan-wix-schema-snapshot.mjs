@@ -226,8 +226,7 @@ async function probeTaylorGallery(planUrl) {
 /**
  * Every Taylor Morrison connection (Jeff, 2026-09-21: "analyze and fix the
  * Taylor Morrison connections we have"): what each listing carries, and the
- * first plan's gallery page. A community whose URL the Hub lacks is looked
- * for in the builder's sitemap.
+ * first plan's gallery page.
  */
 async function probeTaylorListing(base) {
   const list = await fetchText(`${base}/floor-plans`);
@@ -265,43 +264,12 @@ async function probeTaylorListing(base) {
   if (firstPlanUrl) await probeTaylorGallery(firstPlanUrl);
 }
 
-async function probeTaylorFind(word) {
-  // The area pages link every community the builder sells there.
-  for (const area of ['/fl/sarasota', '/fl/sarasota/venice', '/fl/sarasota/north-port', '/fl/tampa']) {
-    const page = await fetchText('https://www.taylormorrison.com' + area);
-    const hrefs = [...new Set([...page.text.matchAll(/href="([^"]*)"/gi)].map((m) => m[1]).filter((h) => normKey(h).includes(word)))];
-    log(`taylor find "${word}" on ${area}: ${page.status}, ${hrefs.length} links: ${hrefs.slice(0, 12).join(' | ')}`);
-  }
-  const robots = await fetchText('https://www.taylormorrison.com/robots.txt');
-  log(`taylor find robots.txt: ${robots.status} ${robots.text.split('\n').filter((l) => /sitemap/i.test(l)).join(' | ').slice(0, 300)}`);
-  const locsOf = (xml) => [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
-  let locs = [];
-  for (const path of ['/sitemap.xml', '/sitemap_index.xml', '/sitemap-index.xml']) {
-    const res = await fetchText('https://www.taylormorrison.com' + path);
-    if (res.status !== 200) { log(`taylor find: ${path} -> ${res.status}`); continue; }
-    locs = locsOf(res.text);
-    if (locs.length && locs.every((l) => /\.xml(\?|$)/.test(l))) {
-      const children = locs;
-      locs = [];
-      for (const child of children.slice(0, 20)) {
-        const c = await fetchText(child);
-        if (c.status === 200) locs.push(...locsOf(c.text));
-      }
-    }
-    if (locs.length) break;
-  }
-  const named = locs.filter((u) => normKey(u).includes(word));
-  log(`taylor find "${word}": ${locs.length} sitemap urls, ${named.length} named for it: ${named.slice(0, 20).join(' | ')}`);
-}
-
 async function probeTaylorConnections() {
   for (const base of [
     'https://www.taylormorrison.com/fl/sarasota/lakewood-ranch/esplanade-at-azario-lakewood-ranch',
     'https://www.taylormorrison.com/fl/tampa/parrish/firethorn',
     'https://www.taylormorrison.com/fl/tampa/parrish/the-towns-at-firethorn',
-    'https://www.taylormorrison.com/fl/sarasota/venice/esplanade-at-wellen-park',
-    'https://www.taylormorrison.com/fl/sarasota/north-port/esplanade-at-wellen-park',
-    'https://www.taylormorrison.com/fl/sarasota/wellen-park/esplanade-at-wellen-park',
+    'https://www.taylormorrison.com/fl/sarasota/englewood/esplanade-at-wellen-park',
   ]) {
     try {
       log(`taylor listing ${base}: probing`);
@@ -309,11 +277,6 @@ async function probeTaylorConnections() {
     } catch (err) {
       log(`taylor listing ${base}: failed ${err?.message ?? err}`);
     }
-  }
-  try {
-    await probeTaylorFind('wellen');
-  } catch (err) {
-    log(`taylor find failed: ${err?.message ?? err}`);
   }
 }
 
