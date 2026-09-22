@@ -246,3 +246,73 @@ export function fullSize(src: string, html: string): string {
 
   return src;
 }
+
+/**
+ * A picture a page carries but never draws, with what the page says it is.
+ */
+export interface PayloadImage {
+  src: string;
+  /** True where the page itself calls it an outside view. */
+  outside: boolean;
+}
+
+// A page can hold its whole gallery in its framework's own data and draw
+// almost none of it. Perry Homes is the case this was written for (Jeff,
+// 2026-09-22): its section pages show a hero and four thumbnails, and
+// carry twenty-three photographs in the Next.js payload — every interior
+// of the model home — as media-library records that no <img> ever names.
+// Better still, each record says what it is:
+//
+//   3e:["interior"]
+//   3d:{"active":"active","type":"$3e","design_id":"3024F", ...}
+//   3c:{"public_id":"…","secure_url":"https://…jpg","metadata":"$3d", …}
+//
+// so the outside views can be told from the rooms without looking at them.
+// A record's fields are split across script chunks mid-object, hence the
+// gaps the patterns allow; and a payload may or may not be escaped, hence
+// the optional backslashes.
+
+/** `3e:["interior"]` — a word the records point at rather than repeat. */
+const PAYLOAD_LABEL = /(?:^|\\n|>)([0-9a-f]{1,4}):\[\\?"([a-z_]+)\\?"\]/gi;
+/** A record naming one of those words as its type. */
+const PAYLOAD_META = /(?:^|\\n|>)([0-9a-f]{1,4}):(\{[^{}]{0,900}?\\?"type\\?":\\?"\$([0-9a-f]{1,4})\\?"[^{}]{0,900}?\})/gi;
+/** A picture: where it lives, and the record describing it. */
+const PAYLOAD_PICTURE =
+  /\\?"secure_url\\?":\\?"(https?:(?:\\?\/){2}[^"]+?\.(?:jpe?g|png|webp|avif))\\?"[\s\S]{0,600}?\\?"metadata\\?":\\?"\$([0-9a-f]{1,4})\\?"/gi;
+
+/** The words a page uses for a picture of the outside rather than a room. */
+const OUTSIDE_LABEL = /^(exterior|elevation|aerial|amenity|community|front)$/i;
+
+/**
+ * Every picture the page's own data carries, in the order it carries
+ * them, with the outside views marked. Empty for a page that keeps no
+ * such data — which is most of them, and costs nothing to ask.
+ *
+ * This is a last resort, for a page whose galleries cannot be read off
+ * its headings: a page that draws its gallery is read from what it draws
+ * (firstGallery), which keeps a plan from inheriting the community's
+ * other pictures. Pure.
+ */
+export function payloadGallery(html: string, baseUrl: string): PayloadImage[] {
+  const labels = new Map<string, string>();
+  for (const m of html.matchAll(PAYLOAD_LABEL)) labels.set(m[1], m[2].toLowerCase());
+  const outsideOf = new Map<string, boolean>();
+  for (const m of html.matchAll(PAYLOAD_META)) {
+    outsideOf.set(m[1], OUTSIDE_LABEL.test(labels.get(m[3]) ?? ""));
+  }
+
+  const seen = new Set<string>();
+  const out: PayloadImage[] = [];
+  for (const m of html.matchAll(PAYLOAD_PICTURE)) {
+    let src = m[1].replace(/\\\//g, "/").replace(/\\/g, "");
+    try {
+      src = new URL(src, baseUrl).href;
+    } catch {
+      continue;
+    }
+    if (seen.has(src)) continue;
+    seen.add(src);
+    out.push({ src, outside: outsideOf.get(m[2]) ?? false });
+  }
+  return out;
+}

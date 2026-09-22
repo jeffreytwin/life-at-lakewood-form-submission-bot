@@ -166,3 +166,30 @@ describe("distinctKey", () => {
       .toBe("easton-iii-20011060174");
   });
 });
+
+describe("orderPhotos, with what the page said about its own pictures", () => {
+  // Perry's payload leads with the front of the house and follows it with
+  // twenty-two rooms (Jeff, 2026-09-22). Exteriors go last, so the lead
+  // has to be the first room, not the first picture.
+  const perry = (name: string) => `https://res.cloudinary.com/perryhomes/image/upload/v1/${name}.jpg`;
+  const front = perry("3413CountryViewCourt");
+  const rooms = [perry("3413CountryViewCourt-01"), perry("3413CountryViewCourt-02"), perry("3413CountryViewCourt-03")];
+
+  it("leads with a room and puts the page's own exterior last", () => {
+    const ordered = orderPhotos([front, ...rooms], new Set([front]));
+    expect(ordered.urls).toEqual([...rooms, front]);
+    expect(ordered.meta[rooms[0]].kind).toBe("primary");
+    expect(ordered.meta[front].room).toBe("exterior");
+  });
+
+  it("keeps the page's order among the rooms it says nothing about", () => {
+    const ordered = orderPhotos([front, ...rooms], new Set([front]));
+    expect(ordered.urls.slice(0, 3)).toEqual(rooms);
+  });
+
+  it("behaves as before for a gallery the page said nothing about", () => {
+    const ordered = orderPhotos([front, ...rooms]);
+    expect(ordered.urls[0]).toBe(front);
+    expect(ordered.meta[front].kind).toBe("primary");
+  });
+});

@@ -279,6 +279,28 @@ table tbody tr:last-child td {
   border-bottom: none;
 }
 
+/* A row that opens onto more rows (Builder Connections, Jeff 2026-09-22).
+   The caret is the handle, but the whole row is the target; it stays a
+   button so it can still be reached by keyboard and read out. */
+.row-caret {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 2px 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 4px;
+}
+.row-caret:hover {
+  color: var(--text-heading);
+}
+.row-caret:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* Badges */
 .badge {
   display: inline-block;
