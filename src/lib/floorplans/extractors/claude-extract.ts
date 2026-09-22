@@ -96,6 +96,25 @@ function listOf<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
+/**
+ * Whether a page that produced no plans produced no facts either. A site
+ * that draws its plans after loading (Richmond American's, 2026-09-22:
+ * every one of its pages is 240KB of shell with not one price in it)
+ * fetches fine, distills to a page of navigation, and reports nothing —
+ * which reads in the Hub as "zero results" and looks like a bad run. It
+ * is not: it is a page a fetch cannot read, and the run should say so.
+ *
+ * A price, a size or a bed count anywhere means the page did render and
+ * the empty answer is the page's own truth — a sold-out community, a list
+ * that moved. Pure.
+ */
+export function pageLooksUnrendered(text: string): boolean {
+  if (/\$\s?\d{1,3},\d{3}/.test(text)) return false;
+  if (/\d[\d,]*\s*(?:sq\.? ?ft|square feet)/i.test(text)) return false;
+  if (/\b\d(?:\.\d)?\s*(?:bd|ba|bed|bath)/i.test(text)) return false;
+  return true;
+}
+
 function distill(html: string, baseUrl: string): string {
   const abs = (u: string) => {
     try {
@@ -367,6 +386,11 @@ async function listPage(
     );
   }
   const plans = listOf<ExtractedPlan>(reported).filter((p) => p?.name?.trim());
+  if (plans.length === 0 && pageLooksUnrendered(content)) {
+    throw new Error(
+      "the page carries no prices or sizes without its scripts — it draws its plans after loading, which a fetch cannot see (this builder needs a rendering engine)"
+    );
+  }
 
   const listed = plans.map((p) => {
     const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true;
