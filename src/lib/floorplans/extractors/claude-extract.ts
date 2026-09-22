@@ -16,9 +16,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
 import { firstGallery, fullSize } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
+import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
+/**
+ * How long a rendering run may spend in the browser. Under the function's
+ * own ceiling with room for the reads and the diff that follow, so a slow
+ * community finishes with what it has rather than being killed mid-run.
+ */
+const RENDER_RUN_MS = 170_000;
 const MAX_CONTENT_CHARS = 90_000;
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
@@ -97,23 +104,22 @@ function listOf<T>(value: unknown): T[] {
 }
 
 /**
- * Whether a page that produced no plans produced no facts either. A site
- * that draws its plans after loading (Richmond American's, 2026-09-22:
- * every one of its pages is 240KB of shell with not one price in it)
- * fetches fine, distills to a page of navigation, and reports nothing —
- * which reads in the Hub as "zero results" and looks like a bad run. It
- * is not: it is a page a fetch cannot read, and the run should say so.
- *
- * A price, a size or a bed count anywhere means the page did render and
- * the empty answer is the page's own truth — a sold-out community, a list
- * that moved. Pure.
+ * How a page is got. Everything after this point is the same whichever it
+ * is — the same distillation, the same reads, the same diff — so a builder
+ * whose pages are empty without a browser differs from the rest in one
+ * line (render.ts).
  */
-export function pageLooksUnrendered(text: string): boolean {
-  if (/\$\s?\d{1,3},\d{3}/.test(text)) return false;
-  if (/\d[\d,]*\s*(?:sq\.? ?ft|square feet)/i.test(text)) return false;
-  if (/\b\d(?:\.\d)?\s*(?:bd|ba|bed|bath)/i.test(text)) return false;
-  return true;
-}
+export type PageReader = (url: string) => Promise<{ url: string; html: string }>;
+
+const fetchPage: PageReader = async (url) => {
+  const res = await fetch(url, {
+    headers: { "user-agent": UA, accept: "text/html" },
+    redirect: "follow",
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
+  return { url: res.url || url, html: await res.text() };
+};
 
 function distill(html: string, baseUrl: string): string {
   const abs = (u: string) => {
@@ -275,16 +281,14 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
  * noticed them, and a picture that belongs only to a later gallery or to
  * the virtual tours is taken back out.
  */
-export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<NormalizedPlan> {
+export async function readPlanPageWithClaude(
+  plan: NormalizedPlan,
+  read: PageReader = fetchPage
+): Promise<NormalizedPlan> {
   if (!plan.sourceUrl) return plan;
-  const res = await fetch(plan.sourceUrl, {
-    headers: { "user-agent": UA, accept: "text/html" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (!res.ok) throw new Error(`fetch ${plan.sourceUrl}: ${res.status}`);
-  const html = await res.text();
-  const content = distill(html, res.url);
+  const page_ = await read(plan.sourceUrl);
+  const html = page_.html;
+  const content = distill(html, page_.url);
   if (content.length < 500) return plan;
 
   const response = await getClient().messages.create({
@@ -302,7 +306,7 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const page = (toolUse?.input ?? {}) as ExtractedPlanPage;
 
-  const gallery = firstGallery(html, res.url);
+  const gallery = firstGallery(html, page_.url);
   const photos = [...plan.galleryImages, ...listOf<string>(page.photoImages), ...gallery.first.map((i) => i.src)]
     .filter((src) => src && !gallery.drop.has(src))
     .map((src) => fullSize(src, html))
@@ -338,15 +342,10 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
  */
 async function listPage(
   url: string,
-  opts: { hint?: string; quickMoveIns?: boolean }
+  opts: { hint?: string; quickMoveIns?: boolean; read?: PageReader }
 ): Promise<{ url: string; plans: NormalizedPlan[] }> {
-  const res = await fetch(url, {
-    headers: { "user-agent": UA, accept: "text/html" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
-  const content = distill(await res.text(), res.url);
+  const page = await (opts.read ?? fetchPage)(url);
+  const content = distill(page.html, page.url);
   if (content.length < 500) {
     throw new Error("page produced almost no text (JS-rendered? use render_claude)");
   }
@@ -409,14 +408,14 @@ async function listPage(
       // Claude reading the field too eagerly, and means nothing downstream.
       relatedPlanName: (quickMoveIn ? p.relatedPlanName?.trim() : "") || null,
       comingSoon: false,
-      sourceUrl: p.sourceUrl ?? res.url ?? url,
+      sourceUrl: p.sourceUrl ?? page.url ?? url,
       description: p.description?.trim() || null,
       virtualTourUrl: p.virtualTourUrl?.trim() || null,
       galleryImages: listOf<string>(p.photoImages),
       blueprintImages: listOf<string>(p.blueprintImages),
     };
   });
-  return { url: res.url || url, plans: listed };
+  return { url: page.url || url, plans: listed };
 }
 
 /**
@@ -434,14 +433,21 @@ export function distinctKey(plan: NormalizedPlan, taken: Set<string>): string {
   return key;
 }
 
-export async function extractWithClaude(params: {
+export interface ClaudeExtractParams {
   url?: string;
   /** A second page, where the builder lists its quick move-ins away from its plans. */
   quickMoveInUrl?: string;
   hint?: string;
-}): Promise<NormalizedPlan[]> {
-  if (!params?.url) throw new Error("fetch_claude extractor requires extractor_params.url");
-  const plansPage = await listPage(params.url, { hint: params.hint });
+}
+
+/** The generic engine. Reads every page the same way; only the reader differs. */
+async function extractPages(
+  params: ClaudeExtractParams,
+  read: PageReader,
+  atOnce: number
+): Promise<NormalizedPlan[]> {
+  if (!params?.url) throw new Error("this extractor requires extractor_params.url");
+  const plansPage = await listPage(params.url, { hint: params.hint, read });
   const listPages = new Set([params.url, plansPage.url]);
 
   // The builder's own page of homes for sale, where it keeps one away from
@@ -451,7 +457,7 @@ export async function extractWithClaude(params: {
   const homesUrl = params.quickMoveInUrl?.trim();
   if (homesUrl && homesUrl !== params.url) {
     try {
-      const homesPage = await listPage(homesUrl, { hint: params.hint, quickMoveIns: true });
+      const homesPage = await listPage(homesUrl, { hint: params.hint, quickMoveIns: true, read });
       homes = homesPage.plans;
       listPages.add(homesUrl).add(homesPage.url);
     } catch (error) {
@@ -473,10 +479,10 @@ export async function extractWithClaude(params: {
 
   // Each plan's own page, where the list linked one of its own. A page
   // that cannot be read costs that plan its extras, never the run.
-  const read = await mapLimit(listed, 4, async (plan) => {
+  const pages = await mapLimit(listed, atOnce, async (plan) => {
     if (!plan.sourceUrl || listPages.has(plan.sourceUrl)) return plan;
     try {
-      return await readPlanPageWithClaude(plan);
+      return await readPlanPageWithClaude(plan, read);
     } catch (error) {
       logger.warn("Plan page could not be read", {
         planKey: plan.planKey,
@@ -487,8 +493,29 @@ export async function extractWithClaude(params: {
     }
   });
 
-  return read.map((plan) => {
+  return pages.map((plan) => {
     const ordered = orderPhotos(plan.galleryImages);
     return { ...plan, galleryImages: ordered.urls, galleryMeta: ordered.meta };
   });
+}
+
+/** Builders whose pages carry their plans in the HTML: a plain fetch. */
+export async function extractWithClaude(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
+  return extractPages(params, fetchPage, 4);
+}
+
+/**
+ * Builders whose pages are empty without a browser (Richmond American's
+ * Blazor site, Jeff 2026-09-22). A browser is rented for the run and
+ * given back at the end of it, whether or not the run went well; fewer
+ * pages at a time, since each one is a tab rather than a request.
+ */
+export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
+  const { renderPage, closeRenderer, renderBudget } = await import("@/lib/floorplans/extractors/render");
+  renderBudget(RENDER_RUN_MS);
+  try {
+    return await extractPages(params, renderPage, 2);
+  } finally {
+    await closeRenderer();
+  }
 }

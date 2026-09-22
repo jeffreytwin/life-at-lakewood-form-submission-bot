@@ -28,6 +28,9 @@ interface Builder {
   fp_builder_communities: Connection[];
 }
 
+/** The engines that read any builder's pages; the rest are one builder's own. */
+const GENERIC_METHODS = new Set(["fetch_claude", "render_claude"]);
+
 const METHOD_LABEL: Record<string, string> = {
   json_api: "JSON API",
   fetch_claude: "HTML + Claude",
@@ -47,6 +50,7 @@ export default function BuildersSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [running, setRunning] = useState<Set<string>>(new Set());
+  const [switching, setSwitching] = useState<Set<string>>(new Set());
   const [sync, setSync] = useState<SyncSettings | null>(null);
   const [savingSync, setSavingSync] = useState(false);
 
@@ -96,6 +100,32 @@ export default function BuildersSettingsPage() {
   useEffect(() => {
     fetchBuilders();
   }, [fetchBuilders]);
+
+  /** Switches a builder between reading its pages and rendering them. */
+  const setMethod = useCallback(
+    async (b: Builder, method: "fetch_claude" | "render_claude") => {
+      setSwitching((s) => new Set(s).add(b.id));
+      try {
+        const res = await fetch(`/api/internal/floorplans/builders/${b.id}`, {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ extractionMethod: method }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          setError(body?.error ?? "Failed to change how this builder is read");
+        }
+      } finally {
+        setSwitching((s) => {
+          const next = new Set(s);
+          next.delete(b.id);
+          return next;
+        });
+        fetchBuilders();
+      }
+    },
+    [fetchBuilders]
+  );
 
   /** Sets one of a connection's page addresses; blank clears it. */
   const editConnectionUrl = useCallback(
@@ -352,6 +382,32 @@ export default function BuildersSettingsPage() {
                           ) : (
                             <span className="text-muted text-sm">{b.audit_notes?.slice(0, 60) ?? "—"}</span>
                           )}
+                          {/* Some builders draw their plans only after the
+                              page loads, and carry nothing a plain fetch can
+                              read (Richmond American's, 2026-09-22). Reading
+                              those takes a browser, which is slower, so it is
+                              off unless a builder needs it. */}
+                          {GENERIC_METHODS.has(b.extraction_method ?? "") && (
+                            <div>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ padding: "0 6px", fontSize: 11, marginTop: 4 }}
+                                disabled={switching.has(b.id)}
+                                onClick={() => setMethod(b, b.extraction_method === "render_claude" ? "fetch_claude" : "render_claude")}
+                                title={
+                                  b.extraction_method === "render_claude"
+                                    ? "Go back to reading the page as it arrives — faster, and enough for most builders"
+                                    : "Open the pages in a browser and wait for them to fill in — for builders whose pages are empty without it"
+                                }
+                              >
+                                {switching.has(b.id)
+                                  ? "saving…"
+                                  : b.extraction_method === "render_claude"
+                                    ? "stop using a browser"
+                                    : "use a browser"}
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td>
                           <select
@@ -427,7 +483,7 @@ export default function BuildersSettingsPage() {
                                   page of their own (Stock's /inventory/). Only
                                   the generic Claude engine reads a second page;
                                   the bespoke ones get homes from their API. */}
-                              {b.extraction_method === "fetch_claude" && (
+                              {GENERIC_METHODS.has(b.extraction_method ?? "") && (
                                 <div>
                                   {c.extractor_params?.quickMoveInUrl ? (
                                     <a
