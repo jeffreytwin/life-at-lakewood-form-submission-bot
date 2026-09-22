@@ -101,6 +101,16 @@ export default function BuildersSettingsPage() {
     fetchBuilders();
   }, [fetchBuilders]);
 
+  /** Opens or closes a builder's communities. */
+  const toggleExpanded = useCallback((builderId: string) => {
+    setExpanded((open) => {
+      const next = new Set(open);
+      if (next.has(builderId)) next.delete(builderId);
+      else next.add(builderId);
+      return next;
+    });
+  }, []);
+
   /** Switches a builder between reading its pages and rendering them. */
   const setMethod = useCallback(
     async (b: Builder, method: "fetch_claude" | "render_claude") => {
@@ -345,11 +355,11 @@ export default function BuildersSettingsPage() {
             <table>
               <thead>
                 <tr>
+                  <th style={{ width: 28 }}></th>
                   <th>Builder</th>
                   <th>Method</th>
                   <th title="What every plan of this builder is, whatever its pages say. Blank leaves it to the pages.">Home type</th>
                   <th>Health</th>
-                  <th>Communities</th>
                   <th>Last run</th>
                   <th></th>
                 </tr>
@@ -365,9 +375,34 @@ export default function BuildersSettingsPage() {
                     .pop();
                   return (
                     <Fragment key={b.id}>
-                      <tr style={{ opacity: b.active ? 1 : 0.55 }}>
+                      <tr
+                        style={{ opacity: b.active ? 1 : 0.55, cursor: "pointer" }}
+                        onClick={(e) => {
+                          // Anywhere on the row opens it, except the things
+                          // that do something of their own (Jeff, 2026-09-22),
+                          // and except when someone was only selecting text.
+                          if ((e.target as HTMLElement).closest("button, a, select, input, label")) return;
+                          if (window.getSelection()?.toString()) return;
+                          toggleExpanded(b.id);
+                        }}
+                      >
+                        <td style={{ width: 28, paddingRight: 0 }}>
+                          <button
+                            className="row-caret"
+                            aria-expanded={isOpen}
+                            aria-label={`${isOpen ? "Hide" : "Show"} ${b.name}'s communities`}
+                            title={`${b.fp_builder_communities.length} ${b.fp_builder_communities.length === 1 ? "community" : "communities"}`}
+                            onClick={() => toggleExpanded(b.id)}
+                          >
+                            {isOpen ? "▾" : "▸"}
+                          </button>
+                        </td>
                         <td>
                           <strong>{b.name}</strong>
+                          <span className="text-muted text-sm">
+                            {" "}· {b.fp_builder_communities.length}{" "}
+                            {b.fp_builder_communities.length === 1 ? "community" : "communities"}
+                          </span>
                           {b.base_url && (
                             <div>
                               <a href={b.base_url} target="_blank" rel="noreferrer" className="text-muted text-sm">
@@ -426,22 +461,6 @@ export default function BuildersSettingsPage() {
                         <td>
                           <span className={`badge ${h.cls}`}>{h.label}</span>
                         </td>
-                        <td>
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: "2px 10px" }}
-                            onClick={() =>
-                              setExpanded((s) => {
-                                const next = new Set(s);
-                                if (next.has(b.id)) next.delete(b.id);
-                                else next.add(b.id);
-                                return next;
-                              })
-                            }
-                          >
-                            {b.fp_builder_communities.length} {isOpen ? "▴" : "▾"}
-                          </button>
-                        </td>
                         <td className="text-muted text-sm">
                           {lastRun ? new Date(lastRun).toLocaleString() : "never"}
                         </td>
@@ -454,7 +473,8 @@ export default function BuildersSettingsPage() {
                       {isOpen &&
                         b.fp_builder_communities.map((c) => (
                           <tr key={c.id} style={{ opacity: b.active && c.active ? 1 : 0.55 }}>
-                            <td className="text-sm" style={{ paddingLeft: 28 }}>
+                            <td style={{ width: 28 }}></td>
+                            <td className="text-sm">
                               ↳ {c.fp_communities?.name}
                               <span className="text-muted"> · {c.fp_communities?.fp_sites?.domain}</span>
                               <div>
