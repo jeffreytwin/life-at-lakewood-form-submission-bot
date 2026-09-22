@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { describePlan, neighborhoodName, rewriteKey, speaksAsOwner, withDescriptions } from "@/lib/floorplans/description";
+import {
+  describePlan,
+  looksLikeSpecList,
+  neighborhoodName,
+  rewriteKey,
+  speaksAsOwner,
+  withDescriptions,
+} from "@/lib/floorplans/description";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 describe("speaksAsOwner", () => {
@@ -70,6 +77,29 @@ describe("describePlan", () => {
   });
 });
 
+describe("looksLikeSpecList", () => {
+  it("knows the spec line a page prints under the plan name", () => {
+    expect(
+      looksLikeSpecList(
+        "Four Bedroom (Opt. Bonus Room), Four Full and 1/2 Bath, Great Room, Dining Room, Two 2-Car Garage"
+      )
+    ).toBe(true);
+    expect(looksLikeSpecList("Three Bedroom, Three Bath, Great Room, Study, Outdoor Living")).toBe(true);
+  });
+
+  it("leaves prose alone, however many commas it carries", () => {
+    expect(
+      looksLikeSpecList(
+        "The Wyndam IV opens on a great room, a dining room and a study, with the lanai beyond."
+      )
+    ).toBe(false);
+    expect(looksLikeSpecList("A great room, a study and a lanai")).toBe(false);
+    expect(looksLikeSpecList("Great Room, Dining Room")).toBe(false);
+    expect(looksLikeSpecList("")).toBe(false);
+    expect(looksLikeSpecList(null)).toBe(false);
+  });
+});
+
 describe("withDescriptions", () => {
   const base: NormalizedPlan = {
     planKey: "wyndam-iv",
@@ -101,5 +131,20 @@ describe("withDescriptions", () => {
     expect(kept.description).toBe("The builder's own words.");
     // A quick move-in is a house on a lot, not a plan to be built.
     expect(home.description).toBeUndefined();
+  });
+
+  it("counts a spec line as no description, keeping it in raw", () => {
+    const line = "Four Bedroom, Four and 1/2 Bath, Great Room, Dining Room, Two 2-Car Garage";
+    const [written, home] = withDescriptions(
+      [
+        { ...base, description: line },
+        { ...base, planKey: "lot-226", quickMoveIn: true, description: line },
+      ],
+      "Waterside - Wild Blue"
+    );
+    expect(written.description).toContain("is available to be built in Wild Blue");
+    expect(written.raw?.featuresLine).toBe(line);
+    expect(home.description).toBeNull();
+    expect(home.raw?.featuresLine).toBe(line);
   });
 });

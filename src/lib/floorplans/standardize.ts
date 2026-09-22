@@ -49,16 +49,53 @@ export function largestInRange(text: string | null | undefined): string {
   return String(Math.max(...numbers.map(Number)));
 }
 
+/** The numbers builders spell out: "Three Car Garage", "Two 2-Car Garage", "Double Garage". */
+const WORD_NUMBERS: Record<string, number> = {
+  one: 1,
+  single: 1,
+  two: 2,
+  double: 2,
+  three: 3,
+  triple: 3,
+  four: 4,
+  quad: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
+const WORDS = Object.keys(WORD_NUMBERS).join("|");
+const NUMBER_WORD = new RegExp(`\\b(${WORDS})\\b`, "gi");
+
+/** So many garages of so many cars each: Stock's "Two 2-Car Garage" is four bays, not two. */
+const MULTIPLIED = new RegExp(`\\b(${WORDS})\\s+(\\d+(?:\\.\\d+)?)\\s*-?\\s*car\\b`, "i");
+
+/** The number a token stands for, spelled or written; null when it stands for none. */
+function countOf(token: string): number | null {
+  const n = /^\d/.test(token) ? Number(token) : WORD_NUMBERS[token.toLowerCase()];
+  return Number.isFinite(n) ? n : null;
+}
+
 /**
  * Garages as the sites show them: the builder's number of cars, kept as it
  * is, "2.5 car" (Jeff, 2026-09-21: never rounded), the larger end of a
- * range as with beds and baths. Nothing for nothing, and a label with no
- * number in it ("Yes") is kept as it is for a person to fix.
+ * range as with beds and baths. A number the builder spelled out counts
+ * ("Three Car Garage" is 3), and a label that counts garages rather than
+ * cars is multiplied out — Stock writes "Two 2-Car Garage" for the four
+ * bays its own icon row shows (Jeff, 2026-09-22). Nothing for nothing, and
+ * a label with no number in it ("Yes") is kept as it is for a person to fix.
  */
 export function standardGarages(text: string | null | undefined): string | null {
   const s = (text ?? "").trim();
   if (!s) return null;
-  const numbers = s.match(/\d+(?:\.\d+)?/g);
+  const multiplied = s.match(MULTIPLIED);
+  const garages = multiplied ? countOf(multiplied[1]) : null;
+  const each = multiplied ? Number(multiplied[2]) : 0;
+  if (garages && each > 0) return `${Math.round(garages * each * 10) / 10} car`;
+  const spelled = s.replace(NUMBER_WORD, (word) => String(WORD_NUMBERS[word.toLowerCase()]));
+  const numbers = spelled.match(/\d+(?:\.\d+)?/g);
   if (!numbers) return s;
   return `${Math.max(...numbers.map(Number))} car`;
 }
