@@ -27,6 +27,7 @@ import {
   mediaState,
   mediaVerdict,
   WixApiError,
+  wixThrottleWaitMs,
   type WixItemData,
   getDataCollection,
   type WixDataItem,
@@ -708,6 +709,8 @@ async function writePlanToWix(
 export async function applyPendingChange(changeId: string): Promise<{
   status: string;
   error?: string;
+  /** Wix was refusing calls: nothing is wrong with the plan, it needs another go later. */
+  throttled?: boolean;
 }> {
   const { data: change, error: loadError } = await supabase
     .from("fp_pending_changes")
@@ -875,6 +878,17 @@ export async function applyPendingChange(changeId: string): Promise<{
 
     return fail(`unknown change_type ${change.change_type}`);
   } catch (error) {
+    // Wix throttling the client says nothing about the plan, so the plan
+    // is not marked failed for it: the caller puts it back in the queue
+    // and comes back once the cooldown is over (Jeff, 2026-09-22 —
+    // Sand Key, Carmel and Longboat landed in Failed for this).
+    if (error instanceof WixApiError && error.rateLimited) {
+      logger.warn("Floor plan write-back deferred: Wix is throttling", {
+        changeId,
+        waitMs: wixThrottleWaitMs(),
+      });
+      return { status: "deferred", error: error.message, throttled: true };
+    }
     return fail(error instanceof Error ? error.message : String(error));
   }
 }

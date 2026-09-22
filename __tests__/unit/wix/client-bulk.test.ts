@@ -9,6 +9,8 @@ import {
   bulkUpdateItems,
   chunkBulkEntries,
   insertItem,
+  resetWixRate,
+  wixThrottleWaitMs,
 } from "@/lib/wix/client";
 
 interface RecordedCall {
@@ -48,6 +50,7 @@ describe("wix client bulk writes", () => {
 
   beforeEach(() => {
     calls.length = 0;
+    resetWixRate();
     process.env.WIX_API_KEY = "test-key";
     respond = echoBulk(() => "INSERT");
     vi.stubGlobal(
@@ -252,9 +255,11 @@ describe("wix client bulk writes", () => {
     expect(result.results[1].error?.code).toBe("WDE0109");
   });
 
-  it("waits a throttled call out, and reports the 429 only once the tries run out", async () => {
-    // Wix throttles at 200 requests a minute and answers with an HTML
-    // page carrying no Retry-After of its own (Jeff, 2026-09-21).
+  it("tries a throttled call once more, then reports the 429 and says how long to wait", async () => {
+    // Wix throttles this app well under the documented 200 a minute and
+    // answers with an HTML page carrying no Retry-After of its own (Jeff,
+    // 2026-09-21). A throttle that outlasts one retry is not waited out
+    // inside the function: the caller stops and comes back.
     let calls = 0;
     respond = () => {
       calls += 1;
@@ -270,8 +275,34 @@ describe("wix client bulk writes", () => {
       expect((error as WixApiError).status).toBe(429);
       expect((error as WixApiError).rateLimited).toBe(true);
       expect((error as WixApiError).retryAfterSeconds).toBe(7);
-      // Tried, waited, tried again — four times over before giving up.
-      expect(calls).toBe(4);
+      // Tried, held off, tried again — then left it to the caller.
+      expect(calls).toBe(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("leaves the whole client holding off, so the caller knows to come back", async () => {
+    respond = () => jsonResponse({ message: "throttled" }, 429);
+    await bulkInsertItems("site-1", "col", [{ _id: "MFRA1" }]).catch(() => undefined);
+    // Two refusals in, the client is on the second rung of the ladder.
+    expect(wixThrottleWaitMs()).toBeGreaterThan(30_000);
+  });
+
+  it("stops holding off once a call goes through", async () => {
+    let calls = 0;
+    respond = () => {
+      calls += 1;
+      return calls === 1
+        ? jsonResponse({ message: "throttled" }, 429, { "retry-after": "1" })
+        : jsonResponse({ results: [{ itemMetadata: { _id: "MFRA1" } }] });
+    };
+    vi.useFakeTimers();
+    try {
+      const attempt = bulkInsertItems("site-1", "col", [{ _id: "MFRA1" }]);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await attempt;
+      expect(wixThrottleWaitMs()).toBe(0);
     } finally {
       vi.useRealTimers();
     }

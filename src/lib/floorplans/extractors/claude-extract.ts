@@ -14,6 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
+import { firstGallery, fullSize } from "@/lib/floorplans/extractors/plan-page";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -137,12 +138,12 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
       sqft: { type: "number", description: "Living square footage, if the page gives it" },
-      description: { type: "string", description: "The builder's own paragraph about the plan; omit if the page only lists features" },
+      description: { type: "string", description: "The builder's own prose about the plan — sentences. Omit it if the page only prints a spec line of rooms and counts" },
       virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour, if one is linked" },
       photoImages: {
         type: "array",
         items: { type: "string" },
-        description: "Absolute URLs: the plan's exterior elevations first, then the photos of the FIRST gallery section only. Never a later gallery, never a finish-package or design-collection picture.",
+        description: "Absolute URLs of photographs and renderings of this home: its exterior elevations first, then the pictures of the page's first photo gallery. A gallery titled for the community or for the designer who furnished it is still this plan's gallery",
       },
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
     },
@@ -181,6 +182,11 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
  * tour and the pictures the list had no room for. The list's picture stays
  * in front, so the hero the community page chose still leads, and a field
  * the list already filled is not overwritten — only the blanks are.
+ *
+ * The pictures are read off the page's headings rather than left to Claude
+ * (plan-page.ts): the first gallery's are added whether or not Claude
+ * noticed them, and a picture that belongs only to a later gallery or to
+ * the virtual tours is taken back out.
  */
 export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<NormalizedPlan> {
   if (!plan.sourceUrl) return plan;
@@ -202,16 +208,18 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
     messages: [
       {
         role: "user",
-        content: `This is the page of one floor plan, "${plan.name}". Report only what the page itself says about that plan — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first gallery only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
+        content: `This is the page of one floor plan, "${plan.name}". Report only what the page itself says about that plan — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
       },
     ],
   });
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const page = (toolUse?.input ?? {}) as ExtractedPlanPage;
 
-  const photos = [...plan.galleryImages, ...(page.photoImages ?? [])].filter(
-    (src, i, all) => src && all.indexOf(src) === i
-  );
+  const gallery = firstGallery(html, res.url);
+  const photos = [...plan.galleryImages, ...(page.photoImages ?? []), ...gallery.first.map((i) => i.src)]
+    .filter((src) => src && !gallery.drop.has(src))
+    .map((src) => fullSize(src, html))
+    .filter((src, i, all) => all.indexOf(src) === i);
   const blueprints = [...plan.blueprintImages, ...(page.blueprintImages ?? [])].filter(
     (src, i, all) => src && all.indexOf(src) === i
   );

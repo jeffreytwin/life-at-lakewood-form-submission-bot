@@ -164,11 +164,35 @@ export function describePlan(plan: NormalizedPlan, communityName: string): strin
   return sentences.join(" ");
 }
 
-/** Gives every base plan the builder left without a description one of its own (describePlan). No IO. */
+/**
+ * Whether a "description" is really the spec line a page prints under the
+ * plan name — "Four Bedroom (Opt. Bonus Room), Four Full and 1/2 Bath,
+ * Great Room, Dining Room, Two 2-Car Garage". It reads as a list, not
+ * prose: nothing ends it as a sentence, and every comma-separated piece is
+ * a short capitalized fragment. Stock has no descriptions at all (Jeff,
+ * 2026-09-21), so its plans were coming through with this line where a
+ * description belongs, which left no room for one of their own.
+ */
+export function looksLikeSpecList(text: string | null | undefined): boolean {
+  const s = (text ?? "").trim();
+  if (!s || /[.!?]["')\]]?$/.test(s)) return false;
+  const pieces = s.split(",").map((p) => p.trim()).filter(Boolean);
+  if (pieces.length < 3) return false;
+  return pieces.every((piece) => /^[A-Z0-9(]/.test(piece) && piece.split(/\s+/).length <= 6);
+}
+
+/**
+ * Gives every base plan the builder left without a description one of its
+ * own (describePlan). A spec line counts as no description: it is dropped,
+ * and the plan gets a written one, or none at all where a quick move-in
+ * cannot have one. No IO.
+ */
 export function withDescriptions(plans: NormalizedPlan[], communityName: string): NormalizedPlan[] {
-  return plans.map((plan) =>
-    plan.quickMoveIn || plan.description?.trim()
-      ? plan
-      : { ...plan, description: describePlan(plan, communityName) }
-  );
+  return plans.map((plan) => {
+    const own = plan.description?.trim() ?? "";
+    if (own && !looksLikeSpecList(own)) return plan;
+    const raw = own ? { ...(plan.raw ?? {}), featuresLine: own } : plan.raw;
+    if (plan.quickMoveIn) return own ? { ...plan, description: null, raw } : plan;
+    return { ...plan, description: describePlan(plan, communityName), raw };
+  });
 }

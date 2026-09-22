@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { envelopeShape, listMediaFiles, nextTurn } from "@/lib/wix/client";
+import { envelopeShape, listMediaFiles, nextCooldown, nextTurn } from "@/lib/wix/client";
 
 /**
  * The Media Manager folder listing is the one Wix call whose cost grows with
@@ -261,14 +261,16 @@ describe("wix media folder listing", () => {
 });
 
 describe("nextTurn (the Wix rate)", () => {
-  // Wix allows 200 requests a minute and answers the 201st with a 429
-  // (Jeff, 2026-09-21: 170 picture imports refused in one Approve All).
-  const SPACING = 400;
+  // A hundred a minute: Wix documents two hundred but refused the
+  // approvals of 2026-09-22 ninety-eight seconds into a run at a hundred
+  // and fifty, so the client asks for less than it is told it may have.
+  const SPACING = 600;
+  const BURST = 10;
 
   it("lets a burst through when the client has been idle", () => {
     let owed = 0;
     let at = 0;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < BURST; i++) {
       const turn = nextTurn(100_000, owed);
       owed = turn.owed;
       at = turn.at;
@@ -291,6 +293,25 @@ describe("nextTurn (the Wix rate)", () => {
     let owed = 0;
     for (let i = 0; i < 200; i++) owed = nextTurn(0, owed).owed;
     // A minute later the client may burst again rather than serving a backlog.
-    expect(nextTurn(120_000, owed).at).toBe(120_000);
+    expect(nextTurn(200_000, owed).at).toBe(200_000);
+  });
+});
+
+describe("nextCooldown (how long a refusal stops the client)", () => {
+  it("holds off longer each time Wix refuses again", () => {
+    // Wix refused every import from 01:27:50 to 01:29:59 on 2026-09-22;
+    // seven seconds of backing off never got back in.
+    expect(nextCooldown(0, null)).toBe(20_000);
+    expect(nextCooldown(1, null)).toBe(45_000);
+    expect(nextCooldown(2, null)).toBe(90_000);
+    // And stays on the last rung rather than growing without end.
+    expect(nextCooldown(9, null)).toBe(90_000);
+  });
+
+  it("does what Wix asks when Wix says, within reason", () => {
+    expect(nextCooldown(0, 7)).toBe(7_000);
+    expect(nextCooldown(2, 3)).toBe(3_000);
+    expect(nextCooldown(0, 600)).toBe(120_000);
+    expect(nextCooldown(0, 0)).toBe(1_000);
   });
 });

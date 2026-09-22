@@ -82,6 +82,19 @@ describe("standardGarages", () => {
     expect(standardGarages("3.0")).toBe("3 car");
   });
 
+  it("counts a number the builder spelled out", () => {
+    expect(standardGarages("Three Car Garage")).toBe("3 car");
+    expect(standardGarages("Two Car Garage")).toBe("2 car");
+    expect(standardGarages("Double Garage")).toBe("2 car");
+  });
+
+  it("multiplies out a label that counts garages rather than cars", () => {
+    // Stock writes this for the four bays its own icon row shows (Jeff, 2026-09-22).
+    expect(standardGarages("Two 2-Car Garage")).toBe("4 car");
+    expect(standardGarages("Three 2 car garages")).toBe("6 car");
+    expect(standardGarages("Two 2.5-Car Garages")).toBe("5 car");
+  });
+
   it("keeps a label with no number for a person to fix, and gives nothing for nothing", () => {
     expect(standardGarages("Yes")).toBe("Yes");
     expect(standardGarages(null)).toBeNull();

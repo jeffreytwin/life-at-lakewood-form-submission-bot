@@ -5,6 +5,7 @@ import { applyPendingChange } from "@/lib/floorplans/writeback";
 import { groupChanges } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { releaseStaleApproving } from "@/lib/floorplans/approving";
+import { wixThrottleWaitMs } from "@/lib/wix/client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -94,9 +95,12 @@ export async function POST(request: NextRequest) {
 
     const started = Date.now();
     const remaining: string[] = [];
+    // Set once Wix starts refusing: the rest of the run goes back to the
+    // queue and the page is told how long to leave it.
+    let throttledFor = 0;
     for (const group of approvable) {
       const groupIds = group.rows.map((r) => r.id);
-      if (Date.now() - started > BUDGET_MS) {
+      if (throttledFor || Date.now() - started > BUDGET_MS) {
         remaining.push(...groupIds);
         continue;
       }
@@ -107,6 +111,13 @@ export async function POST(request: NextRequest) {
         .eq("status", "approving");
       if (approveError) throw approveError;
       const outcome = await applyPendingChange(group.lead.id);
+      if (outcome.throttled) {
+        // Nothing is wrong with this plan; Wix is refusing everyone. It
+        // goes back with the ones not started yet (Jeff, 2026-09-22).
+        throttledFor = Math.max(wixThrottleWaitMs(), 1000);
+        remaining.push(...groupIds);
+        continue;
+      }
       const rest = group.rows.filter((r) => r.id !== group.lead.id);
       if (rest.length) {
         const { data: applied } = await supabase
@@ -129,14 +140,19 @@ export async function POST(request: NextRequest) {
       results.push({ planKey: group.lead.plan_key, rows: group.rows.length, status: outcome.status, error: outcome.error ?? null });
     }
     if (remaining.length) {
-      await supabase
-        .from("fp_pending_changes")
-        .update({ status: "pending", updated_at: new Date().toISOString() })
-        .in("id", remaining)
-        .eq("status", "approving");
+      for (const status of ["approving", "approved"]) {
+        await supabase
+          .from("fp_pending_changes")
+          .update({ status: "pending", updated_at: new Date().toISOString() })
+          .in("id", remaining)
+          .eq("status", status);
+      }
     }
     const failed = results.some((r) => r.status === "failed");
-    return NextResponse.json({ results, remaining }, { status: failed ? 502 : 200 });
+    return NextResponse.json(
+      { results, remaining, ...(throttledFor ? { retryAfterMs: throttledFor } : {}) },
+      { status: failed ? 502 : 200 }
+    );
   } catch (error) {
     logger.error("Bulk floor plan change action failed", {
       error: error instanceof Error ? error.message : String(error),
