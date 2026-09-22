@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { HOME_TYPES, largestInRange, standardGarages, standardHomeType, standardizePlan } from "@/lib/floorplans/standardize";
+import {
+  HOME_TYPES,
+  builderDefaults,
+  largestInRange,
+  standardGarages,
+  standardHomeType,
+  standardizePlan,
+} from "@/lib/floorplans/standardize";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 describe("standardHomeType", () => {
@@ -111,5 +118,39 @@ describe("standardGarages", () => {
     expect(out.raw?.garagesRaw).toBe("2.5-car garage");
     expect(standardizePlan(plan).garages).toBe("2.5 car");
     expect(standardizePlan(plan).raw?.garagesRaw).toBeUndefined();
+  });
+});
+
+describe("builderDefaults", () => {
+  it("reads a home type the builder always builds, and ignores anything else", () => {
+    expect(builderDefaults({ homeType: "Single Family Home" })).toEqual({ homeType: "Single Family Home" });
+    expect(builderDefaults({ homeType: "Mansion" })).toEqual({ homeType: null });
+    expect(builderDefaults({ candidateUrls: ["https://x.test"] })).toEqual({ homeType: null });
+    expect(builderDefaults(null)).toEqual({ homeType: null });
+  });
+
+  it("writes the builder's type over whatever the page said, keeping the page's own in raw", () => {
+    // Stock builds single-family homes and nothing else (Jeff, 2026-09-22).
+    const plan = {
+      planKey: "wyndam-iv",
+      name: "Wyndam IV",
+      price: null,
+      priceDisplay: null,
+      beds: "4",
+      baths: "4",
+      sqft: null,
+      garages: null,
+      homeType: "Townhome",
+      quickMoveIn: false,
+      comingSoon: false,
+      sourceUrl: null,
+      galleryImages: [],
+      blueprintImages: [],
+    };
+    const out = standardizePlan(plan, { homeType: "Single Family Home" });
+    expect(out.homeType).toBe("Single Family Home");
+    expect(out.raw?.homeTypeRaw).toBe("Townhome");
+    // And with no setting the page still decides.
+    expect(standardizePlan(plan).homeType).toBe("Townhome");
   });
 });

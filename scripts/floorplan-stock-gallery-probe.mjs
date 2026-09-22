@@ -1,9 +1,11 @@
-// Stock gallery probe, third pass: each gallery draws five thumbnails over
-// a "+25 MORE" button, so the engine keeps five of thirty (Jeff,
-// 2026-09-22). The other twenty-five are somewhere the page does not draw
-// them. Report where: how the picture URLs sit around each gallery's name
-// in the raw HTML, whether the "more" button links anywhere, and one window
-// verbatim. Guarded to the working branch; always exits 0.
+// Stock gallery probe, fourth pass: checks the harvest against the live
+// pages before it ships. Runs the same rule the engine now runs — follow
+// the run of picture URLs that opens with the gallery's first drawn
+// thumbnail, stopping at anything the page draws elsewhere — and reports
+// how many pictures each plan's first gallery yields. Also asks the media
+// store whether a "_lg" copy of a gallery thumbnail exists, since a
+// gallery of thumbnails would be worse than five good pictures.
+// Guarded to the working branch; always exits 0.
 
 const PROBE_BRANCH = 'claude/stock-luxury-homes-connection-x2ieo8';
 
@@ -19,52 +21,85 @@ const HEADERS = {
   accept: 'text/html',
 };
 
-const URL_PAGE = 'https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/';
+const PLANS = [
+  ['wyndam-iv', 'https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/'],
+  ['chandler-v', 'https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/374/'],
+  ['gardenia-ii', 'https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/311/'],
+];
 
-/** A picture in Stock's media store, bare or with the slashes a payload escapes. */
-const PIC = /https?:(?:\\?\/){2}fabrik\.blob\.core\.windows\.net(?:\\?\/)public(?:\\?\/)[A-Za-z0-9-]+(?:_(?:sm|lg))?\.[a-zA-Z]{3,4}/g;
+const PICTURE_URL = /https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif|gif)(?![a-z0-9])/gi;
+const GALLERY_HEADING = /\b(galler(?:y|ies)|photos?|images)\b/i;
+const TOUR_HEADING = /\b(virtual tours?|tours?|3-?d|walk-?throughs?|videos?|matterport)\b/i;
+const readable = (h) => h.replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 
-try {
-  const res = await fetch(URL_PAGE, { headers: HEADERS, redirect: 'follow', signal: AbortSignal.timeout(30_000) });
-  const html = await res.text().catch(() => '');
-  console.log(`FP-STOCKGAL: ${res.status} html=${html.length}b`);
-
-  // Where each gallery is named, and where each picture sits.
+/** The page's sections, exactly as plan-page.ts builds them. */
+function sectionsOf(html, baseUrl) {
+  const abs = (u) => { try { return new URL(u, baseUrl).href; } catch { return u; } };
   const marks = [];
-  for (const name of ['Dan Rak Design', 'Clive Daniel Home', 'Beasley']) {
-    for (const m of html.matchAll(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'))) {
-      marks.push({ at: m.index, name });
-    }
+  for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) marks.push({ at: m.index, heading: { level: +m[1], text: readable(m[2]) } });
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const src = m[0].match(/\ssrc=["']([^"']*)["']/i)?.[1] || m[0].match(/\sdata-src=["']([^"']*)["']/i)?.[1];
+    if (src && !src.startsWith('data:')) marks.push({ at: m.index, image: abs(src) });
   }
-  const pics = [...html.matchAll(PIC)].map((m) => ({ at: m.index, url: m[0].replace(/\\/g, '') }));
-  console.log(`FP-STOCKGAL: gallery-name-mentions=${marks.length} picture-mentions=${pics.length} distinct=${new Set(pics.map((p) => p.url)).size}`);
   marks.sort((a, b) => a.at - b.at);
-  for (const [i, mark] of marks.entries()) {
-    const end = marks[i + 1]?.at ?? html.length;
-    const between = pics.filter((p) => p.at > mark.at && p.at < end);
-    console.log(
-      `FP-STOCKGAL: @${mark.at} "${mark.name}" -> ${between.length} pictures before the next mention (distinct ${new Set(between.map((p) => p.url)).size}); first=${between[0]?.url ?? '-'} last=${between[between.length - 1]?.url ?? '-'}`
-    );
+  const sections = [{ heading: '', level: 0, ancestors: [], images: [] }];
+  const open = [];
+  for (const mark of marks) {
+    if (mark.heading) {
+      while (open.length && open[open.length - 1].level >= mark.heading.level) open.pop();
+      sections.push({ heading: mark.heading.text, level: mark.heading.level, ancestors: open.map((h) => h.text), images: [] });
+      open.push(mark.heading);
+    } else sections[sections.length - 1].images.push(mark.image);
   }
+  return sections;
+}
 
-  // Does the "+N MORE" button lead anywhere?
-  for (const m of [...html.matchAll(/\+\s*\d+\s*(?:<[^>]*>\s*)*MORE/gi)].slice(0, 3)) {
-    console.log(`FP-STOCKGAL: more-button ${JSON.stringify(html.slice(Math.max(0, m.index - 700), m.index + 300))}`);
-  }
-  const galleryLinks = [...new Set([...html.matchAll(/(?:href|data-[a-z-]*(?:url|href|gallery|album))=["']([^"']{4,200})["']/gi)]
-    .map((m) => m[1])
-    .filter((u) => /galler|album|photos|media|lightbox/i.test(u)))];
-  console.log(`FP-STOCKGAL: gallery-links=${JSON.stringify(galleryLinks.slice(0, 10))}`);
+for (const [label, url] of PLANS) {
+  try {
+    const res = await fetch(url, { headers: HEADERS, redirect: 'follow', signal: AbortSignal.timeout(30_000) });
+    const html = await res.text().catch(() => '');
+    const sections = sectionsOf(html, res.url);
+    const names = (s) => [s.heading, ...s.ancestors];
+    const galleries = sections.filter((s) => s.images.length && names(s).some((h) => GALLERY_HEADING.test(h)) && !names(s).some((h) => TOUR_HEADING.test(h)));
+    const drawn = galleries[0]?.images ?? [];
+    const mine = new Set(drawn);
+    const elsewhere = new Set(sections.flatMap((s) => s.images).filter((src) => !mine.has(src)));
 
-  // The run of payload around the first gallery's name, verbatim.
-  const first = marks[0];
-  if (first) {
-    const start = Math.max(0, first.at - 400);
-    for (let i = 0; i < 4; i++) {
-      const slice = html.slice(start + i * 1800, start + (i + 1) * 1800);
-      if (slice) console.log(`FP-STOCKGAL: RAW[${i}] ${JSON.stringify(slice)}`);
+    let harvested = drawn;
+    if (drawn.length) {
+      const anchor = drawn[0];
+      const origin = new URL(anchor).origin;
+      const urls = [...html.matchAll(PICTURE_URL)].map((m) => m[0].replace(/\\/g, ''));
+      let longest = [];
+      for (let start = 0; start < urls.length; start++) {
+        if (urls[start] !== anchor) continue;
+        const run = [];
+        const seen = new Set();
+        for (let i = start; i < urls.length; i++) {
+          const u = urls[i];
+          if (!u.startsWith(origin) || elsewhere.has(u)) break;
+          if (!seen.has(u)) { seen.add(u); run.push(u); }
+        }
+        if (run.length > longest.length) longest = run;
+      }
+      if (longest.length > drawn.length) harvested = longest;
     }
+    console.log(`FP-STOCKGAL: ${label} galleries=${galleries.length} first-drawn=${drawn.length} first-harvested=${harvested.length} title="${galleries[0]?.heading ?? '-'}"`);
+    console.log(`FP-STOCKGAL: ${label} harvested-head=${JSON.stringify(harvested.slice(0, 2))} tail=${JSON.stringify(harvested.slice(-2))}`);
+
+    // Is there a full-size copy of a gallery thumbnail?
+    const thumb = harvested.find((u) => /_sm\.[a-z]+$/i.test(u));
+    if (thumb) {
+      for (const candidate of [thumb, thumb.replace(/_sm\./i, '_lg.')]) {
+        try {
+          const r = await fetch(candidate, { method: 'GET', headers: { range: 'bytes=0-0' }, signal: AbortSignal.timeout(15_000) });
+          console.log(`FP-STOCKGAL: ${label} ${r.status} ${r.headers.get('content-length') ?? '?'}b type=${r.headers.get('content-type') ?? '?'} ${candidate.split('/').pop()}`);
+        } catch (e) {
+          console.log(`FP-STOCKGAL: ${label} FETCH-FAILED ${candidate.split('/').pop()} ${e?.message ?? e}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.log(`FP-STOCKGAL: ${label} FAILED ${error?.message ?? error}`);
   }
-} catch (error) {
-  console.log(`FP-STOCKGAL: FAILED ${error?.message ?? error}`);
 }

@@ -113,10 +113,60 @@ export interface PlanPageGallery {
   drop: Set<string>;
 }
 
+/** A picture URL as a page writes it: bare, or with the slashes a script payload escapes. */
+const PICTURE_URL = /https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif|gif)(?![a-z0-9])/gi;
+
 /**
- * The plan's own gallery, and the pictures that are somebody else's. A
- * picture that also appears outside a later gallery — the same photograph
- * used as a tour's still and as an elevation, say — is not dropped.
+ * The rest of a gallery, from where the page keeps it rather than draws it.
+ * Stock draws five thumbnails over a "+25 MORE" button, so a gallery of
+ * thirty arrived as five (Jeff, 2026-09-22) — but its framework ships the
+ * whole gallery in the page's own data, one run of picture URLs per
+ * gallery, in the order the gallery shows them.
+ *
+ * So the run that opens with the gallery's first picture is followed as
+ * far as it goes, and the longest such run wins: the drawn thumbnails are
+ * a run of five, the data holds the run of thirty. It ends at the first
+ * picture the page draws somewhere else — the next gallery, an elevation,
+ * the floor plan drawing — or at anything that is not a picture of this
+ * builder's, which is what separates one gallery's run from the next.
+ */
+function wholeGallery(html: string, first: PageImage[], elsewhere: Set<string>): PageImage[] {
+  if (!first.length) return first;
+  const anchor = first[0].src;
+  let origin: string;
+  try {
+    origin = new URL(anchor).origin;
+  } catch {
+    return first;
+  }
+
+  const urls = [...html.matchAll(PICTURE_URL)].map((m) => m[0].replace(/\\/g, ""));
+  let longest: string[] = [];
+  for (let start = 0; start < urls.length; start++) {
+    if (urls[start] !== anchor) continue;
+    const run: string[] = [];
+    const seen = new Set<string>();
+    for (let i = start; i < urls.length; i++) {
+      const url = urls[i];
+      if (!url.startsWith(origin) || elsewhere.has(url)) break;
+      if (!seen.has(url)) {
+        seen.add(url);
+        run.push(url);
+      }
+    }
+    if (run.length > longest.length) longest = run;
+  }
+  if (longest.length <= first.length) return first;
+
+  const drawn = new Map(first.map((image) => [image.src, image] as const));
+  return longest.map((src) => drawn.get(src) ?? { src, alt: "" });
+}
+
+/**
+ * The plan's own gallery, whole, and the pictures that are somebody
+ * else's. A picture that also appears outside a later gallery — the same
+ * photograph used as a tour's still and as an elevation, say — is not
+ * dropped.
  */
 export function firstGallery(html: string, baseUrl: string): PlanPageGallery {
   const sections = sectionsOf(html, baseUrl);
@@ -129,7 +179,15 @@ export function firstGallery(html: string, baseUrl: string): PlanPageGallery {
     for (const image of section.images) (unwanted ? drop : kept).add(image.src);
   }
   for (const src of kept) drop.delete(src);
-  return { first: galleries[0]?.images ?? [], drop };
+
+  const drawn = galleries[0]?.images ?? [];
+  // Everything the page draws that is not this gallery's: where the run ends.
+  const mine = new Set(drawn.map((image) => image.src));
+  const elsewhere = new Set<string>();
+  for (const section of sections) {
+    for (const image of section.images) if (!mine.has(image.src)) elsewhere.add(image.src);
+  }
+  return { first: wholeGallery(html, drawn, elsewhere), drop };
 }
 
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

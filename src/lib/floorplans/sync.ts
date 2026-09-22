@@ -27,7 +27,7 @@ import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorp
 import { linkQuickMoveIns, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
-import { standardizePlan } from "@/lib/floorplans/standardize";
+import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
 import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
@@ -308,7 +308,16 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   // A base plan the builder gave no price takes its cheapest quick
   // move-in's until the builder prices it (Jeff, 2026-09-20).
   const link = (list: NormalizedPlan[]) => withQuickMoveInPrices(linkQuickMoveIns(list));
-  plans = link(plans.map(standardizePlan));
+  // What is true of every plan this builder offers, whatever its pages say
+  // (Settings → Builders; Jeff, 2026-09-22: Stock builds single-family homes
+  // and its pages name no type at all).
+  const { data: settings } = await supabase
+    .from("fp_builders")
+    .select("engine_config")
+    .eq("id", builder.id)
+    .maybeSingle();
+  const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
+  plans = link(plans.map((plan) => standardizePlan(plan, defaults)));
   // A plan the builder no longer lists but a person asked to keep, built
   // from its homes on offer (stand-ins.ts): each is read from the home's own
   // page so it carries every picture, then linked like the rest.
