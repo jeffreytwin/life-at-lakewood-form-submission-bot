@@ -1038,32 +1038,6 @@ export default function FloorPlansPage() {
                 )}
               </div>
             ))}
-            {!editing.lead.proposed_record?.quickMoveIn && (
-              <div className="form-group">
-                <label>Score (required before approval; the sites list high scores first: 1 to 10 as the freelancers used it, 11 for a plan that must come first)</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {SCORES.map((n) => {
-                    const chosen = editForm.score === String(n);
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        className={`btn ${chosen ? "btn-primary" : "btn-secondary"}`}
-                        style={{ minWidth: 40, padding: "4px 0", textAlign: "center", justifyContent: "center" }}
-                        aria-pressed={chosen}
-                        title={n === 11 ? "Puts this plan first on the site" : `Score ${n}`}
-                        onClick={() => setEditForm((f) => ({ ...f, score: chosen ? "" : String(n) }))}
-                      >
-                        {n}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="text-muted text-sm" style={{ marginTop: 4 }}>
-                  {editForm.score ? `Score ${editForm.score}. Click it again to clear it.` : "No score yet."}
-                </div>
-              </div>
-            )}
             {editing.lead.proposed_record?.quickMoveIn && (
               <div className="form-group">
                 <label>Base plan (the floor plan this quick move-in is built from; the site files it under that plan)</label>
@@ -1156,6 +1130,33 @@ export default function FloorPlansPage() {
                     </div>
                   </div>
                 )}
+                {/* Last, under the pictures: the score is a judgement on what
+                    the plan looks like, so it is asked for after the gallery
+                    and the drawings rather than before them (Jeff, 2026-09-22). */}
+                <div className="form-group">
+                  <label>Score (required before approval; the sites list high scores first: 1 to 10 as the freelancers used it, 11 for a plan that must come first)</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {SCORES.map((n) => {
+                      const chosen = editForm.score === String(n);
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          className={`btn ${chosen ? "btn-primary" : "btn-secondary"}`}
+                          style={{ minWidth: 40, padding: "4px 0", textAlign: "center", justifyContent: "center" }}
+                          aria-pressed={chosen}
+                          title={n === 11 ? "Puts this plan first on the site" : `Score ${n}`}
+                          onClick={() => setEditForm((f) => ({ ...f, score: chosen ? "" : String(n) }))}
+                        >
+                          {n}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+                    {editForm.score ? `Score ${editForm.score}. Click it again to clear it.` : "No score yet."}
+                  </div>
+                </div>
               </>
             )}
             <div className="modal-actions">
