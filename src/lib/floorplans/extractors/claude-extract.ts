@@ -85,6 +85,17 @@ interface ExtractedPlan {
 }
 
 /** Strip HTML to visible text; keep img/link URLs as annotations. */
+/**
+ * The model answers with a list, all but always. When it does not — a
+ * string, an object, a half-written answer that ran out of room — a spread
+ * or a .filter turns into a crash a page further on, and the run's error
+ * reads like a bug in the Hub rather than a page that could not be read.
+ * So every list off a tool call comes through here.
+ */
+function listOf<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 function distill(html: string, baseUrl: string): string {
   const abs = (u: string) => {
     try {
@@ -273,11 +284,11 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
   const page = (toolUse?.input ?? {}) as ExtractedPlanPage;
 
   const gallery = firstGallery(html, res.url);
-  const photos = [...plan.galleryImages, ...(page.photoImages ?? []), ...gallery.first.map((i) => i.src)]
+  const photos = [...plan.galleryImages, ...listOf<string>(page.photoImages), ...gallery.first.map((i) => i.src)]
     .filter((src) => src && !gallery.drop.has(src))
     .map((src) => fullSize(src, html))
     .filter((src, i, all) => all.indexOf(src) === i);
-  const blueprints = [...plan.blueprintImages, ...(page.blueprintImages ?? [])].filter(
+  const blueprints = [...plan.blueprintImages, ...listOf<string>(page.blueprintImages)].filter(
     (src, i, all) => src && all.indexOf(src) === i
   );
   // A list gives the plans it prices; the rest carry their price on their
@@ -330,7 +341,9 @@ async function listPage(
 
   const response = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 8192,
+    // A community page with a dozen plans, each with a dozen pictures whose
+    // URLs run long, needs more room than the answer's old ceiling.
+    max_tokens: 16_384,
     tools: [EXTRACT_TOOL],
     tool_choice: { type: "tool", name: "report_floor_plans" },
     messages: [
@@ -345,9 +358,15 @@ async function listPage(
     (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
   );
   if (!toolUse) throw new Error("Claude returned no extraction tool call");
-  const plans = ((toolUse.input as { plans?: ExtractedPlan[] }).plans ?? []).filter(
-    (p) => p.name?.trim()
-  );
+  const reported = (toolUse.input as { plans?: unknown }).plans;
+  if (reported !== undefined && !Array.isArray(reported)) {
+    throw new Error(
+      response.stop_reason === "max_tokens"
+        ? "the page's plans did not fit in one answer (stopped at max_tokens)"
+        : `plans came back as ${typeof reported}, not a list — the page may not be readable without its scripts`
+    );
+  }
+  const plans = listOf<ExtractedPlan>(reported).filter((p) => p?.name?.trim());
 
   const listed = plans.map((p) => {
     const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true;
@@ -369,8 +388,8 @@ async function listPage(
       sourceUrl: p.sourceUrl ?? res.url ?? url,
       description: p.description?.trim() || null,
       virtualTourUrl: p.virtualTourUrl?.trim() || null,
-      galleryImages: p.photoImages ?? [],
-      blueprintImages: p.blueprintImages ?? [],
+      galleryImages: listOf<string>(p.photoImages),
+      blueprintImages: listOf<string>(p.blueprintImages),
     };
   });
   return { url: res.url || url, plans: listed };
