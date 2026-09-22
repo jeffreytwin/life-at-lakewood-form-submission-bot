@@ -14,8 +14,13 @@
 // the plan's (Jeff: "if there is more than one gallery, pick the first
 // one"), the later ones and the tour stills are not.
 //
+// A gallery is then followed past what the page draws: Stock shows five
+// thumbnails over a "+25 MORE" button while its framework ships all thirty
+// in the page's own data (wholeGallery).
+//
 // Nothing here is Stock-specific: a page with no gallery headings yields no
-// gallery, and its plan keeps exactly what it had.
+// gallery, a page that keeps no more than it draws yields what it draws,
+// and either way the plan keeps exactly what it had.
 
 export interface PageImage {
   src: string;
@@ -121,7 +126,8 @@ const PICTURE_URL = /https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|web
  * Stock draws five thumbnails over a "+25 MORE" button, so a gallery of
  * thirty arrived as five (Jeff, 2026-09-22) — but its framework ships the
  * whole gallery in the page's own data, one run of picture URLs per
- * gallery, in the order the gallery shows them.
+ * gallery, in the order the gallery shows them — each picture listed at
+ * every size it keeps, which is one picture, not several.
  *
  * So the run that opens with the gallery's first picture is followed as
  * far as it goes, and the longest such run wins: the drawn thumbnails are
@@ -143,14 +149,15 @@ function wholeGallery(html: string, first: PageImage[], elsewhere: Set<string>):
   const urls = [...html.matchAll(PICTURE_URL)].map((m) => m[0].replace(/\\/g, ""));
   let longest: string[] = [];
   for (let start = 0; start < urls.length; start++) {
-    if (urls[start] !== anchor) continue;
+    if (pictureKey(urls[start]) !== pictureKey(anchor)) continue;
     const run: string[] = [];
     const seen = new Set<string>();
     for (let i = start; i < urls.length; i++) {
       const url = urls[i];
-      if (!url.startsWith(origin) || elsewhere.has(url)) break;
-      if (!seen.has(url)) {
-        seen.add(url);
+      const key = pictureKey(url);
+      if (!url.startsWith(origin) || elsewhere.has(key)) break;
+      if (!seen.has(key)) {
+        seen.add(key);
         run.push(url);
       }
     }
@@ -158,8 +165,8 @@ function wholeGallery(html: string, first: PageImage[], elsewhere: Set<string>):
   }
   if (longest.length <= first.length) return first;
 
-  const drawn = new Map(first.map((image) => [image.src, image] as const));
-  return longest.map((src) => drawn.get(src) ?? { src, alt: "" });
+  const drawn = new Map(first.map((image) => [pictureKey(image.src), image] as const));
+  return longest.map((src) => drawn.get(pictureKey(src)) ?? { src, alt: "" });
 }
 
 /**
@@ -182,15 +189,33 @@ export function firstGallery(html: string, baseUrl: string): PlanPageGallery {
 
   const drawn = galleries[0]?.images ?? [];
   // Everything the page draws that is not this gallery's: where the run ends.
-  const mine = new Set(drawn.map((image) => image.src));
+  const mine = new Set(drawn.map((image) => pictureKey(image.src)));
   const elsewhere = new Set<string>();
   for (const section of sections) {
-    for (const image of section.images) if (!mine.has(image.src)) elsewhere.add(image.src);
+    for (const image of section.images) {
+      const key = pictureKey(image.src);
+      if (!mine.has(key)) elsewhere.add(key);
+    }
   }
   return { first: wholeGallery(html, drawn, elsewhere), drop };
 }
 
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** The sizes a media store keeps one picture at, largest first. */
+const SIZES = ["lg", "md", "sm"] as const;
+const SIZED = /^(.+)_(?:sm|md|lg)(\.[a-z0-9]+)$/i;
+
+/**
+ * The picture a sized copy is a copy of: Stock's data lists every gallery
+ * picture as both "<id>_sm.jpg" and "<id>_md.jpg", which is one picture
+ * twice (Jeff, 2026-09-22).
+ */
+export function pictureKey(src: string): string {
+  const name = src.split("/").pop() ?? "";
+  const sized = name.match(SIZED);
+  return sized ? src.replace(name, `${sized[1]}${sized[2]}`) : src;
+}
 
 /**
  * The full-size picture beside a thumbnail, in the two shapes the builders'
@@ -204,10 +229,13 @@ const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function fullSize(src: string, html: string): string {
   const name = src.split("/").pop() ?? "";
 
-  const small = name.match(/^(.+)_sm\.[a-z0-9]+$/i)?.[1];
-  if (small) {
-    const larger = new RegExp(`${escapeRe(small)}_lg\\.[a-z0-9]+`, "i").exec(html)?.[0];
-    if (larger) return src.replace(name, larger);
+  const stem = name.match(SIZED)?.[1];
+  if (stem) {
+    for (const size of SIZES) {
+      const larger = new RegExp(`${escapeRe(stem)}_${size}\\.[a-z0-9]+`, "i").exec(html)?.[0];
+      if (larger) return src.replace(name, larger);
+    }
+    return src;
   }
 
   const resized = name.match(/^(.+)-\d{2,5}x\d{2,5}(\.[a-z0-9]+)$/i);

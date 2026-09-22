@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { firstGallery, fullSize, sectionsOf } from "@/lib/floorplans/extractors/plan-page";
+import { firstGallery, fullSize, pictureKey, sectionsOf } from "@/lib/floorplans/extractors/plan-page";
 
 const BASE = "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/";
-const blob = (id: string, size: "sm" | "lg", ext = "jpg") =>
+const blob = (id: string, size: "sm" | "md" | "lg", ext = "jpg") =>
   `https://fabrik.blob.core.windows.net/public/${id}_${size}.${ext}`;
 
 const tile = (src: string, alt: string) =>
@@ -18,14 +18,8 @@ const escaped = (src: string) => src.replace(/\//g, "\\/");
 const payload =
   `{"galleries":[` +
   `{"name":"Wild Blue at Waterside","by":"Dan Rak Design","images":[` +
-  [
-    blob("6e8cfe1d", "sm"),
-    blob("e042dbd0", "sm"),
-    blob("b25872ce", "sm"),
-    blob("77aa11bb", "sm"),
-    blob("88cc22dd", "sm"),
-    blob("99ee33ff", "sm"),
-  ]
+  ["6e8cfe1d", "e042dbd0", "b25872ce", "77aa11bb", "88cc22dd", "99ee33ff"]
+    .flatMap((id) => [blob(id, "sm"), blob(id, "md")])
     .map((src) => `\\"${escaped(src)}\\"`)
     .join(",") +
   `]},` +
@@ -158,15 +152,14 @@ describe("firstGallery", () => {
 
   it("follows the gallery past what the page draws, into the page's own data", () => {
     // The markup draws three of six over a "+N MORE" button; the run in the
-    // payload is the whole gallery, and it is the run that wins.
-    expect(first.map((i) => i.src)).toEqual([
-      blob("6e8cfe1d", "sm"),
-      blob("e042dbd0", "sm"),
-      blob("b25872ce", "sm"),
-      blob("77aa11bb", "sm"),
-      blob("88cc22dd", "sm"),
-      blob("99ee33ff", "sm"),
-    ]);
+    // payload is the whole gallery, and it is the run that wins. The store
+    // lists each picture at two sizes, which is six pictures, not twelve.
+    expect(first).toHaveLength(6);
+    expect(first.map((i) => pictureKey(i.src))).toEqual(
+      ["6e8cfe1d", "e042dbd0", "b25872ce", "77aa11bb", "88cc22dd", "99ee33ff"].map((id) =>
+        pictureKey(blob(id, "sm"))
+      )
+    );
   });
 
   it("stops the run at the next gallery's pictures, and keeps the drawn captions", () => {
@@ -185,6 +178,13 @@ describe("firstGallery", () => {
 describe("fullSize", () => {
   it("swaps a thumbnail for the full-size picture the page also names", () => {
     expect(fullSize(blob("6e8cfe1d", "sm"), WYNDAM)).toBe(blob("6e8cfe1d", "lg"));
+  });
+
+  it("takes the largest size the page names, not only the largest that exists", () => {
+    // Stock's data lists a gallery picture as _sm and _md and nothing else.
+    const html = `<img src="${blob("qq", "sm")}"/><span>${blob("qq", "md")}</span>`;
+    expect(fullSize(blob("qq", "sm"), html)).toBe(blob("qq", "md"));
+    expect(fullSize(blob("qq", "md"), html)).toBe(blob("qq", "md"));
   });
 
   it("keeps a thumbnail whose larger file the page never names", () => {

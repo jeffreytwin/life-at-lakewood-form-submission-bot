@@ -28,6 +28,18 @@ const PLANS = [
 ];
 
 const PICTURE_URL = /https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif|gif)(?![a-z0-9])/gi;
+/** One picture, whatever size the store lists it at. */
+const key = (src) => src.replace(/_(?:sm|md|lg)(\.[a-z0-9]+)$/i, '$1');
+/** The largest size the page names for a picture, as the engine takes it. */
+const largest = (src, html) => {
+  const m = src.match(/^(.+)_(?:sm|md|lg)(\.[a-z0-9]+)$/i);
+  if (!m) return src;
+  for (const size of ['lg', 'md', 'sm']) {
+    const found = new RegExp(`${m[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}_${size}\\.[a-z0-9]+`, 'i').exec(html)?.[0];
+    if (found) return found;
+  }
+  return src;
+};
 const GALLERY_HEADING = /\b(galler(?:y|ies)|photos?|images)\b/i;
 const TOUR_HEADING = /\b(virtual tours?|tours?|3-?d|walk-?throughs?|videos?|matterport)\b/i;
 const readable = (h) => h.replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
@@ -62,8 +74,8 @@ for (const [label, url] of PLANS) {
     const names = (s) => [s.heading, ...s.ancestors];
     const galleries = sections.filter((s) => s.images.length && names(s).some((h) => GALLERY_HEADING.test(h)) && !names(s).some((h) => TOUR_HEADING.test(h)));
     const drawn = galleries[0]?.images ?? [];
-    const mine = new Set(drawn);
-    const elsewhere = new Set(sections.flatMap((s) => s.images).filter((src) => !mine.has(src)));
+    const mine = new Set(drawn.map(key));
+    const elsewhere = new Set(sections.flatMap((s) => s.images).map(key).filter((k) => !mine.has(k)));
 
     let harvested = drawn;
     if (drawn.length) {
@@ -72,20 +84,23 @@ for (const [label, url] of PLANS) {
       const urls = [...html.matchAll(PICTURE_URL)].map((m) => m[0].replace(/\\/g, ''));
       let longest = [];
       for (let start = 0; start < urls.length; start++) {
-        if (urls[start] !== anchor) continue;
+        if (key(urls[start]) !== key(anchor)) continue;
         const run = [];
         const seen = new Set();
         for (let i = start; i < urls.length; i++) {
           const u = urls[i];
-          if (!u.startsWith(origin) || elsewhere.has(u)) break;
-          if (!seen.has(u)) { seen.add(u); run.push(u); }
+          const k = key(u);
+          if (!u.startsWith(origin) || elsewhere.has(k)) break;
+          if (!seen.has(k)) { seen.add(k); run.push(u); }
         }
         if (run.length > longest.length) longest = run;
       }
       if (longest.length > drawn.length) harvested = longest;
     }
     console.log(`FP-STOCKGAL: ${label} galleries=${galleries.length} first-drawn=${drawn.length} first-harvested=${harvested.length} title="${galleries[0]?.heading ?? '-'}"`);
-    console.log(`FP-STOCKGAL: ${label} harvested-head=${JSON.stringify(harvested.slice(0, 2))} tail=${JSON.stringify(harvested.slice(-2))}`);
+    const sized = harvested.map((u) => largest(u, html));
+    console.log(`FP-STOCKGAL: ${label} as-imported=${new Set(sized).size} sizes=${JSON.stringify([...new Set(sized.map((u) => u.match(/_(sm|md|lg)\./i)?.[1] ?? 'none'))])}`);
+    console.log(`FP-STOCKGAL: ${label} head=${JSON.stringify(sized.slice(0, 2).map((u) => u.split('/').pop()))} tail=${JSON.stringify(sized.slice(-2).map((u) => u.split('/').pop()))}`);
 
     // Is there a full-size copy of a gallery thumbnail?
     const thumb = harvested.find((u) => /_sm\.[a-z]+$/i.test(u));
