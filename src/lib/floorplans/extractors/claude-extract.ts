@@ -392,14 +392,20 @@ async function listPage(
 
   const ask = `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 
+  // Streamed, not because anything reads the stream, but because the SDK
+  // refuses a plain request whose ceiling could take it past ten minutes —
+  // which is what the room this read needs amounts to (Jeff, 2026-09-22:
+  // Ryan and Pulte both came back "Streaming is required").
   const readList = async (maxTokens: number) => {
-    const response = await getClient().messages.create({
-      model: MODEL,
-      max_tokens: maxTokens,
-      tools: [EXTRACT_TOOL],
-      tool_choice: { type: "tool", name: "report_floor_plans" },
-      messages: [{ role: "user", content: ask }],
-    });
+    const response = await getClient().messages
+      .stream({
+        model: MODEL,
+        max_tokens: maxTokens,
+        tools: [EXTRACT_TOOL],
+        tool_choice: { type: "tool", name: "report_floor_plans" },
+        messages: [{ role: "user", content: ask }],
+      })
+      .finalMessage();
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     return {
       answered: Boolean(toolUse),
