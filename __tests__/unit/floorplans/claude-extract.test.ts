@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { distinctKey, orderPhotos, tourLinkIn, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
+import {
+  distinctKey,
+  isTourUrl,
+  orderPhotos,
+  tourLinkIn,
+  tourUrlIn,
+} from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 describe("tourUrlIn", () => {
@@ -32,6 +38,9 @@ describe("tourUrlIn", () => {
   it("knows the other hosts builders use, and says nothing for a page with none", () => {
     expect(tourUrlIn('<a href="https://www.insidemaps.com/tours/abc123">Tour</a>')).toBe(
       "https://www.insidemaps.com/tours/abc123"
+    );
+    expect(tourUrlIn('<a href="https://kuula.co/share/collection/7abc">Tour</a>')).toBe(
+      "https://kuula.co/share/collection/7abc"
     );
     expect(tourUrlIn("<p>No tour here, just a Google Tag Manager iframe.</p>")).toBeNull();
     // A page's own marketing copy is not a tour link.
@@ -239,5 +248,35 @@ describe("distinctKey across several list pages", () => {
       expect(key).toBe(design);
     }
     expect([...taken]).toEqual(["3741f", "3638f", "3024f"]);
+  });
+});
+
+describe("isTourUrl", () => {
+  it("knows a tour from a page about one", () => {
+    // Ryan wraps its Matterports in a page of its own, and handing a
+    // visitor the wrapper is not handing them the tour (Jeff, 2026-09-22).
+    expect(isTourUrl("https://my.matterport.com/show/?m=azMuVg7aAri")).toBe(true);
+    expect(
+      isTourUrl(
+        "https://www.ryanhomes.com/new-homes/communities/10222120152673/florida/lakewood-ranch/mayport/virtual-tour/31336"
+      )
+    ).toBe(false);
+  });
+
+  it("knows the other hosts that serve tours", () => {
+    expect(isTourUrl("https://www.zillow.com/view-imx/4dee0ea7-5160-4d4f-980a-e8ec0db8b017")).toBe(true);
+    expect(isTourUrl("https://www.insidemaps.com/tours/abc123")).toBe(true);
+    // Kuula serves its tours from .co, not .com, which the host list had
+    // wrong — a real Kuula tour would never have been recognised.
+    expect(isTourUrl("https://kuula.co/share/collection/7abc")).toBe(true);
+  });
+
+  it("is not fooled by a tour's address appearing inside another", () => {
+    // A tour has to be the address, not a word in it.
+    expect(isTourUrl("https://example.com/redirect?to=https://my.matterport.com/show/?m=abc")).toBe(false);
+  });
+
+  it("says nothing is a tour for a builder's plan page", () => {
+    expect(isTourUrl("https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms")).toBe(false);
   });
 });

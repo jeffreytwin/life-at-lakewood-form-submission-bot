@@ -167,7 +167,7 @@ const SLASH = "\\\\?/";
 const TOUR_URL = new RegExp(
   `https?:${SLASH}${SLASH}(?:my\\.matterport\\.com${SLASH}show${SLASH}\\?m=[A-Za-z0-9]+` +
     `|(?:www\\.)?zillow\\.com${SLASH}view-imx${SLASH}[A-Za-z0-9-]+` +
-    `|(?:www\\.)?(?:insidemaps|kuula|cloudpano|eyespy360|truplace)\\.com(?:${SLASH}(?:[^\\s"'<>\\\\]|\\\\/)+)?)`,
+    `|(?:www\\.)?(?:(?:insidemaps|cloudpano|eyespy360|truplace)\\.com|kuula\\.co)(?:${SLASH}(?:[^\\s"'<>\\\\]|\\\\/)+)?)`,
   "i"
 );
 
@@ -175,6 +175,39 @@ const TOUR_URL = new RegExp(
 export function tourUrlIn(html: string): string | null {
   const found = html.match(TOUR_URL)?.[0];
   return found ? found.replace(/\\/g, "") : null;
+}
+
+const IS_TOUR_URL = new RegExp(`^${TOUR_URL.source}`, "i");
+
+/**
+ * Whether an address is a tour itself rather than a page that shows one.
+ * Ryan wraps its Matterports in a page of its own — ".../mayport/virtual
+ * -tour/31336" — and that page is not what a visitor should be handed
+ * (Jeff, 2026-09-22). Exported for tests.
+ */
+export function isTourUrl(url: string): boolean {
+  return IS_TOUR_URL.test(url);
+}
+
+/**
+ * The tour behind a builder's own tour page. One read, and a page that
+ * cannot be read or holds no tour leaves the address as it was.
+ */
+function bestTour(found: (string | null | undefined)[]): string | null {
+  const offered = found.filter((u): u is string => Boolean(u));
+  return offered.find(isTourUrl) ?? offered[0] ?? null;
+}
+
+async function tourBehind(url: string, read: PageReader): Promise<string | null> {
+  try {
+    return tourUrlIn((await read(url)).html);
+  } catch (error) {
+    logger.warn("Virtual tour page could not be read", {
+      url,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 /** What a builder calls the link to a tour of the home. */
@@ -358,10 +391,17 @@ export async function readPlanPageWithClaude(
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
     description: plan.description ?? page.description?.trim() ?? null,
-    // A link the page labels as its tour first, then one hidden in its own
-    // scripts; both beat one Claude read off the text.
-    virtualTourUrl:
-      plan.virtualTourUrl ?? tourLinkIn(html) ?? tourUrlIn(html) ?? page.virtualTourUrl?.trim() ?? null,
+    // A tour on a host that serves tours wins outright, wherever it was
+    // found: the list read may have picked up the builder's own page about
+    // the tour, and that is not the tour (Jeff, 2026-09-22). Failing that,
+    // the link the page labels as its tour, then one hidden in its own
+    // scripts, then one Claude read off the text.
+    virtualTourUrl: bestTour([
+      plan.virtualTourUrl,
+      tourLinkIn(html),
+      tourUrlIn(html),
+      page.virtualTourUrl?.trim(),
+    ]),
     galleryImages: photos,
     blueprintImages: blueprints,
     galleryMeta: { ...plan.galleryMeta, ...outside },
@@ -574,7 +614,17 @@ async function extractPages(
     }
   });
 
-  return pages.map((plan) => {
+  // What remains pointing at a builder's own page about a tour is followed
+  // to the tour it shows. Only those: a plan that already has a real tour,
+  // or none at all, costs nothing.
+  const toured = await mapLimit(pages, atOnce, async (plan) => {
+    const tour = plan.virtualTourUrl;
+    if (!tour || isTourUrl(tour)) return plan;
+    const deeper = await tourBehind(tour, read);
+    return deeper ? { ...plan, virtualTourUrl: deeper } : plan;
+  });
+
+  return toured.map((plan) => {
     const outside = new Set(
       Object.entries(plan.galleryMeta ?? {})
         .filter(([, meta]) => meta.room === "exterior")
