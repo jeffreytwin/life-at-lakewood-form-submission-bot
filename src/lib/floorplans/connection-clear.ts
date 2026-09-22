@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { removeItem, WixApiError } from "@/lib/wix/client";
 import { releaseConnectionMedia } from "@/lib/floorplans/media-cleanup";
+import { describeError } from "@/lib/shared/describe-error";
 
 export interface ClearedConnection {
   plans: number;
@@ -25,6 +26,19 @@ export interface ClearedConnection {
   photoRows: number;
   rasters: number;
 }
+
+/**
+ * Which step of the clearing failed, and what the database said. Three
+ * Resets in a row said "Internal server error" and logged "[object
+ * Object]" (Jeff, 2026-09-22); a person deserves to know it was the
+ * queue, or the pictures, or the plans themselves.
+ */
+const failed = (step: string, error: unknown) => new Error(`${step}: ${describeError(error)}`);
+
+/** How many ids go into one request; a URL has a length and a queue can be long. */
+const CHUNK = 100;
+/** How many rows one read brings back before another is needed. */
+const PAGE = 1000;
 
 export type ClearOutcome =
   | { ok: true; result: ClearedConnection }
@@ -39,7 +53,7 @@ export async function clearConnection(id: string): Promise<ClearOutcome> {
     )
     .eq("id", id)
     .maybeSingle();
-  if (error) throw error;
+  if (error) throw failed("reading the connection", error);
   if (!conn) return { ok: false, status: 404, error: "Connection not found" };
   const community = conn.fp_communities as unknown as {
     site_id: string;
@@ -52,7 +66,7 @@ export async function clearConnection(id: string): Promise<ClearOutcome> {
     .from("fp_floor_plans")
     .select("id, wix_record_id")
     .match(scope);
-  if (plansError) throw plansError;
+  if (plansError) throw failed("reading the connection's plans", plansError);
 
   let wixRemoved = 0;
   const wixFailed: string[] = [];
@@ -86,29 +100,51 @@ export async function clearConnection(id: string): Promise<ClearOutcome> {
   }
 
   // The pictures, while the plans and changes still say which ones are in scope.
-  const media = await releaseConnectionMedia(wix?.wix_site_id ?? null, scope);
+  const media = await releaseConnectionMedia(wix?.wix_site_id ?? null, scope).catch((error) => {
+    throw failed("releasing its pictures", error);
+  });
 
-  // Foreign keys: tasks and links reference plans, changes reference plans.
+  // Foreign keys: everything pointing at what is about to go, first.
+  // Tasks and links name a plan; a task also names the change it came
+  // from, and that one is not always a change of a plan still here — a
+  // Reset held up by a single follow-up task is a Reset that fails with
+  // nothing to show for it (Jeff, 2026-09-22).
   const planIds = (plans ?? []).map((p) => p.id);
   if (planIds.length) {
     const { error: tasksError } = await supabase.from("fp_follow_up_tasks").delete().in("floor_plan_id", planIds);
-    if (tasksError) throw tasksError;
+    if (tasksError) throw failed("clearing the follow-up tasks of its plans", tasksError);
     const { error: linksError } = await supabase.from("fp_plan_links").delete().in("floor_plan_id", planIds);
-    if (linksError) throw linksError;
+    if (linksError) throw failed("clearing its plan links", linksError);
   }
   const { error: scoresError } = await supabase.from("fp_plan_scores").delete().match(scope);
-  if (scoresError) throw scoresError;
+  if (scoresError) throw failed("clearing its scores", scoresError);
   const { error: standInsError } = await supabase.from("fp_stand_in_plans").delete().match(scope);
-  if (standInsError) throw standInsError;
-  const { data: changes, error: changesError } = await supabase
-    .from("fp_pending_changes")
-    .delete()
-    .match(scope)
-    .select("id");
-  if (changesError) throw changesError;
+  if (standInsError) throw failed("clearing its stand-in rules", standInsError);
+
+  // Every queued change, not just the first page of them: what is left
+  // behind would hold up the plans it names.
+  const changeIds: string[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data: queued, error: queuedError } = await supabase
+      .from("fp_pending_changes")
+      .select("id")
+      .match(scope)
+      .range(from, from + PAGE - 1);
+    if (queuedError) throw failed("reading its queued changes", queuedError);
+    changeIds.push(...(queued ?? []).map((c) => c.id));
+    if (!queued || queued.length < PAGE) break;
+  }
+  for (let i = 0; i < changeIds.length; i += CHUNK) {
+    const batch = changeIds.slice(i, i + CHUNK);
+    const { error: tasksError } = await supabase.from("fp_follow_up_tasks").delete().in("pending_change_id", batch);
+    if (tasksError) throw failed("clearing the follow-up tasks of its changes", tasksError);
+    const { error: changesError } = await supabase.from("fp_pending_changes").delete().in("id", batch);
+    if (changesError) throw failed("clearing its queued changes", changesError);
+  }
+
   if (planIds.length) {
     const { error: plansDeleteError } = await supabase.from("fp_floor_plans").delete().in("id", planIds);
-    if (plansDeleteError) throw plansDeleteError;
+    if (plansDeleteError) throw failed("clearing its plans", plansDeleteError);
   }
 
   return {
@@ -116,7 +152,7 @@ export async function clearConnection(id: string): Promise<ClearOutcome> {
     result: {
       plans: planIds.length,
       wixRemoved,
-      changes: changes?.length ?? 0,
+      changes: changeIds.length,
       photos: media.filesDeleted,
       photosFailed: media.filesFailed.length,
       photoRows: media.rows,

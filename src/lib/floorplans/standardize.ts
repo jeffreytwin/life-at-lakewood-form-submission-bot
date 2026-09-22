@@ -118,6 +118,22 @@ export function builderDefaults(config: Record<string, unknown> | null | undefin
 }
 
 /**
+ * What a builder labels as a tour that is not one. Perry Homes puts a "3D
+ * Tour" button on its plans that opens an interactive floor plan at
+ * blu-plan.com — a drawing to click around, not a walkthrough of the
+ * house (Jeff, 2026-09-22). Here rather than in one engine, because the
+ * label is the builder's and any engine can be taken in by it.
+ */
+const NOT_A_TOUR = /(?:^|\/\/|\.)blu-plan\.com(?:[/:?#]|$)/i;
+
+/** The address if it is a tour at all, and nothing if it only says it is. Exported for tests. */
+export function asTour(url: string | null | undefined): string | null {
+  const address = url?.trim();
+  if (!address) return null;
+  return NOT_A_TOUR.test(address) ? null : address;
+}
+
+/**
  * The plan as the site files it: standard home type, one number for beds,
  * baths and garages. A builder that only builds one type has it written in
  * whatever its page said; the builder's own labels are kept in raw either
@@ -126,16 +142,22 @@ export function builderDefaults(config: Record<string, unknown> | null | undefin
 export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults = {}): NormalizedPlan {
   const homeType = defaults.homeType ?? standardHomeType(plan.homeType);
   const garages = standardGarages(plan.garages);
+  const tour = asTour(plan.virtualTourUrl);
   return {
     ...plan,
     homeType,
     beds: largestInRange(plan.beds),
     baths: largestInRange(plan.baths),
     garages,
+    virtualTourUrl: tour,
+    // A plan whose tour turned out to be an interactive drawing has no
+    // still for it either; a plan that never had one is left alone.
+    ...(plan.virtualTourUrl && !tour ? { virtualTourImage: null } : {}),
     raw: {
       ...(plan.raw ?? {}),
       ...(plan.homeType && homeType !== plan.homeType ? { homeTypeRaw: plan.homeType } : {}),
       ...(plan.garages && garages !== plan.garages ? { garagesRaw: plan.garages } : {}),
+      ...(plan.virtualTourUrl && !tour ? { interactivePlanUrl: plan.virtualTourUrl } : {}),
     },
   };
 }

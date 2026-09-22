@@ -14,10 +14,11 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { firstGallery, fullSize, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
+import { firstGallery, fullSize, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
-import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
+import { asTour } from "@/lib/floorplans/standardize";
+import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
 /**
@@ -25,7 +26,7 @@ const MODEL = "claude-sonnet-5";
  * own ceiling with room for the reads and the diff that follow, so a slow
  * community finishes with what it has rather than being killed mid-run.
  */
-const RENDER_RUN_MS = 170_000;
+const RENDER_RUN_MS = 190_000;
 /**
  * Room for the answer about one listing page. A community with a dozen
  * plans, each with a dozen pictures whose URLs run long, needs more than
@@ -143,8 +144,23 @@ function listOf<T>(value: unknown): T[] {
  * is — the same distillation, the same reads, the same diff — so a builder
  * whose pages are empty without a browser differs from the rest in one
  * line (render.ts).
+ *
+ * A reader may also be asked to press something before it reads: a page
+ * that keeps its homes for sale behind a tab rather than on an address of
+ * its own has to be opened there first (Richmond American, Jeff
+ * 2026-09-22). Only a browser can press anything, so a plain fetch
+ * ignores the ask and says it pressed nothing, and the caller leaves that
+ * page alone.
  */
-export type PageReader = (url: string) => Promise<{ url: string; html: string }>;
+export interface ReadOptions {
+  /** Labels of the control to press, the first one the page has. */
+  press?: readonly string[];
+}
+
+export type PageReader = (
+  url: string,
+  opts?: ReadOptions
+) => Promise<{ url: string; html: string; pressed?: string | null }>;
 
 const fetchPage: PageReader = async (url) => {
   const res = await fetch(url, {
@@ -322,18 +338,34 @@ const OPAQUE_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
  * UUID that happens to spell a room does not move the picture.
  * Exported for tests.
  */
-export function orderPhotos(srcs: string[], outside: ReadonlySet<string> = new Set()) {
-  // The lead is the first picture that is not an outside view: a page that
-  // opens on the front of the house still shows a room first, because
-  // exteriors go last (gallery-order.ts).
-  const lead = srcs.find((src) => !outside.has(src));
+export function orderPhotos(srcs: string[], said: Record<string, GalleryMeta> = {}) {
+  // What each picture shows: what the page said outright, else what its
+  // file name says, else what the page titled it. A file named for
+  // nothing but a store's id says nothing, so a UUID that happens to
+  // spell a room does not move the picture.
+  const roomOf = (src: string): Room | null => {
+    const known = said[src];
+    if (known?.room) return known.room;
+    const name = src.split("/").pop() ?? "";
+    const fromName = OPAQUE_NAME.test(name) ? null : classifyRoom(fileNameWords(src));
+    return fromName ?? (known?.caption ? classifyRoom(known.caption) : null);
+  };
+  const rooms = new Map(srcs.map((src) => [src, roomOf(src)] as const));
+  // The lead is the first picture the page itself does not call an outside
+  // view: a page that opens on the front of the house still shows a room
+  // first, because exteriors go last (gallery-order.ts). A file name that
+  // calls itself an elevation does not disqualify the hero — the first
+  // picture is the one the list chose, and only the later ones named for
+  // an elevation are the alternatives (SimplyDwell, Jeff 2026-09-22).
+  const lead = srcs.find((src) => said[src]?.room !== "exterior");
   return orderGallery(
     srcs.map((src) => {
-      if (outside.has(src)) return { src, kind: "exterior" as const };
-      if (src === lead) return { src, kind: "primary" as const };
-      const name = src.split("/").pop() ?? "";
-      const room = OPAQUE_NAME.test(name) ? null : classifyRoom(fileNameWords(src));
-      return room === "exterior" ? { src, kind: "exterior" as const } : { src, room };
+      const caption = said[src]?.caption ?? null;
+      const room = rooms.get(src) ?? null;
+      if (said[src]?.room === "exterior") return { src, kind: "exterior" as const, caption };
+      if (src === lead) return { src, kind: "primary" as const, caption };
+      if (room === "exterior") return { src, kind: "exterior" as const, caption };
+      return { src, room, caption };
     })
   );
 }
@@ -396,6 +428,9 @@ export async function readPlanPageWithClaude(
   // where the headings gave nothing, so a plan never inherits the
   // community's other pictures.
   const carried = gallery.first.length ? [] : payloadGallery(html, page_.url);
+  // One photograph once, whichever of its spellings came first: the list's
+  // picture and the gallery's are often the same file in two formats.
+  const kept = new Set<string>();
   const photos = [
     ...plan.galleryImages,
     ...listOf<string>(page.photoImages),
@@ -404,8 +439,23 @@ export async function readPlanPageWithClaude(
   ]
     .filter((src) => src && !gallery.drop.has(src))
     .map((src) => fullSize(src, html))
-    .filter((src, i, all) => all.indexOf(src) === i);
+    .filter((src) => {
+      const key = pictureKey(src);
+      if (kept.has(key)) return false;
+      kept.add(key);
+      return true;
+    });
   // What the page said about its own pictures, kept for the ordering.
+  // Richmond American titles every picture in a gallery — "Bedroom of the
+  // Slate floor plan", "Elevation M of the Slate floor plan" — and names
+  // the files media-161663.webp, which says nothing at all (Jeff,
+  // 2026-09-22). Perry instead labels its payload, which is `carried`.
+  const said: Record<string, GalleryMeta> = {};
+  for (const image of gallery.first) {
+    const caption = image.alt.trim();
+    if (!caption) continue;
+    said[fullSize(image.src, html)] = { caption, room: classifyRoom(caption), kind: "photo" };
+  }
   const outside = Object.fromEntries(
     carried.filter((i) => i.outside).map((i) => [fullSize(i.src, html), OUTSIDE_META])
   );
@@ -437,7 +487,7 @@ export async function readPlanPageWithClaude(
     ]),
     galleryImages: photos,
     blueprintImages: blueprints,
-    galleryMeta: { ...plan.galleryMeta, ...outside },
+    galleryMeta: { ...plan.galleryMeta, ...said, ...outside },
   };
 }
 
@@ -448,9 +498,12 @@ export async function readPlanPageWithClaude(
  */
 async function listPage(
   url: string,
-  opts: { hint?: string; quickMoveIns?: boolean; read?: PageReader }
-): Promise<{ url: string; plans: NormalizedPlan[] }> {
-  const page = await (opts.read ?? fetchPage)(url);
+  opts: { hint?: string; quickMoveIns?: boolean; press?: readonly string[]; read?: PageReader }
+): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null }> {
+  const page = await (opts.read ?? fetchPage)(url, opts.press ? { press: opts.press } : undefined);
+  // Asked to open a tab and the page has no such tab: there is nothing
+  // behind it to read, and nothing to pay a model to read.
+  if (opts.press && !page.pressed) return { url: page.url || url, plans: [], pressed: null };
   const content = distill(page.html, page.url);
   if (content.length < 500) {
     throw new Error("page produced almost no text (JS-rendered? use render_claude)");
@@ -540,7 +593,7 @@ async function listPage(
       blueprintImages: listOf<string>(p.blueprintImages),
     };
   });
-  return { url: page.url || url, plans: listed };
+  return { url: page.url || url, plans: listed, pressed: page.pressed ?? null };
 }
 
 /**
@@ -573,11 +626,29 @@ export interface ClaudeExtractParams {
   hint?: string;
 }
 
+/**
+ * What a community calls the tab its homes for sale sit behind. Richmond
+ * American's is a button that changes nothing in the address bar, so
+ * there is no page to point the connection at — the tab has to be
+ * pressed (Jeff, 2026-09-22).
+ */
+const HOMES_TAB = [
+  "move-in ready",
+  "move-in ready homes",
+  "quick move-in",
+  "quick move-ins",
+  "quick move-in homes",
+  "available homes",
+  "homes for sale",
+  "inventory homes",
+] as const;
+
 /** The generic engine. Reads every page the same way; only the reader differs. */
 async function extractPages(
   params: ClaudeExtractParams,
   read: PageReader,
-  atOnce: number
+  atOnce: number,
+  can: { press?: boolean } = {}
 ): Promise<NormalizedPlan[]> {
   // The pages the plans are listed on: the community page, unless the
   // connection names others (a builder that splits a community by lot
@@ -590,10 +661,12 @@ async function extractPages(
   const taken = new Set<string>();
   const listed: NormalizedPlan[] = [];
   const refused: string[] = [];
+  const readPages: string[] = [];
   for (const pageUrl of planPages) {
     try {
       const page = await listPage(pageUrl, { hint: params.hint, read });
       listPages.add(page.url);
+      readPages.push(page.url || pageUrl);
       for (const plan of page.plans) {
         const planKey = distinctKey(plan, taken);
         taken.add(planKey);
@@ -632,6 +705,40 @@ async function extractPages(
     }
   }
 
+  // And the community that keeps its homes for sale behind a tab instead
+  // of on a page of its own. There is no address to point at, so the tab
+  // is pressed and the same page read again — which only a browser can
+  // do, and which costs one read and no model call where the page has no
+  // such tab (Richmond American, Jeff 2026-09-22).
+  if (can.press) {
+    for (const pageUrl of readPages) {
+      try {
+        const homes = await listPage(pageUrl, {
+          hint: params.hint,
+          quickMoveIns: true,
+          press: HOMES_TAB,
+          read,
+        });
+        if (!homes.pressed) continue;
+        logger.info("Read a community's homes from behind its own tab", {
+          url: pageUrl,
+          tab: homes.pressed,
+          homes: homes.plans.length,
+        });
+        for (const home of homes.plans) {
+          const planKey = distinctKey(home, taken);
+          taken.add(planKey);
+          listed.push({ ...home, planKey });
+        }
+      } catch (error) {
+        logger.warn("A community's homes tab could not be read", {
+          url: pageUrl,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
   // Each plan's own page, where the list linked one of its own. A page
   // that cannot be read costs that plan its extras, never the run.
   const pages = await mapLimit(listed, atOnce, async (plan) => {
@@ -644,7 +751,8 @@ async function extractPages(
         url: plan.sourceUrl,
         error: error instanceof Error ? error.message : String(error),
       });
-      return plan;
+      // What that page holds is unknown this run, not gone (diff.ts).
+      return { ...plan, pageUnread: true };
     }
   });
 
@@ -652,19 +760,17 @@ async function extractPages(
   // to the tour it shows. Only those: a plan that already has a real tour,
   // or none at all, costs nothing.
   const toured = await mapLimit(pages, atOnce, async (plan) => {
-    const tour = plan.virtualTourUrl;
+    // Not one a builder only calls a tour: Perry's "3D Tour" is an
+    // interactive drawing, and there is nothing behind it to follow
+    // (standardize.ts, which drops it either way).
+    const tour = asTour(plan.virtualTourUrl);
     if (!tour || isTourUrl(tour)) return plan;
     const deeper = await tourBehind(tour, read);
     return deeper ? { ...plan, virtualTourUrl: deeper } : plan;
   });
 
   return toured.map((plan) => {
-    const outside = new Set(
-      Object.entries(plan.galleryMeta ?? {})
-        .filter(([, meta]) => meta.room === "exterior")
-        .map(([src]) => src)
-    );
-    const ordered = orderPhotos(plan.galleryImages, outside);
+    const ordered = orderPhotos(plan.galleryImages, plan.galleryMeta ?? {});
     return { ...plan, galleryImages: ordered.urls, galleryMeta: ordered.meta };
   });
 }
@@ -679,12 +785,18 @@ export async function extractWithClaude(params: ClaudeExtractParams): Promise<No
  * Blazor site, Jeff 2026-09-22). A browser is rented for the run and
  * given back at the end of it, whether or not the run went well; fewer
  * pages at a time, since each one is a tab rather than a request.
+ *
+ * Three at a time rather than two: one Richmond community is eight plans
+ * and eleven homes, and every one of them has a page of its own to open
+ * (Jeff, 2026-09-22). A page the budget cannot reach is not a loss of
+ * what it holds — the plan says its page went unread and the diff leaves
+ * that plan's gallery alone (diff.ts).
  */
 export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
   const { renderPage, closeRenderer, renderBudget } = await import("@/lib/floorplans/extractors/render");
   renderBudget(RENDER_RUN_MS);
   try {
-    return await extractPages(params, renderPage, 2);
+    return await extractPages(params, renderPage, 3, { press: true });
   } finally {
     await closeRenderer();
   }

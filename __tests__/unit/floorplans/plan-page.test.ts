@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { firstGallery, fullSize, pictureKey, sectionsOf } from "@/lib/floorplans/extractors/plan-page";
+import {
+  firstGallery,
+  fullSize,
+  largestInSrcSet,
+  pictureKey,
+  sectionsOf,
+} from "@/lib/floorplans/extractors/plan-page";
 
 const BASE = "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/";
 const blob = (id: string, size: "sm" | "md" | "lg", ext = "jpg") =>
@@ -214,5 +220,28 @@ describe("fullSize", () => {
   it("leaves a URL that is not a thumbnail as it is", () => {
     expect(fullSize(blob("6e8cfe1d", "lg"), WYNDAM)).toBe(blob("6e8cfe1d", "lg"));
     expect(fullSize("https://x.test/kitchen.jpg", WYNDAM)).toBe("https://x.test/kitchen.jpg");
+  });
+});
+
+describe("a picture offered as a set of sizes", () => {
+  it("takes the largest the set names", () => {
+    expect(largestInSrcSet("/p-400.jpg 400w, /p-1600.jpg 1600w, /p-800.jpg 800w")).toBe("/p-1600.jpg");
+    expect(largestInSrcSet("/p.jpg 1x, /p@2x.jpg 2x")).toBe("/p@2x.jpg");
+    expect(largestInSrcSet("/only.jpg")).toBe("/only.jpg");
+    expect(largestInSrcSet(null)).toBe(null);
+    expect(largestInSrcSet("   ")).toBe(null);
+  });
+
+  it("reads a gallery whose pictures carry no src at all", () => {
+    const html =
+      '<h2>Gallery</h2>' +
+      '<img srcset="https://x.test/a-400.webp 400w, https://x.test/a-1600.webp 1600w" alt="Kitchen">' +
+      '<img data-srcset="https://x.test/b-1200.webp 1200w" alt="Bedroom">';
+    const [, gallery] = sectionsOf(html, "https://x.test/plan/");
+    expect(gallery.heading).toBe("Gallery");
+    expect(gallery.images.map((i) => i.src)).toEqual([
+      "https://x.test/a-1600.webp",
+      "https://x.test/b-1200.webp",
+    ]);
   });
 });

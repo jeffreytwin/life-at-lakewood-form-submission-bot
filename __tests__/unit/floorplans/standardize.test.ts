@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   HOME_TYPES,
+  asTour,
   builderDefaults,
   largestInRange,
   standardGarages,
@@ -76,6 +77,43 @@ describe("standardizePlan", () => {
 
   it("records nothing in raw when the label was already standard", () => {
     expect(standardizePlan({ ...plan, homeType: "Townhome" }).raw).toEqual({ masterPlanID: 14510 });
+  });
+
+  it("drops a tour that is only an interactive floor plan, and keeps the address in raw", () => {
+    // Perry's "3D Tour" button opens a drawing to click around, not a
+    // walkthrough of the house (Jeff, 2026-09-22).
+    const out = standardizePlan({
+      ...plan,
+      virtualTourUrl: "https://www.blu-plan.com/perryhomes/3024F/",
+      virtualTourImage: "https://cdn/still.jpg",
+    });
+    expect(out.virtualTourUrl).toBeNull();
+    expect(out.virtualTourImage).toBeNull();
+    expect(out.raw).toMatchObject({ interactivePlanUrl: "https://www.blu-plan.com/perryhomes/3024F/" });
+  });
+
+  it("leaves a real tour, and a plan that never had one, alone", () => {
+    const real = standardizePlan({
+      ...plan,
+      virtualTourUrl: "https://my.matterport.com/show/?m=abc123",
+      virtualTourImage: "https://cdn/still.jpg",
+    });
+    expect(real.virtualTourUrl).toBe("https://my.matterport.com/show/?m=abc123");
+    expect(real.virtualTourImage).toBe("https://cdn/still.jpg");
+    expect(standardizePlan(plan).raw).not.toHaveProperty("interactivePlanUrl");
+  });
+});
+
+describe("asTour", () => {
+  it("knows an interactive floor plan from a tour", () => {
+    expect(asTour("https://blu-plan.com/x/")).toBeNull();
+    expect(asTour("https://www.blu-plan.com/perryhomes/3024F/")).toBeNull();
+    expect(asTour("http://BLU-PLAN.COM")).toBeNull();
+    expect(asTour("https://my.matterport.com/show/?m=abc")).toBe("https://my.matterport.com/show/?m=abc");
+    // Not a blanket ban on the word: another host that merely contains it.
+    expect(asTour("https://tours.blu-planner.com/123")).toBe("https://tours.blu-planner.com/123");
+    expect(asTour(null)).toBeNull();
+    expect(asTour("  ")).toBeNull();
   });
 });
 

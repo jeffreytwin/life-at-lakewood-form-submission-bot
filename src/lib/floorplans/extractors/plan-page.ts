@@ -41,6 +41,24 @@ export interface PageSection {
 const attr = (tag: string, name: string): string | null =>
   tag.match(new RegExp(`\\s${name}=["']([^"']*)["']`, "i"))?.[1] ?? null;
 
+/**
+ * The largest picture a responsive image offers, out of the set it lists:
+ * `photo-400.jpg 400w, photo-1600.jpg 1600w`. A gallery whose pictures
+ * carry only a set and no src reads as no pictures at all otherwise.
+ * Exported for tests.
+ */
+export function largestInSrcSet(value: string | null): string | null {
+  if (!value) return null;
+  let best: { url: string; size: number } | null = null;
+  for (const entry of value.split(",")) {
+    const [url, measure] = entry.trim().split(/\s+/);
+    if (!url) continue;
+    const size = measure ? parseFloat(measure) || 0 : 0;
+    if (!best || size >= best.size) best = { url, size };
+  }
+  return best?.url ?? null;
+}
+
 /** A heading's words, with the spans, comments and entities a framework leaves in it. */
 function readable(html: string): string {
   return html
@@ -76,7 +94,10 @@ export function sectionsOf(html: string, baseUrl: string): PageSection[] {
     marks.push({ at: m.index ?? 0, heading: { level: Number(m[1]), text: readable(m[2]) } });
   }
   for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
-    const src = attr(m[0], "src") || attr(m[0], "data-src");
+    const src =
+      attr(m[0], "src") ||
+      attr(m[0], "data-src") ||
+      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset"));
     if (!src || src.startsWith("data:")) continue;
     marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: attr(m[0], "alt") ?? "" } });
   }
@@ -205,16 +226,23 @@ const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /** The sizes a media store keeps one picture at, largest first. */
 const SIZES = ["lg", "md", "sm"] as const;
 const SIZED = /^(.+)_(?:sm|md|lg)(\.[a-z0-9]+)$/i;
+/** The other spelling: "media-161663-thumbnail.webp" beside "media-161663.webp" (Richmond American). */
+const THUMB = /^(.+)-thumbnail(\.[a-z0-9]+)$/i;
 
 /**
- * The picture a sized copy is a copy of: Stock's data lists every gallery
- * picture as both "<id>_sm.jpg" and "<id>_md.jpg", which is one picture
- * twice (Jeff, 2026-09-22).
+ * One photograph, however a site spells it. Stock's data lists every
+ * gallery picture as both "<id>_sm.jpg" and "<id>_md.jpg"; Richmond puts
+ * "media-180528.jpg" at the top of a plan's page and
+ * "media-180528.webp" in its gallery, and that is the same elevation
+ * twice — once at the front of the gallery and once at the end of it
+ * (Jeff, 2026-09-22). So the size, the thumbnail mark and the format all
+ * come off.
  */
 export function pictureKey(src: string): string {
   const name = src.split("/").pop() ?? "";
-  const sized = name.match(SIZED);
-  return sized ? src.replace(name, `${sized[1]}${sized[2]}`) : src;
+  const sized = name.match(SIZED) ?? name.match(THUMB);
+  const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(/\.(jpe?g|png|webp|avif|gif)$/i, "");
+  return src.replace(name, plain);
 }
 
 /**
@@ -228,6 +256,16 @@ export function pictureKey(src: string): string {
  */
 export function fullSize(src: string, html: string): string {
   const name = src.split("/").pop() ?? "";
+
+  // Richmond American writes a gallery's picture at two sizes and picks
+  // between them by window width, so the thumbnail is what a narrow
+  // window takes (Jeff, 2026-09-22).
+  const thumb = name.match(THUMB);
+  if (thumb) {
+    const original = `${thumb[1]}${thumb[2]}`;
+    if (html.includes(original)) return src.replace(name, original);
+    return src;
+  }
 
   const stem = name.match(SIZED)?.[1];
   if (stem) {
