@@ -252,6 +252,9 @@ export default function FloorPlansPage() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [creatingPlan, setCreatingPlan] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [sorting, setSorting] = useState(false);
+  /** What the last sort managed to place, so the overlay can say so. */
+  const [sorted, setSorted] = useState<{ placed: number; of: number } | null>(null);
   const [editGallery, setEditGallery] = useState<string[]>([]);
   const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -427,6 +430,7 @@ export default function FloorPlansPage() {
     setEditGallery(gallery);
     setEditBlueprints(rec.blueprintImages ?? []);
     setPreview(null);
+    setSorted(null);
     setEditing(group);
   }
 
@@ -489,6 +493,37 @@ export default function FloorPlansPage() {
     } finally {
       setRestoring(false);
       fetchChanges();
+    }
+  }
+
+  /**
+   * Puts the photos in the order the sites show them, from what the
+   * pictures themselves show: the front of the house leads, the rooms
+   * follow, the other outside views go last. Plenty of builders name a
+   * picture nothing a room can be read from — "4638-8-scaled-1.webp", a
+   * media store's UUID — and those galleries arrived in page order for a
+   * person to arrange (Jeff, 2026-09-22). The new order lands in the
+   * overlay for a look; it is saved with the rest on Save.
+   */
+  async function sortPhotos() {
+    if (!editing) return;
+    setSorting(true);
+    setSorted(null);
+    try {
+      const res = await fetch(`/api/internal/floorplans/changes/${editing.lead.id}/sort-photos`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ galleryImages: editGallery }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(data?.galleryImages)) {
+        alert(`Could not sort the photos: ${data?.error ?? `HTTP ${res.status}`}`);
+        return;
+      }
+      setEditGallery(data.galleryImages as string[]);
+      setSorted({ placed: typeof data.placed === "number" ? data.placed : 0, of: editGallery.length });
+    } finally {
+      setSorting(false);
     }
   }
 
@@ -1114,12 +1149,32 @@ export default function FloorPlansPage() {
                   isPhotos={false}
                   onPreview={setPreview}
                 />
+                {editGallery.length > 1 && (
+                  <div className="form-group">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      disabled={sorting || savingEdit || restoring}
+                      onClick={sortPhotos}
+                      title="Claude looks at each photo and puts them in the site's order: the front of the house first, then kitchen, living, dining, outdoor, and the other exterior shots last."
+                    >
+                      {sorting ? "Looking at the photos…" : "✨ Sort the photos"}
+                    </button>
+                    <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+                      {sorted
+                        ? sorted.placed === sorted.of
+                          ? `Placed all ${sorted.of} photos. Drag any that are wrong, then Save.`
+                          : `Placed ${sorted.placed} of ${sorted.of} photos; the rest kept their order. Drag any that are wrong, then Save.`
+                        : "Claude looks at each picture and orders them the way the sites do. Nothing is saved until you press Save."}
+                    </div>
+                  </div>
+                )}
                 {restorable && (
                   <div className="form-group">
                     <button
                       type="button"
                       className="btn btn-secondary"
-                      disabled={restoring || savingEdit}
+                      disabled={restoring || savingEdit || sorting}
                       onClick={restorePictures}
                       title="Every photo and drawing the builder gave comes back, in the builder's order, saved at once."
                     >
