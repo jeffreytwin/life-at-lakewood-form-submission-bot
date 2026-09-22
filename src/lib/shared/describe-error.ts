@@ -12,15 +12,26 @@ export function describeError(error: unknown): string {
     return `${error.message}${cause}`;
   }
   if (error && typeof error === "object") {
-    const it = error as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
+    const it = error as {
+      message?: unknown;
+      code?: unknown;
+      details?: unknown;
+      hint?: unknown;
+      status?: unknown;
+    };
     const said = [
       typeof it.message === "string" ? it.message : null,
       typeof it.details === "string" && it.details ? it.details : null,
       typeof it.hint === "string" && it.hint ? it.hint : null,
     ].filter(Boolean);
     if (said.length) {
-      const code = typeof it.code === "string" && it.code ? ` (${it.code})` : "";
-      return `${said.join(" — ")}${code}`;
+      // "Bad Request" on its own is a gateway's answer, not the
+      // database's: the number is the only thing that says so.
+      const marks = [
+        typeof it.code === "string" && it.code ? it.code : null,
+        typeof it.status === "number" ? String(it.status) : null,
+      ].filter(Boolean);
+      return `${said.join(" — ")}${marks.length ? ` (${marks.join(" ")})` : ""}`;
     }
     try {
       return JSON.stringify(error).slice(0, 500);
@@ -30,3 +41,6 @@ export function describeError(error: unknown): string {
   }
   return String(error);
 }
+
+/** The same, saying which step of a longer piece of work it was. */
+export const failedAt = (step: string, error: unknown) => new Error(`${step}: ${describeError(error)}`);
