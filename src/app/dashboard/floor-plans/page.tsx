@@ -233,6 +233,8 @@ export default function FloorPlansPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  /** Seconds the run is waiting out a Wix throttle, so the buttons say so instead of looking stuck. */
+  const [throttleWait, setThrottleWait] = useState(0);
   const [editing, setEditing] = useState<Group | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -350,6 +352,10 @@ export default function FloorPlansPage() {
   );
   // Plans the server is writing right now; each leaves the list as its write finishes.
   const approvingCount = useMemo(() => siteGroups.filter((g) => g.status === "approving").length, [siteGroups]);
+  // Wix refuses a client that asks too often, and a full run asks far
+  // more than it allows, so the run waits it out rather than dropping
+  // plans (Jeff, 2026-09-22). The button says which it is doing.
+  const busyLabel = throttleWait ? `Wix is busy; waiting ${throttleWait}s…` : "Approving…";
   const approvingInView = useMemo(() => changes.some((c) => c.status === "approving"), [changes]);
   // The writes run on the server (Jeff, 2026-09-21), so the queue is
   // re-read while any row is being written: after Approve All here, and
@@ -565,16 +571,27 @@ export default function FloorPlansPage() {
           else if (r.status === "blocked") blocked.add(names.get(r.planKey) ?? r.planKey);
         }
         const remaining = (Array.isArray(data.remaining) ? data.remaining : []).filter((x: unknown): x is string => typeof x === "string");
-        if (remaining.length >= ids.length) {
+        // Wix throttles this app at a few hundred calls a minute and a
+        // full run imports far more, so the server stops and says how long
+        // to leave it rather than dropping plans (Jeff, 2026-09-22). That
+        // is progress, not a stall.
+        const retryAfterMs = typeof data.retryAfterMs === "number" ? Math.min(data.retryAfterMs, 120_000) : 0;
+        if (!retryAfterMs && remaining.length >= ids.length) {
           requestError = "the server made no progress";
           break;
         }
         if (remaining.length) slices.unshift(remaining);
+        if (retryAfterMs) {
+          setThrottleWait(Math.ceil(retryAfterMs / 1000));
+          await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
+          setThrottleWait(0);
+        }
       }
     } catch (e) {
       requestError = e instanceof Error ? e.message : String(e);
     } finally {
       clearInterval(poll);
+      setThrottleWait(0);
       setBulkBusy(false);
       fetchChanges();
       const notes: string[] = [];
@@ -623,12 +640,12 @@ export default function FloorPlansPage() {
                 disabled={bulkBusy}
                 title="Every pending quick move-in the site and builder filters allow, whatever the view shows"
               >
-                {bulkBusy ? "Approving…" : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
+                {bulkBusy ? busyLabel : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
               </button>
             )}
             {pendingGroups.length > 0 && (
               <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy}>
-                {bulkBusy ? "Approving…" : `Approve All (${pendingGroups.length})`}
+                {bulkBusy ? busyLabel : `Approve All (${pendingGroups.length})`}
               </button>
             )}
           </div>

@@ -58,12 +58,36 @@ function apiKey(): string {
  * six hundred — so calls are spaced to stay under the rate rather than
  * discovering it (Jeff, 2026-09-21: Ibis and Marino reached Wix with one
  * picture each of nineteen and twenty-seven, 170 imports refused).
+ *
+ * A hundred a minute, not the documented two hundred: at a hundred and
+ * fifty the approvals of 2026-09-22 ran for ninety-eight seconds before
+ * Wix cut them off, so the rolling window this app instance really has is
+ * smaller than the number in the docs — the crons and the Hub's own pages
+ * spend from the same budget.
  */
-const RATE_PER_MINUTE = 150;
+const RATE_PER_MINUTE = 100;
 const SPACING_MS = 60_000 / RATE_PER_MINUTE;
-/** Calls that may go at once before the spacing bites, so a page's few reads never wait. Kept low enough that the burst and the first minute's spacing together stay under Wix's 200. */
-const BURST = 30;
+/** Calls that may go at once before the spacing bites, so a page's few reads never wait. */
+const BURST = 10;
 const MAX_ATTEMPTS = 4;
+
+/**
+ * Tries a throttled call gets before the caller is told Wix is refusing:
+ * one retry, after a cooldown. A throttle that outlasts that is not
+ * waited out inside a serverless function — the caller stops and comes
+ * back (changes/bulk).
+ */
+const MAX_THROTTLE_ATTEMPTS = 2;
+
+/**
+ * How long the whole client holds off once Wix refuses a call, longer
+ * each time it happens. Wix's throttle is not a moment: on 2026-09-22 it
+ * refused every import from 01:27:50 to 01:29:59 without a pause, and a
+ * client that keeps knocking every second or two keeps the window full
+ * and never gets back in — three plans of the twenty-four were dropped
+ * that way, each after four tries inside seven seconds.
+ */
+const COOLDOWNS_MS = [20_000, 45_000, 90_000];
 
 /**
  * When this call may go, and when the one after it may: a token bucket,
@@ -78,22 +102,57 @@ export function nextTurn(now: number, owed: number): { at: number; owed: number 
   return { at: Math.max(now, earned), owed: earned + SPACING_MS };
 }
 
+/**
+ * How long to hold off after a refusal: what Wix asked for, else the next
+ * rung of the ladder, so a throttle that keeps coming back is given
+ * longer each time. Pure, for the tests.
+ */
+export function nextCooldown(refusals: number, retryAfterSeconds: number | null): number {
+  if (retryAfterSeconds != null) return Math.min(Math.max(retryAfterSeconds, 1), 120) * 1000;
+  return COOLDOWNS_MS[Math.min(Math.max(refusals, 0), COOLDOWNS_MS.length - 1)];
+}
+
 // A monotonic clock, and not the one tests mock when they pin Date.now().
 let owedAt = 0;
-/** Waits for this call's turn in the rate, and takes it. */
+/** Where the cooldown after a refusal ends, on the same clock. */
+let cooledUntil = 0;
+/** Refusals since the last call that went through, for the ladder. */
+let refusals = 0;
+
+/** How long the client is holding off because Wix refused it; 0 when it is not. */
+export function wixThrottleWaitMs(): number {
+  return Math.max(0, Math.round(cooledUntil - performance.now()));
+}
+
+/** Forgets the rate and the cooldown. Tests only. */
+export function resetWixRate(): void {
+  owedAt = 0;
+  cooledUntil = 0;
+  refusals = 0;
+}
+
+/** Wix refused a call: the whole client holds off, not just this one. Returns the wait. */
+function holdOff(retryAfterSeconds: number | null): number {
+  const wait = nextCooldown(refusals, retryAfterSeconds);
+  refusals += 1;
+  cooledUntil = Math.max(cooledUntil, performance.now() + wait);
+  return wait;
+}
+
+/** Waits for this call's turn in the rate, and for any cooldown, and takes it. */
 async function takeSlot(): Promise<void> {
   const now = performance.now();
   const turn = nextTurn(now, owedAt);
   owedAt = turn.owed;
-  // Under test the rate is arithmetic, not a wait: nextTurn is tested directly.
-  if (turn.at > now && !process.env.VITEST) {
-    await new Promise((resolve) => setTimeout(resolve, turn.at - now));
+  const at = Math.max(turn.at, cooledUntil);
+  // Under test the rate is arithmetic, not a wait: nextTurn and nextCooldown are tested directly.
+  if (at > now && !process.env.VITEST) {
+    await new Promise((resolve) => setTimeout(resolve, at - now));
   }
 }
 
-/** How long to wait before trying again: what Wix asked for, else backing off. */
-function retryDelayMs(error: WixApiError, attempt: number): number {
-  if (error.retryAfterSeconds != null) return Math.min(error.retryAfterSeconds, 30) * 1000;
+/** How long to wait before trying a briefly broken Wix again. */
+function retryDelayMs(attempt: number): number {
   return Math.min(1000 * 2 ** (attempt - 1), 8000) + Math.floor(Math.random() * 250);
 }
 
@@ -116,17 +175,26 @@ async function wixRequest<T>(
       signal: AbortSignal.timeout(30_000),
     });
     const text = await res.text();
-    if (res.ok) return (text ? JSON.parse(text) : null) as T;
+    if (res.ok) {
+      // A call that went through says the throttle is over.
+      refusals = 0;
+      return (text ? JSON.parse(text) : null) as T;
+    }
 
     const retryAfter = res.headers.get("retry-after");
     const error = new WixApiError(res.status, text, `${method} ${path}`, retryAfter);
-    // A throttled or briefly broken Wix is waited out, not reported as a
-    // picture that cannot be imported.
-    const worthRetrying = error.rateLimited || res.status >= 500;
-    if (worthRetrying && attempt < MAX_ATTEMPTS) {
-      const wait = retryDelayMs(error, attempt);
-      logger.warn("Wix API request throttled; waiting", { method, path, status: res.status, retryAfter, attempt, wait });
-      await new Promise((resolve) => setTimeout(resolve, wait));
+    // A throttled Wix stops the whole client for a cooldown, which the
+    // next turn takes; a briefly broken one is waited out here.
+    if (error.rateLimited) {
+      const wait = holdOff(error.retryAfterSeconds);
+      if (attempt < MAX_THROTTLE_ATTEMPTS) {
+        logger.warn("Wix throttled the client; holding off", { method, path, retryAfter, attempt, wait });
+        continue;
+      }
+    } else if (res.status >= 500 && attempt < MAX_ATTEMPTS) {
+      const wait = retryDelayMs(attempt);
+      logger.warn("Wix answered with a server error; waiting", { method, path, status: res.status, attempt, wait });
+      if (!process.env.VITEST) await new Promise((resolve) => setTimeout(resolve, wait));
       continue;
     }
     logger.error("Wix API request failed", {

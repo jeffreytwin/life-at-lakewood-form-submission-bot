@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { applyPendingChange } from "@/lib/floorplans/writeback";
 import { approvalBlocker } from "@/lib/floorplans/approval";
+import { wixThrottleWaitMs } from "@/lib/wix/client";
 
 export const dynamic = "force-dynamic";
 // The write-back fetches, measures and imports every photo of the plan in
@@ -45,6 +46,19 @@ export async function POST(
     }
 
     const result = await applyPendingChange(id);
+    if (result.throttled) {
+      // Wix is refusing everyone; the plan is fine and goes back to the
+      // queue to be approved again once the cooldown is over.
+      await supabase
+        .from("fp_pending_changes")
+        .update({ status: "pending", updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("status", "approved");
+      return NextResponse.json(
+        { ...result, retryAfterMs: Math.max(wixThrottleWaitMs(), 1000) },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(result, {
       status: result.status === "failed" ? 502 : 200,
     });
