@@ -10,7 +10,8 @@ interface Connection {
   last_run_status: string | null;
   last_plan_count: number | null;
   consecutive_failures: number;
-  extractor_params: { url?: string } | null;
+  /** url: the plans page. quickMoveInUrl: the separate page of homes for sale, where the builder keeps one. */
+  extractor_params: { url?: string; quickMoveInUrl?: string } | null;
   fp_communities: { name: string; fp_sites: { domain: string } | null } | null;
 }
 
@@ -94,6 +95,25 @@ export default function BuildersSettingsPage() {
   useEffect(() => {
     fetchBuilders();
   }, [fetchBuilders]);
+
+  /** Sets one of a connection's page addresses; blank clears it. */
+  const editConnectionUrl = useCallback(
+    async (c: Connection, field: "url" | "quickMoveInUrl", ask: string) => {
+      const url = window.prompt(ask, c.extractor_params?.[field] ?? "");
+      if (url === null) return;
+      const res = await fetch(`/api/internal/floorplans/connections/${c.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ [field]: url }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setError(body?.error ?? "Failed to save the URL");
+      }
+      fetchBuilders();
+    },
+    [fetchBuilders]
+  );
 
   async function toggleBuilder(b: Builder) {
     await fetch(`/api/internal/floorplans/builders/${b.id}`, {
@@ -390,23 +410,50 @@ export default function BuildersSettingsPage() {
                                 <button
                                   className="btn btn-secondary"
                                   style={{ padding: "0 6px", fontSize: 11 }}
-                                  onClick={async () => {
-                                    const url = window.prompt(
-                                      "Builder page URL for this community (blank = re-discover on next run):",
-                                      c.extractor_params?.url ?? ""
-                                    );
-                                    if (url === null) return;
-                                    await fetch(`/api/internal/floorplans/connections/${c.id}`, {
-                                      method: "PATCH",
-                                      headers: { "content-type": "application/json" },
-                                      body: JSON.stringify({ url }),
-                                    });
-                                    fetchBuilders();
-                                  }}
+                                  onClick={() =>
+                                    editConnectionUrl(
+                                      c,
+                                      "url",
+                                      "Builder page URL for this community (blank = re-discover on next run):"
+                                    )
+                                  }
                                 >
                                   edit URL
                                 </button>
                               </div>
+                              {/* Builders that keep their homes for sale on a
+                                  page of their own (Stock's /inventory/). Only
+                                  the generic Claude engine reads a second page;
+                                  the bespoke ones get homes from their API. */}
+                              {b.extraction_method === "fetch_claude" && (
+                                <div>
+                                  {c.extractor_params?.quickMoveInUrl ? (
+                                    <a
+                                      href={c.extractor_params.quickMoveInUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-muted text-sm"
+                                    >
+                                      move-ins page ↗
+                                    </a>
+                                  ) : (
+                                    <span className="text-muted text-sm">move-ins come off the source page</span>
+                                  )}{" "}
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: "0 6px", fontSize: 11 }}
+                                    onClick={() =>
+                                      editConnectionUrl(
+                                        c,
+                                        "quickMoveInUrl",
+                                        "Quick move-in page URL, where this builder lists its homes for sale away from its plans (blank = read them off the source page):"
+                                      )
+                                    }
+                                  >
+                                    edit move-ins URL
+                                  </button>
+                                </div>
+                              )}
                             </td>
                             <td className="text-muted text-sm">
                               {c.last_plan_count != null ? `${c.last_plan_count} plans` : "—"}

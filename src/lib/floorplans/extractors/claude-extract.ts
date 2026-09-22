@@ -52,6 +52,7 @@ const EXTRACT_TOOL: Anthropic.Tool = {
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
+            relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address" },
             sourceUrl: { type: "string", description: "Absolute URL of the plan's detail page if linked" },
             description: { type: "string", description: "The builder's own description of the plan, as written; omit if the page gives none" },
             virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour / 3D walkthrough for this plan; omit if none" },
@@ -75,6 +76,7 @@ interface ExtractedPlan {
   garages?: string;
   homeType?: string;
   quickMoveIn?: boolean;
+  relatedPlanName?: string;
   sourceUrl?: string;
   description?: string;
   virtualTourUrl?: string;
@@ -263,7 +265,7 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
     messages: [
       {
         role: "user",
-        content: `This is the page of one floor plan, "${plan.name}". Report only what the page itself says about that plan — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
+        content: `This is the page of one ${plan.quickMoveIn ? `home for sale, "${plan.name}"` : `floor plan, "${plan.name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
       },
     ],
   });
@@ -299,21 +301,32 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
   };
 }
 
-export async function extractWithClaude(params: {
-  url?: string;
-  hint?: string;
-}): Promise<NormalizedPlan[]> {
-  if (!params?.url) throw new Error("fetch_claude extractor requires extractor_params.url");
-  const res = await fetch(params.url, {
+/**
+ * What one listing page holds, read the same way whichever page it is.
+ * The address it answered from comes back with the plans: a list that
+ * redirects is still a list, and must not be read again as a plan page.
+ */
+async function listPage(
+  url: string,
+  opts: { hint?: string; quickMoveIns?: boolean }
+): Promise<{ url: string; plans: NormalizedPlan[] }> {
+  const res = await fetch(url, {
     headers: { "user-agent": UA, accept: "text/html" },
     redirect: "follow",
     signal: AbortSignal.timeout(30_000),
   });
-  if (!res.ok) throw new Error(`fetch ${params.url}: ${res.status}`);
+  if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
   const content = distill(await res.text(), res.url);
   if (content.length < 500) {
     throw new Error("page produced almost no text (JS-rendered? use render_claude)");
   }
+
+  // A page of nothing but quick move-ins is told so: every entry is a house
+  // standing on a lot, named by its address, and the plan it is built from
+  // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
+  const what = opts.quickMoveIns
+    ? `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`
+    : `Extract every floor plan / home model from this new-home community page. Include quick move-in (inventory) homes as separate entries with quickMoveIn=true, named by their street address, with the plan they are built from in relatedPlanName.`;
 
   const response = await getClient().messages.create({
     model: MODEL,
@@ -323,7 +336,7 @@ export async function extractWithClaude(params: {
     messages: [
       {
         role: "user",
-        content: `Extract every floor plan / home model from this new-home community page. Include quick move-in (inventory) homes as separate entries with quickMoveIn=true. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${params.hint ? ` Hint: ${params.hint}` : ""}\n\nPage URL: ${params.url}\n\nPAGE CONTENT:\n${content}`,
+        content: `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`,
       },
     ],
   });
@@ -336,29 +349,89 @@ export async function extractWithClaude(params: {
     (p) => p.name?.trim()
   );
 
-  const listed = plans.map((p) => ({
-    planKey: normKey(p.name),
-    name: p.name.trim(),
-    price: p.price ?? null,
-    priceDisplay: money(p.price),
-    beds: p.beds ?? "",
-    baths: p.baths ?? "",
-    sqft: p.sqft ?? null,
-    garages: p.garages ?? null,
-    homeType: p.homeType ?? null,
-    quickMoveIn: p.quickMoveIn === true,
-    comingSoon: false,
-    sourceUrl: p.sourceUrl ?? params.url ?? null,
-    description: p.description?.trim() || null,
-    virtualTourUrl: p.virtualTourUrl?.trim() || null,
-    galleryImages: p.photoImages ?? [],
-    blueprintImages: p.blueprintImages ?? [],
-  }));
+  const listed = plans.map((p) => {
+    const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true;
+    return {
+      planKey: normKey(p.name),
+      name: p.name.trim(),
+      price: p.price ?? null,
+      priceDisplay: money(p.price),
+      beds: p.beds ?? "",
+      baths: p.baths ?? "",
+      sqft: p.sqft ?? null,
+      garages: p.garages ?? null,
+      homeType: p.homeType ?? null,
+      quickMoveIn,
+      // Only a home stands on a plan; a plan named as its own base plan is
+      // Claude reading the field too eagerly, and means nothing downstream.
+      relatedPlanName: (quickMoveIn ? p.relatedPlanName?.trim() : "") || null,
+      comingSoon: false,
+      sourceUrl: p.sourceUrl ?? res.url ?? url,
+      description: p.description?.trim() || null,
+      virtualTourUrl: p.virtualTourUrl?.trim() || null,
+      galleryImages: p.photoImages ?? [],
+      blueprintImages: p.blueprintImages ?? [],
+    };
+  });
+  return { url: res.url || url, plans: listed };
+}
+
+/**
+ * A key no base plan already has. A quick move-in named for the plan it is
+ * built from would otherwise take that plan's key and the two would be read
+ * as one; the id in its own page's address keeps them apart, and is the
+ * same from one run to the next.
+ */
+export function distinctKey(plan: NormalizedPlan, taken: Set<string>): string {
+  if (!taken.has(plan.planKey)) return plan.planKey;
+  const tail = (plan.sourceUrl ?? "").split(/[?#]/)[0].split("/").filter(Boolean).pop() ?? "";
+  const suffix = normKey(tail);
+  let key = suffix ? `${plan.planKey}-${suffix}` : plan.planKey;
+  for (let n = 2; taken.has(key); n++) key = `${plan.planKey}-${suffix || "home"}-${n}`;
+  return key;
+}
+
+export async function extractWithClaude(params: {
+  url?: string;
+  /** A second page, where the builder lists its quick move-ins away from its plans. */
+  quickMoveInUrl?: string;
+  hint?: string;
+}): Promise<NormalizedPlan[]> {
+  if (!params?.url) throw new Error("fetch_claude extractor requires extractor_params.url");
+  const plansPage = await listPage(params.url, { hint: params.hint });
+  const listPages = new Set([params.url, plansPage.url]);
+
+  // The builder's own page of homes for sale, where it keeps one away from
+  // its plans (Stock's /inventory/, Jeff 2026-09-22). A page that cannot be
+  // read costs the run its homes, never its plans.
+  let homes: NormalizedPlan[] = [];
+  const homesUrl = params.quickMoveInUrl?.trim();
+  if (homesUrl && homesUrl !== params.url) {
+    try {
+      const homesPage = await listPage(homesUrl, { hint: params.hint, quickMoveIns: true });
+      homes = homesPage.plans;
+      listPages.add(homesUrl).add(homesPage.url);
+    } catch (error) {
+      logger.warn("Quick move-in page could not be read", {
+        url: homesUrl,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  // A home named for the plan it is built from would take that plan's key.
+  const taken = new Set(plansPage.plans.map((p) => p.planKey));
+  const listed = [...plansPage.plans];
+  for (const home of homes) {
+    const planKey = distinctKey(home, taken);
+    taken.add(planKey);
+    listed.push({ ...home, planKey });
+  }
 
   // Each plan's own page, where the list linked one of its own. A page
   // that cannot be read costs that plan its extras, never the run.
   const read = await mapLimit(listed, 4, async (plan) => {
-    if (!plan.sourceUrl || plan.sourceUrl === params.url || plan.sourceUrl === res.url) return plan;
+    if (!plan.sourceUrl || listPages.has(plan.sourceUrl)) return plan;
     try {
       return await readPlanPageWithClaude(plan);
     } catch (error) {

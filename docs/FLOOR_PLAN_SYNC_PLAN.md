@@ -514,6 +514,13 @@ cutover safe and future sites cheap.
 ### `fp_builder_communities` (the nightly work list)
 - `id` pk, `builder_id` fk, `community_id` fk
 - `extractor_params` jsonb (community URL, zip, builder-internal community id, …)
+  - `url`: the page the plans are read from (auto-discovered on first run; editable in
+    Settings → Builders)
+  - `quickMoveInUrl`: a second page, for builders that keep their homes for sale away
+    from their plans (Stock's `/inventory/`). Read by the generic Claude engine only —
+    the bespoke engines get their homes from the builder's API. Every entry on it is a
+    quick move-in, named by its address, tied to its plan by the name the listing
+    prints above it.
 - `active` bool (per-community pause/resume, same semantics as the builder-level flag)
 - `last_run_at`, `last_run_status`, `last_plan_count`, `consecutive_failures`
   (drives the zero/partial-scrape guard and the health display in Settings → Builders)
