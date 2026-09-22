@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { orderPhotos, tourLinkIn, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
+import { distinctKey, orderPhotos, tourLinkIn, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
+import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 describe("tourUrlIn", () => {
   it("finds a Zillow 3D Home, which carries no tour-looking words at all", () => {
@@ -110,5 +111,58 @@ describe("orderPhotos", () => {
     const ordered = orderPhotos([sd("elevation-a.webp"), opaque, kitchen]);
     expect(ordered.meta[opaque].room).toBeNull();
     expect(ordered.urls).toEqual([sd("elevation-a.webp"), kitchen, opaque]);
+  });
+});
+
+describe("distinctKey", () => {
+  // Stock keeps its homes for sale on a page of their own, and names each
+  // one for the plan it is built from (Jeff, 2026-09-22). Two rows named
+  // "Madison II" would otherwise be read as one plan.
+  const home = (planKey: string, sourceUrl: string | null): NormalizedPlan => ({
+    planKey,
+    name: planKey,
+    price: null,
+    priceDisplay: null,
+    beds: "",
+    baths: "",
+    sqft: null,
+    garages: null,
+    homeType: null,
+    quickMoveIn: true,
+    comingSoon: false,
+    sourceUrl,
+    galleryImages: [],
+    blueprintImages: [],
+  });
+  const inventory = (id: string) => `https://www.stockdevelopment.com/projects/wild-blue-at-waterside/inventory/${id}/`;
+
+  it("leaves a home whose name no plan has taken alone", () => {
+    expect(distinctKey(home("1003-blue-shell-loop", inventory("20011060173")), new Set(["madison-ii"])))
+      .toBe("1003-blue-shell-loop");
+  });
+
+  it("keeps a home named for its plan apart from the plan itself", () => {
+    const key = distinctKey(home("madison-ii", inventory("20011060173")), new Set(["madison-ii"]));
+    expect(key).toBe("madison-ii-20011060173");
+  });
+
+  it("gives the same home the same key on every run", () => {
+    const once = distinctKey(home("madison-ii", inventory("20011060173")), new Set(["madison-ii"]));
+    const again = distinctKey(home("madison-ii", inventory("20011060173")), new Set(["madison-ii"]));
+    expect(again).toBe(once);
+  });
+
+  it("keeps two homes of one plan apart even where their pages give nothing to tell them by", () => {
+    const taken = new Set(["madison-ii"]);
+    const first = distinctKey(home("madison-ii", null), taken);
+    taken.add(first);
+    const second = distinctKey(home("madison-ii", null), taken);
+    expect(first).toBe("madison-ii-home-2");
+    expect(second).toBe("madison-ii-home-3");
+  });
+
+  it("ignores a query string and a missing trailing slash", () => {
+    expect(distinctKey(home("easton-iii", inventory("20011060174").replace(/\/$/, "") + "?utm=x"), new Set(["easton-iii"])))
+      .toBe("easton-iii-20011060174");
   });
 });

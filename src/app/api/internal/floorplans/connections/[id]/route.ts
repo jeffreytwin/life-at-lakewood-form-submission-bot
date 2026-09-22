@@ -7,14 +7,18 @@ export const dynamic = "force-dynamic";
 // A removal takes the connection's items out of Wix one by one.
 export const maxDuration = 300;
 
+/** The addresses a connection is read from, as the body names them. */
+const URL_FIELDS = ["url", "quickMoveInUrl"] as const;
+
 /**
  * PATCH /api/internal/floorplans/connections/:id
- * Body: { active?: boolean, url?: string, dismissAttention?: true }
+ * Body: { active?: boolean, url?: string, quickMoveInUrl?: string, dismissAttention?: true }
  *
  * Pause/resume a single builder×community connection (same inert-pause
- * semantics as the builder-level flag), set its builder page URL, or
- * dismiss it from the "needs attention" banner until a newer run of it
- * fails again (Jeff, 2026-09-21).
+ * semantics as the builder-level flag), set the pages it is read from — its
+ * plans, and the separate page some builders keep their quick move-ins on
+ * (Jeff, 2026-09-22) — or dismiss it from the "needs attention" banner
+ * until a newer run of it fails again (Jeff, 2026-09-21).
  */
 export async function PATCH(
   request: NextRequest,
@@ -25,24 +29,33 @@ export async function PATCH(
     const body = await request.json();
     const updates: Record<string, unknown> = {};
     if (typeof body.active === "boolean") updates.active = body.active;
-    if (typeof body.url === "string") {
-      const trimmed = body.url.trim();
-      if (trimmed && !/^https?:\/\//.test(trimmed)) {
-        return NextResponse.json({ error: "url must be absolute (https://…)" }, { status: 400 });
+    const urls = URL_FIELDS.filter((field) => typeof body[field] === "string");
+    if (urls.length > 0) {
+      const given = urls.map((field) => [field, String(body[field]).trim()] as const);
+      for (const [field, value] of given) {
+        if (value && !/^https?:\/\//.test(value)) {
+          return NextResponse.json({ error: `${field} must be absolute (https://…)` }, { status: 400 });
+        }
       }
+      // Read-modify-write: the other extractor params are the run's, not ours.
       const { data: current } = await supabase
         .from("fp_builder_communities")
         .select("extractor_params")
         .eq("id", id)
         .single();
       const params = { ...((current?.extractor_params as object) ?? {}) } as Record<string, unknown>;
-      if (trimmed) params.url = trimmed;
-      else delete params.url;
+      for (const [field, value] of given) {
+        if (value) params[field] = value;
+        else delete params[field];
+      }
       updates.extractor_params = params;
     }
     if (body.dismissAttention === true) updates.attention_dismissed_at = new Date().toISOString();
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: "active (boolean), url (string) or dismissAttention (true) required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "active (boolean), url / quickMoveInUrl (string) or dismissAttention (true) required" },
+        { status: 400 }
+      );
     }
     const { data, error } = await supabase
       .from("fp_builder_communities")

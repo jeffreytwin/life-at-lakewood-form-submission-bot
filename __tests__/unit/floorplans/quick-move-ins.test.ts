@@ -67,6 +67,46 @@ describe("nearlySameKey", () => {
 });
 
 describe("linkQuickMoveIns", () => {
+  it("ties a home off a builder's own inventory page to the plan it names", () => {
+    // Stock lists its homes for sale away from its plans, each named by its
+    // address with the plan printed above it (Jeff, 2026-09-22). The home's
+    // own page is under /inventory/, nowhere near the plan's.
+    const stock = (path: string) => `https://www.stockdevelopment.com/projects/wild-blue-at-waterside/${path}`;
+    const linked = linkQuickMoveIns([
+      plan({ planKey: "madison-ii", name: "Madison II", sourceUrl: stock("floorplans/madison-ii/") }),
+      plan({ planKey: "easton-iii", name: "Easton III", sourceUrl: stock("floorplans/easton-iii/") }),
+      plan({
+        planKey: "1003-blue-shell-loop",
+        name: "1003 Blue Shell Loop",
+        quickMoveIn: true,
+        relatedPlanName: "Madison II",
+        sourceUrl: stock("inventory/20011060173/"),
+      }),
+    ]);
+    expect(linked[2].relatedPlanKey).toBe("madison-ii");
+    expect(linked[2].relatedPlanMatch).toBe("plan-name");
+    expect(linked[0].hasQuickMoveIns).toBe(true);
+    expect(linked[1].hasQuickMoveIns).toBe(false);
+  });
+
+  it("ties a home that took its plan's name, and a key of its own, to that plan", () => {
+    // What distinctKey leaves behind when the builder names a home for its
+    // plan: the key differs, the name it carries is the tie.
+    const linked = linkQuickMoveIns([
+      plan({ planKey: "madison-ii", name: "Madison II" }),
+      plan({
+        planKey: "madison-ii-20011060173",
+        name: "Madison II",
+        quickMoveIn: true,
+        relatedPlanName: "Madison II",
+        sourceUrl: "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/inventory/20011060173/",
+      }),
+    ]);
+    expect(linked[1].relatedPlanKey).toBe("madison-ii");
+    expect(linked[1].relatedPlanName).toBe("Madison II");
+    expect(linked[0].hasQuickMoveIns).toBe(true);
+  });
+
   it("ties a quick move-in to the plan whose page its own page sits under", () => {
     // SimplyDwell gives each home a page beneath its plan's, and spells the
     // plan differently in the two places (Jeff, 2026-09-22).
