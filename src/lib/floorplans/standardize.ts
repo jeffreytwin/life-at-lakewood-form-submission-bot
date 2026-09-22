@@ -100,9 +100,31 @@ export function standardGarages(text: string | null | undefined): string | null 
   return `${Math.max(...numbers.map(Number))} car`;
 }
 
-/** The plan as the site files it: standard home type, one number for beds, baths and garages. The builder's own labels are kept in raw. */
-export function standardizePlan(plan: NormalizedPlan): NormalizedPlan {
-  const homeType = standardHomeType(plan.homeType);
+/**
+ * What is true of every plan a builder offers, whatever its own pages say.
+ * Stock Luxury Homes builds single-family homes and nothing else (Jeff,
+ * 2026-09-22), and its pages name no type at all, so the builder's setting
+ * says it once rather than a person saying it on every plan.
+ */
+export interface BuilderDefaults {
+  /** The home type every plan of this builder is, when the builder only builds one. */
+  homeType?: HomeType | null;
+}
+
+/** The builder's settings, as far as standardizing cares; anything unrecognized is ignored. */
+export function builderDefaults(config: Record<string, unknown> | null | undefined): BuilderDefaults {
+  const homeType = config?.homeType;
+  return { homeType: isHomeType(homeType) ? homeType : null };
+}
+
+/**
+ * The plan as the site files it: standard home type, one number for beds,
+ * baths and garages. A builder that only builds one type has it written in
+ * whatever its page said; the builder's own labels are kept in raw either
+ * way.
+ */
+export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults = {}): NormalizedPlan {
+  const homeType = defaults.homeType ?? standardHomeType(plan.homeType);
   const garages = standardGarages(plan.garages);
   return {
     ...plan,

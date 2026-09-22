@@ -1,12 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { firstGallery, fullSize, sectionsOf } from "@/lib/floorplans/extractors/plan-page";
+import { firstGallery, fullSize, pictureKey, sectionsOf } from "@/lib/floorplans/extractors/plan-page";
 
 const BASE = "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/";
-const blob = (id: string, size: "sm" | "lg", ext = "jpg") =>
+const blob = (id: string, size: "sm" | "md" | "lg", ext = "jpg") =>
   `https://fabrik.blob.core.windows.net/public/${id}_${size}.${ext}`;
 
 const tile = (src: string, alt: string) =>
   `<button class="relative aspect-[4/3]" aria-label="Open ${alt}"><img alt="${alt}" loading="lazy" class="object-cover" src="${src}"/></button>`;
+
+const escaped = (src: string) => src.replace(/\//g, "\\/");
+
+/**
+ * What Stock's framework ships in the page's data: each gallery's pictures
+ * in full, in order, while the markup draws five of them over a "+25 MORE"
+ * button. The first gallery holds six here and draws three.
+ */
+const payload =
+  `{"galleries":[` +
+  `{"name":"Wild Blue at Waterside","by":"Dan Rak Design","images":[` +
+  ["6e8cfe1d", "e042dbd0", "b25872ce", "77aa11bb", "88cc22dd", "99ee33ff"]
+    .flatMap((id) => [blob(id, "sm"), blob(id, "md")])
+    .map((src) => `\\"${escaped(src)}\\"`)
+    .join(",") +
+  `]},` +
+  `{"name":"Wild Blue at Waterside","by":"Clive Daniel Home","images":[` +
+  [blob("b0d4d01a", "sm"), blob("b74eed4c", "sm"), blob("44ff55aa", "sm")]
+    .map((src) => `\\"${escaped(src)}\\"`)
+    .join(",") +
+  `]}]}`;
 
 /**
  * Wyndam IV's page, in the shape the probe found (2026-09-22): a hero of
@@ -55,6 +76,7 @@ const WYNDAM = `<!doctype html><html><body>
 <h2>Interested in the Wyndam IV</h2>
 <footer><h5>Floor Plans</h5><h5>Company</h5><img src="/logos/Light.png" alt="STOCK"/></footer>
 <script>{"tour":"https:\\/\\/my.matterport.com\\/show\\/?m=K1hZHtKa6ok"}</script>
+<script>self.__next_f.push([1,"${payload}"])</script>
 ${[blob("6e8cfe1d", "lg"), blob("e042dbd0", "lg"), blob("b25872ce", "lg"), blob("d52610f4", "lg")]
   .map((u) => `<link rel="preload" as="image" href="${u}"/>`)
   .join("")}
@@ -101,8 +123,8 @@ describe("sectionsOf", () => {
 describe("firstGallery", () => {
   const { first, drop } = firstGallery(WYNDAM, BASE);
 
-  it("takes the first gallery whole, whoever it is named for", () => {
-    expect(first.map((i) => i.src)).toEqual([
+  it("takes the first gallery, whoever it is named for", () => {
+    expect(first.slice(0, 3).map((i) => i.src)).toEqual([
       blob("6e8cfe1d", "sm"),
       blob("e042dbd0", "sm"),
       blob("b25872ce", "sm"),
@@ -128,6 +150,25 @@ describe("firstGallery", () => {
     expect(drop.has("https://www.stockdevelopment.com/logos/Light.png")).toBe(false);
   });
 
+  it("follows the gallery past what the page draws, into the page's own data", () => {
+    // The markup draws three of six over a "+N MORE" button; the run in the
+    // payload is the whole gallery, and it is the run that wins. The store
+    // lists each picture at two sizes, which is six pictures, not twelve.
+    expect(first).toHaveLength(6);
+    expect(first.map((i) => pictureKey(i.src))).toEqual(
+      ["6e8cfe1d", "e042dbd0", "b25872ce", "77aa11bb", "88cc22dd", "99ee33ff"].map((id) =>
+        pictureKey(blob(id, "sm"))
+      )
+    );
+  });
+
+  it("stops the run at the next gallery's pictures, and keeps the drawn captions", () => {
+    expect(first.map((i) => i.src)).not.toContain(blob("b0d4d01a", "sm"));
+    expect(first.map((i) => i.src)).not.toContain(blob("44ff55aa", "sm"));
+    expect(first[0].alt).toBe("333");
+    expect(first[3].alt).toBe("");
+  });
+
   it("finds no gallery on a page that has none, and drops nothing", () => {
     const plain = "<h1>Chandler V</h1><h2>Elevations</h2><img src='https://x.test/a.jpg'/>";
     expect(firstGallery(plain, BASE)).toEqual({ first: [], drop: new Set() });
@@ -137,6 +178,13 @@ describe("firstGallery", () => {
 describe("fullSize", () => {
   it("swaps a thumbnail for the full-size picture the page also names", () => {
     expect(fullSize(blob("6e8cfe1d", "sm"), WYNDAM)).toBe(blob("6e8cfe1d", "lg"));
+  });
+
+  it("takes the largest size the page names, not only the largest that exists", () => {
+    // Stock's data lists a gallery picture as _sm and _md and nothing else.
+    const html = `<img src="${blob("qq", "sm")}"/><span>${blob("qq", "md")}</span>`;
+    expect(fullSize(blob("qq", "sm"), html)).toBe(blob("qq", "md"));
+    expect(fullSize(blob("qq", "md"), html)).toBe(blob("qq", "md"));
   });
 
   it("keeps a thumbnail whose larger file the page never names", () => {

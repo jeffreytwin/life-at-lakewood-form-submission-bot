@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { HOME_TYPES } from "@/lib/floorplans/standardize";
 
 interface Connection {
   id: string;
@@ -20,6 +21,8 @@ interface Builder {
   extraction_method: string | null;
   audit_notes: string | null;
   active: boolean;
+  /** The builder's own settings; homeType is what every plan of this builder is. */
+  engine_config: { homeType?: string } | null;
   fp_builder_communities: Connection[];
 }
 
@@ -97,6 +100,21 @@ export default function BuildersSettingsPage() {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ active: !b.active }),
+    });
+    fetchBuilders();
+  }
+
+  /**
+   * What every plan of this builder is, whatever its pages say. Stock
+   * Luxury Homes builds single-family homes and nothing else, and its
+   * pages name no type at all (Jeff, 2026-09-22). Blank leaves it to the
+   * pages, as before.
+   */
+  async function setHomeType(b: Builder, homeType: string) {
+    await fetch(`/api/internal/floorplans/builders/${b.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ homeType: homeType || null }),
     });
     fetchBuilders();
   }
@@ -277,6 +295,7 @@ export default function BuildersSettingsPage() {
                 <tr>
                   <th>Builder</th>
                   <th>Method</th>
+                  <th title="What every plan of this builder is, whatever its pages say. Blank leaves it to the pages.">Home type</th>
                   <th>Health</th>
                   <th>Communities</th>
                   <th>Last run</th>
@@ -311,6 +330,20 @@ export default function BuildersSettingsPage() {
                           ) : (
                             <span className="text-muted text-sm">{b.audit_notes?.slice(0, 60) ?? "—"}</span>
                           )}
+                        </td>
+                        <td>
+                          <select
+                            className="form-input"
+                            style={{ padding: "2px 6px", minWidth: 150 }}
+                            value={b.engine_config?.homeType ?? ""}
+                            onChange={(e) => setHomeType(b, e.target.value)}
+                            title="What every plan of this builder is, whatever its pages say. Blank leaves it to the pages."
+                          >
+                            <option value="">From the page</option>
+                            {HOME_TYPES.map((t) => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
                         </td>
                         <td>
                           <span className={`badge ${h.cls}`}>{h.label}</span>
