@@ -11,8 +11,12 @@ interface Connection {
   last_run_status: string | null;
   last_plan_count: number | null;
   consecutive_failures: number;
-  /** url: the plans page. quickMoveInUrl: the separate page of homes for sale, where the builder keeps one. */
-  extractor_params: { url?: string; quickMoveInUrl?: string } | null;
+  /**
+   * url: the community's own page. listUrls: the pages its plans are
+   * listed on, where those are not the community page. quickMoveInUrl: a
+   * separate page of homes for sale, where the builder keeps one.
+   */
+  extractor_params: { url?: string; listUrls?: string[]; quickMoveInUrl?: string } | null;
   fp_communities: { name: string; fp_sites: { domain: string } | null } | null;
 }
 
@@ -133,6 +137,28 @@ export default function BuildersSettingsPage() {
         });
         fetchBuilders();
       }
+    },
+    [fetchBuilders]
+  );
+
+  /** Sets the pages a connection's plans are listed on; blank clears them. */
+  const editPlanPages = useCallback(
+    async (c: Connection) => {
+      const given = window.prompt(
+        "Pages this community's plans are listed on, one per line. Leave blank to read them off the source page itself.",
+        (c.extractor_params?.listUrls ?? []).join("\n")
+      );
+      if (given === null) return;
+      const res = await fetch(`/api/internal/floorplans/connections/${c.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ listUrls: given }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setError(body?.error ?? "Failed to save the pages");
+      }
+      fetchBuilders();
     },
     [fetchBuilders]
   );
@@ -499,6 +525,31 @@ export default function BuildersSettingsPage() {
                                   edit URL
                                 </button>
                               </div>
+                              {/* Builders that split a community into parts
+                                  and list the homes under each (Perry, by lot
+                                  width). The community page is still the
+                                  connection's address; these are where the
+                                  plans are read from. */}
+                              {GENERIC_METHODS.has(b.extraction_method ?? "") && (
+                                <div>
+                                  {c.extractor_params?.listUrls?.length ? (
+                                    <span className="text-muted text-sm">
+                                      plans read from {c.extractor_params.listUrls.length} page
+                                      {c.extractor_params.listUrls.length === 1 ? "" : "s"}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted text-sm">plans read from the source page</span>
+                                  )}{" "}
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: "0 6px", fontSize: 11 }}
+                                    onClick={() => editPlanPages(c)}
+                                    title="For a community split into parts, each with its own list of homes"
+                                  >
+                                    edit plan pages
+                                  </button>
+                                </div>
+                              )}
                               {/* Builders that keep their homes for sale on a
                                   page of their own (Stock's /inventory/). Only
                                   the generic Claude engine reads a second page;
