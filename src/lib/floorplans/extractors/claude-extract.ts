@@ -35,7 +35,15 @@ const RENDER_RUN_MS = 170_000;
  */
 const LIST_TOKENS = 16_384;
 const LIST_TOKENS_AGAIN = 32_768;
-const MAX_CONTENT_CHARS = 90_000;
+/**
+ * How much of a page is read. Pulte's community pages are 7MB and distill
+ * to 370,000 characters — the plans start a third of the way in and run
+ * most of the rest — so the old 90,000 cut the list in half and handed the
+ * model an entry chopped in two (Jeff, 2026-09-22). This holds such a page
+ * whole; the model's context is far larger still, and a page that has to
+ * be cut at all now says so.
+ */
+const MAX_CONTENT_CHARS = 400_000;
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
@@ -108,8 +116,26 @@ interface ExtractedPlan {
  * reads like a bug in the Hub rather than a page that could not be read.
  * So every list off a tool call comes through here.
  */
+/**
+ * A list, including one the model handed back as text. Asked for an array
+ * it occasionally returns the array serialised — Pulte's community page
+ * did it twice running, at both ceilings, so it is the answer the page
+ * draws rather than an answer cut short. The list is what matters, not how
+ * it was spelled; anything that will not parse into one is still nothing.
+ */
+export function asList<T>(value: unknown): T[] | null {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? (parsed as T[]) : null;
+  } catch {
+    return null;
+  }
+}
+
 function listOf<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
+  return asList<T>(value) ?? [];
 }
 
 /**
@@ -150,6 +176,13 @@ function distill(html: string, baseUrl: string): string {
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim();
+  if (text.length > MAX_CONTENT_CHARS) {
+    logger.warn("Page too long to read whole", {
+      url: baseUrl,
+      chars: text.length,
+      read: MAX_CONTENT_CHARS,
+    });
+  }
   return text.slice(0, MAX_CONTENT_CHARS);
 }
 
@@ -167,7 +200,7 @@ const SLASH = "\\\\?/";
 const TOUR_URL = new RegExp(
   `https?:${SLASH}${SLASH}(?:my\\.matterport\\.com${SLASH}show${SLASH}\\?m=[A-Za-z0-9]+` +
     `|(?:www\\.)?zillow\\.com${SLASH}view-imx${SLASH}[A-Za-z0-9-]+` +
-    `|(?:www\\.)?(?:insidemaps|kuula|cloudpano|eyespy360|truplace)\\.com(?:${SLASH}(?:[^\\s"'<>\\\\]|\\\\/)+)?)`,
+    `|(?:www\\.)?(?:(?:insidemaps|cloudpano|eyespy360|truplace)\\.com|kuula\\.co)(?:${SLASH}(?:[^\\s"'<>\\\\]|\\\\/)+)?)`,
   "i"
 );
 
@@ -175,6 +208,39 @@ const TOUR_URL = new RegExp(
 export function tourUrlIn(html: string): string | null {
   const found = html.match(TOUR_URL)?.[0];
   return found ? found.replace(/\\/g, "") : null;
+}
+
+const IS_TOUR_URL = new RegExp(`^${TOUR_URL.source}`, "i");
+
+/**
+ * Whether an address is a tour itself rather than a page that shows one.
+ * Ryan wraps its Matterports in a page of its own — ".../mayport/virtual
+ * -tour/31336" — and that page is not what a visitor should be handed
+ * (Jeff, 2026-09-22). Exported for tests.
+ */
+export function isTourUrl(url: string): boolean {
+  return IS_TOUR_URL.test(url);
+}
+
+/**
+ * The tour behind a builder's own tour page. One read, and a page that
+ * cannot be read or holds no tour leaves the address as it was.
+ */
+function bestTour(found: (string | null | undefined)[]): string | null {
+  const offered = found.filter((u): u is string => Boolean(u));
+  return offered.find(isTourUrl) ?? offered[0] ?? null;
+}
+
+async function tourBehind(url: string, read: PageReader): Promise<string | null> {
+  try {
+    return tourUrlIn((await read(url)).html);
+  } catch (error) {
+    logger.warn("Virtual tour page could not be read", {
+      url,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 /** What a builder calls the link to a tour of the home. */
@@ -358,10 +424,17 @@ export async function readPlanPageWithClaude(
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
     description: plan.description ?? page.description?.trim() ?? null,
-    // A link the page labels as its tour first, then one hidden in its own
-    // scripts; both beat one Claude read off the text.
-    virtualTourUrl:
-      plan.virtualTourUrl ?? tourLinkIn(html) ?? tourUrlIn(html) ?? page.virtualTourUrl?.trim() ?? null,
+    // A tour on a host that serves tours wins outright, wherever it was
+    // found: the list read may have picked up the builder's own page about
+    // the tour, and that is not the tour (Jeff, 2026-09-22). Failing that,
+    // the link the page labels as its tour, then one hidden in its own
+    // scripts, then one Claude read off the text.
+    virtualTourUrl: bestTour([
+      plan.virtualTourUrl,
+      tourLinkIn(html),
+      tourUrlIn(html),
+      page.virtualTourUrl?.trim(),
+    ]),
     galleryImages: photos,
     blueprintImages: blueprints,
     galleryMeta: { ...plan.galleryMeta, ...outside },
@@ -419,7 +492,7 @@ async function listPage(
   // both failed (Jeff, 2026-09-22). One more go with room to spare fixes
   // it; a page too big even for that says so rather than crashing.
   let answer = await readList(LIST_TOKENS);
-  if (answer.reported !== undefined && !Array.isArray(answer.reported)) {
+  if (answer.reported !== undefined && !asList(answer.reported)) {
     logger.warn("Plan list came back half-written; asking again with more room", {
       url,
       stop: answer.stop,
@@ -428,14 +501,15 @@ async function listPage(
     answer = await readList(LIST_TOKENS_AGAIN);
   }
   if (!answer.answered) throw new Error("Claude returned no extraction tool call");
-  if (answer.reported !== undefined && !Array.isArray(answer.reported)) {
+  const reported = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
+  if (!reported) {
     throw new Error(
       answer.stop === "max_tokens"
         ? "the page's plans did not fit in one answer, even with room to spare"
         : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
     );
   }
-  const plans = listOf<ExtractedPlan>(answer.reported).filter((p) => p?.name?.trim());
+  const plans = reported.filter((p) => p?.name?.trim());
   if (plans.length === 0 && pageLooksUnrendered(content)) {
     throw new Error(
       "the page carries no prices or sizes without its scripts — it draws its plans after loading, which a fetch cannot see (this builder needs a rendering engine)"
@@ -574,7 +648,17 @@ async function extractPages(
     }
   });
 
-  return pages.map((plan) => {
+  // What remains pointing at a builder's own page about a tour is followed
+  // to the tour it shows. Only those: a plan that already has a real tour,
+  // or none at all, costs nothing.
+  const toured = await mapLimit(pages, atOnce, async (plan) => {
+    const tour = plan.virtualTourUrl;
+    if (!tour || isTourUrl(tour)) return plan;
+    const deeper = await tourBehind(tour, read);
+    return deeper ? { ...plan, virtualTourUrl: deeper } : plan;
+  });
+
+  return toured.map((plan) => {
     const outside = new Set(
       Object.entries(plan.galleryMeta ?? {})
         .filter(([, meta]) => meta.room === "exterior")

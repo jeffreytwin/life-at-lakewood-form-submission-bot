@@ -102,7 +102,8 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
   return next;
 }
 
-const pendingIds = (g: Group) => g.rows.filter((r) => r.status === "pending").map((r) => r.id);
+const idsAt = (g: Group, status: string) => g.rows.filter((r) => r.status === status).map((r) => r.id);
+const pendingIds = (g: Group) => idsAt(g, "pending");
 const isQuickMoveIn = (g: Group) => g.lead.proposed_record?.quickMoveIn === true;
 
 /** 1 to 10 as the freelancers used it; 11 for a plan that must come first on the site (Jeff, 2026-09-21). */
@@ -369,9 +370,13 @@ export default function FloorPlansPage() {
     return () => clearInterval(timer);
   }, [approvingInView, bulkBusy, fetchChanges]);
 
-  /** Approves or rejects every pending row of a plan; reports a failed write instead of hiding it in the Failed filter. */
-  async function act(group: Group, action: "approve" | "reject", quiet = false): Promise<boolean> {
-    const ids = pendingIds(group);
+  /**
+   * Approves or rejects every pending row of a plan, or puts a rejected
+   * plan back in the queue; reports a failed write instead of hiding it in
+   * the Failed filter.
+   */
+  async function act(group: Group, action: "approve" | "reject" | "restore", quiet = false): Promise<boolean> {
+    const ids = action === "restore" ? idsAt(group, "rejected") : pendingIds(group);
     if (!ids.length) return true;
     const starred = group.lead.fp_floor_plans?.starred;
     if (
@@ -393,7 +398,8 @@ export default function FloorPlansPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const detail = data?.results?.find((r: { error?: string | null }) => r.error)?.error ?? data?.error ?? `HTTP ${res.status}`;
-        if (!quiet) alert(`${action === "approve" ? "Approve" : "Reject"} failed for ${group.lead.proposed_record?.name ?? group.lead.plan_key}: ${detail}`);
+        const what = action === "approve" ? "Approve" : action === "reject" ? "Reject" : "Restore";
+        if (!quiet) alert(`${what} failed for ${group.lead.proposed_record?.name ?? group.lead.plan_key}: ${detail}`);
         return false;
       }
       return true;
@@ -995,6 +1001,19 @@ export default function FloorPlansPage() {
                         {new Date(g.createdAt).toLocaleDateString()}
                       </td>
                       <td>
+                        {/* A rejection sticks — the sync core will not queue
+                            the same change again — so a reject clicked by
+                            accident needs a way back (Jeff, 2026-09-22). */}
+                        {g.status === "rejected" && (
+                          <button
+                            className="btn btn-secondary"
+                            disabled={busy.has(g.key)}
+                            title="Put this back in the queue. Rejecting it stopped the sync from ever raising it again; this lifts that too."
+                            onClick={() => act(g, "restore")}
+                          >
+                            {busy.has(g.key) ? "…" : "Restore"}
+                          </button>
+                        )}
                         {isPending && (
                           <div style={{ display: "flex", gap: 8 }}>
                             <button
