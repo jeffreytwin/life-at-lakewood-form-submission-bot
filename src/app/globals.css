@@ -784,12 +784,20 @@ select.form-input {
   text-decoration: underline;
 }
 
-/* ── Sidebar notification badge ── */
-.nav-badge {
+/* ── Sidebar notification badges ── */
+/* One nav item can carry several (Floor Plans has pending changes,
+   campaign alerts and failing builder connections), so they sit in a row
+   rather than each pinning itself to the same spot. */
+.nav-badges {
   position: absolute;
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nav-badge {
   min-width: 18px;
   height: 18px;
   border-radius: 9px;

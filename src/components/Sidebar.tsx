@@ -159,6 +159,7 @@ export default function Sidebar({
               >
                 <span className="nav-icon">{item.icon}</span>
                 {item.label}
+                <span className="nav-badges">
                 {item.href === "/dashboard/leads" && failedBadge > 0 && (
                   <span className="nav-badge">{failedBadge}</span>
                 )}
@@ -189,6 +190,7 @@ export default function Sidebar({
                 {item.href === "/dashboard/listings" && listingErrorCount > 0 && (
                   <span className="nav-badge">{listingErrorCount}</span>
                 )}
+                </span>
               </Link>
             </li>
           ))}
