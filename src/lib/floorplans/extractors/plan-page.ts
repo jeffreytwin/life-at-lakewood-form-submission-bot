@@ -132,18 +132,31 @@ export function firstGallery(html: string, baseUrl: string): PlanPageGallery {
   return { first: galleries[0]?.images ?? [], drop };
 }
 
+const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
- * The full-size picture beside a thumbnail. Stock's media store keeps the
- * two as "<id>_sm.jpg" and "<id>_lg.jpg" and its galleries draw the small
- * one, so a gallery would reach Wix as thumbnails, and the same photo twice
- * wherever the page shows both sizes. Swapped only when the page itself
- * names the larger file, so the URL is one that is known to exist.
+ * The full-size picture beside a thumbnail, in the two shapes the builders'
+ * media stores use: Stock keeps "<id>_sm.jpg" beside "<id>_lg.jpg" and its
+ * galleries draw the small one, and WordPress keeps a resized
+ * "...-1024x614.webp" beside the original. Left alone unless the page
+ * itself names the larger file, so the URL is one that is known to exist.
+ * Without this a gallery reaches Wix as thumbnails, and carries the same
+ * photo twice wherever a page shows both sizes.
  */
 export function fullSize(src: string, html: string): string {
   const name = src.split("/").pop() ?? "";
-  const stem = name.match(/^(.+)_sm\.[a-z0-9]+$/i)?.[1];
-  if (!stem) return src;
-  const escaped = stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const larger = new RegExp(`${escaped}_lg\\.[a-z0-9]+`, "i").exec(html)?.[0];
-  return larger ? src.replace(name, larger) : src;
+
+  const small = name.match(/^(.+)_sm\.[a-z0-9]+$/i)?.[1];
+  if (small) {
+    const larger = new RegExp(`${escapeRe(small)}_lg\\.[a-z0-9]+`, "i").exec(html)?.[0];
+    if (larger) return src.replace(name, larger);
+  }
+
+  const resized = name.match(/^(.+)-\d{2,5}x\d{2,5}(\.[a-z0-9]+)$/i);
+  if (resized) {
+    const original = `${resized[1]}${resized[2]}`;
+    if (html.includes(original)) return src.replace(name, original);
+  }
+
+  return src;
 }

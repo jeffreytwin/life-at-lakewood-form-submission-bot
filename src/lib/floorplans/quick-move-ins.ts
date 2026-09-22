@@ -32,11 +32,77 @@ function relatedNameOf(p: NormalizedPlan): string {
 }
 
 /**
- * Ties every quick move-in in a run to its base plan (by the engine's own
- * key, else the builder's plan id, else the plan's name) and flags the base
- * plans that have at least one. A quick move-in whose base plan is not in
- * the run keeps the engine's name for it and is marked unmatched, so the
- * review queue can say so. Pure; order and the other fields are kept.
+ * A quick move-in's own name without the lot it stands on: SimplyDwell
+ * names them for the plan and the homesite, "Hawthorne Homesite 42",
+ * "Buttonwood Homesite 145" (Jeff, 2026-09-22). An address is left whole —
+ * nothing in "17547 Palmiste Dr" looks like a homesite.
+ */
+export function planNameOf(name: string): string {
+  return name
+    .replace(/[\s,·–—-]*\b(?:home ?site|lot|residence|unit)\b\s*#?\s*\d+[A-Za-z]?\b.*$/i, "")
+    .replace(/[\s,·–—-]*#\s*\d+[A-Za-z]?\s*$/, "")
+    .trim();
+}
+
+/**
+ * Whether two plan keys name the same plan though the builder spelled one
+ * of them differently: SimplyDwell's "Hawthorne Homesite 42" stands on the
+ * plan it calls "Hawthorn". One key has to be the other's beginning, and
+ * the tail it adds no more than two letters, so "Cedar" and "Cedar 2" stay
+ * apart.
+ */
+export function nearlySameKey(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const [short, long] = a.length <= b.length ? [a, b] : [b, a];
+  if (short.length < 5 || !long.startsWith(short)) return false;
+  return /^[a-z]{1,2}$/.test(long.slice(short.length));
+}
+
+/** A URL with no query, no fragment and one trailing slash, so two spellings of a page compare equal. */
+function canonicalUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    u.search = "";
+    u.hash = "";
+    if (!u.pathname.endsWith("/")) u.pathname += "/";
+    return u.href;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The page a page sits under: SimplyDwell gives each quick move-in a page
+ * beneath its plan's, ".../hawthorn-broadleaf/hawthorne-homesite-42/". The
+ * surest tie there is, and it does not care how the builder spelled the
+ * name.
+ */
+function parentUrl(url: string | null | undefined): string | null {
+  const canonical = canonicalUrl(url);
+  if (!canonical) return null;
+  try {
+    const u = new URL(canonical);
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (parts.length < 2) return null;
+    u.pathname = `/${parts.slice(0, -1).join("/")}/`;
+    return u.href;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Ties every quick move-in in a run to its base plan and flags the base
+ * plans that have at least one. In order: the engine's own key, the
+ * builder's plan id, the base plan's name where the engine read one, the
+ * page the quick move-in's page sits under, and last its own name with the
+ * homesite taken off it — exactly, then allowing the builder a letter or
+ * two ("Hawthorne Homesite 42" stands on "Hawthorn"). A quick move-in
+ * whose base plan is not in the run keeps the engine's name for it and is
+ * marked unmatched, so the review queue can say so. Pure; order and the
+ * other fields are kept.
  */
 export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
   const bases = plans.filter((p) => !p.quickMoveIn);
@@ -45,6 +111,14 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
   for (const b of bases) {
     const id = planIdOf(b);
     if (id && !byPlanId.has(id)) byPlanId.set(id, b);
+  }
+  // A page two plans share says nothing about either, so it is dropped:
+  // every plan of a builder whose list is one page would share that page.
+  const byUrl = new Map<string, NormalizedPlan | null>();
+  for (const b of bases) {
+    const url = canonicalUrl(b.sourceUrl);
+    if (!url) continue;
+    byUrl.set(url, byUrl.has(url) ? null : b);
   }
   const children = new Map<string, number>();
 
@@ -68,6 +142,27 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
       if (name && byKey.has(normKey(name))) {
         base = byKey.get(normKey(name));
         matchedBy = "plan-name";
+      }
+    }
+    if (!base) {
+      const parent = parentUrl(p.sourceUrl);
+      const above = parent && parent !== canonicalUrl(p.sourceUrl) ? byUrl.get(parent) : null;
+      if (above) {
+        base = above;
+        matchedBy = "plan-page";
+      }
+    }
+    if (!base) {
+      // The quick move-in's own name, less the homesite it stands on.
+      const own = normKey(planNameOf(p.name));
+      if (own && own !== p.planKey) {
+        const exact = byKey.get(own);
+        const near = exact ? [exact] : bases.filter((b) => nearlySameKey(b.planKey, own));
+        // Only when it points at one plan: a near miss that fits two is a guess.
+        if (near.length === 1) {
+          base = near[0];
+          matchedBy = "plan-name";
+        }
       }
     }
     if (base) children.set(base.planKey, (children.get(base.planKey) ?? 0) + 1);

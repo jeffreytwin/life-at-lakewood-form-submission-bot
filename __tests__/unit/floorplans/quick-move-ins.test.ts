@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   linkQuickMoveIns,
+  nearlySameKey,
+  planNameOf,
   withQuickMoveInPrices,
   priceTagOf,
   basePlanMarkers,
@@ -29,7 +31,99 @@ const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
   ...over,
 });
 
+describe("planNameOf", () => {
+  it("takes the homesite off a quick move-in's name", () => {
+    // SimplyDwell names them for the plan and the lot (Jeff, 2026-09-22).
+    expect(planNameOf("Hawthorne Homesite 42")).toBe("Hawthorne");
+    expect(planNameOf("Buttonwood Homesite 145")).toBe("Buttonwood");
+    expect(planNameOf("Cypress Home Site 57")).toBe("Cypress");
+    expect(planNameOf("Cedar 2 Lot 8")).toBe("Cedar 2");
+    expect(planNameOf("Maple - Residence 14B")).toBe("Maple");
+    expect(planNameOf("Sabal #9")).toBe("Sabal");
+  });
+
+  it("leaves an address whole: nothing in it is a homesite", () => {
+    expect(planNameOf("17547 Palmiste Dr")).toBe("17547 Palmiste Dr");
+    expect(planNameOf("100 Main St")).toBe("100 Main St");
+    expect(planNameOf("Lori")).toBe("Lori");
+  });
+});
+
+describe("nearlySameKey", () => {
+  it("allows the builder a letter or two", () => {
+    expect(nearlySameKey("hawthorn", "hawthorne")).toBe(true);
+    expect(nearlySameKey("hawthorne", "hawthorn")).toBe(true);
+    expect(nearlySameKey("maple", "maples")).toBe(true);
+    expect(nearlySameKey("azalea", "azalea")).toBe(true);
+  });
+
+  it("keeps plans apart that only look alike", () => {
+    expect(nearlySameKey("cedar", "cedar-2")).toBe(false);
+    expect(nearlySameKey("oak", "oaks")).toBe(false); // too short to risk it
+    expect(nearlySameKey("magnolia", "magnolia-grande")).toBe(false);
+    expect(nearlySameKey("juniper", "jasmine")).toBe(false);
+    expect(nearlySameKey("", "juniper")).toBe(false);
+  });
+});
+
 describe("linkQuickMoveIns", () => {
+  it("ties a quick move-in to the plan whose page its own page sits under", () => {
+    // SimplyDwell gives each home a page beneath its plan's, and spells the
+    // plan differently in the two places (Jeff, 2026-09-22).
+    const sd = (path: string) => `https://simplydwellhomes.com/new-homes/broadleaf/${path}`;
+    const plans = linkQuickMoveIns([
+      plan({ planKey: "hawthorn", name: "Hawthorn", sourceUrl: sd("hawthorn-broadleaf/") }),
+      plan({ planKey: "buttonwood", name: "Buttonwood", sourceUrl: sd("buttonwood/") }),
+      plan({
+        planKey: "hawthorne-homesite-42",
+        name: "Hawthorne Homesite 42",
+        quickMoveIn: true,
+        sourceUrl: sd("hawthorn-broadleaf/hawthorne-homesite-42/"),
+      }),
+      plan({
+        planKey: "buttonwood-homesite-145",
+        name: "Buttonwood Homesite 145",
+        quickMoveIn: true,
+        sourceUrl: sd("buttonwood/buttonwood-homesite-145"),
+      }),
+    ]);
+    const byKey = Object.fromEntries(plans.map((p) => [p.planKey, p]));
+    expect(byKey["hawthorne-homesite-42"]).toMatchObject({
+      relatedPlanKey: "hawthorn",
+      relatedPlanName: "Hawthorn",
+      relatedPlanMatch: "plan-page",
+    });
+    expect(byKey["buttonwood-homesite-145"]).toMatchObject({
+      relatedPlanKey: "buttonwood",
+      relatedPlanMatch: "plan-page",
+    });
+    expect(byKey["hawthorn"].hasQuickMoveIns).toBe(true);
+  });
+
+  it("falls back to the quick move-in's own name, less the homesite", () => {
+    const plans = linkQuickMoveIns([
+      plan({ planKey: "hawthorn", name: "Hawthorn" }),
+      plan({ planKey: "magnolia", name: "Magnolia" }),
+      plan({ planKey: "hawthorne-homesite-42", name: "Hawthorne Homesite 42", quickMoveIn: true }),
+      plan({ planKey: "magnolia-homesite-34", name: "Magnolia Homesite 34", quickMoveIn: true }),
+    ]);
+    const byKey = Object.fromEntries(plans.map((p) => [p.planKey, p]));
+    expect(byKey["hawthorne-homesite-42"]).toMatchObject({ relatedPlanKey: "hawthorn", relatedPlanMatch: "plan-name" });
+    expect(byKey["magnolia-homesite-34"]).toMatchObject({ relatedPlanKey: "magnolia", relatedPlanMatch: "plan-name" });
+  });
+
+  it("does not guess when a near miss fits two plans, or when the page is shared", () => {
+    const list = "https://x.test/community/";
+    const plans = linkQuickMoveIns([
+      // Both are within a letter of "cedars", so neither is the answer.
+      plan({ planKey: "cedar", name: "Cedar", sourceUrl: list }),
+      plan({ planKey: "cedars", name: "Cedars", sourceUrl: list }),
+      plan({ planKey: "cedarsx-homesite-3", name: "Cedarsx Homesite 3", quickMoveIn: true, sourceUrl: `${list}home-3/` }),
+    ]);
+    const home = plans.find((p) => p.planKey === "cedarsx-homesite-3");
+    expect(home).toMatchObject({ relatedPlanKey: null, relatedPlanMatch: "unmatched" });
+  });
+
   it("ties a quick move-in to its base plan by the builder's plan id, then by name, and flags the base plan", () => {
     const plans = linkQuickMoveIns([
       plan({ raw: { masterPlanID: 14510 } }),

@@ -13,7 +13,11 @@ export interface GalleryInput {
   src: string;
   caption?: string | null;
   kind?: GalleryMeta["kind"];
-  /** A room the builder named outright (DRB types its images, for example); beats the keyword reading. */
+  /**
+   * A room the caller already knows; beats the keyword reading. Null says
+   * the caller looked and there is nothing to read — a file named for
+   * nothing but a store's id — so the keywords are not tried either.
+   */
   room?: Room | null;
 }
 
@@ -89,7 +93,8 @@ export function orderGallery(items: GalleryInput[]): OrderedGallery {
     let room: Room | null;
     if (kind === "primary") room = "primary";
     else if (kind === "exterior") room = "exterior";
-    else room = item.room ?? classifyRoom(fileNameWords(item.src)) ?? classifyRoom(item.caption ?? "");
+    else if (item.room !== undefined) room = item.room;
+    else room = classifyRoom(fileNameWords(item.src)) ?? classifyRoom(item.caption ?? "");
     entries.push({
       src: item.src,
       rank: ROOM_ORDER.indexOf(room ?? "other"),
