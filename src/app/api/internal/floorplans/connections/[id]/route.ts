@@ -7,18 +7,31 @@ export const dynamic = "force-dynamic";
 // A removal takes the connection's items out of Wix one by one.
 export const maxDuration = 300;
 
-/** The addresses a connection is read from, as the body names them. */
+/** A single address the connection is read from, as the body names it. */
 const URL_FIELDS = ["url", "quickMoveInUrl"] as const;
+/** A list of them: the pages one community's plans are listed on. */
+const URL_LIST_FIELDS = ["listUrls"] as const;
+
+const absolute = (url: string) => /^https?:\/\//.test(url);
+
+/** One address per line, or a list; blank entries dropped. */
+const asList = (raw: unknown): string[] =>
+  (Array.isArray(raw) ? raw : String(raw ?? "").split(/[\n,]+/)).map((u) => String(u).trim()).filter(Boolean);
 
 /**
  * PATCH /api/internal/floorplans/connections/:id
- * Body: { active?: boolean, url?: string, quickMoveInUrl?: string, dismissAttention?: true }
+ * Body: { active?, url?, listUrls?, quickMoveInUrl?, dismissAttention? }
  *
  * Pause/resume a single builder×community connection (same inert-pause
- * semantics as the builder-level flag), set the pages it is read from — its
- * plans, and the separate page some builders keep their quick move-ins on
- * (Jeff, 2026-09-22) — or dismiss it from the "needs attention" banner
- * until a newer run of it fails again (Jeff, 2026-09-21).
+ * semantics as the builder-level flag), set the pages it is read from, or
+ * dismiss it from the "needs attention" banner until a newer run of it
+ * fails again (Jeff, 2026-09-21).
+ *
+ * Three kinds of page, all optional but `url`: the community's own
+ * address; the pages its plans are listed on, where those are not the
+ * community page (Perry splits a community by lot width and lists the
+ * homes under each, Jeff 2026-09-22); and the separate page some builders
+ * keep their quick move-ins on (Stock's /inventory/).
  */
 export async function PATCH(
   request: NextRequest,
@@ -29,31 +42,50 @@ export async function PATCH(
     const body = await request.json();
     const updates: Record<string, unknown> = {};
     if (typeof body.active === "boolean") updates.active = body.active;
-    const urls = URL_FIELDS.filter((field) => typeof body[field] === "string");
-    if (urls.length > 0) {
-      const given = urls.map((field) => [field, String(body[field]).trim()] as const);
-      for (const [field, value] of given) {
-        if (value && !/^https?:\/\//.test(value)) {
-          return NextResponse.json({ error: `${field} must be absolute (https://…)` }, { status: 400 });
-        }
+
+    const singles = URL_FIELDS.filter((field) => typeof body[field] === "string").map(
+      (field) => [field, String(body[field]).trim()] as const
+    );
+    const lists = URL_LIST_FIELDS.filter((field) => field in body).map(
+      (field) => [field, asList(body[field])] as const
+    );
+
+    for (const [field, value] of singles) {
+      if (value && !absolute(value)) {
+        return NextResponse.json({ error: `${field} must be absolute (https://…)` }, { status: 400 });
       }
-      // Read-modify-write: the other extractor params are the run's, not ours.
+    }
+    for (const [field, urls] of lists) {
+      const bad = urls.find((u) => !absolute(u));
+      if (bad) {
+        return NextResponse.json({ error: `${field} must be absolute URLs (https://…): ${bad}` }, { status: 400 });
+      }
+    }
+
+    if (singles.length || lists.length) {
+      // Read-modify-write, once: the other extractor params are the run's,
+      // not ours, and two fields set together must not overwrite each other.
       const { data: current } = await supabase
         .from("fp_builder_communities")
         .select("extractor_params")
         .eq("id", id)
         .single();
-      const params = { ...((current?.extractor_params as object) ?? {}) } as Record<string, unknown>;
-      for (const [field, value] of given) {
-        if (value) params[field] = value;
-        else delete params[field];
+      const next = { ...((current?.extractor_params as object) ?? {}) } as Record<string, unknown>;
+      for (const [field, value] of singles) {
+        if (value) next[field] = value;
+        else delete next[field];
       }
-      updates.extractor_params = params;
+      for (const [field, urls] of lists) {
+        if (urls.length) next[field] = urls;
+        else delete next[field];
+      }
+      updates.extractor_params = next;
     }
+
     if (body.dismissAttention === true) updates.attention_dismissed_at = new Date().toISOString();
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "active (boolean), url / quickMoveInUrl (string) or dismissAttention (true) required" },
+        { error: "active (boolean), url / quickMoveInUrl (string), listUrls (list) or dismissAttention (true) required" },
         { status: 400 }
       );
     }

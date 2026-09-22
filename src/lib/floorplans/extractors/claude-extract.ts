@@ -388,7 +388,7 @@ async function listPage(
   // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
   const what = opts.quickMoveIns
     ? `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`
-    : `Extract every floor plan / home model from this new-home community page. Include quick move-in (inventory) homes as separate entries with quickMoveIn=true, named by their street address where the page gives one, with the plan they are built from in relatedPlanName. A plan the page marks with a move-in date — "October Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in of that plan, however the page words it: set quickMoveIn=true, put the plan's own name in relatedPlanName, and keep the date in the name so two homes of one plan stay apart.`;
+    : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
 
   const ask = `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 
@@ -486,6 +486,14 @@ export function distinctKey(plan: NormalizedPlan, taken: Set<string>): string {
 
 export interface ClaudeExtractParams {
   url?: string;
+  /**
+   * The pages the plans are listed on, where that is not the community
+   * page itself. Perry splits a community by lot width and lists the
+   * homes under each — four pages, one community (Jeff, 2026-09-22).
+   * When set, these are read instead of `url`, which stays the
+   * community's own address.
+   */
+  listUrls?: string[];
   /** A second page, where the builder lists its quick move-ins away from its plans. */
   quickMoveInUrl?: string;
   hint?: string;
@@ -497,35 +505,57 @@ async function extractPages(
   read: PageReader,
   atOnce: number
 ): Promise<NormalizedPlan[]> {
-  if (!params?.url) throw new Error("this extractor requires extractor_params.url");
-  const plansPage = await listPage(params.url, { hint: params.hint, read });
-  const listPages = new Set([params.url, plansPage.url]);
+  // The pages the plans are listed on: the community page, unless the
+  // connection names others (a builder that splits a community by lot
+  // width lists its homes under each).
+  const planPages = (params.listUrls ?? []).map((u) => u.trim()).filter(Boolean);
+  if (!planPages.length && params?.url) planPages.push(params.url);
+  if (!planPages.length) throw new Error("this extractor requires extractor_params.url");
+
+  const listPages = new Set<string>(planPages);
+  const taken = new Set<string>();
+  const listed: NormalizedPlan[] = [];
+  const refused: string[] = [];
+  for (const pageUrl of planPages) {
+    try {
+      const page = await listPage(pageUrl, { hint: params.hint, read });
+      listPages.add(page.url);
+      for (const plan of page.plans) {
+        const planKey = distinctKey(plan, taken);
+        taken.add(planKey);
+        listed.push({ ...plan, planKey });
+      }
+    } catch (error) {
+      // One page of four going down should cost the run that page, not the
+      // other three — but a run that read nothing at all has failed, and
+      // says which page said what.
+      const why = error instanceof Error ? error.message : String(error);
+      logger.warn("Plan list page could not be read", { url: pageUrl, error: why });
+      refused.push(`${pageUrl}: ${why}`);
+    }
+  }
+  if (refused.length === planPages.length) throw new Error(refused.join("; "));
 
   // The builder's own page of homes for sale, where it keeps one away from
   // its plans (Stock's /inventory/, Jeff 2026-09-22). A page that cannot be
   // read costs the run its homes, never its plans.
-  let homes: NormalizedPlan[] = [];
   const homesUrl = params.quickMoveInUrl?.trim();
-  if (homesUrl && homesUrl !== params.url) {
+  if (homesUrl && !listPages.has(homesUrl)) {
     try {
       const homesPage = await listPage(homesUrl, { hint: params.hint, quickMoveIns: true, read });
-      homes = homesPage.plans;
       listPages.add(homesUrl).add(homesPage.url);
+      // A home named for the plan it is built from would take that plan's key.
+      for (const home of homesPage.plans) {
+        const planKey = distinctKey(home, taken);
+        taken.add(planKey);
+        listed.push({ ...home, planKey });
+      }
     } catch (error) {
       logger.warn("Quick move-in page could not be read", {
         url: homesUrl,
         error: error instanceof Error ? error.message : String(error),
       });
     }
-  }
-
-  // A home named for the plan it is built from would take that plan's key.
-  const taken = new Set(plansPage.plans.map((p) => p.planKey));
-  const listed = [...plansPage.plans];
-  for (const home of homes) {
-    const planKey = distinctKey(home, taken);
-    taken.add(planKey);
-    listed.push({ ...home, planKey });
   }
 
   // Each plan's own page, where the list linked one of its own. A page

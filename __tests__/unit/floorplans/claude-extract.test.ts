@@ -193,3 +193,51 @@ describe("orderPhotos, with what the page said about its own pictures", () => {
     expect(ordered.meta[front].kind).toBe("primary");
   });
 });
+
+describe("distinctKey across several list pages", () => {
+  // Perry splits a community by lot width and lists the homes under each
+  // (Jeff, 2026-09-22). One design offered on two of them is two rows, and
+  // each keeps a key of its own rather than the second overwriting the
+  // first.
+  const perry = (lot: string, design: string) =>
+    `https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-${lot}/${design}`;
+  const plan = (planKey: string, sourceUrl: string): NormalizedPlan => ({
+    planKey,
+    name: planKey,
+    price: null,
+    priceDisplay: null,
+    beds: "",
+    baths: "",
+    sqft: null,
+    garages: null,
+    homeType: null,
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl,
+    galleryImages: [],
+    blueprintImages: [],
+  });
+
+  it("keeps one design offered on two pages apart, by the page it came from", () => {
+    const taken = new Set<string>();
+    const first = distinctKey(plan("3741f", perry("75", "3741f")), taken);
+    taken.add(first);
+    const second = distinctKey(plan("3741f", perry("90", "3741f")), taken);
+    // The first keeps the plain key; the second takes one of its own,
+    // drawn from its page's address. What matters is that they differ —
+    // the exact spelling of the second is the address's business.
+    expect(first).toBe("3741f");
+    expect(second).not.toBe(first);
+    expect(second.startsWith("3741f-")).toBe(true);
+  });
+
+  it("leaves designs that appear once alone", () => {
+    const taken = new Set<string>();
+    for (const design of ["3741f", "3638f", "3024f"]) {
+      const key = distinctKey(plan(design, perry("90", design)), taken);
+      taken.add(key);
+      expect(key).toBe(design);
+    }
+    expect([...taken]).toEqual(["3741f", "3638f", "3024f"]);
+  });
+});
