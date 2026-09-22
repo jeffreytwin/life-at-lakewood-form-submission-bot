@@ -62,15 +62,21 @@ try {
       `IMG x${(cut.match(/\[IMG /g) ?? []).length}, LINK x${(cut.match(/\[LINK /g) ?? []).length}`
   );
 
-  // Where the plans would be: the first price, and what surrounds it.
-  const at = cut.search(/\$\s?\d{1,3},\d{3}/);
+  // Where in the page the plans actually sit, and whether the engine's
+  // slice ever reaches them. A plan reads as a name with beds, baths and a
+  // size beside it; the community summary at the top does not.
+  const marks = [...text.matchAll(/\b(\d)\s*(?:br|bd|beds?)\b/gi)].map((m) => m.index ?? 0);
+  const sizes = [...text.matchAll(/[\d,]{3,}\s*sq\.? ?ft/gi)].map((m) => m.index ?? 0);
   console.log(
-    at >= 0
-      ? `FP-PULTE: around the first price >>> ${cut.slice(Math.max(0, at - 700), at + 1800)}`
-      : 'FP-PULTE: no price anywhere in what the engine reads'
+    `FP-PULTE: bed marks at ${JSON.stringify(marks.slice(0, 14))}; size marks at ${JSON.stringify(sizes.slice(0, 14))}; ` +
+      `first beyond the slice: ${[...marks, ...sizes].sort((a, b) => a - b).find((i) => i > 90_000) ?? "none"}`
   );
-  // And the head, to see whether this is a page or a shell.
-  console.log(`FP-PULTE: head >>> ${cut.slice(0, 1200)}`);
+
+  // Three windows through the part the engine never sends.
+  for (const at of [120_000, 200_000, 300_000]) {
+    console.log(`FP-PULTE: at ${at} >>> ${text.slice(at, at + 1500)}`);
+  }
+
 } catch (err) {
   console.log(`FP-PULTE: ERROR ${String(err?.cause?.message ?? err?.message ?? err)}`);
 }
