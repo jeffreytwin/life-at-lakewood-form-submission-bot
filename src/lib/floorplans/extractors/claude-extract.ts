@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { firstGallery, fullSize } from "@/lib/floorplans/extractors/plan-page";
+import { firstGallery, fullSize, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
@@ -240,6 +240,9 @@ interface ExtractedPlanPage {
 }
 
 /** A media store's own id, which says nothing about the picture: "6e8cfe1d-66ee-4b88-b752-30e7579fd4bf_lg.jpg". */
+/** What a page says about a picture of its outside, in the shape the gallery keeps. */
+const OUTSIDE_META = { caption: null, room: "exterior" as const, kind: "exterior" as const };
+
 const OPAQUE_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 /**
@@ -253,10 +256,15 @@ const OPAQUE_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
  * UUID that happens to spell a room does not move the picture.
  * Exported for tests.
  */
-export function orderPhotos(srcs: string[]) {
+export function orderPhotos(srcs: string[], outside: ReadonlySet<string> = new Set()) {
+  // The lead is the first picture that is not an outside view: a page that
+  // opens on the front of the house still shows a room first, because
+  // exteriors go last (gallery-order.ts).
+  const lead = srcs.find((src) => !outside.has(src));
   return orderGallery(
-    srcs.map((src, i) => {
-      if (i === 0) return { src, kind: "primary" as const };
+    srcs.map((src) => {
+      if (outside.has(src)) return { src, kind: "exterior" as const };
+      if (src === lead) return { src, kind: "primary" as const };
       const name = src.split("/").pop() ?? "";
       const room = OPAQUE_NAME.test(name) ? null : classifyRoom(fileNameWords(src));
       return room === "exterior" ? { src, kind: "exterior" as const } : { src, room };
@@ -316,10 +324,25 @@ export async function readPlanPageWithClaude(
   const page = (toolUse?.input ?? {}) as ExtractedPlanPage;
 
   const gallery = firstGallery(html, page_.url);
-  const photos = [...plan.galleryImages, ...listOf<string>(page.photoImages), ...gallery.first.map((i) => i.src)]
+  // A page whose galleries cannot be read off its headings may still be
+  // carrying them: Perry draws a hero and four thumbnails and keeps
+  // twenty-three photographs in its payload (Jeff, 2026-09-22). Only
+  // where the headings gave nothing, so a plan never inherits the
+  // community's other pictures.
+  const carried = gallery.first.length ? [] : payloadGallery(html, page_.url);
+  const photos = [
+    ...plan.galleryImages,
+    ...listOf<string>(page.photoImages),
+    ...gallery.first.map((i) => i.src),
+    ...carried.map((i) => i.src),
+  ]
     .filter((src) => src && !gallery.drop.has(src))
     .map((src) => fullSize(src, html))
     .filter((src, i, all) => all.indexOf(src) === i);
+  // What the page said about its own pictures, kept for the ordering.
+  const outside = Object.fromEntries(
+    carried.filter((i) => i.outside).map((i) => [fullSize(i.src, html), OUTSIDE_META])
+  );
   const blueprints = [...plan.blueprintImages, ...listOf<string>(page.blueprintImages)].filter(
     (src, i, all) => src && all.indexOf(src) === i
   );
@@ -341,6 +364,7 @@ export async function readPlanPageWithClaude(
       plan.virtualTourUrl ?? tourLinkIn(html) ?? tourUrlIn(html) ?? page.virtualTourUrl?.trim() ?? null,
     galleryImages: photos,
     blueprintImages: blueprints,
+    galleryMeta: { ...plan.galleryMeta, ...outside },
   };
 }
 
@@ -515,7 +539,12 @@ async function extractPages(
   });
 
   return pages.map((plan) => {
-    const ordered = orderPhotos(plan.galleryImages);
+    const outside = new Set(
+      Object.entries(plan.galleryMeta ?? {})
+        .filter(([, meta]) => meta.room === "exterior")
+        .map(([src]) => src)
+    );
+    const ordered = orderPhotos(plan.galleryImages, outside);
     return { ...plan, galleryImages: ordered.urls, galleryMeta: ordered.meta };
   });
 }
