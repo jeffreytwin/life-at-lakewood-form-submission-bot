@@ -35,7 +35,15 @@ const RENDER_RUN_MS = 170_000;
  */
 const LIST_TOKENS = 16_384;
 const LIST_TOKENS_AGAIN = 32_768;
-const MAX_CONTENT_CHARS = 90_000;
+/**
+ * How much of a page is read. Pulte's community pages are 7MB and distill
+ * to 370,000 characters — the plans start a third of the way in and run
+ * most of the rest — so the old 90,000 cut the list in half and handed the
+ * model an entry chopped in two (Jeff, 2026-09-22). This holds such a page
+ * whole; the model's context is far larger still, and a page that has to
+ * be cut at all now says so.
+ */
+const MAX_CONTENT_CHARS = 400_000;
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
@@ -168,6 +176,13 @@ function distill(html: string, baseUrl: string): string {
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim();
+  if (text.length > MAX_CONTENT_CHARS) {
+    logger.warn("Page too long to read whole", {
+      url: baseUrl,
+      chars: text.length,
+      read: MAX_CONTENT_CHARS,
+    });
+  }
   return text.slice(0, MAX_CONTENT_CHARS);
 }
 
