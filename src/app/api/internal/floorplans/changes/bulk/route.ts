@@ -19,7 +19,7 @@ const BUDGET_MS = 180_000;
 
 /**
  * POST /api/internal/floorplans/changes/bulk
- * Body: { action: "approve" | "reject", ids: string[] }
+ * Body: { action: "approve" | "reject" | "restore", ids: string[] }
  *
  * Approves or rejects a set of pending rows together, which is how the Hub
  * acts on a plan: the sync core queues one row per changed field, so a plan
@@ -36,6 +36,13 @@ const BUDGET_MS = 180_000;
  * (Jeff, 2026-09-21). Plans are written one after another within a time
  * budget; what did not fit goes back to pending and is returned as
  * `remaining` for the page to send again.
+ *
+ * "restore" is reject's undo, and it matters more than it sounds: a
+ * rejection sticks, so the sync core will not queue the same change again
+ * (sync.ts). A reject clicked by accident would otherwise bury that change
+ * until the builder's own value moved (Jeff, 2026-09-22). Putting the row
+ * back to pending both returns it to the queue and lifts the suppression,
+ * since the suppression only looks for rejected rows.
  */
 export async function POST(request: NextRequest) {
   // Rows this request locked; released if it dies before writing them.
@@ -45,23 +52,30 @@ export async function POST(request: NextRequest) {
     const action = body?.action;
     const ids: unknown = body?.ids;
     if (
-      (action !== "approve" && action !== "reject") ||
+      (action !== "approve" && action !== "reject" && action !== "restore") ||
       !Array.isArray(ids) || !ids.length || ids.length > 200 ||
       !ids.every((id) => typeof id === "string")
     ) {
-      return NextResponse.json({ error: "action (approve|reject) and ids (string[]) are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "action (approve|reject|restore) and ids (string[]) are required" },
+        { status: 400 }
+      );
     }
     const now = new Date().toISOString();
 
-    if (action === "reject") {
+    if (action === "reject" || action === "restore") {
+      // Only from the one status each moves out of, so a row already
+      // written or being written is never dragged back by a stale page.
+      const from = action === "reject" ? "pending" : "rejected";
+      const to = action === "reject" ? "rejected" : "pending";
       const { data, error } = await supabase
         .from("fp_pending_changes")
-        .update({ status: "rejected", updated_at: now })
+        .update({ status: to, updated_at: now })
         .in("id", ids)
-        .eq("status", "pending")
+        .eq("status", from)
         .select("id");
       if (error) throw error;
-      return NextResponse.json({ rejected: data?.length ?? 0 });
+      return NextResponse.json({ [action === "reject" ? "rejected" : "restored"]: data?.length ?? 0 });
     }
 
     // A row a dead request left locked goes back to the queue (approving.ts).

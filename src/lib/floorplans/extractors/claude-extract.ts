@@ -108,8 +108,26 @@ interface ExtractedPlan {
  * reads like a bug in the Hub rather than a page that could not be read.
  * So every list off a tool call comes through here.
  */
+/**
+ * A list, including one the model handed back as text. Asked for an array
+ * it occasionally returns the array serialised — Pulte's community page
+ * did it twice running, at both ceilings, so it is the answer the page
+ * draws rather than an answer cut short. The list is what matters, not how
+ * it was spelled; anything that will not parse into one is still nothing.
+ */
+export function asList<T>(value: unknown): T[] | null {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value !== "string") return null;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? (parsed as T[]) : null;
+  } catch {
+    return null;
+  }
+}
+
 function listOf<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
+  return asList<T>(value) ?? [];
 }
 
 /**
@@ -459,7 +477,7 @@ async function listPage(
   // both failed (Jeff, 2026-09-22). One more go with room to spare fixes
   // it; a page too big even for that says so rather than crashing.
   let answer = await readList(LIST_TOKENS);
-  if (answer.reported !== undefined && !Array.isArray(answer.reported)) {
+  if (answer.reported !== undefined && !asList(answer.reported)) {
     logger.warn("Plan list came back half-written; asking again with more room", {
       url,
       stop: answer.stop,
@@ -468,14 +486,15 @@ async function listPage(
     answer = await readList(LIST_TOKENS_AGAIN);
   }
   if (!answer.answered) throw new Error("Claude returned no extraction tool call");
-  if (answer.reported !== undefined && !Array.isArray(answer.reported)) {
+  const reported = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
+  if (!reported) {
     throw new Error(
       answer.stop === "max_tokens"
         ? "the page's plans did not fit in one answer, even with room to spare"
         : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
     );
   }
-  const plans = listOf<ExtractedPlan>(answer.reported).filter((p) => p?.name?.trim());
+  const plans = reported.filter((p) => p?.name?.trim());
   if (plans.length === 0 && pageLooksUnrendered(content)) {
     throw new Error(
       "the page carries no prices or sizes without its scripts — it draws its plans after loading, which a fetch cannot see (this builder needs a rendering engine)"

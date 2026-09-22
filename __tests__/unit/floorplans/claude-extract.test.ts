@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  asList,
   distinctKey,
   isTourUrl,
   orderPhotos,
@@ -278,5 +279,37 @@ describe("isTourUrl", () => {
 
   it("says nothing is a tour for a builder's plan page", () => {
     expect(isTourUrl("https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms")).toBe(false);
+  });
+});
+
+describe("asList", () => {
+  it("takes a list as a list", () => {
+    expect(asList([{ name: "Mayport" }])).toEqual([{ name: "Mayport" }]);
+    expect(asList([])).toEqual([]);
+  });
+
+  it("takes a list the model spelled as text", () => {
+    // Pulte's community page came back this way twice running, at both
+    // ceilings, so it is the answer that page draws rather than one cut
+    // short (Jeff, 2026-09-22).
+    expect(asList('[{"name":"Mayport"},{"name":"Easton"}]')).toEqual([
+      { name: "Mayport" },
+      { name: "Easton" },
+    ]);
+  });
+
+  it("is nothing for an answer that is not a list at all", () => {
+    expect(asList("No floor plans were found on this page.")).toBeNull();
+    expect(asList('{"name":"Mayport"}')).toBeNull();
+    expect(asList(42)).toBeNull();
+    expect(asList(null)).toBeNull();
+    expect(asList(undefined)).toBeNull();
+  });
+
+  it("tells an empty list from no list at all", () => {
+    // One means the page listed nothing; the other means the answer was
+    // unusable, and they are not the same outcome.
+    expect(asList("[]")).toEqual([]);
+    expect(asList("")).toBeNull();
   });
 });
