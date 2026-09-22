@@ -88,6 +88,30 @@ export async function closeRenderer(): Promise<void> {
 const shownText = (page: Page) => page.evaluate(() => document.body?.innerText ?? "");
 
 /**
+ * Walk the page to the bottom, so it loads the pictures it only loads
+ * when somebody looks at them. Richmond American's galleries are eleven
+ * photographs and arrived as two, because nothing here had ever scrolled
+ * (Jeff, 2026-09-22). Bounded: a page that grows as it is scrolled — a
+ * feed, an endless list — is walked a fixed distance and no further.
+ */
+const SCROLL_STEPS = 30;
+
+async function seeWholePage(page: Page): Promise<void> {
+  await page.evaluate(async (steps: number) => {
+    const step = window.innerHeight || 1000;
+    for (let n = 0; n < steps; n++) {
+      const y = step * (n + 1);
+      if (y > document.body.scrollHeight) break;
+      window.scrollTo(0, y);
+      await new Promise((done) => setTimeout(done, 250));
+    }
+    window.scrollTo(0, 0);
+  }, SCROLL_STEPS);
+  // The last pictures asked for are still on their way.
+  await new Promise((done) => setTimeout(done, 1_500));
+}
+
+/**
  * The page's HTML once it has drawn itself, and the address it settled on.
  *
  * "Drawn itself" is the same test the plain engine uses to tell an empty
@@ -131,6 +155,14 @@ export async function renderPage(url: string): Promise<{ url: string; html: stri
     // A moment more once the facts appear: the first price on the page is
     // rarely the last, and the rest arrive in the same breath.
     if (ready) await new Promise((done) => setTimeout(done, 1_500));
+
+    // And then down the page, for the pictures it loads only in view.
+    await seeWholePage(page).catch((error) => {
+      logger.warn("Floor plan page would not scroll", {
+        url,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
 
     const html = await page.content();
     logger.info("Floor plan page rendered", { url, quiet, ready, bytes: html.length });

@@ -1,11 +1,20 @@
-// Richmond American probe: three things the run is getting wrong (Jeff,
-// 2026-09-22) — the community page's "Move-in ready" tab is never opened,
-// and neither a home's gallery ("Sage model gallery") nor a plan's
-// ("Gallery" with Interiors/Renderings tabs) reaches the plan.
+// Richmond American probe, round two.
 //
-// Builder domains are blocked from the working container, so this runs as
-// a prebuild step on Vercel, guarded to the working branch; results are
-// read from the build logs. Always exits 0, and never fails the build.
+// Round one found the shape of it (build 310c144): the community's
+// "Move-in ready" homes are behind a <button> that changes nothing in the
+// address bar, and a plan's "Gallery" heading has no pictures under it at
+// all until a tab is pressed — the tab that opens is "Interactive Tours",
+// which is an embed, not photographs. Pressing "Interiors (11)" put six
+// pictures on the page, and a home's "Sage model gallery" draws six
+// thumbnails of its own.
+//
+// So round two asks the three things the fix turns on: where the other
+// five pictures are, whether the page names a full-size copy of each
+// thumbnail, and whether the captions under them ("Bedroom", "Kitchen")
+// are in the markup beside the picture.
+//
+// Guarded to the working branch; results are read from the build logs.
+// Always exits 0.
 
 const PROBE_BRANCH = 'claude/stock-luxury-homes-connection-x2ieo8';
 
@@ -16,7 +25,8 @@ if (branch !== PROBE_BRANCH) {
 }
 
 const COMMUNITY = 'https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/';
-const HOME = 'https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/sage/35630000-0021/';
+const PLAN = COMMUNITY + 'slate/';
+const HOME = COMMUNITY + 'sage/35630000-0021/';
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
@@ -24,8 +34,6 @@ const UA =
 const say = (...parts) => console.log('FP-RICH:', ...parts);
 const wait = (ms) => new Promise((done) => setTimeout(done, ms));
 
-// The build must not hang on a browser that will not start or a page that
-// will not settle.
 const watchdog = setTimeout(() => {
   say('watchdog fired; giving up');
   process.exit(0);
@@ -35,9 +43,7 @@ let browser;
 try {
   const pack = (await import('@sparticuz/chromium')).default;
   const puppeteer = (await import('puppeteer-core')).default;
-  const executablePath = await pack.executablePath();
-  say('chromium at', executablePath);
-  browser = await puppeteer.launch({ executablePath, args: pack.args, headless: true });
+  browser = await puppeteer.launch({ executablePath: await pack.executablePath(), args: pack.args, headless: true });
   say('browser started');
 } catch (err) {
   say('browser would not start:', String(err?.message ?? err));
@@ -45,85 +51,29 @@ try {
   process.exit(0);
 }
 
-/** Open a page and let it draw itself, the way render.ts does. */
 async function open(url) {
   const page = await browser.newPage();
   await page.setUserAgent(UA);
   await page.setViewport({ width: 1440, height: 2400 });
-  let quiet = true;
   try {
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 45_000 });
-  } catch (err) {
-    quiet = false;
-    say('navigate not quiet:', url, String(err?.message ?? err).slice(0, 80));
+  } catch {
     await page.waitForSelector('body', { timeout: 5_000 }).catch(() => {});
   }
-  await wait(6_000);
-  say('opened', url, 'quiet=' + quiet, 'landed=' + page.url());
+  await wait(5_000);
+  await page.evaluate(async () => {
+    for (let n = 1; n <= 12; n++) {
+      if (window.innerHeight * n > document.body.scrollHeight) break;
+      window.scrollTo(0, window.innerHeight * n);
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    window.scrollTo(0, 0);
+  });
+  await wait(2_000);
+  say('opened', url);
   return page;
 }
 
-/** Every picture the page is showing, and how it names it. */
-const pictures = (page) =>
-  page.evaluate(() => {
-    const out = [];
-    for (const img of document.querySelectorAll('img')) {
-      const src = img.getAttribute('src');
-      out.push({
-        src: (img.currentSrc || img.src || src || '').slice(0, 120),
-        attr: src ? 'src' : img.getAttribute('data-src') ? 'data-src' : img.getAttribute('srcset') ? 'srcset-only' : 'none',
-        shown: img.offsetParent !== null,
-      });
-    }
-    return out;
-  });
-
-/** The page as its headings divide it, with the pictures under each. */
-const sections = (page) =>
-  page.evaluate(() => {
-    const out = [];
-    let here = { heading: '(top)', level: 0, n: 0, first: [] };
-    out.push(here);
-    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-    while (walk.nextNode()) {
-      const el = walk.currentNode;
-      if (/^H[1-6]$/.test(el.tagName)) {
-        here = { heading: (el.textContent || '').trim().slice(0, 60), level: Number(el.tagName[1]), n: 0, first: [] };
-        out.push(here);
-      } else if (el.tagName === 'IMG') {
-        const src = el.currentSrc || el.src;
-        if (src && !src.startsWith('data:')) {
-          here.n++;
-          if (here.first.length < 2) here.first.push(src.slice(0, 100));
-        }
-      }
-    }
-    return out.filter((s) => s.n || s.heading !== '(top)');
-  });
-
-/** Anything on the page that reads like one of these words. */
-const tabs = (page, words) =>
-  page.evaluate((want) => {
-    const out = [];
-    for (const el of document.querySelectorAll('*')) {
-      if (el.children.length) continue;
-      const text = (el.textContent || '').trim();
-      if (!text || text.length > 40) continue;
-      if (!want.some((w) => text.toLowerCase().startsWith(w))) continue;
-      const a = el.closest('a');
-      out.push({
-        text,
-        tag: el.tagName,
-        href: a ? a.getAttribute('href') : null,
-        role: el.closest('[role]') ? el.closest('[role]').getAttribute('role') : null,
-        cls: String(el.className || '').slice(0, 60),
-        up: String(el.parentElement?.className || '').slice(0, 60),
-      });
-    }
-    return out;
-  }, words);
-
-/** Click the thing that says this, and say whether anything was found. */
 const press = (page, word) =>
   page.evaluate((want) => {
     for (const el of document.querySelectorAll('*')) {
@@ -132,120 +82,135 @@ const press = (page, word) =>
       if (!text.startsWith(want)) continue;
       const target = el.closest('a,button,[role="tab"],li') || el;
       target.click();
-      return target.tagName + '.' + String(target.className || '').slice(0, 40);
+      return true;
     }
-    return null;
+    return false;
   }, word);
 
-/** Scroll the whole way down, for the pictures a page only loads in view. */
-async function toTheBottom(page) {
-  await page.evaluate(async () => {
-    const step = 900;
-    for (let y = 0; y < document.body.scrollHeight; y += step) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 250));
+/** The section a heading opens, as markup and as its parts. */
+const gallery = (page, heading) =>
+  page.evaluate((want) => {
+    const head = [...document.querySelectorAll('h1,h2,h3,h4')].find((h) =>
+      (h.textContent || '').trim().toLowerCase().includes(want)
+    );
+    if (!head) return { found: false };
+    // The block that holds both the heading and the pictures.
+    let box = head.parentElement;
+    for (let n = 0; n < 6 && box; n++) {
+      if (box.querySelectorAll('img').length >= 2) break;
+      box = box.parentElement;
     }
-    window.scrollTo(0, document.body.scrollHeight);
-  });
-  await wait(3_000);
-}
+    box = box || head.parentElement;
+    const pictures = [...box.querySelectorAll('img')].map((img) => {
+      const holder = img.closest('figure,li,div');
+      return {
+        src: img.getAttribute('src'),
+        alt: img.getAttribute('alt'),
+        cap: (holder?.innerText || '').trim().slice(0, 40),
+        up: String(img.parentElement?.className || '').slice(0, 40),
+      };
+    });
+    const controls = [...box.querySelectorAll('button,a,[role="button"]')]
+      .map((el) => ({
+        t: (el.innerText || el.getAttribute('aria-label') || '').trim().slice(0, 30),
+        tag: el.tagName,
+        cls: String(el.className || '').slice(0, 40),
+        href: el.getAttribute('href'),
+      }))
+      .filter((c) => c.t || c.cls);
+    return {
+      found: true,
+      heading: head.textContent.trim().slice(0, 40),
+      box: String(box.className || '').slice(0, 60),
+      pictures,
+      controls: controls.slice(0, 18),
+      markup: box.outerHTML.replace(/\s+/g, ' ').slice(0, 1800),
+    };
+  }, heading);
 
-const count = (list) => `${list.length} pictures (${list.filter((p) => p.attr === 'src').length} src, ${list.filter((p) => p.attr === 'data-src').length} data-src, ${list.filter((p) => p.attr === 'srcset-only').length} srcset-only)`;
+/** For each thumbnail, the other spellings of the same picture the page names. */
+const siblings = (page, pictures) =>
+  page.evaluate((srcs) => {
+    const html = document.documentElement.outerHTML;
+    return srcs.map((src) => {
+      const id = (src || '').match(/media-(\d+)/)?.[1];
+      if (!id) return { src, id: null, forms: [] };
+      const forms = [...new Set((html.match(new RegExp(`[^"'\\s]*media-${id}[^"'\\s]*`, 'g')) || []))];
+      return { src: src.slice(-40), id, forms: forms.slice(0, 6).map((f) => f.slice(-46)) };
+    });
+  }, pictures);
 
-async function look(page, label) {
-  const before = await pictures(page);
-  say(label, 'before scrolling:', count(before));
-  await toTheBottom(page);
-  const after = await pictures(page);
-  say(label, 'after scrolling: ', count(after));
-  const html = await page.content();
-  say(label, 'html', html.length, 'bytes,', (html.match(/<img\b/gi) || []).length, '<img>,',
-      (html.match(/background-image/gi) || []).length, 'background-image');
-  for (const s of await sections(page)) {
-    if (s.n) say(label, `  h${s.level} "${s.heading}" -> ${s.n} pictures`, s.first.join(' | '));
-    else say(label, `  h${s.level} "${s.heading}"`);
-  }
-  return after;
-}
-
-// ---- the community page, and the tab the run never opens ----------------
+// ---- a plan's gallery, tab by tab ---------------------------------------
 try {
-  const page = await open(COMMUNITY);
-  say('community tabs:', JSON.stringify(await tabs(page, ['plans to build', 'move-in ready', 'models'])));
-  const text = await page.evaluate(() => document.body.innerText.slice(0, 600));
-  say('community text head:', JSON.stringify(text));
-
-  const pressed = await press(page, 'move-in ready');
-  say('pressed move-in ready ->', pressed);
-  await wait(6_000);
-  say('community landed after press:', page.url());
-  const after = await page.evaluate(() => {
-    const rows = [...document.querySelectorAll('a')]
-      .map((a) => ({ text: (a.textContent || '').trim().slice(0, 40), href: a.getAttribute('href') || '' }))
-      .filter((r) => /lot\s*\d+/i.test(r.text) || /\/\d{8}-\d{4}\/?$/.test(r.href));
-    return { body: document.body.innerText.slice(0, 900), rows: rows.slice(0, 14) };
-  });
-  say('move-in ready rows:', JSON.stringify(after.rows));
-  say('move-in ready text:', JSON.stringify(after.body));
-
-  const links = await page.evaluate(() =>
-    [...new Set([...document.querySelectorAll('a')].map((a) => a.href))]
-      .filter((h) => h.includes('/estates-at-rivers-edge/') && !h.endsWith('/estates-at-rivers-edge/'))
-      .slice(0, 20)
-  );
-  say('community plan links:', JSON.stringify(links));
-  await page.close();
-} catch (err) {
-  say('community failed:', String(err?.message ?? err));
-}
-
-// ---- does the tab have an address of its own? ---------------------------
-for (const candidate of [
-  COMMUNITY + '?tab=move-in-ready',
-  COMMUNITY + 'move-in-ready/',
-  COMMUNITY + '#move-in-ready',
-  COMMUNITY + 'quick-move-in/',
-]) {
-  try {
-    const page = await open(candidate);
-    const seen = await page.evaluate(() => ({
-      tab: [...document.querySelectorAll('*')]
-        .filter((el) => !el.children.length && /^(plans to build|move-in ready|models)$/i.test((el.textContent || '').trim()))
-        .map((el) => ({ t: el.textContent.trim(), c: String(el.className || '').slice(0, 40) })),
-      ready: (document.body.innerText.match(/Ready for move-in/gi) || []).length,
-      head: document.body.innerText.slice(0, 300),
-    }));
-    say('candidate', candidate, '->', JSON.stringify(seen));
-    await page.close();
-  } catch (err) {
-    say('candidate', candidate, 'failed:', String(err?.message ?? err));
-  }
-}
-
-// ---- a home's page: "Sage model gallery" --------------------------------
-try {
-  const page = await open(HOME);
-  await look(page, 'home');
-  await page.close();
-} catch (err) {
-  say('home failed:', String(err?.message ?? err));
-}
-
-// ---- a plan's page: "Gallery" with Interiors / Renderings tabs ----------
-try {
-  const page = await open(COMMUNITY + 'slate/');
-  say('plan gallery tabs:', JSON.stringify(await tabs(page, ['interactive tours', 'video', 'interiors', 'renderings'])));
-  const shown = await look(page, 'plan');
-  for (const tab of ['interiors', 'renderings']) {
+  const page = await open(PLAN);
+  for (const tab of ['interiors', 'renderings', 'exteriors', 'floor plan']) {
     const pressed = await press(page, tab);
-    await wait(4_000);
-    const now = await pictures(page);
-    say(`plan after pressing ${tab} (${pressed}):`, count(now), 'new:',
-        now.filter((p) => !shown.some((s) => s.src === p.src)).length);
+    if (!pressed) {
+      say('plan has no', tab, 'tab');
+      continue;
+    }
+    await wait(3_500);
+    const seen = await gallery(page, 'gallery');
+    say(`plan "${tab}" ->`, seen.found ? `${seen.pictures.length} pictures in .${seen.box}` : 'no gallery heading');
+    if (!seen.found) continue;
+    say(`plan "${tab}" pictures:`, JSON.stringify(seen.pictures));
+    say(`plan "${tab}" controls:`, JSON.stringify(seen.controls));
+    if (tab === 'interiors') {
+      say('plan interiors markup:', seen.markup);
+      say('plan interiors siblings:', JSON.stringify(await siblings(page, seen.pictures.map((p) => p.src))));
+      // Is the rest of the eleven behind a control, or further down?
+      for (const more of ['view all', 'view more', 'see all', 'load more', 'next']) {
+        if (await press(page, more)) {
+          await wait(3_000);
+          const after = await gallery(page, 'gallery');
+          say(`plan after "${more}":`, after.pictures?.length ?? 0, 'pictures',
+              JSON.stringify((after.pictures ?? []).map((p) => (p.src || '').slice(-30))));
+        }
+      }
+      const arrows = await page.evaluate(() => {
+        const box = [...document.querySelectorAll('h1,h2,h3')].find((h) => /gallery/i.test(h.textContent || ''))?.closest('section,div');
+        const next = box && [...box.querySelectorAll('button,a')].find((b) => /next|right|›|>/i.test((b.getAttribute('aria-label') || b.className || '')));
+        if (!next) return 'none';
+        next.click();
+        return next.tagName + '.' + String(next.className).slice(0, 30);
+      });
+      say('plan gallery next-control:', arrows);
+      await wait(3_000);
+      const after = await gallery(page, 'gallery');
+      say('plan after next-control:', after.pictures?.length ?? 0, 'pictures');
+    }
   }
   await page.close();
 } catch (err) {
   say('plan failed:', String(err?.message ?? err));
+}
+
+// ---- a home's gallery ---------------------------------------------------
+try {
+  const page = await open(HOME);
+  const seen = await gallery(page, 'model gallery');
+  say('home gallery ->', seen.found ? `${seen.pictures.length} pictures in .${seen.box}` : 'no gallery heading');
+  if (seen.found) {
+    say('home pictures:', JSON.stringify(seen.pictures));
+    say('home controls:', JSON.stringify(seen.controls));
+    say('home markup:', seen.markup);
+    say('home siblings:', JSON.stringify(await siblings(page, seen.pictures.map((p) => p.src))));
+    for (const more of ['view all', 'view more', 'see all', 'load more']) {
+      if (await press(page, more)) {
+        await wait(3_000);
+        const after = await gallery(page, 'model gallery');
+        say(`home after "${more}":`, after.pictures?.length ?? 0, 'pictures');
+      }
+    }
+  }
+  // What the page says about the home itself, for the list read.
+  say('home text:', JSON.stringify(await page.evaluate(() => {
+    const main = document.querySelector('main') || document.body;
+    return main.innerText.replace(/\s+/g, ' ').slice(0, 700);
+  })));
+  await page.close();
+} catch (err) {
+  say('home failed:', String(err?.message ?? err));
 }
 
 say('done');

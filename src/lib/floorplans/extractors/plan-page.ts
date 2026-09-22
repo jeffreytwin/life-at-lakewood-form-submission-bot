@@ -41,6 +41,24 @@ export interface PageSection {
 const attr = (tag: string, name: string): string | null =>
   tag.match(new RegExp(`\\s${name}=["']([^"']*)["']`, "i"))?.[1] ?? null;
 
+/**
+ * The largest picture a responsive image offers, out of the set it lists:
+ * `photo-400.jpg 400w, photo-1600.jpg 1600w`. A gallery whose pictures
+ * carry only a set and no src reads as no pictures at all otherwise.
+ * Exported for tests.
+ */
+export function largestInSrcSet(value: string | null): string | null {
+  if (!value) return null;
+  let best: { url: string; size: number } | null = null;
+  for (const entry of value.split(",")) {
+    const [url, measure] = entry.trim().split(/\s+/);
+    if (!url) continue;
+    const size = measure ? parseFloat(measure) || 0 : 0;
+    if (!best || size >= best.size) best = { url, size };
+  }
+  return best?.url ?? null;
+}
+
 /** A heading's words, with the spans, comments and entities a framework leaves in it. */
 function readable(html: string): string {
   return html
@@ -76,7 +94,10 @@ export function sectionsOf(html: string, baseUrl: string): PageSection[] {
     marks.push({ at: m.index ?? 0, heading: { level: Number(m[1]), text: readable(m[2]) } });
   }
   for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
-    const src = attr(m[0], "src") || attr(m[0], "data-src");
+    const src =
+      attr(m[0], "src") ||
+      attr(m[0], "data-src") ||
+      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset"));
     if (!src || src.startsWith("data:")) continue;
     marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: attr(m[0], "alt") ?? "" } });
   }
