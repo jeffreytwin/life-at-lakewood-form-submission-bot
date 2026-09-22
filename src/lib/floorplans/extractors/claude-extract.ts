@@ -26,6 +26,15 @@ const MODEL = "claude-sonnet-5";
  * community finishes with what it has rather than being killed mid-run.
  */
 const RENDER_RUN_MS = 170_000;
+/**
+ * Room for the answer about one listing page. A community with a dozen
+ * plans, each with a dozen pictures whose URLs run long, needs more than
+ * the 8k this used to have — that ceiling is what cut Ryan's and Pulte's
+ * answers in half. The second figure is the retry, for the rare page that
+ * needs more still.
+ */
+const LIST_TOKENS = 16_384;
+const LIST_TOKENS_AGAIN = 32_768;
 const MAX_CONTENT_CHARS = 90_000;
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
@@ -357,34 +366,46 @@ async function listPage(
     ? `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`
     : `Extract every floor plan / home model from this new-home community page. Include quick move-in (inventory) homes as separate entries with quickMoveIn=true, named by their street address, with the plan they are built from in relatedPlanName.`;
 
-  const response = await getClient().messages.create({
-    model: MODEL,
-    // A community page with a dozen plans, each with a dozen pictures whose
-    // URLs run long, needs more room than the answer's old ceiling.
-    max_tokens: 16_384,
-    tools: [EXTRACT_TOOL],
-    tool_choice: { type: "tool", name: "report_floor_plans" },
-    messages: [
-      {
-        role: "user",
-        content: `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`,
-      },
-    ],
-  });
+  const ask = `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 
-  const toolUse = response.content.find(
-    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
-  );
-  if (!toolUse) throw new Error("Claude returned no extraction tool call");
-  const reported = (toolUse.input as { plans?: unknown }).plans;
-  if (reported !== undefined && !Array.isArray(reported)) {
+  const readList = async (maxTokens: number) => {
+    const response = await getClient().messages.create({
+      model: MODEL,
+      max_tokens: maxTokens,
+      tools: [EXTRACT_TOOL],
+      tool_choice: { type: "tool", name: "report_floor_plans" },
+      messages: [{ role: "user", content: ask }],
+    });
+    const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+    return {
+      answered: Boolean(toolUse),
+      reported: (toolUse?.input as { plans?: unknown } | undefined)?.plans,
+      stop: response.stop_reason,
+    };
+  };
+
+  // An answer that runs out of room comes back half-written, and a
+  // half-written list is not a list — which is how Ryan Homes and Pulte
+  // both failed (Jeff, 2026-09-22). One more go with room to spare fixes
+  // it; a page too big even for that says so rather than crashing.
+  let answer = await readList(LIST_TOKENS);
+  if (answer.reported !== undefined && !Array.isArray(answer.reported)) {
+    logger.warn("Plan list came back half-written; asking again with more room", {
+      url,
+      stop: answer.stop,
+      got: typeof answer.reported,
+    });
+    answer = await readList(LIST_TOKENS_AGAIN);
+  }
+  if (!answer.answered) throw new Error("Claude returned no extraction tool call");
+  if (answer.reported !== undefined && !Array.isArray(answer.reported)) {
     throw new Error(
-      response.stop_reason === "max_tokens"
-        ? "the page's plans did not fit in one answer (stopped at max_tokens)"
-        : `plans came back as ${typeof reported}, not a list — the page may not be readable without its scripts`
+      answer.stop === "max_tokens"
+        ? "the page's plans did not fit in one answer, even with room to spare"
+        : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
     );
   }
-  const plans = listOf<ExtractedPlan>(reported).filter((p) => p?.name?.trim());
+  const plans = listOf<ExtractedPlan>(answer.reported).filter((p) => p?.name?.trim());
   if (plans.length === 0 && pageLooksUnrendered(content)) {
     throw new Error(
       "the page carries no prices or sizes without its scripts — it draws its plans after loading, which a fetch cannot see (this builder needs a rendering engine)"
