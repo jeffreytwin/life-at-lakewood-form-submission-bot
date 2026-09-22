@@ -1,15 +1,17 @@
-// Perry round two (Jeff, 2026-09-22).
+// Perry round three (Jeff, 2026-09-22) — the harvest itself.
 //
-// Round one found the cause: Perry is a Next.js site and its photographs
-// are not in <img> tags at all. The community page draws 12 images but
-// carries 65 picture URLs; a section page draws 8 and carries 78. The
-// rest live in the flight payload — where, better still, each one is
-// labelled: "type":["interior"], with a design_id, an elevation_id, the
-// community and the section it belongs to.
+// Round two read the shape. Every photograph is a Cloudinary record in the
+// page's own flight payload, and its metadata says what it is:
 //
-// So: what exactly does a picture record look like, which types are used,
-// and how are the plans themselves carried? That decides how to read this
-// builder, and how to sort its photographs.
+//   3e:["interior"]
+//   3d:{"type":"$3e","design_id":"3024F","section":"Lakewood Ranch 50'", ...}
+//   3c:{"public_id":"...","secure_url":"https://res.cloudinary.com/...jpg","metadata":"$3d", ...}
+//
+// A page that says which of its pictures are interiors can have its
+// gallery gathered and ordered without guessing. So take the harvest as
+// the engine would — every secure_url in payload order, with the label
+// its metadata carries — and print it, so what is written next can be
+// held to it.
 //
 // Runs as a prebuild step on Vercel, guarded to the working branch;
 // results are read from the build logs. Always exits 0.
@@ -34,66 +36,54 @@ const get = async (url) => {
   return { res, html: await res.text().catch(() => '') };
 };
 
-const SECTION =
-  'https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50';
-
-try {
-  const { res, html } = await get(SECTION);
-  console.log(`FP-PERRY: section -> ${res.status} (${html.length} bytes)`);
-
-  // 1. Which labels the payload uses, and how many pictures carry each.
-  const types = {};
-  for (const m of html.matchAll(/\\"type\\":\\"\$([0-9a-f]+)\\"/gi)) types[m[1]] = (types[m[1]] ?? 0) + 1;
-  const named = {};
-  for (const m of html.matchAll(/([0-9a-f]+):\[\\"(interior|exterior|floorplan|floor_plan|elevation|amenity|aerial|video|virtual_tour|[a-z_]+)\\"\]/gi)) {
-    named[m[1]] = m[2];
+/**
+ * The harvest, as the engine would take it: each picture the payload
+ * carries, in the order the payload carries it, with the label its
+ * metadata gives it.
+ */
+function harvest(html) {
+  // "3e:[\"interior\"]" — a label the records point at by reference.
+  const labels = {};
+  for (const m of html.matchAll(/(?:^|\\n)([0-9a-f]{1,4}):\[\\"([a-z_]+)\\"\]/gi)) labels[m[1]] = m[2];
+  // "3d:{...\"type\":\"$3e\"...}" — a metadata record naming a label.
+  const meta = {};
+  for (const m of html.matchAll(/(?:^|\\n)([0-9a-f]{1,4}):(\{\\"active[\s\S]{0,700}?\\"show_disclaimer\\":\\"[a-z]+\\"\})/gi)) {
+    const type = (m[2].match(/\\"type\\":\\"\$([0-9a-f]+)\\"/i) ?? [])[1];
+    const design = (m[2].match(/\\"design_id\\":\\"([^\\"]+)\\"/i) ?? [])[1];
+    meta[m[1]] = { label: labels[type] ?? null, design: design ?? null };
   }
-  const tally = {};
-  for (const [ref, n] of Object.entries(types)) {
-    const label = named[ref] ?? `ref:${ref}`;
-    tally[label] = (tally[label] ?? 0) + n;
+  // A picture record: its URL, and the metadata it points at.
+  const out = [];
+  for (const m of html.matchAll(/\\"secure_url\\":\\"(https:\\?\/\\?\/[^\\"]+?\.(?:jpe?g|png|webp|avif))\\"([\s\S]{0,400}?)\\"metadata\\":\\"\$([0-9a-f]+)\\"/gi)) {
+    const url = m[1].replace(/\\\//g, '/').replace(/\\/g, '');
+    const info = meta[m[3]] ?? {};
+    out.push({ url, label: info.label ?? null, design: info.design ?? null });
   }
-  console.log(`FP-PERRY: picture labels in the payload: ${JSON.stringify(tally)}`);
+  return out;
+}
 
-  // 2. One picture record whole, so its shape is on the record.
-  const at = html.search(/\\"secure_url\\"|\\"public_id\\"|res\.cloudinary\.com/);
-  if (at >= 0) console.log(`FP-PERRY: a picture record >>> ${html.slice(Math.max(0, at - 700), at + 1400)}`);
+const PAGES = [
+  ['50', 'https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50'],
+  ['90', 'https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-90'],
+  ['community', 'https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch'],
+];
 
-  // 3. An interior one specifically, with whatever ties it to a design.
-  const interiorAt = html.search(/\[\\"interior\\"\]/i);
-  if (interiorAt >= 0) console.log(`FP-PERRY: interior record >>> ${html.slice(interiorAt, interiorAt + 1600)}`);
-
-  // 4. How the plans themselves appear, and where their pages are.
-  const designs = [...new Set([...html.matchAll(/\\"design_id\\":\\"([0-9A-Z]+)\\"/gi)].map((m) => m[1]))];
-  console.log(`FP-PERRY: ${designs.length} design ids on this page: ${JSON.stringify(designs.slice(0, 30))}`);
-  const hrefs = [...new Set([...html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]))].filter((h) =>
-    /star-farms-at-lakewood-ranch-50\/[a-z0-9]/i.test(h)
-  );
-  console.log(`FP-PERRY: ${hrefs.length} links under the 50' section: ${JSON.stringify(hrefs.slice(0, 20))}`);
-
-  // 5. A plan page, if one is linked: the same questions again.
-  const plan = hrefs.find((h) => !/^\d/.test(h.split('/').pop() ?? ''));
-  if (plan) {
-    const url = new URL(plan, res.url).href;
-    const { res: r, html: h2 } = await get(url);
-    const imgs = (h2.match(/<img\b/gi) ?? []).length;
-    const urls = new Set(
-      [...h2.matchAll(/https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif)(?![a-z0-9])/gi)].map((m) =>
-        m[0].replace(/\\/g, '')
-      )
-    );
-    const planTypes = {};
-    for (const m of h2.matchAll(/\[\\"(interior|exterior|floorplan|elevation|aerial|amenity)\\"\]/gi)) {
-      planTypes[m[1]] = (planTypes[m[1]] ?? 0) + 1;
-    }
+for (const [tag, url] of PAGES) {
+  try {
+    const { res, html } = await get(url);
+    const got = harvest(html);
+    const byLabel = {};
+    for (const g of got) byLabel[g.label ?? 'unlabelled'] = (byLabel[g.label ?? 'unlabelled'] ?? 0) + 1;
+    const drawn = [...html.matchAll(/<img\b[^>]*?src=["']([^"']+)["']/gi)].map((m) => m[1]);
     console.log(
-      `FP-PERRY-PLAN: ${url} -> ${r.status} (${h2.length} bytes), ${imgs} <img>, ${urls.size} picture URLs, labels ${JSON.stringify(planTypes)}`
+      `FP-PERRY[${tag}]: ${res.status}, harvested ${got.length} pictures ${JSON.stringify(byLabel)}; ` +
+        `designs ${JSON.stringify([...new Set(got.map((g) => g.design).filter(Boolean))])}; ` +
+        `${drawn.length} drawn in <img>, of which ${drawn.filter((d) => got.some((g) => g.url === d)).length} are in the harvest`
     );
-    const i2 = h2.search(/\[\\"interior\\"\]/i);
-    if (i2 >= 0) console.log(`FP-PERRY-PLAN: interior record >>> ${h2.slice(Math.max(0, i2 - 900), i2 + 900)}`);
+    console.log(`FP-PERRY[${tag}]: in order >>> ${JSON.stringify(got.slice(0, 26).map((g) => `${g.label ?? '?'}:${g.url.split('/').pop()}`))}`);
+  } catch (err) {
+    console.log(`FP-PERRY[${tag}]: ERROR ${String(err?.cause?.message ?? err?.message ?? err)}`);
   }
-} catch (err) {
-  console.log(`FP-PERRY: ERROR ${String(err?.cause?.message ?? err?.message ?? err)}`);
 }
 
 console.log('FP-PERRY: done');
