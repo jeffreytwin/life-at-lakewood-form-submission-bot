@@ -18,6 +18,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { ROOM_ORDER, type Room } from "@/lib/floorplans/types";
 import { orderGallery, type GalleryInput, type OrderedGallery } from "@/lib/floorplans/gallery-order";
+import { askableBatches } from "@/lib/floorplans/media";
 
 const MODEL = "claude-opus-5";
 
@@ -135,12 +136,17 @@ export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabe
   const known = new Map<string, PhotoLabel | null>();
   if (!wanted.length) return known;
 
-  const { data: cached, error } = await supabase
-    .from("fp_photo_rooms")
-    .select("source_url, room")
-    .in("source_url", wanted);
-  if (error) logger.warn("Remembered photo rooms could not be read", { error: error.message });
-  for (const row of cached ?? []) known.set(row.source_url, isLabel(row.room) ? row.room : null);
+  // Asked for in batches an address can carry: a filter travels in the
+  // address, and a gateway answers "Bad Request" to one too long, which
+  // would quietly cost a second look at every picture (Jeff, 2026-09-22).
+  for (const batch of askableBatches(wanted)) {
+    const { data: cached, error } = await supabase
+      .from("fp_photo_rooms")
+      .select("source_url, room")
+      .in("source_url", batch);
+    if (error) logger.warn("Remembered photo rooms could not be read", { error: error.message });
+    for (const row of cached ?? []) known.set(row.source_url, isLabel(row.room) ? row.room : null);
+  }
 
   const fresh = wanted.filter((url) => !known.has(url));
   if (!fresh.length) return known;

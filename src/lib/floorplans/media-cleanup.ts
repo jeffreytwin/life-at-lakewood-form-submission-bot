@@ -7,8 +7,9 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { failedAt } from "@/lib/shared/describe-error";
 import { deleteMediaFiles } from "@/lib/wix/client";
-import { isSvgUrl, mediaUrlsOf, RASTER_BUCKET, rasterStoragePath, urlsToRelease, wixFileIdOf } from "@/lib/floorplans/media";
+import { askableBatches, isSvgUrl, mediaUrlsOf, RASTER_BUCKET, rasterStoragePath, urlsToRelease, wixFileIdOf } from "@/lib/floorplans/media";
 
 export interface PlanScope {
   site_id: string;
@@ -30,9 +31,9 @@ const CHUNK = 50;
 /** The pictures of a connection's plans, canonical rows (removed ones too) and queued changes alike. */
 async function urlsInScope(scope: PlanScope): Promise<string[]> {
   const { data: plans, error: plansError } = await supabase.from("fp_floor_plans").select("record").match(scope);
-  if (plansError) throw plansError;
+  if (plansError) throw failedAt("reading its plans' pictures", plansError);
   const { data: changes, error: changesError } = await supabase.from("fp_pending_changes").select("proposed_record").match(scope);
-  if (changesError) throw changesError;
+  if (changesError) throw failedAt("reading its queued pictures", changesError);
   return [...(plans ?? []).flatMap((p) => mediaUrlsOf(p.record)), ...(changes ?? []).flatMap((c) => mediaUrlsOf(c.proposed_record))];
 }
 
@@ -45,13 +46,13 @@ async function urlsUsedElsewhere(scope: PlanScope): Promise<Set<string>> {
     .select("record, community_id, builder_id")
     .eq("site_id", scope.site_id)
     .is("removed_at", null);
-  if (plansError) throw plansError;
+  if (plansError) throw failedAt("reading the site's other plans' pictures", plansError);
   const { data: changes, error: changesError } = await supabase
     .from("fp_pending_changes")
     .select("proposed_record, community_id, builder_id")
     .eq("site_id", scope.site_id)
     .in("status", ["pending", "approved"]);
-  if (changesError) throw changesError;
+  if (changesError) throw failedAt("reading the site's other queued pictures", changesError);
   return new Set([
     ...(plans ?? []).filter(outside).flatMap((p) => mediaUrlsOf(p.record)),
     ...(changes ?? []).filter(outside).flatMap((c) => mediaUrlsOf(c.proposed_record)),
@@ -71,13 +72,13 @@ export async function releaseConnectionMedia(wixSiteId: string | null, scope: Pl
   if (!urls.length) return result;
 
   const rows: { source_url: string; wix_media_id: string; content_hash: string | null }[] = [];
-  for (let i = 0; i < urls.length; i += CHUNK) {
+  for (const batch of askableBatches(urls)) {
     const { data, error } = await supabase
       .from("fp_media_map")
       .select("source_url, wix_media_id, content_hash")
       .eq("site_id", scope.site_id)
-      .in("source_url", urls.slice(i, i + CHUNK));
-    if (error) throw error;
+      .in("source_url", batch);
+    if (error) throw failedAt("looking the pictures up", error);
     rows.push(...(data ?? []));
   }
   if (!rows.length) return result;
@@ -103,13 +104,13 @@ export async function releaseConnectionMedia(wixSiteId: string | null, scope: Pl
 
   // The rows go whether or not Wix kept a file: a kept file is an orphan in
   // the Media Manager, not a broken row, and the next Run imports afresh.
-  for (let i = 0; i < rows.length; i += CHUNK) {
+  for (const batch of askableBatches(rows.map((r) => r.source_url))) {
     const { error } = await supabase
       .from("fp_media_map")
       .delete()
       .eq("site_id", scope.site_id)
-      .in("source_url", rows.slice(i, i + CHUNK).map((r) => r.source_url));
-    if (error) throw error;
+      .in("source_url", batch);
+    if (error) throw failedAt("forgetting the pictures", error);
   }
   result.rows = rows.length;
   return result;

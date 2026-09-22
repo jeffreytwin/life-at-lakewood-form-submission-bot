@@ -214,3 +214,37 @@ export function wixFileIdOf(stored: string | null | undefined): string | null {
   if (uri) return uri[1];
   return /^[A-Za-z0-9_.~-]+$/.test(stored) ? stored : null;
 }
+
+/**
+ * How long the ids in one request may run. A PostgREST filter travels in
+ * the address, and an address has a length a gateway will not exceed: it
+ * answers "Bad Request" and says nothing else, which is what a Reset of
+ * Perry's fifty plans hit every time (Jeff, 2026-09-22). Their pictures
+ * are Cloudinary addresses of a hundred characters each, and fifty of
+ * them at once is past it.
+ */
+const ASK_BUDGET = 2_000;
+
+/**
+ * The URLs in batches small enough to ask about at once — by the length
+ * they add to the address, not by how many they are, since a builder's
+ * picture URLs can be any length at all. Exported for tests. Pure.
+ */
+export function askableBatches(urls: string[], budget = ASK_BUDGET, most = 50): string[][] {
+  const batches: string[][] = [];
+  let batch: string[] = [];
+  let length = 0;
+  for (const url of urls) {
+    // The address carries each one escaped, in quotes, with a comma.
+    const costs = encodeURIComponent(url).length + 3;
+    if (batch.length && (length + costs > budget || batch.length >= most)) {
+      batches.push(batch);
+      batch = [];
+      length = 0;
+    }
+    batch.push(url);
+    length += costs;
+  }
+  if (batch.length) batches.push(batch);
+  return batches;
+}

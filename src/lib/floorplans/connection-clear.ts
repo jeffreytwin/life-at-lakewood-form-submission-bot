@@ -15,7 +15,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { removeItem, WixApiError } from "@/lib/wix/client";
 import { releaseConnectionMedia } from "@/lib/floorplans/media-cleanup";
-import { describeError } from "@/lib/shared/describe-error";
+import { failedAt as failed } from "@/lib/shared/describe-error";
 
 export interface ClearedConnection {
   plans: number;
@@ -26,14 +26,6 @@ export interface ClearedConnection {
   photoRows: number;
   rasters: number;
 }
-
-/**
- * Which step of the clearing failed, and what the database said. Three
- * Resets in a row said "Internal server error" and logged "[object
- * Object]" (Jeff, 2026-09-22); a person deserves to know it was the
- * queue, or the pictures, or the plans themselves.
- */
-const failed = (step: string, error: unknown) => new Error(`${step}: ${describeError(error)}`);
 
 /** How many ids go into one request; a URL has a length and a queue can be long. */
 const CHUNK = 100;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeError } from "@/lib/shared/describe-error";
+import { describeError, failedAt } from "@/lib/shared/describe-error";
 
 describe("describeError", () => {
   it("says what a Supabase error was, which String() will not", () => {
@@ -22,6 +22,18 @@ describe("describeError", () => {
     expect(describeError(new Error("fetch failed"))).toBe("fetch failed");
     expect(describeError(new Error("fetch failed", { cause: new Error("ECONNRESET") })))
       .toBe("fetch failed: ECONNRESET");
+  });
+
+  it("keeps the number when that is all a gateway gave", () => {
+    // A Reset said only "Bad Request": a gateway refusing an address too
+    // long, not the database (Jeff, 2026-09-22).
+    expect(describeError({ message: "Bad Request", status: 400 })).toBe("Bad Request (400)");
+  });
+
+  it("says which step it was", () => {
+    expect(failedAt("releasing its pictures", { message: "Bad Request", status: 400 }).message).toBe(
+      "releasing its pictures: Bad Request (400)"
+    );
   });
 
   it("falls back to the object itself, then to the value", () => {
