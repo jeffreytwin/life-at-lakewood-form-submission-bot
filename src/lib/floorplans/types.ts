@@ -35,7 +35,7 @@ export interface GalleryMeta {
 }
 
 // Canonical normalized plan shape produced by every extractor engine.
-export type RelatedPlanMatch = "extractor" | "plan-id" | "plan-name" | "unmatched";
+export type RelatedPlanMatch = "extractor" | "plan-id" | "plan-name" | "plan-page" | "unmatched";
 
 export interface NormalizedPlan {
   planKey: string;

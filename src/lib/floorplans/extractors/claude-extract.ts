@@ -15,6 +15,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
 import { firstGallery, fullSize } from "@/lib/floorplans/extractors/plan-page";
+import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -118,6 +119,7 @@ const money = (n: number | undefined) =>
 const SLASH = "\\\\?/";
 const TOUR_URL = new RegExp(
   `https?:${SLASH}${SLASH}(?:my\\.matterport\\.com${SLASH}show${SLASH}\\?m=[A-Za-z0-9]+` +
+    `|(?:www\\.)?zillow\\.com${SLASH}view-imx${SLASH}[A-Za-z0-9-]+` +
     `|(?:www\\.)?(?:insidemaps|kuula|cloudpano|eyespy360|truplace)\\.com(?:${SLASH}(?:[^\\s"'<>\\\\]|\\\\/)+)?)`,
   "i"
 );
@@ -128,12 +130,39 @@ export function tourUrlIn(html: string): string | null {
   return found ? found.replace(/\\/g, "") : null;
 }
 
+/** What a builder calls the link to a tour of the home. */
+const TOUR_LABEL = /\b(virtual tour|3-? ?d tour|3-? ?d home|take a tour|tour this home|video tour|matterport)\b/i;
+
+/**
+ * The link a page labels as its tour, whatever it points at: SimplyDwell's
+ * is a Zillow 3D Home behind "Take a Virtual Tour!" (Jeff, 2026-09-22), and
+ * a host list will always be a step behind the builders. Exported for tests.
+ */
+export function tourLinkIn(html: string): string | null {
+  for (const m of html.matchAll(/<a\b[^>]*?href=["']([^"']+)["'][^>]*>([\s\S]{0,400}?)<\/a>/gi)) {
+    const label = m[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (!TOUR_LABEL.test(label)) continue;
+    const href = decodeEntities(m[1]);
+    if (/^https?:\/\//i.test(href)) return href;
+  }
+  return null;
+}
+
+/** The ampersands and quotes a page writes as entities inside an attribute ("&#038;" for "&"). */
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&(?:amp|#0*38);/gi, "&")
+    .replace(/&(?:quot|#0*34);/gi, '"')
+    .replace(/&(?:apos|#0*39);/gi, "'");
+}
+
 const PLAN_PAGE_TOOL: Anthropic.Tool = {
   name: "report_plan_page",
   description: "Report what this one floor plan's own page says about it.",
   input_schema: {
     type: "object" as const,
     properties: {
+      price: { type: "number", description: "The plan's price in dollars as the page shows it, e.g. 'Priced $353,999' or 'From $410,900'; omit if the page shows none" },
       garages: { type: "string", description: "Garage count as the page gives it, e.g. '3 car' or 'Two 2-Car Garage'" },
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
@@ -152,6 +181,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
 };
 
 interface ExtractedPlanPage {
+  price?: number;
   garages?: string;
   beds?: string;
   baths?: string;
@@ -160,6 +190,31 @@ interface ExtractedPlanPage {
   virtualTourUrl?: string;
   photoImages?: string[];
   blueprintImages?: string[];
+}
+
+/** A media store's own id, which says nothing about the picture: "6e8cfe1d-66ee-4b88-b752-30e7579fd4bf_lg.jpg". */
+const OPAQUE_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+/**
+ * The plan's photos in the order the sites show them (gallery-order.ts):
+ * the front of the house leads, the rooms follow, the alternative
+ * elevations go last. The first picture is the hero the list chose, so it
+ * leads whatever its file name says, and every other picture whose name
+ * calls itself an elevation is an alternative — SimplyDwell prints three
+ * per plan and all three were landing in front of the interiors (Jeff,
+ * 2026-09-22). A file named for nothing but an id is read as nothing, so a
+ * UUID that happens to spell a room does not move the picture.
+ * Exported for tests.
+ */
+export function orderPhotos(srcs: string[]) {
+  return orderGallery(
+    srcs.map((src, i) => {
+      if (i === 0) return { src, kind: "primary" as const };
+      const name = src.split("/").pop() ?? "";
+      const room = OPAQUE_NAME.test(name) ? null : classifyRoom(fileNameWords(src));
+      return room === "exterior" ? { src, kind: "exterior" as const } : { src, room };
+    })
+  );
 }
 
 /** Runs `fn` over the items a few at a time, keeping order. */
@@ -223,15 +278,22 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
   const blueprints = [...plan.blueprintImages, ...(page.blueprintImages ?? [])].filter(
     (src, i, all) => src && all.indexOf(src) === i
   );
+  // A list gives the plans it prices; the rest carry their price on their
+  // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
+  const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);
   return {
     ...plan,
+    price,
+    priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
     beds: plan.beds || (page.beds ?? ""),
     baths: plan.baths || (page.baths ?? ""),
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
     description: plan.description ?? page.description?.trim() ?? null,
-    // A tour hidden in the page's own scripts beats one Claude read off the text.
-    virtualTourUrl: plan.virtualTourUrl ?? tourUrlIn(html) ?? page.virtualTourUrl?.trim() ?? null,
+    // A link the page labels as its tour first, then one hidden in its own
+    // scripts; both beat one Claude read off the text.
+    virtualTourUrl:
+      plan.virtualTourUrl ?? tourLinkIn(html) ?? tourUrlIn(html) ?? page.virtualTourUrl?.trim() ?? null,
     galleryImages: photos,
     blueprintImages: blueprints,
   };
@@ -295,7 +357,7 @@ export async function extractWithClaude(params: {
 
   // Each plan's own page, where the list linked one of its own. A page
   // that cannot be read costs that plan its extras, never the run.
-  return mapLimit(listed, 4, async (plan) => {
+  const read = await mapLimit(listed, 4, async (plan) => {
     if (!plan.sourceUrl || plan.sourceUrl === params.url || plan.sourceUrl === res.url) return plan;
     try {
       return await readPlanPageWithClaude(plan);
@@ -307,5 +369,10 @@ export async function extractWithClaude(params: {
       });
       return plan;
     }
+  });
+
+  return read.map((plan) => {
+    const ordered = orderPhotos(plan.galleryImages);
+    return { ...plan, galleryImages: ordered.urls, galleryMeta: ordered.meta };
   });
 }

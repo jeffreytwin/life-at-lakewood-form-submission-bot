@@ -148,6 +148,21 @@ describe("fullSize", () => {
     expect(fullSize(blob("zz", "sm"), html)).toBe(blob("zz", "lg", "png"));
   });
 
+  it("swaps a WordPress resize for the original the page also names", () => {
+    const wp = (name: string) => `https://simplydwellhomes.com/wp-content/uploads/2026/06/${name}`;
+    const html = `<img src="${wp("cypress-elevation-b-scaled-1-1024x614.webp")}"/><img src="${wp("cypress-elevation-b-scaled-1.webp")}"/>`;
+    expect(fullSize(wp("cypress-elevation-b-scaled-1-1024x614.webp"), html)).toBe(
+      wp("cypress-elevation-b-scaled-1.webp")
+    );
+  });
+
+  it("keeps a resize whose original the page never names", () => {
+    const wp = (name: string) => `https://simplydwellhomes.com/wp-content/uploads/2026/06/${name}`;
+    // Stripping the size off this one names a file that does not exist.
+    const only = wp("Azalea-40-1817_Elevation-A-1-1024x614-1.webp");
+    expect(fullSize(only, `<img src="${only}"/>`)).toBe(only);
+  });
+
   it("leaves a URL that is not a thumbnail as it is", () => {
     expect(fullSize(blob("6e8cfe1d", "lg"), WYNDAM)).toBe(blob("6e8cfe1d", "lg"));
     expect(fullSize("https://x.test/kitchen.jpg", WYNDAM)).toBe("https://x.test/kitchen.jpg");
