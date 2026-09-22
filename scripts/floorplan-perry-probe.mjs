@@ -1,11 +1,15 @@
-// Perry Homes: the plans come through but their interior pictures do not,
-// though they are right there on the page (Jeff, 2026-09-22).
+// Perry round two (Jeff, 2026-09-22).
 //
-// Two candidate causes, and this tells them apart. Either the pictures are
-// lazy-loaded — distillation only understands <img src>, so a page that
-// carries its photos in data-src or srcset shows Claude almost none — or
-// the page keeps interiors in a second gallery, which firstGallery drops
-// on purpose so a plan does not inherit the community's other galleries.
+// Round one found the cause: Perry is a Next.js site and its photographs
+// are not in <img> tags at all. The community page draws 12 images but
+// carries 65 picture URLs; a section page draws 8 and carries 78. The
+// rest live in the flight payload — where, better still, each one is
+// labelled: "type":["interior"], with a design_id, an elevation_id, the
+// community and the section it belongs to.
+//
+// So: what exactly does a picture record look like, which types are used,
+// and how are the plans themselves carried? That decides how to read this
+// builder, and how to sort its photographs.
 //
 // Runs as a prebuild step on Vercel, guarded to the working branch;
 // results are read from the build logs. Always exits 0.
@@ -30,76 +34,63 @@ const get = async (url) => {
   return { res, html: await res.text().catch(() => '') };
 };
 
-const attr = (tag, name) => (tag.match(new RegExp(`${name}=["']([^"']+)["']`, 'i')) ?? [])[1] ?? '';
-
-/** How the page carries its pictures, and how much distillation would see. */
-function pictures(tag, html, baseUrl) {
-  const imgs = [...html.matchAll(/<img\b[^>]*>/gi)].map((m) => m[0]);
-  const withSrc = imgs.filter((i) => attr(i, 'src'));
-  const lazyOnly = imgs.filter((i) => !attr(i, 'src') && (attr(i, 'data-src') || attr(i, 'data-lazy') || attr(i, 'srcset')));
-  const srcset = imgs.filter((i) => attr(i, 'srcset')).length;
-  // Every picture URL anywhere in the source, however it is carried.
-  const anywhere = new Set(
-    [...html.matchAll(/https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif)(?![a-z0-9])/gi)].map((m) =>
-      m[0].replace(/\\/g, '')
-    )
-  );
-  console.log(
-    `${tag}: ${imgs.length} <img> (${withSrc.length} with src, ${lazyOnly.length} lazy-only, ${srcset} with srcset); ` +
-      `${anywhere.size} distinct picture URLs anywhere in the source; ` +
-      `<picture> x${(html.match(/<picture[\s>]/gi) ?? []).length}, background-image x${(html.match(/background-image/gi) ?? []).length}`
-  );
-  if (lazyOnly.length) console.log(`${tag}: a lazy one >>> ${lazyOnly[0].slice(0, 300)}`);
-  else if (withSrc.length) console.log(`${tag}: a plain one >>> ${withSrc[0].slice(0, 300)}`);
-  void baseUrl;
-  return anywhere;
-}
-
-/** The headings the gallery rules key on, and where the pictures sit between them. */
-function headings(tag, html) {
-  const marks = [];
-  for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) {
-    marks.push({ at: m.index ?? 0, text: m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 70) });
-  }
-  const pics = [...html.matchAll(/https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif)(?![a-z0-9])/gi)].map(
-    (m) => m.index ?? 0
-  );
-  const lines = marks.map((h, i) => {
-    const end = i + 1 < marks.length ? marks[i + 1].at : Infinity;
-    const n = pics.filter((p) => p >= h.at && p < end).length;
-    return `${n}×"${h.text}"`;
-  });
-  console.log(`${tag}: ${marks.length} headings, pictures under each: ${lines.join(' | ').slice(0, 1500)}`);
-}
-
-const COMMUNITY = 'https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch';
+const SECTION =
+  'https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50';
 
 try {
-  const { res, html } = await get(COMMUNITY);
-  console.log(`FP-PERRY: community -> ${res.status} ${res.url} (${html.length} bytes)`);
-  pictures('FP-PERRY', html, res.url);
-  headings('FP-PERRY', html);
+  const { res, html } = await get(SECTION);
+  console.log(`FP-PERRY: section -> ${res.status} (${html.length} bytes)`);
 
-  const hrefs = [...new Set([...html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]))]
-    .map((h) => {
-      try {
-        return new URL(h, res.url).href;
-      } catch {
-        return null;
-      }
-    })
-    .filter((h) => h && h.includes('/star-farms-at-lakewood-ranch'));
-  console.log(`FP-PERRY: ${hrefs.length} links under this community: ${JSON.stringify(hrefs.slice(0, 18))}`);
+  // 1. Which labels the payload uses, and how many pictures carry each.
+  const types = {};
+  for (const m of html.matchAll(/\\"type\\":\\"\$([0-9a-f]+)\\"/gi)) types[m[1]] = (types[m[1]] ?? 0) + 1;
+  const named = {};
+  for (const m of html.matchAll(/([0-9a-f]+):\[\\"(interior|exterior|floorplan|floor_plan|elevation|amenity|aerial|video|virtual_tour|[a-z_]+)\\"\]/gi)) {
+    named[m[1]] = m[2];
+  }
+  const tally = {};
+  for (const [ref, n] of Object.entries(types)) {
+    const label = named[ref] ?? `ref:${ref}`;
+    tally[label] = (tally[label] ?? 0) + n;
+  }
+  console.log(`FP-PERRY: picture labels in the payload: ${JSON.stringify(tally)}`);
 
-  // A plan page: the deepest link that is not an address (addresses are homes).
-  const plan = hrefs.find((h) => /\/(?:design|plan)[-/]/i.test(h)) ?? hrefs.filter((h) => !/\/\d+-/.test(h)).pop();
+  // 2. One picture record whole, so its shape is on the record.
+  const at = html.search(/\\"secure_url\\"|\\"public_id\\"|res\.cloudinary\.com/);
+  if (at >= 0) console.log(`FP-PERRY: a picture record >>> ${html.slice(Math.max(0, at - 700), at + 1400)}`);
+
+  // 3. An interior one specifically, with whatever ties it to a design.
+  const interiorAt = html.search(/\[\\"interior\\"\]/i);
+  if (interiorAt >= 0) console.log(`FP-PERRY: interior record >>> ${html.slice(interiorAt, interiorAt + 1600)}`);
+
+  // 4. How the plans themselves appear, and where their pages are.
+  const designs = [...new Set([...html.matchAll(/\\"design_id\\":\\"([0-9A-Z]+)\\"/gi)].map((m) => m[1]))];
+  console.log(`FP-PERRY: ${designs.length} design ids on this page: ${JSON.stringify(designs.slice(0, 30))}`);
+  const hrefs = [...new Set([...html.matchAll(/href=["']([^"'#]+)["']/gi)].map((m) => m[1]))].filter((h) =>
+    /star-farms-at-lakewood-ranch-50\/[a-z0-9]/i.test(h)
+  );
+  console.log(`FP-PERRY: ${hrefs.length} links under the 50' section: ${JSON.stringify(hrefs.slice(0, 20))}`);
+
+  // 5. A plan page, if one is linked: the same questions again.
+  const plan = hrefs.find((h) => !/^\d/.test(h.split('/').pop() ?? ''));
   if (plan) {
-    const { res: r, html: h2 } = await get(plan);
-    console.log(`FP-PERRY-PLAN: ${plan} -> ${r.status} (${h2.length} bytes)`);
-    pictures('FP-PERRY-PLAN', h2, r.url);
-    headings('FP-PERRY-PLAN', h2);
-    const at = h2.search(/interior/i);
-    if (at >= 0) console.log(`FP-PERRY-PLAN: "interior" at ${at} >>> ${h2.slice(at - 200, at + 500).replace(/\s+/g, ' ')}`);
+    const url = new URL(plan, res.url).href;
+    const { res: r, html: h2 } = await get(url);
+    const imgs = (h2.match(/<img\b/gi) ?? []).length;
+    const urls = new Set(
+      [...h2.matchAll(/https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif)(?![a-z0-9])/gi)].map((m) =>
+        m[0].replace(/\\/g, '')
+      )
+    );
+    const planTypes = {};
+    for (const m of h2.matchAll(/\[\\"(interior|exterior|floorplan|elevation|aerial|amenity)\\"\]/gi)) {
+      planTypes[m[1]] = (planTypes[m[1]] ?? 0) + 1;
+    }
+    console.log(
+      `FP-PERRY-PLAN: ${url} -> ${r.status} (${h2.length} bytes), ${imgs} <img>, ${urls.size} picture URLs, labels ${JSON.stringify(planTypes)}`
+    );
+    const i2 = h2.search(/\[\\"interior\\"\]/i);
+    if (i2 >= 0) console.log(`FP-PERRY-PLAN: interior record >>> ${h2.slice(Math.max(0, i2 - 900), i2 + 900)}`);
   }
 } catch (err) {
   console.log(`FP-PERRY: ERROR ${String(err?.cause?.message ?? err?.message ?? err)}`);
