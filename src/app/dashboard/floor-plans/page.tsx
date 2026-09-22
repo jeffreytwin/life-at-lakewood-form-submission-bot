@@ -779,7 +779,7 @@ export default function FloorPlansPage() {
             </div>
           ))}
           <div style={{ marginTop: 8 }}>
-            <a href="/dashboard/settings/builders" className="text-sm">Builder Connections →</a>
+            <a href="/dashboard/floor-plans/connections" className="text-sm">Builder Connections →</a>
           </div>
         </div>
       )}

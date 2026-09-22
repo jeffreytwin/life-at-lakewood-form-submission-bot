@@ -28,12 +28,6 @@ const settingsItems = [
     icon: "\u2691",
   },
   {
-    href: "/dashboard/settings/builders",
-    label: "Builder Connections",
-    description: "Floor plan pipeline builders \u2014 health, coverage, pause/resume",
-    icon: "\u25a6",
-  },
-  {
     href: "/dashboard/settings/sites",
     label: "Sites",
     description: "Each site's Floor Plans V2 collection against the standard \u2014 add what a site lacks",

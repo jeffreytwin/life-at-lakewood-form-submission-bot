@@ -16,7 +16,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { extractTollBrothers, readTollPlanPage } from "@/lib/floorplans/extractors/toll-brothers";
-import { extractWithClaude } from "@/lib/floorplans/extractors/claude-extract";
+import { extractWithClaude, extractWithRender } from "@/lib/floorplans/extractors/claude-extract";
 import { extractLennar } from "@/lib/floorplans/extractors/lennar";
 import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTaylorMorrison, readTaylorPlanPage } from "@/lib/floorplans/extractors/taylor-morrison";
@@ -71,6 +71,9 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
 
 const METHOD_EXTRACTORS: Record<string, Extractor> = {
   fetch_claude: extractWithClaude,
+  // Builders whose pages carry nothing without their scripts (Richmond
+  // American's Blazor site): the same engine, read through a browser.
+  render_claude: extractWithRender,
 };
 
 // Builders whose extractor works from API ids rather than a page URL —

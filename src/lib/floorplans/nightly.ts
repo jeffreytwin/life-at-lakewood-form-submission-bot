@@ -15,6 +15,11 @@ import { logger } from "@/lib/shared/logger";
 import { runConnection } from "@/lib/floorplans/sync";
 
 const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
+// A builder read through a browser takes minutes, not seconds, so the tick
+// only starts one with most of its budget left; otherwise it waits for the
+// next tick, where it goes first. Started too late it would be killed
+// mid-run, with nothing written down (Jeff, 2026-09-22).
+const RENDER_RESERVE_MS = 200_000;
 
 interface NightlyState {
   cycleDate?: string; // ET date the current/last cycle belongs to
@@ -87,13 +92,13 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
   // Connections still needing a run this cycle.
   const { data: pending } = await supabase
     .from("fp_builder_communities")
-    .select("id, last_run_at, fp_builders:builder_id(active)")
+    .select("id, last_run_at, fp_builders:builder_id(active, extraction_method)")
     .eq("active", true)
     .not("onboarded_at", "is", null)
     .or(`last_run_at.is.null,last_run_at.lt.${startedAt}`);
-  const todo = (pending ?? []).filter(
-    (c) => (c.fp_builders as unknown as { active: boolean } | null)?.active
-  );
+  const builderOf = (c: { fp_builders: unknown }) =>
+    c.fp_builders as { active: boolean; extraction_method: string | null } | null;
+  const todo = (pending ?? []).filter((c) => builderOf(c)?.active);
 
   let ran = state.ran ?? 0;
   let failed = state.failed ?? 0;
@@ -101,7 +106,12 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
   let processed = 0;
 
   for (const conn of todo) {
-    if (Date.now() > deadline) break;
+    const needs = builderOf(conn)?.extraction_method === "render_claude" ? RENDER_RESERVE_MS : 0;
+    if (Date.now() + needs > deadline) {
+      // Out of room for this one; it is first in line on the next tick.
+      if (needs === 0) break;
+      continue;
+    }
     const result = await runConnection(conn.id);
     processed += 1;
     ran += 1;

@@ -46,6 +46,8 @@ function getMessage(event: LeadEvent): string {
       return "Colonel! Something's wrong over in the listings. Take a look at the Listings area when you get a chance.";
     case "floorplan_campaign":
       return "Colonel! A floor plan in the email campaign just changed. Check Floor Plans → Email campaign and get the marketing in line.";
+    case "builder_error":
+      return `Colonel! ${event.builderName ?? "A builder connection"} just went dark. Check Floor Plans → Builder Connections.`;
   }
 }
 
