@@ -221,7 +221,7 @@ export async function readPlanPageWithClaude(plan: NormalizedPlan): Promise<Norm
     .map((src) => fullSize(src, html))
     .filter((src, i, all) => all.indexOf(src) === i);
   const blueprints = [...plan.blueprintImages, ...(page.blueprintImages ?? [])].filter(
-    (src, i, all) => src && all.indexOf(src) === i && !photos.includes(src)
+    (src, i, all) => src && all.indexOf(src) === i
   );
   return {
     ...plan,
