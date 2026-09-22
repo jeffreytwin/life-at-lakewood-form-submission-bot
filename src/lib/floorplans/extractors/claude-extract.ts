@@ -388,7 +388,7 @@ async function listPage(
   // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
   const what = opts.quickMoveIns
     ? `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`
-    : `Extract every floor plan / home model from this new-home community page. Include quick move-in (inventory) homes as separate entries with quickMoveIn=true, named by their street address, with the plan they are built from in relatedPlanName.`;
+    : `Extract every floor plan / home model from this new-home community page. Include quick move-in (inventory) homes as separate entries with quickMoveIn=true, named by their street address where the page gives one, with the plan they are built from in relatedPlanName. A plan the page marks with a move-in date — "October Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in of that plan, however the page words it: set quickMoveIn=true, put the plan's own name in relatedPlanName, and keep the date in the name so two homes of one plan stay apart.`;
 
   const ask = `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 

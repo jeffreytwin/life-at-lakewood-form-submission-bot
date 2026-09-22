@@ -102,8 +102,23 @@ export async function renderPage(url: string): Promise<{ url: string; html: stri
   try {
     await page.setUserAgent(UA);
     await page.setViewport({ width: 1440, height: 2400 });
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAVIGATE_MS });
+    // Wait for the page to stop fetching, not merely to exist. Asking
+    // whether any facts are on the page yet is not enough on its own:
+    // Perry's community pages print a summary in their HTML ("3,100 -
+    // 5,300 Sq. Ft.") and draw the plans afterwards, so a page that has
+    // shown one fact may still be loading the ones that matter (Jeff,
+    // 2026-09-22). A page that never goes quiet — a chat widget, a poll —
+    // is taken as it stands rather than failing.
+    let quiet = true;
+    try {
+      await page.goto(url, { waitUntil: "networkidle2", timeout: NAVIGATE_MS });
+    } catch {
+      quiet = false;
+      await page.waitForSelector("body", { timeout: 5_000 }).catch(() => {});
+    }
 
+    // And then the backstop, for a page still filling in after it went
+    // quiet: wait until it shows a price, a size or a bed count.
     const until = Date.now() + SETTLE_MS;
     let ready = false;
     while (Date.now() < until) {
@@ -118,7 +133,7 @@ export async function renderPage(url: string): Promise<{ url: string; html: stri
     if (ready) await new Promise((done) => setTimeout(done, 1_500));
 
     const html = await page.content();
-    logger.info("Floor plan page rendered", { url, ready, bytes: html.length });
+    logger.info("Floor plan page rendered", { url, quiet, ready, bytes: html.length });
     return { url: page.url(), html };
   } finally {
     await page.close().catch(() => {});
