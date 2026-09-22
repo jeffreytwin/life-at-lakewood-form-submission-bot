@@ -184,16 +184,18 @@ describe("orderPhotos, with what the page said about its own pictures", () => {
   const perry = (name: string) => `https://res.cloudinary.com/perryhomes/image/upload/v1/${name}.jpg`;
   const front = perry("3413CountryViewCourt");
   const rooms = [perry("3413CountryViewCourt-01"), perry("3413CountryViewCourt-02"), perry("3413CountryViewCourt-03")];
+  /** The page calling one of its pictures an outside view, as the reader records it. */
+  const outside = (src: string) => ({ [src]: { caption: null, room: "exterior" as const, kind: "exterior" as const } });
 
   it("leads with a room and puts the page's own exterior last", () => {
-    const ordered = orderPhotos([front, ...rooms], new Set([front]));
+    const ordered = orderPhotos([front, ...rooms], outside(front));
     expect(ordered.urls).toEqual([...rooms, front]);
     expect(ordered.meta[rooms[0]].kind).toBe("primary");
     expect(ordered.meta[front].room).toBe("exterior");
   });
 
   it("keeps the page's order among the rooms it says nothing about", () => {
-    const ordered = orderPhotos([front, ...rooms], new Set([front]));
+    const ordered = orderPhotos([front, ...rooms], outside(front));
     expect(ordered.urls.slice(0, 3)).toEqual(rooms);
   });
 
@@ -311,5 +313,46 @@ describe("asList", () => {
     // unusable, and they are not the same outcome.
     expect(asList("[]")).toEqual([]);
     expect(asList("")).toBeNull();
+  });
+});
+
+describe("orderPhotos, when the file names say nothing", () => {
+  // Richmond American names every picture media-<id>.webp and titles each
+  // one for the room it shows (Jeff, 2026-09-22), so the title is all
+  // there is to sort by.
+  const media = (id: number) => `https://www.richmondamerican.com/content/plans/media-${id}.webp`;
+  /** A picture as the reader records it: the page's own title, and the room that title names. */
+  const titled = (id: number, alt: string, room: "bedroom" | "kitchen" | "living" | "exterior") =>
+    [media(id), { caption: alt, room, kind: "photo" as const }] as const;
+
+  it("sorts by what the page titled each picture", () => {
+    const said = Object.fromEntries([
+      titled(161663, "Bedroom of the Slate floor plan", "bedroom"),
+      titled(161666, "Kitchen of the Slate floor plan", "kitchen"),
+      titled(161668, "Great Room of the Slate floor plan", "living"),
+      titled(180528, "Elevation M of the Slate floor plan", "exterior"),
+    ]);
+    const ordered = orderPhotos(
+      [media(161663), media(161666), media(161668), media(180528)],
+      said
+    );
+    // The first picture that is not an outside view leads; then the
+    // kitchen and the living room; the elevation goes last.
+    expect(ordered.urls).toEqual([media(161663), media(161666), media(161668), media(180528)]);
+    expect(ordered.meta[media(161663)].kind).toBe("primary");
+    expect(ordered.meta[media(161666)].room).toBe("kitchen");
+    expect(ordered.meta[media(161668)].room).toBe("living");
+    expect(ordered.meta[media(180528)].room).toBe("exterior");
+  });
+
+  it("puts the rooms in the order the site shows them in", () => {
+    const said = Object.fromEntries([
+      titled(1, "Elevation M of the Slate floor plan", "exterior"),
+      titled(2, "Bedroom of the Slate floor plan", "bedroom"),
+      titled(3, "Kitchen of the Slate floor plan", "kitchen"),
+    ]);
+    const ordered = orderPhotos([media(1), media(2), media(3)], said);
+    expect(ordered.urls).toEqual([media(2), media(3), media(1)]);
+    expect(ordered.meta[media(2)].kind).toBe("primary");
   });
 });

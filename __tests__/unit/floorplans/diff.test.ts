@@ -28,6 +28,29 @@ describe("fieldChanges", () => {
     ]);
   });
 
+  it("proposes nothing a plan's own page would have said, when that page could not be read", () => {
+    // Richmond American has nineteen pages to render in one community and
+    // a budget for fewer, and a page that 500s is no different: the run
+    // knows nothing about the gallery, not that it is gone (Jeff,
+    // 2026-09-22).
+    const current = plan({
+      description: "A thoughtfully designed two-story.",
+      virtualTourUrl: "https://my.matterport.com/show/?m=abc",
+    });
+    const unread = plan({
+      galleryImages: ["https://cdn/hero.jpg"],
+      blueprintImages: [],
+      description: null,
+      virtualTourUrl: null,
+      pageUnread: true,
+    });
+    expect(fieldChanges(current, unread)).toEqual([]);
+    // The list still speaks for what a list carries.
+    expect(fieldChanges(current, plan({ ...unread, priceDisplay: "$819,995" }))).toEqual([
+      { field: "priceDisplay", label: "price", oldValue: "$807,995", newValue: "$819,995" },
+    ]);
+  });
+
   it("never proposes reverting a field a person edited", () => {
     const current = plan({ name: "Avery II", userEditedFields: ["name"] });
     expect(fieldChanges(current, plan({ name: "Avery" }))).toEqual([]);

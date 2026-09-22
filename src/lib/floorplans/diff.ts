@@ -114,6 +114,9 @@ export function mergeForUpdate(current: CanonicalRecord, plan: NormalizedPlan): 
   return merged as unknown as NormalizedPlan;
 }
 
+/** What only a plan's own page tells a run; a list page never carries these. */
+const PAGE_ONLY_FIELDS = new Set(["description", "virtualTourUrl", "virtualTourImage", "garages"]);
+
 /**
  * Every field whose scraped value differs from the canonical one and that no
  * person has overridden. Galleries are compared as ordered lists: a photo
@@ -122,10 +125,16 @@ export function mergeForUpdate(current: CanonicalRecord, plan: NormalizedPlan): 
  */
 export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): FieldChange[] {
   const overrides = new Set(current.userEditedFields ?? []);
+  // A run that could not read a plan's own page knows nothing about what
+  // only that page holds, and must not propose dropping what a run that
+  // did read it found (Jeff, 2026-09-22: Richmond American has nineteen
+  // pages to render in a community and a budget for fewer).
+  const unread = plan.pageUnread === true;
   const quickMoveIn = plan.quickMoveIn === true;
   const changes: FieldChange[] = [];
   for (const [field, label] of DIFF_FIELDS) {
     if (overrides.has(field)) continue;
+    if (unread && PAGE_ONLY_FIELDS.has(field)) continue;
     if (quickMoveIn && !QMI_FIELDS.has(field)) continue;
     const oldVal = BOOLEAN_FIELDS.has(field) ? current[field] === true : current[field];
     const newVal = BOOLEAN_FIELDS.has(field) ? plan[field] === true : plan[field];
@@ -141,6 +150,7 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
   }
   for (const [field, label] of GALLERY_FIELDS) {
     if (overrides.has(field)) continue;
+    if (unread) continue;
     // A quick move-in shows one picture and no drawings.
     if (quickMoveIn && field === "blueprintImages") continue;
     const before = quickMoveIn ? galleryOf(current, field).slice(0, 1) : galleryOf(current, field);

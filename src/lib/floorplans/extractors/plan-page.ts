@@ -226,6 +226,8 @@ const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /** The sizes a media store keeps one picture at, largest first. */
 const SIZES = ["lg", "md", "sm"] as const;
 const SIZED = /^(.+)_(?:sm|md|lg)(\.[a-z0-9]+)$/i;
+/** The other spelling: "media-161663-thumbnail.webp" beside "media-161663.webp" (Richmond American). */
+const THUMB = /^(.+)-thumbnail(\.[a-z0-9]+)$/i;
 
 /**
  * The picture a sized copy is a copy of: Stock's data lists every gallery
@@ -234,7 +236,7 @@ const SIZED = /^(.+)_(?:sm|md|lg)(\.[a-z0-9]+)$/i;
  */
 export function pictureKey(src: string): string {
   const name = src.split("/").pop() ?? "";
-  const sized = name.match(SIZED);
+  const sized = name.match(SIZED) ?? name.match(THUMB);
   return sized ? src.replace(name, `${sized[1]}${sized[2]}`) : src;
 }
 
@@ -249,6 +251,16 @@ export function pictureKey(src: string): string {
  */
 export function fullSize(src: string, html: string): string {
   const name = src.split("/").pop() ?? "";
+
+  // Richmond American writes a gallery's picture at two sizes and picks
+  // between them by window width, so the thumbnail is what a narrow
+  // window takes (Jeff, 2026-09-22).
+  const thumb = name.match(THUMB);
+  if (thumb) {
+    const original = `${thumb[1]}${thumb[2]}`;
+    if (html.includes(original)) return src.replace(name, original);
+    return src;
+  }
 
   const stem = name.match(SIZED)?.[1];
   if (stem) {

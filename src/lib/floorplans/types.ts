@@ -103,6 +103,13 @@ export interface NormalizedPlan {
    */
   score?: number | null;
   userEditedFields?: string[];
+  /**
+   * The run could not read this plan's own page — it would not load, or
+   * the run ran out of rendering time. What only that page knows (its
+   * gallery, its description, its tour) is unknown this run rather than
+   * gone, so the diff leaves those fields alone (diff.ts).
+   */
+  pageUnread?: boolean;
   raw?: Record<string, unknown>;
 }
 

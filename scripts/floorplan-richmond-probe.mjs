@@ -1,17 +1,11 @@
-// Richmond American probe, round two.
+// Richmond American probe, round three: does the fix actually work?
 //
-// Round one found the shape of it (build 310c144): the community's
-// "Move-in ready" homes are behind a <button> that changes nothing in the
-// address bar, and a plan's "Gallery" heading has no pictures under it at
-// all until a tab is pressed — the tab that opens is "Interactive Tours",
-// which is an embed, not photographs. Pressing "Interiors (11)" put six
-// pictures on the page, and a home's "Sage model gallery" draws six
-// thumbnails of its own.
-//
-// So round two asks the three things the fix turns on: where the other
-// five pictures are, whether the page names a full-size copy of each
-// thumbnail, and whether the captions under them ("Bedroom", "Kitchen")
-// are in the markup beside the picture.
+// Rounds one and two found the shape of it. This one runs the mechanism
+// the engine now uses — the same exact-label press, the same walk up to
+// the block with a heading, the same "Load more" loop, the same injection
+// of what the tabs swapped away — and then reads the result the way
+// plan-page.ts reads it, so the answer is what the engine will see and
+// not a near-enough imitation.
 //
 // Guarded to the working branch; results are read from the build logs.
 // Always exits 0.
@@ -30,6 +24,14 @@ const HOME = COMMUNITY + 'sage/35630000-0021/';
 
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+
+// The engine's own lists.
+const HOMES_TAB = ['move-in ready', 'move-in ready homes', 'quick move-in', 'quick move-ins',
+  'quick move-in homes', 'available homes', 'homes for sale', 'inventory homes'];
+const PICTURE_TABS = ['interiors', 'interior', 'exteriors', 'exterior', 'renderings', 'rendering',
+  'photos', 'photo gallery', 'gallery', 'images', 'elevations'];
+const NOT_PICTURES = '(tour|video|map|matterport|3-? ?d|film|walk-?through|floor ?plan)';
+const MORE_LABELS = ['load more', 'view more', 'show more', 'see more', 'load all', 'view all', 'see all'];
 
 const say = (...parts) => console.log('FP-RICH:', ...parts);
 const wait = (ms) => new Promise((done) => setTimeout(done, ms));
@@ -51,166 +53,201 @@ try {
   process.exit(0);
 }
 
-async function open(url) {
+// ---- what render.ts does, verbatim enough to trust ----------------------
+
+const pressOne = (page, labels) =>
+  page.evaluate((want) => {
+    const bare = (text) => (text ?? '').replace(/\s*\(\d+\)\s*$/, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const wanted = new Set(want.map(bare));
+    const here = location.href.split('#')[0];
+    for (const el of document.querySelectorAll('button, [role="tab"], a')) {
+      const label = bare(el.textContent);
+      if (!wanted.has(label)) continue;
+      const href = el.getAttribute('href');
+      if (el.tagName === 'A' && href && !href.startsWith('#')) {
+        try {
+          if (new URL(href, location.href).href.split('#')[0] !== here) continue;
+        } catch { continue; }
+      }
+      el.click();
+      return label;
+    }
+    return null;
+  }, labels);
+
+const openGalleries = (page) =>
+  page.evaluate(async (want, more, avoid, budget) => {
+    const until = Date.now() + budget;
+    const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
+    const bare = (text) => (text ?? '').replace(/\s*\(\d+\)\s*$/, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const notPictures = new RegExp(avoid, 'i');
+    const wanted = new Set(want);
+    const moreWanted = new Set(more);
+
+    const boxOf = (el) => {
+      let box = el.parentElement;
+      for (let n = 0; n < 8 && box; n++) {
+        if (box.querySelector('h1, h2, h3, h4')) return box;
+        box = box.parentElement;
+      }
+      return el.parentElement ?? el;
+    };
+    const drawTheRest = async (box) => {
+      for (let n = 0; n < 5 && Date.now() < until; n++) {
+        const button = [...box.querySelectorAll('button, a')].find((el) => moreWanted.has(bare(el.textContent)));
+        if (!button) return;
+        button.click();
+        await sleep(1_200);
+      }
+    };
+    const pictures = (box) =>
+      [...box.querySelectorAll('img')]
+        .map((img) => ({ src: img.src || img.currentSrc, alt: img.getAttribute('alt') || img.getAttribute('title') || '' }))
+        .filter((p) => p.src && !p.src.startsWith('data:') && !/\.svg(\?|$)/i.test(p.src));
+
+    const tabs = [...document.querySelectorAll('button, [role="tab"]')].filter((el) => {
+      const label = bare(el.textContent);
+      return Boolean(label) && wanted.has(label) && !notPictures.test(label);
+    });
+
+    const gathered = new Map();
+    const pressedTabs = [];
+    for (const tab of tabs) {
+      if (Date.now() > until) break;
+      const box = boxOf(tab);
+      pressedTabs.push(bare(tab.textContent) + ' -> ' + (box.tagName + '.' + String(box.className || '')).slice(0, 50));
+      tab.click();
+      await sleep(1_500);
+      await drawTheRest(box);
+      const found = gathered.get(box) ?? new Map();
+      for (const picture of pictures(box)) if (!found.has(picture.src)) found.set(picture.src, picture);
+      gathered.set(box, found);
+    }
+    await drawTheRest(document);
+
+    let added = 0;
+    for (const [box, found] of gathered) {
+      const keep = document.createElement('div');
+      keep.setAttribute('data-gathered', 'gallery');
+      for (const picture of found.values()) {
+        const img = document.createElement('img');
+        img.setAttribute('data-src', picture.src);
+        if (picture.alt) img.setAttribute('alt', picture.alt);
+        keep.appendChild(img);
+        added++;
+      }
+      box.appendChild(keep);
+    }
+    return { added, pressedTabs };
+  }, PICTURE_TABS, MORE_LABELS, NOT_PICTURES, 25_000);
+
+// ---- and what plan-page.ts does with the result --------------------------
+
+/** sectionsOf, as the reader has it: headings, and the images under each. */
+function sectionsOf(html) {
+  const attr = (tag, name) => tag.match(new RegExp(`\\s${name}=["']([^"']*)["']`, 'i'))?.[1] ?? null;
+  const readable = (h) => h.replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const marks = [];
+  for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) {
+    marks.push({ at: m.index ?? 0, heading: { level: Number(m[1]), text: readable(m[2]) } });
+  }
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const src = attr(m[0], 'src') || attr(m[0], 'data-src');
+    if (!src || src.startsWith('data:')) continue;
+    marks.push({ at: m.index ?? 0, image: { src, alt: attr(m[0], 'alt') ?? '' } });
+  }
+  marks.sort((a, b) => a.at - b.at);
+  const sections = [{ heading: '', level: 0, images: [] }];
+  for (const mark of marks) {
+    if (mark.heading) sections.push({ heading: mark.heading.text, level: mark.heading.level, images: [] });
+    else sections[sections.length - 1].images.push(mark.image);
+  }
+  return sections;
+}
+
+async function open(url, press) {
   const page = await browser.newPage();
   await page.setUserAgent(UA);
   await page.setViewport({ width: 1440, height: 2400 });
+  await page.setRequestInterception(true);
+  page.on('request', (r) => {
+    const kind = r.resourceType();
+    if (kind === 'image' || kind === 'media' || kind === 'font') r.abort().catch(() => {});
+    else r.continue().catch(() => {});
+  });
+  const started = Date.now();
   try {
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 45_000 });
   } catch {
     await page.waitForSelector('body', { timeout: 5_000 }).catch(() => {});
   }
-  await wait(5_000);
-  await page.evaluate(async () => {
-    for (let n = 1; n <= 12; n++) {
-      if (window.innerHeight * n > document.body.scrollHeight) break;
-      window.scrollTo(0, window.innerHeight * n);
-      await new Promise((r) => setTimeout(r, 250));
+  await wait(1_500);
+  await page.evaluate(async (steps) => {
+    for (let n = 0; n < steps; n++) {
+      const y = (window.innerHeight || 1000) * (n + 1);
+      if (y > document.body.scrollHeight) break;
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 200));
     }
     window.scrollTo(0, 0);
-  });
-  await wait(2_000);
-  say('opened', url);
-  return page;
+  }, 12);
+  await wait(1_500);
+  let pressed = null;
+  if (press) {
+    pressed = await pressOne(page, press);
+    if (pressed) {
+      await wait(3_000);
+    }
+  }
+  const opened = await openGalleries(page);
+  const html = await page.content();
+  say(`opened ${url} in ${Date.now() - started}ms pressed=${pressed} gathered=${opened.added} tabs=${JSON.stringify(opened.pressedTabs)}`);
+  return { page, html, pressed };
 }
 
-const press = (page, word) =>
-  page.evaluate((want) => {
-    for (const el of document.querySelectorAll('*')) {
-      if (el.children.length) continue;
-      const text = (el.textContent || '').trim().toLowerCase();
-      if (!text.startsWith(want)) continue;
-      const target = el.closest('a,button,[role="tab"],li') || el;
-      target.click();
-      return true;
-    }
-    return false;
-  }, word);
-
-/** The section a heading opens, as markup and as its parts. */
-const gallery = (page, heading) =>
-  page.evaluate((want) => {
-    const head = [...document.querySelectorAll('h1,h2,h3,h4')].find((h) =>
-      (h.textContent || '').trim().toLowerCase().includes(want)
-    );
-    if (!head) return { found: false };
-    // The block that holds both the heading and the pictures.
-    let box = head.parentElement;
-    for (let n = 0; n < 6 && box; n++) {
-      if (box.querySelectorAll('img').length >= 2) break;
-      box = box.parentElement;
-    }
-    box = box || head.parentElement;
-    const pictures = [...box.querySelectorAll('img')].map((img) => {
-      const holder = img.closest('figure,li,div');
-      return {
-        src: img.getAttribute('src'),
-        alt: img.getAttribute('alt'),
-        cap: (holder?.innerText || '').trim().slice(0, 40),
-        up: String(img.parentElement?.className || '').slice(0, 40),
-      };
-    });
-    const controls = [...box.querySelectorAll('button,a,[role="button"]')]
-      .map((el) => ({
-        t: (el.innerText || el.getAttribute('aria-label') || '').trim().slice(0, 30),
-        tag: el.tagName,
-        cls: String(el.className || '').slice(0, 40),
-        href: el.getAttribute('href'),
-      }))
-      .filter((c) => c.t || c.cls);
-    return {
-      found: true,
-      heading: head.textContent.trim().slice(0, 40),
-      box: String(box.className || '').slice(0, 60),
-      pictures,
-      controls: controls.slice(0, 18),
-      markup: box.outerHTML.replace(/\s+/g, ' ').slice(0, 1800),
-    };
-  }, heading);
-
-/** For each thumbnail, the other spellings of the same picture the page names. */
-const siblings = (page, pictures) =>
-  page.evaluate((srcs) => {
-    const html = document.documentElement.outerHTML;
-    return srcs.map((src) => {
-      const id = (src || '').match(/media-(\d+)/)?.[1];
-      if (!id) return { src, id: null, forms: [] };
-      const forms = [...new Set((html.match(new RegExp(`[^"'\\s]*media-${id}[^"'\\s]*`, 'g')) || []))];
-      return { src: src.slice(-40), id, forms: forms.slice(0, 6).map((f) => f.slice(-46)) };
-    });
-  }, pictures);
-
-// ---- a plan's gallery, tab by tab ---------------------------------------
+// ---- a plan: the gallery the reader will see ----------------------------
 try {
-  const page = await open(PLAN);
-  for (const tab of ['interiors', 'renderings', 'exteriors', 'floor plan']) {
-    const pressed = await press(page, tab);
-    if (!pressed) {
-      say('plan has no', tab, 'tab');
-      continue;
-    }
-    await wait(3_500);
-    const seen = await gallery(page, 'gallery');
-    say(`plan "${tab}" ->`, seen.found ? `${seen.pictures.length} pictures in .${seen.box}` : 'no gallery heading');
-    if (!seen.found) continue;
-    say(`plan "${tab}" pictures:`, JSON.stringify(seen.pictures));
-    say(`plan "${tab}" controls:`, JSON.stringify(seen.controls));
-    if (tab === 'interiors') {
-      say('plan interiors markup:', seen.markup);
-      say('plan interiors siblings:', JSON.stringify(await siblings(page, seen.pictures.map((p) => p.src))));
-      // Is the rest of the eleven behind a control, or further down?
-      for (const more of ['view all', 'view more', 'see all', 'load more', 'next']) {
-        if (await press(page, more)) {
-          await wait(3_000);
-          const after = await gallery(page, 'gallery');
-          say(`plan after "${more}":`, after.pictures?.length ?? 0, 'pictures',
-              JSON.stringify((after.pictures ?? []).map((p) => (p.src || '').slice(-30))));
-        }
-      }
-      const arrows = await page.evaluate(() => {
-        const box = [...document.querySelectorAll('h1,h2,h3')].find((h) => /gallery/i.test(h.textContent || ''))?.closest('section,div');
-        const next = box && [...box.querySelectorAll('button,a')].find((b) => /next|right|›|>/i.test((b.getAttribute('aria-label') || b.className || '')));
-        if (!next) return 'none';
-        next.click();
-        return next.tagName + '.' + String(next.className).slice(0, 30);
-      });
-      say('plan gallery next-control:', arrows);
-      await wait(3_000);
-      const after = await gallery(page, 'gallery');
-      say('plan after next-control:', after.pictures?.length ?? 0, 'pictures');
-    }
+  const { page, html } = await open(PLAN);
+  for (const section of sectionsOf(html)) {
+    if (!section.images.length) continue;
+    say(`plan h${section.level} "${section.heading}" -> ${section.images.length}`,
+        JSON.stringify(section.images.slice(0, 14).map((i) => `${i.src.split('/').pop()} [${i.alt.slice(0, 32)}]`)));
   }
   await page.close();
 } catch (err) {
   say('plan failed:', String(err?.message ?? err));
 }
 
-// ---- a home's gallery ---------------------------------------------------
+// ---- a home: the same ---------------------------------------------------
 try {
-  const page = await open(HOME);
-  const seen = await gallery(page, 'model gallery');
-  say('home gallery ->', seen.found ? `${seen.pictures.length} pictures in .${seen.box}` : 'no gallery heading');
-  if (seen.found) {
-    say('home pictures:', JSON.stringify(seen.pictures));
-    say('home controls:', JSON.stringify(seen.controls));
-    say('home markup:', seen.markup);
-    say('home siblings:', JSON.stringify(await siblings(page, seen.pictures.map((p) => p.src))));
-    for (const more of ['view all', 'view more', 'see all', 'load more']) {
-      if (await press(page, more)) {
-        await wait(3_000);
-        const after = await gallery(page, 'model gallery');
-        say(`home after "${more}":`, after.pictures?.length ?? 0, 'pictures');
-      }
-    }
+  const { page, html } = await open(HOME);
+  for (const section of sectionsOf(html)) {
+    if (!section.images.length) continue;
+    say(`home h${section.level} "${section.heading}" -> ${section.images.length}`,
+        JSON.stringify(section.images.slice(0, 8).map((i) => `${i.src.split('/').pop()} [${i.alt.slice(0, 32)}]`)));
   }
-  // What the page says about the home itself, for the list read.
-  say('home text:', JSON.stringify(await page.evaluate(() => {
-    const main = document.querySelector('main') || document.body;
-    return main.innerText.replace(/\s+/g, ' ').slice(0, 700);
-  })));
   await page.close();
 } catch (err) {
   say('home failed:', String(err?.message ?? err));
+}
+
+// ---- the community, with its homes tab pressed --------------------------
+try {
+  const { page, html, pressed } = await open(COMMUNITY, HOMES_TAB);
+  const text = await page.evaluate(() => {
+    const body = document.body.innerText.replace(/\s+/g, ' ');
+    const at = body.search(/Ready for move-in|Sale price|Lot \d+/i);
+    return at < 0 ? body.slice(0, 200) : body.slice(Math.max(0, at - 300), at + 900);
+  });
+  say('community pressed:', pressed);
+  say('community homes text:', JSON.stringify(text));
+  const homes = await page.evaluate(() =>
+    [...new Set([...document.querySelectorAll('a')].map((a) => a.href))].filter((h) => /\/\d{8}-\d{4}\/?$/.test(h)).length
+  );
+  say('community home links after press:', homes, 'html', html.length, 'bytes');
+  await page.close();
+} catch (err) {
+  say('community failed:', String(err?.message ?? err));
 }
 
 say('done');
