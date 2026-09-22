@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { clearConnection } from "@/lib/floorplans/connection-clear";
+import { describeError } from "@/lib/shared/describe-error";
 
 export const dynamic = "force-dynamic";
 // A removal takes the connection's items out of Wix one by one.
@@ -129,10 +130,8 @@ export async function DELETE(
     logger.info("Floor plan connection removed", { connectionId: id, ...outcome.result });
     return NextResponse.json(outcome.result);
   } catch (error) {
-    logger.error("Failed to remove builder connection", {
-      id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const why = describeError(error);
+    logger.error("Failed to remove builder connection", { id, error: why });
+    return NextResponse.json({ error: why }, { status: 500 });
   }
 }

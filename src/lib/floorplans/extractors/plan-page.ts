@@ -230,14 +230,19 @@ const SIZED = /^(.+)_(?:sm|md|lg)(\.[a-z0-9]+)$/i;
 const THUMB = /^(.+)-thumbnail(\.[a-z0-9]+)$/i;
 
 /**
- * The picture a sized copy is a copy of: Stock's data lists every gallery
- * picture as both "<id>_sm.jpg" and "<id>_md.jpg", which is one picture
- * twice (Jeff, 2026-09-22).
+ * One photograph, however a site spells it. Stock's data lists every
+ * gallery picture as both "<id>_sm.jpg" and "<id>_md.jpg"; Richmond puts
+ * "media-180528.jpg" at the top of a plan's page and
+ * "media-180528.webp" in its gallery, and that is the same elevation
+ * twice — once at the front of the gallery and once at the end of it
+ * (Jeff, 2026-09-22). So the size, the thumbnail mark and the format all
+ * come off.
  */
 export function pictureKey(src: string): string {
   const name = src.split("/").pop() ?? "";
   const sized = name.match(SIZED) ?? name.match(THUMB);
-  return sized ? src.replace(name, `${sized[1]}${sized[2]}`) : src;
+  const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(/\.(jpe?g|png|webp|avif|gif)$/i, "");
+  return src.replace(name, plain);
 }
 
 /**

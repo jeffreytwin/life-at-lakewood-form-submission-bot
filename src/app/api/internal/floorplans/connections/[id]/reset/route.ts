@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { clearConnection } from "@/lib/floorplans/connection-clear";
+import { describeError } from "@/lib/shared/describe-error";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -40,10 +41,10 @@ export async function POST(
     logger.info("Floor plan connection reset", { connectionId: id, ...outcome.result });
     return NextResponse.json(outcome.result);
   } catch (error) {
-    logger.error("Failed to reset builder connection", {
-      id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const why = describeError(error);
+    logger.error("Failed to reset builder connection", { id, error: why });
+    // The Hub is the only thing that calls this, and a person reading
+    // "Internal server error" three times learns nothing (Jeff, 2026-09-22).
+    return NextResponse.json({ error: why }, { status: 500 });
   }
 }

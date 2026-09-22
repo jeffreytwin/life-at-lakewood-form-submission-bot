@@ -14,9 +14,10 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { firstGallery, fullSize, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
+import { firstGallery, fullSize, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
+import { asTour } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -427,6 +428,9 @@ export async function readPlanPageWithClaude(
   // where the headings gave nothing, so a plan never inherits the
   // community's other pictures.
   const carried = gallery.first.length ? [] : payloadGallery(html, page_.url);
+  // One photograph once, whichever of its spellings came first: the list's
+  // picture and the gallery's are often the same file in two formats.
+  const kept = new Set<string>();
   const photos = [
     ...plan.galleryImages,
     ...listOf<string>(page.photoImages),
@@ -435,7 +439,12 @@ export async function readPlanPageWithClaude(
   ]
     .filter((src) => src && !gallery.drop.has(src))
     .map((src) => fullSize(src, html))
-    .filter((src, i, all) => all.indexOf(src) === i);
+    .filter((src) => {
+      const key = pictureKey(src);
+      if (kept.has(key)) return false;
+      kept.add(key);
+      return true;
+    });
   // What the page said about its own pictures, kept for the ordering.
   // Richmond American titles every picture in a gallery — "Bedroom of the
   // Slate floor plan", "Elevation M of the Slate floor plan" — and names
@@ -751,7 +760,10 @@ async function extractPages(
   // to the tour it shows. Only those: a plan that already has a real tour,
   // or none at all, costs nothing.
   const toured = await mapLimit(pages, atOnce, async (plan) => {
-    const tour = plan.virtualTourUrl;
+    // Not one a builder only calls a tour: Perry's "3D Tour" is an
+    // interactive drawing, and there is nothing behind it to follow
+    // (standardize.ts, which drops it either way).
+    const tour = asTour(plan.virtualTourUrl);
     if (!tour || isTourUrl(tour)) return plan;
     const deeper = await tourBehind(tour, read);
     return deeper ? { ...plan, virtualTourUrl: deeper } : plan;
