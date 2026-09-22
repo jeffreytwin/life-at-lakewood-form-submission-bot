@@ -49,6 +49,8 @@ function getMessage(event: LeadEvent): string {
       return "We've got a situation in the listings, Colonel. Get eyes on the Listings area when you can.";
     case "floorplan_campaign":
       return "One of the email campaign's floor plans changed, Colonel. Head to Floor Plans → Email campaign and bring the marketing up to date.";
+    case "builder_error":
+      return `We lost contact with ${event.builderName ?? "a builder connection"}, Colonel. Floor Plans → Builder Connections, when you can.`;
   }
 }
 

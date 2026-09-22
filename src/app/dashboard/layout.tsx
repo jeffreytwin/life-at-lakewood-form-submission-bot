@@ -8,6 +8,7 @@ import PixelFireworks from "@/components/PixelFireworks";
 import EmailDraftSoundMonitor from "@/components/EmailDraftSoundMonitor";
 import ListingsAlertMonitor from "@/components/ListingsAlertMonitor";
 import CampaignAlertMonitor from "@/components/CampaignAlertMonitor";
+import BuilderAlertMonitor from "@/components/BuilderAlertMonitor";
 
 export default function DashboardLayout({
   children,
@@ -41,6 +42,7 @@ export default function DashboardLayout({
       <EmailDraftSoundMonitor />
       <ListingsAlertMonitor />
       <CampaignAlertMonitor />
+      <BuilderAlertMonitor />
     </div>
   );
 }

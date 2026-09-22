@@ -28,6 +28,7 @@ export default function Sidebar({
   const [floorPlanCount, setFloorPlanCount] = useState(0);
   const [listingErrorCount, setListingErrorCount] = useState(0);
   const [campaignAlertCount, setCampaignAlertCount] = useState(0);
+  const [builderErrorCount, setBuilderErrorCount] = useState(0);
 
   useEffect(() => {
     return onFailedCount(setFailedBadge);
@@ -85,6 +86,23 @@ export default function Sidebar({
     }
     fetchCampaignAlerts();
     const interval = setInterval(fetchCampaignAlerts, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll for builder connections whose last run failed and nobody dismissed
+  // (Jeff, 2026-09-22): a broken connection is a number on the menu, the
+  // same as a pending change or a campaign alert.
+  useEffect(() => {
+    function fetchBuilderErrors() {
+      fetch("/api/internal/floorplans/connections/troubled")
+        .then((r) => r.json())
+        .then((data) => {
+          setBuilderErrorCount(typeof data?.count === "number" ? data.count : 0);
+        })
+        .catch(() => {});
+    }
+    fetchBuilderErrors();
+    const interval = setInterval(fetchBuilderErrors, 30_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -157,6 +175,15 @@ export default function Sidebar({
                     title="Email campaign alerts: a tracked floor plan changed — see the Email Campaign tab"
                   >
                     {campaignAlertCount}
+                  </span>
+                )}
+                {item.href === "/dashboard/floor-plans" && builderErrorCount > 0 && (
+                  <span
+                    className="nav-badge"
+                    style={{ background: "var(--danger, #ef4444)" }}
+                    title="Builder connections whose last run failed — see the Builder Connections tab"
+                  >
+                    {builderErrorCount}
                   </span>
                 )}
                 {item.href === "/dashboard/listings" && listingErrorCount > 0 && (
