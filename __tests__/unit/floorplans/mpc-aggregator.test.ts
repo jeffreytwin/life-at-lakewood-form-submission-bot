@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage, withoutSharedPictures } from "@/lib/floorplans/extractors/mpc-aggregator";
+import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -100,5 +101,29 @@ describe("folderOf", () => {
     expect(folderOf("https://static.wellenpark.com/Images/Homes/NealC9425/82211950-240808.jpg")).toBe("nealc9425");
     expect(folderOf("https://static.wellenpark.com/Images/Homes/MattamyCorp/99831138-251007.jpg")).toBe("mattamycorp");
     expect(folderOf("https://example.com/other.jpg")).toBeNull();
+  });
+});
+
+describe("withoutSharedPictures", () => {
+  const neal = (n: number) => `https://static.wellenpark.com/Images/Homes/NealC9425/${n}.jpg`;
+  const listing = (name: string, pictures: number[], quickMoveIn = false) =>
+    ({ planKey: name.toLowerCase(), name, quickMoveIn, galleryImages: pictures.map(neal), blueprintImages: [] }) as unknown as NormalizedPlan;
+
+  it("takes from each plan the pictures another plan shows too, and leaves each its card's", () => {
+    const fallback = [10, 11, 12, 13, 14];
+    const [ravenna, palmBay, genoa] = withoutSharedPictures([
+      listing("Ravenna", [1, ...fallback]),
+      listing("Palm Bay 2", [2, ...fallback]),
+      listing("Genoa", [3, 30, 31]),
+    ]);
+    expect(ravenna.galleryImages).toEqual([neal(1)]);
+    expect(palmBay.galleryImages).toEqual([neal(2)]);
+    expect(genoa.galleryImages).toEqual([3, 30, 31].map(neal));
+  });
+
+  it("leaves a home the pictures it shares with its one plan", () => {
+    const [plan, home] = withoutSharedPictures([listing("Positano 2", [1, 20, 21]), listing("11446 Brightly Drive", [5, 20, 21], true)]);
+    expect(plan.galleryImages).toEqual([1, 20, 21].map(neal));
+    expect(home.galleryImages).toEqual([5, 20, 21].map(neal));
   });
 });
