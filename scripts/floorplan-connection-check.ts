@@ -664,7 +664,7 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     for (const p of [...base, ...homes]) {
       out(
         `  ${(p.quickMoveIn ? "⌂ " : "") + cell(p.name, p.quickMoveIn ? 26 : 28)}`.padEnd(32) +
-          ` ${cell(p.homeType, 12).padEnd(12)} ${cell(p.priceDisplay, 11).padEnd(11)} ${cell(p.beds, 3).padEnd(3)} ${cell(p.baths, 4).padEnd(4)} ${cell(p.sqft, 5).padStart(5)}  ${cell(p.garages, 6).padEnd(6)} ${String(p.galleryImages.length).padStart(2)}  ${String(p.blueprintImages.length).padStart(2)} ${p.virtualTourUrl ? "yes " : "—   "}  ${roomsOf(p).slice(0, 40)}${p.pageUnread ? " UNREAD" : ""}${p.quickMoveIn ? ` → ${p.relatedPlanName ?? "?"} (${p.relatedPlanMatch ?? "—"})` : ""}`
+          ` ${cell(p.homeType, 12).padEnd(12)} ${cell(p.priceDisplay, 11).padEnd(11)} ${cell(p.beds, 3).padEnd(3)} ${cell(p.baths, 4).padEnd(4)} ${cell(p.sqft, 5).padStart(5)}  ${cell(p.garages, 6).padEnd(6)} ${String(p.galleryImages.length).padStart(2)}  ${String(p.blueprintImages.length).padStart(2)} ${p.virtualTourUrl ? "yes " : "—   "}  ${roomsOf(p).slice(0, 40)}${p.pageUnread ? " UNREAD" : ""}${p.quickMoveIn ? ` → ${p.relatedPlanName ?? "?"} (${p.relatedPlanMatch ?? "—"}) ${p.sourceUrl ?? ""}` : ""}`
       );
     }
     // A few plans in full, so the pictures themselves can be judged.
