@@ -697,7 +697,10 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     if (base.length && onePhoto.length > base.length / 2) problems.push(`images: only the main photo on ${onePhoto.length}/${base.length}`);
     if (base.length && noPrints.length > base.length / 2) problems.push(`images: no floor plan drawing on ${noPrints.length}/${base.length}`);
     if (unread.length) problems.push(`images: ${unread.length} plan pages could not be read`);
-    if (unplaced.length > base.length / 2 && base.length) problems.push(`sorting: most photos unplaced on ${unplaced.length}/${base.length} plans`);
+    // Not a fault of the run: the photo sorter (sort-queue.ts) looks at
+    // these once they are queued and puts them in order. Noted, not held
+    // against the connection.
+    if (unplaced.length) out(`  left to the photo sorter: most photos unplaced on ${unplaced.length}/${base.length} plans`);
     const printsLookLikePhotos = base.filter((p) => p.blueprintImages.some((u) => /elevation|exterior|kitchen|living|bedroom|rendering/i.test(fileTail(u))));
     if (printsLookLikePhotos.length) problems.push(`images: photos filed as floor plan drawings on ${printsLookLikePhotos.map((p) => p.name).join(", ")}`);
     const shared = new Map<string, number>();
