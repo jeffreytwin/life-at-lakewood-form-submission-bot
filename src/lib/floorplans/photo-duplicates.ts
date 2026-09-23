@@ -11,20 +11,24 @@
 // What decides is the picture, never its caption or its name: two photos
 // captioned differently are still one photo shown twice (Jeff,
 // 2026-09-23). Three things are asked:
-//   - its pixels: each picture's fingerprint (a difference hash of it
-//     shrunk to 9×8), which a copy at another size or quality keeps;
+//   - its pixels: each picture shrunk to 32×32 and compared colour by
+//     colour with every other; a copy at another size or quality is all
+//     but the same, and another photograph is not;
 //   - its file: one upload however spelled or sized (fileKey);
-//   - Claude, which looks at the whole gallery and can see a crop the
-//     fingerprint cannot. Claude found none of Medallion's four pairs
-//     of one rendering at two sizes on its own, and on one run called
-//     two different SimplyDwell pictures one (2026-09-23), so what it
-//     reports is taken only where the fingerprints are close as well.
+//   - Claude, which looks at the whole gallery and can see a crop or an
+//     edit the pixels only half match. Claude found none of Medallion's
+//     four renderings at two sizes on its own, and on one run called two
+//     different SimplyDwell photos one (2026-09-23), so what it reports is
+//     taken only where the pixels are near as well.
+// A coarser fingerprint (a 64-bit difference hash) was tried first and
+// called Medallion's four elevations one photograph: renderings drawn from
+// one template differ in the house, not in the sky and lawn around it.
 
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { logger } from "@/lib/shared/logger";
 import { askedSize, pictureKey } from "@/lib/floorplans/extractors/plan-page";
-import { fetchImage } from "@/lib/floorplans/media";
+import { fetchPictures, imageBlock, type FetchedPicture } from "@/lib/floorplans/claude-image";
 
 const MODEL = "claude-opus-5";
 
@@ -80,11 +84,11 @@ const PROMPT =
 const readable = (url: string) => !/\.(svg|avif|heic|tiff?|bmp)(?:[?#]|$)/i.test(url);
 
 /** One request: the sets of these pictures that are one photograph, as positions in `urls`, and what Claude said each shows. */
-async function sameIn(urls: string[]): Promise<{ same: number[][]; shows: string[] }> {
+async function sameIn(urls: string[], pictures: (FetchedPicture | null)[]): Promise<{ same: number[][]; shows: string[] }> {
   const content: Anthropic.ContentBlockParam[] = [{ type: "text", text: PROMPT }];
   urls.forEach((url, i) => {
     content.push({ type: "text", text: `Picture ${i + 1}:` });
-    content.push({ type: "image", source: { type: "url", url } });
+    content.push(imageBlock(url, pictures[i]));
   });
   const response = await getClient().messages.create({
     model: MODEL,
@@ -120,8 +124,8 @@ export function sameFromAnswer(same: unknown, count: number): number[][] {
 }
 
 /** Claude's sets across the gallery, in batches it can see at once; `checked` is false where a request failed. */
-async function claudeSets(urls: string[]): Promise<{ same: number[][]; shows: string[]; checked: boolean }> {
-  const lookable = urls.map((url, at) => ({ url, at })).filter(({ url }) => readable(url));
+async function claudeSets(urls: string[], pictures: (FetchedPicture | null)[]): Promise<{ same: number[][]; shows: string[]; checked: boolean }> {
+  const lookable = urls.map((url, at) => ({ url, at })).filter(({ url, at }) => pictures[at] || readable(url));
   const same: number[][] = [];
   const shows = urls.map(() => "");
   let checked = true;
@@ -129,7 +133,10 @@ async function claudeSets(urls: string[]): Promise<{ same: number[][]; shows: st
     const batch = lookable.slice(i, i + AT_ONCE);
     if (batch.length < 2) continue;
     try {
-      const answer = await sameIn(batch.map((p) => p.url));
+      const answer = await sameIn(
+        batch.map((p) => p.url),
+        batch.map((p) => pictures[p.at])
+      );
       for (const set of answer.same) same.push(set.map((n) => batch[n].at));
       answer.shows.forEach((said, n) => (shows[batch[n].at] = said));
     } catch (err) {
@@ -143,62 +150,64 @@ async function claudeSets(urls: string[]): Promise<{ same: number[][]; shows: st
   return { same, shows, checked };
 }
 
-/** Pictures fingerprinted at once. */
-const PRINTING = 6;
+/** A picture shrunk for comparing: squeezed whole into 32×32, and its middle square at 32×32 for a crop. */
+export interface PictureLook {
+  whole: Uint8Array;
+  middle: Uint8Array;
+  /** Width over height. */
+  aspect: number;
+}
 
-/**
- * A picture's fingerprint: 64 bits, each whether a pixel of the picture
- * shrunk to 9×8 in grey is brighter than its right-hand neighbour. A copy
- * at another size or quality keeps nearly all of them; another photograph
- * keeps about half. Null when the picture cannot be fetched or read.
- */
-async function printOf(url: string): Promise<string | null> {
-  const fetched = await fetchImage(url);
-  if (!fetched) return null;
+const SIDE = 32;
+
+async function lookOf(picture: FetchedPicture): Promise<PictureLook | null> {
   try {
-    const { data } = await sharp(Buffer.from(fetched.data))
-      .rotate()
-      .flatten({ background: "#ffffff" })
-      .grayscale()
-      .resize(9, 8, { fit: "fill" })
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-    let bits = "";
-    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) bits += data[y * 9 + x] > data[y * 9 + x + 1] ? "1" : "0";
-    return bits;
+    const shrink = (fit: "fill" | "cover") =>
+      sharp(picture.jpeg).resize(SIDE, SIDE, { fit }).removeAlpha().raw().toBuffer();
+    const [whole, middle] = await Promise.all([shrink("fill"), shrink("cover")]);
+    return { whole: new Uint8Array(whole), middle: new Uint8Array(middle), aspect: picture.width / picture.height };
   } catch {
     return null;
   }
 }
 
-/** How many of two fingerprints' 64 bits differ. Exported for tests. */
-export function printDistance(a: string, b: string): number {
-  let n = 0;
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) n++;
-  return n;
+/** How far apart two shrunk pictures are: the mean difference of their colours, 0 to 255. Exported for tests. */
+export function pixelDistance(a: Uint8Array, b: Uint8Array): number {
+  let sum = 0;
+  for (let i = 0; i < a.length; i++) sum += Math.abs(a[i] - b[i]);
+  return sum / a.length;
 }
 
-/** Fingerprints this close are one photograph, whatever anyone says: a copy at another size or quality. */
-export const SAME_PRINT = 6;
-/** Fingerprints this close may be one photograph cut down a little: taken as one where Claude says so. */
-export const NEAR_PRINT = 22;
+/** Whether two pictures have the same shape, so their whole pictures can be laid one over the other. */
+const sameShape = (a: PictureLook, b: PictureLook) => Math.abs(a.aspect / b.aspect - 1) <= 0.03;
+
+/** Pictures of one shape this close are one photograph, whatever anyone says: a copy at another size or quality. */
+export const SAME_PIXELS = 6;
+/** Pictures this close, whole or in their middles, may be one photograph cut or edited a little: taken as one where Claude says so. */
+export const NEAR_PIXELS = 18;
 
 /**
- * The pairs that are one photograph: the fingerprints alone where they
- * all but match, and Claude's sets where the fingerprints are near too.
- * A pair whose fingerprints are far apart, or that could not be
- * fingerprinted, is not taken on Claude's word. Pure; exported for tests.
+ * The pairs that are one photograph: the pixels alone where two pictures
+ * of one shape all but match, and Claude's sets where the pixels are near
+ * too, whole or in the middle. A pair whose pixels are far apart, or that
+ * could not be fetched to compare, is not taken on Claude's word. Pure;
+ * exported for tests.
  */
-export function confirmedSame(prints: (string | null)[], claude: number[][]): { same: number[][]; rejected: number[][] } {
+export function confirmedSame(looks: (PictureLook | null)[], claude: number[][]): { same: number[][]; rejected: number[][] } {
   const same: number[][] = [];
   const rejected: number[][] = [];
-  const near = (i: number, j: number, most: number) => {
-    const [a, b] = [prints[i], prints[j]];
-    return a != null && b != null && printDistance(a, b) <= most;
+  for (let i = 0; i < looks.length; i++) {
+    for (let j = i + 1; j < looks.length; j++) {
+      const [a, b] = [looks[i], looks[j]];
+      if (a && b && sameShape(a, b) && pixelDistance(a.whole, b.whole) <= SAME_PIXELS) same.push([i, j]);
+    }
+  }
+  const near = (i: number, j: number) => {
+    const [a, b] = [looks[i], looks[j]];
+    return Boolean(a && b && Math.min(pixelDistance(a.whole, b.whole), pixelDistance(a.middle, b.middle)) <= NEAR_PIXELS);
   };
-  for (let i = 0; i < prints.length; i++) for (let j = i + 1; j < prints.length; j++) if (near(i, j, SAME_PRINT)) same.push([i, j]);
   for (const set of claude) {
-    for (let k = 1; k < set.length; k++) (near(set[0], set[k], NEAR_PRINT) ? same : rejected).push([set[0], set[k]]);
+    for (let k = 1; k < set.length; k++) (near(set[0], set[k]) ? same : rejected).push([set[0], set[k]]);
   }
   return { same, rejected };
 }
@@ -208,32 +217,28 @@ export interface SamePhotos {
   same: number[][];
   /** Whether Claude looked; false where a request failed. */
   checked: boolean;
-  /** Sets Claude named that the fingerprints did not bear out. */
+  /** Sets Claude named that the pixels did not bear out. */
   rejected: number[][];
   /** What Claude said each picture shows. */
   shows: string[];
-  prints: (string | null)[];
+  looks: (PictureLook | null)[];
 }
 
 /**
  * The sets of a gallery's pictures that are one photograph, as positions
- * in `urls`: by their fingerprints and by Claude looking at them together
- * (confirmedSame). Nothing is taken out on a look that did not happen.
+ * in `urls`: by their pixels and by Claude looking at them together
+ * (confirmedSame). Each picture is fetched once, here, and Claude is
+ * handed the same bytes that are compared (claude-image.ts). Nothing is
+ * taken out on a look that did not happen.
  */
 export async function samePhotos(urls: string[]): Promise<SamePhotos> {
-  const prints: (string | null)[] = new Array(urls.length).fill(null);
-  let next = 0;
-  const printing = Promise.all(
-    Array.from({ length: Math.min(PRINTING, urls.length) }, async () => {
-      while (next < urls.length) {
-        const i = next++;
-        prints[i] = await printOf(urls[i]);
-      }
-    })
-  );
-  const [claude] = await Promise.all([claudeSets(urls), printing]);
-  const { same, rejected } = confirmedSame(prints, claude.same);
-  return { same, checked: claude.checked, rejected, shows: claude.shows, prints };
+  const pictures = await fetchPictures(urls);
+  const [claude, looks] = await Promise.all([
+    claudeSets(urls, pictures),
+    Promise.all(pictures.map((p) => (p ? lookOf(p) : Promise.resolve(null)))),
+  ]);
+  const { same, rejected } = confirmedSame(looks, claude.same);
+  return { same, checked: claude.checked, rejected, shows: claude.shows, looks };
 }
 
 /**

@@ -29,7 +29,7 @@ import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, reso
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
-import { printDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
+import { pixelDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
 interface Target {
@@ -841,18 +841,23 @@ async function main() {
     const once = withoutDuplicates(urls, found.same);
     const name = (u: string) => u.replace(/[?#].*$/, "").split("/").pop();
     const sets = (list: number[][]) => list.map((set) => `[${set.map((i) => i + 1).join(", ")}]`).join(" ") || "none";
-    const close: string[] = [];
+    const close: [number, string][] = [];
     for (let i = 0; i < urls.length; i++)
       for (let j = i + 1; j < urls.length; j++) {
-        const [a, b] = [found.prints[i], found.prints[j]];
-        if (a && b && printDistance(a, b) <= 30) close.push(`${printDistance(a, b)}: ${i + 1}–${j + 1}`);
+        const [a, b] = [found.looks[i], found.looks[j]];
+        if (!a || !b) continue;
+        const whole = pixelDistance(a.whole, b.whole);
+        const middle = pixelDistance(a.middle, b.middle);
+        if (Math.min(whole, middle) <= 40)
+          close.push([Math.min(whole, middle), `${i + 1}–${j + 1} whole ${whole.toFixed(1)} middle ${middle.toFixed(1)} shapes ${a.aspect.toFixed(2)}/${b.aspect.toFixed(2)}`]);
       }
     const report = [
       `checked by Claude: ${found.checked} in ${Math.round((Date.now() - started) / 1000)}s`,
-      `same (fingerprints, and Claude where they agree): ${sets(found.same)}`,
+      `same (pixels, and Claude where they agree): ${sets(found.same)}`,
       `Claude's sets not borne out: ${sets(found.rejected)}`,
-      `fingerprints unread: ${found.prints.map((p, i) => (p ? null : i + 1)).filter(Boolean).join(", ") || "none"}`,
-      `closest fingerprints (bits apart of 64): ${close.sort((x, y) => parseInt(x) - parseInt(y)).join(" · ") || "none within 30"}`,
+      `pictures not fetched: ${found.looks.map((p, i) => (p ? null : i + 1)).filter(Boolean).join(", ") || "none"}`,
+      `closest pixels (mean colour difference, 0–255):`,
+      ...close.sort((x, y) => x[0] - y[0]).map(([, line]) => `  ${line}`),
       ...urls.map((u, i) => `  ${i + 1}. ${name(u)} — ${found.shows[i] || "?"}`),
       `kept ${once.urls.length} of ${urls.length}:`,
       ...once.urls.map((u) => `  ✓ ${name(u)}`),
