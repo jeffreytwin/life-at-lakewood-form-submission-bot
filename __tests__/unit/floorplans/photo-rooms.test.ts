@@ -9,7 +9,7 @@ import {
   withLookedAtRooms,
   type PhotoLabel,
 } from "@/lib/floorplans/photo-rooms";
-import { wantsSorting } from "@/lib/floorplans/sort-queue";
+import { handsOff, wantsSorting } from "@/lib/floorplans/sort-queue";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 import { ROOM_ORDER } from "@/lib/floorplans/types";
 
@@ -157,6 +157,16 @@ describe("withLookedAtRooms: the same order every run for the same answers", () 
     expect(withLookedAtRooms(sorted, looked).galleryImages).toEqual(sorted.galleryImages);
   });
 
+  it("leads with a picture seen to be the front over one only presumed to be (12510 Adobe Street)", () => {
+    const [graphic, living, dining, elevation] = [pic("peace-of-mind"), pic("living"), pic("dining"), pic("elevation-c1")];
+    const presumed = { [graphic]: { kind: "primary" as const, room: "primary" as const, caption: "Peace of Mind" } };
+    const looked = labelled([[living, "living"], [dining, "dining"], [elevation, "front"]]);
+    expect(withLookedAtRooms(plan([graphic, living, dining, elevation], presumed), looked).galleryImages).toEqual([elevation, living, dining, graphic]);
+    // With no picture seen to be the front, the presumed one still leads.
+    const noFront = labelled([[living, "living"], [dining, "dining"], [elevation, "exterior"]]);
+    expect(withLookedAtRooms(plan([graphic, living, dining, elevation], presumed), noFront).galleryImages[0]).toBe(graphic);
+  });
+
   it("leaves a gallery nobody has looked at exactly as it came", () => {
     const untouched = plan([hero, a, b], meta);
     expect(withLookedAtRooms(untouched, new Map())).toBe(untouched);
@@ -172,6 +182,12 @@ describe("which waiting galleries are worth looking at", () => {
     const placed = Object.fromEntries(urls.map((u) => [u, { kind: "photo" as const, room: "kitchen" as const }]));
     expect(wantsSorting(plan(urls, placed))).toBe(false);
     expect(wantsSorting(plan(urls.slice(0, 2)))).toBe(false);
+  });
+
+  it("never one arranged by hand, or of a single picture", () => {
+    expect(handsOff(plan(urls))).toBe(true);
+    expect(handsOff(plan(urls, {}, { userEditedFields: ["galleryImages"] }))).toBe(false);
+    expect(handsOff(plan(urls.slice(0, 1)))).toBe(false);
   });
 
   it("and the ones sorted with a room in front of an outside view", () => {
