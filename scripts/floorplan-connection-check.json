@@ -8,35 +8,29 @@
       "community": "Oakfield"
     },
     {
-      "builder": "Kolter Homes",
-      "community": "Woodland Preserve"
+      "builder": "D.R. Horton",
+      "community": "Ashcombe"
     },
     {
       "builder": "Pulte Homes",
       "community": "Riversong"
     },
     {
+      "builder": "Pulte Homes",
+      "community": "North River Ranch"
+    },
+    {
       "builder": "Centex Homes"
     },
     {
-      "builder": "Adams Homes",
-      "method": "render_claude"
-    },
-    {
-      "builder": "M/I Homes",
-      "community": "Palmera"
+      "builder": "Mattamy Homes",
+      "community": "Windwater"
     },
     {
       "builder": "Richmond American Homes"
     },
     {
       "builder": "Perry Homes"
-    },
-    {
-      "builder": "Stock Luxury Homes"
-    },
-    {
-      "builder": "SimplyDwell Homes"
     }
   ],
   "raw": [
