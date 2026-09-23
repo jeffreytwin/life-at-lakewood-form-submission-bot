@@ -147,10 +147,15 @@ export function pulteGallery(images: PulteImage[] | null | undefined, address: (
   return orderGallery(items);
 }
 
-/** A plan as the site files it, from its feed record; null for one the builder no longer offers. Exported for tests. */
-export function planFromRecord(r: PultePlan, origin: string, communityUrl: string, address?: (path: string) => string): NormalizedPlan | null {
+/**
+ * A plan as the site files it, from its feed record; null for one the
+ * builder no longer offers — unless homes built on it are still for sale
+ * (`withHomes`): Longmeadow's sold-out plan has three (North River Ranch,
+ * 2026-09-23). Exported for tests.
+ */
+export function planFromRecord(r: PultePlan, origin: string, communityUrl: string, address?: (path: string) => string, withHomes = false): NormalizedPlan | null {
   const name = clean(r.planName);
-  if (!name || r.isSoldOut || r.isPlanActive === false) return null;
+  if (!name || ((r.isSoldOut || r.isPlanActive === false) && !withHomes)) return null;
   const price = !r.priceComingSoon && r.price && r.price > 0 ? r.price : null;
   const gallery = pulteGallery(r.images, address);
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -227,7 +232,10 @@ export async function extractPulteGroup(params: { url?: string; runDeadline?: nu
     feed<PultePlan>(`${origin}/api/plan/homeplans?communityId=${id}`, url),
     feed<PulteHome>(`${origin}/api/plan/qmiplans?communityId=${id}`, url),
   ]);
-  const plans = planRecords.map((r) => planFromRecord(r, origin, url)).filter((p): p is NormalizedPlan => Boolean(p));
+  const onSale = new Set(homeRecords.filter((h) => !h.soldDate && h.planId != null).map((h) => String(h.planId)));
+  const plans = planRecords
+    .map((r) => planFromRecord(r, origin, url, undefined, r.id != null && onSale.has(String(r.id))))
+    .filter((p): p is NormalizedPlan => Boolean(p));
   // A home is built to its plan's drawings where it has none of its own.
   const drawingsOf = new Map(plans.map((p) => [String(p.raw?.planId), p.blueprintImages]));
   const homes = homeRecords

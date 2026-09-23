@@ -90,6 +90,10 @@ describe("planFromRecord", () => {
     expect(planFromRecord({ ...daylen, isPlanActive: false }, ORIGIN, RIVERSONG)).toBeNull();
   });
 
+  it("keeps a sold-out plan whose homes are still for sale", () => {
+    expect(planFromRecord({ ...daylen, isSoldOut: true }, ORIGIN, RIVERSONG, undefined, true)?.name).toBe("Daylen");
+  });
+
   it("says nothing of a price still to come, and marks the plan coming soon", () => {
     const p = planFromRecord({ ...daylen, priceComingSoon: true }, ORIGIN, RIVERSONG)!;
     expect(p.price).toBeNull();
