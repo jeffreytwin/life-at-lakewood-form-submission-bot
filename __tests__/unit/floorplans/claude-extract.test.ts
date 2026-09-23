@@ -12,6 +12,7 @@ import {
   sortDrawings,
   planName,
   mergeRepeatedPlan,
+  homesPageIn,
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
@@ -525,5 +526,21 @@ describe("sortDrawings: styles, colour schemes and folders of elevations (2026-0
     const got = sortDrawings([df, aw, kb, plan, towne]);
     expect(got.views).toEqual([df, aw, kb]);
     expect(got.drawings).toEqual([plan, towne]);
+  });
+});
+
+describe("homesPageIn (Kolter's Woodland Preserve, 2026-09-23)", () => {
+  const PAGE = "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/";
+  it("finds the community's own page of homes for sale beneath its address", () => {
+    const html = `<a href="/new-homes/parrish-florida-woodland-preserve/homes/">Homes</a>
+      <a href="/new-homes/parrish-florida-woodland-preserve/move-in-ready/#top">Move-In Ready</a>`;
+    expect(homesPageIn(html, PAGE)).toBe("https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/move-in-ready/");
+  });
+
+  it("does not take the builder's page of every home it has anywhere, or another site's", () => {
+    const html = `<a href="https://nealcommunities.com/available-homes/">Quick Move-In Homes</a>
+      <a href="https://other.com/new-homes/parrish-florida-woodland-preserve/move-in-ready/">x</a>
+      <a href="/move-in-ready/">All homes</a>`;
+    expect(homesPageIn(html, PAGE)).toBeNull();
   });
 });

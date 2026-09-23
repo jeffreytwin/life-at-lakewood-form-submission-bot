@@ -651,7 +651,7 @@ export async function readPlanPageWithClaude(
 async function listPage(
   url: string,
   opts: { hint?: string; quickMoveIns?: boolean; press?: readonly string[]; read?: PageReader }
-): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null }> {
+): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null; homesPage?: string | null }> {
   const page = await (opts.read ?? fetchPage)(url, opts.press ? { press: opts.press } : undefined);
   // Asked to open a tab and the page has no such tab: there is nothing
   // behind it to read, and nothing to pay a model to read.
@@ -748,7 +748,47 @@ async function listPage(
       blueprintImages: pictureAddresses(p.blueprintImages),
     };
   });
-  return { url: page.url || url, plans: listed, pressed: page.pressed ?? null };
+  return { url: page.url || url, plans: listed, pressed: page.pressed ?? null, homesPage: homesPageIn(page.html, page.url || url) };
+}
+
+/** What a community calls the page of its homes for sale, as the last part of its address. */
+const HOMES_PAGE = /^(move-?in-?ready(-homes)?|quick-?move-?ins?(-homes)?|available-homes|homes-ready-soon|ready-now(-homes)?|inventory(-homes)?|spec-homes|qmis?)$/i;
+
+/**
+ * The community's own page of homes for sale, where it keeps one beneath
+ * its own address: Kolter's Woodland Preserve lists its plans on the
+ * community page and its homes at ".../woodland-preserve/move-in-ready/",
+ * and a run that did not know to read it came back with no homes at all
+ * (2026-09-23). Only a page beneath the community's — the builder's page
+ * of every home it has for sale anywhere is not this community's.
+ * Exported for tests.
+ */
+export function homesPageIn(html: string, pageUrl: string): string | null {
+  const baseUrl = documentBase(html, pageUrl);
+  let community: URL;
+  try {
+    community = new URL(pageUrl);
+  } catch {
+    return null;
+  }
+  const beneath = community.pathname.replace(/\/+$/, "") + "/";
+  for (const tag of html.match(A_TAG) ?? []) {
+    const href = attrOf(tag, "href");
+    if (!href || href.startsWith("#")) continue;
+    let link: URL;
+    try {
+      link = new URL(href, baseUrl);
+    } catch {
+      continue;
+    }
+    if (link.host !== community.host || !link.pathname.startsWith(beneath)) continue;
+    const last = link.pathname.split("/").filter(Boolean).pop() ?? "";
+    if (HOMES_PAGE.test(last)) {
+      link.hash = "";
+      return link.href;
+    }
+  }
+  return null;
 }
 
 /**
@@ -912,7 +952,8 @@ async function extractPages(
   // The builder's own page of homes for sale, where it keeps one away from
   // its plans (Stock's /inventory/, Jeff 2026-09-22). A page that cannot be
   // read costs the run its homes, never its plans.
-  const homesUrl = params.quickMoveInUrl?.trim();
+  // Named in the connection, or linked from beneath the community's own page.
+  const homesUrl = params.quickMoveInUrl?.trim() || lists.map((l) => l.page?.homesPage).find(Boolean) || undefined;
   if (homesUrl && !listPages.has(homesUrl)) {
     try {
       const homesPage = await listPage(homesUrl, { hint: params.hint, quickMoveIns: true, read });
