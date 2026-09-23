@@ -13,6 +13,7 @@
 //
 // Structure captured in pipeline/slice/discovery/mpc3/wellenpark-card-raw.html.
 
+import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -80,6 +81,17 @@ const num = (s: string | undefined): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+/**
+ * The site's home type for what the aggregator calls a home. Wellen Park
+ * files M/I's Palm, Sabal, Foxtail and Bismark as "Multi-Family", and the
+ * site carries every one of them as a townhome (2026-09-23).
+ */
+export function mpcHomeType(label: string | null | undefined): string | null {
+  const text = (label ?? "").replace(/-/g, " ").trim();
+  if (!text) return null;
+  return standardHomeType(text) ?? (/\bmulti\s*family\b/i.test(text) ? "Townhome" : text.replace(/\b\w/g, (c) => c.toUpperCase()));
+}
+
 export function normalizeCard(card: Card): NormalizedPlan | null {
   const { attrs } = card;
   const availability = (attrs.availability ?? "").trim();
@@ -102,7 +114,7 @@ export function normalizeCard(card: Card): NormalizedPlan | null {
     baths: baths != null ? String(baths) : "",
     sqft: sqft != null ? sqft : null,
     garages: garage ? `${garage} car` : null,
-    homeType: attrs.type ? attrs.type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null,
+    homeType: mpcHomeType(attrs.type),
     quickMoveIn,
     comingSoon: /coming soon|from\s+price/i.test(card.h4),
     sourceUrl: card.detail,
@@ -130,7 +142,18 @@ export function normalizeCard(card: Card): NormalizedPlan | null {
  * "More Homes in …" row of other homes — so a neighbour's picture is never
  * taken. Pure; exported for tests.
  */
-export function readDetailPage(html: string): { photos: string[]; drawings: string[]; tour: string | null } {
+export function readDetailPage(html: string): {
+  photos: string[];
+  drawings: string[];
+  tour: string | null;
+  homeType: string | null;
+  description: string | null;
+} {
+  // The type sits over the name ("<p>Multi-Family</p> … <h1>Palm</h1>"),
+  // and the description under a bold "Description".
+  const header = html.match(/<p>\s*([^<]{3,40}?)\s*<\/p>(?:(?!<\/?p\b)[\s\S]){0,400}?<h1\b/i)?.[1] ?? null;
+  const described = html.match(/<strong>\s*Description\s*<\/strong>\s*(?:<br\s*\/?>)?([\s\S]*?)<\/p>/i)?.[1];
+  const description = described ? stripTags(described).replace(/&#0?39;|&rsquo;/g, "'") || null : null;
   const start = html.search(/<h1\b/i);
   const rest = start >= 0 ? html.slice(start) : html;
   const end = rest.search(/>\s*More Homes in\b|>\s*GETTING social\b/i);
@@ -145,6 +168,8 @@ export function readDetailPage(html: string): { photos: string[]; drawings: stri
     photos: pictures.filter((u) => !/\.svg$/i.test(u)),
     drawings: pictures.filter((u) => /\.svg$/i.test(u)),
     tour,
+    homeType: mpcHomeType(header),
+    description,
   };
 }
 
@@ -182,6 +207,8 @@ async function withDetailPage(plan: NormalizedPlan, origin: string): Promise<Nor
       galleryImages: photos,
       blueprintImages: page.drawings.length ? page.drawings : plan.blueprintImages,
       virtualTourUrl: plan.virtualTourUrl ?? page.tour,
+      homeType: plan.homeType ?? page.homeType,
+      description: plan.description ?? page.description,
     };
   } catch {
     return { ...plan, sourceUrl: url, pageUnread: true };

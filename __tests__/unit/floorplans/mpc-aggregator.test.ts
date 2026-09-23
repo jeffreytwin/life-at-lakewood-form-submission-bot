@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -63,5 +63,34 @@ describe("a home's own page on the aggregator (wellenpark.com/home/…/detail)",
     expect(read.photos).toEqual([img("110705387-260712"), img("82500852-240815"), img("81829164-240729")]);
     expect(read.drawings).toEqual([img("82501101-250820", "svg")]);
     expect(read.tour).toBe("https://my.matterport.com/show/?m=bNgGWuY3fsk");
+  });
+});
+
+describe("a Wellen Park home's page names its type and describes it (M/I's Palm, 2026-09-23)", () => {
+  const page = `<nav>…</nav><main class="container content-main home-details-content">
+    <header class="row between home-details-header bottom">
+      <div class="col-36-21 no-pad-left no-pad-right">
+        <p>Multi-Family</p>
+        <q class="mobile">FROM $472,990</q>
+        <h1>Palm</h1>
+        <ul><li>3 BED</li><li>2 BATH</li><li>2,425 SQFT</li></ul>
+      </div>
+    </header>
+    <div class="content">
+      <p><strong>Description</strong><br> Introducing the Palm by M/I Homes! This 2-story floorplan features 3 bedrooms, a loft &amp; 2.5 bathrooms.</p>
+      <p><strong>Amenities</strong><br> Playground, Park</p>
+    </div>
+    <h2>More Homes in Palmera At Wellen Park</h2>`;
+
+  it("reads a Multi-Family home as the townhome the site files it as, and keeps the description", () => {
+    const read = readDetailPage(page);
+    expect(read.homeType).toBe("Townhome");
+    expect(read.description).toBe("Introducing the Palm by M/I Homes! This 2-story floorplan features 3 bedrooms, a loft & 2.5 bathrooms.");
+  });
+
+  it("reads the same word on a card", () => {
+    expect(mpcHomeType("multi-family")).toBe("Townhome");
+    expect(mpcHomeType("single-family")).toBe("Single Family Home");
+    expect(mpcHomeType(null)).toBeNull();
   });
 });
