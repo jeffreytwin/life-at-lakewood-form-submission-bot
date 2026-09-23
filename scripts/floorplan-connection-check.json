@@ -1,125 +1,75 @@
 {
   "anatomy": [
-    "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch",
-    "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
-    "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/saddlestone-innovation",
-    "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/",
-    "https://lwhomes.com/communities/shellstone/"
+    "json https://www.homesbywestbay.com/api/plans?community=24&page=1",
+    "json https://www.homesbywestbay.com/api/homes?community=24&page=1",
+    "json https://www.homesbywestbay.com/api/communities/options?ids=24",
+    "POST https://www.highlandhomes.org/components/CommunityDetailSearch.cfc?method=getCommunity&returnFormat=json&s=1&metroarea=0&lowPrice=0&highprice=0&bed=0&bath=0&lowSqft=0&highsqft=0&amenities=&garage=0&additionalrooms=&hometype=&cityid=0&communityid=2",
+    "json https://argo.ml3ds-cloud.com/floorplansnorules/161487",
+    "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1541"
   ],
   "raw": [
     {
       "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch",
       "around": [
-        "plan-1541",
-        "\"price\"",
-        "__NEXT_DATA__"
+        "\"floorPlanID\"",
+        "\"homesite",
+        "\"address"
       ],
-      "chars": 1200,
+      "chars": 3500,
+      "count": 1
+    },
+    {
+      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i",
+      "around": [
+        "\"address",
+        "\"homesite",
+        "moveIn"
+      ],
+      "chars": 2500,
+      "count": 1
+    },
+    {
+      "url": "https://www.pulte.com/homes/florida/sarasota/venice/lakespur-wellen-park-211168/mystique-696223",
+      "around": [
+        "floor-container",
+        "data-ifp-id",
+        "PlanInteractiveTool"
+      ],
+      "chars": 800,
+      "count": 1
+    },
+    {
+      "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community",
+      "around": [
+        "community=",
+        "community-id",
+        "communityId",
+        ":community"
+      ],
+      "chars": 500,
       "count": 2
     },
     {
       "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
       "around": [
-        "westin-ii",
-        "Savannah",
-        "/api/"
+        "communityid",
+        "communityId",
+        "CommunityDetailSearch"
       ],
-      "chars": 1200,
-      "count": 2
-    },
-    {
-      "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/saddlestone-innovation",
-      "around": [
-        "Pelican",
-        "Sandpiper",
-        "/api/"
-      ],
-      "chars": 1200,
-      "count": 2
-    },
-    {
-      "url": "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/",
-      "around": [
-        "Floor plan",
-        "floorplan",
-        "/api/"
-      ],
-      "chars": 1000,
-      "count": 2
-    },
-    {
-      "url": "https://www.adamshomes.com/plan/aviary-at-rutland-ranch/1820",
-      "around": [
-        "webp/80",
-        "exact/w",
-        "ADDITIONAL ELEVATIONS"
-      ],
-      "chars": 900,
+      "chars": 600,
       "count": 2
     },
     {
       "url": "https://www.wellenpark.com/available-homes/",
       "around": [
-        "oakbend",
-        "ici-homes"
+        "data-neighborhood=\"oakbend\"",
+        "data-builder-name=\"ici-homes\""
       ],
-      "chars": 600,
+      "chars": 700,
       "count": 2
     }
   ],
   "concurrency": 3,
   "detailPlans": 2,
-  "checks": [
-    {
-      "builder": "Cardel Homes",
-      "community": "North River Ranch",
-      "preferCandidate": true
-    },
-    {
-      "builder": "Pulte Homes",
-      "community": "Del Webb Catalina"
-    },
-    {
-      "builder": "Pulte Homes",
-      "community": "Lakespur"
-    },
-    {
-      "builder": "Pulte Homes",
-      "community": "Riversong"
-    },
-    {
-      "builder": "Dream Finders Homes",
-      "community": "Waterside - Bungalow Walk"
-    },
-    {
-      "builder": "Adams Homes",
-      "all": true,
-      "method": "render_claude"
-    },
-    {
-      "builder": "Pulte Homes",
-      "community": "North River Ranch"
-    },
-    {
-      "builder": "David Weekley Homes",
-      "community": "North River Ranch"
-    },
-    {
-      "builder": "ICI Homes",
-      "community": "Oakbend"
-    },
-    {
-      "builder": "Neal Communities",
-      "community": "Everly",
-      "params": {
-        "url": "https://www.wellenpark.com/available-homes/",
-        "engine": "mpc_aggregator",
-        "builderSlug": "neal-signature-homes"
-      }
-    },
-    {
-      "builder": "M/I Homes",
-      "community": "Palmera"
-    }
-  ]
+  "checks": []
 }

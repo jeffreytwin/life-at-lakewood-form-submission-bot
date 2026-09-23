@@ -52,7 +52,7 @@ interface Target {
 }
 
 interface Config {
-  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. */
+  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed. */
   anatomy?: string[];
   /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
   raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
@@ -425,8 +425,8 @@ const ANATOMY_SCRIPT = `(() => {
 })()`;
 
 /** The anatomy of a JSON answer: where its pictures are, and the shape around them. */
-async function jsonAnatomy(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(45_000) });
+async function jsonAnatomy(url: string, method = "GET"): Promise<string> {
+  const res = await fetch(url, { method, headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(45_000) });
   const text = await res.text();
   let data: unknown;
   try {
@@ -527,6 +527,9 @@ async function rawAround(url: string, around: string[], chars = 1500, after = 0,
 }
 
 async function anatomy(url: string): Promise<string> {
+  // A feed named as one: "json <url>", or "POST <url>" for a feed a page posts to.
+  const feed = url.match(/^(json|POST)\s+(\S+)$/i);
+  if (feed) return jsonAnatomy(feed[2], feed[1] === "POST" ? "POST" : "GET").catch((e) => `could not read ${feed[2]}: ${e instanceof Error ? e.message : String(e)}`);
   if (/\/api\/|\.json(?:\?|$)/i.test(url)) return jsonAnatomy(url).catch((e) => `could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
   let page: Page | null = null;
   try {
