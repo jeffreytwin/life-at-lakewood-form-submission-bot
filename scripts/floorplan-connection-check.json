@@ -36,6 +36,14 @@
       "builder": "Adams Homes",
       "all": true,
       "method": "render_claude"
+    },
+    {
+      "builder": "Dream Finders Homes",
+      "all": true
+    },
+    {
+      "builder": "Ashton Woods",
+      "all": true
     }
   ]
 }

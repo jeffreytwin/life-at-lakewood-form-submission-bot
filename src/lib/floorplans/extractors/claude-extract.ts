@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -609,11 +609,14 @@ export async function readPlanPageWithClaude(
   const headed = firstGallery(html, page_.url);
   const lightbox = headed.first.length ? null : lightboxGallery(html, page_.url);
   const carousel = headed.first.length || lightbox?.first.length ? null : captionedCarousel(html, page_.url, plan.quickMoveIn ? undefined : plan.name);
-  const gallery = lightbox?.first.length
+  const marked = lightbox?.first.length
     ? { first: lightbox.first, drop: headed.drop }
     : carousel
       ? { first: carousel.first, drop: new Set([...headed.drop, ...carousel.drop]) }
       : headed;
+  // Failing all those, a block the page names a gallery (Dream Finders).
+  const named = marked.first.length ? [] : namedGallery(html, page_.url);
+  const gallery = named.length ? { first: named, drop: marked.drop } : marked;
   // A page whose galleries cannot be read off its headings may still be
   // carrying them: Perry draws a hero and four thumbnails and keeps
   // twenty-three photographs in its payload (Jeff, 2026-09-22). Only

@@ -12,6 +12,7 @@ import {
   elevationPictures,
   picturesNamedFor,
   imageAddress,
+  namedGallery,
   sectionsOf,
 } from "@/lib/floorplans/extractors/plan-page";
 
@@ -474,5 +475,41 @@ describe("elevationPictures does not take a slide's caption for a section (Pulte
   it("ignores what follows a heading like \"Elevation FM1\"", () => {
     const html = `<h5>Elevation FM1</h5><img src="https://x.com/community-pool.jpg"><img src="https://x.com/clubhouse.jpg">`;
     expect(elevationPictures(html, "https://x.com/plan")).toEqual([]);
+  });
+});
+
+describe("imageAddress and placeholders", () => {
+  it("takes no loading picture for a picture of the home", () => {
+    // Ashton Woods' gallery at 10046 Hidden Hammock Loop (2026-09-23).
+    expect(imageAddress('<img src="https://www.ashtonwoods.com/assets/loading-dot-pattern-1bcbfdcf1f.gif" alt="Loading...">')).toBeNull();
+    expect(imageAddress('<img src="/img/spacer.gif">')).toBeNull();
+    expect(imageAddress('<img src="/img/placeholder.png" data-src="/img/kitchen.jpg">')).toBe("/img/kitchen.jpg");
+    expect(imageAddress('<img src="/img/loading-dock.jpg">')).toBe("/img/loading-dock.jpg");
+  });
+});
+
+describe("namedGallery", () => {
+  // Haven at Bungalow Walk (Dream Finders, 2026-09-23): the gallery's title
+  // is a <div>, and every slide is captioned only by its number.
+  const DF = "https://dreamfindershomes.com/new-homes/fl/lakewood-ranch/bungalow-walk-at-lakewood-ranch/haven/";
+  const slide = (n: number) =>
+    `<div class="swiper-slide"><div class="oi-aspect three-two"><img src="https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=1000&amp;height=625" loading="lazy" alt="Haven New Home in Lakewood Ranch, FL.  - Slide ${n}" /></div></div>`;
+  const page = `<div class="community-gallery"><img src="/amenity-1.jpg"><img src="/amenity-2.jpg"><img src="/amenity-3.jpg"></div>
+    <div id="model-gallery" class="py-3"><div class="heading">Floor Plan Gallery</div>
+      <div class="swiper modeGallerySwiper"><div class="swiper-wrapper">${[1, 2, 3, 4].map(slide).join("")}</div></div>
+    </div>
+    <div class="similar-plans"><img src="/other-plan.jpg"></div>`;
+
+  it("takes the pictures of the first block named a gallery, and stops where it closes", () => {
+    const got = namedGallery(page, DF);
+    expect(got.map((i) => i.src)).toEqual([1, 2, 3, 4].map((n) => `https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=1000&height=625`));
+  });
+
+  it("passes over a gallery of the community's", () => {
+    expect(namedGallery(page, DF).some((i) => i.src.includes("amenity"))).toBe(false);
+  });
+
+  it("gives nothing where no gallery holds three pictures", () => {
+    expect(namedGallery(`<div class="gallery"><img src="/a.jpg"><img src="/b.jpg"></div>`, DF)).toEqual([]);
   });
 });

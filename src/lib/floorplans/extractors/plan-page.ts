@@ -95,6 +95,13 @@ export function joinedPicture(tag: string): string | null {
 }
 
 /**
+ * What a page shows while a picture loads, never a picture of the home:
+ * Ashton Woods' "loading-dot-pattern-….gif" (alt "Loading...") stood in a
+ * home's gallery (2026-09-23).
+ */
+const PLACEHOLDER = /(?:^|[/_-])(?:loading|loader|spinner|placeholder|lazy-?load|blank|transparent|spacer)(?:[._-][^/]*)?\.(?:gif|svg|png)(?:[?#]|$)/i;
+
+/**
  * The address an <img> shows, however it is written: its src, or where a
  * lazy page keeps it until it scrolls into view (data-src, Kolter's
  * data-lazy-src, D.R. Horton's data-lazy, data-original), or the largest
@@ -102,7 +109,7 @@ export function joinedPicture(tag: string): string | null {
  */
 export function imageAddress(tag: string, opts: { joined?: boolean } = {}): string | null {
   const plain = [attr(tag, "src"), attr(tag, "data-src"), attr(tag, "data-lazy-src"), attr(tag, "data-lazy"), attr(tag, "data-original")].find(
-    (u): u is string => Boolean(u) && !/^data:/i.test(u!)
+    (u): u is string => Boolean(u) && !/^data:/i.test(u!) && !PLACEHOLDER.test(u!)
   );
   return (
     plain ||
@@ -452,6 +459,53 @@ const wordsOf = (text: string) =>
 /** Words a plan's name carries that no file would: "Plan 1272" is 1272. */
 const GENERIC_NAME_WORD = /^(plan|the|model|home|homes|design|series|residence)$/;
 const DRAWING_WORD = /^(fp|floorplans?|flrpln|blueprints?)$/;
+
+/**
+ * The pictures of the first block the page names a gallery ("model-gallery",
+ * "plan-gallery", "photo-gallery") that holds three or more, in order. Dream
+ * Finders titles its plan gallery "Floor Plan Gallery" in a <div>, not a
+ * heading, and captions each slide "Slide 1", "Slide 2" — nothing the other
+ * readers can place — and the run kept five of Haven's twenty-four (Bungalow
+ * Walk, 2026-09-23). A block named for the community, its amenities or the
+ * area is not the plan's. Pure; exported for tests.
+ */
+export function namedGallery(html: string, pageUrl: string): PageImage[] {
+  const baseUrl = documentBase(html, pageUrl);
+  for (const open of html.matchAll(/<(div|section|ul)\b[^>]*\b(?:id|class)\s*=\s*["']([^"']*\bgallery\b[^"']*|[^"']*[-_]gallery\b[^"']*|[^"']*\bgallery[-_][^"']*)["'][^>]*>/gi)) {
+    if (/communit|amenit|lifestyle|neighbou?rhood|footer|\bnav\b/i.test(open[2])) continue;
+    const tag = open[1].toLowerCase();
+    const start = (open.index ?? 0) + open[0].length;
+    // The block runs to the tag that closes it.
+    const pattern = new RegExp(`<(/?)${tag}\\b[^>]*>`, "gi");
+    pattern.lastIndex = start;
+    let depth = 1;
+    let end = html.length;
+    for (let m = pattern.exec(html); m; m = pattern.exec(html)) {
+      depth += m[1] ? -1 : 1;
+      if (depth === 0) {
+        end = m.index;
+        break;
+      }
+    }
+    const seen = new Set<string>();
+    const images: PageImage[] = [];
+    for (const m of html.slice(start, end).matchAll(/<img\b[^>]*>/gi)) {
+      const src = imageAddress(m[0]);
+      if (!src || src.startsWith("data:")) continue;
+      let url: string;
+      try {
+        url = new URL(src.replace(/&amp;/gi, "&"), baseUrl).href;
+      } catch {
+        continue;
+      }
+      if (seen.has(pictureKey(url))) continue;
+      seen.add(pictureKey(url));
+      images.push({ src: url, alt: readable(attr(m[0], "alt") ?? "") });
+    }
+    if (images.length >= 3) return images;
+  }
+  return [];
+}
 
 /**
  * The floor plan drawings a page carries for this plan, found by their
