@@ -422,3 +422,12 @@ describe("distill: a page as Claude is given it", () => {
     expect(Date.now() - started).toBeLessThan(2_000);
   });
 });
+
+describe("distill honours a page's <base href>", () => {
+  it("gives Claude the link the browser would follow", () => {
+    const html = `<head><base href="/"></head><a href="florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/">Fraser</a>`;
+    expect(distill(html, "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/")).toContain(
+      "[LINK https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/]"
+    );
+  });
+});

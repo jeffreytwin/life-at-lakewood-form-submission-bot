@@ -76,7 +76,26 @@ function readable(html: string): string {
  * under, so a gallery named for its designer is still known to be a
  * gallery.
  */
-export function sectionsOf(html: string, baseUrl: string): PageSection[] {
+/**
+ * The address a page's relative links are relative to: its own, unless it
+ * names another in a <base> tag. Richmond American's Blazor pages declare
+ * <base href="/"> and write "florida/tampa-new-homes/…/fraser/", and read
+ * against the page's own address every plan's link came out doubled —
+ * ".../estates-at-rivers-edge/florida/tampa-new-homes/...", a page that
+ * says "Not found" — so no plan page was ever read (2026-09-23).
+ */
+export function documentBase(html: string, pageUrl: string): string {
+  const href = html.match(/<base\b[^>]*?\shref\s*=\s*["']([^"']+)["']/i)?.[1];
+  if (!href) return pageUrl;
+  try {
+    return new URL(href, pageUrl).href;
+  } catch {
+    return pageUrl;
+  }
+}
+
+export function sectionsOf(html: string, pageUrl: string): PageSection[] {
+  const baseUrl = documentBase(html, pageUrl);
   const absolute = (url: string) => {
     try {
       return new URL(url, baseUrl).href;
@@ -331,7 +350,8 @@ const OUTSIDE_LABEL = /^(exterior|elevation|aerial|amenity|community|front)$/i;
  * (firstGallery), which keeps a plan from inheriting the community's
  * other pictures. Pure.
  */
-export function payloadGallery(html: string, baseUrl: string): PayloadImage[] {
+export function payloadGallery(html: string, pageUrl: string): PayloadImage[] {
+  const baseUrl = documentBase(html, pageUrl);
   const labels = new Map<string, string>();
   for (const m of html.matchAll(PAYLOAD_LABEL)) labels.set(m[1], m[2].toLowerCase());
   const outsideOf = new Map<string, boolean>();

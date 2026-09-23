@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  documentBase,
   firstGallery,
   fullSize,
   largestInSrcSet,
@@ -243,5 +244,17 @@ describe("a picture offered as a set of sizes", () => {
       "https://x.test/a-1600.webp",
       "https://x.test/b-1200.webp",
     ]);
+  });
+});
+
+describe("documentBase: a page's <base href> (Richmond American, 2026-09-23)", () => {
+  const page = "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/";
+  it("resolves a relative link against the page's base, not the page", () => {
+    const html = `<html><head><base href="/"></head><body><a href="florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/">Fraser</a></body></html>`;
+    expect(documentBase(html, page)).toBe("https://www.richmondamerican.com/");
+    expect(new URL("florida/x/", documentBase(html, page)).href).toBe("https://www.richmondamerican.com/florida/x/");
+  });
+  it("is the page itself where no base is named", () => {
+    expect(documentBase("<html><body></body></html>", page)).toBe(page);
   });
 });

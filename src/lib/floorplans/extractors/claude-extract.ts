@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { documentBase, firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -256,7 +256,8 @@ function pictureOf(tag: string): string | null {
 }
 
 /** A page as Claude is given it: its text, with its pictures and links as markers. Exported for the connection check. */
-export function distill(html: string, baseUrl: string): string {
+export function distill(html: string, pageUrl: string): string {
+  const baseUrl = documentBase(html, pageUrl);
   const abs = (u: string) => {
     try {
       return new URL(u, baseUrl).href;
