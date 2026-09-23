@@ -41,6 +41,8 @@ interface Target {
   params?: Record<string, unknown>;
   /** An extraction method to try instead of the builder's saved one ("render_claude" for a page drawn after loading). */
   method?: string;
+  /** Read with the generic engine of `method`, not the builder's own (a builder whose own engine has no source for this community). */
+  generic?: boolean;
   /** Use the candidate page from floorplan-connection-urls.json even though a page is saved (a saved page that is wrong). */
   preferCandidate?: boolean;
   /** Skip the extraction and only look at the pages. */
@@ -632,7 +634,7 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     out(`  extraction skipped: Claude unavailable (${claudeDown})`);
   }
   if (!target.surveyOnly && !(claudeDown && claudeBuilder)) {
-    const extractor = resolveExtractor(conn.builder.name, conn.builder.extraction_method);
+    const extractor = resolveExtractor(target.generic ? "" : conn.builder.name, conn.builder.extraction_method);
     const started = Date.now();
     try {
       if (!extractor) throw new Error(`no extractor for ${conn.builder.extraction_method}`);
