@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { HOME_TYPES, isHomeType } from "@/lib/floorplans/standardize";
+import { HOME_TYPES, isHomeType, standardGarages } from "@/lib/floorplans/standardize";
 import { normKey } from "@/lib/floorplans/types";
 
 /**
@@ -108,8 +108,10 @@ export async function PATCH(
         }
         continue;
       }
-      // A blank in the form is the same as nothing in the record.
-      const after = typeof edits[field] === "string" ? edits[field].trim() : edits[field];
+      // A blank in the form is the same as nothing in the record; garages
+      // read "2 car" however they were typed ("2", "two car garage").
+      const typed = typeof edits[field] === "string" ? edits[field].trim() : edits[field];
+      const after = field === "garages" && typeof typed === "string" ? (standardGarages(typed) ?? "") : typed;
       const before = record[field] ?? "";
       if (String(after ?? "") !== String(before)) {
         record[field] = after === "" ? null : after;

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
-import { HOME_TYPES } from "@/lib/floorplans/standardize";
+import { HOME_TYPES, standardGarages } from "@/lib/floorplans/standardize";
 import { siteColors } from "@/app/dashboard/listings/format";
 import FloorPlanTabs from "./tabs";
 
@@ -1088,6 +1088,8 @@ export default function FloorPlansPage() {
                     className="form-input"
                     value={editForm[field]}
                     onChange={(e) => setEditForm((f) => ({ ...f, [field]: e.target.value }))}
+                    // "2" reads "2 car", the way the sites show garages; saved that way too.
+                    onBlur={field === "garages" ? () => setEditForm((f) => ({ ...f, garages: standardGarages(f.garages) ?? "" })) : undefined}
                   />
                 )}
               </div>
