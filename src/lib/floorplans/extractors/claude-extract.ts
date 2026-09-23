@@ -747,7 +747,7 @@ async function extractPages(
   params: ClaudeExtractParams,
   read: PageReader,
   atOnce: number,
-  can: { press?: boolean } = {}
+  can: { press?: boolean; readPlanPage?: PageReader } = {}
 ): Promise<NormalizedPlan[]> {
   // The pages the plans are listed on: the community page, unless the
   // connection names others (a builder that splits a community by lot
@@ -851,10 +851,14 @@ async function extractPages(
 
   // Each plan's own page, where the list linked one of its own. A page
   // that cannot be read costs that plan its extras, never the run.
-  const pages = await mapLimit(listed, atOnce, async (plan) => {
+  // Base plans first: where a community has more pages than a run has
+  // time for, it is the homes' pages that go unread, not the plans'.
+  const byPlansFirst = [...listed.keys()].sort((a, b) => Number(listed[a].quickMoveIn) - Number(listed[b].quickMoveIn) || a - b);
+  const readInOrder = await mapLimit(byPlansFirst, atOnce, async (i) => {
+    const plan = listed[i];
     if (!plan.sourceUrl || listPages.has(plan.sourceUrl)) return plan;
     try {
-      return await readPlanPageWithClaude(plan, read);
+      return await readPlanPageWithClaude(plan, can.readPlanPage ?? read);
     } catch (error) {
       logger.warn("Plan page could not be read", {
         planKey: plan.planKey,
@@ -865,6 +869,8 @@ async function extractPages(
       return { ...plan, pageUnread: true };
     }
   });
+  const pages: NormalizedPlan[] = new Array(listed.length);
+  byPlansFirst.forEach((i, n) => (pages[i] = readInOrder[n]));
 
   // What remains pointing at a builder's own page about a tour is followed
   // to the tour it shows. Only those: a plan that already has a real tour,
@@ -905,8 +911,22 @@ export async function extractWithClaude(params: ClaudeExtractParams): Promise<No
 export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
   const { renderPage, closeRenderer, renderBudget } = await import("@/lib/floorplans/extractors/render");
   renderBudget(RENDER_RUN_MS);
+  // A plan's own page is fetched first and rendered only if the fetch
+  // shows no facts: Perry's community has thirty-nine plans and twenty
+  // homes, and rendering every one of their pages took the whole budget
+  // and more — fifty-nine pages went unread (2026-09-23). A page that
+  // needs a browser, like Richmond's, still gets one.
+  const fetchThenRender: PageReader = async (url, opts) => {
+    try {
+      const fetched = await fetchPage(url, opts);
+      if (!pageLooksUnrendered(distill(fetched.html, fetched.url))) return fetched;
+    } catch {
+      // a page that will not fetch may still render
+    }
+    return renderPage(url, opts);
+  };
   try {
-    return await extractPages(params, renderPage, 3, { press: true });
+    return await extractPages(params, renderPage, 5, { press: true, readPlanPage: fetchThenRender });
   } finally {
     await closeRenderer();
   }
