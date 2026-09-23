@@ -3,16 +3,37 @@
   "raw": [],
   "concurrency": 2,
   "detailPlans": 4,
-  "checks": [
+  "duplicates": [
     {
-      "builder": "Medallion Home"
+      "label": "Medallion Aruba 2",
+      "urls": [
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_a_3_car_02-800x534.jpg?ver=1779839219",
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_b_3_car_01-800x534.jpg?ver=1779839154",
+        "https://medallionhome.com/wp-content/uploads/2026/04/6980c6db4ae900c5327bb513_41667.jpeg",
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_c_3_car_03-800x534.jpg?ver=1779838971",
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_t_3_car_03-800x534.jpg?ver=1779839070",
+        "https://medallionhome.com/wp-content/uploads/2026/04/6980c6db4ae900c5327bb508_41669.jpeg",
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_a_3_car_02-1200x801.jpg?ver=1779839219",
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_b_3_car_01-1200x801.jpg?ver=1779839154",
+        "https://medallionhome.com/wp-content/uploads/2026/04/696f88e559aff6719aff6ec6_41638.jpeg",
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_c_3_car_03-1200x801.jpg?ver=1779838971",
+        "https://medallionhome.com/wp-content/uploads/2026/04/ra_aruba-ii_t_3_car_03-1200x801.jpg?ver=1779839070",
+        "https://medallionhome.com/wp-content/uploads/2026/04/6980c6db4ae900c5327bb4f9_41666.jpeg"
+      ]
     },
     {
-      "builder": "Dream Finders Homes",
-      "community": "Waterside - Bungalow Walk"
-    },
-    {
-      "builder": "SimplyDwell Homes"
+      "label": "SimplyDwell Buttonwood",
+      "urls": [
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/Buttonwood-30-2216_Elevation-A-1200x720-1.webp",
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/4634-10-scaled-1-1.webp",
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/4634-2-scaled-1-1.webp",
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/4634-6-scaled-1-1.webp",
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/Buttonwood_1.jpg",
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/Buttonwood_2.jpg",
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/Buttonwood-30-2216_Elevation-B-scaled-1.webp",
+        "https://simplydwellhomes.com/wp-content/uploads/2026/06/Buttonwood-30-2216_Elevation-A-scaled-1.webp"
+      ]
     }
-  ]
+  ],
+  "checks": []
 }

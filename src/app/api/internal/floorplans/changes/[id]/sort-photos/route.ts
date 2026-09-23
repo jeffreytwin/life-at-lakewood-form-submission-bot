@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { labelPhotos, sortByRooms } from "@/lib/floorplans/photo-rooms";
+import { samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 
 export const dynamic = "force-dynamic";
 // Every picture of the gallery is looked at; a gallery of thirty is a
@@ -14,10 +15,12 @@ export const maxDuration = 300;
  *
  * Puts a plan's photos in the order the sites show them, using what the
  * pictures themselves show rather than what their file names say — for the
- * builders that name a picture nothing (Jeff, 2026-09-22). Asked for from
- * the edit overlay, so it sorts the list as it stands there, edits and all;
- * the queue row is not touched, and the order is saved with the rest when
- * the overlay is saved.
+ * builders that name a picture nothing (Jeff, 2026-09-22) — and shows each
+ * photograph once: one filed twice, at another size or crop, is kept at
+ * its largest in the place it first came (photo-duplicates.ts; Jeff,
+ * 2026-09-23). Asked for from the edit overlay, so it sorts the list as it
+ * stands there, edits and all; the queue row is not touched, and the order
+ * is saved with the rest when the overlay is saved.
  */
 export async function POST(
   request: NextRequest,
@@ -44,13 +47,20 @@ export async function POST(
       gallery = Array.isArray(rec.galleryImages) ? rec.galleryImages : [];
     }
     gallery = gallery.filter((url, i) => url && gallery.indexOf(url) === i);
-    if (gallery.length < 2) return NextResponse.json({ galleryImages: gallery, placed: 0 });
+    if (gallery.length < 2) return NextResponse.json({ galleryImages: gallery, placed: 0, removed: [], duplicatesChecked: true });
 
-    const labels = await labelPhotos(gallery);
-    const ordered = sortByRooms(gallery, labels);
-    const placed = gallery.filter((url) => labels.get(url)).length;
-    logger.info("Floor plan photos sorted by what they show", { id, photos: gallery.length, placed });
-    return NextResponse.json({ galleryImages: ordered.urls, galleryMeta: ordered.meta, placed });
+    const [labels, duplicates] = await Promise.all([labelPhotos(gallery), samePhotos(gallery)]);
+    const once = withoutDuplicates(gallery, duplicates.same);
+    const ordered = sortByRooms(once.urls, labels);
+    const placed = once.urls.filter((url) => labels.get(url)).length;
+    logger.info("Floor plan photos sorted by what they show", { id, photos: gallery.length, placed, removed: once.removed.length });
+    return NextResponse.json({
+      galleryImages: ordered.urls,
+      galleryMeta: ordered.meta,
+      placed,
+      removed: once.removed,
+      duplicatesChecked: duplicates.checked,
+    });
   } catch (error) {
     logger.error("Failed to sort floor plan photos", {
       id,

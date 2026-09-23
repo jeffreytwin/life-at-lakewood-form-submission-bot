@@ -255,7 +255,7 @@ export default function FloorPlansPage() {
   const [restoring, setRestoring] = useState(false);
   const [sorting, setSorting] = useState(false);
   /** What the last sort managed to place, so the overlay can say so. */
-  const [sorted, setSorted] = useState<{ placed: number; of: number } | null>(null);
+  const [sorted, setSorted] = useState<{ placed: number; of: number; removed: number; checked: boolean } | null>(null);
   const [editGallery, setEditGallery] = useState<string[]>([]);
   const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -508,8 +508,9 @@ export default function FloorPlansPage() {
    * follow, the other outside views go last. Plenty of builders name a
    * picture nothing a room can be read from — "4638-8-scaled-1.webp", a
    * media store's UUID — and those galleries arrived in page order for a
-   * person to arrange (Jeff, 2026-09-22). The new order lands in the
-   * overlay for a look; it is saved with the rest on Save.
+   * person to arrange (Jeff, 2026-09-22). A photograph filed twice, at
+   * another size or crop, is shown once (Jeff, 2026-09-23). The new order
+   * lands in the overlay for a look; it is saved with the rest on Save.
    */
   async function sortPhotos() {
     if (!editing) return;
@@ -527,7 +528,12 @@ export default function FloorPlansPage() {
         return;
       }
       setEditGallery(data.galleryImages as string[]);
-      setSorted({ placed: typeof data.placed === "number" ? data.placed : 0, of: editGallery.length });
+      setSorted({
+        placed: typeof data.placed === "number" ? data.placed : 0,
+        of: data.galleryImages.length,
+        removed: Array.isArray(data.removed) ? data.removed.length : 0,
+        checked: data.duplicatesChecked !== false,
+      });
     } finally {
       setSorting(false);
     }
@@ -1177,16 +1183,24 @@ export default function FloorPlansPage() {
                       className="btn btn-secondary"
                       disabled={sorting || savingEdit || restoring}
                       onClick={sortPhotos}
-                      title="Claude looks at each photo and puts them in the site's order: the front of the house first, then kitchen, living, dining, outdoor, and the other exterior shots last."
+                      title="Claude looks at each photo and puts them in the site's order: the front of the house first, then kitchen, living, dining, outdoor, and the other exterior shots last. A photo that appears twice is kept once."
                     >
                       {sorting ? "Looking at the photos…" : "✨ Sort the photos"}
                     </button>
                     <div className="text-muted text-sm" style={{ marginTop: 4 }}>
                       {sorted
-                        ? sorted.placed === sorted.of
-                          ? `Placed all ${sorted.of} photos. Drag any that are wrong, then Save.`
-                          : `Placed ${sorted.placed} of ${sorted.of} photos; the rest kept their order. Drag any that are wrong, then Save.`
-                        : "Claude looks at each picture and orders them the way the sites do. Nothing is saved until you press Save."}
+                        ? `${
+                            sorted.placed === sorted.of
+                              ? `Placed all ${sorted.of} photos.`
+                              : `Placed ${sorted.placed} of ${sorted.of} photos; the rest kept their order.`
+                          } ${
+                            sorted.removed
+                              ? `Removed ${sorted.removed} duplicate photo${sorted.removed === 1 ? "" : "s"}.`
+                              : sorted.checked
+                                ? "No duplicates found."
+                                : "Duplicates could not be checked this time; try again."
+                          } Drag any that are wrong, then Save.`
+                        : "Claude looks at each picture, removes any photo that appears twice and orders them the way the sites do. Nothing is saved until you press Save."}
                     </div>
                   </div>
                 )}

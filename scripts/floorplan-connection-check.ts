@@ -29,6 +29,7 @@ import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, reso
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
+import { samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
 interface Target {
@@ -58,6 +59,8 @@ interface Config {
   raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
   /** Addresses fetched as a picture would be: the status, the type and the size that come back. */
   probe?: string[];
+  /** Galleries Claude is asked to find the same photograph in (photo-duplicates.ts), as "Sort the photos" asks. */
+  duplicates?: { label: string; urls: string[] }[];
   concurrency?: number;
   /** Plans printed with every picture; the rest get one line each. */
   detailPlans?: number;
@@ -831,6 +834,22 @@ async function main() {
     );
     await keep("probe", lines.join("\n"));
     say(`${lines.length} addresses probed`);
+  }
+  for (const { label, urls } of config.duplicates ?? []) {
+    const started = Date.now();
+    const found = await samePhotos(urls);
+    const once = withoutDuplicates(urls, found.same);
+    const name = (u: string) => u.replace(/[?#].*$/, "").split("/").pop();
+    const report = [
+      `checked by Claude: ${found.checked} in ${Math.round((Date.now() - started) / 1000)}s`,
+      `Claude's sets: ${found.same.map((set) => `[${set.map((i) => i + 1).join(", ")}]`).join(" ") || "none"}`,
+      ...urls.map((u, i) => `  ${i + 1}. ${name(u)}`),
+      `kept ${once.urls.length} of ${urls.length}:`,
+      ...once.urls.map((u) => `  ✓ ${name(u)}`),
+      ...once.removed.map((u) => `  ✗ ${name(u)}`),
+    ].join("\n");
+    await keep(`duplicates: ${label}`, report);
+    say(`duplicates in ${label}: ${once.removed.length} removed`);
   }
   const all = await loadConnections();
   const jobs: { conn: Connection; target: Target }[] = [];
