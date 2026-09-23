@@ -10,6 +10,7 @@ import {
   joinedPicture,
   lightboxGallery,
   elevationPictures,
+  picturesNamedFor,
   imageAddress,
   sectionsOf,
 } from "@/lib/floorplans/extractors/plan-page";
@@ -450,5 +451,21 @@ describe("captionedCarousel prefers the plan's own carousel (Pulte's Riversong, 
 
   it("takes the first carousel where none names the plan", () => {
     expect(captionedCarousel(page, "https://x.com/daylen", "Pinecrest").first[0].alt).toBe("Resort-Style Pool");
+  });
+});
+
+describe("picturesNamedFor (Perry's elevations, drawn in the browser, 2026-09-23)", () => {
+  const cl = (overlay: string, id: string) =>
+    `https://res.cloudinary.com/perryhomes/image/upload/f_auto,c_limit,w_1920,q_auto/b_rgb:1B1919,co_rgb:fafafa,l_text:Arial_700_bold_24:%20%20${overlay}%20%20/c_scale,fl_relative,w_0.15/fl_layer_apply,g_south_east/v1/${id}?_a=B`;
+  const page = `<img alt="star-farms-at-lakewood-ranch" src="${cl("DESIGN%202016F%20E-1", "a1")}">
+    <img alt="star-farms-at-lakewood-ranch" src="${cl("DESIGN%202016F%20E-31", "a31")}">
+    <img alt="star-farms-at-lakewood-ranch" src="${cl("DESIGN%202016F%20E-50", "a50")}">
+    <img alt="Floor plan" src="https://res.cloudinary.com/perryhomes/image/upload/c_limit,w_500/2016F-FP_frnnpg">
+    <img alt="" src="${cl("DESIGN%202200F%20E-1", "b1")}">`;
+
+  it("takes the pictures whose address names the plan, and not its drawing or another plan's", () => {
+    const got = picturesNamedFor(page, "https://www.perryhomes.com/x/2016f", ["2016F"]);
+    expect(got).toHaveLength(3);
+    expect(got.every((u) => u.includes("2016F%20E-"))).toBe(true);
   });
 });

@@ -487,6 +487,37 @@ export function drawingsNamed(html: string, pageUrl: string, planNames: (string 
   return [...found.values()];
 }
 
+/**
+ * The photographs a page names for this plan: pictures whose address
+ * carries the plan's name as a word of its own. Perry draws a plan's
+ * elevations only once the page has run its scripts, each a picture
+ * captioned into its own address — ".../l_text:…DESIGN 2016F E-31…" — with
+ * an alt text that names only the community (2026-09-23). A floor plan
+ * drawing is left to the drawings. Pure; exported for tests.
+ */
+export function picturesNamedFor(html: string, pageUrl: string, planNames: (string | null | undefined)[]): string[] {
+  const names = planNames
+    .map((name) => wordsOf(name ?? "").filter((w) => !GENERIC_NAME_WORD.test(w)))
+    .filter((words) => words.join("").length >= 3);
+  if (!names.length) return [];
+  const found = new Map<string, string>();
+  for (const section of sectionsOf(html, pageUrl)) {
+    for (const image of section.images) {
+      let said: string[];
+      try {
+        said = wordsOf(decodeURIComponent(new URL(image.src).pathname));
+      } catch {
+        continue;
+      }
+      if (said.some((w) => DRAWING_WORD.test(w)) || /\.svg(?:[?#]|$)/i.test(image.src)) continue;
+      if (!names.some((words) => words.every((w) => said.includes(w)))) continue;
+      const key = pictureKey(image.src);
+      if (!found.has(key)) found.set(key, image.src);
+    }
+  }
+  return [...found.values()];
+}
+
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The sizes a media store keeps one picture at, largest first. */

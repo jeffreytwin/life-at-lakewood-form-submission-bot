@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, fullSize, imageAddress, lightboxGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -595,7 +595,8 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
  */
 export async function readPlanPageWithClaude(
   plan: NormalizedPlan,
-  read: PageReader = fetchPage
+  read: PageReader = fetchPage,
+  renderAgain?: PageReader
 ): Promise<NormalizedPlan> {
   if (!plan.sourceUrl) return plan;
   const page_ = await read(plan.sourceUrl);
@@ -660,6 +661,28 @@ export async function readPlanPageWithClaude(
       kept.add(key);
       return true;
     });
+  // A page that gave one picture may draw the rest once its scripts run:
+  // Perry's elevations appear only in the browser. Where a browser is to
+  // hand and the run has time, the page is drawn once more and the
+  // pictures named for the plan are kept.
+  // (A rendered page says what it pressed, null or not; a fetched one says nothing.)
+  if (photos.length <= 1 && renderAgain && page_.pressed === undefined) {
+    try {
+      const drawn = await renderAgain(plan.sourceUrl);
+      for (const src of picturesNamedFor(drawn.html, drawn.url, [plan.name, plan.relatedPlanName])) {
+        const key = pictureKey(src);
+        if (kept.has(key)) continue;
+        kept.add(key);
+        photos.push(src);
+      }
+    } catch (error) {
+      logger.warn("Plan page could not be drawn again for its pictures", {
+        url: plan.sourceUrl,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   // What the page said about its own pictures, kept for the ordering.
   // Richmond American titles every picture in a gallery — "Bedroom of the
   // Slate floor plan", "Elevation M of the Slate floor plan" — and names
@@ -975,7 +998,7 @@ async function extractPages(
   params: ClaudeExtractParams,
   read: PageReader,
   atOnce: number,
-  can: { press?: boolean; readPlanPage?: PageReader } = {}
+  can: { press?: boolean; readPlanPage?: PageReader; renderAgain?: PageReader } = {}
 ): Promise<NormalizedPlan[]> {
   // The pages the plans are listed on: the community page, unless the
   // connection names others (a builder that splits a community by lot
@@ -1110,7 +1133,14 @@ async function extractPages(
     // run found on it stays (diff.ts).
     if (Date.now() + PAGE_READ_MS > deadline) return { ...plan, pageUnread: true };
     try {
-      return await readPlanPageWithClaude(plan, can.readPlanPage ?? read);
+      // Drawn again only while the run has time for it.
+      const renderAgain = can.renderAgain
+        ? (url: string, opts?: Parameters<PageReader>[1]) => {
+            if (Date.now() + PAGE_READ_MS > deadline) throw new Error("no time to draw the page again");
+            return can.renderAgain!(url, opts);
+          }
+        : undefined;
+      return await readPlanPageWithClaude(plan, can.readPlanPage ?? read, renderAgain);
     } catch (error) {
       logger.warn("Plan page could not be read", {
         planKey: plan.planKey,
@@ -1194,6 +1224,10 @@ export async function extractWithRender(params: ClaudeExtractParams): Promise<No
       }
       return renderSlot(() => renderPage(url, opts));
     };
-    return extractPages(params, renderPage, 8, { press: true, readPlanPage: fetchThenRender });
+    return extractPages(params, renderPage, 8, {
+      press: true,
+      readPlanPage: fetchThenRender,
+      renderAgain: (url, opts) => renderSlot(() => renderPage(url, opts)),
+    });
   });
 }
