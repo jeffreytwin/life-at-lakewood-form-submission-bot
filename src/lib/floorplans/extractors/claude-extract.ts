@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, drawingsNamed, firstGallery, fullSize, imageAddress, lightboxGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, fullSize, imageAddress, lightboxGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -441,6 +441,18 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
   },
 };
 
+/**
+ * The same question with the photographs left out, for a page whose
+ * gallery is already read off its markup: the photo addresses are most of
+ * what Claude writes back for a plan page, and a run of fifty-odd pages
+ * spent most of its time on them (Perry, 2026-09-23).
+ */
+const PLAN_PAGE_TOOL_NO_PHOTOS: Anthropic.Tool = (() => {
+  const schema = PLAN_PAGE_TOOL.input_schema as { properties: Record<string, unknown> };
+  const properties = Object.fromEntries(Object.entries(schema.properties).filter(([key]) => key !== "photoImages"));
+  return { ...PLAN_PAGE_TOOL, input_schema: { ...PLAN_PAGE_TOOL.input_schema, properties } };
+})();
+
 interface ExtractedPlanPage {
   price?: number;
   garages?: string;
@@ -539,6 +551,22 @@ function folderWords(url: string): string {
   }
 }
 
+/** At most `n` of the jobs handed to it running at once; the rest wait their turn. */
+function slots(n: number): <T>(job: () => Promise<T>) => Promise<T> {
+  let running = 0;
+  const waiting: (() => void)[] = [];
+  return async (job) => {
+    if (running >= n) await new Promise<void>((go) => waiting.push(go));
+    running++;
+    try {
+      return await job();
+    } finally {
+      running--;
+      waiting.shift()?.();
+    }
+  };
+}
+
 /** Runs `fn` over the items a few at a time, keeping order. */
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -575,25 +603,6 @@ export async function readPlanPageWithClaude(
   const content = distill(html, page_.url);
   if (content.length < 500) return plan;
 
-  const response = await getClient().messages.create(
-    {
-      model: MODEL,
-      max_tokens: 4096,
-      tools: [PLAN_PAGE_TOOL],
-      tool_choice: { type: "tool", name: "report_plan_page" },
-      messages: [
-        {
-          role: "user",
-          content: `This is the page of one ${plan.quickMoveIn ? `home for sale, "${plan.name}"` : `floor plan, "${plan.name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
-        },
-      ],
-    },
-    // One page's read may not hold up the run: past this it is left unread.
-    { timeout: 45_000, maxRetries: 1 }
-  );
-  const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-  const page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
-
   // Read off the page's gallery headings, or failing those its first
   // carousel of captioned slides (Pulte).
   const headed = firstGallery(html, page_.url);
@@ -610,12 +619,36 @@ export async function readPlanPageWithClaude(
   // where the headings gave nothing, so a plan never inherits the
   // community's other pictures.
   const carried = gallery.first.length ? [] : payloadGallery(html, page_.url);
+  // A gallery read off the markup is the plan's pictures; Claude is not
+  // asked to list them again.
+  const picturesKnown = gallery.first.length + carried.length >= 4;
+  const outsides = elevationPictures(html, page_.url);
+
+  const response = await getClient().messages.create(
+    {
+      model: MODEL,
+      max_tokens: 4096,
+      tools: [picturesKnown ? PLAN_PAGE_TOOL_NO_PHOTOS : PLAN_PAGE_TOOL],
+      tool_choice: { type: "tool", name: "report_plan_page" },
+      messages: [
+        {
+          role: "user",
+          content: `This is the page of one ${plan.quickMoveIn ? `home for sale, "${plan.name}"` : `floor plan, "${plan.name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
+        },
+      ],
+    },
+    // One page's read may not hold up the run: past this it is left unread.
+    { timeout: 45_000, maxRetries: 1 }
+  );
+  const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+  const page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
   // One photograph once, whichever of its spellings came first: the list's
   // picture and the gallery's are often the same file in two formats.
   const kept = new Set<string>();
   const photos = [
     ...plan.galleryImages,
     ...pictureAddresses(page.photoImages),
+    ...outsides.map((i) => i.src),
     ...gallery.first.map((i) => i.src),
     ...carried.map((i) => i.src),
   ]
@@ -638,9 +671,14 @@ export async function readPlanPageWithClaude(
     if (!caption) continue;
     said[fullSize(image.src, html)] = { caption, room: classifyRoom(caption), kind: "photo" };
   }
-  const outside = Object.fromEntries(
-    carried.filter((i) => i.outside).map((i) => [fullSize(i.src, html), OUTSIDE_META])
-  );
+  const outside = Object.fromEntries([
+    ...carried.filter((i) => i.outside).map((i) => [fullSize(i.src, html), OUTSIDE_META] as const),
+    // Not the picture the list led with: it stays the plan's main picture
+    // though it is also one of the elevations.
+    ...outsides
+      .filter((i) => !plan.galleryImages[0] || pictureKey(i.src) !== pictureKey(plan.galleryImages[0]))
+      .map((i) => [fullSize(i.src, html), OUTSIDE_META] as const),
+  ]);
   // The drawings Claude reported, and any the page names for this plan
   // that it passed over (a "Floor Plan" tab's picture, drawingsNamed); a
   // home is named for its address, so its plan's name is looked for too.
@@ -952,6 +990,23 @@ async function extractPages(
   // four rendered pages, each a long answer, and read in turn they took
   // most of a run before a single plan page was opened (2026-09-23). The
   // plans are still taken in the pages' order, so keys come out the same.
+  // The homes behind a community's own tab (below): a page's homes, or none.
+  const pressForHomes = async (pageUrl: string): Promise<NormalizedPlan[]> => {
+    try {
+      const homes = await listPage(pageUrl, { hint: params.hint, quickMoveIns: true, press: HOMES_TAB, read });
+      if (!homes.pressed) return [];
+      logger.info("Read a community's homes from behind its own tab", { url: pageUrl, tab: homes.pressed, homes: homes.plans.length });
+      return homes.plans;
+    } catch (error) {
+      logger.warn("A community's homes tab could not be read", {
+        url: pageUrl,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return [];
+    }
+  };
+  const pressedEarly = can.press && planPages.length === 1 ? pressForHomes(planPages[0]) : null;
+
   const lists = await mapLimit(planPages, 4, async (pageUrl) => {
     try {
       return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read }) };
@@ -1012,32 +1067,18 @@ async function extractPages(
   // of on a page of its own. There is no address to point at, so the tab
   // is pressed and the same page read again — which only a browser can
   // do, and which costs one read and no model call where the page has no
-  // such tab (Richmond American, Jeff 2026-09-22).
-  if (can.press) {
-    for (const pageUrl of readPages) {
-      try {
-        const homes = await listPage(pageUrl, {
-          hint: params.hint,
-          quickMoveIns: true,
-          press: HOMES_TAB,
-          read,
-        });
-        if (!homes.pressed) continue;
-        logger.info("Read a community's homes from behind its own tab", {
-          url: pageUrl,
-          tab: homes.pressed,
-          homes: homes.plans.length,
-        });
-        for (const home of homes.plans) {
-          const planKey = distinctKey(home, taken);
-          taken.add(planKey);
-          listed.push({ ...home, planKey });
-        }
-      } catch (error) {
-        logger.warn("A community's homes tab could not be read", {
-          url: pageUrl,
-          error: error instanceof Error ? error.message : String(error),
-        });
+  // such tab (Richmond American, Jeff 2026-09-22). Only where the lists
+  // showed no homes of their own: Perry lists its homes beside its plans,
+  // and pressing for a tab its four pages do not have cost the run the
+  // time its plan pages needed (2026-09-23). A community of one page has
+  // its tab pressed while the page itself is read (started above).
+  if (can.press && !listed.some((p) => p.quickMoveIn)) {
+    const behindTabs = pressedEarly ? [await pressedEarly] : await mapLimit(readPages, 1, pressForHomes);
+    for (const homes of behindTabs) {
+      for (const home of homes) {
+        const planKey = distinctKey(home, taken);
+        taken.add(planKey);
+        listed.push({ ...home, planKey });
       }
     }
   }
@@ -1132,6 +1173,10 @@ export async function extractWithRender(params: ClaudeExtractParams): Promise<No
     // homes, and rendering every one of their pages took the whole budget
     // and more — fifty-nine pages went unread (2026-09-23). A page that
     // needs a browser, like Richmond's, still gets one.
+    // Eight plan pages at a time, of which no more than three in the
+    // browser: most fetch whole, and a fetch and a read cost the browser
+    // nothing (Perry's fifty-four pages, 2026-09-23).
+    const renderSlot = slots(3);
     const fetchThenRender: PageReader = async (url, opts) => {
       try {
         const fetched = await fetchPage(url, opts);
@@ -1139,8 +1184,8 @@ export async function extractWithRender(params: ClaudeExtractParams): Promise<No
       } catch {
         // a page that will not fetch may still render
       }
-      return renderPage(url, opts);
+      return renderSlot(() => renderPage(url, opts));
     };
-    return extractPages(params, renderPage, 5, { press: true, readPlanPage: fetchThenRender });
+    return extractPages(params, renderPage, 8, { press: true, readPlanPage: fetchThenRender });
   });
 }

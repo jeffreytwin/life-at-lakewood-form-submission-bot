@@ -248,6 +248,28 @@ const names = (section: PageSection) => [section.heading, ...section.ancestors];
 const isTour = (section: PageSection) => names(section).some((h) => TOUR_HEADING.test(h));
 const isGallery = (section: PageSection) => names(section).some((h) => GALLERY_HEADING.test(h));
 
+/**
+ * The pictures under a heading that names the house's outside —
+ * "Elevations", "Exteriors" — which a page keeps apart from its gallery:
+ * Stock's plan pages run Elevations, Virtual Tours, then Galleries
+ * (2026-09-22). Read here so they are kept whether or not Claude lists
+ * them. Pure; exported for tests.
+ */
+export function elevationPictures(html: string, pageUrl: string): PageImage[] {
+  const seen = new Set<string>();
+  const out: PageImage[] = [];
+  for (const section of sectionsOf(html, pageUrl)) {
+    if (isTour(section) || !names(section).some((h) => /\b(elevations?|exteriors?)\b/i.test(h))) continue;
+    for (const image of section.images) {
+      const key = pictureKey(image.src);
+      if (seen.has(key) || /\.svg(?:[?#]|$)/i.test(image.src)) continue;
+      seen.add(key);
+      out.push(image);
+    }
+  }
+  return out;
+}
+
 export interface PlanPageGallery {
   /** The first gallery's pictures, in the order the page shows them. Empty when the page has no gallery. */
   first: PageImage[];

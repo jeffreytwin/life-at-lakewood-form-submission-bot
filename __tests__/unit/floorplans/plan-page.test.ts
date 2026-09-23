@@ -9,6 +9,7 @@ import {
   drawingsNamed,
   joinedPicture,
   lightboxGallery,
+  elevationPictures,
   imageAddress,
   sectionsOf,
 } from "@/lib/floorplans/extractors/plan-page";
@@ -423,5 +424,14 @@ describe("lightboxGallery (Kolter's Eva at Woodland Preserve, 2026-09-23)", () =
 
   it("reads the lazy picture's address", () => {
     expect(imageAddress(`<img data-lazy-src="${r}/x.jpg" alt="">`)).toBe(`${r}/x.jpg`);
+  });
+});
+
+describe("elevationPictures (Stock's plan pages)", () => {
+  it("takes the pictures under an Elevations heading, and not a tour's still or the gallery", () => {
+    const html = `<h2>Elevations</h2><img src="https://x.com/a/elev-a.jpg" alt="A"><img src="https://x.com/a/elev-b.jpg" alt="B">
+      <h2>Virtual Tours</h2><img src="https://x.com/a/tour.jpg">
+      <h2>Galleries</h2><h4>Wild Blue — Interior by Dan Rak</h4><img src="https://x.com/a/kitchen.jpg">`;
+    expect(elevationPictures(html, "https://x.com/plan").map((i) => i.src)).toEqual(["https://x.com/a/elev-a.jpg", "https://x.com/a/elev-b.jpg"]);
   });
 });
