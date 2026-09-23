@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   linkQuickMoveIns,
   bareKey,
+  codeAndName,
   nearlySameKey,
   planNameOf,
   withQuickMoveInPictures,
@@ -385,6 +386,41 @@ describe("linkQuickMoveIns and plan codes", () => {
   it("does not tie a home that names a plan by name to another plan its size", () => {
     const home = plan({ planKey: "1 main st", name: "1 Main St", quickMoveIn: true, sqft: 2697, relatedPlanName: "Pearson" });
     expect(linkQuickMoveIns([wagoner, colston, home])[2].relatedPlanMatch).toBe("unmatched");
+  });
+
+  // North River Ranch (David Weekley, 2026-09-23): homes give the code and the name.
+  it("ties a home that gives its plan's code and name together, by the name", () => {
+    const benton = plan({ planKey: "the benton", name: "The Benton", sqft: 1953 });
+    const truman = plan({ planKey: "the truman", name: "The Truman", sqft: 1980 });
+    const homes = [
+      plan({ planKey: "10665 crescent creek crossing", name: "10665 Crescent Creek Crossing", quickMoveIn: true, sqft: 1953, relatedPlanName: "F034 (The Benton)" }),
+      plan({ planKey: "10732 oak bend drive", name: "10732 Oak Bend Drive", quickMoveIn: true, sqft: 1980, relatedPlanName: "F008 - The Truman" }),
+    ];
+    const got = linkQuickMoveIns([benton, truman, ...homes]).slice(2);
+    expect(got.map((h) => [h.relatedPlanKey, h.relatedPlanMatch])).toEqual([
+      ["the benton", "plan-name"],
+      ["the truman", "plan-name"],
+    ]);
+  });
+
+  it("ties it by the code where the plan's page gave one", () => {
+    const coded = { ...colston, raw: { planId: "F060" } };
+    const home = plan({ planKey: "2 main st", name: "2 Main St", quickMoveIn: true, sqft: 3026, relatedPlanName: "F060 (The Colston II)" });
+    expect(linkQuickMoveIns([wagoner, coded, home])[2]).toMatchObject({ relatedPlanKey: "the colston", relatedPlanMatch: "plan-id" });
+  });
+});
+
+describe("codeAndName", () => {
+  it("takes a plan's code and name apart, whichever comes first", () => {
+    expect(codeAndName("F034 (The Benton)")).toEqual({ code: "F034", name: "The Benton" });
+    expect(codeAndName("F008 - The Truman")).toEqual({ code: "F008", name: "The Truman" });
+    expect(codeAndName("The Bingley II (F019)")).toEqual({ code: "F019", name: "The Bingley II" });
+  });
+
+  it("leaves alone a name that is one or the other", () => {
+    expect(codeAndName("F057")).toBeNull();
+    expect(codeAndName("The Wagoner")).toBeNull();
+    expect(codeAndName("Plan 1820")).toBeNull();
   });
 });
 

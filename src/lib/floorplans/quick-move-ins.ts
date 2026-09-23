@@ -31,6 +31,22 @@ function relatedNameOf(p: NormalizedPlan): string {
   return text(p.relatedPlanName) || text(p.raw?.relatedPlan);
 }
 
+const PLAN_CODE = String.raw`[A-Za-z]{0,3}\d{2,5}[A-Za-z]?`;
+
+/**
+ * A related name that gives the plan's code and its name together, taken
+ * apart: David Weekley's homes say "F034 (The Benton)" and "F008 - The
+ * Truman" (North River Ranch, 2026-09-23). Null for a name that is not
+ * written that way. Exported for tests.
+ */
+export function codeAndName(named: string): { code: string; name: string } | null {
+  const lead = named.match(new RegExp(String.raw`^(?:plan\s+)?(${PLAN_CODE})\s*(?:[-–—:]\s*|\(\s*)(.+?)\s*\)?$`, "i"));
+  if (lead && /[a-z]{3}/i.test(lead[2])) return { code: lead[1], name: lead[2] };
+  const tail = named.match(new RegExp(String.raw`^(.+?)\s*(?:[-–—:]\s*|\(\s*)(?:plan\s+)?(${PLAN_CODE})\s*\)?$`, "i"));
+  if (tail && /[a-z]{3}/i.test(tail[1])) return { code: tail[2], name: tail[1] };
+  return null;
+}
+
 /**
  * A quick move-in's own name without the lot it stands on: SimplyDwell
  * names them for the plan and the homesite, "Hawthorne Homesite 42",
@@ -159,20 +175,23 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
         matchedBy = "plan-id";
       }
     }
+    const split = codeAndName(relatedNameOf(p));
     if (!base) {
       // A home that names its plan by the plan's code (David Weekley).
-      const code = normKey(relatedNameOf(p)).replace(/-/g, "");
-      if (code && byCode.has(code)) {
-        base = byCode.get(code);
-        matchedBy = "plan-id";
+      for (const code of [relatedNameOf(p), split?.code ?? ""].map((c) => normKey(c).replace(/-/g, ""))) {
+        if (code && byCode.has(code)) {
+          base = byCode.get(code);
+          matchedBy = "plan-id";
+          break;
+        }
       }
     }
-    if (!base) {
-      const name = relatedNameOf(p);
-      if (name && byKey.has(normKey(name))) {
+    for (const name of [relatedNameOf(p), split?.name ?? ""]) {
+      if (base || !name) continue;
+      if (byKey.has(normKey(name))) {
         base = byKey.get(normKey(name));
         matchedBy = "plan-name";
-      } else if (name && byBare.get(bareKey(name))) {
+      } else if (byBare.get(bareKey(name))) {
         base = byBare.get(bareKey(name)) ?? undefined;
         matchedBy = "plan-name";
       }

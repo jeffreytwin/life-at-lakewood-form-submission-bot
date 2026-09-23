@@ -14,7 +14,7 @@ import {
   imageAddress,
   namedGallery,
   sectionsOf,
-  askedWidth,
+  askedSize,
   onePerPicture,
 } from "@/lib/floorplans/extractors/plan-page";
 
@@ -526,7 +526,7 @@ describe("namedGallery", () => {
   });
 });
 
-describe("pictureKey and askedWidth", () => {
+describe("pictureKey and askedSize", () => {
   it("knows a file at any size its query asks for, and by its name however it is written", () => {
     const df = "https://media.dreamfindershomes.com/371/2024/3/17/Bunaglow_Walk-Pemberly-A-Gen3.jpg";
     expect(pictureKey(`${df}?width=1000&height=625&fit=bounds&ois=c60fe8c`)).toBe(pictureKey(`${df}?width=100&height=62&fit=bounds&ois=c2eba2b`));
@@ -546,9 +546,10 @@ describe("pictureKey and askedWidth", () => {
   });
 
   it("reads the width an address asks for", () => {
-    expect(askedWidth("https://m.com/a.jpg?width=1000&height=625")).toBe(1000);
-    expect(askedWidth("https://m.com/a.jpg?fit=crop&w=900&h=675")).toBe(900);
-    expect(askedWidth("https://m.com/a.jpg")).toBe(0);
+    expect(askedSize("https://m.com/a.jpg?width=1000&height=625")).toBe(1000);
+    expect(askedSize("https://m.com/a.jpg?fit=crop&w=900&h=675")).toBe(900);
+    expect(askedSize("https://m.com/a.jpg")).toBe(0);
+    expect(askedSize("https://www.davidweekleyhomes.com/media/ElevationPhoto/5f903ffd.JPG?h=800")).toBe(800);
   });
 });
 

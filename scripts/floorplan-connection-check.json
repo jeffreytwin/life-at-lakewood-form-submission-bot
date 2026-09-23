@@ -56,6 +56,15 @@
       ],
       "chars": 900,
       "count": 2
+    },
+    {
+      "url": "https://www.wellenpark.com/available-homes/",
+      "around": [
+        "oakbend",
+        "ici-homes"
+      ],
+      "chars": 600,
+      "count": 2
     }
   ],
   "concurrency": 3,
@@ -86,6 +95,18 @@
       "builder": "Adams Homes",
       "all": true,
       "method": "render_claude"
+    },
+    {
+      "builder": "Pulte Homes",
+      "community": "North River Ranch"
+    },
+    {
+      "builder": "David Weekley Homes",
+      "community": "North River Ranch"
+    },
+    {
+      "builder": "ICI Homes",
+      "community": "Oakbend"
     }
   ]
 }

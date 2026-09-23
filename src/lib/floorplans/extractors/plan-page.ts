@@ -627,9 +627,14 @@ export function pictureKey(src: string): string {
 
 const IMAGE_FILE = /\.(jpe?g|png|webp|avif|gif)$/i;
 
-/** The width a picture's address asks for ("?width=1000", "&w=900"), or 0 where it asks for none. Exported for tests. */
-export function askedWidth(src: string): number {
-  return Number(src.match(/[?&](?:width|w)=(\d+)/i)?.[1] ?? 0);
+/**
+ * The size a picture's address asks for, the larger of its width and its
+ * height ("?width=1000", "&w=900", "?h=800" — David Weekley's list asks
+ * for its fronts 400 wide and its galleries 800 high), or 0 where it asks
+ * for none. Exported for tests.
+ */
+export function askedSize(src: string): number {
+  return Math.max(0, ...[...src.matchAll(/[?&](?:width|w|height|h)=(\d+)/gi)].map((m) => Number(m[1])));
 }
 
 /**
@@ -649,7 +654,7 @@ export function onePerPicture(sources: string[]): { photos: string[]; enlarged: 
     if (n === undefined) {
       at.set(key, photos.length);
       photos.push(src);
-    } else if (askedWidth(photos[n]) && askedWidth(src) > askedWidth(photos[n])) {
+    } else if (askedSize(photos[n]) && askedSize(src) > askedSize(photos[n])) {
       enlarged.set(photos[n], src);
       photos[n] = src;
     }

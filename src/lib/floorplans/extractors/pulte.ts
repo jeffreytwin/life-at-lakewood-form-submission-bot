@@ -278,9 +278,19 @@ export async function extractPulteGroup(params: { url?: string; runDeadline?: nu
     feed<PultePlan>(`${origin}/api/plan/homeplans?communityId=${id}`, url),
     feed<PulteHome>(`${origin}/api/plan/qmiplans?communityId=${id}`, url),
   ]);
-  const onSale = new Set(homeRecords.filter((h) => !h.soldDate && h.planId != null).map((h) => String(h.planId)));
+  const onSale = new Set(homeRecords.filter((h) => !h.soldDate && (h.planId ?? h.plan?.id) != null).map((h) => String(h.planId ?? h.plan?.id)));
+  // A home for sale on a plan the plans feed no longer lists brings its
+  // plan's record with it: Longmeadow's three homes on the Coral
+  // (North River Ranch, 2026-09-23).
+  const listed = new Set(planRecords.map((r) => String(r.id)));
+  const brought = new Map<string, PultePlan>();
+  for (const h of homeRecords) {
+    const id = h.planId ?? h.plan?.id;
+    if (h.soldDate || id == null || listed.has(String(id)) || brought.has(String(id)) || !h.plan?.planName) continue;
+    brought.set(String(id), { ...h.plan, id });
+  }
   const plans = await withPageDrawings(
-    planRecords
+    [...planRecords, ...brought.values()]
       .map((r) => planFromRecord(r, origin, url, undefined, r.id != null && onSale.has(String(r.id))))
       .filter((p): p is NormalizedPlan => Boolean(p)),
     params.runDeadline,

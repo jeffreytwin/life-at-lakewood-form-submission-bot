@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { communityIdOf, homeFromRecord, pageDrawings, planFromRecord, pulteDrawings, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { communityIdOf, extractPulteGroup, homeFromRecord, pageDrawings, planFromRecord, pulteDrawings, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
 
 const ORIGIN = "https://www.pulte.com";
 const RIVERSONG = "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407";
@@ -209,5 +209,48 @@ describe("pageDrawings", () => {
     const html = `<section id="PlanInteractiveTool"><div class="PlanInteractiveTool__loading"></div></section>
       <div class="Carousel-slide">${figure("https://pultegroup.picturepark.com/Go/btte5VIm/V/317347/13", "Open Concept")}</div>`;
     expect(pageDrawings(html)).toEqual([]);
+  });
+});
+
+describe("extractPulteGroup", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  // Longmeadow at North River Ranch (2026-09-23): three homes for sale on
+  // the Coral, a plan the plans feed no longer lists.
+  const coral: PultePlan = { ...daylen, id: 697938, planName: "Coral", squareFeet: 3100, pageURL: "/homes/florida/sarasota/parrish/longmeadow-211403/coral-697938" };
+  const home = (street: string, plan: PultePlan): PulteHome => ({
+    inventoryHomeID: street.length,
+    address: { street1: street },
+    finalPrice: 569870,
+    planId: plan.id,
+    planName: plan.planName,
+    plan,
+    images: [],
+  });
+  const serve = (plans: PultePlan[], homes: PulteHome[], pages: Record<string, string> = {}) =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const body = url.includes("/api/plan/homeplans") ? JSON.stringify(plans) : url.includes("/api/plan/qmiplans") ? JSON.stringify(homes) : pages[url];
+        return body === undefined ? new Response("", { status: 404 }) : new Response(body, { status: 200 });
+      })
+    );
+
+  it("takes a plan the feed no longer lists from the record its homes carry", async () => {
+    serve([daylen], [home("11248 Meadow River Way", coral), home("11240 Meadow River Way", coral)]);
+    const got = await extractPulteGroup({ url: "https://www.pulte.com/homes/florida/sarasota/parrish/longmeadow-211403" });
+    expect(got.filter((p) => !p.quickMoveIn).map((p) => p.name)).toEqual(["Daylen", "Coral"]);
+    expect(got.find((p) => p.name === "Coral")).toMatchObject({ sqft: 3100, raw: { planId: "697938" } });
+    expect(got.filter((p) => p.quickMoveIn).map((p) => p.raw?.planId)).toEqual(["697938", "697938"]);
+  });
+
+  it("reads a plan's drawings off its page where the feed has none", async () => {
+    const bare = { ...daylen, images: daylen.images!.filter((i) => i.imageType !== "Plan Floorplan-New") };
+    const drawing = "https://pultegroup.cdn.picturepark.com/v/0w56AjBu/";
+    serve([bare], [], {
+      "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105": `<div class="floor-container is-active"><figure><img data-name="${drawing}" alt="First Floor"></figure></div>`,
+    });
+    const [plan] = await extractPulteGroup({ url: RIVERSONG });
+    expect(plan.blueprintImages).toEqual([drawing]);
   });
 });
