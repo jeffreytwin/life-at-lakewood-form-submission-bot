@@ -14,12 +14,21 @@ import { normKey } from "@/lib/floorplans/types";
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
-async function fetchText(url: string): Promise<string | null> {
+/**
+ * How long discovery may take in all. It runs inside a connection's first
+ * run, which has five minutes for everything, and it now has more places
+ * to look than it did; past this it gives up with what it has verified.
+ */
+const DISCOVERY_MS = 90_000;
+
+async function fetchText(url: string, deadline = Infinity): Promise<string | null> {
+  const left = deadline - Date.now();
+  if (left < 2_000) return null;
   try {
     const res = await fetch(url, {
       headers: { "user-agent": UA, accept: "text/html,application/xml" },
       redirect: "follow",
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(Math.min(20_000, left)),
     });
     return res.ok ? await res.text() : null;
   } catch {
@@ -141,11 +150,11 @@ export function pageIsCommunity(url: string, html: string, communityName: string
   return regionHints.some((h) => lower.includes(h.toLowerCase())) || regionKeys(regionHints).some((r) => u.includes(r));
 }
 
-async function sitemapUrls(baseUrl: string, keys: string[] = []): Promise<string[]> {
+async function sitemapUrls(baseUrl: string, keys: string[] = [], deadline = Infinity): Promise<string[]> {
   const origin = new URL(baseUrl).origin;
   const urls: string[] = [];
   for (const path of ["/sitemap.xml", "/sitemap_index.xml"]) {
-    const xml = await fetchText(origin + path);
+    const xml = await fetchText(origin + path, deadline);
     if (!xml) continue;
     let locs = [...xml.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
     if (locs.length && locs.every((l) => /\.xml(\?|$)/.test(l))) {
@@ -156,7 +165,7 @@ async function sitemapUrls(baseUrl: string, keys: string[] = []): Promise<string
       const children = [...locs].sort((a, b) => useful(b) - useful(a)).slice(0, 8);
       locs = [];
       for (const child of children) {
-        const c = await fetchText(child);
+        const c = await fetchText(child, deadline);
         if (c) locs.push(...[...c.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]));
       }
     }
@@ -191,6 +200,8 @@ export async function discoverCommunityUrl(
   const region = regionKeys(regionHints);
   const candidates = new Map<string, number>();
   const tried = new Set<string>();
+  const deadline = Date.now() + DISCOVERY_MS;
+  const get = (url: string) => fetchText(url, deadline);
 
   const addCandidates = (urls: string[]) => {
     for (const url of urls) {
@@ -204,7 +215,7 @@ export async function discoverCommunityUrl(
     const ranked = [...candidates.entries()].sort((a, b) => b[1] - a[1]).map(([u]) => u);
     for (const url of ranked.filter((u) => !tried.has(u)).slice(0, limit)) {
       tried.add(url);
-      const html = await fetchText(url);
+      const html = await get(url);
       if (!html) continue;
       if (pageIsCommunity(url, html, communityName, regionHints)) {
         logger.info("Discovered community URL", { communityName, url });
@@ -223,26 +234,26 @@ export async function discoverCommunityUrl(
   addCandidates(stored);
   const hubs = stored.filter((u) => score(u, keys, region) === 0 && !ARTICLE_PATH.test(u)).slice(0, 4);
   for (const hub of hubs) {
-    const html = await fetchText(hub);
+    const html = await get(hub);
     if (html) addCandidates(linksOn(html, hub));
   }
   const fromStored = await verify(4);
   if (fromStored) return fromStored;
 
   // 2. Sitemap sweep.
-  addCandidates(await sitemapUrls(builder.base_url, keys));
+  addCandidates(await sitemapUrls(builder.base_url, keys, deadline));
   const fromSitemap = await verify(4);
   if (fromSitemap) return fromSitemap;
 
   // 3. Homepage links, and the links on any page of them that looks like a
   //    list of communities.
-  const home = await fetchText(builder.base_url);
+  const home = await get(builder.base_url);
   if (home) {
     const links = linksOn(home, builder.base_url);
     addCandidates(links);
     const lists = links.filter((u) => /communit|where-we-build|locations?|find-(?:a|your)-home|new-homes/i.test(u) && score(u, keys, region) === 0).slice(0, 4);
     for (const list of lists) {
-      const html = await fetchText(list);
+      const html = await get(list);
       if (html) addCandidates(linksOn(html, list));
     }
   }
