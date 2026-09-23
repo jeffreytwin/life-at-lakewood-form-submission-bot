@@ -79,12 +79,12 @@ const METHOD_EXTRACTORS: Record<string, Extractor> = {
 // Builders whose extractor works from API ids rather than a page URL —
 // URL auto-discovery is skipped (their pages block non-browser fetches,
 // which would fail discovery's verification step and abort the run).
-const URLLESS_BUILDERS = new Set([
+export const URLLESS_BUILDERS = new Set([
   "Meritage Homes", "DRB Homes", "Lee Wetherington",
   "M/I Homes", "ICI Homes", "Neal Signature Homes",
 ]);
 
-function resolveExtractor(builderName: string, method: string | null): Extractor | null {
+export function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
 }
 
@@ -237,6 +237,66 @@ export async function loadStandInRules(scope: PlanScopeIds): Promise<StandInRule
   return (data ?? []).map((r) => ({ planKey: r.plan_key, planName: r.plan_name, sourcePlanKey: r.source_plan_key }));
 }
 
+/**
+ * What a run makes of the plans its extractor read, before anything is
+ * compared or queued: the site's standard fields, quick move-ins tied to
+ * their plans, stand-ins, descriptions. Reads settings and stand-in rules
+ * but writes nothing, so the connection check (scripts/floorplan-
+ * connection-check.ts) sees exactly what a run would queue.
+ */
+export async function preparePlans(
+  scraped: NormalizedPlan[],
+  scope: { site: { id: string }; community: { id: string; name: string }; builder: { id: string; name: string } },
+  opts: { rewordDescriptions?: boolean } = {}
+): Promise<NormalizedPlan[]> {
+  const { site, community, builder } = scope;
+  let plans = scraped;
+  // Every plan reads the way the site files it (one of five home types,
+  // the larger end of a bed or bath range; standardize.ts), then each
+  // quick move-in learns its base plan and each base plan learns whether
+  // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
+  // A base plan the builder gave no price takes its cheapest quick
+  // move-in's until the builder prices it (Jeff, 2026-09-20).
+  const link = (list: NormalizedPlan[]) => withQuickMoveInPrices(linkQuickMoveIns(list));
+  // What is true of every plan this builder offers, whatever its pages say
+  // (Settings → Builders; Jeff, 2026-09-22: Stock builds single-family homes
+  // and its pages name no type at all).
+  const { data: settings } = await supabase
+    .from("fp_builders")
+    .select("engine_config")
+    .eq("id", builder.id)
+    .maybeSingle();
+  const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
+  plans = link(plans.map((plan) => standardizePlan(plan, defaults)));
+  // A plan the builder no longer lists but a person asked to keep, built
+  // from its homes on offer (stand-ins.ts): each is read from the home's own
+  // page so it carries every picture, then linked like the rest.
+  const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
+  const standIns = withStandIns(plans, rules);
+  if (standIns.standIns.length) {
+    const filled = await Promise.all(
+      standIns.standIns.map(async (p) => {
+        try {
+          return await readPlanInFull(builder.name, p);
+        } catch (err) {
+          logger.warn("Stand-in plan page could not be read", { planKey: p.planKey, error: err instanceof Error ? err.message : String(err) });
+          return p;
+        }
+      })
+    );
+    const standInKeys = new Set(filled.map((p) => p.planKey));
+    plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
+  }
+
+  // A base plan whose builder writes no description gets one from its own
+  // fields (Jeff, 2026-09-21: Stock Luxury Homes writes none at all), and
+  // a description that speaks as the builder ("we", "our") is reworded in
+  // the third person, once per text (description.ts).
+  plans = withDescriptions(plans, community.name);
+  if (opts.rewordDescriptions !== false) plans = await neutralizeDescriptions(plans, builder.name);
+  return plans;
+}
+
 export async function runConnection(connectionId: string): Promise<RunResult> {
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
@@ -304,49 +364,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
     return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
   }
-  // Every plan reads the way the site files it (one of five home types,
-  // the larger end of a bed or bath range; standardize.ts), then each
-  // quick move-in learns its base plan and each base plan learns whether
-  // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
-  // A base plan the builder gave no price takes its cheapest quick
-  // move-in's until the builder prices it (Jeff, 2026-09-20).
-  const link = (list: NormalizedPlan[]) => withQuickMoveInPrices(linkQuickMoveIns(list));
-  // What is true of every plan this builder offers, whatever its pages say
-  // (Settings → Builders; Jeff, 2026-09-22: Stock builds single-family homes
-  // and its pages name no type at all).
-  const { data: settings } = await supabase
-    .from("fp_builders")
-    .select("engine_config")
-    .eq("id", builder.id)
-    .maybeSingle();
-  const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
-  plans = link(plans.map((plan) => standardizePlan(plan, defaults)));
-  // A plan the builder no longer lists but a person asked to keep, built
-  // from its homes on offer (stand-ins.ts): each is read from the home's own
-  // page so it carries every picture, then linked like the rest.
-  const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
-  const standIns = withStandIns(plans, rules);
-  if (standIns.standIns.length) {
-    const filled = await Promise.all(
-      standIns.standIns.map(async (p) => {
-        try {
-          return await readPlanInFull(builder.name, p);
-        } catch (err) {
-          logger.warn("Stand-in plan page could not be read", { planKey: p.planKey, error: err instanceof Error ? err.message : String(err) });
-          return p;
-        }
-      })
-    );
-    const standInKeys = new Set(filled.map((p) => p.planKey));
-    plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
-  }
-
-  // A base plan whose builder writes no description gets one from its own
-  // fields (Jeff, 2026-09-21: Stock Luxury Homes writes none at all), and
-  // a description that speaks as the builder ("we", "our") is reworded in
-  // the third person, once per text (description.ts).
-  plans = withDescriptions(plans, community.name);
-  plans = await neutralizeDescriptions(plans, builder.name);
+  plans = await preparePlans(plans, { site, community, builder });
 
   const { data: canonical } = await supabase
     .from("fp_floor_plans")
