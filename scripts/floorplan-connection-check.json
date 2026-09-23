@@ -7,7 +7,7 @@
     "https://nealcommunities.com/communities/palm-grove/"
   ],
   "concurrency": 4,
-  "detailPlans": 1,
+  "detailPlans": 99,
   "checks": [
     {
       "builder": "Pulte Homes"

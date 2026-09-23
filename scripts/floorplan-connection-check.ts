@@ -15,13 +15,12 @@
 // many pictures each claims. Those counts are the answer key.
 //
 // Which connections are checked is scripts/floorplan-connection-check.json.
-// Everything is printed with the FP-CHECK prefix in the build log, and each
-// connection's report is also written into the preview deployment itself —
-// /fp-check/index.txt and /fp-check/<builder>--<community>.txt — so one
-// builder's can be read on its own. Only on the working branch; production
-// never builds this.
+// Each connection's report is kept in fp_connection_checks (migration 074),
+// one row per connection per build, so one builder's can be read on its
+// own; the build log gets one verdict line per connection. Only on the
+// working branch; production never builds this.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Browser, Page } from "puppeteer-core";
@@ -58,8 +57,13 @@ interface Config {
 const say = (...parts: unknown[]) => console.log("FP-CHECK", ...parts);
 const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
 const RUN_LIMIT_MS = 300_000;
-const REPORT_DIR = path.join(process.cwd(), "public", "fp-check");
-const slug = (s: string) => normKey(s).slice(0, 60);
+/** This build, as the reports are filed under: the commit and the minute. */
+const BUILD = `${(process.env.VERCEL_GIT_COMMIT_SHA ?? "local").slice(0, 7)} ${new Date().toISOString().slice(0, 16)}`;
+
+async function keep(label: string, report: string, verdict: string | null = null): Promise<void> {
+  const { error } = await supabase.from("fp_connection_checks").insert({ build: BUILD, label, verdict, report });
+  if (error) say(`could not keep the report for ${label}: ${error.message}`);
+}
 const CHECK_TIMEOUT_MS = 420_000;
 
 const config = JSON.parse(
@@ -394,7 +398,6 @@ function fileTail(url: string): string {
 
 interface Outcome {
   label: string;
-  file: string;
   verdict: string[];
 }
 
@@ -412,7 +415,7 @@ async function claudeAnswers(): Promise<string | null> {
 const NEEDS_CLAUDE = new Set(["fetch_claude", "render_claude"]);
 let claudeDown: string | null = null;
 
-async function check(conn: Connection, target: Target): Promise<Outcome> {
+async function check(conn: Connection, target: Target): Promise<Outcome & { report: string }> {
   const label = `${conn.builder.name} · ${conn.community.name} (${conn.site.name ?? "?"})`;
   const lines: string[] = [];
   const problems: string[] = [];
@@ -562,30 +565,21 @@ async function check(conn: Connection, target: Target): Promise<Outcome> {
 
   return finish();
 
-  function finish(): Outcome {
+  function finish(): Outcome & { report: string } {
     const verdict = problems.length ? problems : ["looks healthy"];
     out(`  VERDICT: ${verdict.join(" · ")}`);
-    for (const l of lines) say(l);
-    const file = `${slug(conn.builder.name)}--${slug(conn.community.name)}.txt`;
-    try {
-      writeFileSync(path.join(REPORT_DIR, file), lines.join("\n") + "\n");
-    } catch (error) {
-      say(`could not write ${file}: ${error instanceof Error ? error.message : String(error)}`);
-    }
-    return { label, file, verdict };
+    say(`${label}: ${verdict.join(" · ")}`);
+    return { label, verdict, report: lines.join("\n") };
   }
 }
 
 async function main() {
   say(`start; Claude key ${process.env.ANTHROPIC_API_KEY ? "present" : "MISSING"}, Supabase ${process.env.SUPABASE_SERVICE_ROLE_KEY ? "present" : "MISSING"}`);
-  mkdirSync(REPORT_DIR, { recursive: true });
   claudeDown = await claudeAnswers();
   say(claudeDown ? `Claude is unavailable — pages will be surveyed but not extracted: ${claudeDown}` : "Claude answers");
   for (const url of config.anatomy ?? []) {
-    mkdirSync(path.join(REPORT_DIR, "anatomy"), { recursive: true });
-    const file = `anatomy/${slug(url.replace(/^https?:\/\/(www\.)?/, "")).slice(0, 90)}.txt`;
-    writeFileSync(path.join(REPORT_DIR, file), await anatomy(url));
-    say(`anatomy of ${url} → /fp-check/${file}`);
+    await keep(`anatomy: ${url}`, await anatomy(url));
+    say(`anatomy of ${url} kept`);
   }
   const all = await loadConnections();
   const jobs: { conn: Connection; target: Target }[] = [];
@@ -609,10 +603,12 @@ async function main() {
     while (queue.length) {
       const job = queue.shift()!;
       try {
-        outcomes.push(await check(job.conn, job.target));
+        const outcome = await check(job.conn, job.target);
+        await keep(outcome.label, outcome.report, outcome.verdict.join(" · "));
+        outcomes.push(outcome);
       } catch (error) {
         say(`check crashed for ${job.conn.builder.name} · ${job.conn.community.name}: ${error instanceof Error ? error.stack : String(error)}`);
-        outcomes.push({ label: `${job.conn.builder.name} · ${job.conn.community.name}`, file: "", verdict: ["check crashed"] });
+        outcomes.push({ label: `${job.conn.builder.name} · ${job.conn.community.name}`, verdict: ["check crashed"] });
       }
     }
   };
@@ -624,9 +620,9 @@ async function main() {
   say("════ SUMMARY ════");
   const summary = outcomes
     .sort((a, b) => a.label.localeCompare(b.label))
-    .map((o) => `${o.label}: ${o.verdict.join(" · ")}${o.file ? `  [${o.file}]` : ""}`);
+    .map((o) => `${o.label}: ${o.verdict.join(" · ")}`);
   for (const line of summary) say(line);
-  writeFileSync(path.join(REPORT_DIR, "index.txt"), `checked ${new Date().toISOString()}\n` + summary.join("\n") + "\n");
+  await keep("~summary", summary.join("\n"));
   await browser?.close().catch(() => {});
 }
 
