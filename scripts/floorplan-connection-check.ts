@@ -225,9 +225,14 @@ async function see(url: string): Promise<Seen> {
     page = await (await surveyBrowser()).newPage();
     await page.setUserAgent(UA);
     await page.setViewport({ width: 1440, height: 2000 });
-    const res = await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 }).catch(() => null);
+    // Loaded, then up to 15 seconds to go quiet: a page with a chat widget
+    // never does, and waiting out 45 seconds a page made the survey the
+    // slowest part of a check (D.R. Horton: 13 seconds to read, 5 minutes
+    // to survey).
+    const res = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 }).catch(() => null);
     status = res?.status() ?? null;
-    await wait(4_000);
+    await page.waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: 15_000 }).catch(() => {});
+    await wait(2_000);
     await page.evaluate(async () => {
       for (let n = 1; n <= 16; n++) {
         if (window.innerHeight * n > document.body.scrollHeight) break;
