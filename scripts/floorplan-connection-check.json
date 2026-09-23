@@ -52,6 +52,11 @@
     },
     {
       "builder": "Ashton Woods"
+    },
+    {
+      "builder": "Cardel Homes",
+      "community": "North River Ranch",
+      "preferCandidate": true
     }
   ],
   "raw": [
