@@ -146,7 +146,13 @@ async function sitePlans(conn: Connection): Promise<{ name: string; qmi: boolean
     .eq("site_id", conn.site.id)
     .eq("collection_id", "FloorPlans");
   const short = conn.community.name.split(/\s*-\s*/).pop()!.toLowerCase();
-  const builderWord = conn.builder.name.split(/[\s.]+/)[0].toLowerCase();
+  // The builder's own word, not a word every builder uses: "Homes by
+  // WestBay" matched every "... Homes" on the site.
+  const builderWord =
+    conn.builder.name
+      .toLowerCase()
+      .split(/[\s.]+/)
+      .find((w) => w.length > 2 && !/^(homes?|by|the|builders?|communities|group|inc|llc)$/.test(w)) ?? conn.builder.name.toLowerCase();
   const mine = (data ?? [])
     .map((r) => r.data as Record<string, unknown>)
     .filter((d) => String(d.builder ?? "").toLowerCase().includes(builderWord));
