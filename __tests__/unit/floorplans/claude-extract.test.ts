@@ -16,6 +16,7 @@ import {
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
   drawingsOrPhotos,
+  drawingsNotShownAsPhotos,
 } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -597,5 +598,32 @@ describe("drawingsOrPhotos", () => {
       meta: { [kitchen]: { caption: "Kitchen of the Sage floor plan", room: "kitchen", kind: "photo" } },
     });
     expect(got).toMatchObject({ blueprintImages: [], galleryImages: ["https://x.com/front.jpg", kitchen] });
+  });
+});
+
+describe("drawingsNotShownAsPhotos", () => {
+  const df = (f: string) => `https://media.dreamfindershomes.com/371/2024/3/17/${f}`;
+  const gallery = [
+    df("Bunaglow_Walk-Pearl-A-Gen3.jpg?width=1000&height=625&fit=bounds"),
+    df("Bunaglow_Walk-Pearl-B-Gen3_7DZ3lS9.jpg?width=1000&height=625&fit=bounds"),
+  ];
+
+  it("does not take an elevation in the page's gallery for a drawing on Claude's word (Dream Finders' Pearl)", () => {
+    expect(drawingsNotShownAsPhotos([df("Bunaglow_Walk-Pearl-B-Gen3_7DZ3lS9.jpg?width=400")], gallery)).toEqual([]);
+  });
+
+  it("keeps a picture in the gallery that is named for a plan", () => {
+    const fp = df("Pearl-FP.jpg");
+    expect(drawingsNotShownAsPhotos([fp], [...gallery, fp])).toEqual([fp]);
+  });
+
+  it("keeps a drawing in the gallery that is drawn, not photographed (Medallion's Belize.svg)", () => {
+    const svg = "https://medallionhome.com/wp-content/uploads/2026/04/Belize.svg";
+    expect(drawingsNotShownAsPhotos([svg], ["https://medallionhome.com/wp-content/uploads/2026/04/ra_belize-plan-_a_01-800x534.jpg", svg])).toEqual([svg]);
+  });
+
+  it("keeps a drawing the gallery does not show", () => {
+    const drawing = df("8450ec42-69b4-4cc4-b36f-30abf9fd6c03.jpg");
+    expect(drawingsNotShownAsPhotos([drawing], gallery)).toEqual([drawing]);
   });
 });

@@ -588,6 +588,14 @@ describe("drawingsMarked", () => {
     expect(drawingsMarked(page, "https://simplydwellhomes.com/new-homes/broadleaf/jasmine-2/")).toEqual([fp]);
   });
 
+  it("leaves out the page's icons beside a drawing (Kolter)", () => {
+    const page = `<div class="floorplan-image"><img src="https://cdn.kolterhomes.com/kh-includes/images/svg/sketch.svg" width="24" height="24">
+      <img src="https://cdn.kolterhomes.com/kh-includes/communities/parrish-florida-woodland-preserve/floorplans/morgan-master-floor-1.jpg"></div>`;
+    expect(drawingsMarked(page, "https://www.kolterhomes.com/x/")).toEqual([
+      "https://cdn.kolterhomes.com/kh-includes/communities/parrish-florida-woodland-preserve/floorplans/morgan-master-floor-1.jpg",
+    ]);
+  });
+
   it("takes nothing from a list of other plans, a page's own title, or a room's caption", () => {
     const page = `<h1>Fraser floor plan</h1><img src="https://r.com/media-1.jpg" alt="Kitchen of the Fraser floor plan">
       <h2>Other Floor Plans</h2><div class="related-floorplans"><div class="floorplan-card"><img src="https://r.com/sage.jpg" alt="Sage"></div></div>

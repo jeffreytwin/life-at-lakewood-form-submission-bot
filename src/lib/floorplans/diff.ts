@@ -42,6 +42,21 @@ const NUMERIC_FIELDS = new Set<keyof NormalizedPlan>(["sqft"]);
 /** Fields too long to show or match whole; their queue values are a lead-in plus a digest, like galleries. */
 const LONG_TEXT_FIELDS = new Set<keyof NormalizedPlan>(["description"]);
 
+/**
+ * A text as its words: the same description read again with a curly
+ * apostrophe for a straight one, or "The Cypress" for "the Cypress", is
+ * the same description, and was queued as a change (SimplyDwell,
+ * 2026-09-23).
+ */
+const wordsOf = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/[\u2018\u2019\u201B\u0060\u00B4]/g, "'")
+    .replace(/[\u201C\u201D\u201F]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
 /** "Contemporary elegance. The Avery's welcoming covered entry and fo… · 5f2a9c1e", or "" for nothing. */
 export function describeText(value: unknown): string {
   const text = typeof value === "string" ? value.trim() : "";
@@ -139,6 +154,7 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
     const oldVal = BOOLEAN_FIELDS.has(field) ? current[field] === true : current[field];
     const newVal = BOOLEAN_FIELDS.has(field) ? plan[field] === true : plan[field];
     if (String(oldVal ?? "") === String(newVal ?? "")) continue;
+    if (LONG_TEXT_FIELDS.has(field) && wordsOf(oldVal) === wordsOf(newVal)) continue;
     const show = LONG_TEXT_FIELDS.has(field)
       ? describeText
       : NUMERIC_FIELDS.has(field)
