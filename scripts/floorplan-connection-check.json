@@ -1,14 +1,10 @@
 {
   "anatomy": [
-    "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes",
-    "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes/floor-plans/3eab",
-    "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/floor-plans",
-    "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-towns",
-    "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/5289/floorplan/eva/",
-    "https://lwhomes.com/listings/",
-    "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch",
-    "https://www.johncannonhomes.com/community/everly-at-wellen-park/",
-    "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/calabrai-i-sf-detail"
+    "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
+    "https://rifp.ml3ds-icon.com/#/floorplan/524920?crmCommunityId=1116",
+    "https://lwhomes.com/where-we-build/",
+    "https://api.drbhomes.com/api/v1/public/community?search=seaire",
+    "https://argo.ml3ds-cloud.com/api/settings/application/42E6BCB5-7E2F-4D0D-B822-1CB9AE1D839C/categoryname/ICON%20Responsive%20Interactive%20FloorPlan%20%20(RIFP)/floorplan/524920"
   ],
   "concurrency": 4,
   "detailPlans": 99,
@@ -57,48 +53,51 @@
       "builder": "Cardel Homes",
       "community": "North River Ranch",
       "preferCandidate": true
+    },
+    {
+      "builder": "Centex Homes"
+    },
+    {
+      "builder": "Adams Homes"
+    },
+    {
+      "builder": "Dream Finders Homes"
     }
   ],
   "raw": [
     {
-      "url": "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
+      "url": "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/5289/floorplan/eva/",
       "around": [
-        "Daylen Exterior",
-        "650640"
+        "Eva Model Home | Kitchen",
+        "eva%2D003"
+      ],
+      "chars": 900
+    },
+    {
+      "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes",
+      "around": [
+        "application/ld+json",
+        "Alford",
+        "12412 Hopscotch"
       ],
       "chars": 1500
     },
     {
-      "url": "https://wellenpark.com/home/3336189/detail/",
+      "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes/floor-plans/3eab",
       "around": [
-        "Multi-Family",
-        "INTERACTIVE PLAN"
+        "application/ld+json",
+        "1-kitchen",
+        "view-imx"
       ],
-      "chars": 1200
+      "chars": 1500
     },
     {
-      "url": "https://wellenpark.com/home/2946210/detail/",
+      "url": "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch",
       "around": [
-        "Broadleaf",
-        "Palm"
+        "Plan 1720",
+        "FLOORPLAN 1970"
       ],
       "chars": 1200
-    },
-    {
-      "url": "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
-      "around": [
-        "E-31",
-        "2016F-FP"
-      ],
-      "chars": 1200
-    },
-    {
-      "url": "https://nealcommunities.com/new-homes/grand-palm/",
-      "around": [
-        "Captiva",
-        "floorplan"
-      ],
-      "chars": 900
     }
   ]
 }
