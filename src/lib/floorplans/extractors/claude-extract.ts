@@ -607,7 +607,7 @@ export async function readPlanPageWithClaude(
   // carousel of captioned slides (Pulte).
   const headed = firstGallery(html, page_.url);
   const lightbox = headed.first.length ? null : lightboxGallery(html, page_.url);
-  const carousel = headed.first.length || lightbox?.first.length ? null : captionedCarousel(html, page_.url);
+  const carousel = headed.first.length || lightbox?.first.length ? null : captionedCarousel(html, page_.url, plan.quickMoveIn ? undefined : plan.name);
   const gallery = lightbox?.first.length
     ? { first: lightbox.first, drop: headed.drop }
     : carousel

@@ -435,3 +435,20 @@ describe("elevationPictures (Stock's plan pages)", () => {
     expect(elevationPictures(html, "https://x.com/plan").map((i) => i.src)).toEqual(["https://x.com/a/elev-a.jpg", "https://x.com/a/elev-b.jpg"]);
   });
 });
+
+describe("captionedCarousel prefers the plan's own carousel (Pulte's Riversong, 2026-09-23)", () => {
+  const slide = (id: string, caption: string) => `<img src="https://x.com/${id}.jpg" alt="${caption}"><h5>${caption}</h5>`;
+  const amenities = ["Resort-Style Pool", "Covered Lanai", "Fitness Room", "Community Kitchen"].map((c, i) => slide(`a${i}`, c)).join("");
+  const daylen = ["Daylen Exterior", "Designer Kitchen", "Gathering Room", "Owner's Bath"].map((c, i) => slide(`d${i}`, c)).join("");
+  const page = `<section>${amenities}</section><h2>Daylen</h2><section>${daylen}</section>`;
+
+  it("takes the carousel that names the plan, and drops the community's", () => {
+    const { first, drop } = captionedCarousel(page, "https://x.com/daylen", "Daylen");
+    expect(first.map((i) => i.alt)).toEqual(["Daylen Exterior", "Designer Kitchen", "Gathering Room", "Owner's Bath"]);
+    expect(drop.has("https://x.com/a0.jpg")).toBe(true);
+  });
+
+  it("takes the first carousel where none names the plan", () => {
+    expect(captionedCarousel(page, "https://x.com/daylen", "Pinecrest").first[0].alt).toBe("Resort-Style Pool");
+  });
+});

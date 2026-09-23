@@ -373,7 +373,7 @@ export function firstGallery(html: string, baseUrl: string): PlanPageGallery {
  * its captions name a room or a view of the house. A slide a carousel
  * repeats to loop is one picture. Pure; exported for tests.
  */
-export function captionedCarousel(html: string, pageUrl: string): PlanPageGallery {
+export function captionedCarousel(html: string, pageUrl: string, planName?: string): PlanPageGallery {
   const baseUrl = documentBase(html, pageUrl);
   const absolute = (url: string) => {
     try {
@@ -408,18 +408,22 @@ export function captionedCarousel(html: string, pageUrl: string): PlanPageGaller
   }
   if (run.length) runs.push(run);
 
-  const first =
-    runs
-      .map((candidate) => {
-        const seen = new Set<string>();
-        return candidate.filter((image) => {
-          const key = pictureKey(image.src);
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-      })
-      .find((slides) => slides.length >= 4 && slides.filter((image) => classifyRoom(image.alt)).length * 2 >= slides.length) ?? [];
+  const carousels = runs
+    .map((candidate) => {
+      const seen = new Set<string>();
+      return candidate.filter((image) => {
+        const key = pictureKey(image.src);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    })
+    .filter((slides) => slides.length >= 4 && slides.filter((image) => classifyRoom(image.alt)).length * 2 >= slides.length);
+  // The plan's own carousel names the plan ("Daylen Exterior"); a carousel
+  // of the community's amenities, which a page can carry first, does not
+  // (Pulte's Riversong, 2026-09-23).
+  const named = planName ? new RegExp(`\\b${planName.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i") : null;
+  const first = (named && carousels.find((slides) => slides.some((image) => named.test(image.alt)))) || carousels[0] || [];
   // The other carousels' pictures are other plans': not to be taken from
   // anyone else's reading of the page either.
   const mine = new Set(first.map((image) => pictureKey(image.src)));
