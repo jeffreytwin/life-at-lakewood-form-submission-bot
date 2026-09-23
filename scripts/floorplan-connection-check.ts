@@ -53,7 +53,7 @@ interface Config {
   /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. */
   anatomy?: string[];
   /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
-  raw?: { url: string; around: string[]; chars?: number }[];
+  raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
   concurrency?: number;
   /** Plans printed with every picture; the rest get one line each. */
   detailPlans?: number;
@@ -461,7 +461,7 @@ async function jsonAnatomy(url: string): Promise<string> {
  * the page: how long Claude's copy of it is, and which pictures the
  * gallery readers take.
  */
-async function rawAround(url: string, around: string[], chars = 1500): Promise<string> {
+async function rawAround(url: string, around: string[], chars = 1500, after = 0, count = 3): Promise<string> {
   try {
     const res = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(45_000) });
     const html = await res.text();
@@ -473,8 +473,8 @@ async function rawAround(url: string, around: string[], chars = 1500): Promise<s
     const carried = payloadGallery(html, res.url || url);
     out.push("", `== PAYLOAD GALLERY (${carried.length}) ==`, ...carried.slice(0, 40).map((i) => `${i.src}${i.outside ? " (outside)" : ""}`));
     for (const words of around) {
-      let from = 0;
-      for (let n = 0; n < 3; n++) {
+      let from = after;
+      for (let n = 0; n < count; n++) {
         const at = html.indexOf(words, from);
         if (at < 0) {
           if (n === 0) out.push("", `== "${words}" not in the markup ==`);
@@ -765,8 +765,8 @@ async function main() {
     await keep(`anatomy: ${url}`, await anatomy(url));
     say(`anatomy of ${url} kept`);
   }
-  for (const { url, around, chars } of config.raw ?? []) {
-    await keep(`raw: ${url}`, await rawAround(url, around, chars));
+  for (const { url, around, chars, after, count } of config.raw ?? []) {
+    await keep(`raw: ${url}`, await rawAround(url, around, chars, after, count));
     say(`markup of ${url} kept`);
   }
   const all = await loadConnections();

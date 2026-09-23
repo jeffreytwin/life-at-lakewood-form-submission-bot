@@ -188,7 +188,10 @@ export function readDrhPage(html: string): {
   const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
   const price = text.match(/starting at \$\s?([\d,]+)/i)?.[1] ?? text.match(/^[^$]{0,200}\$\s?([\d,]{6,})/)?.[1];
   const garages = text.match(/(\d+)\s*Garage/i)?.[1];
-  const about = html.match(/About this (?:floor plan|home)\s*<\/h\d>([\s\S]*?)<(?:h\d|\/section)\b/i)?.[1];
+  // The builder's words sit in their own block under "About this floor plan".
+  const about =
+    html.match(/class="about-this-plan"[^>]*>\s*<h\d[^>]*>[^<]*<\/h\d>([\s\S]*?)<\/div>/i)?.[1] ??
+    html.match(/About this (?:floor plan|home)\s*<\/h\d>([\s\S]*?)<(?:h\d|\/section|\/div)\b/i)?.[1];
   const description = about ? words(about) || null : null;
   const specBaths = text.match(/(\d+(?:\.\d)?)\s*Bath/i)?.[1];
   const specBeds = text.match(/(\d+)\s*Bed/i)?.[1];

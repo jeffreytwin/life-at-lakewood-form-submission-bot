@@ -43,7 +43,14 @@ const planPage = `<script type="application/ld+json">
 </div>
 <h1>Oakfield Lakes Allex Floor Plan</h1><h2>starting at $293,990</h2><h3>|Express Series&reg;</h3>
 <p>3 Bed | 2 Bath | 2 Garage | 1 Story 1,504 Sq. Ft.</p>
-<h3>About this floor plan</h3><div><p>This all-concrete block constructed, one-story, two-car garage home optimizes living space.</p></div>
+<div class="about-this-plan">
+		<h3>About this floor plan</h3>
+			<p>
+			This all-concrete block constructed, one-story, two-car garage home optimizes living space.
+			</p>
+		<br/>
+	</div>
+	</div><section><div id="relatedmovein" class="related-move-in">Sort By $329,000 12412 Hopscotch Avenue</div></section>
 <h2>21 homes for sale in this community</h2>`;
 
 describe("D.R. Horton's community page (Oakfield Lakes, 2026-09-23)", () => {

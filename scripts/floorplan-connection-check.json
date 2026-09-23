@@ -1,8 +1,5 @@
 {
-  "anatomy": [
-    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/bradenton/parrish/windwater/pinnacle&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
-    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/bradenton/parrish/windwater/pinnacle/5038-125th-avenue-e&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D"
-  ],
+  "anatomy": [],
   "concurrency": 4,
   "detailPlans": 99,
   "checks": [
@@ -46,18 +43,13 @@
     {
       "url": "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
       "around": [
-        "levation",
-        "2016F-E",
-        "E-1"
+        "elevation_id",
+        "design_id",
+        "2016F"
       ],
-      "chars": 700
-    },
-    {
-      "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes/floor-plans/3eab",
-      "around": [
-        "About this floor plan"
-      ],
-      "chars": 900
+      "chars": 600,
+      "after": 116000,
+      "count": 4
     }
   ]
 }
