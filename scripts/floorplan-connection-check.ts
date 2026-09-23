@@ -25,7 +25,7 @@ import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Browser, Page } from "puppeteer-core";
 import { supabase } from "@/lib/supabase/client";
-import { preparePlans, readsThroughBrowser, resolveExtractor, RUN_READ_MS, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
+import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, resolveExtractor, RUN_READ_MS } from "@/lib/floorplans/sync";
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
@@ -458,7 +458,19 @@ async function jsonAnatomy(url: string): Promise<string> {
     for (const k of keys) walk((value as Record<string, unknown>)[k], `${at}.${k}`, depth + 1);
   };
   walk(data, "$", 0);
-  out.push("", "== SAMPLES (first item of each list of pictures) ==", ...samples, "", "== SHAPE ==", ...shapes, "", "== BEGINS ==", text.slice(0, 3000));
+  // The first item of the first list, whole: a feed's record is what a reader is written from.
+  const firstList = (value: unknown, depth: number): unknown[] | null => {
+    if (Array.isArray(value)) return value.length ? value : null;
+    if (!value || typeof value !== "object" || depth > 3) return null;
+    for (const v of Object.values(value)) {
+      const found = firstList(v, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  };
+  const items = firstList(data, 0);
+  const whole = items ? [`== FIRST ITEM (of ${items.length}) ==`, JSON.stringify(items[0], null, 1).slice(0, 12_000)] : [];
+  out.push("", ...whole, "", "== SAMPLES (first item of each list of pictures) ==", ...samples, "", "== SHAPE ==", ...shapes, "", "== BEGINS ==", text.slice(0, 3000));
   return out.join("\n");
 }
 
@@ -588,7 +600,7 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
   const useCandidate = !target.params && candidate && (!conn.params.url || target.preferCandidate);
   let params = { ...conn.params, ...(target.params ?? {}), ...(useCandidate ? candidate : {}) };
   let how = target.params ? "override" : useCandidate ? "candidate" : params.url ? "saved" : "none";
-  if (!params.url && !URLLESS_BUILDERS.has(conn.builder.name) && !target.surveyOnly) {
+  if (!params.url && !readsWithoutPage(conn.builder.name, params) && !target.surveyOnly) {
     const found = await discoverCommunityUrl(conn.builder, conn.community.name, conn.site.name ? [conn.site.name] : [], (line) =>
       out(`    discovery: ${line}`)
     ).catch((error) => {
@@ -639,7 +651,9 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     out(`  extraction skipped: Claude unavailable (${claudeDown})`);
   }
   if (!target.surveyOnly && !(claudeDown && claudeBuilder)) {
-    const extractor = resolveExtractor(target.generic ? "" : conn.builder.name, conn.builder.extraction_method);
+    const extractor = target.generic
+      ? resolveExtractor("", conn.builder.extraction_method)
+      : extractorFor(conn.builder.name, conn.builder.extraction_method, params);
     const started = Date.now();
     try {
       if (!extractor) throw new Error(`no extractor for ${conn.builder.extraction_method}`);
@@ -793,7 +807,8 @@ async function main() {
 
   // Rendering builders share one browser (render.ts, withRenderer), two at
   // a time so seven of them fit in a build; the rest run a few at once.
-  const browsed = (j: (typeof jobs)[number]) => readsThroughBrowser(j.conn.builder.name, j.conn.builder.extraction_method);
+  const browsed = (j: (typeof jobs)[number]) =>
+    readsThroughBrowser(j.conn.builder.name, j.conn.builder.extraction_method, { ...j.conn.params, ...(j.target.params ?? {}) });
   const rendered = jobs.filter(browsed);
   const fetched = jobs.filter((j) => !browsed(j));
   const outcomes: Outcome[] = [];

@@ -52,7 +52,11 @@ export function communityHomeType(community: ApolloEntity | undefined): string |
     .join(" ")
     .replace(/_/g, " ");
   // The collection's name first: "Coach Homes" says more than "Single Family".
-  return standardHomeType(String(community.name ?? "")) ?? standardHomeType(types);
+  const name = String(community.name ?? "");
+  // Lennar's condominiums go by the names of their buildings: the "Veranda"
+  // and "Terrace" collections at Calusa Country Club (2026-09-23).
+  const condominium = /\b(veranda|terrace)\b/i.test(name) ? "Condominium" : null;
+  return standardHomeType(name) ?? condominium ?? standardHomeType(types);
 }
 
 /**
@@ -171,7 +175,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
 }
 
 /** The Apollo state a Lennar page carries. */
-async function apolloOf(url: string): Promise<{ apollo: Apollo; path: string }> {
+async function apolloOf(url: string): Promise<{ apollo: Apollo; path: string; html: string }> {
   const res = await fetch(url, {
     headers: { "user-agent": UA, accept: "text/html" },
     redirect: "follow",
@@ -183,7 +187,46 @@ async function apolloOf(url: string): Promise<{ apollo: Apollo; path: string }> 
   if (!m) throw new Error(`no __NEXT_DATA__ at ${url}`);
   const apollo = JSON.parse(m[1])?.props?.pageProps?.initialApolloState;
   if (!apollo) throw new Error(`no initialApolloState at ${url}`);
-  return { apollo, path: new URL(res.url || url).pathname };
+  return { apollo, path: new URL(res.url || url).pathname, html };
+}
+
+/**
+ * The pages one level beneath a community that a page links to: its
+ * series. A community Lennar has split into collections keeps no plans of
+ * its own, and its old address sends a visitor to the region's page —
+ * Aurora became "Townhomes" and "Patio Homes", Lorraine Lakes "Executive",
+ * "Estate" and "Manor" homes (2026-09-23). Exported for tests.
+ */
+export function seriesLinks(html: string, communityPath: string): string[] {
+  const path = communityPath.replace(/\/+$/, "");
+  const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const out = new Set<string>();
+  for (const m of html.matchAll(new RegExp(`${escaped}/([a-z0-9][a-z0-9-]*)(?=[\\\\"'?#])`, "g"))) {
+    out.add(`https://www.lennar.com${path}/${m[1]}`);
+  }
+  return [...out];
+}
+
+/**
+ * A community's series pages: those the page it landed on links to, and
+ * those the city's page lists beneath it (a region's page may show only
+ * some of them).
+ */
+async function seriesOf(target: string, landing: string): Promise<string[]> {
+  const path = new URL(target).pathname.replace(/\/+$/, "");
+  const parent = path.slice(0, path.lastIndexOf("/"));
+  let city = "";
+  try {
+    const res = await fetch(`https://www.lennar.com${parent}`, {
+      headers: { "user-agent": UA, accept: "text/html" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (res.ok) city = await res.text();
+  } catch {
+    // The landing page's links are all there is.
+  }
+  return [...new Set([...seriesLinks(landing, path), ...seriesLinks(city, path)])];
 }
 
 /** Runs `fn` over the items a few at a time, keeping order. */
@@ -235,10 +278,22 @@ export async function extractLennar(params: {
   const targets = params.urls?.length ? params.urls : params.url ? [params.url] : [];
   if (!targets.length) throw new Error("lennar extractor requires extractor_params.url");
   const byKey = new Map<string, NormalizedPlan>();
+  const keep = (plans: NormalizedPlan[]) => {
+    for (const plan of plans) if (!byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
+  };
   for (const target of targets) {
-    const { apollo, path } = await apolloOf(target);
-    for (const plan of plansFromPage(apollo, path)) {
-      if (!byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
+    const { apollo, path, html } = await apolloOf(target);
+    const plans = plansFromPage(apollo, path);
+    keep(plans);
+    if (plans.length) continue;
+    // Nothing here: the community has been split into series.
+    for (const series of (await seriesOf(target, html)).slice(0, 8)) {
+      try {
+        const page = await apolloOf(series);
+        keep(plansFromPage(page.apollo, page.path));
+      } catch {
+        // A series page that will not load is left for the next run.
+      }
     }
   }
   return mapLimit([...byKey.values()], 6, withPlanPage);

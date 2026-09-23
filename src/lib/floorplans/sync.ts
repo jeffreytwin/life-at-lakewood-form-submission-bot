@@ -12,6 +12,7 @@
 // - Galleries are diffed too (photos and blueprints, in order), so a
 //   builder's photo changes reach the site instead of freezing at the add.
 
+import { withoutCommunityPictures } from "@/lib/floorplans/community-pictures";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
@@ -110,12 +111,37 @@ const BROWSER_BUILDERS = new Set(["Lee Wetherington"]);
  * browser per process and take minutes, so the nightly loop starts one only
  * with most of a tick left, and never two at once.
  */
-export function readsThroughBrowser(builderName: string, method: string | null): boolean {
+export function readsThroughBrowser(builderName: string, method: string | null, params?: Record<string, unknown> | null): boolean {
+  const engine = connectionEngine(params);
+  if (engine) return engine === "render_claude";
   return method === "render_claude" || BROWSER_BUILDERS.has(builderName);
 }
 
 export function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
+}
+
+/**
+ * The engine one connection is read with, where it differs from its
+ * builder's: extractor_params.engine. M/I's Wellen Park homes come from
+ * Wellen Park's own listings, but its Lakewood Ranch communities are on no
+ * such list and are read off M/I's pages in a browser (Sweetwater,
+ * Nautique at Waterside; 2026-09-23).
+ */
+function connectionEngine(params?: Record<string, unknown> | null): string | null {
+  const engine = params?.engine;
+  return typeof engine === "string" && METHOD_EXTRACTORS[engine] ? engine : null;
+}
+
+/** The extractor for one connection: its own engine if it names one, else its builder's. */
+export function extractorFor(builderName: string, method: string | null, params?: Record<string, unknown> | null): Extractor | null {
+  const engine = connectionEngine(params);
+  return engine ? METHOD_EXTRACTORS[engine] : resolveExtractor(builderName, method);
+}
+
+/** Whether a connection is read from ids rather than a page: its builder's engine needs none, and it names no engine of its own. */
+export function readsWithoutPage(builderName: string, params?: Record<string, unknown> | null): boolean {
+  return URLLESS_BUILDERS.has(builderName) && !connectionEngine(params);
 }
 
 interface RunResult {
@@ -298,6 +324,9 @@ export async function preparePlans(
     .maybeSingle();
   const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
   plans = link(plans.map((plan) => standardizePlan(plan, defaults)));
+  // The community's own pictures, filed in every plan's gallery, are taken
+  // back out (community-pictures.ts).
+  plans = withoutCommunityPictures(plans);
   // A plan the builder no longer lists but a person asked to keep, built
   // from its homes on offer (stand-ins.ts): each is read from the home's own
   // page so it carries every picture, then linked like the rest.
@@ -362,15 +391,15 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   if (!conn.active || !builder.active) {
     return { status: "skipped", detail: "connection or builder is paused" };
   }
-  const extractor = resolveExtractor(builder.name, builder.extraction_method);
+  let params = (conn.extractor_params ?? {}) as Record<string, unknown>;
+  const extractor = extractorFor(builder.name, builder.extraction_method, params);
   if (!extractor) {
     await setRunStatus(conn.id, "no extractor available for this builder yet", null, true);
     return { status: "failed", detail: `no extractor available for ${builder.name} (${builder.extraction_method ?? "unclassified"})` };
   }
 
   // Auto-discover the community page URL on first run if not configured.
-  let params = (conn.extractor_params ?? {}) as Record<string, unknown>;
-  if (!params.url && !URLLESS_BUILDERS.has(builder.name)) {
+  if (!params.url && !readsWithoutPage(builder.name, params)) {
     const { data: builderRow } = await supabase
       .from("fp_builders")
       .select("base_url, engine_config")

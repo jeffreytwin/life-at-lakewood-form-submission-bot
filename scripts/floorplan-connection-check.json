@@ -1,79 +1,41 @@
 {
   "anatomy": [
-    "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407"
+    "https://www.pulte.com/api/plan/homeplans?communityId=211407",
+    "https://www.pulte.com/api/plan/qmiplans?communityId=211407"
   ],
   "raw": [
     {
-      "url": "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
-      "around": [
-        "2016F",
-        "levation"
-      ],
-      "chars": 350,
-      "after": 125000,
-      "count": 10
+      "url": "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407",
+      "around": ["PlanGridCard__content", "QMIGridCard", "QmiGridCard", "data-qmi", "HomeGridCard"],
+      "chars": 5000,
+      "after": 4000000,
+      "count": 1
     },
     {
-      "url": "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407",
-      "around": [
-        "699105",
-        "Quick Move-In",
-        "application/ld+json"
-      ],
-      "chars": 1500,
+      "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/calusa-country-club/manor-golf-collection/the-princeton/23415600436",
+      "around": ["HomesiteType:", "\"photos", "\"gallery"],
+      "chars": 3000,
       "count": 2
     }
   ],
   "concurrency": 4,
-  "detailPlans": 3,
+  "detailPlans": 2,
   "checks": [
+    { "builder": "Lennar", "community": "Aurora" },
+    { "builder": "Lennar", "community": "Lorraine Lakes" },
+    { "builder": "Lennar", "community": "Calusa Country Club" },
+    { "builder": "Mattamy Homes", "community": "Lakespur" },
+    { "builder": "Mattamy Homes", "community": "Sunstone Lakeside" },
+    { "builder": "Perry Homes" },
     {
-      "builder": "Lennar",
-      "all": true
-    },
-    {
-      "builder": "Mattamy Homes",
-      "all": true
-    },
-    {
-      "builder": "Toll Brothers",
-      "all": true
-    },
-    {
-      "builder": "Taylor Morrison",
-      "all": true
+      "builder": "M/I Homes",
+      "community": "Sweetwater",
+      "params": { "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/lakewood-ranch/sweetwater-at-lakewood-ranch", "engine": "render_claude" }
     },
     {
       "builder": "M/I Homes",
-      "all": true
-    },
-    {
-      "builder": "ICI Homes",
-      "all": true
-    },
-    {
-      "builder": "D.R. Horton",
-      "all": true
-    },
-    {
-      "builder": "Kolter Homes",
-      "all": true
-    },
-    {
-      "builder": "Homes by Towne",
-      "all": true
-    },
-    {
-      "builder": "Meritage Homes",
-      "all": true
-    },
-    {
-      "builder": "Neal Signature Homes",
-      "all": true
-    },
-    {
-      "builder": "DRB Homes",
-      "all": true
+      "community": "Waterside - Nautique",
+      "params": { "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/lakewood-ranch/nautique-at-waterside", "engine": "render_claude" }
     }
   ]
 }

@@ -619,7 +619,7 @@ export async function readPlanPageWithClaude(
   // twenty-three photographs in its payload (Jeff, 2026-09-22). Only
   // where the headings gave nothing, so a plan never inherits the
   // community's other pictures.
-  const carried = gallery.first.length ? [] : payloadGallery(html, page_.url);
+  const carried = gallery.first.length ? [] : payloadGallery(html, page_.url, [plan.name, plan.relatedPlanName]);
   // A gallery read off the markup is the plan's pictures; Claude is not
   // asked to list them again.
   const picturesKnown = gallery.first.length + carried.length >= 4;

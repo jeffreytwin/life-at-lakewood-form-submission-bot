@@ -92,7 +92,7 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
   // Connections still needing a run this cycle.
   const { data: pending } = await supabase
     .from("fp_builder_communities")
-    .select("id, last_run_at, fp_builders:builder_id(name, active, extraction_method)")
+    .select("id, last_run_at, extractor_params, fp_builders:builder_id(name, active, extraction_method)")
     .eq("active", true)
     .not("onboarded_at", "is", null)
     .or(`last_run_at.is.null,last_run_at.lt.${startedAt}`);
@@ -107,7 +107,8 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
 
   for (const conn of todo) {
     const builder = builderOf(conn);
-    const needs = builder && readsThroughBrowser(builder.name, builder.extraction_method) ? RENDER_RESERVE_MS : 0;
+    const params = conn.extractor_params as Record<string, unknown> | null;
+    const needs = builder && readsThroughBrowser(builder.name, builder.extraction_method, params) ? RENDER_RESERVE_MS : 0;
     if (Date.now() + needs > deadline) {
       // Out of room for this one; it is first in line on the next tick.
       if (needs === 0) break;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, planDrawings, planGallery, plansFromPage } from "@/lib/floorplans/extractors/lennar";
+import { communityHomeType, planDrawings, planGallery, plansFromPage, seriesLinks } from "@/lib/floorplans/extractors/lennar";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
 // caches a plan's first elevation under `elevationImages({"first":1})`; a
@@ -71,6 +71,9 @@ describe("Lennar: what a community builds", () => {
     expect(communityHomeType({ name: "Coach Homes", types: ["MULTI_FAMILY"] })).toBe("Coach Home");
     expect(communityHomeType({ name: "The Estates", types: ["SINGLE_FAMILY"] })).toBe("Single Family Home");
     expect(communityHomeType({ name: "Veranda Condominiums" })).toBe("Condominium");
+    // Calusa Country Club (2026-09-23): the buildings' names, and nothing else.
+    expect(communityHomeType({ name: "Veranda Golf Collection", types: ["MULTI_FAMILY"] })).toBe("Condominium");
+    expect(communityHomeType({ name: "Terrace Resort Collection", types: ["MULTI_FAMILY"] })).toBe("Condominium");
   });
 
   it("gives every plan and each home on it the plan's facts, drawings and type", () => {
@@ -87,5 +90,22 @@ describe("Lennar: what a community builds", () => {
     expect(home.quickMoveIn).toBe(true);
     expect(home.homeType).toBe("Single Family Home");
     expect(home.raw?.relatedPlan).toBe("Dover");
+  });
+});
+
+describe("seriesLinks", () => {
+  const aurora = "/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch";
+
+  it("finds the series one level beneath a community, and not their plans", () => {
+    const html = String.raw`{"url":"${aurora}/townhomes","x":1}<a href="${aurora}/patio-homes?tab=plans">` +
+      String.raw`{\"url\":\"${aurora}/townhomes/avery\"}<a href='${aurora}/patio-homes'>`;
+    expect(seriesLinks(html, aurora + "/")).toEqual([
+      `https://www.lennar.com${aurora}/townhomes`,
+      `https://www.lennar.com${aurora}/patio-homes`,
+    ]);
+  });
+
+  it("does not take a neighbouring community whose name begins the same", () => {
+    expect(seriesLinks(`"${aurora}-west/townhomes"`, aurora)).toEqual([]);
   });
 });

@@ -615,6 +615,16 @@ export interface PayloadImage {
 // A record's fields are split across script chunks mid-object, hence the
 // gaps the patterns allow; and a payload may or may not be escaped, hence
 // the optional backslashes.
+//
+// A plan's own page writes the same records whole, the description inside
+// the picture rather than pointed at (Perry 2016F, 2026-09-23):
+//
+//   {"public_id":"2016F_E31_Web_hvttov","secure_url":"https://…jpg", …,
+//    "metadata":{"design_id":"2016F","elevation_id":31,"type":["elevation"]}}
+//
+// and its menus carry pictures of their own — the markets, the building
+// process — whose descriptions name no design. Only a picture described
+// as one of the designs is taken from such a page.
 
 /** `3e:["interior"]` — a word the records point at rather than repeat. */
 const PAYLOAD_LABEL = /(?:^|\\n|>)([0-9a-f]{1,4}):\[\\?"([a-z_]+)\\?"\]/gi;
@@ -623,6 +633,12 @@ const PAYLOAD_META = /(?:^|\\n|>)([0-9a-f]{1,4}):(\{[^{}]{0,900}?\\?"type\\?":\\
 /** A picture: where it lives, and the record describing it. */
 const PAYLOAD_PICTURE =
   /\\?"secure_url\\?":\\?"(https?:(?:\\?\/){2}[^"]+?\.(?:jpe?g|png|webp|avif))\\?"[\s\S]{0,600}?\\?"metadata\\?":\\?"\$([0-9a-f]{1,4})\\?"/gi;
+
+/** A picture whose description is written inside it; the gap may not run into the next picture. */
+const PAYLOAD_PICTURE_INLINE =
+  /\\?"secure_url\\?":\\?"(https?:(?:\\?\/){2}[^"]+?\.(?:jpe?g|png|webp|avif))\\?"(?:(?!secure_url)[\s\S]){0,600}?\\?"metadata\\?":\{([^{}]{0,1500})\}/gi;
+const INLINE_DESIGN = /\\?"design_id\\?":\\?"([^"\\]+)\\?"/i;
+const INLINE_TYPE = /\\?"type\\?":\[\\?"([a-z_]+)/i;
 
 /** The words a page uses for a picture of the outside rather than a room. */
 const OUTSIDE_LABEL = /^(exterior|elevation|aerial|amenity|community|front)$/i;
@@ -637,7 +653,7 @@ const OUTSIDE_LABEL = /^(exterior|elevation|aerial|amenity|community|front)$/i;
  * (firstGallery), which keeps a plan from inheriting the community's
  * other pictures. Pure.
  */
-export function payloadGallery(html: string, pageUrl: string): PayloadImage[] {
+export function payloadGallery(html: string, pageUrl: string, names: (string | null | undefined)[] = []): PayloadImage[] {
   const baseUrl = documentBase(html, pageUrl);
   const labels = new Map<string, string>();
   for (const m of html.matchAll(PAYLOAD_LABEL)) labels.set(m[1], m[2].toLowerCase());
@@ -646,10 +662,26 @@ export function payloadGallery(html: string, pageUrl: string): PayloadImage[] {
     outsideOf.set(m[1], OUTSIDE_LABEL.test(labels.get(m[3]) ?? ""));
   }
 
+  const found: { at: number; src: string; outside: boolean; design?: string }[] = [];
+  for (const m of html.matchAll(PAYLOAD_PICTURE)) {
+    found.push({ at: m.index ?? 0, src: m[1], outside: outsideOf.get(m[2]) ?? false });
+  }
+  for (const m of html.matchAll(PAYLOAD_PICTURE_INLINE)) {
+    const design = m[2].match(INLINE_DESIGN)?.[1];
+    if (!design) continue;
+    found.push({ at: m.index ?? 0, src: m[1], outside: OUTSIDE_LABEL.test(m[2].match(INLINE_TYPE)?.[1] ?? ""), design });
+  }
+  found.sort((a, b) => a.at - b.at);
+  // A plan's page may show its neighbours too: where the pictures name the
+  // plan's own design, only those are its.
+  const wanted = new Set(names.filter((n): n is string => Boolean(n)).map(designKey));
+  const own = found.filter((f) => f.design && wanted.has(designKey(f.design)));
+  const chosen = own.length ? own : found;
+
   const seen = new Set<string>();
   const out: PayloadImage[] = [];
-  for (const m of html.matchAll(PAYLOAD_PICTURE)) {
-    let src = m[1].replace(/\\\//g, "/").replace(/\\/g, "");
+  for (const f of chosen) {
+    let src = f.src.replace(/\\\//g, "/").replace(/\\/g, "");
     try {
       src = new URL(src, baseUrl).href;
     } catch {
@@ -657,7 +689,10 @@ export function payloadGallery(html: string, pageUrl: string): PayloadImage[] {
     }
     if (seen.has(src)) continue;
     seen.add(src);
-    out.push({ src, outside: outsideOf.get(m[2]) ?? false });
+    out.push({ src, outside: f.outside });
   }
   return out;
 }
+
+/** "Design 2016F", "2016F" and "2016 F" as one design. */
+const designKey = (name: string) => name.toLowerCase().replace(/\b(?:design|plan|the)\b/g, "").replace(/[^a-z0-9]/g, "");
