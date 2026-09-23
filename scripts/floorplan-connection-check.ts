@@ -491,6 +491,13 @@ async function anatomy(url: string): Promise<string> {
     page = await (await surveyBrowser()).newPage();
     await page.setUserAgent(UA);
     await page.setViewport({ width: 1440, height: 2000 });
+    // The data a page asks for after it loads: where a builder keeps its
+    // plans when the markup does not carry them.
+    const calls: string[] = [];
+    page.on("response", (r) => {
+      const type = r.headers()["content-type"] ?? "";
+      if (/json/i.test(type) && calls.length < 80) calls.push(`${r.status()} ${r.request().method()} ${r.url().slice(0, 400)}`);
+    });
     const res = await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 }).catch(() => null);
     await wait(4_000);
     await page.evaluate(`(async () => { for (let n = 1; n <= 16; n++) { if (innerHeight * n > document.body.scrollHeight) break; scrollTo(0, innerHeight * n); await new Promise((r) => setTimeout(r, 300)); } scrollTo(0, 0); })()`);
@@ -498,7 +505,8 @@ async function anatomy(url: string): Promise<string> {
     const fetched = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) })
       .then(async (r) => `${r.status}, ${(await r.text()).length} chars`)
       .catch((e) => `failed: ${e instanceof Error ? e.message : String(e)}`);
-    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n` + String(await page.evaluate(ANATOMY_SCRIPT));
+    const body = String(await page.evaluate(ANATOMY_SCRIPT));
+    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n== JSON CALLS ==\n${calls.join("\n") || "(none)"}\n\n` + body;
   } catch (error) {
     return `could not open ${url}: ${error instanceof Error ? error.message : String(error)}`;
   } finally {

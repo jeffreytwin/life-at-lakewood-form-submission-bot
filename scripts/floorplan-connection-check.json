@@ -1,5 +1,14 @@
 {
-  "anatomy": [],
+  "anatomy": [
+    "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes",
+    "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes/floor-plans/3eab",
+    "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/floor-plans",
+    "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-towns",
+    "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/5289/floorplan/eva/",
+    "https://lwhomes.com/listings/",
+    "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch",
+    "https://www.johncannonhomes.com/community/everly-at-wellen-park/"
+  ],
   "concurrency": 4,
   "detailPlans": 99,
   "checks": [
