@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { firstGallery, fullSize, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -230,6 +230,31 @@ const fetchPage: PageReader = async (url) => {
   return { url: res.url || url, html: await res.text() };
 };
 
+/**
+ * A tag, read whole: a quoted attribute may hold a ">" of its own. Homes by
+ * Towne's pages keep their data as JSON in an attribute, and a stripper
+ * that ended every tag at the first ">" left three million characters of
+ * that JSON in the text Claude read — every plan came back the same size
+ * (2026-09-23). A "<" that does not open a tag name is text.
+ */
+const TAG_BODY = `(?:"[^"]*"|'[^']*'|[^'">])*`;
+const ANY_TAG = new RegExp(`<[/!]?[a-zA-Z][^\\s/>]*${TAG_BODY}>`, "g");
+const IMG_TAG = new RegExp(`<img\\b${TAG_BODY}>`, "gi");
+const A_TAG = new RegExp(`<a\\b${TAG_BODY}>`, "gi");
+
+function attrOf(tag: string, name: string): string | null {
+  return tag.match(new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i"))?.slice(1).find((v) => v != null)?.trim() || null;
+}
+
+/**
+ * The address a picture shows: its own, or the one a lazy page keeps in
+ * data-src behind a placeholder, or the largest of the sizes it offers.
+ */
+function pictureOf(tag: string): string | null {
+  const offered = [attrOf(tag, "data-src"), attrOf(tag, "src"), largestInSrcSet(attrOf(tag, "srcset") ?? attrOf(tag, "data-srcset"))];
+  return offered.find((u): u is string => Boolean(u) && !/^data:/i.test(u!)) ?? null;
+}
+
 /** A page as Claude is given it: its text, with its pictures and links as markers. Exported for the connection check. */
 export function distill(html: string, baseUrl: string): string {
   const abs = (u: string) => {
@@ -245,14 +270,21 @@ export function distill(html: string, baseUrl: string): string {
   // million characters and every read was cut at the ceiling (2026-09-23).
   const marker = (kind: string, url: string) => (/^data:/i.test(url) ? " " : ` [${kind} ${abs(url)}] `);
   const withImgs = html
+    .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
-    .replace(/<img\b[^>]*?src=["']([^"']+)["'][^>]*>/gi, (_, src) => marker("IMG", src))
-    .replace(/<a\b[^>]*?href=["']([^"'#]+)["'][^>]*>/gi, (_, href) => marker("LINK", href));
+    .replace(IMG_TAG, (tag) => {
+      const src = pictureOf(tag);
+      return src ? marker("IMG", src) : " ";
+    })
+    .replace(A_TAG, (tag) => {
+      const href = attrOf(tag, "href");
+      return href && !href.startsWith("#") ? marker("LINK", href) : " ";
+    });
   const text = withImgs
-    .replace(/<[^>]+>/g, " ")
+    .replace(ANY_TAG, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")

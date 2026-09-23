@@ -8,6 +8,7 @@ import {
   tourUrlIn,
   withoutBlanks,
   pictureAddresses,
+  distill,
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
@@ -389,5 +390,35 @@ describe("pictureAddresses: a picture is an address, not its name (Pulte, 2026-0
       pictureAddresses(["Exterior CO2", "https://res.cloudinary.com/x/image/fetch/w_1200/a.jpg", "Elevation FM1", " https://cdn.example.com/b.png ", 7, "/relative/c.jpg"])
     ).toEqual(["https://res.cloudinary.com/x/image/fetch/w_1200/a.jpg", "https://cdn.example.com/b.png"]);
     expect(pictureAddresses("not a list")).toEqual([]);
+  });
+});
+
+describe("distill: a page as Claude is given it", () => {
+  const base = "https://homesbytowne.com/florida/shellstone-at-waterside";
+
+  it("reads a tag whole, though an attribute holds JSON with a > in it (Homes by Towne, 2026-09-23)", () => {
+    const html = `<astro-island props="{&quot;note&quot;:[0,&quot;--> 2,617 sq ft everywhere&quot;]}"><h2>Banyan</h2><p>2,410 Sq. Ft.</p></astro-island>`;
+    const text = distill(html, base);
+    expect(text).toContain("Banyan");
+    expect(text).toContain("2,410 Sq. Ft.");
+    expect(text).not.toContain("2,617");
+    expect(text).not.toContain("quot");
+  });
+
+  it("gives a lazy picture the address it keeps in data-src, and a link its target", () => {
+    const html = `<img src="data:image/gif;base64,R0lGOD" data-src="/img/banyan-kitchen.jpg" alt="Kitchen"><a href="/florida/shellstone-at-waterside/banyan">Banyan</a><img srcset="/a-400.jpg 400w, /a-1600.jpg 1600w">`;
+    const text = distill(html, base);
+    expect(text).toContain("[IMG https://homesbytowne.com/img/banyan-kitchen.jpg]");
+    expect(text).toContain("[LINK https://homesbytowne.com/florida/shellstone-at-waterside/banyan]");
+    expect(text).toContain("[IMG https://homesbytowne.com/a-1600.jpg]");
+    expect(text).not.toContain("data:");
+  });
+
+  it("keeps a < that opens no tag as text, and is quick on a page of megabytes", () => {
+    expect(distill("<p>2 < 3 bedrooms</p>", base)).toBe("2 < 3 bedrooms");
+    const big = `<div data-x="${"a>b ".repeat(200_000)}">x</div>`.repeat(4);
+    const started = Date.now();
+    expect(distill(big, base)).toBe("x x x x");
+    expect(Date.now() - started).toBeLessThan(2_000);
   });
 });
