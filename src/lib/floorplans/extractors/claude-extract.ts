@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsNamed, firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -487,10 +487,26 @@ export function sortDrawings(urls: string[]): { drawings: string[]; views: strin
   for (const url of urls) {
     const name = fileNameWords(url).toLowerCase();
     const namesPlan = /\b(fp|floor ?plans?|floorplans?|plan|plans|layout|blueprint)\b/.test(name);
-    const namesView = /\b(elevation|elevations|exterior|exteriors|rendering|renderings|rend|front|rear|facade|streetscape)\b/.test(name);
+    // A view names itself, its architectural style (Dream Finders'
+    // "Arlington-Traditional-With-Bonus", 2026-09-23) or its colour scheme
+    // (Ashton Woods' "Griffin-U-Scheme"), or sits in a folder of them
+    // (KB's ".../elevations/1511_a_sch14.jpg").
+    const namesView =
+      /\b(elevation|elevations|exterior|exteriors|rendering|renderings|rend|front|rear|facade|streetscape|scheme|schemes|sch|traditional|transitional|craftsman|coastal|colonial|farmhouse|mediterranean|contemporary|modern|prairie|tuscan|spanish)\b/.test(name) ||
+      /\b(elevations?|exteriors?|renderings?)\b/.test(folderWords(url));
     (namesView && !namesPlan ? views : drawings).push(url);
   }
   return { drawings, views };
+}
+
+/** The words of the folders a file sits in: ".../30ft-kb-2020-series/elevations/1511_a.jpg" gives "... series elevations". */
+function folderWords(url: string): string {
+  try {
+    const parts = decodeURIComponent(new URL(url).pathname).split("/").filter(Boolean);
+    return parts.slice(0, -1).join(" ").replace(/[^a-zA-Z]+/g, " ").toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 /** Runs `fn` over the items a few at a time, keeping order. */
@@ -590,9 +606,14 @@ export async function readPlanPageWithClaude(
   const outside = Object.fromEntries(
     carried.filter((i) => i.outside).map((i) => [fullSize(i.src, html), OUTSIDE_META])
   );
-  const blueprints = [...plan.blueprintImages, ...pictureAddresses(page.blueprintImages)].filter(
-    (src, i, all) => src && all.indexOf(src) === i
-  );
+  // The drawings Claude reported, and any the page names for this plan
+  // that it passed over (a "Floor Plan" tab's picture, drawingsNamed); a
+  // home is named for its address, so its plan's name is looked for too.
+  const blueprints = [
+    ...plan.blueprintImages,
+    ...pictureAddresses(page.blueprintImages),
+    ...drawingsNamed(html, page_.url, [plan.name, plan.relatedPlanName, typeof plan.raw?.relatedPlan === "string" ? plan.raw.relatedPlan : null]),
+  ].filter((src, i, all) => src && all.indexOf(src) === i);
   // A list gives the plans it prices; the rest carry their price on their
   // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
   const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);

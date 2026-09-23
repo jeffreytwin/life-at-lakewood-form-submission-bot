@@ -6,6 +6,7 @@ import {
   largestInSrcSet,
   pictureKey,
   captionedCarousel,
+  drawingsNamed,
   sectionsOf,
 } from "@/lib/floorplans/extractors/plan-page";
 
@@ -322,5 +323,30 @@ describe("captionedCarousel (Pulte plan pages, Daylen at Riversong, 2026-09-23)"
   it("knows one picture at two sizes of the same image service", () => {
     expect(pictureKey(cdn(650661, 400))).toBe(pictureKey(cdn(650661, 768)));
     expect(pictureKey(cdn(650661))).not.toBe(pictureKey(cdn(650640)));
+  });
+});
+
+describe("drawingsNamed (Homes by Towne's Floor Plan tab, 2026-09-23)", () => {
+  const cdn = "https://d195jfz94fv5eb.cloudfront.net/uploads";
+  const page = `
+    <img src="${cdn}/gallery/banyan-kitchen.jpg" alt="Kitchen">
+    <div data-tab="floor-plan" hidden><img data-src="${cdn}/floorplan/hbt-fl-shellstone-waterside-fp-banyan.jpg"></div>
+    <script>{"other":"${cdn.replace(/\//g, "\\/")}\\/floorplan\\/hbt-fl-shellstone-waterside-fp-mooring.jpg"}</script>
+    <img src="https://x.com/plans/1272_fp.svg"><img src="https://x.com/plans/palmetto-floor-plan.png">`;
+  const BASE = "https://homesbytowne.com/florida/shellstone-at-waterside/banyan";
+
+  it("takes the drawing a file names for this plan, and not another plan's", () => {
+    expect(drawingsNamed(page, BASE, ["Banyan"])).toEqual([`${cdn}/floorplan/hbt-fl-shellstone-waterside-fp-banyan.jpg`]);
+    expect(drawingsNamed(page, BASE, ["Mooring"])).toEqual([`${cdn}/floorplan/hbt-fl-shellstone-waterside-fp-mooring.jpg`]);
+  });
+
+  it("reads a plan named by its number, and a home by its plan's name", () => {
+    expect(drawingsNamed(page, BASE, ["Plan 1272"])).toEqual(["https://x.com/plans/1272_fp.svg"]);
+    expect(drawingsNamed(page, BASE, ["12 Harbor Way", "Banyan"])).toHaveLength(1);
+  });
+
+  it("does not take a photo, or a word inside another word", () => {
+    expect(drawingsNamed(page, BASE, ["Palm"])).toEqual([]);
+    expect(drawingsNamed(`<img src="${cdn}/gallery/banyan-kitchen.jpg">`, BASE, ["Banyan"])).toEqual([]);
   });
 });

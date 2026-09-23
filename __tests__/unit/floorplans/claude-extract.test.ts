@@ -514,3 +514,16 @@ describe("mergeRepeatedPlan (Perry's 3220F on two lot widths, 2026-09-23)", () =
     expect(merged).toMatchObject({ price: 1_412_900, priceDisplay: "$1,412,900" });
   });
 });
+
+describe("sortDrawings: styles, colour schemes and folders of elevations (2026-09-23)", () => {
+  it("moves renderings named for their style or scheme, or filed with the elevations, out of the drawings", () => {
+    const df = "https://media.dreamfindershomes.com/371/2026/8/6/Regional-Arlington-Traditional-With-Bonus-3Car-Gen3.jpg?width=1000";
+    const aw = "https://awh.widen.net/content/qho3z66qke/webp/cms_Griffin-U-Scheme-122.jpg_q9xGlGv.jpg?w=1000";
+    const kb = "https://www.kbhome.com/globalassets/images/community-images/florida/tampa/30ft-kb-2020-series/elevations/1511_a_sch14.jpg";
+    const plan = "https://www.kbhome.com/globalassets/images/community-images/florida/tampa/30ft-kb-2020-series/elevations/1511_fp.jpg";
+    const towne = "https://d195jfz94fv5eb.cloudfront.net/uploads/floorplan/hbt-fl-shellstone-waterside-fp-mooring.jpg";
+    const got = sortDrawings([df, aw, kb, plan, towne]);
+    expect(got.views).toEqual([df, aw, kb]);
+    expect(got.drawings).toEqual([plan, towne]);
+  });
+});

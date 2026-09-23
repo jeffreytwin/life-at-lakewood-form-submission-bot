@@ -321,6 +321,59 @@ export function captionedCarousel(html: string, pageUrl: string): PlanPageGaller
   return { first, drop };
 }
 
+/** A drawing's address, bare or with a payload's escaped slashes; floor plans are often vectors. */
+const DRAWING_URL = /https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif|gif|svg)(?![a-z0-9])/gi;
+
+/** A name's words: "Grand Sabal" is grand, sabal; "hbt-fl-fp-mooring" is hbt, fl, fp, mooring. */
+const wordsOf = (text: string) =>
+  text
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+
+/** Words a plan's name carries that no file would: "Plan 1272" is 1272. */
+const GENERIC_NAME_WORD = /^(plan|the|model|home|homes|design|series|residence)$/;
+const DRAWING_WORD = /^(fp|floorplans?|flrpln|blueprints?)$/;
+
+/**
+ * The floor plan drawings a page carries for this plan, found by their
+ * names: a file or folder that says it is a floor plan ("fp", "floorplan",
+ * "floor-plan") and a file named for the plan. Homes by Towne keeps each
+ * plan's drawing at ".../uploads/floorplan/hbt-fl-shellstone-waterside-fp-
+ * mooring.jpg" behind a "Floor Plan" tab, and Claude, reading the page's
+ * words, reported it for three plans of seventeen (2026-09-23). A drawing
+ * named for another plan is never taken, and neither is one named for
+ * none. Pure; exported for tests.
+ */
+export function drawingsNamed(html: string, pageUrl: string, planNames: (string | null | undefined)[]): string[] {
+  const names = planNames
+    .map((name) => wordsOf(name ?? "").filter((w) => !GENERIC_NAME_WORD.test(w)))
+    .filter((words) => words.join("").length >= 3);
+  if (!names.length) return [];
+  const baseUrl = documentBase(html, pageUrl);
+  const found = new Map<string, string>();
+  for (const m of html.matchAll(DRAWING_URL)) {
+    let url: string;
+    let parts: string[];
+    try {
+      url = new URL(m[0].replace(/\\\//g, "/").replace(/\\/g, ""), baseUrl).href;
+      parts = decodeURIComponent(new URL(url).pathname).split("/").filter(Boolean);
+    } catch {
+      continue;
+    }
+    const file = wordsOf((parts.pop() ?? "").replace(/\.[a-z0-9]+$/i, ""));
+    const said = [...file, ...parts.flatMap(wordsOf)];
+    const saysDrawing = said.some((w, i) => DRAWING_WORD.test(w) || (w === "floor" && /^plans?$/.test(said[i + 1] ?? "")));
+    if (!saysDrawing) continue;
+    const forThisPlan = names.some((words) => words.every((w) => file.includes(w)) || file.includes(words.join("")));
+    if (!forThisPlan) continue;
+    const key = pictureKey(fullSize(url, html));
+    if (!found.has(key)) found.set(key, fullSize(url, html));
+  }
+  return [...found.values()];
+}
+
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The sizes a media store keeps one picture at, largest first. */
