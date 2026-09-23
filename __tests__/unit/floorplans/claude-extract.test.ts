@@ -464,3 +464,10 @@ describe("planName: a plan's code without the word in front of it (Perry, 2026-0
     expect(planName("Model Home Aspen")).toBe("Model Home Aspen");
   });
 });
+
+describe("distill leaves out the site's menus and footer", () => {
+  it("keeps the page's own words", () => {
+    const html = `<nav><a href="/florida">Florida</a> Find a New Home</nav><main><h2>Daylen</h2> From $342,990</main><footer>© Pulte <a href="/privacy">Privacy</a></footer>`;
+    expect(distill(html, "https://www.pulte.com/x")).toBe("Daylen From $342,990");
+  });
+});

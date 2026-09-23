@@ -276,6 +276,10 @@ export function distill(html: string, pageUrl: string): string {
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    // The site's own menus and footer say nothing about a community, and on
+    // a big builder's page they are much of what there is to read.
+    .replace(/<nav\b[\s\S]*?<\/nav>/gi, " ")
+    .replace(/<footer\b[\s\S]*?<\/footer>/gi, " ")
     .replace(IMG_TAG, (tag) => {
       const src = pictureOf(tag);
       return src ? marker("IMG", src) : " ";
