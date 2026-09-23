@@ -22,6 +22,7 @@ import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTaylorMorrison, readTaylorPlanPage } from "@/lib/floorplans/extractors/taylor-morrison";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
+import { extractDrHorton } from "@/lib/floorplans/extractors/drhorton";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { linkQuickMoveIns, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
@@ -60,6 +61,7 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Taylor Morrison": extractTaylorMorrison,
   "Mattamy Homes": extractMattamy,
   "DRB Homes": extractDrb,
+  "D.R. Horton": extractDrHorton,
   "Lee Wetherington": extractLeeWetherington,
   // Builders that block their own sites — sourced from the master-planned-
   // community aggregators instead (a different origin, so the blocks don't
