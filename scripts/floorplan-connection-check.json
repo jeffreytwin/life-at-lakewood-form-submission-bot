@@ -100,7 +100,8 @@
       "builder": "Ashton Woods"
     },
     {
-      "builder": "Cardel Homes"
+      "builder": "Cardel Homes",
+      "method": "render_claude"
     },
     {
       "builder": "Centex Homes"
@@ -109,7 +110,8 @@
       "builder": "DRB Homes"
     },
     {
-      "builder": "Highland Homes"
+      "builder": "Highland Homes",
+      "method": "render_claude"
     },
     {
       "builder": "Inland Homes"
