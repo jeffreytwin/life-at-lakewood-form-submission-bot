@@ -16,6 +16,7 @@ import {
   sectionsOf,
   askedSize,
   onePerPicture,
+  drawingsMarked,
 } from "@/lib/floorplans/extractors/plan-page";
 
 const BASE = "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/";
@@ -563,5 +564,34 @@ describe("onePerPicture", () => {
 
   it("keeps the first spelling where none asks for a size", () => {
     expect(onePerPicture(["https://r.com/media-1.jpg", "https://r.com/media-1.webp"]).photos).toEqual(["https://r.com/media-1.jpg"]);
+  });
+});
+
+describe("drawingsMarked", () => {
+  // Covington III at Wild Blue (Stock, 2026-09-23): the drawing under a heading of its own.
+  const STOCK = "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/281/";
+  const stockPage = `<section><h2 class="display-3">Elevations</h2><div><button aria-label="Open Elevation K — Modern"><img alt="Elevation K — Modern" src="https://fabrik.blob.core.windows.net/public/c25d1671_lg.jpg"></button></div></section>
+    <section><div class=" "><h2 class="display-3">Floor Plan</h2><div class="h-[3px] w-14"></div></div><div class="mt-6 space-y-6"><div class="flex flex-wrap gap-3"><button>PDF for Print</button></div>
+    <div class=" w-full sm:w-1/2"><button class="relative block overflow-hidden group" aria-label="Open Covington III floor plan"><img src="https://fabrik.blob.core.windows.net/public/4a6363de-a6b8-45d1-b158-5cb523dc4947.jpg" alt="Covington III floor plan" class="w-full h-auto block"/></button></div></div></section>
+    <section><h2>Interested in the Covington III</h2><img src="https://www.stockdevelopment.com/contact.jpg"></section>`;
+
+  it("takes the pictures under a heading that is only \"Floor Plan\"", () => {
+    expect(drawingsMarked(stockPage, STOCK)).toEqual(["https://fabrik.blob.core.windows.net/public/4a6363de-a6b8-45d1-b158-5cb523dc4947.jpg"]);
+  });
+
+  // Jasmine 2 at Broadleaf (SimplyDwell, 2026-09-23): the drawing in a box its class names.
+  it("takes a picture whose class or box calls it the floor plan, once", () => {
+    const fp = "https://simplydwellhomes.com/wp-content/uploads/2026/06/Jasmine-2.jpg";
+    const page = `<div class="sd-ov__panel"><div class="sd-ov__floorplan"><img class="sd-ov__fp-img" src="${fp}" alt="Jasmine 2" loading="lazy"></div></div>
+      <dialog aria-label="Floorplan zoom"><div class="zoomist-image"><img src="${fp}" alt="Jasmine 2"></div></dialog>
+      <section class="sd-hgal" aria-label="Photo gallery"><ul class="sd-hgal__track"><li class="sd-hgal__item"><button class="sd-hgal__thumb"><img src="https://simplydwellhomes.com/wp-content/uploads/2026/06/Jasmine-30-2413_Elevation-A.webp" alt=""></button></li></ul></section>`;
+    expect(drawingsMarked(page, "https://simplydwellhomes.com/new-homes/broadleaf/jasmine-2/")).toEqual([fp]);
+  });
+
+  it("takes nothing from a list of other plans, a page's own title, or a room's caption", () => {
+    const page = `<h1>Fraser floor plan</h1><img src="https://r.com/media-1.jpg" alt="Kitchen of the Fraser floor plan">
+      <h2>Other Floor Plans</h2><div class="related-floorplans"><div class="floorplan-card"><img src="https://r.com/sage.jpg" alt="Sage"></div></div>
+      <div class="fp-section"><img src="https://r.com/hero.jpg"></div>`;
+    expect(drawingsMarked(page, "https://r.com/fraser/")).toEqual([]);
   });
 });

@@ -507,6 +507,54 @@ export function namedGallery(html: string, pageUrl: string): PageImage[] {
   return [];
 }
 
+/** A heading that is only "Floor Plan(s)", as a plan's page heads its drawing (Stock). */
+const DRAWING_HEADING = /^\s*(?:the\s+)?floor\s*-?\s*plans?\s*$/i;
+/** A class that says what it holds is the floor plan: "sd-ov__floorplan", "sd-ov__fp-img" (SimplyDwell). */
+const DRAWING_CLASS = /floor[-_]?plan|(?:^|[_-])fp[-_]?(?:img|image|drawing)\b/i;
+/** …but not a list of other plans ("related-floorplans", "floorplan-card"). */
+const OTHER_PLANS_CLASS = /related|other|similar|more|card|list|grid|carousel|slider|nav|menu/i;
+
+/**
+ * The floor plan drawings a plan's page marks as such in its markup: the
+ * pictures under a heading that is only "Floor Plan" (Stock: "<h2>Floor
+ * Plan</h2>" over "Covington III floor plan"), or a picture whose own
+ * class or its box's says it is the floor plan (SimplyDwell: "sd-ov__fp-img"
+ * in "sd-ov__floorplan"). Read off the markup, they are the same every
+ * run; Claude, reading the page's words, reported Stock's for some plans
+ * one night and others the next (2026-09-23). Pure; exported for tests.
+ */
+export function drawingsMarked(html: string, pageUrl: string): string[] {
+  const baseUrl = documentBase(html, pageUrl);
+  const found: string[] = [];
+  const take = (tag: string) => {
+    const src = imageAddress(tag);
+    if (!src || src.startsWith("data:") || found.length >= 6) return;
+    try {
+      const url = new URL(src.replace(/&amp;/gi, "&"), baseUrl).href;
+      if (!found.includes(url)) found.push(url);
+    } catch {
+      // not an address
+    }
+  };
+  // Under a heading that is only "Floor Plan", to the next heading.
+  for (const m of html.matchAll(/<h([1-4])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) {
+    if (!DRAWING_HEADING.test(readable(m[2].replace(/<[^>]+>/g, " ")))) continue;
+    const from = (m.index ?? 0) + m[0].length;
+    const next = html.slice(from).search(/<h[1-4]\b/i);
+    const block = html.slice(from, next < 0 ? from + 20_000 : from + Math.min(next, 20_000));
+    for (const img of block.matchAll(/<img\b[^>]*>/gi)) take(img[0]);
+  }
+  // A picture its own class, or its box's, calls the floor plan.
+  const marked = (classes: string | null) =>
+    (classes ?? "").split(/\s+/).some((c) => DRAWING_CLASS.test(c) && !OTHER_PLANS_CLASS.test(c));
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const before = html.slice(Math.max(0, (m.index ?? 0) - 300), m.index ?? 0);
+    const box = [...before.matchAll(/<(?:div|figure|picture|a|button|span)\b[^>]*\bclass=["']([^"']*)["'][^>]*>/gi)].pop()?.[1] ?? null;
+    if (marked(attr(m[0], "class")) || marked(box)) take(m[0]);
+  }
+  return found;
+}
+
 /**
  * The floor plan drawings a page carries for this plan, found by their
  * names: a file or folder that says it is a floor plan ("fp", "floorplan",

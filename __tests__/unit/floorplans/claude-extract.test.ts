@@ -15,6 +15,7 @@ import {
   homesPageIn,
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
+  drawingsOrPhotos,
 } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -567,5 +568,34 @@ describe("distill leaves a carousel's joined pictures out (Pulte's Riversong, 20
     const text = distill(`<main><h1>Riversong</h1>${slide}<p>Daylen from $342,990</p></main>`, "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407");
     expect(text).not.toContain("picturepark");
     expect(text).toContain("$342,990");
+  });
+});
+
+describe("drawingsOrPhotos", () => {
+  const sd = (f: string) => `https://simplydwellhomes.com/wp-content/uploads/2026/06/${f}`;
+
+  it("keeps a picture read both ways as the drawing, SimplyDwell's floor plan", () => {
+    const got = drawingsOrPhotos([sd("Jasmine-2.jpg")], {
+      urls: [sd("Jasmine-30-2413_Elevation-A.webp"), sd("Jasmine-2.jpg"), sd("Jasmine-30-2413_Elevation-B.webp")],
+      meta: { [sd("Jasmine-30-2413_Elevation-A.webp")]: { kind: "primary" }, [sd("Jasmine-2.jpg")]: { caption: null, room: null } },
+    });
+    expect(got.blueprintImages).toEqual([sd("Jasmine-2.jpg")]);
+    expect(got.galleryImages).toEqual([sd("Jasmine-30-2413_Elevation-A.webp"), sd("Jasmine-30-2413_Elevation-B.webp")]);
+    expect(got.galleryMeta[sd("Jasmine-2.jpg")]).toBeUndefined();
+  });
+
+  it("keeps the plan's main picture a photo, whatever format the drawing names it in (Richmond's Palm)", () => {
+    const main = "https://www.richmondamerican.com/content/plans/media-61025.jpg";
+    const got = drawingsOrPhotos(["https://www.richmondamerican.com/content/plans/media-61025.webp"], { urls: [main], meta: {} });
+    expect(got).toMatchObject({ blueprintImages: [], galleryImages: [main] });
+  });
+
+  it("keeps a photo whose caption names a room", () => {
+    const kitchen = "https://www.richmondamerican.com/content/pln/media-267142.webp";
+    const got = drawingsOrPhotos([kitchen], {
+      urls: ["https://x.com/front.jpg", kitchen],
+      meta: { [kitchen]: { caption: "Kitchen of the Sage floor plan", room: "kitchen", kind: "photo" } },
+    });
+    expect(got).toMatchObject({ blueprintImages: [], galleryImages: ["https://x.com/front.jpg", kitchen] });
   });
 });

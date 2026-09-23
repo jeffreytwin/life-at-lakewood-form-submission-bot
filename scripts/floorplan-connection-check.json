@@ -1,21 +1,42 @@
 {
-  "anatomy": [
-    "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i"
-  ],
-  "raw": [
-    {
-      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i",
-      "around": [
-        "List = [",
-        "MoveIn",
-        "moveIn",
-        "homesite"
-      ],
-      "chars": 300,
-      "count": 6
-    }
-  ],
+  "anatomy": [],
+  "raw": [],
   "concurrency": 3,
-  "detailPlans": 1,
-  "checks": []
+  "detailPlans": 2,
+  "checks": [
+    {
+      "builder": "Stock Luxury Homes",
+      "all": true
+    },
+    {
+      "builder": "SimplyDwell Homes",
+      "all": true
+    },
+    {
+      "builder": "Homes by Towne"
+    },
+    {
+      "builder": "Perry Homes"
+    },
+    {
+      "builder": "Kolter Homes",
+      "community": "Woodland Preserve"
+    },
+    {
+      "builder": "Dream Finders Homes",
+      "community": "Waterside - Bungalow Walk"
+    },
+    {
+      "builder": "Medallion Home"
+    },
+    {
+      "builder": "Inland Homes"
+    },
+    {
+      "builder": "Cardel Homes"
+    },
+    {
+      "builder": "Ryan Homes"
+    }
+  ]
 }
