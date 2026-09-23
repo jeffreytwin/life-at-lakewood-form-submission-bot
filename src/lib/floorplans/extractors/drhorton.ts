@@ -172,10 +172,17 @@ export function readDrhPage(html: string): {
     const caption = decode(tag.match(/\salt="([^"]*)"/i)?.[1] ?? "").trim();
     // A picture titled for the floor plan is its drawing — unless its file
     // says it is an elevation: Fletcher's four renderings are all titled
-    // "Floor Plan" and named "freeportii-elevation-a-…" (2026-09-23).
-    const namedView = /elevation|exterior|rendering|front|rear/i.test(fileNameWords(url));
-    if (/\bfloor ?plan\b/i.test(caption) && !namedView) drawings.push(url);
-    else gallery.push({ src: url, caption: namedView && /\bfloor ?plan\b/i.test(caption) ? "Exterior" : caption });
+    // "Floor Plan" and named "freeportii-elevation-a-…" (2026-09-23) — or
+    // names a room: Star Farms titles every picture of its Hawthorne,
+    // Camden, Jordyn II and Torino "Floor Plan", kitchens and bedrooms
+    // included, and names each file for what it shows.
+    const fileWords = fileNameWords(url);
+    const namedView = /elevation|exterior|rendering|front|rear/i.test(fileWords);
+    const namedRoom = !namedView && classifyRoom(fileWords) !== null && !/\b(fp|floor ?plans?|floorplans?)\b/i.test(fileWords);
+    const titledPlan = /\bfloor ?plan\b/i.test(caption);
+    if (titledPlan && !namedView && !namedRoom) drawings.push(url);
+    // The title said nothing true; the file name is left to say what it shows.
+    else gallery.push({ src: url, caption: titledPlan ? (namedView ? "Exterior" : "") : caption });
   }
 
   // schema.org's FloorPlan block: the plan's own facts.
@@ -226,7 +233,13 @@ export function communityHomeType(html: string): string | null {
   const about = html.match(/About our community\s*<\/h\d>([\s\S]{0,6000}?)<h\d\b/i)?.[1] ?? "";
   const text = words(about);
   const said = text.match(/\b(single[- ]family|town ?homes?|paired villas?|villas?|condominiums?|condos?)\b/i)?.[1];
-  return said ? standardHomeType(said) : null;
+  if (said) return standardHomeType(said);
+  // Failing that, what the page's title says is for sale: "Houses For Sale
+  // in Parrish, FL | Rye Crossing" (2026-09-23), whose description names
+  // no kind of home at all.
+  const title = words(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? "");
+  const selling = title.match(/^\s*(houses|town ?homes|town ?houses|villas|condos|condominiums)\s+for\s+sale\b/i)?.[1];
+  return selling ? standardHomeType(selling) : null;
 }
 
 /** A plan's name out of its page's heading: "Oakfield Lakes Allex Floor Plan" is Allex. Exported for tests. */

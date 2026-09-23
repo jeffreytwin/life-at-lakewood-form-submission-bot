@@ -88,6 +88,9 @@ describe("what D.R. Horton's pages say besides their pictures", () => {
     expect(communityHomeType(lakes)).toBe("Single Family Home");
     expect(communityHomeType(ashcombe)).toBe("Townhome");
     expect(communityHomeType("<h1>Oakfield</h1>")).toBeNull();
+    // Rye Crossing's description names no kind of home; its title does.
+    expect(communityHomeType("<title>Houses For Sale in Parrish, FL | Rye Crossing | D.R. Horton</title><h1>Rye Crossing</h1>")).toBe("Single Family Home");
+    expect(communityHomeType("<title>Townhomes For Sale in Venice, FL | Ashcombe</title>")).toBe("Townhome");
   });
 
   it("takes a picture titled Floor Plan but named for an elevation as a photo (Fletcher, 2026-09-23)", () => {
@@ -97,5 +100,22 @@ describe("what D.R. Horton's pages say besides their pictures", () => {
     </div><div class="mobile-carousel"></div>`);
     expect(page.gallery.map((g) => g.src)).toEqual(["https://www.drhorton.com/-/media/x/e410/freeportii-elevation-a-2carfl-cs7.jpg"]);
     expect(page.drawings).toEqual(["https://www.drhorton.com/-/media/x/e410/fletcher-fp.jpg"]);
+  });
+
+  it("takes the rooms of a plan that titles every picture Floor Plan as photos (Hawthorne, 2026-09-23)", () => {
+    const page = readDrhPage(`<div class="PropertyGallery-container">
+      <img data-lazy="/-/media/x/hawthorne_kitchen_web.jpg?w=494" alt="Floor Plan">
+      <img data-lazy="/-/media/x/hawthorne_primary_bedroom_web.jpg?w=494" alt="Floor Plan">
+      <img data-lazy="/-/media/x/hawthorne_first_floor.jpg?w=494" alt="Floor Plan">
+      <img data-lazy="/-/media/x/hawthorne_bonus_room_floorplan.jpg?w=494" alt="Floor Plan">
+    </div><div class="mobile-carousel"></div>`);
+    expect(page.gallery).toEqual([
+      { src: "https://www.drhorton.com/-/media/x/hawthorne_kitchen_web.jpg", caption: "" },
+      { src: "https://www.drhorton.com/-/media/x/hawthorne_primary_bedroom_web.jpg", caption: "" },
+    ]);
+    expect(page.drawings).toEqual([
+      "https://www.drhorton.com/-/media/x/hawthorne_first_floor.jpg",
+      "https://www.drhorton.com/-/media/x/hawthorne_bonus_room_floorplan.jpg",
+    ]);
   });
 });

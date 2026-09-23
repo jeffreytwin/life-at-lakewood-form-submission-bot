@@ -745,7 +745,9 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
       );
     }
     // A few plans in full, so the pictures themselves can be judged.
-    const detail = [...base].sort((a, b) => b.galleryImages.length - a.galleryImages.length).slice(0, config.detailPlans ?? 1);
+    // And the first plan the check found fault with, whatever its size.
+    const faulted = [...printsLookLikePhotos, ...base.filter((p) => p.galleryImages.length <= 1)].slice(0, 1);
+    const detail = [...new Set([...[...base].sort((a, b) => b.galleryImages.length - a.galleryImages.length).slice(0, config.detailPlans ?? 1), ...faulted])];
     for (const p of detail) {
       out(`  ▸ ${p.name}: ${p.sourceUrl}`);
       for (const src of p.galleryImages) {
