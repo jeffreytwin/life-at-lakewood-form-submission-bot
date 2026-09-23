@@ -2,7 +2,10 @@
   "anatomy": [
     "https://www.lennar.com/new-homes/florida/tampa-manatee/parrish/prosperity-lakes/the-estates/dover",
     "https://www.lennar.com/new-homes/florida/tampa-manatee/parrish/prosperity-lakes/the-estates/dover/15198575097",
-    "https://homesbytowne.com/florida/shellstone-at-waterside"
+    "https://homesbytowne.com/florida/shellstone-at-waterside",
+    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
+    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote/17768-stillness-ct&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
+    "https://mattamyhomes.com/florida/sarasota/venice/wellen-park/sunstone/anclote"
   ],
   "concurrency": 4,
   "detailPlans": 99,

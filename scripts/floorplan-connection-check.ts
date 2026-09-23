@@ -371,7 +371,40 @@ const ANATOMY_SCRIPT = `(() => {
   return out.join("\\n");
 })()`;
 
+/** The anatomy of a JSON answer: where its pictures are, and the shape around them. */
+async function jsonAnatomy(url: string): Promise<string> {
+  const res = await fetch(url, { headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(45_000) });
+  const text = await res.text();
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return `status ${res.status}; not JSON (${text.length} chars): ${text.slice(0, 1500)}`;
+  }
+  const out: string[] = [`status ${res.status}; ${text.length} chars of JSON`, "", "== PICTURES (path = value) =="];
+  const shapes: string[] = [];
+  const walk = (value: unknown, at: string, depth: number) => {
+    if (typeof value === "string") {
+      if (/\.(?:jpe?g|png|webp|svg|gif)(?:\?|$)/i.test(value) && out.length < 260) out.push(`${at} = ${value.slice(0, 200)}`);
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      if (depth <= 7 && shapes.length < 200) shapes.push(`${at} [${value.length}]`);
+      value.forEach((v, i) => walk(v, `${at}[${i}]`, depth + 1));
+      return;
+    }
+    const keys = Object.keys(value);
+    if (depth <= 7 && shapes.length < 200) shapes.push(`${at} {${keys.slice(0, 25).join(", ")}}`);
+    for (const k of keys) walk((value as Record<string, unknown>)[k], `${at}.${k}`, depth + 1);
+  };
+  walk(data, "$", 0);
+  out.push("", "== SHAPE ==", ...shapes, "", "== BEGINS ==", text.slice(0, 3000));
+  return out.join("\n");
+}
+
 async function anatomy(url: string): Promise<string> {
+  if (/\/api\/|\.json(?:\?|$)/i.test(url)) return jsonAnatomy(url).catch((e) => `could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
   let page: Page | null = null;
   try {
     page = await (await surveyBrowser()).newPage();

@@ -44,3 +44,12 @@ describe("plansFromSearchData (Mattamy)", () => {
     expect(normalizeMattamyCard({}, { quickMoveIn: false })).toBeNull();
   });
 });
+
+describe("a community whose market was renamed in its address (Sunstone, 2026-09-23)", () => {
+  it("still matches its cards by the last two parts of the address", () => {
+    const renamed = plansFromSearchData(capture.data, "/florida/some-old-market-name/jensen-beach/avila");
+    const current = plansFromSearchData(capture.data, "/florida/palm-city-stuart/jensen-beach/avila");
+    expect(renamed.length).toBeGreaterThan(0);
+    expect(renamed.map((p) => p.planKey)).toEqual(current.map((p) => p.planKey));
+  });
+});

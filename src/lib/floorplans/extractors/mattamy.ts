@@ -82,7 +82,11 @@ export function plansFromSearchData(
     };
   })?.sitecore?.route?.placeholders?.["jss-main"]?.find((c) => c?.fields)?.fields;
   if (!fields) throw new Error("search-data payload missing Search component fields");
-  const prefix = communityPath.replace(/\/$/, "").toLowerCase();
+  // The community by the last two parts of its address — "wellen-park/
+  // sunstone" — not the whole of it: Mattamy renamed its market in the path
+  // ("sarasota-bradenton" became "sarasota", 2026-09-23) and every card of
+  // a saved connection stopped matching. "sunstone-lakeside" is its own.
+  const tail = communityPath.replace(/\/$/, "").toLowerCase().split("/").filter(Boolean).slice(-2).join("/");
   const out: NormalizedPlan[] = [];
   for (const [key, quickMoveIn] of [
     ["planCards", false],
@@ -90,8 +94,8 @@ export function plansFromSearchData(
   ] as const) {
     for (const card of fields[key]?.value ?? []) {
       if (!card || typeof card !== "object") continue;
-      const url = (card.url ?? "").toLowerCase();
-      if (!url.startsWith(prefix + "/") && url !== prefix) continue;
+      const url = (card.url ?? "").toLowerCase().replace(/\/$/, "");
+      if (!tail || !(url.endsWith("/" + tail) || url.includes("/" + tail + "/"))) continue;
       const plan = normalizeMattamyCard(card, { quickMoveIn });
       if (plan) out.push(plan);
     }
@@ -104,7 +108,10 @@ export async function extractMattamy(params: {
   market?: string;
 }): Promise<NormalizedPlan[]> {
   if (!params?.url) throw new Error("mattamy extractor requires extractor_params.url (community page)");
-  const communityPath = new URL(params.url).pathname;
+  // Where the saved address leads now, in case the site has moved it.
+  const communityPath = await fetch(params.url, { headers: { "user-agent": UA, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(30_000) })
+    .then((r) => new URL(r.url || params.url!).pathname)
+    .catch(() => new URL(params.url!).pathname);
   const market = params.market ?? "Sarasota-Bradenton";
   const apiUrl =
     `https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/search-data` +
