@@ -792,6 +792,17 @@ async function extractPages(
     }
   }
 
+  // Every page read and not one plan on any: a page fetched without its
+  // scripts often lists nothing its visitors see — Homes by WestBay's
+  // Crosswind Ranch shows nineteen floor plans and fetches as seventeen
+  // thousand characters without a price (2026-09-23). Said plainly, so
+  // the fix is in the message rather than in a guess.
+  if (!listed.length && !can.press) {
+    throw new Error(
+      `no plans on ${readPages.join(", ")} as fetched — if the builder's page shows plans, it draws them after loading: switch this builder to Render + Claude`
+    );
+  }
+
   // Each plan's own page, where the list linked one of its own. A page
   // that cannot be read costs that plan its extras, never the run.
   const pages = await mapLimit(listed, atOnce, async (plan) => {
