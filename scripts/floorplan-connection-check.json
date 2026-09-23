@@ -1,49 +1,79 @@
 {
-  "anatomy": [],
-  "concurrency": 4,
-  "detailPlans": 99,
-  "checks": [
-    {
-      "builder": "D.R. Horton",
-      "community": "Oakfield"
-    },
-    {
-      "builder": "D.R. Horton",
-      "community": "Ashcombe"
-    },
-    {
-      "builder": "Pulte Homes",
-      "community": "Riversong"
-    },
-    {
-      "builder": "Pulte Homes",
-      "community": "North River Ranch"
-    },
-    {
-      "builder": "Centex Homes"
-    },
-    {
-      "builder": "Mattamy Homes",
-      "community": "Windwater"
-    },
-    {
-      "builder": "Richmond American Homes"
-    },
-    {
-      "builder": "Perry Homes"
-    }
+  "anatomy": [
+    "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407"
   ],
   "raw": [
     {
       "url": "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
       "around": [
-        "elevation_id",
-        "design_id",
-        "2016F"
+        "2016F",
+        "levation"
       ],
-      "chars": 600,
-      "after": 116000,
-      "count": 4
+      "chars": 350,
+      "after": 125000,
+      "count": 10
+    },
+    {
+      "url": "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407",
+      "around": [
+        "699105",
+        "Quick Move-In",
+        "application/ld+json"
+      ],
+      "chars": 1500,
+      "count": 2
+    }
+  ],
+  "concurrency": 4,
+  "detailPlans": 3,
+  "checks": [
+    {
+      "builder": "Lennar",
+      "all": true
+    },
+    {
+      "builder": "Mattamy Homes",
+      "all": true
+    },
+    {
+      "builder": "Toll Brothers",
+      "all": true
+    },
+    {
+      "builder": "Taylor Morrison",
+      "all": true
+    },
+    {
+      "builder": "M/I Homes",
+      "all": true
+    },
+    {
+      "builder": "ICI Homes",
+      "all": true
+    },
+    {
+      "builder": "D.R. Horton",
+      "all": true
+    },
+    {
+      "builder": "Kolter Homes",
+      "all": true
+    },
+    {
+      "builder": "Homes by Towne",
+      "all": true
+    },
+    {
+      "builder": "Meritage Homes",
+      "all": true
+    },
+    {
+      "builder": "Neal Signature Homes",
+      "all": true
+    },
+    {
+      "builder": "DRB Homes",
+      "all": true
     }
   ]
 }
