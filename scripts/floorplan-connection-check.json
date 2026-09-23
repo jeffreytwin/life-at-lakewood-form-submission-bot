@@ -9,26 +9,52 @@
   "raw": [
     {
       "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch",
-      "around": ["plan-1541", "\"price\"", "__NEXT_DATA__"],
+      "around": [
+        "plan-1541",
+        "\"price\"",
+        "__NEXT_DATA__"
+      ],
       "chars": 1200,
       "count": 2
     },
     {
       "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
-      "around": ["westin-ii", "Savannah", "/api/"],
+      "around": [
+        "westin-ii",
+        "Savannah",
+        "/api/"
+      ],
       "chars": 1200,
       "count": 2
     },
     {
       "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/saddlestone-innovation",
-      "around": ["Pelican", "Sandpiper", "/api/"],
+      "around": [
+        "Pelican",
+        "Sandpiper",
+        "/api/"
+      ],
       "chars": 1200,
       "count": 2
     },
     {
       "url": "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/",
-      "around": ["Floor plan", "floorplan", "/api/"],
+      "around": [
+        "Floor plan",
+        "floorplan",
+        "/api/"
+      ],
       "chars": 1000,
+      "count": 2
+    },
+    {
+      "url": "https://www.adamshomes.com/plan/aviary-at-rutland-ranch/1820",
+      "around": [
+        "webp/80",
+        "exact/w",
+        "ADDITIONAL ELEVATIONS"
+      ],
+      "chars": 900,
       "count": 2
     }
   ],
@@ -51,6 +77,15 @@
     {
       "builder": "Pulte Homes",
       "community": "Riversong"
+    },
+    {
+      "builder": "Dream Finders Homes",
+      "community": "Waterside - Bungalow Walk"
+    },
+    {
+      "builder": "Adams Homes",
+      "all": true,
+      "method": "render_claude"
     }
   ]
 }

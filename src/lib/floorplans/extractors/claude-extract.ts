@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -648,24 +648,19 @@ export async function readPlanPageWithClaude(
   );
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
-  // One photograph once, whichever of its spellings came first: the list's
-  // picture and the gallery's are often the same file in two formats.
-  const kept = new Set<string>();
-  const photos = [
-    ...plan.galleryImages,
-    ...pictureAddresses(page.photoImages),
-    ...outsides.map((i) => i.src),
-    ...gallery.first.map((i) => i.src),
-    ...carried.map((i) => i.src),
-  ]
-    .filter((src) => src && !gallery.drop.has(src))
-    .map((src) => fullSize(src, html))
-    .filter((src) => {
-      const key = pictureKey(src);
-      if (kept.has(key)) return false;
-      kept.add(key);
-      return true;
-    });
+  // One photograph once, at the largest size any spelling asks for.
+  const { photos, enlarged } = onePerPicture(
+    [
+      ...plan.galleryImages,
+      ...pictureAddresses(page.photoImages),
+      ...outsides.map((i) => i.src),
+      ...gallery.first.map((i) => i.src),
+      ...carried.map((i) => i.src),
+    ]
+      .filter((src) => src && !gallery.drop.has(src))
+      .map((src) => fullSize(src, html))
+  );
+  const kept = new Set(photos.map(pictureKey));
   // A page that gave one picture may draw the rest once its scripts run:
   // Perry's elevations appear only in the browser. Where a browser is to
   // hand and the run has time, the page is drawn once more and the
@@ -741,7 +736,12 @@ export async function readPlanPageWithClaude(
     ]),
     galleryImages: photos,
     blueprintImages: blueprints,
-    galleryMeta: { ...plan.galleryMeta, ...said, ...outside },
+    // What the list said of a picture stays with it at its larger size.
+    galleryMeta: {
+      ...Object.fromEntries(Object.entries(plan.galleryMeta ?? {}).map(([src, meta]) => [enlarged.get(src) ?? src, meta])),
+      ...said,
+      ...outside,
+    },
     // The code a base plan's homes may name it by (David Weekley's "F057"
     // is The Wagoner): what ties them when the home gives no name.
     raw: !plan.quickMoveIn && page.planCode?.trim() && !plan.raw?.planId ? { ...(plan.raw ?? {}), planId: page.planCode.trim() } : plan.raw,

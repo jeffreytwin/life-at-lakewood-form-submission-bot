@@ -14,6 +14,8 @@ import {
   imageAddress,
   namedGallery,
   sectionsOf,
+  askedWidth,
+  onePerPicture,
 } from "@/lib/floorplans/extractors/plan-page";
 
 const BASE = "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/";
@@ -511,5 +513,54 @@ describe("namedGallery", () => {
 
   it("gives nothing where no gallery holds three pictures", () => {
     expect(namedGallery(`<div class="gallery"><img src="/a.jpg"><img src="/b.jpg"></div>`, DF)).toEqual([]);
+  });
+
+  it("takes each slide once, not again as its thumbnail", () => {
+    const thumb = (n: number) =>
+      `<div class="swiper-slide"><img src="https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=100&amp;height=62" alt="Thumbnail for Slide ${n}" /></div>`;
+    const withThumbs = page.replace(`</div></div>\n    </div>`, `</div></div><div class="swiper thumbs">${[1, 2, 3, 4].map(thumb).join("")}</div>\n    </div>`);
+    expect(withThumbs).toContain("Thumbnail for Slide 4");
+    expect(namedGallery(withThumbs, DF).map((i) => i.src)).toEqual(
+      [1, 2, 3, 4].map((n) => `https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=1000&height=625`)
+    );
+  });
+});
+
+describe("pictureKey and askedWidth", () => {
+  it("knows a file at any size its query asks for, and by its name however it is written", () => {
+    const df = "https://media.dreamfindershomes.com/371/2024/3/17/Bunaglow_Walk-Pemberly-A-Gen3.jpg";
+    expect(pictureKey(`${df}?width=1000&height=625&fit=bounds&ois=c60fe8c`)).toBe(pictureKey(`${df}?width=100&height=62&fit=bounds&ois=c2eba2b`));
+    expect(pictureKey("https://highlandhomes.imgix.net/model/Parker%2DA1%2Ejpg?fit=crop&w=225")).toBe(pictureKey("https://highlandhomes.imgix.net/model/Parker-A1.jpg"));
+  });
+
+  it("knows a picture a resizer carries in base64, at any size", () => {
+    const adams = (source: string, size: string) =>
+      `https://dlqxt4mfnxo6k.cloudfront.net/adamshomes.com/${Buffer.from(source).toString("base64")}/${size}`;
+    const front = "https://s3.amazonaws.com/buildercloud/b3b3e717034e6cb586761f1c891a57bc.jpeg";
+    expect(pictureKey(adams(front, "exact/w1200"))).toBe(pictureKey(adams(front, "webp/30")));
+    expect(pictureKey(adams(front, "webp/30"))).not.toBe(pictureKey(adams("https://s3.amazonaws.com/buildercloud/2ad5275be471ce95852e47de5a1eb882.jpeg", "webp/30")));
+  });
+
+  it("keeps apart pictures an address tells apart only by its query", () => {
+    expect(pictureKey("https://x.com/photo?id=1")).not.toBe(pictureKey("https://x.com/photo?id=2"));
+  });
+
+  it("reads the width an address asks for", () => {
+    expect(askedWidth("https://m.com/a.jpg?width=1000&height=625")).toBe(1000);
+    expect(askedWidth("https://m.com/a.jpg?fit=crop&w=900&h=675")).toBe(900);
+    expect(askedWidth("https://m.com/a.jpg")).toBe(0);
+  });
+});
+
+describe("onePerPicture", () => {
+  const front = "https://media.dreamfindershomes.com/371/Pemberly-A-Gen3.jpg";
+  it("keeps a picture once, in its first place, at the largest size asked for", () => {
+    const got = onePerPicture([`${front}?width=400`, "https://m.com/kitchen.jpg", `${front}?width=1000`, `${front}?width=100`]);
+    expect(got.photos).toEqual([`${front}?width=1000`, "https://m.com/kitchen.jpg"]);
+    expect(got.enlarged.get(`${front}?width=400`)).toBe(`${front}?width=1000`);
+  });
+
+  it("keeps the first spelling where none asks for a size", () => {
+    expect(onePerPicture(["https://r.com/media-1.jpg", "https://r.com/media-1.webp"]).photos).toEqual(["https://r.com/media-1.jpg"]);
   });
 });

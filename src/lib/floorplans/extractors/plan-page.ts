@@ -599,10 +599,62 @@ export function pictureKey(src: string): string {
   // res.cloudinary.com/…/image/fetch/ar_1.5,c_fill,w_768/https://pultegroup.picturepark.com/….
   const fetched = src.match(/\/image\/fetch\/(?:[^/]*\/)*?(https?:\/\/?[^/].*)$/i)?.[1];
   if (fetched) return pictureKey(fetched.replace(/^(https?:)\/(?!\/)/i, "$1//"));
-  const name = src.split("/").pop() ?? "";
+  // And so is one whose address it carries written in base64: Adams draws
+  // a plan's front at ".../adamshomes.com/aHR0cHM6Ly9zMy…/exact/w1200"
+  // and again at ".../<the same>/webp/30" (2026-09-23).
+  const carried = src.match(/\/(aHR0c[A-Za-z0-9+_-]*={0,2})(?=\/|$)/)?.[1];
+  if (carried) {
+    const decoded = Buffer.from(carried.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+    if (/^https?:\/\/[^\s]+$/.test(decoded)) return pictureKey(decoded);
+  }
+  // A file the address names is that file whatever size its query asks
+  // for: Dream Finders draws each slide at "…Pemberly-A-Gen3.jpg?width=1000"
+  // and again as its thumbnail at "?width=100" (2026-09-23).
+  // Highland writes one file as "Parker-A1.jpg" and as "Parker%2DA1%2Ejpg".
+  const path = src.replace(/[?#].*$/, "");
+  const folder = path.slice(0, path.lastIndexOf("/") + 1);
+  let file = path.slice(folder.length);
+  try {
+    file = decodeURIComponent(file);
+  } catch {
+    // left as written
+  }
+  const name = IMAGE_FILE.test(file) ? file : src.slice(folder.length);
   const sized = name.match(SIZED) ?? name.match(THUMB);
-  const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(/\.(jpe?g|png|webp|avif|gif)$/i, "");
-  return src.replace(name, plain);
+  const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(IMAGE_FILE, "");
+  return folder + plain;
+}
+
+const IMAGE_FILE = /\.(jpe?g|png|webp|avif|gif)$/i;
+
+/** The width a picture's address asks for ("?width=1000", "&w=900"), or 0 where it asks for none. Exported for tests. */
+export function askedWidth(src: string): number {
+  return Number(src.match(/[?&](?:width|w)=(\d+)/i)?.[1] ?? 0);
+}
+
+/**
+ * One photograph once, in the place its first spelling came: a list's
+ * picture and a gallery's are often the same file in two formats. Where a
+ * later spelling asks for it larger, that one takes the place — Dream
+ * Finders' list draws a plan's front 400 wide and its gallery 1,000 — and
+ * `enlarged` says which address it replaced. Pure; exported for tests.
+ */
+export function onePerPicture(sources: string[]): { photos: string[]; enlarged: Map<string, string> } {
+  const at = new Map<string, number>();
+  const enlarged = new Map<string, string>();
+  const photos: string[] = [];
+  for (const src of sources) {
+    const key = pictureKey(src);
+    const n = at.get(key);
+    if (n === undefined) {
+      at.set(key, photos.length);
+      photos.push(src);
+    } else if (askedWidth(photos[n]) && askedWidth(src) > askedWidth(photos[n])) {
+      enlarged.set(photos[n], src);
+      photos[n] = src;
+    }
+  }
+  return { photos, enlarged };
 }
 
 /**
