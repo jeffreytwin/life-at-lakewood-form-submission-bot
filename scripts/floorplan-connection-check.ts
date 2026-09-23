@@ -123,17 +123,29 @@ async function sitePlans(conn: Connection): Promise<{ name: string; qmi: boolean
 // ─── The browser survey ─────────────────────────────────────────────────────
 
 let browser: Browser | null = null;
-async function surveyBrowser(): Promise<Browser> {
-  if (browser?.connected) return browser;
-  const puppeteer = (await import("puppeteer-core")).default;
-  const local = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH;
-  if (local) {
-    browser = await puppeteer.launch({ executablePath: local, args: ["--no-sandbox", "--disable-dev-shm-usage"], headless: true });
-  } else {
-    const pack = (await import("@sparticuz/chromium")).default;
-    browser = await puppeteer.launch({ executablePath: await pack.executablePath(), args: pack.args, headless: true });
-  }
-  return browser;
+let starting: Promise<Browser> | null = null;
+/**
+ * One browser for every survey, started once: lanes asking at the same
+ * moment would each unpack Chromium into the same file while another was
+ * running it (ETXTBSY).
+ */
+function surveyBrowser(): Promise<Browser> {
+  if (browser?.connected) return Promise.resolve(browser);
+  starting ??= (async () => {
+    const puppeteer = (await import("puppeteer-core")).default;
+    const local = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH;
+    const opened = local
+      ? await puppeteer.launch({ executablePath: local, args: ["--no-sandbox", "--disable-dev-shm-usage"], headless: true })
+      : await (async () => {
+          const pack = (await import("@sparticuz/chromium")).default;
+          return puppeteer.launch({ executablePath: await pack.executablePath(), args: pack.args, headless: true });
+        })();
+    browser = opened;
+    return opened;
+  })().finally(() => {
+    starting = null;
+  });
+  return starting;
 }
 
 const UA =
@@ -158,12 +170,12 @@ interface Seen {
 
 /** What a visitor sees on a page once it has drawn and been scrolled through. */
 async function see(url: string): Promise<Seen> {
-  const b = await surveyBrowser();
-  const page: Page = await b.newPage();
-  await page.setUserAgent(UA);
-  await page.setViewport({ width: 1440, height: 2000 });
+  let page: Page | null = null;
   let status: number | null = null;
   try {
+    page = await (await surveyBrowser()).newPage();
+    await page.setUserAgent(UA);
+    await page.setViewport({ width: 1440, height: 2000 });
     const res = await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 }).catch(() => null);
     status = res?.status() ?? null;
     await wait(4_000);
@@ -225,7 +237,7 @@ async function see(url: string): Promise<Seen> {
       error: error instanceof Error ? error.message : String(error),
     };
   } finally {
-    await page.close().catch(() => {});
+    await page?.close().catch(() => {});
   }
 }
 
@@ -418,10 +430,14 @@ async function check(conn: Connection, target: Target): Promise<Outcome> {
     }
   }
 
-  const verdict = problems.length ? problems : ["looks healthy"];
-  out(`  VERDICT: ${verdict.join(" · ")}`);
-  for (const l of lines) say(l);
-  return { label, verdict };
+  return finish();
+
+  function finish(): Outcome {
+    const verdict = problems.length ? problems : ["looks healthy"];
+    out(`  VERDICT: ${verdict.join(" · ")}`);
+    for (const l of lines) say(l);
+    return { label, verdict };
+  }
 }
 
 async function main() {
@@ -434,6 +450,9 @@ async function main() {
     for (const conn of picked) jobs.push({ conn, target });
   }
   say(`${jobs.length} connections to check`);
+  // Chromium is unpacked once, before anything else can reach for it —
+  // the rendering engine unpacks into the same place.
+  await surveyBrowser().catch((error) => say(`survey browser would not start: ${error instanceof Error ? error.message : String(error)}`));
 
   // Rendering builders share one browser per run (render.ts), so they go one
   // at a time; the rest run a few at once.
