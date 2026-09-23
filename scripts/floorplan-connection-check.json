@@ -1,25 +1,34 @@
 {
-  "anatomy": [],
+  "anatomy": [
+    "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch",
+    "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
+    "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/saddlestone-innovation",
+    "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/",
+    "https://lwhomes.com/communities/shellstone/"
+  ],
   "raw": [
     {
-      "url": "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
-      "around": [
-        "ar_1.0",
-        "Floorplan-New",
-        "FloorPlanImage",
-        "floor-plan-image"
-      ],
-      "chars": 1500,
+      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch",
+      "around": ["plan-1541", "\"price\"", "__NEXT_DATA__"],
+      "chars": 1200,
       "count": 2
     },
     {
-      "url": "https://www.delwebb.com/homes/florida/sarasota/lakewood-ranch/del-webb-catalina-211202/layton-grande-697729",
-      "around": [
-        "ar_1.0",
-        "Floorplan",
-        "floorplan"
-      ],
+      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
+      "around": ["westin-ii", "Savannah", "/api/"],
       "chars": 1200,
+      "count": 2
+    },
+    {
+      "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/saddlestone-innovation",
+      "around": ["Pelican", "Sandpiper", "/api/"],
+      "chars": 1200,
+      "count": 2
+    },
+    {
+      "url": "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/",
+      "around": ["Floor plan", "floorplan", "/api/"],
+      "chars": 1000,
       "count": 2
     }
   ],
@@ -27,70 +36,21 @@
   "detailPlans": 2,
   "checks": [
     {
-      "builder": "Homes by WestBay",
-      "all": true
-    },
-    {
-      "builder": "John Cannon Homes",
-      "all": true
-    },
-    {
-      "builder": "KB Home",
-      "all": true
-    },
-    {
       "builder": "Cardel Homes",
-      "all": true
-    },
-    {
-      "builder": "Highland Homes",
-      "all": true
-    },
-    {
-      "builder": "Richmond American Homes",
-      "all": true
-    },
-    {
-      "builder": "Lee Wetherington",
-      "all": true
-    },
-    {
-      "builder": "Adams Homes",
-      "all": true,
-      "method": "render_claude"
-    },
-    {
-      "builder": "Dream Finders Homes",
-      "all": true
-    },
-    {
-      "builder": "Ashton Woods",
-      "all": true
-    },
-    {
-      "builder": "David Weekley Homes",
-      "all": true
+      "community": "North River Ranch",
+      "preferCandidate": true
     },
     {
       "builder": "Pulte Homes",
-      "community": "North River Ranch"
+      "community": "Del Webb Catalina"
     },
     {
-      "builder": "Neal Communities",
-      "community": "Everly",
-      "params": {
-        "url": "https://www.wellenpark.com/available-homes/",
-        "engine": "mpc_aggregator",
-        "builderSlug": "neal-signature-homes"
-      }
+      "builder": "Pulte Homes",
+      "community": "Lakespur"
     },
     {
-      "builder": "M/I Homes",
-      "community": "Palmera"
-    },
-    {
-      "builder": "ICI Homes",
-      "all": true
+      "builder": "Pulte Homes",
+      "community": "Riversong"
     }
   ]
 }

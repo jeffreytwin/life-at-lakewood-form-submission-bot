@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { communityIdOf, homeFromRecord, planFromRecord, pulteDrawings, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
+import { communityIdOf, homeFromRecord, pageDrawings, planFromRecord, pulteDrawings, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
 
 const ORIGIN = "https://www.pulte.com";
 const RIVERSONG = "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407";
@@ -173,5 +173,41 @@ describe("pulteGallery", () => {
     const g = pulteGallery([{ path: pic(7), caption: "Cafe Area", imageRank: 3, imageType: "Home Interior" }]);
     expect(g.urls).toEqual([pic(7)]);
     expect(g.meta[pic(7)].kind).toBe("primary");
+  });
+});
+
+describe("pageDrawings", () => {
+  // Daylen's floor plan section (Riversong, 2026-09-23): each floor drawn
+  // once for the page and again for printing.
+  const figure = (src: string, alt: string) => `
+    <figure>
+      <img class="u-responsiveMedia cld-responsive is-initialized"
+           data-dam="//res.cloudinary.com/dv0jqjrc3/image/fetch/"
+           data-name="${src}"
+           data-size="{&quot;0&quot;:&quot;ar_1.0&quot;}"
+           data-alt="${alt}" alt="${alt}" src="">
+    </figure>`;
+  const first = "https://pultegroup.cdn.picturepark.com/v/0w56AjBu/";
+  const second = "https://pultegroup.cdn.picturepark.com/v/9xYz1234/";
+
+  it("reads each floor's drawing once", () => {
+    const html = `
+      <div class="bed-bath-container is-active" data-index="0">
+        <div class="floor-container is-active" data-index="0">${figure(first, "First Floor")}</div>
+        <div class="floor-container" data-index="1">${figure(second, "Second Floor")}</div>
+      </div>
+      <div class="secondary-content secondary0 is-active">${figure(first, "First Floor")}</div>
+      <button class="btn save-item" data-tool-type="FloorPlan" data-ifp-id="${first}"></button>`;
+    expect(pageDrawings(html)).toEqual([first, second]);
+  });
+
+  it("falls back to the drawing the save button names", () => {
+    expect(pageDrawings(`<button data-tool-type="FloorPlan" data-ifp-id="${first}"></button>`)).toEqual([first]);
+  });
+
+  it("finds none on a page with only the interactive floor plan tool", () => {
+    const html = `<section id="PlanInteractiveTool"><div class="PlanInteractiveTool__loading"></div></section>
+      <div class="Carousel-slide">${figure("https://pultegroup.picturepark.com/Go/btte5VIm/V/317347/13", "Open Concept")}</div>`;
+    expect(pageDrawings(html)).toEqual([]);
   });
 });

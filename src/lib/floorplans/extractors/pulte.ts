@@ -12,6 +12,7 @@
 // the inside, the floor plan drawings among them ("Plan Floorplan-New"). A
 // home's carries its address, its page, price, facts, its own pictures
 // ("Inventory Elevation", "Inventory Interior") and its plan's record.
+// Where a plan's record has no drawings, its page is read for them.
 //
 // Read by Claude instead, Riversong's list was an eleven-megabyte page cut
 // short before its plans (twenty-three of them, one run; one, another),
@@ -212,6 +213,51 @@ export function homeFromRecord(r: PulteHome, origin: string, address?: (path: st
   };
 }
 
+/**
+ * The floor plan drawings a plan's page shows where the feed has none: its
+ * floor plan section draws each floor as a figure in a "floor-container"
+ * (Daylen at Riversong, 2026-09-23: "First Floor", pultegroup.cdn.picturepark.com/v/0w56AjBu/).
+ * A plan offered only through the interactive floor plan tool has none.
+ * Exported for tests.
+ */
+export function pageDrawings(html: string): string[] {
+  const found: string[] = [];
+  const add = (src: string | undefined) => {
+    const url = src?.replace(/&amp;/g, "&").trim();
+    if (url && /^https?:\/\//.test(url) && !found.includes(url)) found.push(url);
+  };
+  for (const m of html.matchAll(/class="[^"]*\bfloor-container\b[^"]*"/g)) {
+    const img = html.slice(m.index!, m.index! + 3000).match(/<img\b[^>]*>/)?.[0];
+    add(img?.match(/\bdata-name="([^"]+)"/)?.[1]);
+  }
+  if (!found.length) add(html.match(/\bdata-ifp-id="([^"]+)"/)?.[1]);
+  return found;
+}
+
+/** Each plan the feed gives no drawings, with the drawings its page shows; a page that cannot be read is left as it was. */
+async function withPageDrawings(plans: NormalizedPlan[], runDeadline?: number): Promise<NormalizedPlan[]> {
+  const wanting = plans.filter((p) => !p.quickMoveIn && !p.blueprintImages.length && p.sourceUrl);
+  const found = new Map<string, string[]>();
+  let next = 0;
+  const worker = async () => {
+    while (next < wanting.length) {
+      const plan = wanting[next++];
+      if (runDeadline && Date.now() > runDeadline - 30_000) return;
+      try {
+        const res = await fetch(plan.sourceUrl!, {
+          headers: { "user-agent": UA, accept: "text/html" },
+          signal: AbortSignal.timeout(30_000),
+        });
+        if (res.ok) found.set(plan.planKey, pageDrawings(await res.text()));
+      } catch {
+        // left without drawings, as the feed gave it
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, wanting.length) }, worker));
+  return plans.map((p) => (found.get(p.planKey)?.length ? { ...p, blueprintImages: found.get(p.planKey)! } : p));
+}
+
 async function feed<T>(url: string, referer: string): Promise<T[]> {
   const res = await fetch(url, {
     headers: { "user-agent": UA, accept: "application/json", referer },
@@ -233,9 +279,12 @@ export async function extractPulteGroup(params: { url?: string; runDeadline?: nu
     feed<PulteHome>(`${origin}/api/plan/qmiplans?communityId=${id}`, url),
   ]);
   const onSale = new Set(homeRecords.filter((h) => !h.soldDate && h.planId != null).map((h) => String(h.planId)));
-  const plans = planRecords
-    .map((r) => planFromRecord(r, origin, url, undefined, r.id != null && onSale.has(String(r.id))))
-    .filter((p): p is NormalizedPlan => Boolean(p));
+  const plans = await withPageDrawings(
+    planRecords
+      .map((r) => planFromRecord(r, origin, url, undefined, r.id != null && onSale.has(String(r.id))))
+      .filter((p): p is NormalizedPlan => Boolean(p)),
+    params.runDeadline,
+  );
   // A home is built to its plan's drawings where it has none of its own.
   const drawingsOf = new Map(plans.map((p) => [String(p.raw?.planId), p.blueprintImages]));
   const homes = homeRecords
