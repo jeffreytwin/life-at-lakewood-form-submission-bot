@@ -2,7 +2,11 @@
   "anatomy": [],
   "raw": [],
   "concurrency": 2,
-  "detailPlans": 4,
+  "detailPlans": 3,
   "duplicates": [],
-  "checks": []
+  "checks": [
+    {
+      "builder": "Perry Homes"
+    }
+  ]
 }
