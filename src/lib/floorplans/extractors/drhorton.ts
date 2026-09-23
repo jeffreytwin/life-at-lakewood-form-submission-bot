@@ -16,7 +16,7 @@
 // back. Read here, it is a fetch per page.
 
 import { mergeRepeatedPlan, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
-import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
+import { classifyRoom, fileNameWords, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
@@ -170,8 +170,12 @@ export function readDrhPage(html: string): {
     if (seen.has(url)) continue;
     seen.add(url);
     const caption = decode(tag.match(/\salt="([^"]*)"/i)?.[1] ?? "").trim();
-    if (/\bfloor ?plan\b/i.test(caption)) drawings.push(url);
-    else gallery.push({ src: url, caption });
+    // A picture titled for the floor plan is its drawing — unless its file
+    // says it is an elevation: Fletcher's four renderings are all titled
+    // "Floor Plan" and named "freeportii-elevation-a-…" (2026-09-23).
+    const namedView = /elevation|exterior|rendering|front|rear/i.test(fileNameWords(url));
+    if (/\bfloor ?plan\b/i.test(caption) && !namedView) drawings.push(url);
+    else gallery.push({ src: url, caption: namedView && /\bfloor ?plan\b/i.test(caption) ? "Exterior" : caption });
   }
 
   // schema.org's FloorPlan block: the plan's own facts.
@@ -212,6 +216,19 @@ export function readDrhPage(html: string): {
   };
 }
 
+/**
+ * What a community page says it builds, in its own description: Oakfield
+ * Lakes "offers a variety of carefully crafted single-family home
+ * floorplans"; Ashcombe "brings a fresh take on modern townhome living".
+ * Null where it says neither. Exported for tests.
+ */
+export function communityHomeType(html: string): string | null {
+  const about = html.match(/About our community\s*<\/h\d>([\s\S]{0,6000}?)<h\d\b/i)?.[1] ?? "";
+  const text = words(about);
+  const said = text.match(/\b(single[- ]family|town ?homes?|paired villas?|villas?|condominiums?|condos?)\b/i)?.[1];
+  return said ? standardHomeType(said) : null;
+}
+
 /** A plan's name out of its page's heading: "Oakfield Lakes Allex Floor Plan" is Allex. Exported for tests. */
 export function planNameFrom(heading: string, communityWords: string[]): string {
   let name = heading.replace(/\s+floor\s*plan\s*$/i, "").trim();
@@ -226,9 +243,15 @@ export function planNameFrom(heading: string, communityWords: string[]): string 
 
 /** A page's gallery in the site's order: the front of the house leads, the rooms by what the page titles them, the other views last. */
 function galleryOf(gallery: { src: string; caption: string }[]) {
+  // The front of the house leads where the page has one, wherever it sits:
+  // Madison's gallery opens on its entryway and ends on its elevations.
+  const says = (g: { src: string; caption: string }) => `${g.caption} ${fileNameWords(g.src)}`;
+  const front =
+    gallery.findIndex((g) => /\b(exterior|elevation|front)\b/i.test(says(g)) && !/\b(rear|back)\b/i.test(says(g)));
+  const lead = front >= 0 ? front : 0;
   const items: GalleryInput[] = gallery.map((g, i) => {
     const room = classifyRoom(g.caption);
-    if (i === 0) return { src: g.src, kind: "primary", caption: g.caption || null };
+    if (i === lead) return { src: g.src, kind: "primary", caption: g.caption || null };
     if (room === "exterior") return { src: g.src, kind: "exterior", caption: g.caption || null };
     return { src: g.src, caption: g.caption || null, room: room ?? undefined };
   });
@@ -273,12 +296,14 @@ export async function extractDrHorton(params: {
   const planUrls = new Set<string>();
   const homes = new Map<string, DrhHome>();
   const communityWords = [params.communityName ?? ""];
+  let communityType: string | null = null;
   for (const page of pages) {
     const { html, url } = await fetchHtml(page);
     for (const link of planLinks(html, url)) planUrls.add(link);
     for (const home of homesOnPage(html)) homes.set(normKey(home.Address ?? ""), home);
     const heading = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
     if (heading) communityWords.push(words(heading).replace(/^homes for sale at\s+/i, ""));
+    communityType ??= communityHomeType(html);
   }
   if (!planUrls.size && !homes.size) throw new Error(`no floor plans or homes on ${pages.join(", ")}`);
 
@@ -299,7 +324,7 @@ export async function extractDrHorton(params: {
         baths: page.baths,
         sqft: page.sqft,
         garages: page.garages,
-        homeType: page.homeType,
+        homeType: page.homeType ?? communityType,
         quickMoveIn: false,
         comingSoon: false,
         sourceUrl: planUrl,
@@ -327,7 +352,7 @@ export async function extractDrHorton(params: {
       baths: home.NumberOfBathrooms != null ? String(home.NumberOfBathrooms) : "",
       sqft: home.SquareFootage ?? null,
       garages: home.NumberOfGarages ? `${home.NumberOfGarages} car` : null,
-      homeType: null,
+      homeType: communityType,
       quickMoveIn: true,
       comingSoon: false,
       sourceUrl,

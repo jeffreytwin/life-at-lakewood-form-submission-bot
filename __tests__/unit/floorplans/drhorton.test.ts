@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { homesOnPage, planLinks, planNameFrom, readDrhPage } from "@/lib/floorplans/extractors/drhorton";
+import { communityHomeType, homesOnPage, planLinks, planNameFrom, readDrhPage } from "@/lib/floorplans/extractors/drhorton";
 
 // Shaped like Oakfield Lakes as fetched on 2026-09-23, pruned.
 const COMMUNITY = "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes";
@@ -78,5 +78,24 @@ describe("D.R. Horton's plan page", () => {
   it("reads the gallery whole, each picture at its own size and with its title", () => {
     expect(page.gallery.map((g) => g.caption)).toEqual(["Allex Exterior", "Kitchen", "Primary Bedroom", "Allex Rear Exterior", "Dining"]);
     expect(page.gallery[0].src).toBe("https://www.drhorton.com/-/media/drhorton/productcatalog/3eab/allex_front.jpg");
+  });
+});
+
+describe("what D.R. Horton's pages say besides their pictures", () => {
+  it("reads the community's home type from its own description", () => {
+    const lakes = `<h2>About our community</h2><p>Oakfield Lakes offers a variety of carefully crafted single-family home floorplans.</p><h2>Tour</h2>`;
+    const ashcombe = `<h2>About our community</h2><p>Ashcombe brings a fresh take on modern townhome living.</p><h3>Schools</h3>`;
+    expect(communityHomeType(lakes)).toBe("Single Family Home");
+    expect(communityHomeType(ashcombe)).toBe("Townhome");
+    expect(communityHomeType("<h1>Oakfield</h1>")).toBeNull();
+  });
+
+  it("takes a picture titled Floor Plan but named for an elevation as a photo (Fletcher, 2026-09-23)", () => {
+    const page = readDrhPage(`<div class="PropertyGallery-container">
+      <img data-lazy="/-/media/x/e410/freeportii-elevation-a-2carfl-cs7.jpg?w=494" alt="Fletcher Floor Plan">
+      <img data-lazy="/-/media/x/e410/fletcher-fp.jpg?w=494" alt="Floor Plan">
+    </div><div class="mobile-carousel"></div>`);
+    expect(page.gallery.map((g) => g.src)).toEqual(["https://www.drhorton.com/-/media/x/e410/freeportii-elevation-a-2carfl-cs7.jpg"]);
+    expect(page.drawings).toEqual(["https://www.drhorton.com/-/media/x/e410/fletcher-fp.jpg"]);
   });
 });

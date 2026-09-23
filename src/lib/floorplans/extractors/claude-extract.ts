@@ -920,9 +920,12 @@ export function mergeRepeatedPlan(first: NormalizedPlan, again: NormalizedPlan):
     description: first.description ?? again.description,
     virtualTourUrl: first.virtualTourUrl ?? again.virtualTourUrl,
     comingSoon: first.comingSoon && again.comingSoon,
-    galleryImages: union(first.galleryImages, again.galleryImages),
+    // A listing that already brought a gallery keeps it: D.R. Horton's two
+    // Oakfield pages carry the same plan's photographs from two folders,
+    // and together they were every picture twice.
+    galleryImages: first.galleryImages.length >= 4 ? first.galleryImages : union(first.galleryImages, again.galleryImages),
     galleryMeta: { ...again.galleryMeta, ...first.galleryMeta },
-    blueprintImages: union(first.blueprintImages, again.blueprintImages),
+    blueprintImages: first.blueprintImages.length ? first.blueprintImages : again.blueprintImages,
   };
 }
 
