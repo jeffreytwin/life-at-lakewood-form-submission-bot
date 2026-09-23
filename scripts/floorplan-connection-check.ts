@@ -359,7 +359,11 @@ const ANATOMY_SCRIPT = `(() => {
       if (apollo) {
         const types = {};
         for (const k of Object.keys(apollo)) { const t = k.split(":")[0]; (types[t] = types[t] || []).push(k); }
-        for (const t of Object.keys(types)) out.push(t + " x" + types[t].length + " " + types[t][0] + ": " + JSON.stringify(apollo[types[t][0]]).slice(0, 2500));
+        for (const t of Object.keys(types)) {
+          const first = apollo[types[t][0]];
+          out.push(t + " x" + types[t].length + " keys: " + Object.keys(first || {}).join(", "));
+          out.push("  " + types[t][0] + ": " + JSON.stringify(first).slice(0, /Plan|Home/.test(t) ? 20000 : 1200));
+        }
       }
     } catch (e) { out.push("unreadable: " + e); }
     out.push("");
