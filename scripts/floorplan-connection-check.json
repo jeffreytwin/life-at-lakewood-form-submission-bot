@@ -1,34 +1,30 @@
 {
   "anatomy": [],
-  "raw": [],
+  "raw": [
+    {
+      "url": "https://simplydwellhomes.com/new-homes/broadleaf/buttonwood/",
+      "around": [
+        "Buttonwood.jpg",
+        "Buttonwood_1",
+        "Buttonwood_2"
+      ],
+      "chars": 1800,
+      "after": 600,
+      "count": 2
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 4,
   "checks": [
+    {
+      "builder": "Medallion Home"
+    },
     {
       "builder": "Dream Finders Homes",
       "community": "Waterside - Bungalow Walk"
     },
     {
-      "builder": "Perry Homes"
-    },
-    {
-      "builder": "Medallion Home"
-    },
-    {
-      "builder": "Homes by Towne"
-    },
-    {
-      "builder": "Inland Homes"
-    },
-    {
-      "builder": "Adams Homes"
-    },
-    {
-      "builder": "Highland Homes"
-    },
-    {
-      "builder": "Cardel Homes",
-      "community": "North River Ranch"
+      "builder": "SimplyDwell Homes"
     }
   ]
 }

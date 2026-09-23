@@ -521,15 +521,18 @@ const PLAN_WORDS = /\b(fp|floor ?plans?|floorplans?|plan|plans|layout|blueprint)
 
 /**
  * The drawings Claude reported, less the pictures the page's own markup
- * shows among its photos, unless a picture's name says it is a plan.
- * Claude took one of the elevations in Dream Finders' Pearl gallery
- * ("Bunaglow_Walk-Pearl-B-Gen3.jpg") for its floor plan on one run and
- * not on the next (2026-09-23), and a picture in the gallery is a photo
- * on the page's word. Pure; exported for tests.
+ * shows among its photos, unless a picture's name says it is a plan or it
+ * is drawn rather than photographed (an .svg: Medallion keeps "Belize.svg"
+ * in its gallery). Claude took one of the elevations in Dream Finders'
+ * Pearl gallery ("Bunaglow_Walk-Pearl-B-Gen3.jpg") for its floor plan on
+ * one run and not on the next (2026-09-23), and a picture in the gallery
+ * is a photo on the page's word. Pure; exported for tests.
  */
 export function drawingsNotShownAsPhotos(said: string[], shown: string[]): string[] {
   const photos = new Set(shown.map(pictureKey));
-  return said.filter((src) => !photos.has(pictureKey(src)) || PLAN_WORDS.test(fileNameWords(src).toLowerCase()));
+  return said.filter(
+    (src) => !photos.has(pictureKey(src)) || /\.svg(?:[?#]|$)/i.test(src) || PLAN_WORDS.test(fileNameWords(src).toLowerCase())
+  );
 }
 
 /**

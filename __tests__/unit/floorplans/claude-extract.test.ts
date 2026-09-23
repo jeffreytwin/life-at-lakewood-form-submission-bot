@@ -617,6 +617,11 @@ describe("drawingsNotShownAsPhotos", () => {
     expect(drawingsNotShownAsPhotos([fp], [...gallery, fp])).toEqual([fp]);
   });
 
+  it("keeps a drawing in the gallery that is drawn, not photographed (Medallion's Belize.svg)", () => {
+    const svg = "https://medallionhome.com/wp-content/uploads/2026/04/Belize.svg";
+    expect(drawingsNotShownAsPhotos([svg], ["https://medallionhome.com/wp-content/uploads/2026/04/ra_belize-plan-_a_01-800x534.jpg", svg])).toEqual([svg]);
+  });
+
   it("keeps a drawing the gallery does not show", () => {
     const drawing = df("8450ec42-69b4-4cc4-b36f-30abf9fd6c03.jpg");
     expect(drawingsNotShownAsPhotos([drawing], gallery)).toEqual([drawing]);
