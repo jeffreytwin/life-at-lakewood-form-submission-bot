@@ -13,6 +13,9 @@ import { logger } from "@/lib/shared/logger";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 const MODEL = "claude-opus-5";
+/** Descriptions reworded at once, and the longest one rewording is allowed. */
+const REWORD_AT_ONCE = 8;
+const REWORD_MS = 40_000;
 
 /** First-person ownership words, as whole words. "US" the country is not one of them. */
 const OWNER_WORDS = /\b(we|we're|we've|we'll|we'd|our|ours|ourselves|us)\b/gi;
@@ -57,22 +60,25 @@ const REWRITE_TOOL: Anthropic.Tool = {
  * answers with nothing usable.
  */
 export async function rewriteAsThirdParty(text: string, builderName: string): Promise<string | null> {
-  const response = await getClient().messages.create({
-    model: MODEL,
-    max_tokens: 2048,
-    tools: [REWRITE_TOOL],
-    tool_choice: { type: "tool", name: REWRITE_TOOL.name },
-    messages: [
-      {
-        role: "user",
-        content:
-          `This is a home builder's description of one of its floor plans, to be shown on a community website that does not belong to the builder. ` +
-          `Reword it so it no longer speaks in the builder's first person: replace "we", "our", "us" and the like by naming the builder (${builderName}) or with neutral third-person wording, whichever reads better. ` +
-          `Keep every fact, feature, number and the overall length and tone; change nothing else; do not add anything. Report only the reworded description.\n\n` +
-          `Builder: ${builderName}\n\nDescription:\n${text}`,
-      },
-    ],
-  });
+  const response = await getClient().messages.create(
+    {
+      model: MODEL,
+      max_tokens: 2048,
+      tools: [REWRITE_TOOL],
+      tool_choice: { type: "tool", name: REWRITE_TOOL.name },
+      messages: [
+        {
+          role: "user",
+          content:
+            `This is a home builder's description of one of its floor plans, to be shown on a community website that does not belong to the builder. ` +
+            `Reword it so it no longer speaks in the builder's first person: replace "we", "our", "us" and the like by naming the builder (${builderName}) or with neutral third-person wording, whichever reads better. ` +
+            `Keep every fact, feature, number and the overall length and tone; change nothing else; do not add anything. Report only the reworded description.\n\n` +
+            `Builder: ${builderName}\n\nDescription:\n${text}`,
+        },
+      ],
+    },
+    { timeout: REWORD_MS, maxRetries: 1 }
+  );
   if (response.stop_reason === "refusal") return null;
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const rewritten = (toolUse?.input as { description?: unknown } | undefined)?.description;
@@ -99,29 +105,47 @@ async function rewordOnce(text: string, builderName: string): Promise<string | n
  * original is kept in raw. A plan whose description cannot be reworded is
  * left as it is, for the queue to hold back.
  */
-export async function neutralizeDescriptions(plans: NormalizedPlan[], builderName: string): Promise<NormalizedPlan[]> {
-  const out: NormalizedPlan[] = [];
-  for (const plan of plans) {
+export async function neutralizeDescriptions(
+  plans: NormalizedPlan[],
+  builderName: string,
+  deadline = Infinity
+): Promise<NormalizedPlan[]> {
+  // Several at once, and none started past the run's deadline: one after
+  // another, a first run of a community of thirty-odd plans spent minutes
+  // here and was cut off before anything was queued (2026-09-23). What is
+  // not reworded this run is held back by the queue and reworded by the
+  // next one.
+  return mapLimit(plans, REWORD_AT_ONCE, async (plan) => {
     const text = plan.description?.trim() ?? "";
-    if (!text || !speaksAsOwner(text)) {
-      out.push(plan);
-      continue;
-    }
+    if (!text || !speaksAsOwner(text)) return plan;
+    if (Date.now() + REWORD_MS > deadline) return plan;
     try {
       const rewritten = await rewordOnce(text, builderName);
-      out.push(
-        rewritten
-          ? { ...plan, description: rewritten, raw: { ...(plan.raw ?? {}), descriptionOriginal: text } }
-          : plan
-      );
+      return rewritten
+        ? { ...plan, description: rewritten, raw: { ...(plan.raw ?? {}), descriptionOriginal: text } }
+        : plan;
     } catch (error) {
       logger.warn("Description could not be reworded", {
         planKey: plan.planKey,
         error: error instanceof Error ? error.message : String(error),
       });
-      out.push(plan);
+      return plan;
     }
-  }
+  });
+}
+
+/** Runs `fn` over the items a few at a time, keeping order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]);
+      }
+    })
+  );
   return out;
 }
 

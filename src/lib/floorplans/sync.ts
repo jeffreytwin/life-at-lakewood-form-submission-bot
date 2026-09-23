@@ -87,6 +87,19 @@ export const URLLESS_BUILDERS = new Set([
   "M/I Homes", "ICI Homes", "Neal Signature Homes",
 ]);
 
+/**
+ * How a run's 300 seconds are spent. The builder's pages are read for the
+ * first 210; a page not started by then is left for the next run (the
+ * plan says its page went unread, and the diff keeps what an earlier run
+ * found — diff.ts). Descriptions are reworded until 250; the rest is the
+ * comparing and queueing. Before this a big community simply ran out of
+ * time and the whole run was lost: Perry's Star Farms read for 306
+ * seconds, and a first run would then have reworded thirty-odd
+ * descriptions one after another on top (2026-09-23).
+ */
+export const RUN_READ_MS = 210_000;
+export const RUN_PREPARE_MS = 250_000;
+
 /** Builders read through a browser though their method says otherwise: their own engine renders. */
 const BROWSER_BUILDERS = new Set(["Lee Wetherington"]);
 
@@ -262,7 +275,7 @@ export async function loadStandInRules(scope: PlanScopeIds): Promise<StandInRule
 export async function preparePlans(
   scraped: NormalizedPlan[],
   scope: { site: { id: string }; community: { id: string; name: string }; builder: { id: string; name: string } },
-  opts: { rewordDescriptions?: boolean } = {}
+  opts: { rewordDescriptions?: boolean; deadline?: number } = {}
 ): Promise<NormalizedPlan[]> {
   const { site, community, builder } = scope;
   let plans = scraped;
@@ -321,11 +334,12 @@ export async function preparePlans(
   // a description that speaks as the builder ("we", "our") is reworded in
   // the third person, once per text (description.ts).
   plans = withDescriptions(plans, community.name);
-  if (opts.rewordDescriptions !== false) plans = await neutralizeDescriptions(plans, builder.name);
+  if (opts.rewordDescriptions !== false) plans = await neutralizeDescriptions(plans, builder.name, opts.deadline);
   return plans;
 }
 
 export async function runConnection(connectionId: string): Promise<RunResult> {
+  const startedAt = Date.now();
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
@@ -380,7 +394,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const runId = `manual-${Date.now()}`;
   let plans: NormalizedPlan[];
   try {
-    plans = await extractor({ ...params, communityName: community.name, builderName: builder.name });
+    plans = await extractor({ ...params, communityName: community.name, builderName: builder.name, runDeadline: startedAt + RUN_READ_MS });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     await setRunStatus(conn.id, `error: ${detail}`, null, true);
@@ -392,7 +406,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
     return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
   }
-  plans = await preparePlans(plans, { site, community, builder });
+  plans = await preparePlans(plans, { site, community, builder }, { deadline: startedAt + RUN_PREPARE_MS });
 
   const { data: canonical } = await supabase
     .from("fp_floor_plans")

@@ -529,18 +529,22 @@ export async function readPlanPageWithClaude(
   const content = distill(html, page_.url);
   if (content.length < 500) return plan;
 
-  const response = await getClient().messages.create({
-    model: MODEL,
-    max_tokens: 4096,
-    tools: [PLAN_PAGE_TOOL],
-    tool_choice: { type: "tool", name: "report_plan_page" },
-    messages: [
-      {
-        role: "user",
-        content: `This is the page of one ${plan.quickMoveIn ? `home for sale, "${plan.name}"` : `floor plan, "${plan.name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
-      },
-    ],
-  });
+  const response = await getClient().messages.create(
+    {
+      model: MODEL,
+      max_tokens: 4096,
+      tools: [PLAN_PAGE_TOOL],
+      tool_choice: { type: "tool", name: "report_plan_page" },
+      messages: [
+        {
+          role: "user",
+          content: `This is the page of one ${plan.quickMoveIn ? `home for sale, "${plan.name}"` : `floor plan, "${plan.name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
+        },
+      ],
+    },
+    // One page's read may not hold up the run: past this it is left unread.
+    { timeout: 45_000, maxRetries: 1 }
+  );
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
 
@@ -767,7 +771,16 @@ export interface ClaudeExtractParams {
   /** A second page, where the builder lists its quick move-ins away from its plans. */
   quickMoveInUrl?: string;
   hint?: string;
+  /** When the run stops opening pages (sync.ts, RUN_READ_MS); pages not started by then are left unread. */
+  runDeadline?: number;
 }
+
+/**
+ * The longest one plan's page takes: a fetch or a render, and Claude's
+ * read. A page is not started with less than this left before the run's
+ * deadline.
+ */
+const PAGE_READ_MS = 35_000;
 
 /**
  * What a community calls the tab its homes for sale sit behind. Richmond
@@ -907,9 +920,13 @@ async function extractPages(
   // Base plans first: where a community has more pages than a run has
   // time for, it is the homes' pages that go unread, not the plans'.
   const byPlansFirst = [...listed.keys()].sort((a, b) => Number(listed[a].quickMoveIn) - Number(listed[b].quickMoveIn) || a - b);
+  const deadline = params.runDeadline ?? Infinity;
   const readInOrder = await mapLimit(byPlansFirst, atOnce, async (i) => {
     const plan = listed[i];
     if (!plan.sourceUrl || listPages.has(plan.sourceUrl)) return plan;
+    // Out of time: this page is left for the next run, and what an earlier
+    // run found on it stays (diff.ts).
+    if (Date.now() + PAGE_READ_MS > deadline) return { ...plan, pageUnread: true };
     try {
       return await readPlanPageWithClaude(plan, can.readPlanPage ?? read);
     } catch (error) {
@@ -933,7 +950,7 @@ async function extractPages(
     // interactive drawing, and there is nothing behind it to follow
     // (standardize.ts, which drops it either way).
     const tour = asTour(plan.virtualTourUrl);
-    if (!tour || isTourUrl(tour)) return plan;
+    if (!tour || isTourUrl(tour) || Date.now() + PAGE_READ_MS > deadline) return plan;
     const deeper = await tourBehind(tour, read);
     return deeper ? { ...plan, virtualTourUrl: deeper } : plan;
   });
@@ -969,7 +986,9 @@ export async function extractWithClaude(params: ClaudeExtractParams): Promise<No
  */
 export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
   const { withRenderer } = await import("@/lib/floorplans/extractors/render");
-  return withRenderer(RENDER_RUN_MS, (renderPage) => {
+  // The browser's budget ends with the run's reading time, whichever comes first.
+  const budget = Math.max(0, Math.min(RENDER_RUN_MS, (params.runDeadline ?? Infinity) - Date.now()));
+  return withRenderer(budget, (renderPage) => {
     // A plan's own page is fetched first and rendered only if the fetch
     // shows no facts: Perry's community has thirty-nine plans and twenty
     // homes, and rendering every one of their pages took the whole budget

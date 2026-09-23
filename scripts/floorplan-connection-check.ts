@@ -25,7 +25,7 @@ import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Browser, Page } from "puppeteer-core";
 import { supabase } from "@/lib/supabase/client";
-import { preparePlans, readsThroughBrowser, resolveExtractor, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
+import { preparePlans, readsThroughBrowser, resolveExtractor, RUN_READ_MS, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
@@ -623,7 +623,8 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     try {
       if (!extractor) throw new Error(`no extractor for ${conn.builder.extraction_method}`);
       const scraped = await Promise.race([
-        extractor({ ...params, communityName: conn.community.name, builderName: conn.builder.name }),
+        // The same reading time a run has (sync.ts).
+        extractor({ ...params, communityName: conn.community.name, builderName: conn.builder.name, runDeadline: started + RUN_READ_MS }),
         wait(CHECK_TIMEOUT_MS).then(() => {
           throw new Error(`still running after ${CHECK_TIMEOUT_MS / 1000}s`);
         }),
