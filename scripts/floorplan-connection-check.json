@@ -1,6 +1,28 @@
 {
   "anatomy": [],
-  "raw": [],
+  "raw": [
+    {
+      "url": "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
+      "around": [
+        "ar_1.0",
+        "Floorplan-New",
+        "FloorPlanImage",
+        "floor-plan-image"
+      ],
+      "chars": 1500,
+      "count": 2
+    },
+    {
+      "url": "https://www.delwebb.com/homes/florida/sarasota/lakewood-ranch/del-webb-catalina-211202/layton-grande-697729",
+      "around": [
+        "ar_1.0",
+        "Floorplan",
+        "floorplan"
+      ],
+      "chars": 1200,
+      "count": 2
+    }
+  ],
   "concurrency": 3,
   "detailPlans": 2,
   "checks": [
