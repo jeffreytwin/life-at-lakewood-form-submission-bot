@@ -1,6 +1,5 @@
 {
   "anatomy": [
-    "https://homesbytowne.com/florida/shellstone-at-waterside",
     "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
     "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote/17768-stillness-ct&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
     "https://mattamyhomes.com/florida/sarasota/venice/wellen-park/sunstone/anclote",
@@ -12,7 +11,12 @@
   "detailPlans": 99,
   "checks": [
     {
-      "builder": "Pulte Homes"
+      "builder": "Pulte Homes",
+      "community": "Riversong"
+    },
+    {
+      "builder": "Pulte Homes",
+      "community": "North River Ranch"
     },
     {
       "builder": "Perry Homes"
@@ -22,47 +26,66 @@
     },
     {
       "builder": "Neal Communities",
-      "community": "Palm Grove"
+      "community": "Grand Palm"
     },
     {
-      "builder": "Lennar"
+      "builder": "Lennar",
+      "community": "Stillwater"
     },
     {
-      "builder": "D.R. Horton"
+      "builder": "D.R. Horton",
+      "community": "Oakfield"
     },
     {
-      "builder": "Homes by WestBay"
-    },
-    {
-      "builder": "John Cannon Homes"
-    },
-    {
-      "builder": "Mattamy Homes"
-    },
-    {
-      "builder": "Lee Wetherington"
-    },
-    {
-      "builder": "David Weekley Homes"
-    },
-    {
-      "builder": "M/I Homes"
-    },
-    {
-      "builder": "Dream Finders Homes"
-    },
-    {
-      "builder": "Homes by Towne"
-    },
-    {
-      "builder": "ICI Homes"
-    },
-    {
-      "builder": "KB Home",
+      "builder": "Homes by WestBay",
+      "community": "Star Farms",
       "method": "render_claude"
     },
     {
-      "builder": "Kolter Homes"
+      "builder": "John Cannon Homes",
+      "community": "Everly",
+      "method": "render_claude"
+    },
+    {
+      "builder": "Mattamy Homes",
+      "community": "Sunstone"
+    },
+    {
+      "builder": "Mattamy Homes",
+      "community": "Windwater"
+    },
+    {
+      "builder": "Lee Wetherington",
+      "community": "Everly"
+    },
+    {
+      "builder": "David Weekley Homes",
+      "community": "Waterside - Emerald Landing"
+    },
+    {
+      "builder": "M/I Homes",
+      "community": "Palmera"
+    },
+    {
+      "builder": "Dream Finders Homes",
+      "community": "Seaire"
+    },
+    {
+      "builder": "Homes by Towne",
+      "community": "Waterside - Shellstone"
+    },
+    {
+      "builder": "ICI Homes",
+      "community": "Oakbend"
+    },
+    {
+      "builder": "KB Home",
+      "community": "Sawgrass Lakes",
+      "method": "render_claude"
+    },
+    {
+      "builder": "Kolter Homes",
+      "community": "Woodland Preserve"
     },
     {
       "builder": "Adams Homes"
@@ -95,12 +118,6 @@
       "builder": "Medallion Home"
     },
     {
-      "builder": "Meritage Homes"
-    },
-    {
-      "builder": "Neal Signature Homes"
-    },
-    {
       "builder": "Ryan Homes"
     },
     {
@@ -111,11 +128,11 @@
     },
     {
       "builder": "Taylor Morrison",
-      "community": "The Towns at Firethorn"
+      "community": "Azario - Esplanade"
     },
     {
       "builder": "Toll Brothers",
-      "community": "Oakbend"
+      "community": "The Isles"
     }
   ]
 }

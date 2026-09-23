@@ -40,6 +40,8 @@ interface Target {
   params?: Record<string, unknown>;
   /** An extraction method to try instead of the builder's saved one ("render_claude" for a page drawn after loading). */
   method?: string;
+  /** Use the candidate page from floorplan-connection-urls.json even though a page is saved (a saved page that is wrong). */
+  preferCandidate?: boolean;
   /** Skip the extraction and only look at the pages. */
   surveyOnly?: boolean;
   /** Skip the browser survey. */
@@ -70,6 +72,20 @@ const CHECK_TIMEOUT_MS = 420_000;
 const config = JSON.parse(
   readFileSync(process.env.FP_CHECK_CONFIG ?? path.join(__dirname, "floorplan-connection-check.json"), "utf8")
 ) as Config;
+
+/**
+ * Pages found for the connections that have none saved (scripts/floorplan-
+ * connection-urls.json), tried in place of discovery so each can be
+ * checked before it is saved. Null: the builder has no page for it.
+ */
+const CANDIDATES = (() => {
+  try {
+    const file = process.env.FP_CHECK_URLS ?? path.join(path.dirname(process.env.FP_CHECK_CONFIG ?? __filename), "floorplan-connection-urls.json");
+    return JSON.parse(readFileSync(file, "utf8")) as Record<string, Record<string, unknown> | null>;
+  } catch {
+    return {} as Record<string, Record<string, unknown> | null>;
+  }
+})();
 
 // ─── Connections ────────────────────────────────────────────────────────────
 
@@ -483,9 +499,17 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
   const out = (s: string) => lines.push(s);
   out(`══ ${label} ══ method=${conn.builder.extraction_method} last status="${cell(conn.lastStatus, 90)}"`);
 
-  // The page.
-  let params = { ...conn.params, ...(target.params ?? {}) };
-  let how = target.params ? "override" : params.url ? "saved" : "none";
+  // The page: one given for this check, else the saved one, else a
+  // candidate found for it, else discovery.
+  const candidateKey = `${conn.builder.name} · ${conn.community.name}`;
+  const candidate = CANDIDATES[candidateKey];
+  if (!target.params && candidate === null && !conn.params.url) {
+    problems.push("no page: the builder has no page for this community — it may not build there");
+    return finish();
+  }
+  const useCandidate = !target.params && candidate && (!conn.params.url || target.preferCandidate);
+  let params = { ...conn.params, ...(target.params ?? {}), ...(useCandidate ? candidate : {}) };
+  let how = target.params ? "override" : useCandidate ? "candidate" : params.url ? "saved" : "none";
   if (!params.url && !URLLESS_BUILDERS.has(conn.builder.name) && !target.surveyOnly) {
     const found = await discoverCommunityUrl(conn.builder, conn.community.name, conn.site.name ? [conn.site.name] : [], (line) =>
       out(`    discovery: ${line}`)

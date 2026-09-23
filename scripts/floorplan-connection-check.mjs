@@ -46,7 +46,11 @@ try {
 const result = spawnSync(process.execPath, [bundle], {
   cwd: root,
   stdio: 'inherit',
-  env: { ...process.env, FP_CHECK_CONFIG: process.env.FP_CHECK_CONFIG ?? path.join(here, 'floorplan-connection-check.json') },
+  env: {
+    ...process.env,
+    FP_CHECK_CONFIG: process.env.FP_CHECK_CONFIG ?? path.join(here, 'floorplan-connection-check.json'),
+    FP_CHECK_URLS: process.env.FP_CHECK_URLS ?? path.join(here, 'floorplan-connection-urls.json'),
+  },
   timeout: 35 * 60 * 1000,
 });
 if (result.error) console.log(`FP-CHECK: could not run the check: ${result.error.message}`);
