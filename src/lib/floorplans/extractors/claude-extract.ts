@@ -758,6 +758,39 @@ export function distinctKey(plan: NormalizedPlan, taken: Set<string>): string {
   return key;
 }
 
+/**
+ * One plan listed twice in a community — under two of its series. Perry
+ * sells 3220F on its 75' lots and its 90' lots, at two prices and with a
+ * half bath more on the larger lot, and the site carries one 3220F
+ * (2026-09-23); a second row of the same name would be a duplicate there.
+ * So the two are one plan: the lower price ("from"), the larger bed and
+ * bath counts (the site shows the larger end of a range, standardize.ts),
+ * and both listings' pictures, the first listing's leading. Pure;
+ * exported for tests.
+ */
+export function mergeRepeatedPlan(first: NormalizedPlan, again: NormalizedPlan): NormalizedPlan {
+  const priced = [first, again].filter((p) => typeof p.price === "number" && p.price > 0);
+  const cheapest = priced.sort((a, b) => (a.price as number) - (b.price as number))[0];
+  const larger = (a: string, b: string) => ((parseFloat(b) || 0) > (parseFloat(a) || 0) ? b : a);
+  const union = (a: string[], b: string[]) => [...a, ...b.filter((u) => !a.includes(u))];
+  return {
+    ...first,
+    price: cheapest?.price ?? first.price,
+    priceDisplay: cheapest?.priceDisplay ?? money(cheapest?.price ?? undefined) ?? first.priceDisplay,
+    beds: larger(first.beds, again.beds),
+    baths: larger(first.baths, again.baths),
+    sqft: first.sqft ?? again.sqft,
+    garages: first.garages ?? again.garages,
+    homeType: first.homeType ?? again.homeType,
+    description: first.description ?? again.description,
+    virtualTourUrl: first.virtualTourUrl ?? again.virtualTourUrl,
+    comingSoon: first.comingSoon && again.comingSoon,
+    galleryImages: union(first.galleryImages, again.galleryImages),
+    galleryMeta: { ...again.galleryMeta, ...first.galleryMeta },
+    blueprintImages: union(first.blueprintImages, again.blueprintImages),
+  };
+}
+
 export interface ClaudeExtractParams {
   url?: string;
   /**
@@ -841,6 +874,13 @@ async function extractPages(
     listPages.add(page.url);
     readPages.push(page.url || pageUrl);
     for (const plan of page.plans) {
+      // A base plan another of the community's pages already listed is
+      // that plan again, not a second one (mergeRepeatedPlan).
+      const twin = plan.quickMoveIn ? -1 : listed.findIndex((p) => !p.quickMoveIn && p.planKey === plan.planKey);
+      if (twin >= 0) {
+        listed[twin] = mergeRepeatedPlan(listed[twin], plan);
+        continue;
+      }
       const planKey = distinctKey(plan, taken);
       taken.add(planKey);
       listed.push({ ...plan, planKey });

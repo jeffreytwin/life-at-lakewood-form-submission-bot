@@ -11,6 +11,7 @@ import {
   distill,
   sortDrawings,
   planName,
+  mergeRepeatedPlan,
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
@@ -469,5 +470,47 @@ describe("distill leaves out the site's menus and footer", () => {
   it("keeps the page's own words", () => {
     const html = `<nav><a href="/florida">Florida</a> Find a New Home</nav><main><h2>Daylen</h2> From $342,990</main><footer>© Pulte <a href="/privacy">Privacy</a></footer>`;
     expect(distill(html, "https://www.pulte.com/x")).toBe("Daylen From $342,990");
+  });
+});
+
+describe("mergeRepeatedPlan (Perry's 3220F on two lot widths, 2026-09-23)", () => {
+  const listing = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "3220f",
+    name: "3220F",
+    price: 1_182_900,
+    priceDisplay: "$1,182,900",
+    beds: "4",
+    baths: "4",
+    sqft: 3220,
+    garages: "3 car",
+    homeType: "Single Family",
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl: "https://www.perryhomes.com/x/star-farms-75/3220f",
+    galleryImages: ["https://p.com/e1.jpg"],
+    blueprintImages: ["https://p.com/fp.jpg"],
+    ...over,
+  });
+
+  it("keeps one plan: the lower price, the larger baths, both listings' pictures, the first's page", () => {
+    const merged = mergeRepeatedPlan(
+      listing({}),
+      listing({
+        price: 1_412_900,
+        priceDisplay: "$1,412,900",
+        baths: "4.5",
+        sourceUrl: "https://www.perryhomes.com/x/star-farms-90/3220f",
+        galleryImages: ["https://p.com/e1.jpg", "https://p.com/e31.jpg"],
+      })
+    );
+    expect(merged).toMatchObject({ price: 1_182_900, priceDisplay: "$1,182,900", baths: "4.5", beds: "4" });
+    expect(merged.sourceUrl).toBe("https://www.perryhomes.com/x/star-farms-75/3220f");
+    expect(merged.galleryImages).toEqual(["https://p.com/e1.jpg", "https://p.com/e31.jpg"]);
+    expect(merged.blueprintImages).toEqual(["https://p.com/fp.jpg"]);
+  });
+
+  it("takes the other listing's price where the first has none", () => {
+    const merged = mergeRepeatedPlan(listing({ price: null, priceDisplay: null }), listing({ price: 1_412_900, priceDisplay: "$1,412,900" }));
+    expect(merged).toMatchObject({ price: 1_412_900, priceDisplay: "$1,412,900" });
   });
 });

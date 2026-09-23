@@ -26,6 +26,12 @@
     {
       "builder": "ICI Homes",
       "community": "Oakbend"
+    },
+    {
+      "builder": "Perry Homes"
+    },
+    {
+      "builder": "Richmond American Homes"
     }
   ],
   "raw": [
@@ -60,6 +66,14 @@
         "2016F-FP"
       ],
       "chars": 1200
+    },
+    {
+      "url": "https://nealcommunities.com/new-homes/grand-palm/",
+      "around": [
+        "Captiva",
+        "floorplan"
+      ],
+      "chars": 900
     }
   ]
 }
