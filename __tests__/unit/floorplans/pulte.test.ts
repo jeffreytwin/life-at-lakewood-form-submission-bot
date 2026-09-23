@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { communityIdOf, homeFromRecord, planFromRecord, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
+import { communityIdOf, homeFromRecord, planFromRecord, pulteDrawings, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
 
 const ORIGIN = "https://www.pulte.com";
 const RIVERSONG = "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407";
@@ -32,6 +32,7 @@ const daylen: PultePlan = {
     { path: pic(5), altText: "Designer Kitchen ", caption: "Designer Kitchen ", imageRank: 5, imageType: "Home Interior" },
     { path: pic(10), altText: "Owner's Suite ", caption: "Owner's Suite ", imageRank: 10, imageType: "Home Interior" },
     { path: pic(18), altText: "Spacious Covered Lanai ", caption: "Spacious Covered Lanai ", imageRank: 18, imageType: "Home Exterior" },
+    { path: pic(31), altText: "Daylen Floor Plan", caption: "", imageRank: 31, imageType: "Plan Floorplan-New" },
   ],
 };
 
@@ -62,6 +63,11 @@ describe("planFromRecord", () => {
       virtualTourUrl: null,
       raw: { planId: "699105" },
     });
+  });
+
+  it("takes the drawings out of the pictures", () => {
+    expect(plan.blueprintImages).toEqual([pic(31)]);
+    expect(plan.galleryImages).not.toContain(pic(31));
   });
 
   it("leads with the front of the house and keeps the elevations as outside views", () => {
@@ -114,10 +120,12 @@ describe("homeFromRecord", () => {
     planId: 699478,
     planName: "Pinecrest",
     plan: { planTypeName: "Single Family Home", pageURL: "/homes/florida/sarasota/parrish/riversong-211407/pinecrest-699478" },
+    inventoryPageURL: "/homes/florida/sarasota/parrish/riversong-211407/pinecrest-699478/16817-harmony-river-lane-1154558",
+    virtualTour: "https://my.matterport.com/show/?m=home",
     images: [
+      { path: pic(3), altText: "Kitchen", imageRank: 2, imageType: "Inventory Interior" },
+      { path: pic(2), altText: "Front Exterior", imageRank: 1, imageType: "Inventory Elevation" },
       { path: pic(26), altText: "Expansive Amenity Campus", imageRank: 26, imageType: "Community Amenity" },
-      { path: pic(2), altText: "Front Exterior", imageRank: 1, imageType: "Home Exterior" },
-      { path: pic(3), altText: "Kitchen", imageRank: 2, imageType: "Home Interior" },
     ],
   };
 
@@ -133,13 +141,26 @@ describe("homeFromRecord", () => {
       quickMoveIn: true,
       relatedPlanName: "Pinecrest",
       galleryImages: [pic(2), pic(3)],
+      sourceUrl: "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/pinecrest-699478/16817-harmony-river-lane-1154558",
+      virtualTourUrl: "https://my.matterport.com/show/?m=home",
       raw: { planId: "699478" },
     });
+    expect(homeFromRecord(home, ORIGIN)!.galleryMeta?.[pic(2)]?.kind).toBe("primary");
   });
 
   it("leaves out a home already sold, and gives no price where the builder asks you to call", () => {
     expect(homeFromRecord({ ...home, soldDate: "2026-09-01" }, ORIGIN)).toBeNull();
     expect(homeFromRecord({ ...home, callForPricingFlag: true }, ORIGIN)!.price).toBeNull();
+  });
+});
+
+describe("pulteDrawings", () => {
+  it("keeps the drawings in the builder's order", () => {
+    expect(pulteDrawings([
+      { path: pic(2), imageRank: 2, imageType: "Plan Floorplan-New" },
+      { path: pic(1), imageRank: 1, imageType: "Plan Floorplan-New" },
+      { path: pic(3), imageRank: 0, imageType: "Home Interior" },
+    ])).toEqual([pic(1), pic(2)]);
   });
 });
 

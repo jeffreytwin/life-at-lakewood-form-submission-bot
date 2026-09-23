@@ -9,9 +9,9 @@
 // beds, baths, half baths, size, garages, the builder's description, the
 // address of its page, its Matterport tour and every picture with its
 // caption, its place in the gallery and whether it shows the outside or
-// the inside. A home's carries its address, price, facts, pictures and its
-// plan's record. Only the floor plan drawings are missing: those are read
-// off each plan's own page.
+// the inside, the floor plan drawings among them ("Plan Floorplan-New"). A
+// home's carries its address, its page, price, facts, its own pictures
+// ("Inventory Elevation", "Inventory Interior") and its plan's record.
 //
 // Read by Claude instead, Riversong's list was an eleven-megabyte page cut
 // short before its plans (twenty-three of them, one run; one, another),
@@ -78,7 +78,10 @@ export interface PulteHome {
   overview?: string | null;
   plan?: PultePlan | null;
   images?: PulteImage[] | null;
-  pageURL?: string | null;
+  inventoryPageURL?: string | null;
+  inventoryDescription?: string | null;
+  virtualTour?: string | null;
+  threeDTour?: string | null;
 }
 
 const money = (n: number | null) => (n ? "$" + n.toLocaleString("en-US") : null);
@@ -103,8 +106,19 @@ export function communityIdOf(url: string): string | null {
   }
 }
 
-/** A picture of the home itself; the community's are the community's (a home's feed leads with the amenity campus). */
-const OF_THE_HOME = /^home\b/i;
+/** A picture of the home or the plan ("Home Exterior", "Inventory Elevation"); the community's are the community's. */
+const OF_THE_HOME = /^(home|inventory)\b/i;
+/** A floor plan drawing ("Plan Floorplan-New"). */
+const DRAWING = /floor ?plan/i;
+
+/** A record's floor plan drawings, in the builder's order. Exported for tests. */
+export function pulteDrawings(images: PulteImage[] | null | undefined, address: (path: string) => string = (p) => p): string[] {
+  return (images ?? [])
+    .filter((i) => i.path && DRAWING.test(i.imageType ?? ""))
+    .map((i, at) => ({ ...i, at }))
+    .sort((a, b) => (a.imageRank ?? Infinity) - (b.imageRank ?? Infinity) || a.at - b.at)
+    .map((i) => address(i.path!.trim()));
+}
 
 /**
  * A record's pictures in the builder's order, the front of the house
@@ -116,7 +130,7 @@ export function pulteGallery(images: PulteImage[] | null | undefined, address: (
     .filter((i) => i.path && (!i.imageType || OF_THE_HOME.test(i.imageType.trim())))
     .map((i, at) => ({ ...i, at }))
     .sort((a, b) => (a.imageRank ?? Infinity) - (b.imageRank ?? Infinity) || a.at - b.at);
-  const outside = (i: PulteImage) => /exterior/i.test(i.imageType ?? "");
+  const outside = (i: PulteImage) => /exterior|elevation/i.test(i.imageType ?? "");
   const said = (i: PulteImage) => clean(i.caption) || clean(i.altText);
   const isElevation = (i: PulteImage) => /^elevation\b/i.test(said(i));
   // The front of the house: the first outside view that is not one of the
@@ -157,7 +171,7 @@ export function planFromRecord(r: PultePlan, origin: string, communityUrl: strin
     virtualTourUrl: clean(r.virtualTour) || clean(r.threeDTour) || null,
     galleryImages: gallery.urls,
     galleryMeta: gallery.meta,
-    blueprintImages: [],
+    blueprintImages: pulteDrawings(r.images, address),
     raw: { planId: r.id != null ? String(r.id) : null, series: clean(r.seriesName) || null },
   };
 }
@@ -182,12 +196,13 @@ export function homeFromRecord(r: PulteHome, origin: string, address?: (path: st
     homeType: standardHomeType(r.plan?.planTypeNameActual ?? r.plan?.planTypeName ?? (r.isSingleFamily ? "Single Family Home" : null)),
     quickMoveIn: true,
     comingSoon: false,
-    sourceUrl: r.pageURL ? new URL(r.pageURL, origin).href : r.plan?.pageURL ? new URL(r.plan.pageURL, origin).href : null,
+    sourceUrl: r.inventoryPageURL ? new URL(r.inventoryPageURL, origin).href : r.plan?.pageURL ? new URL(r.plan.pageURL, origin).href : null,
     relatedPlanName: planName,
-    description: clean(r.overview) || null,
+    description: clean(r.inventoryDescription) || clean(r.overview) || null,
+    virtualTourUrl: clean(r.virtualTour) || clean(r.threeDTour) || null,
     galleryImages: gallery.urls,
     galleryMeta: gallery.meta,
-    blueprintImages: [],
+    blueprintImages: pulteDrawings(r.images, address),
     raw: { planId: r.planId != null ? String(r.planId) : null, relatedPlan: planName, inventoryHomeId: r.inventoryHomeID ?? null },
   };
 }
@@ -213,7 +228,12 @@ export async function extractPulteGroup(params: { url?: string; runDeadline?: nu
     feed<PulteHome>(`${origin}/api/plan/qmiplans?communityId=${id}`, url),
   ]);
   const plans = planRecords.map((r) => planFromRecord(r, origin, url)).filter((p): p is NormalizedPlan => Boolean(p));
-  const homes = homeRecords.map((r) => homeFromRecord(r, origin)).filter((p): p is NormalizedPlan => Boolean(p));
+  // A home is built to its plan's drawings where it has none of its own.
+  const drawingsOf = new Map(plans.map((p) => [String(p.raw?.planId), p.blueprintImages]));
+  const homes = homeRecords
+    .map((r) => homeFromRecord(r, origin))
+    .filter((p): p is NormalizedPlan => Boolean(p))
+    .map((h) => (h.blueprintImages.length ? h : { ...h, blueprintImages: drawingsOf.get(String(h.raw?.planId)) ?? [] }));
   if (!plans.length && !homes.length) throw new Error(`no plans or homes in ${origin}'s feeds for community ${id}`);
   // One plan once: a plan listed in two series keeps its first record.
   const byKey = new Map<string, NormalizedPlan>();
