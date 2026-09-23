@@ -120,6 +120,74 @@ export function normalizeCard(card: Card): NormalizedPlan | null {
   };
 }
 
+/**
+ * What a home's own page on the aggregator adds to its card: the whole
+ * gallery, the floor plan drawing and the tour. The card carries one
+ * picture; the page carries seventeen of them under the home's heading, a
+ * drawing (an .svg from the same folder), and an "Interactive Plan" link
+ * to a Matterport (wellenpark.com/home/3911998/detail, 2026-09-23). Only
+ * the part of the page about this home is read — from its heading to the
+ * "More Homes in …" row of other homes — so a neighbour's picture is never
+ * taken. Pure; exported for tests.
+ */
+export function readDetailPage(html: string): { photos: string[]; drawings: string[]; tour: string | null } {
+  const start = html.search(/<h1\b/i);
+  const rest = start >= 0 ? html.slice(start) : html;
+  const end = rest.search(/>\s*More Homes in\b|>\s*GETTING social\b/i);
+  const own = end > 0 ? rest.slice(0, end) : rest;
+  const pictures = [
+    ...new Set(
+      [...own.matchAll(/https?:\/\/[^"'\s()<>]+?\/Images\/Homes\/[^"'\s()<>]+?\.(?:jpe?g|png|webp|svg)/gi)].map((m) => m[0])
+    ),
+  ];
+  const tour = own.match(/https?:\/\/my\.matterport\.com\/show\/\?m=[A-Za-z0-9]+/i)?.[0] ?? null;
+  return {
+    photos: pictures.filter((u) => !/\.svg$/i.test(u)),
+    drawings: pictures.filter((u) => /\.svg$/i.test(u)),
+    tour,
+  };
+}
+
+/** Runs `fn` over the items a few at a time, keeping order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]);
+      }
+    })
+  );
+  return out;
+}
+
+/** The home with what its own page adds; a page that will not load leaves it as its card had it. */
+async function withDetailPage(plan: NormalizedPlan, origin: string): Promise<NormalizedPlan> {
+  if (!plan.sourceUrl) return plan;
+  const url = new URL(plan.sourceUrl, origin).href;
+  try {
+    const res = await fetch(url, {
+      headers: { "user-agent": UA, accept: "text/html" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
+    const page = readDetailPage(await res.text());
+    const photos = [...plan.galleryImages, ...page.photos].filter((u, i, all) => all.indexOf(u) === i);
+    return {
+      ...plan,
+      sourceUrl: url,
+      galleryImages: photos,
+      blueprintImages: page.drawings.length ? page.drawings : plan.blueprintImages,
+      virtualTourUrl: plan.virtualTourUrl ?? page.tour,
+    };
+  } catch {
+    return { ...plan, sourceUrl: url, pageUnread: true };
+  }
+}
+
 function resolveBuilderSlug(builderName: string, override?: string): string | null {
   if (override) return override;
   if (BUILDER_SLUGS[builderName]) return BUILDER_SLUGS[builderName];
@@ -170,5 +238,6 @@ export async function extractMpcAggregator(params: {
     const plan = normalizeCard(card);
     if (plan && !byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
   }
-  return [...byKey.values()];
+  // Each home's own page, for its gallery, its drawing and its tour.
+  return mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin));
 }

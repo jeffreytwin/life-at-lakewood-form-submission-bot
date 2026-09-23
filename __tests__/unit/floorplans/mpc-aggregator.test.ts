@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { parseCards, normalizeCard } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -43,5 +43,25 @@ describe("MPC aggregator card parsing", () => {
     expect(plan.price).toBe(859990); // parsed out of "FROM $859,990"
     expect(plan.raw?.relatedPlan).toBe("Reflection");
     expect(plan.raw?.builderSlug).toBe("mi-homes");
+  });
+});
+
+describe("a home's own page on the aggregator (wellenpark.com/home/…/detail)", () => {
+  const img = (id: string, ext = "jpg") => `https://static.wellenpark.com/Images/Homes/ICIHo8875/${id}.${ext}`;
+  const page = `
+    <header><img src="https://wellenpark.com/wp-content/uploads/2020/05/grand-palm.jpg"></header>
+    <h1>Ava</h1>
+    <div class="slider"><img src="${img("110705387-260712")}"><img src="${img("82500852-240815")}"><img src="${img("81829164-240729")}"><img src="${img("110705387-260712")}"></div>
+    <div class="plans"><img src="${img("82501101-250820", "svg")}"></div>
+    <a href="https://my.matterport.com/show/?m=bNgGWuY3fsk">INTERACTIVE PLAN</a>
+    <h2>More Homes in Palmera Wellen Park - ICI Homes</h2>
+    <img src="${img("82501074-240815")}">
+    <img src="https://static.wellenpark.com/Images/Homes/NealC9425/max1500_31891545-190122.jpg">`;
+
+  it("takes the home's photos once each, its drawing apart, and its tour — and nothing of the homes after it", () => {
+    const read = readDetailPage(page);
+    expect(read.photos).toEqual([img("110705387-260712"), img("82500852-240815"), img("81829164-240729")]);
+    expect(read.drawings).toEqual([img("82501101-250820", "svg")]);
+    expect(read.tour).toBe("https://my.matterport.com/show/?m=bNgGWuY3fsk");
   });
 });
