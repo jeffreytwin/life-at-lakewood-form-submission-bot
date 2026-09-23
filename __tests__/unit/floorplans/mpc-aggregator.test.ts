@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { parseCards, normalizeCard } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage, withoutSharedPictures } from "@/lib/floorplans/extractors/mpc-aggregator";
+import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -43,5 +44,86 @@ describe("MPC aggregator card parsing", () => {
     expect(plan.price).toBe(859990); // parsed out of "FROM $859,990"
     expect(plan.raw?.relatedPlan).toBe("Reflection");
     expect(plan.raw?.builderSlug).toBe("mi-homes");
+  });
+});
+
+describe("a home's own page on the aggregator (wellenpark.com/home/…/detail)", () => {
+  const img = (id: string, ext = "jpg") => `https://static.wellenpark.com/Images/Homes/ICIHo8875/${id}.${ext}`;
+  const page = `
+    <header><img src="https://wellenpark.com/wp-content/uploads/2020/05/grand-palm.jpg"></header>
+    <h1>Ava</h1>
+    <div class="slider"><img src="${img("110705387-260712")}"><img src="${img("82500852-240815")}"><img src="${img("81829164-240729")}"><img src="${img("110705387-260712")}"></div>
+    <div class="plans"><img src="${img("82501101-250820", "svg")}"></div>
+    <a href="https://my.matterport.com/show/?m=bNgGWuY3fsk">INTERACTIVE PLAN</a>
+    <h2>More Homes in Palmera Wellen Park - ICI Homes</h2>
+    <img src="${img("82501074-240815")}">
+    <img src="https://static.wellenpark.com/Images/Homes/NealC9425/max1500_31891545-190122.jpg">`;
+
+  it("takes the home's photos once each, its drawing apart, and its tour — and nothing of the homes after it", () => {
+    const read = readDetailPage(page);
+    expect(read.photos).toEqual([img("110705387-260712"), img("82500852-240815"), img("81829164-240729")]);
+    expect(read.drawings).toEqual([img("82501101-250820", "svg")]);
+    expect(read.tour).toBe("https://my.matterport.com/show/?m=bNgGWuY3fsk");
+  });
+});
+
+describe("a Wellen Park home's page names its type and describes it (M/I's Palm, 2026-09-23)", () => {
+  const page = `<nav>…</nav><main class="container content-main home-details-content">
+    <header class="row between home-details-header bottom">
+      <div class="col-36-21 no-pad-left no-pad-right">
+        <p>Multi-Family</p>
+        <q class="mobile">FROM $472,990</q>
+        <h1>Palm</h1>
+        <ul><li>3 BED</li><li>2 BATH</li><li>2,425 SQFT</li></ul>
+      </div>
+    </header>
+    <div class="content">
+      <p><strong>Description</strong><br> Introducing the Palm by M/I Homes! This 2-story floorplan features 3 bedrooms, a loft &amp; 2.5 bathrooms.</p>
+      <p><strong>Amenities</strong><br> Playground, Park</p>
+    </div>
+    <h2>More Homes in Palmera At Wellen Park</h2>`;
+
+  it("reads a Multi-Family home as the townhome the site files it as, and keeps the description", () => {
+    const read = readDetailPage(page);
+    expect(read.homeType).toBe("Townhome");
+    expect(read.description).toBe("Introducing the Palm by M/I Homes! This 2-story floorplan features 3 bedrooms, a loft & 2.5 bathrooms.");
+  });
+
+  it("reads the same word on a card", () => {
+    expect(mpcHomeType("multi-family")).toBe("Townhome");
+    expect(mpcHomeType("single-family")).toBe("Single Family Home");
+    expect(mpcHomeType(null)).toBeNull();
+  });
+});
+
+describe("folderOf", () => {
+  it("reads the builder's folder a listing picture sits in", () => {
+    expect(folderOf("https://static.wellenpark.com/Images/Homes/NealC9425/82211950-240808.jpg")).toBe("nealc9425");
+    expect(folderOf("https://static.wellenpark.com/Images/Homes/MattamyCorp/99831138-251007.jpg")).toBe("mattamycorp");
+    expect(folderOf("https://example.com/other.jpg")).toBeNull();
+  });
+});
+
+describe("withoutSharedPictures", () => {
+  const neal = (n: number) => `https://static.wellenpark.com/Images/Homes/NealC9425/${n}.jpg`;
+  const listing = (name: string, pictures: number[], quickMoveIn = false) =>
+    ({ planKey: name.toLowerCase(), name, quickMoveIn, galleryImages: pictures.map(neal), blueprintImages: [] }) as unknown as NormalizedPlan;
+
+  it("takes from each plan the pictures another plan shows too, and leaves each its card's", () => {
+    const fallback = [10, 11, 12, 13, 14];
+    const [ravenna, palmBay, genoa] = withoutSharedPictures([
+      listing("Ravenna", [1, ...fallback]),
+      listing("Palm Bay 2", [2, ...fallback]),
+      listing("Genoa", [3, 30, 31]),
+    ]);
+    expect(ravenna.galleryImages).toEqual([neal(1)]);
+    expect(palmBay.galleryImages).toEqual([neal(2)]);
+    expect(genoa.galleryImages).toEqual([3, 30, 31].map(neal));
+  });
+
+  it("leaves a home the pictures it shares with its one plan", () => {
+    const [plan, home] = withoutSharedPictures([listing("Positano 2", [1, 20, 21]), listing("11446 Brightly Drive", [5, 20, 21], true)]);
+    expect(plan.galleryImages).toEqual([1, 20, 21].map(neal));
+    expect(home.galleryImages).toEqual([5, 20, 21].map(neal));
   });
 });

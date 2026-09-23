@@ -12,6 +12,7 @@
 // - Galleries are diffed too (photos and blueprints, in order), so a
 //   builder's photo changes reach the site instead of freezing at the add.
 
+import { withoutCommunityPictures } from "@/lib/floorplans/community-pictures";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
@@ -22,9 +23,14 @@ import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTaylorMorrison, readTaylorPlanPage } from "@/lib/floorplans/extractors/taylor-morrison";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
+import { extractDrHorton } from "@/lib/floorplans/extractors/drhorton";
+import { extractPulteGroup } from "@/lib/floorplans/extractors/pulte";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
+import { extractKb } from "@/lib/floorplans/extractors/kb";
+import { extractHighland } from "@/lib/floorplans/extractors/highland";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
-import { linkQuickMoveIns, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
+import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
@@ -32,17 +38,20 @@ import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
 import { withScrapedPictures } from "@/lib/floorplans/pictures";
+import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
 // Lee Wetherington's real site (lwhomes.com; leewetherington.com is an
-// empty JS shell) server-renders all its for-sale homes on one shared
-// /listings/ page — route it through the generic Claude engine with the
-// community pinned in the hint so each connection only sees its own homes.
+// empty JS shell) lists all its for-sale homes on one shared /listings/
+// page — routed through the generic Claude engine with the community
+// pinned in the hint so each connection only sees its own homes. That page
+// now draws its homes after it loads ("carries no prices or sizes without
+// its scripts", 2026-09-23), so it is read through the browser.
 const extractLeeWetherington: Extractor = (params) => {
   const communityName = String(params.communityName ?? "");
   const shortName = communityName.split(/\s*-\s*/).pop() ?? communityName;
-  return extractWithClaude({
+  return extractWithRender({
     url: typeof params.url === "string" && params.url ? params.url : "https://lwhomes.com/listings/",
     hint: `The page lists Lee Wetherington homes across several communities. Only report homes/plans located in the "${shortName}" community; ignore every other community. If none are listed for it, report an empty list.`,
   });
@@ -57,7 +66,18 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Taylor Morrison": extractTaylorMorrison,
   "Mattamy Homes": extractMattamy,
   "DRB Homes": extractDrb,
+  "D.R. Horton": extractDrHorton,
+  // PulteGroup's brands share one site and its feeds (pulte.ts); Del Webb's
+  // communities are filed under Pulte Homes.
+  "Pulte Homes": extractPulteGroup,
+  "Centex Homes": extractPulteGroup,
   "Lee Wetherington": extractLeeWetherington,
+  // WestBay's pages draw their plans from its own feeds (westbay.ts).
+  "Homes by WestBay": extractWestBay,
+  // KB writes every plan card's record into its page (kb.ts).
+  "KB Home": extractKb,
+  // Highland's pages post to a feed for their plans and homes (highland.ts).
+  "Highland Homes": extractHighland,
   // Builders that block their own sites — sourced from the master-planned-
   // community aggregators instead (a different origin, so the blocks don't
   // apply). Wellen Park (default) is server-rendered and covers ICI (Oakbend
@@ -74,18 +94,74 @@ const METHOD_EXTRACTORS: Record<string, Extractor> = {
   // Builders whose pages carry nothing without their scripts (Richmond
   // American's Blazor site): the same engine, read through a browser.
   render_claude: extractWithRender,
+  // A master-planned community's own listings (mpc-aggregator.ts), for a
+  // connection whose builder's site will not be read: Neal Signature's
+  // Everly is behind a bot challenge, and Wellen Park lists its homes
+  // (2026-09-23). extractor_params.url is then the listing page, and
+  // builderSlug the builder as the listing names it.
+  mpc_aggregator: extractMpcAggregator,
 };
 
 // Builders whose extractor works from API ids rather than a page URL —
 // URL auto-discovery is skipped (their pages block non-browser fetches,
 // which would fail discovery's verification step and abort the run).
-const URLLESS_BUILDERS = new Set([
+export const URLLESS_BUILDERS = new Set([
   "Meritage Homes", "DRB Homes", "Lee Wetherington",
   "M/I Homes", "ICI Homes", "Neal Signature Homes",
 ]);
 
-function resolveExtractor(builderName: string, method: string | null): Extractor | null {
+/**
+ * How a run's 300 seconds are spent. The builder's pages are read for the
+ * first 210; a page not started by then is left for the next run (the
+ * plan says its page went unread, and the diff keeps what an earlier run
+ * found — diff.ts). Descriptions are reworded until 250; the rest is the
+ * comparing and queueing. Before this a big community simply ran out of
+ * time and the whole run was lost: Perry's Star Farms read for 306
+ * seconds, and a first run would then have reworded thirty-odd
+ * descriptions one after another on top (2026-09-23).
+ */
+export const RUN_READ_MS = 210_000;
+export const RUN_PREPARE_MS = 250_000;
+
+/** Builders read through a browser though their method says otherwise: their own engine renders. */
+const BROWSER_BUILDERS = new Set(["Lee Wetherington"]);
+
+/**
+ * Whether a builder's run renders pages in a browser. Such runs share one
+ * browser per process and take minutes, so the nightly loop starts one only
+ * with most of a tick left, and never two at once.
+ */
+export function readsThroughBrowser(builderName: string, method: string | null, params?: Record<string, unknown> | null): boolean {
+  const engine = connectionEngine(params);
+  if (engine) return engine === "render_claude";
+  return method === "render_claude" || BROWSER_BUILDERS.has(builderName);
+}
+
+export function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
+}
+
+/**
+ * The engine one connection is read with, where it differs from its
+ * builder's: extractor_params.engine. M/I's Wellen Park homes come from
+ * Wellen Park's own listings, but its Lakewood Ranch communities are on no
+ * such list and are read off M/I's pages in a browser (Sweetwater,
+ * Nautique at Waterside; 2026-09-23).
+ */
+function connectionEngine(params?: Record<string, unknown> | null): string | null {
+  const engine = params?.engine;
+  return typeof engine === "string" && METHOD_EXTRACTORS[engine] ? engine : null;
+}
+
+/** The extractor for one connection: its own engine if it names one, else its builder's. */
+export function extractorFor(builderName: string, method: string | null, params?: Record<string, unknown> | null): Extractor | null {
+  const engine = connectionEngine(params);
+  return engine ? METHOD_EXTRACTORS[engine] : resolveExtractor(builderName, method);
+}
+
+/** Whether a connection is read from ids rather than a page: its builder's engine needs none, and it names no engine of its own. */
+export function readsWithoutPage(builderName: string, params?: Record<string, unknown> | null): boolean {
+  return URLLESS_BUILDERS.has(builderName) && !connectionEngine(params);
 }
 
 interface RunResult {
@@ -237,7 +313,84 @@ export async function loadStandInRules(scope: PlanScopeIds): Promise<StandInRule
   return (data ?? []).map((r) => ({ planKey: r.plan_key, planName: r.plan_name, sourcePlanKey: r.source_plan_key }));
 }
 
+/**
+ * What a run makes of the plans its extractor read, before anything is
+ * compared or queued: the site's standard fields, quick move-ins tied to
+ * their plans, stand-ins, descriptions. Reads settings and stand-in rules
+ * but writes nothing, so the connection check (scripts/floorplan-
+ * connection-check.ts) sees exactly what a run would queue.
+ */
+export async function preparePlans(
+  scraped: NormalizedPlan[],
+  scope: { site: { id: string }; community: { id: string; name: string }; builder: { id: string; name: string } },
+  opts: { rewordDescriptions?: boolean; deadline?: number } = {}
+): Promise<NormalizedPlan[]> {
+  const { site, community, builder } = scope;
+  let plans = scraped;
+  // Every plan reads the way the site files it (one of five home types,
+  // the larger end of a bed or bath range; standardize.ts), then each
+  // quick move-in learns its base plan and each base plan learns whether
+  // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
+  // A base plan the builder gave no price takes its cheapest quick
+  // move-in's until the builder prices it (Jeff, 2026-09-20).
+  const link = (list: NormalizedPlan[]) => withQuickMoveInPictures(withQuickMoveInPrices(linkQuickMoveIns(list)));
+  // What is true of every plan this builder offers, whatever its pages say
+  // (Settings → Builders; Jeff, 2026-09-22: Stock builds single-family homes
+  // and its pages name no type at all).
+  const { data: settings } = await supabase
+    .from("fp_builders")
+    .select("engine_config")
+    .eq("id", builder.id)
+    .maybeSingle();
+  const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
+  plans = link(plans.map((plan) => standardizePlan(plan, defaults)));
+  // The community's own pictures, filed in every plan's gallery, are taken
+  // back out (community-pictures.ts).
+  plans = withoutCommunityPictures(plans);
+  // A plan the builder no longer lists but a person asked to keep, built
+  // from its homes on offer (stand-ins.ts): each is read from the home's own
+  // page so it carries every picture, then linked like the rest.
+  const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
+  const standIns = withStandIns(plans, rules);
+  if (standIns.standIns.length) {
+    const filled = await Promise.all(
+      standIns.standIns.map(async (p) => {
+        try {
+          return await readPlanInFull(builder.name, p);
+        } catch (err) {
+          logger.warn("Stand-in plan page could not be read", { planKey: p.planKey, error: err instanceof Error ? err.message : String(err) });
+          return p;
+        }
+      })
+    );
+    const standInKeys = new Set(filled.map((p) => p.planKey));
+    plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
+  }
+
+  // Photos someone has already looked at are put in the site's order by
+  // what they show (photo-rooms.ts); the builder's file names say nothing
+  // for most of them. Only remembered answers are used here, so the order
+  // is the same every run and no reordering is proposed night after night;
+  // the looking itself happens in the background (sort-queue.ts). A table
+  // that cannot be read costs the order, never the run.
+  try {
+    const looked = await rememberedRooms(plans.flatMap((p) => p.galleryImages));
+    if (looked.size) plans = plans.map((p) => withLookedAtRooms(p, looked));
+  } catch (err) {
+    logger.warn("Remembered photo rooms could not be applied", { error: err instanceof Error ? err.message : String(err) });
+  }
+
+  // A base plan whose builder writes no description gets one from its own
+  // fields (Jeff, 2026-09-21: Stock Luxury Homes writes none at all), and
+  // a description that speaks as the builder ("we", "our") is reworded in
+  // the third person, once per text (description.ts).
+  plans = withDescriptions(plans, community.name);
+  if (opts.rewordDescriptions !== false) plans = await neutralizeDescriptions(plans, builder.name, opts.deadline);
+  return plans;
+}
+
 export async function runConnection(connectionId: string): Promise<RunResult> {
+  const startedAt = Date.now();
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
@@ -258,15 +411,15 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   if (!conn.active || !builder.active) {
     return { status: "skipped", detail: "connection or builder is paused" };
   }
-  const extractor = resolveExtractor(builder.name, builder.extraction_method);
+  let params = (conn.extractor_params ?? {}) as Record<string, unknown>;
+  const extractor = extractorFor(builder.name, builder.extraction_method, params);
   if (!extractor) {
     await setRunStatus(conn.id, "no extractor available for this builder yet", null, true);
     return { status: "failed", detail: `no extractor available for ${builder.name} (${builder.extraction_method ?? "unclassified"})` };
   }
 
   // Auto-discover the community page URL on first run if not configured.
-  let params = (conn.extractor_params ?? {}) as Record<string, unknown>;
-  if (!params.url && !URLLESS_BUILDERS.has(builder.name)) {
+  if (!params.url && !readsWithoutPage(builder.name, params)) {
     const { data: builderRow } = await supabase
       .from("fp_builders")
       .select("base_url, engine_config")
@@ -292,7 +445,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const runId = `manual-${Date.now()}`;
   let plans: NormalizedPlan[];
   try {
-    plans = await extractor({ ...params, communityName: community.name, builderName: builder.name });
+    plans = await extractor({ ...params, communityName: community.name, builderName: builder.name, runDeadline: startedAt + RUN_READ_MS });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     await setRunStatus(conn.id, `error: ${detail}`, null, true);
@@ -304,49 +457,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
     return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
   }
-  // Every plan reads the way the site files it (one of five home types,
-  // the larger end of a bed or bath range; standardize.ts), then each
-  // quick move-in learns its base plan and each base plan learns whether
-  // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
-  // A base plan the builder gave no price takes its cheapest quick
-  // move-in's until the builder prices it (Jeff, 2026-09-20).
-  const link = (list: NormalizedPlan[]) => withQuickMoveInPrices(linkQuickMoveIns(list));
-  // What is true of every plan this builder offers, whatever its pages say
-  // (Settings → Builders; Jeff, 2026-09-22: Stock builds single-family homes
-  // and its pages name no type at all).
-  const { data: settings } = await supabase
-    .from("fp_builders")
-    .select("engine_config")
-    .eq("id", builder.id)
-    .maybeSingle();
-  const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
-  plans = link(plans.map((plan) => standardizePlan(plan, defaults)));
-  // A plan the builder no longer lists but a person asked to keep, built
-  // from its homes on offer (stand-ins.ts): each is read from the home's own
-  // page so it carries every picture, then linked like the rest.
-  const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
-  const standIns = withStandIns(plans, rules);
-  if (standIns.standIns.length) {
-    const filled = await Promise.all(
-      standIns.standIns.map(async (p) => {
-        try {
-          return await readPlanInFull(builder.name, p);
-        } catch (err) {
-          logger.warn("Stand-in plan page could not be read", { planKey: p.planKey, error: err instanceof Error ? err.message : String(err) });
-          return p;
-        }
-      })
-    );
-    const standInKeys = new Set(filled.map((p) => p.planKey));
-    plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
-  }
-
-  // A base plan whose builder writes no description gets one from its own
-  // fields (Jeff, 2026-09-21: Stock Luxury Homes writes none at all), and
-  // a description that speaks as the builder ("we", "our") is reworded in
-  // the third person, once per text (description.ts).
-  plans = withDescriptions(plans, community.name);
-  plans = await neutralizeDescriptions(plans, builder.name);
+  plans = await preparePlans(plans, { site, community, builder }, { deadline: startedAt + RUN_PREPARE_MS });
 
   const { data: canonical } = await supabase
     .from("fp_floor_plans")

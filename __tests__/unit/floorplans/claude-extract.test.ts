@@ -6,6 +6,15 @@ import {
   orderPhotos,
   tourLinkIn,
   tourUrlIn,
+  withoutBlanks,
+  pictureAddresses,
+  distill,
+  sortDrawings,
+  planName,
+  mergeRepeatedPlan,
+  homesPageIn,
+  EXTRACT_TOOL,
+  EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -354,5 +363,209 @@ describe("orderPhotos, when the file names say nothing", () => {
     const ordered = orderPhotos([media(1), media(2), media(3)], said);
     expect(ordered.urls).toEqual([media(2), media(3), media(1)]);
     expect(ordered.meta[media(2)].kind).toBe("primary");
+  });
+});
+
+describe("withoutBlanks: a strict tool answers every field, and a blank means the page said nothing", () => {
+  it("drops empty text and zeros, keeps what was said", () => {
+    expect(
+      withoutBlanks({ name: "Aspen", price: 0, sqft: 1850, garages: "", homeType: "  ", quickMoveIn: false, photoImages: [] })
+    ).toEqual({ name: "Aspen", sqft: 1850, quickMoveIn: false, photoImages: [] });
+  });
+});
+
+describe("the strict second ask", () => {
+  it("requires every field the loose one offers, allows no others, and never says omit", () => {
+    const itemsOf = (tool: typeof EXTRACT_TOOL) =>
+      (tool.input_schema as unknown as { properties: { plans: { items: { properties: Record<string, { description?: string }>; required: string[]; additionalProperties?: boolean } } } }).properties.plans.items;
+    const loose = itemsOf(EXTRACT_TOOL);
+    const strict = itemsOf(EXTRACT_TOOL_STRICT);
+    expect(EXTRACT_TOOL.strict).toBeUndefined();
+    expect(EXTRACT_TOOL_STRICT.strict).toBe(true);
+    expect(strict.required.sort()).toEqual(Object.keys(loose.properties).sort());
+    expect(strict.additionalProperties).toBe(false);
+    for (const field of Object.values(strict.properties)) expect(field.description ?? "").not.toMatch(/omit/i);
+  });
+});
+
+describe("pictureAddresses: a picture is an address, not its name (Pulte, 2026-09-23)", () => {
+  it("keeps web addresses and drops the names Claude handed back in their place", () => {
+    expect(
+      pictureAddresses(["Exterior CO2", "https://res.cloudinary.com/x/image/fetch/w_1200/a.jpg", "Elevation FM1", " https://cdn.example.com/b.png ", 7, "/relative/c.jpg"])
+    ).toEqual(["https://res.cloudinary.com/x/image/fetch/w_1200/a.jpg", "https://cdn.example.com/b.png"]);
+    expect(pictureAddresses("not a list")).toEqual([]);
+  });
+});
+
+describe("distill: a page as Claude is given it", () => {
+  const base = "https://homesbytowne.com/florida/shellstone-at-waterside";
+
+  it("reads a tag whole, though an attribute holds JSON with a > in it (Homes by Towne, 2026-09-23)", () => {
+    const html = `<astro-island props="{&quot;note&quot;:[0,&quot;--> 2,617 sq ft everywhere&quot;]}"><h2>Banyan</h2><p>2,410 Sq. Ft.</p></astro-island>`;
+    const text = distill(html, base);
+    expect(text).toContain("Banyan");
+    expect(text).toContain("2,410 Sq. Ft.");
+    expect(text).not.toContain("2,617");
+    expect(text).not.toContain("quot");
+  });
+
+  it("gives a lazy picture the address it keeps in data-src, and a link its target", () => {
+    const html = `<img src="data:image/gif;base64,R0lGOD" data-src="/img/banyan-kitchen.jpg" alt="Kitchen"><a href="/florida/shellstone-at-waterside/banyan">Banyan</a><img srcset="/a-400.jpg 400w, /a-1600.jpg 1600w">`;
+    const text = distill(html, base);
+    expect(text).toContain("[IMG https://homesbytowne.com/img/banyan-kitchen.jpg]");
+    expect(text).toContain("[LINK https://homesbytowne.com/florida/shellstone-at-waterside/banyan]");
+    expect(text).toContain("[IMG https://homesbytowne.com/a-1600.jpg]");
+    expect(text).not.toContain("data:");
+  });
+
+  it("keeps a < that opens no tag as text, and is quick on a page of megabytes", () => {
+    expect(distill("<p>2 < 3 bedrooms</p>", base)).toBe("2 < 3 bedrooms");
+    const big = `<div data-x="${"a>b ".repeat(200_000)}">x</div>`.repeat(4);
+    const started = Date.now();
+    expect(distill(big, base)).toBe("x x x x");
+    expect(Date.now() - started).toBeLessThan(2_000);
+  });
+});
+
+describe("distill honours a page's <base href>", () => {
+  it("gives Claude the link the browser would follow", () => {
+    const html = `<head><base href="/"></head><a href="florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/">Fraser</a>`;
+    expect(distill(html, "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/")).toContain(
+      "[LINK https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/]"
+    );
+  });
+});
+
+describe("sortDrawings: an elevation is a view of the house, not its floor plan", () => {
+  it("moves elevation renderings out of the drawings and keeps the plans", () => {
+    const up = (n: string) => `https://simplydwellhomes.com/wp-content/uploads/2026/06/${n}`;
+    const got = sortDrawings([
+      up("Jasmine-2.jpg"),
+      up("Jasmine-30-2413_Elevation-A-2-scaled-1.webp"),
+      up("Juniper_fp.jpg"),
+      up("Jasmine-Floor-Plan-Elevation-B.jpg"),
+      "https://cdn.lennar.com/api/images/x/tpu_1551_fp_dover_mod1_ow_07_03_23.svg",
+    ]);
+    expect(got.views).toEqual([up("Jasmine-30-2413_Elevation-A-2-scaled-1.webp")]);
+    expect(got.drawings).toEqual([
+      up("Jasmine-2.jpg"),
+      up("Juniper_fp.jpg"),
+      up("Jasmine-Floor-Plan-Elevation-B.jpg"),
+      "https://cdn.lennar.com/api/images/x/tpu_1551_fp_dover_mod1_ow_07_03_23.svg",
+    ]);
+  });
+});
+
+describe("planName: a plan's code without the word in front of it (Perry, 2026-09-23)", () => {
+  it("drops Design before a numbered code, and leaves other names alone", () => {
+    expect(planName("Design 3368F")).toBe("3368F");
+    expect(planName("Plan 2016")).toBe("Plan 2016");
+    expect(planName("3368F")).toBe("3368F");
+    expect(planName("Plan B")).toBe("Plan B");
+    expect(planName("The Design House")).toBe("The Design House");
+    expect(planName("Model Home Aspen")).toBe("Model Home Aspen");
+  });
+});
+
+describe("distill leaves out the site's menus and footer", () => {
+  it("keeps the page's own words", () => {
+    const html = `<nav><a href="/florida">Florida</a> Find a New Home</nav><main><h2>Daylen</h2> From $342,990</main><footer>© Pulte <a href="/privacy">Privacy</a></footer>`;
+    expect(distill(html, "https://www.pulte.com/x")).toBe("Daylen From $342,990");
+  });
+});
+
+describe("mergeRepeatedPlan (Perry's 3220F on two lot widths, 2026-09-23)", () => {
+  const listing = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "3220f",
+    name: "3220F",
+    price: 1_182_900,
+    priceDisplay: "$1,182,900",
+    beds: "4",
+    baths: "4",
+    sqft: 3220,
+    garages: "3 car",
+    homeType: "Single Family",
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl: "https://www.perryhomes.com/x/star-farms-75/3220f",
+    galleryImages: ["https://p.com/e1.jpg"],
+    blueprintImages: ["https://p.com/fp.jpg"],
+    ...over,
+  });
+
+  it("keeps one plan: the lower price, the larger baths, both listings' pictures, the first's page", () => {
+    const merged = mergeRepeatedPlan(
+      listing({}),
+      listing({
+        price: 1_412_900,
+        priceDisplay: "$1,412,900",
+        baths: "4.5",
+        sourceUrl: "https://www.perryhomes.com/x/star-farms-90/3220f",
+        galleryImages: ["https://p.com/e1.jpg", "https://p.com/e31.jpg"],
+      })
+    );
+    expect(merged).toMatchObject({ price: 1_182_900, priceDisplay: "$1,182,900", baths: "4.5", beds: "4" });
+    expect(merged.sourceUrl).toBe("https://www.perryhomes.com/x/star-farms-75/3220f");
+    expect(merged.galleryImages).toEqual(["https://p.com/e1.jpg", "https://p.com/e31.jpg"]);
+    expect(merged.blueprintImages).toEqual(["https://p.com/fp.jpg"]);
+  });
+
+  it("takes the other listing's price where the first has none", () => {
+    const merged = mergeRepeatedPlan(listing({ price: null, priceDisplay: null }), listing({ price: 1_412_900, priceDisplay: "$1,412,900" }));
+    expect(merged).toMatchObject({ price: 1_412_900, priceDisplay: "$1,412,900" });
+  });
+});
+
+describe("sortDrawings: styles, colour schemes and folders of elevations (2026-09-23)", () => {
+  it("moves renderings named for their style or scheme, or filed with the elevations, out of the drawings", () => {
+    const df = "https://media.dreamfindershomes.com/371/2026/8/6/Regional-Arlington-Traditional-With-Bonus-3Car-Gen3.jpg?width=1000";
+    const aw = "https://awh.widen.net/content/qho3z66qke/webp/cms_Griffin-U-Scheme-122.jpg_q9xGlGv.jpg?w=1000";
+    const kb = "https://www.kbhome.com/globalassets/images/community-images/florida/tampa/30ft-kb-2020-series/elevations/1511_a_sch14.jpg";
+    const plan = "https://www.kbhome.com/globalassets/images/community-images/florida/tampa/30ft-kb-2020-series/elevations/1511_fp.jpg";
+    const towne = "https://d195jfz94fv5eb.cloudfront.net/uploads/floorplan/hbt-fl-shellstone-waterside-fp-mooring.jpg";
+    const got = sortDrawings([df, aw, kb, plan, towne]);
+    expect(got.views).toEqual([df, aw, kb]);
+    expect(got.drawings).toEqual([plan, towne]);
+  });
+});
+
+describe("homesPageIn (Kolter's Woodland Preserve, 2026-09-23)", () => {
+  const PAGE = "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/";
+  it("finds the community's own page of homes for sale beneath its address", () => {
+    const html = `<a href="/new-homes/parrish-florida-woodland-preserve/homes/">Homes</a>
+      <a href="/new-homes/parrish-florida-woodland-preserve/move-in-ready/#top">Move-In Ready</a>`;
+    expect(homesPageIn(html, PAGE)).toBe("https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/move-in-ready/");
+  });
+
+  it("does not take the builder's page of every home it has anywhere, or another site's", () => {
+    const html = `<a href="https://nealcommunities.com/available-homes/">Quick Move-In Homes</a>
+      <a href="https://other.com/new-homes/parrish-florida-woodland-preserve/move-in-ready/">x</a>
+      <a href="/move-in-ready/">All homes</a>`;
+    expect(homesPageIn(html, PAGE)).toBeNull();
+  });
+});
+
+describe("distill keeps a menu that lists homes (Kolter's Woodland Preserve, 2026-09-23)", () => {
+  it("drops the site's menus and footer, but not a nav that carries plans", () => {
+    const html = `<nav><a href="/about">About</a><a href="/contact">Contact</a><a href="/new-homes/parrish-florida-woodland-preserve/">Woodland Preserve</a></nav>
+      <nav class="floorplans"><a href="/floorplan/eva/">Eva</a> 4 Beds · 2 Baths · 1,668 Sq Ft · From $428,990</nav>
+      <nav class="models"><a href="/new-homes/parrish-florida-woodland-preserve/5289/floorplan/jade/"><img src="/r/jade.jpg" alt="Jade">Jade</a></nav>
+      <main><h1>Woodland Preserve</h1></main>
+      <footer>© Kolter Homes · Privacy</footer>`;
+    const text = distill(html, "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/");
+    expect(text).toContain("Eva");
+    expect(text).toContain("$428,990");
+    expect(text).toContain("floorplan/jade");
+    expect(text).not.toContain("Contact");
+    expect(text).not.toContain("Privacy");
+  });
+});
+
+describe("distill leaves a carousel's joined pictures out (Pulte's Riversong, 2026-09-23)", () => {
+  it("does not hand Claude a picture the page writes as two halves", () => {
+    const slide = `<img alt="Kitchen" data-dam="//res.cloudinary.com/x/image/fetch/" data-name="https://pultegroup.picturepark.com/Go/a/V/1/13" data-transformations="c_fill,w_auto"><h5>Kitchen</h5>`;
+    const text = distill(`<main><h1>Riversong</h1>${slide}<p>Daylen from $342,990</p></main>`, "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407");
+    expect(text).not.toContain("picturepark");
+    expect(text).toContain("$342,990");
   });
 });

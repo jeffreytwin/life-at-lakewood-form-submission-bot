@@ -1,0 +1,21 @@
+{
+  "anatomy": [
+    "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i"
+  ],
+  "raw": [
+    {
+      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i",
+      "around": [
+        "List = [",
+        "MoveIn",
+        "moveIn",
+        "homesite"
+      ],
+      "chars": 300,
+      "count": 6
+    }
+  ],
+  "concurrency": 3,
+  "detailPlans": 1,
+  "checks": []
+}

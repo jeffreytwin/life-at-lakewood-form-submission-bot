@@ -1,0 +1,138 @@
+{
+  "_about": "Candidate pages for connections with no saved page, found by web search (2026-09-23) and tested by the connection check before any is saved. Keyed \"Builder · Community\"; each value is the connection's extractor_params. null: the builder has no page for that community.",
+  "D.R. Horton · Ashcombe": { "url": "https://www.drhorton.com/florida/manatee-sarasota/sarasota/ashcombe-wellen-park" },
+  "D.R. Horton · Bella Lago": { "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/bella-lago" },
+  "D.R. Horton · Legacy Preserve": { "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/legacy-preserve" },
+  "D.R. Horton · Oakfield": {
+    "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes",
+    "listUrls": ["https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes", "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-trails"]
+  },
+  "D.R. Horton · Rye Crossing": { "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/rye-crossing" },
+  "D.R. Horton · Solera": { "url": "https://www.drhorton.com/florida/manatee-sarasota/lakewood-ranch/solera" },
+  "D.R. Horton · Star Farms": { "url": "https://www.drhorton.com/florida/manatee-sarasota/lakewood-ranch/star-farms" },
+  "Centex Homes · Oakfield": { "url": "https://www.centex.com/homes/florida/tampa/parrish/oakfield-lakes-211245" },
+  "Pulte Homes · Oakfield": { "url": "https://www.pulte.com/homes/florida/tampa/parrish/oakfield-trails-211348" },
+  "Pulte Homes · Lakespur": { "url": "https://www.pulte.com/homes/florida/sarasota/venice/lakespur-wellen-park-211168" },
+  "Pulte Homes · Riversong": { "url": "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407" },
+  "Pulte Homes · Del Webb Catalina": { "url": "https://www.delwebb.com/homes/florida/sarasota/lakewood-ranch/del-webb-catalina-211202" },
+  "Pulte Homes · Del Webb Explore North River Ranch": { "url": "https://www.delwebb.com/homes/florida/sarasota/parrish/explore-by-del-webb-north-river-ranch-211538" },
+  "Pulte Homes · Del Webb Sunchase": { "url": "https://www.delwebb.com/homes/florida/sarasota/parrish/del-webb-sunchase-211310" },
+  "Ashton Woods · Oakfield": {
+    "url": "https://www.ashtonwoods.com/tampa/oakfield-trails",
+    "listUrls": ["https://www.ashtonwoods.com/tampa/oakfield-trails-signature", "https://www.ashtonwoods.com/tampa/oakfield-trails-traditional"]
+  },
+  "Cardel Homes · North River Ranch": { "url": "https://www1.cardelhomes.com/florida/north-river-ranch/homes" },
+  "Adams Homes · Aviary at Rutland Ranch": { "url": "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch" },
+  "Arthur Rutenberg · Waterside - Wild Blue": { "url": "https://www.arhomes.com/builder/nelson-homes-inc/communities/wild-blue-in-waterside/" },
+  "David Weekley Homes · North River Ranch": {
+    "url": "https://www.davidweekleyhomes.com/neighborhoods/fl/tampa/north-river-ranch",
+    "listUrls": [
+      "https://www.davidweekleyhomes.com/new-homes/fl/tampa/parrish/north-river-ranch-garden-series",
+      "https://www.davidweekleyhomes.com/new-homes/fl/tampa/parrish/north-river-ranch-cottage-series",
+      "https://www.davidweekleyhomes.com/new-homes/fl/tampa/parrish/north-river-ranch-townhomes"
+    ]
+  },
+  "David Weekley Homes · Palmera": {
+    "url": "https://www.davidweekleyhomes.com/neighborhoods/fl/tampa/palmera-wellen-park",
+    "listUrls": [
+      "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-at-wellen-park",
+      "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-wellen-park-executive-series"
+    ]
+  },
+  "David Weekley Homes · Waterside - Emerald Landing": {
+    "url": "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-towns",
+    "listUrls": [
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-towns",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-city-homes",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-cottage-series",
+      "https://www.davidweekleyhomes.com/new-homes/fl/sarasota/sarasota/emerald-landing-at-waterside-at-lakewood-ranch-lake-series"
+    ]
+  },
+  "Dream Finders Homes · Seaire": {
+    "url": "https://dreamfindershomes.com/new-homes/fl/parrish/seaire/",
+    "listUrls": [
+      "https://dreamfindershomes.com/new-homes/fl/parrish/seaire-40/",
+      "https://dreamfindershomes.com/new-homes/fl/parrish/seaire-50/",
+      "https://dreamfindershomes.com/new-homes/fl/parrish/seaire-60/",
+      "https://dreamfindershomes.com/new-homes/fl/parrish/seaire-townhomes/",
+      "https://dreamfindershomes.com/new-homes/fl/parrish/seaire-phase-two/"
+    ]
+  },
+  "Dream Finders Homes · Waterside - Bungalow Walk": { "url": "https://dreamfindershomes.com/new-homes/fl/lakewood-ranch/bungalow-walk-at-lakewood-ranch/" },
+  "Homes by WestBay · Crosswind Point": {
+    "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-point-community",
+    "listUrls": [
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-point-community/villas",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-point-community/artisan"
+    ]
+  },
+  "Homes by WestBay · Crosswind Ranch": {
+    "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-ranch-community",
+    "listUrls": [
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-ranch-community/artisan",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-ranch-community/artisan-phase-2",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/crosswind-ranch-community/innovation"
+    ]
+  },
+  "Homes by WestBay · Everly": {
+    "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/wellen-park-community",
+    "listUrls": ["https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/wellen-park-community/artisan"]
+  },
+  "Homes by WestBay · North River Ranch": {
+    "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/north-river-ranch-community",
+    "listUrls": ["https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/north-river-ranch-community/artisan"]
+  },
+  "Homes by WestBay · Oakfield": {
+    "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/oakfield-community",
+    "listUrls": ["https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/oakfield-community/artisan"]
+  },
+  "Homes by WestBay · Star Farms": {
+    "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community",
+    "listUrls": [
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/artisan",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/saddlestone-innovation",
+      "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community/masterpiece"
+    ]
+  },
+  "Homes by WestBay · Wellen Park Country Club": null,
+  "John Cannon Homes · Everly": { "url": "https://www.johncannonhomes.com/community/everly-at-wellen-park/" },
+  "John Cannon Homes · Monarch Acres": { "url": "https://www.johncannonhomes.com/community/monarch-acres/" },
+  "John Cannon Homes · Star Farms": { "url": "https://www.johncannonhomes.com/community/star-farms-at-lakewood-ranch/" },
+  "John Cannon Homes · Waterside - Kingfisher Estates": null,
+  "John Cannon Homes · Waterside - Wild Blue": null,
+  "John Cannon Homes · Wellen Park Country Club": null,
+  "KB Home · Creekside at Rutland Ranch": { "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch" },
+  "KB Home · Sawgrass Lakes": {
+    "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i",
+    "listUrls": ["https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i", "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-ii"]
+  },
+  "Kolter Homes · Cresswind": {
+    "url": "https://www.kolterhomes.com/new-homes/sarasota-bradenton-cresswind-lakewood-ranch/",
+    "quickMoveInUrl": "https://www.kolterhomes.com/new-homes/sarasota-bradenton-cresswind-lakewood-ranch/move-in-ready/"
+  },
+  "Kolter Homes · Woodland Preserve": { "url": "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/" },
+  "Lennar · Aurora": { "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch" },
+  "Lennar · Calusa Country Club": { "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/calusa-country-club" },
+  "Lennar · Lorraine Lakes": { "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch" },
+  "Lennar · Stillwater": { "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/stillwater-at-lakewood-ranch" },
+  "Lennar · Wellen Park Country Club": { "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/venice/wellen-park-golf-country-club" },
+  "Mattamy Homes · Windwater": { "url": "https://mattamyhomes.com/florida/tampa/parrish/windwater", "market": "Tampa" },
+  "Medallion Home · Cross Creek": {
+    "url": "https://medallionhome.com/communities/cross-creek/",
+    "listUrls": [
+      "https://www.medallionhome.com/community/the-laurels",
+      "https://medallionhome.com/communities/the-willows/",
+      "https://www.medallionhome.com/community/river-preserve-estates"
+    ]
+  },
+  "Neal Communities · Avelina": { "url": "https://nealcommunities.com/new-homes/avelina/" },
+  "Neal Communities · Boca Royale": { "url": "https://nealcommunities.com/new-homes/boca-royale-golf-country-club-at-wellen-park/" },
+  "Neal Communities · Canoe Creek": { "url": "https://nealcommunities.com/new-homes/canoe-creek/" },
+  "Neal Communities · Everly": { "url": "https://nealsignaturehomes.com/everly/" },
+  "Neal Communities · Grand Palm": { "url": "https://nealcommunities.com/new-homes/grand-palm/" },
+  "Neal Communities · North River Ranch": { "url": "https://nealcommunities.com/new-homes/wildleaf-at-north-river-ranch/" },
+  "Neal Communities · Palm Grove": { "url": "https://nealcommunities.com/communities/palm-grove/" },
+  "Neal Communities · Palmera": { "url": "https://nealcommunities.com/new-homes/palmera/" },
+  "Neal Communities · Windward": { "url": "https://nealcommunities.com/new-homes/windward/" },
+  "Neal Communities · Wysteria": { "url": "https://nealcommunities.com/new-homes/wysteria/" }
+}

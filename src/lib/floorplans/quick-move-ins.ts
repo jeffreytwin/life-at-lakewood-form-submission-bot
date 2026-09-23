@@ -31,6 +31,22 @@ function relatedNameOf(p: NormalizedPlan): string {
   return text(p.relatedPlanName) || text(p.raw?.relatedPlan);
 }
 
+const PLAN_CODE = String.raw`[A-Za-z]{0,3}\d{2,5}[A-Za-z]?`;
+
+/**
+ * A related name that gives the plan's code and its name together, taken
+ * apart: David Weekley's homes say "F034 (The Benton)" and "F008 - The
+ * Truman" (North River Ranch, 2026-09-23). Null for a name that is not
+ * written that way. Exported for tests.
+ */
+export function codeAndName(named: string): { code: string; name: string } | null {
+  const lead = named.match(new RegExp(String.raw`^(?:plan\s+)?(${PLAN_CODE})\s*(?:[-–—:]\s*|\(\s*)(.+?)\s*\)?$`, "i"));
+  if (lead && /[a-z]{3}/i.test(lead[2])) return { code: lead[1], name: lead[2] };
+  const tail = named.match(new RegExp(String.raw`^(.+?)\s*(?:[-–—:]\s*|\(\s*)(?:plan\s+)?(${PLAN_CODE})\s*\)?$`, "i"));
+  if (tail && /[a-z]{3}/i.test(tail[1])) return { code: tail[2], name: tail[1] };
+  return null;
+}
+
 /**
  * A quick move-in's own name without the lot it stands on: SimplyDwell
  * names them for the plan and the homesite, "Hawthorne Homesite 42",
@@ -57,6 +73,15 @@ export function nearlySameKey(a: string, b: string): boolean {
   const [short, long] = a.length <= b.length ? [a, b] : [b, a];
   if (short.length < 5 || !long.startsWith(short)) return false;
   return /^[a-z]{1,2}$/.test(long.slice(short.length));
+}
+
+/**
+ * A plan's name without the word a builder puts in front of it: Adams
+ * lists "Plan 1512" and prints "FLOORPLAN 1512" on the homes built from it
+ * (2026-09-23); David Weekley's "The Waterway" is its "Waterway".
+ */
+export function bareKey(name: string): string {
+  return normKey(name.replace(/^\s*(?:(?:the|plan|model|design|floor ?plan)\b\s*[-:#]?\s*)+/i, ""));
 }
 
 /** A URL with no query, no fragment and one trailing slash, so two spellings of a page compare equal. */
@@ -99,7 +124,11 @@ function parentUrl(url: string | null | undefined): string | null {
  * builder's plan id, the base plan's name where the engine read one, the
  * page the quick move-in's page sits under, and last its own name with the
  * homesite taken off it — exactly, then allowing the builder a letter or
- * two ("Hawthorne Homesite 42" stands on "Hawthorn"). A quick move-in
+ * two ("Hawthorne Homesite 42" stands on "Hawthorn"). Last, a home that
+ * names no plan at all is tied to the one plan of the run with its square
+ * footage (and its bedrooms, where both say): Wellen Park lists M/I's
+ * homes by address alone, and "17966 Broadleaf Loop", 2,425 sq ft, is the
+ * Palm, the only plan of that size (2026-09-23). A quick move-in
  * whose base plan is not in the run keeps the engine's name for it and is
  * marked unmatched, so the review queue can say so. Pure; order and the
  * other fields are kept.
@@ -107,11 +136,20 @@ function parentUrl(url: string | null | undefined): string | null {
 export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
   const bases = plans.filter((p) => !p.quickMoveIn);
   const byKey = new Map(bases.map((b) => [b.planKey, b] as const));
+  // Bare names that point at one plan only.
+  const byBare = new Map<string, NormalizedPlan | null>();
+  for (const b of bases) {
+    const bare = bareKey(b.name);
+    if (bare) byBare.set(bare, byBare.has(bare) ? null : b);
+  }
   const byPlanId = new Map<string, NormalizedPlan>();
   for (const b of bases) {
     const id = planIdOf(b);
     if (id && !byPlanId.has(id)) byPlanId.set(id, b);
   }
+  // The same codes spelled any way: "F057", "f057", "F-057".
+  const byCode = new Map<string, NormalizedPlan>();
+  for (const [id, b] of byPlanId) byCode.set(normKey(id).replace(/-/g, ""), b);
   // A page two plans share says nothing about either, so it is dropped:
   // every plan of a builder whose list is one page would share that page.
   const byUrl = new Map<string, NormalizedPlan | null>();
@@ -137,10 +175,24 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
         matchedBy = "plan-id";
       }
     }
+    const split = codeAndName(relatedNameOf(p));
     if (!base) {
-      const name = relatedNameOf(p);
-      if (name && byKey.has(normKey(name))) {
+      // A home that names its plan by the plan's code (David Weekley).
+      for (const code of [relatedNameOf(p), split?.code ?? ""].map((c) => normKey(c).replace(/-/g, ""))) {
+        if (code && byCode.has(code)) {
+          base = byCode.get(code);
+          matchedBy = "plan-id";
+          break;
+        }
+      }
+    }
+    for (const name of [relatedNameOf(p), split?.name ?? ""]) {
+      if (base || !name) continue;
+      if (byKey.has(normKey(name))) {
         base = byKey.get(normKey(name));
+        matchedBy = "plan-name";
+      } else if (byBare.get(bareKey(name))) {
+        base = byBare.get(bareKey(name)) ?? undefined;
         matchedBy = "plan-name";
       }
     }
@@ -163,6 +215,21 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
           base = near[0];
           matchedBy = "plan-name";
         }
+      }
+    }
+    // A plan's code is no name: David Weekley's homes say "F057" where its
+    // plans are "The Wagoner" (Palmera, 2026-09-23), so the footage is asked.
+    const named = relatedNameOf(p);
+    const codeOnly = /^[a-z]{0,3}\d{2,5}[a-z]?$/i.test(named.replace(/\s+/g, ""));
+    if (!base && (!named || codeOnly) && typeof p.sqft === "number" && p.sqft > 0) {
+      // Only when the footage points at one plan: two plans that size is a guess.
+      const beds = (v: unknown) => (/^\d+$/.test(text(v)) ? text(v) : null);
+      const sized = bases.filter(
+        (b) => b.sqft === p.sqft && !(beds(b.beds) && beds(p.beds) && beds(b.beds) !== beds(p.beds))
+      );
+      if (sized.length === 1) {
+        base = sized[0];
+        matchedBy = "plan-facts";
       }
     }
     if (base) children.set(base.planKey, (children.get(base.planKey) ?? 0) + 1);
@@ -201,6 +268,38 @@ export function withQuickMoveInPrices(plans: NormalizedPlan[]): NormalizedPlan[]
     const home = cheapest.get(p.planKey);
     if (!home) return { ...p, priceFromHome: null };
     return { ...p, price: home.price, priceDisplay: home.priceDisplay, priceFromHome: home.name };
+  });
+}
+
+/**
+ * A base plan the builder shows no picture of takes those of its homes
+ * with the most, and the size and garage its homes give where it gives
+ * none, until the builder shows its own — the way a plan with no price
+ * takes its cheapest home's. Amber Creek is sold out but for one Mayport,
+ * whose card is all the page says of the plan; the home's page carries
+ * thirty-one pictures (Ryan Homes, 2026-09-23). Runs after
+ * linkQuickMoveIns; pure.
+ */
+export function withQuickMoveInPictures(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const richest = new Map<string, NormalizedPlan>();
+  for (const p of plans) {
+    if (!p.quickMoveIn || !p.relatedPlanKey || !p.galleryImages.length) continue;
+    const best = richest.get(p.relatedPlanKey);
+    if (!best || p.galleryImages.length > best.galleryImages.length) richest.set(p.relatedPlanKey, p);
+  }
+  return plans.map((p) => {
+    if (p.quickMoveIn || p.galleryImages.length) return p;
+    const home = richest.get(p.planKey);
+    if (!home) return p;
+    return {
+      ...p,
+      galleryImages: home.galleryImages,
+      galleryMeta: home.galleryMeta,
+      blueprintImages: p.blueprintImages.length ? p.blueprintImages : home.blueprintImages,
+      sqft: p.sqft ?? home.sqft,
+      garages: p.garages ?? home.garages,
+      virtualTourUrl: p.virtualTourUrl ?? home.virtualTourUrl ?? null,
+    };
   });
 }
 

@@ -22,6 +22,8 @@
 // gallery, a page that keeps no more than it draws yields what it draws,
 // and either way the plan keeps exactly what it had.
 
+import { classifyRoom } from "@/lib/floorplans/gallery-order";
+
 export interface PageImage {
   src: string;
   alt: string;
@@ -38,8 +40,11 @@ export interface PageSection {
   images: PageImage[];
 }
 
-const attr = (tag: string, name: string): string | null =>
-  tag.match(new RegExp(`\\s${name}=["']([^"']*)["']`, "i"))?.[1] ?? null;
+/** An attribute's value, in whichever quotes it is written: alt="Owner's Suite" holds an apostrophe. */
+const attr = (tag: string, name: string): string | null => {
+  const m = tag.match(new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i"));
+  return m ? (m[1] ?? m[2] ?? null) : null;
+};
 
 /**
  * The largest picture a responsive image offers, out of the set it lists:
@@ -59,6 +64,106 @@ export function largestInSrcSet(value: string | null): string | null {
   return best?.url ?? null;
 }
 
+/**
+ * A picture a page writes as two halves for its script to join rather
+ * than as a src: Pulte's carousels give each slide
+ * data-dam="//res.cloudinary.com/…/image/fetch/" and
+ * data-name="https://pultegroup.picturepark.com/Go/…", with the sizes it
+ * draws at in data-size and data-transformations (Daylen at Riversong,
+ * 2026-09-23). Joined here at the largest size the page itself asks for,
+ * which is an address the site uses. Exported for tests.
+ */
+export function joinedPicture(tag: string): string | null {
+  const dam = attr(tag, "data-dam");
+  const name = attr(tag, "data-name");
+  if (!dam || !name || !/^https?:\/\//i.test(name)) return null;
+  const base = (dam.startsWith("//") ? `https:${dam}` : dam).replace(/\/?$/, "/");
+  let sizes: Record<string, string> = {};
+  try {
+    sizes = JSON.parse((attr(tag, "data-size") ?? "{}").replace(/&quot;/g, '"'));
+  } catch {
+    // no sizes: the transformations alone
+  }
+  const widest = Object.keys(sizes)
+    .map(Number)
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => b - a)[0];
+  const transforms = [widest ? sizes[String(widest)] : null, (attr(tag, "data-transformations") ?? "").replace(/\bw_auto\b/, `w_${widest ?? 1920}`)]
+    .filter(Boolean)
+    .join(",");
+  return `${base}${transforms ? `${transforms}/` : ""}${name}`;
+}
+
+/**
+ * What a page shows while a picture loads, never a picture of the home:
+ * Ashton Woods' "loading-dot-pattern-….gif" (alt "Loading...") stood in a
+ * home's gallery (2026-09-23).
+ */
+const PLACEHOLDER = /(?:^|[/_-])(?:loading|loader|spinner|placeholder|lazy-?load|blank|transparent|spacer)(?:[._-][^/]*)?\.(?:gif|svg|png)(?:[?#]|$)/i;
+
+/**
+ * The address an <img> shows, however it is written: its src, or where a
+ * lazy page keeps it until it scrolls into view (data-src, Kolter's
+ * data-lazy-src, D.R. Horton's data-lazy, data-original), or the largest
+ * of the sizes it offers, or two halves for a script to join (Pulte).
+ */
+export function imageAddress(tag: string, opts: { joined?: boolean } = {}): string | null {
+  const plain = [attr(tag, "src"), attr(tag, "data-src"), attr(tag, "data-lazy-src"), attr(tag, "data-lazy"), attr(tag, "data-original")].find(
+    (u): u is string => Boolean(u) && !/^data:/i.test(u!) && !PLACEHOLDER.test(u!)
+  );
+  return (
+    plain ||
+    largestInSrcSet(attr(tag, "srcset") || attr(tag, "data-srcset") || attr(tag, "data-lazy-srcset")) ||
+    (opts.joined === false ? null : joinedPicture(tag))
+  );
+}
+
+/**
+ * The pictures a page opens in a lightbox, which marks them as a gallery
+ * outright: Fancybox's data-fancybox="<group>", each with the full-size
+ * picture in data-src (or href) and its caption in data-caption. Kolter's
+ * plan pages keep every model photo this way — "Entry", "Dining room",
+ * "Kitchen" — under no heading at all, and the run kept one picture of
+ * thirty (Woodland Preserve, 2026-09-23). The first group of three or more
+ * is the plan's, and a group named for elevations, exteriors or floor plans
+ * is too; a picture captioned or named as a floor plan is a drawing.
+ * Pure; exported for tests.
+ */
+export function lightboxGallery(html: string, pageUrl: string): { first: PageImage[]; drawings: string[] } {
+  const baseUrl = documentBase(html, pageUrl);
+  const groups = new Map<string, PageImage[]>();
+  for (const m of html.matchAll(/<[a-z][a-z0-9]*\b[^>]*\sdata-fancybox\s*=\s*["']([^"']*)["'][^>]*>/gi)) {
+    const address = attr(m[0], "data-src") || attr(m[0], "href");
+    if (!address || !/\.(?:jpe?g|png|webp|avif|gif)(?:[?#]|$)/i.test(address.replace(/%2E/gi, "."))) continue;
+    let src: string;
+    try {
+      src = new URL(address, baseUrl).href;
+    } catch {
+      continue;
+    }
+    const caption = readable(attr(m[0], "data-caption") ?? attr(m[0], "title") ?? "");
+    const group = groups.get(m[1]) ?? [];
+    group.push({ src, alt: caption });
+    groups.set(m[1], group);
+  }
+  const named = /elev|exterior|floor|plan/i;
+  const firstName = [...groups.entries()].find(([, images]) => images.length >= 3)?.[0];
+  const seen = new Set<string>();
+  const first: PageImage[] = [];
+  const drawings: string[] = [];
+  for (const [name, images] of groups) {
+    if (name !== firstName && !named.test(name)) continue;
+    for (const image of images) {
+      const key = pictureKey(image.src);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (/\bfloor ?plans?\b/i.test(image.alt) || /floor[\s_-]?plan|[_-]fp[_.-]/i.test(decodeURIComponent(image.src))) drawings.push(image.src);
+      else first.push(image);
+    }
+  }
+  return { first, drawings };
+}
+
 /** A heading's words, with the spans, comments and entities a framework leaves in it. */
 function readable(html: string): string {
   return html
@@ -66,6 +171,8 @@ function readable(html: string): string {
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
+    .replace(/&#0*39;|&#x0*27;|&apos;|&rsquo;|&#8217;|’/gi, "'")
+    .replace(/&quot;|&#0*34;/gi, '"')
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -76,7 +183,26 @@ function readable(html: string): string {
  * under, so a gallery named for its designer is still known to be a
  * gallery.
  */
-export function sectionsOf(html: string, baseUrl: string): PageSection[] {
+/**
+ * The address a page's relative links are relative to: its own, unless it
+ * names another in a <base> tag. Richmond American's Blazor pages declare
+ * <base href="/"> and write "florida/tampa-new-homes/…/fraser/", and read
+ * against the page's own address every plan's link came out doubled —
+ * ".../estates-at-rivers-edge/florida/tampa-new-homes/...", a page that
+ * says "Not found" — so no plan page was ever read (2026-09-23).
+ */
+export function documentBase(html: string, pageUrl: string): string {
+  const href = html.match(/<base\b[^>]*?\shref\s*=\s*["']([^"']+)["']/i)?.[1];
+  if (!href) return pageUrl;
+  try {
+    return new URL(href, pageUrl).href;
+  } catch {
+    return pageUrl;
+  }
+}
+
+export function sectionsOf(html: string, pageUrl: string): PageSection[] {
+  const baseUrl = documentBase(html, pageUrl);
   const absolute = (url: string) => {
     try {
       return new URL(url, baseUrl).href;
@@ -94,10 +220,7 @@ export function sectionsOf(html: string, baseUrl: string): PageSection[] {
     marks.push({ at: m.index ?? 0, heading: { level: Number(m[1]), text: readable(m[2]) } });
   }
   for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
-    const src =
-      attr(m[0], "src") ||
-      attr(m[0], "data-src") ||
-      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset"));
+    const src = imageAddress(m[0]);
     if (!src || src.startsWith("data:")) continue;
     marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: attr(m[0], "alt") ?? "" } });
   }
@@ -131,6 +254,32 @@ const TOUR_HEADING = /\b(virtual tours?|tours?|3-?d|walk-?throughs?|videos?|matt
 const names = (section: PageSection) => [section.heading, ...section.ancestors];
 const isTour = (section: PageSection) => names(section).some((h) => TOUR_HEADING.test(h));
 const isGallery = (section: PageSection) => names(section).some((h) => GALLERY_HEADING.test(h));
+
+/**
+ * The pictures under a heading that names the house's outside —
+ * "Elevations", "Exteriors" — which a page keeps apart from its gallery:
+ * Stock's plan pages run Elevations, Virtual Tours, then Galleries
+ * (2026-09-22). Read here so they are kept whether or not Claude lists
+ * them. Pure; exported for tests.
+ */
+export function elevationPictures(html: string, pageUrl: string): PageImage[] {
+  const seen = new Set<string>();
+  const out: PageImage[] = [];
+  for (const section of sectionsOf(html, pageUrl)) {
+    // A heading for the section, "Elevations" or "Exteriors" — not one
+    // slide's caption: Pulte captions each slide "Elevation FM1", and what
+    // followed those captions down the page was the community's pictures
+    // (Riversong, 2026-09-23).
+    if (isTour(section) || !names(section).some((h) => /\b(elevations|exteriors)\b|^\s*(elevation|exterior)s?\s*$/i.test(h))) continue;
+    for (const image of section.images) {
+      const key = pictureKey(image.src);
+      if (seen.has(key) || /\.svg(?:[?#]|$)/i.test(image.src)) continue;
+      seen.add(key);
+      out.push(image);
+    }
+  }
+  return out;
+}
 
 export interface PlanPageGallery {
   /** The first gallery's pictures, in the order the page shows them. Empty when the page has no gallery. */
@@ -221,6 +370,212 @@ export function firstGallery(html: string, baseUrl: string): PlanPageGallery {
   return { first: wholeGallery(html, drawn, elsewhere), drop };
 }
 
+/**
+ * The plan's photos where a page shows them as a carousel of captioned
+ * slides instead of under a gallery heading: each picture followed by a
+ * heading that repeats its alt text. Pulte's plan pages are built this way
+ * (Daylen at Riversong, 2026-09-23): twenty-two slides, "Daylen Exterior",
+ * "Designer Kitchen", "Owner's Bath", "Elevation FM1", under no heading
+ * that says gallery — and the same page carries every other plan's
+ * carousel further down, so only the first carousel is the plan's.
+ *
+ * A row of cards for other plans is built the same way (a picture, then a
+ * heading with the plan's name), so a carousel counts only when most of
+ * its captions name a room or a view of the house. A slide a carousel
+ * repeats to loop is one picture. Pure; exported for tests.
+ */
+export function captionedCarousel(html: string, pageUrl: string, planName?: string): PlanPageGallery {
+  const baseUrl = documentBase(html, pageUrl);
+  const absolute = (url: string) => {
+    try {
+      return new URL(url, baseUrl).href;
+    } catch {
+      return url;
+    }
+  };
+  type Mark = { at: number; heading?: string; image?: PageImage };
+  const marks: Mark[] = [];
+  for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) marks.push({ at: m.index ?? 0, heading: readable(m[2]) });
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const src = imageAddress(m[0]);
+    if (!src || src.startsWith("data:")) continue;
+    marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: readable(attr(m[0], "alt") ?? "") } });
+  }
+  marks.sort((a, b) => a.at - b.at);
+
+  const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+  const runs: PageImage[][] = [];
+  let run: PageImage[] = [];
+  for (let i = 0; i < marks.length; i++) {
+    const image = marks[i].image;
+    const caption = marks[i + 1]?.heading;
+    if (image && image.alt && caption !== undefined && same(caption, image.alt)) {
+      run.push(image);
+      i++; // the caption
+    } else if (image || (marks[i].heading !== undefined && run.length)) {
+      if (run.length) runs.push(run);
+      run = [];
+    }
+  }
+  if (run.length) runs.push(run);
+
+  const carousels = runs
+    .map((candidate) => {
+      const seen = new Set<string>();
+      return candidate.filter((image) => {
+        const key = pictureKey(image.src);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    })
+    .filter((slides) => slides.length >= 4 && slides.filter((image) => classifyRoom(image.alt)).length * 2 >= slides.length);
+  // The plan's own carousel names the plan ("Daylen Exterior"); a carousel
+  // of the community's amenities, which a page can carry first, does not
+  // (Pulte's Riversong, 2026-09-23).
+  const named = planName ? new RegExp(`\\b${planName.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i") : null;
+  const first = (named && carousels.find((slides) => slides.some((image) => named.test(image.alt)))) || carousels[0] || [];
+  // The other carousels' pictures are other plans': not to be taken from
+  // anyone else's reading of the page either.
+  const mine = new Set(first.map((image) => pictureKey(image.src)));
+  const drop = new Set<string>();
+  if (first.length) {
+    for (const other of runs) for (const image of other) if (!mine.has(pictureKey(image.src))) drop.add(image.src);
+  }
+  return { first, drop };
+}
+
+/** A drawing's address, bare or with a payload's escaped slashes; floor plans are often vectors. */
+const DRAWING_URL = /https?:(?:\\?\/){2}(?:[^\s"'<>\\]|\\\/)+?\.(?:jpe?g|png|webp|avif|gif|svg)(?![a-z0-9])/gi;
+
+/** A name's words: "Grand Sabal" is grand, sabal; "hbt-fl-fp-mooring" is hbt, fl, fp, mooring. */
+const wordsOf = (text: string) =>
+  text
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+
+/** Words a plan's name carries that no file would: "Plan 1272" is 1272. */
+const GENERIC_NAME_WORD = /^(plan|the|model|home|homes|design|series|residence)$/;
+const DRAWING_WORD = /^(fp|floorplans?|flrpln|blueprints?)$/;
+
+/**
+ * The pictures of the first block the page names a gallery ("model-gallery",
+ * "plan-gallery", "photo-gallery") that holds three or more, in order. Dream
+ * Finders titles its plan gallery "Floor Plan Gallery" in a <div>, not a
+ * heading, and captions each slide "Slide 1", "Slide 2" — nothing the other
+ * readers can place — and the run kept five of Haven's twenty-four (Bungalow
+ * Walk, 2026-09-23). A block named for the community, its amenities or the
+ * area is not the plan's. Pure; exported for tests.
+ */
+export function namedGallery(html: string, pageUrl: string): PageImage[] {
+  const baseUrl = documentBase(html, pageUrl);
+  for (const open of html.matchAll(/<(div|section|ul)\b[^>]*\b(?:id|class)\s*=\s*["']([^"']*\bgallery\b[^"']*|[^"']*[-_]gallery\b[^"']*|[^"']*\bgallery[-_][^"']*)["'][^>]*>/gi)) {
+    if (/communit|amenit|lifestyle|neighbou?rhood|footer|\bnav\b/i.test(open[2])) continue;
+    const tag = open[1].toLowerCase();
+    const start = (open.index ?? 0) + open[0].length;
+    // The block runs to the tag that closes it.
+    const pattern = new RegExp(`<(/?)${tag}\\b[^>]*>`, "gi");
+    pattern.lastIndex = start;
+    let depth = 1;
+    let end = html.length;
+    for (let m = pattern.exec(html); m; m = pattern.exec(html)) {
+      depth += m[1] ? -1 : 1;
+      if (depth === 0) {
+        end = m.index;
+        break;
+      }
+    }
+    const seen = new Set<string>();
+    const images: PageImage[] = [];
+    for (const m of html.slice(start, end).matchAll(/<img\b[^>]*>/gi)) {
+      const src = imageAddress(m[0]);
+      if (!src || src.startsWith("data:")) continue;
+      let url: string;
+      try {
+        url = new URL(src.replace(/&amp;/gi, "&"), baseUrl).href;
+      } catch {
+        continue;
+      }
+      if (seen.has(pictureKey(url))) continue;
+      seen.add(pictureKey(url));
+      images.push({ src: url, alt: readable(attr(m[0], "alt") ?? "") });
+    }
+    if (images.length >= 3) return images;
+  }
+  return [];
+}
+
+/**
+ * The floor plan drawings a page carries for this plan, found by their
+ * names: a file or folder that says it is a floor plan ("fp", "floorplan",
+ * "floor-plan") and a file named for the plan. Homes by Towne keeps each
+ * plan's drawing at ".../uploads/floorplan/hbt-fl-shellstone-waterside-fp-
+ * mooring.jpg" behind a "Floor Plan" tab, and Claude, reading the page's
+ * words, reported it for three plans of seventeen (2026-09-23). A drawing
+ * named for another plan is never taken, and neither is one named for
+ * none. Pure; exported for tests.
+ */
+export function drawingsNamed(html: string, pageUrl: string, planNames: (string | null | undefined)[]): string[] {
+  const names = planNames
+    .map((name) => wordsOf(name ?? "").filter((w) => !GENERIC_NAME_WORD.test(w)))
+    .filter((words) => words.join("").length >= 3);
+  if (!names.length) return [];
+  const baseUrl = documentBase(html, pageUrl);
+  const found = new Map<string, string>();
+  for (const m of html.matchAll(DRAWING_URL)) {
+    let url: string;
+    let parts: string[];
+    try {
+      url = new URL(m[0].replace(/\\\//g, "/").replace(/\\/g, ""), baseUrl).href;
+      parts = decodeURIComponent(new URL(url).pathname).split("/").filter(Boolean);
+    } catch {
+      continue;
+    }
+    const file = wordsOf((parts.pop() ?? "").replace(/\.[a-z0-9]+$/i, ""));
+    const said = [...file, ...parts.flatMap(wordsOf)];
+    const saysDrawing = said.some((w, i) => DRAWING_WORD.test(w) || (w === "floor" && /^plans?$/.test(said[i + 1] ?? "")));
+    if (!saysDrawing) continue;
+    const forThisPlan = names.some((words) => words.every((w) => file.includes(w)) || file.includes(words.join("")));
+    if (!forThisPlan) continue;
+    const key = pictureKey(fullSize(url, html));
+    if (!found.has(key)) found.set(key, fullSize(url, html));
+  }
+  return [...found.values()];
+}
+
+/**
+ * The photographs a page names for this plan: pictures whose address
+ * carries the plan's name as a word of its own. Perry draws a plan's
+ * elevations only once the page has run its scripts, each a picture
+ * captioned into its own address — ".../l_text:…DESIGN 2016F E-31…" — with
+ * an alt text that names only the community (2026-09-23). A floor plan
+ * drawing is left to the drawings. Pure; exported for tests.
+ */
+export function picturesNamedFor(html: string, pageUrl: string, planNames: (string | null | undefined)[]): string[] {
+  const names = planNames
+    .map((name) => wordsOf(name ?? "").filter((w) => !GENERIC_NAME_WORD.test(w)))
+    .filter((words) => words.join("").length >= 3);
+  if (!names.length) return [];
+  const found = new Map<string, string>();
+  for (const section of sectionsOf(html, pageUrl)) {
+    for (const image of section.images) {
+      let said: string[];
+      try {
+        said = wordsOf(decodeURIComponent(new URL(image.src).pathname));
+      } catch {
+        continue;
+      }
+      if (said.some((w) => DRAWING_WORD.test(w)) || /\.svg(?:[?#]|$)/i.test(image.src)) continue;
+      if (!names.some((words) => words.every((w) => said.includes(w)))) continue;
+      const key = pictureKey(image.src);
+      if (!found.has(key)) found.set(key, image.src);
+    }
+  }
+  return [...found.values()];
+}
+
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The sizes a media store keeps one picture at, largest first. */
@@ -239,10 +594,72 @@ const THUMB = /^(.+)-thumbnail(\.[a-z0-9]+)$/i;
  * come off.
  */
 export function pictureKey(src: string): string {
-  const name = src.split("/").pop() ?? "";
+  // A picture an image service fetches and resizes is the picture it
+  // fetches, whatever size it is asked for: Pulte's are
+  // res.cloudinary.com/…/image/fetch/ar_1.5,c_fill,w_768/https://pultegroup.picturepark.com/….
+  const fetched = src.match(/\/image\/fetch\/(?:[^/]*\/)*?(https?:\/\/?[^/].*)$/i)?.[1];
+  if (fetched) return pictureKey(fetched.replace(/^(https?:)\/(?!\/)/i, "$1//"));
+  // And so is one whose address it carries written in base64: Adams draws
+  // a plan's front at ".../adamshomes.com/aHR0cHM6Ly9zMy…/exact/w1200"
+  // and again at ".../<the same>/webp/30" (2026-09-23).
+  const carried = src.match(/\/(aHR0c[A-Za-z0-9+_-]*={0,2})(?=\/|$)/)?.[1];
+  if (carried) {
+    const decoded = Buffer.from(carried.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+    if (/^https?:\/\/[^\s]+$/.test(decoded)) return pictureKey(decoded);
+  }
+  // A file the address names is that file whatever size its query asks
+  // for: Dream Finders draws each slide at "…Pemberly-A-Gen3.jpg?width=1000"
+  // and again as its thumbnail at "?width=100" (2026-09-23).
+  // Highland writes one file as "Parker-A1.jpg" and as "Parker%2DA1%2Ejpg".
+  const path = src.replace(/[?#].*$/, "");
+  const folder = path.slice(0, path.lastIndexOf("/") + 1);
+  let file = path.slice(folder.length);
+  try {
+    file = decodeURIComponent(file);
+  } catch {
+    // left as written
+  }
+  const name = IMAGE_FILE.test(file) ? file : src.slice(folder.length);
   const sized = name.match(SIZED) ?? name.match(THUMB);
-  const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(/\.(jpe?g|png|webp|avif|gif)$/i, "");
-  return src.replace(name, plain);
+  const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(IMAGE_FILE, "");
+  return folder + plain;
+}
+
+const IMAGE_FILE = /\.(jpe?g|png|webp|avif|gif)$/i;
+
+/**
+ * The size a picture's address asks for, the larger of its width and its
+ * height ("?width=1000", "&w=900", "?h=800" — David Weekley's list asks
+ * for its fronts 400 wide and its galleries 800 high), or 0 where it asks
+ * for none. Exported for tests.
+ */
+export function askedSize(src: string): number {
+  return Math.max(0, ...[...src.matchAll(/[?&](?:width|w|height|h)=(\d+)/gi)].map((m) => Number(m[1])));
+}
+
+/**
+ * One photograph once, in the place its first spelling came: a list's
+ * picture and a gallery's are often the same file in two formats. Where a
+ * later spelling asks for it larger, that one takes the place — Dream
+ * Finders' list draws a plan's front 400 wide and its gallery 1,000 — and
+ * `enlarged` says which address it replaced. Pure; exported for tests.
+ */
+export function onePerPicture(sources: string[]): { photos: string[]; enlarged: Map<string, string> } {
+  const at = new Map<string, number>();
+  const enlarged = new Map<string, string>();
+  const photos: string[] = [];
+  for (const src of sources) {
+    const key = pictureKey(src);
+    const n = at.get(key);
+    if (n === undefined) {
+      at.set(key, photos.length);
+      photos.push(src);
+    } else if (askedSize(photos[n]) && askedSize(src) > askedSize(photos[n])) {
+      enlarged.set(photos[n], src);
+      photos[n] = src;
+    }
+  }
+  return { photos, enlarged };
 }
 
 /**
@@ -309,6 +726,16 @@ export interface PayloadImage {
 // A record's fields are split across script chunks mid-object, hence the
 // gaps the patterns allow; and a payload may or may not be escaped, hence
 // the optional backslashes.
+//
+// A plan's own page writes the same records whole, the description inside
+// the picture rather than pointed at (Perry 2016F, 2026-09-23):
+//
+//   {"public_id":"2016F_E31_Web_hvttov","secure_url":"https://…jpg", …,
+//    "metadata":{"design_id":"2016F","elevation_id":31,"type":["elevation"]}}
+//
+// and its menus carry pictures of their own — the markets, the building
+// process — whose descriptions name no design. Only a picture described
+// as one of the designs is taken from such a page.
 
 /** `3e:["interior"]` — a word the records point at rather than repeat. */
 const PAYLOAD_LABEL = /(?:^|\\n|>)([0-9a-f]{1,4}):\[\\?"([a-z_]+)\\?"\]/gi;
@@ -317,6 +744,12 @@ const PAYLOAD_META = /(?:^|\\n|>)([0-9a-f]{1,4}):(\{[^{}]{0,900}?\\?"type\\?":\\
 /** A picture: where it lives, and the record describing it. */
 const PAYLOAD_PICTURE =
   /\\?"secure_url\\?":\\?"(https?:(?:\\?\/){2}[^"]+?\.(?:jpe?g|png|webp|avif))\\?"[\s\S]{0,600}?\\?"metadata\\?":\\?"\$([0-9a-f]{1,4})\\?"/gi;
+
+/** A picture whose description is written inside it; the gap may not run into the next picture. */
+const PAYLOAD_PICTURE_INLINE =
+  /\\?"secure_url\\?":\\?"(https?:(?:\\?\/){2}[^"]+?\.(?:jpe?g|png|webp|avif))\\?"(?:(?!secure_url)[\s\S]){0,600}?\\?"metadata\\?":\{([^{}]{0,1500})\}/gi;
+const INLINE_DESIGN = /\\?"design_id\\?":\\?"([^"\\]+)\\?"/i;
+const INLINE_TYPE = /\\?"type\\?":\[\\?"([a-z_]+)/i;
 
 /** The words a page uses for a picture of the outside rather than a room. */
 const OUTSIDE_LABEL = /^(exterior|elevation|aerial|amenity|community|front)$/i;
@@ -331,7 +764,8 @@ const OUTSIDE_LABEL = /^(exterior|elevation|aerial|amenity|community|front)$/i;
  * (firstGallery), which keeps a plan from inheriting the community's
  * other pictures. Pure.
  */
-export function payloadGallery(html: string, baseUrl: string): PayloadImage[] {
+export function payloadGallery(html: string, pageUrl: string, names: (string | null | undefined)[] = []): PayloadImage[] {
+  const baseUrl = documentBase(html, pageUrl);
   const labels = new Map<string, string>();
   for (const m of html.matchAll(PAYLOAD_LABEL)) labels.set(m[1], m[2].toLowerCase());
   const outsideOf = new Map<string, boolean>();
@@ -339,10 +773,26 @@ export function payloadGallery(html: string, baseUrl: string): PayloadImage[] {
     outsideOf.set(m[1], OUTSIDE_LABEL.test(labels.get(m[3]) ?? ""));
   }
 
+  const found: { at: number; src: string; outside: boolean; design?: string }[] = [];
+  for (const m of html.matchAll(PAYLOAD_PICTURE)) {
+    found.push({ at: m.index ?? 0, src: m[1], outside: outsideOf.get(m[2]) ?? false });
+  }
+  for (const m of html.matchAll(PAYLOAD_PICTURE_INLINE)) {
+    const design = m[2].match(INLINE_DESIGN)?.[1];
+    if (!design) continue;
+    found.push({ at: m.index ?? 0, src: m[1], outside: OUTSIDE_LABEL.test(m[2].match(INLINE_TYPE)?.[1] ?? ""), design });
+  }
+  found.sort((a, b) => a.at - b.at);
+  // A plan's page may show its neighbours too: where the pictures name the
+  // plan's own design, only those are its.
+  const wanted = new Set(names.filter((n): n is string => Boolean(n)).map(designKey));
+  const own = found.filter((f) => f.design && wanted.has(designKey(f.design)));
+  const chosen = own.length ? own : found;
+
   const seen = new Set<string>();
   const out: PayloadImage[] = [];
-  for (const m of html.matchAll(PAYLOAD_PICTURE)) {
-    let src = m[1].replace(/\\\//g, "/").replace(/\\/g, "");
+  for (const f of chosen) {
+    let src = f.src.replace(/\\\//g, "/").replace(/\\/g, "");
     try {
       src = new URL(src, baseUrl).href;
     } catch {
@@ -350,7 +800,10 @@ export function payloadGallery(html: string, baseUrl: string): PayloadImage[] {
     }
     if (seen.has(src)) continue;
     seen.add(src);
-    out.push({ src, outside: outsideOf.get(m[2]) ?? false });
+    out.push({ src, outside: f.outside });
   }
   return out;
 }
+
+/** "Design 2016F", "2016F" and "2016 F" as one design. */
+const designKey = (name: string) => name.toLowerCase().replace(/\b(?:design|plan|the)\b/g, "").replace(/[^a-z0-9]/g, "");

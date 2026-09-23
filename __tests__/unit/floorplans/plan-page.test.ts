@@ -1,10 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
+  documentBase,
   firstGallery,
   fullSize,
   largestInSrcSet,
   pictureKey,
+  captionedCarousel,
+  drawingsNamed,
+  joinedPicture,
+  lightboxGallery,
+  elevationPictures,
+  picturesNamedFor,
+  imageAddress,
+  namedGallery,
   sectionsOf,
+  askedSize,
+  onePerPicture,
 } from "@/lib/floorplans/extractors/plan-page";
 
 const BASE = "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/320/";
@@ -243,5 +254,314 @@ describe("a picture offered as a set of sizes", () => {
       "https://x.test/a-1600.webp",
       "https://x.test/b-1200.webp",
     ]);
+  });
+});
+
+describe("documentBase: a page's <base href> (Richmond American, 2026-09-23)", () => {
+  const page = "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/";
+  it("resolves a relative link against the page's base, not the page", () => {
+    const html = `<html><head><base href="/"></head><body><a href="florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/">Fraser</a></body></html>`;
+    expect(documentBase(html, page)).toBe("https://www.richmondamerican.com/");
+    expect(new URL("florida/x/", documentBase(html, page)).href).toBe("https://www.richmondamerican.com/florida/x/");
+  });
+  it("is the page itself where no base is named", () => {
+    expect(documentBase("<html><body></body></html>", page)).toBe(page);
+  });
+});
+
+describe("captionedCarousel (Pulte plan pages, Daylen at Riversong, 2026-09-23)", () => {
+  const cdn = (id: number, w = 768) =>
+    `https://res.cloudinary.com/dv0jqjrc3/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_${w}/https://pultegroup.picturepark.com/Go/mLJpMux8/V/${id}/13`;
+  const slide = (id: number, caption: string) =>
+    `<div class="slide"><img src="${cdn(id)}" alt="${caption}"><div class="caption"><h5>${caption}</h5><button>Save Item</button></div></div>`;
+  const DAYLEN = [
+    [650661, "Daylen Exterior"],
+    [650640, "Designer Kitchen"],
+    [650639, "Large Center Island"],
+    [650642, "Gathering Room"],
+    [650648, "Owner's Suite"],
+    [650650, "Owner's Bath"],
+    [650641, "Perfect for Entertaining"],
+    [439080, "Elevation FM1"],
+  ] as const;
+  const PINECREST = [
+    [700001, "Pinecrest Exterior"],
+    [700002, "Designer Kitchen"],
+    [700003, "Versatile Loft"],
+    [700004, "Covered Lanai"],
+  ] as const;
+  const page = [
+    `<h2>Daylen</h2>`,
+    // The loop's clone of the last slide, before the first.
+    slide(439080, "Elevation FM1"),
+    ...DAYLEN.map(([id, caption]) => slide(id, caption)),
+    `<h1>Daylen At Riversong</h1><h3>Floor Plans</h3><img src="https://www.pulte.com/-/media/fp.png" alt="">`,
+    `<h2>Similar plans</h2>`,
+    ...PINECREST.map(([id, caption]) => slide(id, caption)),
+  ].join("\n");
+  const BASE = "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105";
+
+  it("takes the first carousel of captioned slides, each picture once", () => {
+    const { first } = captionedCarousel(page, BASE);
+    expect(first.map((i) => i.alt)).toEqual([
+      "Elevation FM1",
+      "Daylen Exterior",
+      "Designer Kitchen",
+      "Large Center Island",
+      "Gathering Room",
+      "Owner's Suite",
+      "Owner's Bath",
+      "Perfect for Entertaining",
+    ]);
+  });
+
+  it("marks the later carousels' pictures as somebody else's", () => {
+    const { drop } = captionedCarousel(page, BASE);
+    expect(drop.has(cdn(700002))).toBe(true);
+    expect(drop.has(cdn(650640))).toBe(false);
+  });
+
+  it("does not take a row of other plans' cards for a gallery", () => {
+    const cards = ["Daylen", "Pinecrest", "Crestmere", "Heston", "Mercer"]
+      .map((name, i) => `<a href="/p/${i}"><img src="https://x.com/${i}.jpg" alt="${name}"><h3>${name}</h3></a><p>From $400,000</p>`)
+      .join("");
+    expect(captionedCarousel(cards, BASE)).toEqual({ first: [], drop: new Set() });
+  });
+
+  it("knows one picture at two sizes of the same image service", () => {
+    expect(pictureKey(cdn(650661, 400))).toBe(pictureKey(cdn(650661, 768)));
+    expect(pictureKey(cdn(650661))).not.toBe(pictureKey(cdn(650640)));
+  });
+});
+
+describe("drawingsNamed (Homes by Towne's Floor Plan tab, 2026-09-23)", () => {
+  const cdn = "https://d195jfz94fv5eb.cloudfront.net/uploads";
+  const page = `
+    <img src="${cdn}/gallery/banyan-kitchen.jpg" alt="Kitchen">
+    <div data-tab="floor-plan" hidden><img data-src="${cdn}/floorplan/hbt-fl-shellstone-waterside-fp-banyan.jpg"></div>
+    <script>{"other":"${cdn.replace(/\//g, "\\/")}\\/floorplan\\/hbt-fl-shellstone-waterside-fp-mooring.jpg"}</script>
+    <img src="https://x.com/plans/1272_fp.svg"><img src="https://x.com/plans/palmetto-floor-plan.png">`;
+  const BASE = "https://homesbytowne.com/florida/shellstone-at-waterside/banyan";
+
+  it("takes the drawing a file names for this plan, and not another plan's", () => {
+    expect(drawingsNamed(page, BASE, ["Banyan"])).toEqual([`${cdn}/floorplan/hbt-fl-shellstone-waterside-fp-banyan.jpg`]);
+    expect(drawingsNamed(page, BASE, ["Mooring"])).toEqual([`${cdn}/floorplan/hbt-fl-shellstone-waterside-fp-mooring.jpg`]);
+  });
+
+  it("reads a plan named by its number, and a home by its plan's name", () => {
+    expect(drawingsNamed(page, BASE, ["Plan 1272"])).toEqual(["https://x.com/plans/1272_fp.svg"]);
+    expect(drawingsNamed(page, BASE, ["12 Harbor Way", "Banyan"])).toHaveLength(1);
+  });
+
+  it("does not take a photo, or a word inside another word", () => {
+    expect(drawingsNamed(page, BASE, ["Palm"])).toEqual([]);
+    expect(drawingsNamed(`<img src="${cdn}/gallery/banyan-kitchen.jpg">`, BASE, ["Banyan"])).toEqual([]);
+  });
+});
+
+describe("Pulte's carousel as the page writes it (Daylen at Riversong, 2026-09-23)", () => {
+  // As fetched: no src at all — the script joins data-dam and data-name.
+  const slide = (id: number, caption: string) => `
+    <div class="Carousel-slide" data-type="image">
+      <button class="image-wrapper" type="button">
+        <span class="sr-only">Expand carousel image. </span>
+        <img loading="lazy" class="u-responsiveMedia cld-responsive" alt="${caption} "
+             data-dam="//res.cloudinary.com/dv0jqjrc3/image/fetch/"
+             data-name="https://pultegroup.picturepark.com/Go/mLJpMux8/V/${id}/13"
+             data-size="{&quot;0&quot;:&quot;ar_1.5&quot;,&quot;768&quot;:&quot;ar_1.5&quot;,&quot;1025&quot;:&quot;ar_1.5&quot;,&quot;1920&quot;:&quot;ar_1.5&quot;}"
+             data-transformations="c_fill,f_auto,q_auto,w_auto"
+             data-alt="${caption} ">
+      </button>
+      <h5 class="Image-caption mr-lg-6" title="${caption} " tabindex="-1">
+        ${caption.replace("'", "&#39;")}
+      </h5>
+      <div class="Social-links"><button type="button"><i data-image-caption="${caption} "></i></button></div>
+    </div>`;
+  const page = `<section class="Carousel-v2">${[
+    [650661, "Daylen Exterior"],
+    [650640, "Designer Kitchen"],
+    [650639, "Large Center Island"],
+    [650648, "Owner's Suite"],
+    [650650, "Owner's Bath"],
+  ]
+    .map(([id, caption]) => slide(id as number, caption as string))
+    .join("")}</section>`;
+
+  it("joins each slide's two halves at the largest size the page asks for", () => {
+    expect(joinedPicture(page.match(/<img\b[^>]*>/)![0])).toBe(
+      "https://res.cloudinary.com/dv0jqjrc3/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_1920/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13"
+    );
+  });
+
+  it("reads the carousel whole, captions and all", () => {
+    const { first } = captionedCarousel(page, "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105");
+    expect(first.map((i) => i.alt)).toEqual(["Daylen Exterior", "Designer Kitchen", "Large Center Island", "Owner's Suite", "Owner's Bath"]);
+    expect(first[0].src).toContain("/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_1920/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13");
+  });
+});
+
+describe("lightboxGallery (Kolter's Eva at Woodland Preserve, 2026-09-23)", () => {
+  const r = "https://cdn.kolterhomes.com/kh-includes/communities/parrish-florida-woodland-preserve/renderings";
+  const slide = (file: string, caption: string, group = "model-carousel") =>
+    `<div class="f-carousel__slide" data-fancybox="${group}" data-src="${r}/${file}" data-caption="${caption}"> <img data-lazy-src="${r}/tr:h-720,w-1280,c-maintain_ratio/${file}" alt="Eva Model Home | ${caption}"> </div>`;
+  const page = `<section id="model-images"><div class="f-carousel default">
+    ${slide("kolter%2Dwp%2Deva%2Ddusk%2D011%2Ejpg", "Transitional ")}
+    ${slide("woodland%2Dpreserve%2Deva%2D003%2Ejpg", "Entry")}
+    ${slide("woodland%2Dpreserve%2Deva%2D008%2Ejpg", "Dining room ")}
+    ${slide("woodland%2Dpreserve%2Deva%2D005%2Ejpg", "Kitchen")}
+    ${slide("eva%2Dfloorplan%2Ejpg", "Floor Plan", "floorplans")}
+    ${slide("clubhouse%2D1%2Ejpg", "Clubhouse", "community")}${slide("clubhouse%2D2%2Ejpg", "Pool", "community")}${slide("clubhouse%2D3%2Ejpg", "Gym", "community")}
+  </div></section>`;
+  const BASE = "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/5289/floorplan/eva/";
+
+  it("takes the first lightbox gallery whole, full size, with its captions", () => {
+    const { first } = lightboxGallery(page, BASE);
+    expect(first.map((i) => i.alt)).toEqual(["Transitional", "Entry", "Dining room", "Kitchen"]);
+    expect(first[1].src).toBe(`${r}/woodland%2Dpreserve%2Deva%2D003%2Ejpg`);
+  });
+
+  it("takes a floor plan group's pictures as drawings, and leaves the community's gallery out", () => {
+    const { first, drawings } = lightboxGallery(page, BASE);
+    expect(drawings).toEqual([`${r}/eva%2Dfloorplan%2Ejpg`]);
+    expect(first.some((i) => /clubhouse/.test(i.src))).toBe(false);
+  });
+
+  it("reads the lazy picture's address", () => {
+    expect(imageAddress(`<img data-lazy-src="${r}/x.jpg" alt="">`)).toBe(`${r}/x.jpg`);
+  });
+});
+
+describe("elevationPictures (Stock's plan pages)", () => {
+  it("takes the pictures under an Elevations heading, and not a tour's still or the gallery", () => {
+    const html = `<h2>Elevations</h2><img src="https://x.com/a/elev-a.jpg" alt="A"><img src="https://x.com/a/elev-b.jpg" alt="B">
+      <h2>Virtual Tours</h2><img src="https://x.com/a/tour.jpg">
+      <h2>Galleries</h2><h4>Wild Blue — Interior by Dan Rak</h4><img src="https://x.com/a/kitchen.jpg">`;
+    expect(elevationPictures(html, "https://x.com/plan").map((i) => i.src)).toEqual(["https://x.com/a/elev-a.jpg", "https://x.com/a/elev-b.jpg"]);
+  });
+});
+
+describe("captionedCarousel prefers the plan's own carousel (Pulte's Riversong, 2026-09-23)", () => {
+  const slide = (id: string, caption: string) => `<img src="https://x.com/${id}.jpg" alt="${caption}"><h5>${caption}</h5>`;
+  const amenities = ["Resort-Style Pool", "Covered Lanai", "Fitness Room", "Community Kitchen"].map((c, i) => slide(`a${i}`, c)).join("");
+  const daylen = ["Daylen Exterior", "Designer Kitchen", "Gathering Room", "Owner's Bath"].map((c, i) => slide(`d${i}`, c)).join("");
+  const page = `<section>${amenities}</section><h2>Daylen</h2><section>${daylen}</section>`;
+
+  it("takes the carousel that names the plan, and drops the community's", () => {
+    const { first, drop } = captionedCarousel(page, "https://x.com/daylen", "Daylen");
+    expect(first.map((i) => i.alt)).toEqual(["Daylen Exterior", "Designer Kitchen", "Gathering Room", "Owner's Bath"]);
+    expect(drop.has("https://x.com/a0.jpg")).toBe(true);
+  });
+
+  it("takes the first carousel where none names the plan", () => {
+    expect(captionedCarousel(page, "https://x.com/daylen", "Pinecrest").first[0].alt).toBe("Resort-Style Pool");
+  });
+});
+
+describe("picturesNamedFor (Perry's elevations, drawn in the browser, 2026-09-23)", () => {
+  const cl = (overlay: string, id: string) =>
+    `https://res.cloudinary.com/perryhomes/image/upload/f_auto,c_limit,w_1920,q_auto/b_rgb:1B1919,co_rgb:fafafa,l_text:Arial_700_bold_24:%20%20${overlay}%20%20/c_scale,fl_relative,w_0.15/fl_layer_apply,g_south_east/v1/${id}?_a=B`;
+  const page = `<img alt="star-farms-at-lakewood-ranch" src="${cl("DESIGN%202016F%20E-1", "a1")}">
+    <img alt="star-farms-at-lakewood-ranch" src="${cl("DESIGN%202016F%20E-31", "a31")}">
+    <img alt="star-farms-at-lakewood-ranch" src="${cl("DESIGN%202016F%20E-50", "a50")}">
+    <img alt="Floor plan" src="https://res.cloudinary.com/perryhomes/image/upload/c_limit,w_500/2016F-FP_frnnpg">
+    <img alt="" src="${cl("DESIGN%202200F%20E-1", "b1")}">`;
+
+  it("takes the pictures whose address names the plan, and not its drawing or another plan's", () => {
+    const got = picturesNamedFor(page, "https://www.perryhomes.com/x/2016f", ["2016F"]);
+    expect(got).toHaveLength(3);
+    expect(got.every((u) => u.includes("2016F%20E-"))).toBe(true);
+  });
+});
+
+describe("elevationPictures does not take a slide's caption for a section (Pulte, 2026-09-23)", () => {
+  it("ignores what follows a heading like \"Elevation FM1\"", () => {
+    const html = `<h5>Elevation FM1</h5><img src="https://x.com/community-pool.jpg"><img src="https://x.com/clubhouse.jpg">`;
+    expect(elevationPictures(html, "https://x.com/plan")).toEqual([]);
+  });
+});
+
+describe("imageAddress and placeholders", () => {
+  it("takes no loading picture for a picture of the home", () => {
+    // Ashton Woods' gallery at 10046 Hidden Hammock Loop (2026-09-23).
+    expect(imageAddress('<img src="https://www.ashtonwoods.com/assets/loading-dot-pattern-1bcbfdcf1f.gif" alt="Loading...">')).toBeNull();
+    expect(imageAddress('<img src="/img/spacer.gif">')).toBeNull();
+    expect(imageAddress('<img src="/img/placeholder.png" data-src="/img/kitchen.jpg">')).toBe("/img/kitchen.jpg");
+    expect(imageAddress('<img src="/img/loading-dock.jpg">')).toBe("/img/loading-dock.jpg");
+  });
+});
+
+describe("namedGallery", () => {
+  // Haven at Bungalow Walk (Dream Finders, 2026-09-23): the gallery's title
+  // is a <div>, and every slide is captioned only by its number.
+  const DF = "https://dreamfindershomes.com/new-homes/fl/lakewood-ranch/bungalow-walk-at-lakewood-ranch/haven/";
+  const slide = (n: number) =>
+    `<div class="swiper-slide"><div class="oi-aspect three-two"><img src="https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=1000&amp;height=625" loading="lazy" alt="Haven New Home in Lakewood Ranch, FL.  - Slide ${n}" /></div></div>`;
+  const page = `<div class="community-gallery"><img src="/amenity-1.jpg"><img src="/amenity-2.jpg"><img src="/amenity-3.jpg"></div>
+    <div id="model-gallery" class="py-3"><div class="heading">Floor Plan Gallery</div>
+      <div class="swiper modeGallerySwiper"><div class="swiper-wrapper">${[1, 2, 3, 4].map(slide).join("")}</div></div>
+    </div>
+    <div class="similar-plans"><img src="/other-plan.jpg"></div>`;
+
+  it("takes the pictures of the first block named a gallery, and stops where it closes", () => {
+    const got = namedGallery(page, DF);
+    expect(got.map((i) => i.src)).toEqual([1, 2, 3, 4].map((n) => `https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=1000&height=625`));
+  });
+
+  it("passes over a gallery of the community's", () => {
+    expect(namedGallery(page, DF).some((i) => i.src.includes("amenity"))).toBe(false);
+  });
+
+  it("gives nothing where no gallery holds three pictures", () => {
+    expect(namedGallery(`<div class="gallery"><img src="/a.jpg"><img src="/b.jpg"></div>`, DF)).toEqual([]);
+  });
+
+  it("takes each slide once, not again as its thumbnail", () => {
+    const thumb = (n: number) =>
+      `<div class="swiper-slide"><img src="https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=100&amp;height=62" alt="Thumbnail for Slide ${n}" /></div>`;
+    const withThumbs = page.replace(`</div></div>\n    </div>`, `</div></div><div class="swiper thumbs">${[1, 2, 3, 4].map(thumb).join("")}</div>\n    </div>`);
+    expect(withThumbs).toContain("Thumbnail for Slide 4");
+    expect(namedGallery(withThumbs, DF).map((i) => i.src)).toEqual(
+      [1, 2, 3, 4].map((n) => `https://media.dreamfindershomes.com/371/Haven-${n}.jpg?width=1000&height=625`)
+    );
+  });
+});
+
+describe("pictureKey and askedSize", () => {
+  it("knows a file at any size its query asks for, and by its name however it is written", () => {
+    const df = "https://media.dreamfindershomes.com/371/2024/3/17/Bunaglow_Walk-Pemberly-A-Gen3.jpg";
+    expect(pictureKey(`${df}?width=1000&height=625&fit=bounds&ois=c60fe8c`)).toBe(pictureKey(`${df}?width=100&height=62&fit=bounds&ois=c2eba2b`));
+    expect(pictureKey("https://highlandhomes.imgix.net/model/Parker%2DA1%2Ejpg?fit=crop&w=225")).toBe(pictureKey("https://highlandhomes.imgix.net/model/Parker-A1.jpg"));
+  });
+
+  it("knows a picture a resizer carries in base64, at any size", () => {
+    const adams = (source: string, size: string) =>
+      `https://dlqxt4mfnxo6k.cloudfront.net/adamshomes.com/${Buffer.from(source).toString("base64")}/${size}`;
+    const front = "https://s3.amazonaws.com/buildercloud/b3b3e717034e6cb586761f1c891a57bc.jpeg";
+    expect(pictureKey(adams(front, "exact/w1200"))).toBe(pictureKey(adams(front, "webp/30")));
+    expect(pictureKey(adams(front, "webp/30"))).not.toBe(pictureKey(adams("https://s3.amazonaws.com/buildercloud/2ad5275be471ce95852e47de5a1eb882.jpeg", "webp/30")));
+  });
+
+  it("keeps apart pictures an address tells apart only by its query", () => {
+    expect(pictureKey("https://x.com/photo?id=1")).not.toBe(pictureKey("https://x.com/photo?id=2"));
+  });
+
+  it("reads the width an address asks for", () => {
+    expect(askedSize("https://m.com/a.jpg?width=1000&height=625")).toBe(1000);
+    expect(askedSize("https://m.com/a.jpg?fit=crop&w=900&h=675")).toBe(900);
+    expect(askedSize("https://m.com/a.jpg")).toBe(0);
+    expect(askedSize("https://www.davidweekleyhomes.com/media/ElevationPhoto/5f903ffd.JPG?h=800")).toBe(800);
+  });
+});
+
+describe("onePerPicture", () => {
+  const front = "https://media.dreamfindershomes.com/371/Pemberly-A-Gen3.jpg";
+  it("keeps a picture once, in its first place, at the largest size asked for", () => {
+    const got = onePerPicture([`${front}?width=400`, "https://m.com/kitchen.jpg", `${front}?width=1000`, `${front}?width=100`]);
+    expect(got.photos).toEqual([`${front}?width=1000`, "https://m.com/kitchen.jpg"]);
+    expect(got.enlarged.get(`${front}?width=400`)).toBe(`${front}?width=1000`);
+  });
+
+  it("keeps the first spelling where none asks for a size", () => {
+    expect(onePerPicture(["https://r.com/media-1.jpg", "https://r.com/media-1.webp"]).photos).toEqual(["https://r.com/media-1.jpg"]);
   });
 });

@@ -13,6 +13,7 @@
 //
 // Structure captured in pipeline/slice/discovery/mpc3/wellenpark-card-raw.html.
 
+import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -80,6 +81,17 @@ const num = (s: string | undefined): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+/**
+ * The site's home type for what the aggregator calls a home. Wellen Park
+ * files M/I's Palm, Sabal, Foxtail and Bismark as "Multi-Family", and the
+ * site carries every one of them as a townhome (2026-09-23).
+ */
+export function mpcHomeType(label: string | null | undefined): string | null {
+  const text = (label ?? "").replace(/-/g, " ").trim();
+  if (!text) return null;
+  return standardHomeType(text) ?? (/\bmulti\s*family\b/i.test(text) ? "Townhome" : text.replace(/\b\w/g, (c) => c.toUpperCase()));
+}
+
 export function normalizeCard(card: Card): NormalizedPlan | null {
   const { attrs } = card;
   const availability = (attrs.availability ?? "").trim();
@@ -102,7 +114,7 @@ export function normalizeCard(card: Card): NormalizedPlan | null {
     baths: baths != null ? String(baths) : "",
     sqft: sqft != null ? sqft : null,
     garages: garage ? `${garage} car` : null,
-    homeType: attrs.type ? attrs.type.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : null,
+    homeType: mpcHomeType(attrs.type),
     quickMoveIn,
     comingSoon: /coming soon|from\s+price/i.test(card.h4),
     sourceUrl: card.detail,
@@ -118,6 +130,120 @@ export function normalizeCard(card: Card): NormalizedPlan | null {
       relatedPlan: quickMoveIn ? null : name,
     },
   };
+}
+
+/**
+ * What a home's own page on the aggregator adds to its card: the whole
+ * gallery, the floor plan drawing and the tour. The card carries one
+ * picture; the page carries seventeen of them under the home's heading, a
+ * drawing (an .svg from the same folder), and an "Interactive Plan" link
+ * to a Matterport (wellenpark.com/home/3911998/detail, 2026-09-23). Only
+ * the part of the page about this home is read — from its heading to the
+ * "More Homes in …" row of other homes — so a neighbour's picture is never
+ * taken. Pure; exported for tests.
+ */
+export function readDetailPage(html: string): {
+  photos: string[];
+  drawings: string[];
+  tour: string | null;
+  homeType: string | null;
+  description: string | null;
+} {
+  // The type sits over the name ("<p>Multi-Family</p> … <h1>Palm</h1>"),
+  // and the description under a bold "Description".
+  const header = html.match(/<p>\s*([^<]{3,40}?)\s*<\/p>(?:(?!<\/?p\b)[\s\S]){0,400}?<h1\b/i)?.[1] ?? null;
+  const described = html.match(/<strong>\s*Description\s*<\/strong>\s*(?:<br\s*\/?>)?([\s\S]*?)<\/p>/i)?.[1];
+  const description = described ? stripTags(described).replace(/&#0?39;|&rsquo;/g, "'") || null : null;
+  const start = html.search(/<h1\b/i);
+  const rest = start >= 0 ? html.slice(start) : html;
+  const end = rest.search(/>\s*More Homes in\b|>\s*GETTING social\b/i);
+  const own = end > 0 ? rest.slice(0, end) : rest;
+  const pictures = [
+    ...new Set(
+      [...own.matchAll(/https?:\/\/[^"'\s()<>]+?\/Images\/Homes\/[^"'\s()<>]+?\.(?:jpe?g|png|webp|svg)/gi)].map((m) => m[0])
+    ),
+  ];
+  const tour = own.match(/https?:\/\/my\.matterport\.com\/show\/\?m=[A-Za-z0-9]+/i)?.[0] ?? null;
+  return {
+    photos: pictures.filter((u) => !/\.svg$/i.test(u)),
+    drawings: pictures.filter((u) => /\.svg$/i.test(u)),
+    tour,
+    homeType: mpcHomeType(header),
+    description,
+  };
+}
+
+/** The builder's folder a listing picture sits in: ".../Images/Homes/NealC9425/82211950.jpg" is "nealc9425". Exported for tests. */
+export function folderOf(url: string): string | null {
+  return url.match(/\/Images\/Homes\/([^/]+)\//i)?.[1]?.toLowerCase() ?? null;
+}
+
+/**
+ * A picture two of a builder's plans both show is neither plan's own: a
+ * to-be-built page with no gallery of its own falls back on the builder's
+ * pictures of the neighborhood, and Everly's Ravenna and Palm Bay 2 came
+ * back with the same 59 of Neal's (2026-09-23). Each listing keeps the
+ * picture its card leads with. Pure; exported for tests.
+ */
+export function withoutSharedPictures(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const count = new Map<string, number>();
+  for (const p of plans) {
+    if (p.quickMoveIn) continue;
+    for (const u of new Set(p.galleryImages.slice(1))) count.set(u, (count.get(u) ?? 0) + 1);
+  }
+  const shared = (u: string) => (count.get(u) ?? 0) >= 2;
+  return plans.map((p) =>
+    p.galleryImages.slice(1).some(shared) ? { ...p, galleryImages: p.galleryImages.filter((u, i) => i === 0 || !shared(u)) } : p
+  );
+}
+
+/** Runs `fn` over the items a few at a time, keeping order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]);
+      }
+    })
+  );
+  return out;
+}
+
+/** The home with what its own page adds; a page that will not load leaves it as its card had it. */
+async function withDetailPage(plan: NormalizedPlan, origin: string): Promise<NormalizedPlan> {
+  if (!plan.sourceUrl) return plan;
+  const url = new URL(plan.sourceUrl, origin).href;
+  try {
+    const res = await fetch(url, {
+      headers: { "user-agent": UA, accept: "text/html" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
+    const page = readDetailPage(await res.text());
+    // Only the builder's own pictures: a to-be-built page with no gallery
+    // of its own shows other builders' homes instead, and Ravenna came back
+    // with 258 of Mattamy's, Toll's and Lennar's (Everly, 2026-09-23). The
+    // listing files each builder's under its own folder.
+    const folder = folderOf(plan.galleryImages[0] ?? "") ?? folderOf(page.photos[0] ?? "");
+    const ours = (u: string) => !folder || folderOf(u) === folder;
+    const photos = [...plan.galleryImages, ...page.photos.filter(ours)].filter((u, i, all) => all.indexOf(u) === i);
+    const drawings = page.drawings.filter(ours);
+    return {
+      ...plan,
+      sourceUrl: url,
+      galleryImages: photos,
+      blueprintImages: drawings.length ? drawings : plan.blueprintImages,
+      virtualTourUrl: plan.virtualTourUrl ?? page.tour,
+      homeType: plan.homeType ?? page.homeType,
+      description: plan.description ?? page.description,
+    };
+  } catch {
+    return { ...plan, sourceUrl: url, pageUnread: true };
+  }
 }
 
 function resolveBuilderSlug(builderName: string, override?: string): string | null {
@@ -170,5 +296,6 @@ export async function extractMpcAggregator(params: {
     const plan = normalizeCard(card);
     if (plan && !byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
   }
-  return [...byKey.values()];
+  // Each home's own page, for its gallery, its drawing and its tour.
+  return withoutSharedPictures(await mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin)));
 }

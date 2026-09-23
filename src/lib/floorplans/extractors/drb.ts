@@ -7,6 +7,7 @@
 // inventory homes, which is what the legacy collection tracks.
 // Structure captured in pipeline/slice/discovery/round8/.
 
+import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -61,10 +62,22 @@ export function normalizeDrbItem(item: DrbInventoryItem, pageUrl?: string): Norm
     addressFromImage ??
     (planName ? `${planName}${homesite != null ? ` (Homesite ${homesite})` : ` (${item.id ?? ""})`}` : "");
   if (!name.trim()) return null;
-  const gallery = (item.images ?? [])
-    .filter((img) => img.url && !/floorplan/i.test(img.type ?? ""))
-    .map((img) => img.url as string)
-    .filter((u, i, a) => a.indexOf(u) === i);
+  // Every picture comes titled — "Front Exterior of 8320 Golden Beach
+  // Court", "Kitchen" — so the gallery is put in the site's order from what
+  // DRB says each one is: the front of the house leads, the rooms follow,
+  // the other outside views go last (gallery-order.ts).
+  const photos = (item.images ?? []).filter((img) => img.url && !/floorplan/i.test(img.type ?? ""));
+  const said = (img: DrbImage) => (img.title || img.type || "").trim();
+  const front = photos.find((img) => /\bfront\b/i.test(said(img)) && classifyRoom(said(img)) === "exterior");
+  const ordered = orderGallery(
+    photos.map((img): GalleryInput => {
+      const caption = said(img) || null;
+      if (img === front) return { src: img.url!, kind: "primary", caption };
+      if (caption && classifyRoom(caption) === "exterior") return { src: img.url!, kind: "exterior", caption };
+      return { src: img.url!, caption };
+    })
+  );
+  const gallery = ordered.urls;
   const blueprints = (item.images ?? [])
     .filter((img) => img.url && /floorplan/i.test(img.type ?? ""))
     .map((img) => img.url as string);
@@ -87,6 +100,7 @@ export function normalizeDrbItem(item: DrbInventoryItem, pageUrl?: string): Norm
     comingSoon: (item.salesStatus ?? "").toLowerCase() === "coming_soon",
     sourceUrl: item.websiteUrl || pageUrl || null,
     galleryImages: gallery,
+    galleryMeta: ordered.meta,
     blueprintImages: blueprints,
     raw: {
       drbId: item.id,

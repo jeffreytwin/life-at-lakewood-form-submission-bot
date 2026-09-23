@@ -27,20 +27,35 @@ const SETTLE_MS = 20_000;
 const POLL_MS = 500;
 /** A page that will not even load in this long is not going to. */
 const NAVIGATE_MS = 45_000;
+/** The longest a page is given to stop fetching once it has loaded. */
+const QUIET_MS = 15_000;
 
 let browser: Browser | null = null;
-let deadline = Infinity;
+let starting: Promise<Browser> | null = null;
+/** Runs using the browser now; it is closed when the last of them ends. */
+let users = 0;
 
 /**
- * How long this run may spend in the browser. A rendered page takes
- * seconds rather than milliseconds, and a community with twenty of them
- * would otherwise outlive the function it runs in and be killed with
- * nothing written down. Past the budget, a page is refused: the list
- * pages come first, so what is refused is a plan's extras, which the
- * caller already treats as optional.
+ * A browser for one run, with a budget of its own. Runs in the same
+ * process share one browser — two connections run at once from the Hub
+ * can land on the same function instance — so it is started once and
+ * closed only when the last run using it ends; before this, the first run
+ * to finish closed the browser under the other. Past its budget a run's
+ * pages are refused: the list pages come first, so what is refused is a
+ * plan's extras, which the caller already treats as optional.
  */
-export function renderBudget(ms: number): void {
-  deadline = Date.now() + ms;
+export async function withRenderer<T>(
+  budgetMs: number,
+  work: (render: (url: string, opts?: RenderOptions) => Promise<{ url: string; html: string; pressed: string | null }>) => Promise<T>
+): Promise<T> {
+  users += 1;
+  const deadline = Date.now() + budgetMs;
+  try {
+    return await work((url, opts) => renderPage(url, opts, deadline));
+  } finally {
+    users -= 1;
+    if (users === 0) await closeRenderer();
+  }
 }
 
 /**
@@ -62,18 +77,23 @@ async function chromium(): Promise<{ executablePath: string; args: string[]; hea
 /** The run's browser, started on first use. */
 async function open(): Promise<Browser> {
   if (browser?.connected) return browser;
-  const { executablePath, args, headless } = await chromium();
-  const puppeteer = await import("puppeteer-core");
-  browser = await puppeteer.default.launch({ executablePath, args, headless });
-  logger.info("Floor plan renderer started", { executablePath });
-  return browser;
+  starting ??= (async () => {
+    const { executablePath, args, headless } = await chromium();
+    const puppeteer = await import("puppeteer-core");
+    const opened = await puppeteer.default.launch({ executablePath, args, headless });
+    logger.info("Floor plan renderer started", { executablePath });
+    browser = opened;
+    return opened;
+  })().finally(() => {
+    starting = null;
+  });
+  return starting;
 }
 
-/** Ends the run's browser. Safe to call when none was started. */
-export async function closeRenderer(): Promise<void> {
+/** Ends the browser. Safe to call when none was started. */
+async function closeRenderer(): Promise<void> {
   const open = browser;
   browser = null;
-  deadline = Infinity;
   if (!open) return;
   try {
     await open.close();
@@ -282,6 +302,26 @@ export interface RenderOptions {
 }
 
 /**
+ * The page's markup, once it has stopped moving. A page can send itself
+ * somewhere else after it has drawn — Richmond American's did, and the
+ * read failed with "Execution context was destroyed" (2026-09-23) — so a
+ * read that loses its page waits for the next one to arrive and reads
+ * that, twice at most.
+ */
+async function settledContent(page: Page): Promise<string> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await page.content();
+    } catch (error) {
+      const moved = /context was destroyed|navigat/i.test(error instanceof Error ? error.message : String(error));
+      if (!moved || attempt >= 2) throw error;
+      await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15_000 }).catch(() => {});
+      await page.waitForSelector("body", { timeout: 5_000 }).catch(() => {});
+    }
+  }
+}
+
+/**
  * The page's HTML once it has drawn itself, and the address it settled on.
  *
  * "Drawn itself" is the same test the plain engine uses to tell an empty
@@ -292,7 +332,8 @@ export interface RenderOptions {
  */
 export async function renderPage(
   url: string,
-  opts: RenderOptions = {}
+  opts: RenderOptions = {},
+  deadline = Infinity
 ): Promise<{ url: string; html: string; pressed: string | null }> {
   if (Date.now() > deadline) throw new Error(`out of rendering time before ${url}`);
   const page = await (await open()).newPage();
@@ -318,13 +359,18 @@ export async function renderPage(
     // shown one fact may still be loading the ones that matter (Jeff,
     // 2026-09-22). A page that never goes quiet — a chat widget, a poll —
     // is taken as it stands rather than failing.
-    let quiet = true;
-    try {
-      await page.goto(url, { waitUntil: "networkidle2", timeout: NAVIGATE_MS });
-    } catch {
-      quiet = false;
+    //
+    // Quiet within QUIET_MS, though: a page with a chat widget or a poll
+    // never goes quiet, and waiting out the whole navigation for each of
+    // Richmond's plan pages cost half a minute a page (2026-09-23). The
+    // facts check below is what says the page has drawn.
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAVIGATE_MS }).catch(async () => {
       await page.waitForSelector("body", { timeout: 5_000 }).catch(() => {});
-    }
+    });
+    const quiet = await page
+      .waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: QUIET_MS })
+      .then(() => true)
+      .catch(() => false);
 
     // And then the backstop, for a page still filling in after it went
     // quiet: wait until it shows a price, a size or a bed count.
@@ -370,7 +416,7 @@ export async function renderPage(
       return 0;
     });
 
-    const html = await page.content();
+    const html = await settledContent(page);
     logger.info("Floor plan page rendered", { url, quiet, ready, pressed, gathered, bytes: html.length });
     return { url: page.url(), html, pressed };
   } finally {

@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   linkQuickMoveIns,
+  bareKey,
+  codeAndName,
   nearlySameKey,
   planNameOf,
+  withQuickMoveInPictures,
   withQuickMoveInPrices,
   priceTagOf,
   basePlanMarkers,
@@ -193,6 +196,40 @@ describe("linkQuickMoveIns", () => {
   it("marks a base plan without quick move-ins as such", () => {
     expect(linkQuickMoveIns([plan({})])[0].hasQuickMoveIns).toBe(false);
   });
+
+  it("ties a home to its plan whatever word the builder puts in front of the name (Adams, 2026-09-23)", () => {
+    const plans = linkQuickMoveIns([
+      plan({ planKey: "6927166thplacee", name: "6927 166TH Place E", quickMoveIn: true, sqft: 1540, relatedPlanName: "1512" }),
+      plan({ planKey: "plan1512", name: "Plan 1512", sqft: 1512 }),
+      plan({ planKey: "plan1720", name: "Plan 1720", sqft: 1720 }),
+    ]);
+    expect(plans[0]).toMatchObject({ relatedPlanKey: "plan1512", relatedPlanName: "Plan 1512", relatedPlanMatch: "plan-name" });
+    expect(bareKey("The Waterway")).toBe(bareKey("Waterway"));
+    expect(bareKey("Plan 1635- B")).toBe(bareKey("1635- B"));
+  });
+
+  describe("a home listed by its address alone (M/I at Wellen Park, 2026-09-23)", () => {
+    const palm = plan({ planKey: "palm", name: "Palm", sqft: 2425, beds: "3" });
+    const sabal = plan({ planKey: "sabal", name: "Sabal", sqft: 1702, beds: "3" });
+    const home = (over: Partial<NormalizedPlan>) =>
+      plan({ planKey: "17966broadleafloop", name: "17966 Broadleaf Loop", quickMoveIn: true, sqft: 2425, beds: "3", ...over });
+
+    it("is tied to the one plan of its square footage", () => {
+      const [linked] = linkQuickMoveIns([home({}), palm, sabal]);
+      expect(linked).toMatchObject({ relatedPlanKey: "palm", relatedPlanName: "Palm", relatedPlanMatch: "plan-facts" });
+    });
+
+    it("is left unmatched when two plans are that size, or the bedrooms disagree", () => {
+      const twin = plan({ planKey: "palmii", name: "Palm II", sqft: 2425, beds: "3" });
+      expect(linkQuickMoveIns([home({}), palm, twin])[0].relatedPlanMatch).toBe("unmatched");
+      expect(linkQuickMoveIns([home({ beds: "4" }), palm, sabal])[0].relatedPlanMatch).toBe("unmatched");
+    });
+
+    it("never overrides a plan the engine named, even one missing from the run", () => {
+      const [linked] = linkQuickMoveIns([home({ raw: { relatedPlan: "Banyan" } }), palm]);
+      expect(linked).toMatchObject({ relatedPlanMatch: "unmatched", relatedPlanName: "Banyan" });
+    });
+  });
 });
 
 describe("priceTagOf", () => {
@@ -300,3 +337,90 @@ describe("withQuickMoveInPrices", () => {
     expect(out[1].priceFromHome).toBeUndefined();
   });
 });
+
+describe("withQuickMoveInPictures", () => {
+  const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "mayport", name: "Mayport", price: 324990, priceDisplay: "$324,990", beds: "3", baths: "2.5", sqft: null, garages: null,
+    homeType: "Townhome", quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  // Amber Creek (Ryan Homes, 2026-09-23): sold out but for one Mayport.
+  const home = (name: string, pictures: number, over: Partial<NormalizedPlan> = {}) =>
+    plan({ planKey: name.toLowerCase(), name, quickMoveIn: true, relatedPlanKey: "mayport", sqft: 1674, garages: "1 car",
+      galleryImages: Array.from({ length: pictures }, (_, i) => `${name}-${i}.jpg`), ...over });
+
+  it("gives a plan with no picture the pictures, size and garage of its home with the most", () => {
+    const [got] = withQuickMoveInPictures([plan({}), home("A", 3), home("B", 31, { blueprintImages: ["b-fp.jpg"] })]);
+    expect(got.galleryImages).toHaveLength(31);
+    expect(got.galleryImages[0]).toBe("B-0.jpg");
+    expect(got.blueprintImages).toEqual(["b-fp.jpg"]);
+    expect(got).toMatchObject({ sqft: 1674, garages: "1 car" });
+  });
+
+  it("leaves a plan the builder shows pictures of as it is", () => {
+    const [got] = withQuickMoveInPictures([plan({ galleryImages: ["own.jpg"] }), home("B", 31)]);
+    expect(got.galleryImages).toEqual(["own.jpg"]);
+  });
+});
+
+describe("linkQuickMoveIns and plan codes", () => {
+  const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "x", name: "x", price: null, priceDisplay: null, beds: "4", baths: "3", sqft: null, garages: null,
+    homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  // Palmera (David Weekley, 2026-09-23): homes name their plan by code.
+  const wagoner = plan({ planKey: "the wagoner", name: "The Wagoner", sqft: 2697 });
+  const colston = plan({ planKey: "the colston", name: "The Colston", sqft: 3035 });
+
+  it("ties a home that names its plan only by code to the one plan of its size", () => {
+    const home = plan({ planKey: "17988 foxtail loop", name: "17988 Foxtail Loop", quickMoveIn: true, sqft: 2697, relatedPlanName: "F057" });
+    const got = linkQuickMoveIns([wagoner, colston, home])[2];
+    expect(got).toMatchObject({ relatedPlanKey: "the wagoner", relatedPlanMatch: "plan-facts" });
+  });
+
+  it("ties a home to the plan whose page gave the code it names, whatever its size", () => {
+    const coded = { ...colston, raw: { planId: "F060" } };
+    const home = plan({ planKey: "17676 foxtail loop", name: "17676 Foxtail Loop", quickMoveIn: true, sqft: 3026, relatedPlanName: "f-060" });
+    expect(linkQuickMoveIns([wagoner, coded, home])[2]).toMatchObject({ relatedPlanKey: "the colston", relatedPlanMatch: "plan-id" });
+  });
+
+  it("does not tie a home that names a plan by name to another plan its size", () => {
+    const home = plan({ planKey: "1 main st", name: "1 Main St", quickMoveIn: true, sqft: 2697, relatedPlanName: "Pearson" });
+    expect(linkQuickMoveIns([wagoner, colston, home])[2].relatedPlanMatch).toBe("unmatched");
+  });
+
+  // North River Ranch (David Weekley, 2026-09-23): homes give the code and the name.
+  it("ties a home that gives its plan's code and name together, by the name", () => {
+    const benton = plan({ planKey: "the benton", name: "The Benton", sqft: 1953 });
+    const truman = plan({ planKey: "the truman", name: "The Truman", sqft: 1980 });
+    const homes = [
+      plan({ planKey: "10665 crescent creek crossing", name: "10665 Crescent Creek Crossing", quickMoveIn: true, sqft: 1953, relatedPlanName: "F034 (The Benton)" }),
+      plan({ planKey: "10732 oak bend drive", name: "10732 Oak Bend Drive", quickMoveIn: true, sqft: 1980, relatedPlanName: "F008 - The Truman" }),
+    ];
+    const got = linkQuickMoveIns([benton, truman, ...homes]).slice(2);
+    expect(got.map((h) => [h.relatedPlanKey, h.relatedPlanMatch])).toEqual([
+      ["the benton", "plan-name"],
+      ["the truman", "plan-name"],
+    ]);
+  });
+
+  it("ties it by the code where the plan's page gave one", () => {
+    const coded = { ...colston, raw: { planId: "F060" } };
+    const home = plan({ planKey: "2 main st", name: "2 Main St", quickMoveIn: true, sqft: 3026, relatedPlanName: "F060 (The Colston II)" });
+    expect(linkQuickMoveIns([wagoner, coded, home])[2]).toMatchObject({ relatedPlanKey: "the colston", relatedPlanMatch: "plan-id" });
+  });
+});
+
+describe("codeAndName", () => {
+  it("takes a plan's code and name apart, whichever comes first", () => {
+    expect(codeAndName("F034 (The Benton)")).toEqual({ code: "F034", name: "The Benton" });
+    expect(codeAndName("F008 - The Truman")).toEqual({ code: "F008", name: "The Truman" });
+    expect(codeAndName("The Bingley II (F019)")).toEqual({ code: "F019", name: "The Bingley II" });
+  });
+
+  it("leaves alone a name that is one or the other", () => {
+    expect(codeAndName("F057")).toBeNull();
+    expect(codeAndName("The Wagoner")).toBeNull();
+    expect(codeAndName("Plan 1820")).toBeNull();
+  });
+});
+

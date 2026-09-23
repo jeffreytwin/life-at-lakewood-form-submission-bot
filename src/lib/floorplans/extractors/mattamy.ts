@@ -6,6 +6,8 @@
 // connection is scoped by its community page URL prefix. Structure
 // captured in pipeline/slice/discovery/round7/mattamy-search.*.
 
+import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
+import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -23,6 +25,7 @@ interface MattamyCard {
   price?: { price?: string | null; noPriceText?: string | null } | null;
   attributes?: { icon?: string | null; label?: string | null }[] | null;
   isComingSoon?: boolean;
+  homeType?: string | null;
 }
 
 const parseMoney = (s: string | null | undefined): number | null => {
@@ -57,7 +60,7 @@ export function normalizeMattamyCard(
     baths: full != null ? ((half ?? 0) > 0 ? `${full}.5` : String(full)) : "",
     sqft,
     garages: garages != null ? `${garages} car` : null,
-    homeType: null,
+    homeType: standardHomeType(card.homeType ?? null),
     quickMoveIn,
     comingSoon: !price && /coming soon/i.test(card.price?.noPriceText ?? ""),
     sourceUrl: card.url ? `https://mattamyhomes.com${card.url}` : null,
@@ -82,7 +85,11 @@ export function plansFromSearchData(
     };
   })?.sitecore?.route?.placeholders?.["jss-main"]?.find((c) => c?.fields)?.fields;
   if (!fields) throw new Error("search-data payload missing Search component fields");
-  const prefix = communityPath.replace(/\/$/, "").toLowerCase();
+  // The community by the last two parts of its address — "wellen-park/
+  // sunstone" — not the whole of it: Mattamy renamed its market in the path
+  // ("sarasota-bradenton" became "sarasota", 2026-09-23) and every card of
+  // a saved connection stopped matching. "sunstone-lakeside" is its own.
+  const tail = communityPath.replace(/\/$/, "").toLowerCase().split("/").filter(Boolean).slice(-2).join("/");
   const out: NormalizedPlan[] = [];
   for (const [key, quickMoveIn] of [
     ["planCards", false],
@@ -90,8 +97,8 @@ export function plansFromSearchData(
   ] as const) {
     for (const card of fields[key]?.value ?? []) {
       if (!card || typeof card !== "object") continue;
-      const url = (card.url ?? "").toLowerCase();
-      if (!url.startsWith(prefix + "/") && url !== prefix) continue;
+      const url = (card.url ?? "").toLowerCase().replace(/\/$/, "");
+      if (!tail || !(url.endsWith("/" + tail) || url.includes("/" + tail + "/"))) continue;
       const plan = normalizeMattamyCard(card, { quickMoveIn });
       if (plan) out.push(plan);
     }
@@ -104,7 +111,10 @@ export async function extractMattamy(params: {
   market?: string;
 }): Promise<NormalizedPlan[]> {
   if (!params?.url) throw new Error("mattamy extractor requires extractor_params.url (community page)");
-  const communityPath = new URL(params.url).pathname;
+  // Where the saved address leads now, in case the site has moved it.
+  const communityPath = await fetch(params.url, { headers: { "user-agent": UA, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(30_000) })
+    .then((r) => new URL(r.url || params.url!).pathname)
+    .catch(() => new URL(params.url!).pathname);
   const market = params.market ?? "Sarasota-Bradenton";
   const apiUrl =
     `https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/search-data` +
@@ -123,5 +133,131 @@ export async function extractMattamy(params: {
   const plans = plansFromSearchData(data, communityPath);
   const byKey = new Map<string, NormalizedPlan>();
   for (const p of plans) if (!byKey.has(p.planKey)) byKey.set(p.planKey, p);
-  return [...byKey.values()];
+  return mapLimit([...byKey.values()], 6, withPlanLayout);
+}
+
+interface LayoutComponent {
+  componentName?: string;
+  fields?: Record<string, { value?: unknown } | undefined>;
+  placeholders?: Record<string, LayoutComponent[]>;
+}
+
+interface LayoutMedia {
+  type?: string;
+  src?: string;
+  alt?: string;
+  title?: string;
+  /** The room Mattamy files the picture under: "Exterior", "Kitchen". */
+  description?: string;
+}
+
+/** Every component of a layout, however deep its placeholders nest them. */
+function componentsOf(list: LayoutComponent[] | undefined): LayoutComponent[] {
+  const out: LayoutComponent[] = [];
+  for (const c of list ?? []) {
+    out.push(c);
+    for (const inner of Object.values(c.placeholders ?? {})) out.push(...componentsOf(inner));
+  }
+  return out;
+}
+
+/**
+ * What a plan's own page carries, read from the layout service that draws
+ * it (sitecore/api/layout/render/jss?item=<plan path>): its hero, the
+ * gallery's pictures each with the room Mattamy names in its alt text
+ * ("Kitchen", "Dining"), the exterior styles, the floor plan drawing, and
+ * the product line ("Attached Villa") — Anclote at Sunstone, 2026-09-23.
+ * The search cards carry one picture and no type. Pure; exported for tests.
+ */
+export function readPlanLayout(data: unknown): {
+  photos: string[];
+  meta: NonNullable<NormalizedPlan["galleryMeta"]>;
+  drawings: string[];
+  homeType: string | null;
+} {
+  const route = (data as { sitecore?: { route?: LayoutComponent & { fields?: Record<string, unknown> } } })?.sitecore?.route;
+  const components = componentsOf(Object.values(route?.placeholders ?? {}).flat());
+  const media = (c: LayoutComponent) => {
+    const v = c.fields?.media?.value;
+    return Array.isArray(v) ? (v as LayoutMedia[]) : [];
+  };
+  const items: GalleryInput[] = [];
+  const drawings: string[] = [];
+  for (const c of components) {
+    if (c.componentName === "TitleDetailsBlock") {
+      const hero = (c.fields?.image?.value as { src?: string; alt?: string } | undefined)?.src;
+      if (hero) items.unshift({ src: hero, kind: "primary", caption: null });
+    }
+    for (const m of media(c)) {
+      if (!m.src) continue;
+      if (m.type === "floorplan") {
+        if (!drawings.includes(m.src)) drawings.push(m.src);
+      } else if (m.type === "image") {
+        const caption = (m.alt || m.title || "").trim() || null;
+        // The room Mattamy files the picture under ("Exterior", "Kitchen"),
+        // then its prose; one that names none leaves the file name to be
+        // read. Isle Royal's alt reads "Model photos Lakeside in Sunstone
+        // Isle Royal" on eighteen pictures of eighteen rooms (2026-09-23).
+        const filed = (m.description ?? "").trim();
+        const room = (filed && classifyRoom(filed)) || (caption && classifyRoom(caption)) || undefined;
+        items.push({ src: m.src, caption: caption ?? (filed || null), room });
+      }
+    }
+    const styles = c.fields?.styles?.value;
+    if (Array.isArray(styles)) {
+      for (const style of styles as { imageUrl?: string; imageCaption?: string }[]) {
+        if (style.imageUrl) items.push({ src: style.imageUrl, kind: "exterior", caption: style.imageCaption ?? null });
+      }
+    }
+  }
+  const ordered = orderGallery(items);
+  const field = (name: string) => route?.fields?.[name] as { displayName?: string; fields?: { homeType?: { value?: string } } } | undefined;
+  const homeType =
+    standardHomeType(field("Product Line")?.displayName ?? null) ??
+    standardHomeType(field("Home Type")?.fields?.homeType?.value ?? field("Home Type")?.displayName ?? null);
+  return { photos: ordered.urls, meta: ordered.meta, drawings, homeType };
+}
+
+/** Runs `fn` over the items a few at a time, keeping order. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]);
+      }
+    })
+  );
+  return out;
+}
+
+/**
+ * A plan or a home with what its own page's layout adds; a layout that
+ * will not load leaves it as its card had it, marked unread. A home's page
+ * carries its own gallery — its kitchen, its dining room, staged — where
+ * its card carried one picture (5038 125th Avenue E. at Windwater,
+ * 2026-09-23).
+ */
+async function withPlanLayout(plan: NormalizedPlan): Promise<NormalizedPlan> {
+  if (!plan.sourceUrl) return plan;
+  const path = new URL(plan.sourceUrl).pathname;
+  try {
+    const res = await fetch(
+      `https://mattamyhomes.com/sitecore/api/layout/render/jss?item=${encodeURIComponent(path)}&sc_apikey=${SC_APIKEY}`,
+      { headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(30_000) }
+    );
+    if (!res.ok) throw new Error(`layout ${path}: ${res.status}`);
+    const page = readPlanLayout(await res.json());
+    return {
+      ...plan,
+      galleryImages: page.photos.length ? page.photos : plan.galleryImages,
+      galleryMeta: page.photos.length ? page.meta : plan.galleryMeta,
+      blueprintImages: page.drawings.length ? page.drawings : plan.blueprintImages,
+      homeType: plan.homeType ?? page.homeType,
+    };
+  } catch {
+    return { ...plan, pageUnread: true };
+  }
 }

@@ -12,7 +12,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { runConnection } from "@/lib/floorplans/sync";
+import { readsThroughBrowser, runConnection } from "@/lib/floorplans/sync";
 
 const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
 // A builder read through a browser takes minutes, not seconds, so the tick
@@ -92,12 +92,12 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
   // Connections still needing a run this cycle.
   const { data: pending } = await supabase
     .from("fp_builder_communities")
-    .select("id, last_run_at, fp_builders:builder_id(active, extraction_method)")
+    .select("id, last_run_at, extractor_params, fp_builders:builder_id(name, active, extraction_method)")
     .eq("active", true)
     .not("onboarded_at", "is", null)
     .or(`last_run_at.is.null,last_run_at.lt.${startedAt}`);
   const builderOf = (c: { fp_builders: unknown }) =>
-    c.fp_builders as { active: boolean; extraction_method: string | null } | null;
+    c.fp_builders as { name: string; active: boolean; extraction_method: string | null } | null;
   const todo = (pending ?? []).filter((c) => builderOf(c)?.active);
 
   let ran = state.ran ?? 0;
@@ -106,7 +106,9 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
   let processed = 0;
 
   for (const conn of todo) {
-    const needs = builderOf(conn)?.extraction_method === "render_claude" ? RENDER_RESERVE_MS : 0;
+    const builder = builderOf(conn);
+    const params = conn.extractor_params as Record<string, unknown> | null;
+    const needs = builder && readsThroughBrowser(builder.name, builder.extraction_method, params) ? RENDER_RESERVE_MS : 0;
     if (Date.now() + needs > deadline) {
       // Out of room for this one; it is first in line on the next tick.
       if (needs === 0) break;

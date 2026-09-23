@@ -16,7 +16,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { ROOM_ORDER, type Room } from "@/lib/floorplans/types";
+import { ROOM_ORDER, type GalleryMeta, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 import { orderGallery, type GalleryInput, type OrderedGallery } from "@/lib/floorplans/gallery-order";
 import { askableBatches } from "@/lib/floorplans/media";
 
@@ -127,15 +127,13 @@ export function batches<T>(items: T[], size = BATCH): T[][] {
 }
 
 /**
- * What each picture shows: from what was learned about it before, else by
- * looking at it now and remembering the answer. A picture Claude cannot
- * place is remembered as unplaced, so it is not paid for twice.
+ * What was learned before about each of these pictures, without looking at
+ * any: only the remembered answers, so it costs a read and nothing else. A
+ * picture never looked at is absent; one looked at and not placed is null.
  */
-export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabel | null>> {
+export async function rememberedRooms(urls: string[]): Promise<Map<string, PhotoLabel | null>> {
   const wanted = urls.filter((url, i) => url && urls.indexOf(url) === i);
   const known = new Map<string, PhotoLabel | null>();
-  if (!wanted.length) return known;
-
   // Asked for in batches an address can carry: a filter travels in the
   // address, and a gateway answers "Bad Request" to one too long, which
   // would quietly cost a second look at every picture (Jeff, 2026-09-22).
@@ -147,10 +145,23 @@ export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabe
     if (error) logger.warn("Remembered photo rooms could not be read", { error: error.message });
     for (const row of cached ?? []) known.set(row.source_url, isLabel(row.room) ? row.room : null);
   }
+  return known;
+}
 
+/**
+ * What each picture shows: from what was learned about it before, else by
+ * looking at it now and remembering the answer. A picture Claude cannot
+ * place is remembered as unplaced, so it is not paid for twice.
+ */
+export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabel | null>> {
+  const wanted = urls.filter((url, i) => url && urls.indexOf(url) === i);
+  const known = await rememberedRooms(wanted);
   const fresh = wanted.filter((url) => !known.has(url));
   if (!fresh.length) return known;
 
+  // A request that failed says nothing about its pictures — an empty
+  // account, a timeout — so they are not remembered, and are looked at
+  // again next time rather than filed as unplaced for good.
   const looked = await mapLimit(batches(fresh), PARALLEL, async (batch) => {
     try {
       return await lookAt(batch);
@@ -159,14 +170,16 @@ export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabe
         count: batch.length,
         error: err instanceof Error ? err.message : String(err),
       });
-      return batch.map(() => null);
+      return null;
     }
   });
 
   const rows: { source_url: string; room: PhotoLabel | null; model: string }[] = [];
   batches(fresh).forEach((batch, b) => {
+    const answers = looked[b];
+    if (!answers) return;
     batch.forEach((url, i) => {
-      const room = looked[b][i] ?? null;
+      const room = answers[i] ?? null;
       known.set(url, room);
       rows.push({ source_url: url, room, model: MODEL });
     });
@@ -201,4 +214,44 @@ export function sortByRooms(urls: string[], labels: Map<string, PhotoLabel | nul
     return { src, room: label as Room | null };
   });
   return orderGallery(items);
+}
+
+/**
+ * What a gallery already says about a picture nobody has looked at, in the
+ * labels' terms: the lead is the front, an elevation is an outside view, a
+ * room read off a caption or a file name is that room. Exported for tests.
+ */
+export function labelFromMeta(meta: GalleryMeta | undefined): PhotoLabel | null {
+  if (!meta) return null;
+  if (meta.kind === "primary") return "front";
+  if (meta.kind === "exterior" || meta.room === "exterior") return "exterior";
+  if (!meta.room || meta.room === "primary" || meta.room === "other") return null;
+  return meta.room;
+}
+
+/**
+ * A plan's photos in the site's order, using what has been learned by
+ * looking at them (fp_photo_rooms), and what the gallery already said for
+ * the pictures nobody has looked at yet. A plan none of whose pictures has
+ * been looked at comes back as it was. Pure, and the same every run for the
+ * same answers — the diff compares galleries in order, so an order that
+ * moved from one run to the next would be proposed as a change every night.
+ */
+export function withLookedAtRooms(plan: NormalizedPlan, looked: Map<string, PhotoLabel | null>): NormalizedPlan {
+  const urls = plan.galleryImages;
+  if (urls.length < 2 || !urls.some((url) => looked.get(url))) return plan;
+  const labels = new Map(urls.map((url) => [url, looked.get(url) ?? labelFromMeta(plan.galleryMeta?.[url])] as const));
+  const ordered = sortByRooms(urls, labels);
+  const meta = Object.fromEntries(
+    ordered.urls.map((url) => [url, { ...ordered.meta[url], caption: plan.galleryMeta?.[url]?.caption ?? null }])
+  );
+  return { ...plan, galleryImages: ordered.urls, galleryMeta: meta };
+}
+
+/** Whether most of a gallery's photos are placed already, so looking at them would buy little. Exported for tests. */
+export function mostlyPlaced(plan: Pick<NormalizedPlan, "galleryImages" | "galleryMeta">): boolean {
+  const urls = plan.galleryImages ?? [];
+  if (urls.length < 3) return true;
+  const unplaced = urls.filter((url) => !labelFromMeta(plan.galleryMeta?.[url])).length;
+  return unplaced / urls.length < 0.25;
 }

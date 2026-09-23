@@ -39,3 +39,24 @@ describe("normalizeDrbItem", () => {
     expect(normalizeDrbItem({})).toBeNull();
   });
 });
+
+describe("a DRB home's gallery, in the site's order from its titles", () => {
+  it("leads with the front of the house, then the rooms, with the other outside views last", () => {
+    const u = (n: string) => `https://cdn.drbhomes.com/${n}.jpg`;
+    const plan = normalizeDrbItem({
+      id: 1,
+      planName: "Eagle",
+      homesite: 8,
+      images: [
+        { url: u("bath"), type: "Photo", title: "Primary Bathroom" },
+        { url: u("rear"), type: "Photo", title: "Rear Exterior of 8320 Golden Beach Court" },
+        { url: u("kitchen"), type: "Photo", title: "Kitchen" },
+        { url: u("front"), type: "Photo", title: "Front Exterior of 8320 Golden Beach Court" },
+        { url: u("plan"), type: "Floorplan", title: "First Floor" },
+      ],
+    })!;
+    expect(plan.galleryImages).toEqual([u("front"), u("kitchen"), u("bath"), u("rear")]);
+    expect(plan.blueprintImages).toEqual([u("plan")]);
+    expect(plan.galleryMeta?.[u("kitchen")]?.room).toBe("kitchen");
+  });
+});

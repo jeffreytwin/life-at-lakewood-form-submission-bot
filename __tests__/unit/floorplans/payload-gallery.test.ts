@@ -66,4 +66,43 @@ describe("payloadGallery", () => {
   it("shows the same picture once, however often the payload names it", () => {
     expect(payloadGallery(perry + perry, BASE)).toHaveLength(3);
   });
+
+  describe("a plan's own page, whose pictures describe themselves", () => {
+    // Perry's 2016F page (read off the live page, 2026-09-23): each
+    // elevation carries its description inside it, and the menus above
+    // carry pictures of the markets that describe no design.
+    const record = (id: string, meta: string) =>
+      String.raw`{\"public_id\":\"${id}\",\"secure_url\":\"https://res.cloudinary.com/perryhomes/image/upload/v1/${id}.jpg\",\"width\":2048,\"display_name\":\"${id}\",\"metadata\":{${meta}},\"format\":\"jpg\"}`;
+    const page = [
+      String.raw`<script>self.__next_f.push([1,"{\"images\":[`,
+      record("market_orlando", String.raw`\"representative_disclaimer\":\"Representative Image.\",\"show_design_id\":\"off\"`),
+      ",",
+      record("2016F_E1_Web", String.raw`\"active\":\"active\",\"design_id\":\"2016F\",\"elevation_id\":1,\"type\":[\"elevation\"]`),
+      ",",
+      record("2016F_E31_Web", String.raw`\"active\":\"active\",\"design_id\":\"2016F\",\"elevation_id\":31,\"type\":[\"elevation\"]`),
+      ",",
+      record("2016F_Kitchen", String.raw`\"design_id\":\"2016F\",\"type\":[\"interior\"]`),
+      ",",
+      record("2420F_E1_Web", String.raw`\"design_id\":\"2420F\",\"type\":[\"elevation\"]`),
+      String.raw`]}"])</script>`,
+    ].join("");
+    const at = (id: string) => `https://res.cloudinary.com/perryhomes/image/upload/v1/${id}.jpg`;
+
+    it("takes the pictures of the plan's own design, in order, and not the menus'", () => {
+      expect(payloadGallery(page, BASE, ["Design 2016F"])).toEqual([
+        { src: at("2016F_E1_Web"), outside: true },
+        { src: at("2016F_E31_Web"), outside: true },
+        { src: at("2016F_Kitchen"), outside: false },
+      ]);
+    });
+
+    it("takes every design's pictures where none is the plan's", () => {
+      expect(payloadGallery(page, BASE, ["Somewhere Else"]).map((g) => g.src)).toEqual([
+        at("2016F_E1_Web"),
+        at("2016F_E31_Web"),
+        at("2016F_Kitchen"),
+        at("2420F_E1_Web"),
+      ]);
+    });
+  });
 });

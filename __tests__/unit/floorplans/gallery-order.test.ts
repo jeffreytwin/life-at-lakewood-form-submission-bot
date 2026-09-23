@@ -114,3 +114,12 @@ describe("orderGallery", () => {
     expect(orderGallery(items).urls).toEqual(orderGallery([...items]).urls);
   });
 });
+
+describe("a caption that is only a style is an elevation (Kolter, 2026-09-23)", () => {
+  it("reads Transitional and Spanish Bonus as exteriors, and a coastal kitchen as a kitchen", () => {
+    expect(classifyRoom("Transitional")).toBe("exterior");
+    expect(classifyRoom("Spanish Bonus")).toBe("exterior");
+    expect(classifyRoom("Coastal B")).toBe("exterior");
+    expect(classifyRoom("Coastal kitchen with island")).toBe("kitchen");
+  });
+});
