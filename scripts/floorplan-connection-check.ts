@@ -407,23 +407,31 @@ async function jsonAnatomy(url: string): Promise<string> {
   }
   const out: string[] = [`status ${res.status}; ${text.length} chars of JSON`, "", "== PICTURES (path = value) =="];
   const shapes: string[] = [];
+  const samples: string[] = [];
+  // A picture by its extension, or by the media stores that write none
+  // (Mattamy's ".../42159-50420/tpa-sunstone-anclote-kitchen1-jpg").
+  const isPicture = (v: string) => /^https?:/i.test(v) && /\.(?:jpe?g|png|webp|svg|gif)(?:\?|$)|[-_](?:jpe?g|png|webp)(?:\?|$)|dfsmedia|\/-\/media\//i.test(v);
+  const holdsPicture = (v: unknown): boolean => JSON.stringify(v ?? "").match(/"(https?:[^"]+)"/g)?.some((m) => isPicture(m.slice(1, -1))) ?? false;
   const walk = (value: unknown, at: string, depth: number) => {
     if (typeof value === "string") {
-      if (/\.(?:jpe?g|png|webp|svg|gif)(?:\?|$)/i.test(value) && out.length < 260) out.push(`${at} = ${value.slice(0, 200)}`);
+      if (isPicture(value) && out.length < 300) out.push(`${at} = ${value.slice(0, 200)}`);
       return;
     }
     if (!value || typeof value !== "object") return;
     if (Array.isArray(value)) {
-      if (depth <= 7 && shapes.length < 200) shapes.push(`${at} [${value.length}]`);
+      if (depth <= 12 && shapes.length < 400) shapes.push(`${at} [${value.length}]`);
+      if (value.length && typeof value[0] === "object" && holdsPicture(value[0]) && samples.length < 20) {
+        samples.push(`${at}[0] of ${value.length}: ${JSON.stringify(value[0]).slice(0, 1500)}`);
+      }
       value.forEach((v, i) => walk(v, `${at}[${i}]`, depth + 1));
       return;
     }
     const keys = Object.keys(value);
-    if (depth <= 7 && shapes.length < 200) shapes.push(`${at} {${keys.slice(0, 25).join(", ")}}`);
+    if (depth <= 12 && shapes.length < 400) shapes.push(`${at} {${keys.slice(0, 25).join(", ")}}`);
     for (const k of keys) walk((value as Record<string, unknown>)[k], `${at}.${k}`, depth + 1);
   };
   walk(data, "$", 0);
-  out.push("", "== SHAPE ==", ...shapes, "", "== BEGINS ==", text.slice(0, 3000));
+  out.push("", "== SAMPLES (first item of each list of pictures) ==", ...samples, "", "== SHAPE ==", ...shapes, "", "== BEGINS ==", text.slice(0, 3000));
   return out.join("\n");
 }
 
