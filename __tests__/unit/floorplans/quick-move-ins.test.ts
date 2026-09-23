@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   linkQuickMoveIns,
+  bareKey,
   nearlySameKey,
   planNameOf,
   withQuickMoveInPrices,
@@ -192,6 +193,17 @@ describe("linkQuickMoveIns", () => {
 
   it("marks a base plan without quick move-ins as such", () => {
     expect(linkQuickMoveIns([plan({})])[0].hasQuickMoveIns).toBe(false);
+  });
+
+  it("ties a home to its plan whatever word the builder puts in front of the name (Adams, 2026-09-23)", () => {
+    const plans = linkQuickMoveIns([
+      plan({ planKey: "6927166thplacee", name: "6927 166TH Place E", quickMoveIn: true, sqft: 1540, relatedPlanName: "1512" }),
+      plan({ planKey: "plan1512", name: "Plan 1512", sqft: 1512 }),
+      plan({ planKey: "plan1720", name: "Plan 1720", sqft: 1720 }),
+    ]);
+    expect(plans[0]).toMatchObject({ relatedPlanKey: "plan1512", relatedPlanName: "Plan 1512", relatedPlanMatch: "plan-name" });
+    expect(bareKey("The Waterway")).toBe(bareKey("Waterway"));
+    expect(bareKey("Plan 1635- B")).toBe(bareKey("1635- B"));
   });
 
   describe("a home listed by its address alone (M/I at Wellen Park, 2026-09-23)", () => {

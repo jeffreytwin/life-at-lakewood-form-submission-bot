@@ -59,6 +59,15 @@ export function nearlySameKey(a: string, b: string): boolean {
   return /^[a-z]{1,2}$/.test(long.slice(short.length));
 }
 
+/**
+ * A plan's name without the word a builder puts in front of it: Adams
+ * lists "Plan 1512" and prints "FLOORPLAN 1512" on the homes built from it
+ * (2026-09-23); David Weekley's "The Waterway" is its "Waterway".
+ */
+export function bareKey(name: string): string {
+  return normKey(name.replace(/^\s*(?:(?:the|plan|model|design|floor ?plan)\b\s*[-:#]?\s*)+/i, ""));
+}
+
 /** A URL with no query, no fragment and one trailing slash, so two spellings of a page compare equal. */
 function canonicalUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -111,6 +120,12 @@ function parentUrl(url: string | null | undefined): string | null {
 export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
   const bases = plans.filter((p) => !p.quickMoveIn);
   const byKey = new Map(bases.map((b) => [b.planKey, b] as const));
+  // Bare names that point at one plan only.
+  const byBare = new Map<string, NormalizedPlan | null>();
+  for (const b of bases) {
+    const bare = bareKey(b.name);
+    if (bare) byBare.set(bare, byBare.has(bare) ? null : b);
+  }
   const byPlanId = new Map<string, NormalizedPlan>();
   for (const b of bases) {
     const id = planIdOf(b);
@@ -145,6 +160,9 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
       const name = relatedNameOf(p);
       if (name && byKey.has(normKey(name))) {
         base = byKey.get(normKey(name));
+        matchedBy = "plan-name";
+      } else if (name && byBare.get(bareKey(name))) {
+        base = byBare.get(bareKey(name)) ?? undefined;
         matchedBy = "plan-name";
       }
     }
