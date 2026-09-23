@@ -333,7 +333,10 @@ export async function extractDrHorton(params: {
         galleryImages: ordered.urls,
         galleryMeta: ordered.meta,
         blueprintImages: page.drawings,
-        raw: { planCode: planUrl.split("/").pop()?.toUpperCase() ?? null },
+        // The code both a plan's address and its homes carry ("E313"):
+        // Ashcombe's homes say "Pearson" and its plans are Pearson A and
+        // Pearson B, so the name alone ties none of them (2026-09-23).
+        raw: { planId: planUrl.split("/").pop()?.toUpperCase() ?? null },
       };
     } catch {
       return null;
@@ -359,7 +362,7 @@ export async function extractDrHorton(params: {
       relatedPlanName: home.PlanName?.trim() || null,
       galleryImages: home.Thumbnail ? [original(home.Thumbnail)] : [],
       blueprintImages: [],
-      raw: { relatedPlan: home.PlanName?.trim() || null, planCode: home.PlanCode ?? null, lot: home.LotNumber?.trim() ?? null },
+      raw: { relatedPlan: home.PlanName?.trim() || null, planId: home.PlanCode?.trim().toUpperCase() || null, lot: home.LotNumber?.trim() ?? null },
     };
     if (!sourceUrl || Date.now() + 30_000 > deadline) return { ...base, pageUnread: Boolean(sourceUrl) };
     try {
