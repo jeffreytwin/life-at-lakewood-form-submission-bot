@@ -1,66 +1,41 @@
 {
   "anatomy": [],
-  "raw": [
-    {
-      "url": "https://www.ashtonwoods.com/tampa/oakfield-trails-signature/signature-plant",
-      "around": [
-        "Plant Floor Plan",
-        "floorplan",
-        "FloorPlan"
-      ],
-      "chars": 1200,
-      "count": 3
-    },
-    {
-      "url": "https://www.ashtonwoods.com/tampa/oakfield-trails-signature/signature-amelia/10046-hidden-hammock-loop",
-      "around": [
-        "38 Photos",
-        "Photo Gallery"
-      ],
-      "chars": 2500,
-      "count": 2
-    },
-    {
-      "url": "https://dreamfindershomes.com/new-homes/fl/lakewood-ranch/bungalow-walk-at-lakewood-ranch/haven/",
-      "around": [
-        "Floor Plan",
-        "floorplan",
-        "gallery",
-        "swiper"
-      ],
-      "chars": 1500,
-      "count": 2
-    }
-  ],
-  "concurrency": 4,
+  "raw": [],
+  "concurrency": 3,
   "detailPlans": 2,
   "checks": [
     {
-      "builder": "Pulte Homes",
+      "builder": "Homes by WestBay",
       "all": true
     },
     {
-      "builder": "Centex Homes",
+      "builder": "John Cannon Homes",
       "all": true
     },
     {
-      "builder": "Ryan Homes",
+      "builder": "KB Home",
       "all": true
     },
     {
-      "builder": "Neal Communities",
-      "community": "Everly",
-      "params": {
-        "url": "https://www.wellenpark.com/available-homes/",
-        "engine": "mpc_aggregator",
-        "builderSlug": "neal-signature-homes"
-      }
+      "builder": "Cardel Homes",
+      "all": true
     },
     {
-      "builder": "Neal Communities",
-      "community": "Boca Royale",
-      "preferCandidate": true
+      "builder": "Highland Homes",
+      "all": true
+    },
+    {
+      "builder": "Richmond American Homes",
+      "all": true
+    },
+    {
+      "builder": "Lee Wetherington",
+      "all": true
+    },
+    {
+      "builder": "Adams Homes",
+      "all": true,
+      "method": "render_claude"
     }
-  ],
-  "probe": []
+  ]
 }
