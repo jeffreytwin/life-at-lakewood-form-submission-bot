@@ -19,6 +19,7 @@ import { logger } from "@/lib/shared/logger";
 import { ROOM_ORDER, type GalleryMeta, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 import { orderGallery, type GalleryInput, type OrderedGallery } from "@/lib/floorplans/gallery-order";
 import { askableBatches } from "@/lib/floorplans/media";
+import { fetchPictures, imageBlock } from "@/lib/floorplans/claude-image";
 
 const MODEL = "claude-opus-5";
 
@@ -78,12 +79,17 @@ const PROMPT =
   `Use "other" when the picture is of this home but none of the rooms fits, and when you cannot tell.\n\n` +
   `Answer for every picture. Do not leave one out and do not add one.`;
 
-/** One request: what each of these pictures shows, in the order given. */
+/**
+ * One request: what each of these pictures shows, in the order given. The
+ * pictures are fetched here and sent whole (claude-image.ts): Anthropic's
+ * own fetcher is turned away by Dream Finders' robots.txt.
+ */
 async function lookAt(urls: string[]): Promise<(PhotoLabel | null)[]> {
+  const pictures = await fetchPictures(urls);
   const content: Anthropic.ContentBlockParam[] = [{ type: "text", text: PROMPT }];
   urls.forEach((url, i) => {
     content.push({ type: "text", text: `Picture ${i + 1}:` });
-    content.push({ type: "image", source: { type: "url", url } });
+    content.push(imageBlock(url, pictures[i]));
   });
 
   const response = await getClient().messages.create({

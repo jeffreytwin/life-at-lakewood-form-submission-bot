@@ -127,6 +127,12 @@ describe("standardGarages", () => {
     expect(standardGarages("3.0")).toBe("3 car");
   });
 
+  it("reads a bare number typed in the edit overlay as that many cars", () => {
+    expect(standardGarages("2")).toBe("2 car");
+    expect(standardGarages(" 3 ")).toBe("3 car");
+    expect(standardGarages("2 cars")).toBe("2 car");
+  });
+
   it("counts a number the builder spelled out", () => {
     expect(standardGarages("Three Car Garage")).toBe("3 car");
     expect(standardGarages("Two Car Garage")).toBe("2 car");
