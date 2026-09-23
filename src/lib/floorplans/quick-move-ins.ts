@@ -131,6 +131,9 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
     const id = planIdOf(b);
     if (id && !byPlanId.has(id)) byPlanId.set(id, b);
   }
+  // The same codes spelled any way: "F057", "f057", "F-057".
+  const byCode = new Map<string, NormalizedPlan>();
+  for (const [id, b] of byPlanId) byCode.set(normKey(id).replace(/-/g, ""), b);
   // A page two plans share says nothing about either, so it is dropped:
   // every plan of a builder whose list is one page would share that page.
   const byUrl = new Map<string, NormalizedPlan | null>();
@@ -153,6 +156,14 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
       const id = planIdOf(p);
       if (id && byPlanId.has(id)) {
         base = byPlanId.get(id);
+        matchedBy = "plan-id";
+      }
+    }
+    if (!base) {
+      // A home that names its plan by the plan's code (David Weekley).
+      const code = normKey(relatedNameOf(p)).replace(/-/g, "");
+      if (code && byCode.has(code)) {
+        base = byCode.get(code);
         matchedBy = "plan-id";
       }
     }
@@ -187,7 +198,11 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
         }
       }
     }
-    if (!base && !relatedNameOf(p) && typeof p.sqft === "number" && p.sqft > 0) {
+    // A plan's code is no name: David Weekley's homes say "F057" where its
+    // plans are "The Wagoner" (Palmera, 2026-09-23), so the footage is asked.
+    const named = relatedNameOf(p);
+    const codeOnly = /^[a-z]{0,3}\d{2,5}[a-z]?$/i.test(named.replace(/\s+/g, ""));
+    if (!base && (!named || codeOnly) && typeof p.sqft === "number" && p.sqft > 0) {
       // Only when the footage points at one plan: two plans that size is a guess.
       const beds = (v: unknown) => (/^\d+$/.test(text(v)) ? text(v) : null);
       const sized = bases.filter(

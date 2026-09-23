@@ -360,3 +360,31 @@ describe("withQuickMoveInPictures", () => {
     expect(got.galleryImages).toEqual(["own.jpg"]);
   });
 });
+
+describe("linkQuickMoveIns and plan codes", () => {
+  const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "x", name: "x", price: null, priceDisplay: null, beds: "4", baths: "3", sqft: null, garages: null,
+    homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  // Palmera (David Weekley, 2026-09-23): homes name their plan by code.
+  const wagoner = plan({ planKey: "the wagoner", name: "The Wagoner", sqft: 2697 });
+  const colston = plan({ planKey: "the colston", name: "The Colston", sqft: 3035 });
+
+  it("ties a home that names its plan only by code to the one plan of its size", () => {
+    const home = plan({ planKey: "17988 foxtail loop", name: "17988 Foxtail Loop", quickMoveIn: true, sqft: 2697, relatedPlanName: "F057" });
+    const got = linkQuickMoveIns([wagoner, colston, home])[2];
+    expect(got).toMatchObject({ relatedPlanKey: "the wagoner", relatedPlanMatch: "plan-facts" });
+  });
+
+  it("ties a home to the plan whose page gave the code it names, whatever its size", () => {
+    const coded = { ...colston, raw: { planId: "F060" } };
+    const home = plan({ planKey: "17676 foxtail loop", name: "17676 Foxtail Loop", quickMoveIn: true, sqft: 3026, relatedPlanName: "f-060" });
+    expect(linkQuickMoveIns([wagoner, coded, home])[2]).toMatchObject({ relatedPlanKey: "the colston", relatedPlanMatch: "plan-id" });
+  });
+
+  it("does not tie a home that names a plan by name to another plan its size", () => {
+    const home = plan({ planKey: "1 main st", name: "1 Main St", quickMoveIn: true, sqft: 2697, relatedPlanName: "Pearson" });
+    expect(linkQuickMoveIns([wagoner, colston, home])[2].relatedPlanMatch).toBe("unmatched");
+  });
+});
+

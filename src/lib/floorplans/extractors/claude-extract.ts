@@ -436,6 +436,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
         description: "Absolute URLs of photographs and renderings of this home: its exterior elevations first, then the pictures of the page's first photo gallery. A gallery titled for the community or for the designer who furnished it is still this plan's gallery",
       },
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
+      planCode: { type: "string", description: "The builder's own code or number for this plan where the page shows one beside its name, e.g. 'F057' or 'B929'; omit if the page shows none" },
     },
     required: [],
   },
@@ -463,6 +464,7 @@ interface ExtractedPlanPage {
   virtualTourUrl?: string;
   photoImages?: string[];
   blueprintImages?: string[];
+  planCode?: string;
 }
 
 /** A media store's own id, which says nothing about the picture: "6e8cfe1d-66ee-4b88-b752-30e7579fd4bf_lg.jpg". */
@@ -740,6 +742,9 @@ export async function readPlanPageWithClaude(
     galleryImages: photos,
     blueprintImages: blueprints,
     galleryMeta: { ...plan.galleryMeta, ...said, ...outside },
+    // The code a base plan's homes may name it by (David Weekley's "F057"
+    // is The Wagoner): what ties them when the home gives no name.
+    raw: !plan.quickMoveIn && page.planCode?.trim() && !plan.raw?.planId ? { ...(plan.raw ?? {}), planId: page.planCode.trim() } : plan.raw,
   };
 }
 
