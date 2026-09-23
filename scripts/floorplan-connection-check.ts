@@ -743,7 +743,9 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     if (printsLookLikePhotos.length) problems.push(`images: photos filed as floor plan drawings on ${printsLookLikePhotos.map((p) => p.name).join(", ")}`);
     const shared = new Map<string, number>();
     for (const p of base) for (const u of new Set(p.galleryImages)) shared.set(u, (shared.get(u) ?? 0) + 1);
-    const common = [...shared.values()].filter((n) => base.length >= 3 && n >= Math.max(3, base.length * 0.6)).length;
+    // A building's front and its elevations may be every condominium plan's (community-pictures.ts); a room-less picture may not.
+    const placed = (u: string) => base.some((p) => { const m = p.galleryMeta?.[u]; return Boolean(m && (m.room || m.kind === "primary" || m.kind === "exterior")); });
+    const common = [...shared].filter(([u, n]) => base.length >= 3 && n >= Math.max(3, base.length * 0.6) && !placed(u)).length;
     if (common) problems.push(`images: ${common} pictures appear on most plans (community photos, not the plan's)`);
 
     // Quick move-ins.

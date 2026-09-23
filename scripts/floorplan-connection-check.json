@@ -34,9 +34,28 @@
       ],
       "chars": 300,
       "count": 4
+    },
+    {
+      "url": "https://www.ashtonwoods.com/tampa/oakfield-trails-signature/signature-plant",
+      "around": [
+        "Plant Floor Plan",
+        "floorplan",
+        "FloorPlan"
+      ],
+      "chars": 1200,
+      "count": 3
+    },
+    {
+      "url": "https://www.ashtonwoods.com/tampa/oakfield-trails-signature/signature-amelia/10046-hidden-hammock-loop",
+      "around": [
+        "38 Photos",
+        "Photo Gallery"
+      ],
+      "chars": 2500,
+      "count": 2
     }
   ],
-  "concurrency": 3,
+  "concurrency": 4,
   "detailPlans": 2,
   "checks": [
     {
@@ -91,6 +110,18 @@
         "url": "https://nealsignaturehomes.com/waterbury-park/",
         "engine": "render_claude"
       }
+    },
+    {
+      "builder": "Pulte Homes",
+      "all": true
+    },
+    {
+      "builder": "Centex Homes",
+      "all": true
+    },
+    {
+      "builder": "Ryan Homes",
+      "all": true
     }
   ],
   "probe": [

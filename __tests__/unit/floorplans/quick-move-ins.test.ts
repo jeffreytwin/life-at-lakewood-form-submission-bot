@@ -4,6 +4,7 @@ import {
   bareKey,
   nearlySameKey,
   planNameOf,
+  withQuickMoveInPictures,
   withQuickMoveInPrices,
   priceTagOf,
   basePlanMarkers,
@@ -333,5 +334,29 @@ describe("withQuickMoveInPrices", () => {
     expect(out[0].priceFromHome).toBeNull();
     expect(out[1]).toMatchObject({ price: null, priceDisplay: null });
     expect(out[1].priceFromHome).toBeUndefined();
+  });
+});
+
+describe("withQuickMoveInPictures", () => {
+  const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "mayport", name: "Mayport", price: 324990, priceDisplay: "$324,990", beds: "3", baths: "2.5", sqft: null, garages: null,
+    homeType: "Townhome", quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  // Amber Creek (Ryan Homes, 2026-09-23): sold out but for one Mayport.
+  const home = (name: string, pictures: number, over: Partial<NormalizedPlan> = {}) =>
+    plan({ planKey: name.toLowerCase(), name, quickMoveIn: true, relatedPlanKey: "mayport", sqft: 1674, garages: "1 car",
+      galleryImages: Array.from({ length: pictures }, (_, i) => `${name}-${i}.jpg`), ...over });
+
+  it("gives a plan with no picture the pictures, size and garage of its home with the most", () => {
+    const [got] = withQuickMoveInPictures([plan({}), home("A", 3), home("B", 31, { blueprintImages: ["b-fp.jpg"] })]);
+    expect(got.galleryImages).toHaveLength(31);
+    expect(got.galleryImages[0]).toBe("B-0.jpg");
+    expect(got.blueprintImages).toEqual(["b-fp.jpg"]);
+    expect(got).toMatchObject({ sqft: 1674, garages: "1 car" });
+  });
+
+  it("leaves a plan the builder shows pictures of as it is", () => {
+    const [got] = withQuickMoveInPictures([plan({ galleryImages: ["own.jpg"] }), home("B", 31)]);
+    expect(got.galleryImages).toEqual(["own.jpg"]);
   });
 });

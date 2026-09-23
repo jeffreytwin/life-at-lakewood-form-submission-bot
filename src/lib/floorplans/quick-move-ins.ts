@@ -238,6 +238,38 @@ export function withQuickMoveInPrices(plans: NormalizedPlan[]): NormalizedPlan[]
 }
 
 /**
+ * A base plan the builder shows no picture of takes those of its homes
+ * with the most, and the size and garage its homes give where it gives
+ * none, until the builder shows its own — the way a plan with no price
+ * takes its cheapest home's. Amber Creek is sold out but for one Mayport,
+ * whose card is all the page says of the plan; the home's page carries
+ * thirty-one pictures (Ryan Homes, 2026-09-23). Runs after
+ * linkQuickMoveIns; pure.
+ */
+export function withQuickMoveInPictures(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const richest = new Map<string, NormalizedPlan>();
+  for (const p of plans) {
+    if (!p.quickMoveIn || !p.relatedPlanKey || !p.galleryImages.length) continue;
+    const best = richest.get(p.relatedPlanKey);
+    if (!best || p.galleryImages.length > best.galleryImages.length) richest.set(p.relatedPlanKey, p);
+  }
+  return plans.map((p) => {
+    if (p.quickMoveIn || p.galleryImages.length) return p;
+    const home = richest.get(p.planKey);
+    if (!home) return p;
+    return {
+      ...p,
+      galleryImages: home.galleryImages,
+      galleryMeta: home.galleryMeta,
+      blueprintImages: p.blueprintImages.length ? p.blueprintImages : home.blueprintImages,
+      sqft: p.sqft ?? home.sqft,
+      garages: p.garages ?? home.garages,
+      virtualTourUrl: p.virtualTourUrl ?? home.virtualTourUrl ?? null,
+    };
+  });
+}
+
+/**
  * The price bracket tag the site filters on: "$400s" for $419,990, "1M+"
  * from a million up, "Custom Pricing" when the builder gives no price
  * (Wellen Park's wording), nothing under $100k.

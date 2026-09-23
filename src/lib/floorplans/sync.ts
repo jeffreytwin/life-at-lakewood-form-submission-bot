@@ -24,9 +24,10 @@ import { extractTaylorMorrison, readTaylorPlanPage } from "@/lib/floorplans/extr
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractDrHorton } from "@/lib/floorplans/extractors/drhorton";
+import { extractPulteGroup } from "@/lib/floorplans/extractors/pulte";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
-import { linkQuickMoveIns, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
+import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
@@ -63,6 +64,10 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Mattamy Homes": extractMattamy,
   "DRB Homes": extractDrb,
   "D.R. Horton": extractDrHorton,
+  // PulteGroup's brands share one site and its feeds (pulte.ts); Del Webb's
+  // communities are filed under Pulte Homes.
+  "Pulte Homes": extractPulteGroup,
+  "Centex Homes": extractPulteGroup,
   "Lee Wetherington": extractLeeWetherington,
   // Builders that block their own sites — sourced from the master-planned-
   // community aggregators instead (a different origin, so the blocks don't
@@ -313,7 +318,7 @@ export async function preparePlans(
   // it has any (the Wellen Park / Parrish way, quick-move-ins.ts).
   // A base plan the builder gave no price takes its cheapest quick
   // move-in's until the builder prices it (Jeff, 2026-09-20).
-  const link = (list: NormalizedPlan[]) => withQuickMoveInPrices(linkQuickMoveIns(list));
+  const link = (list: NormalizedPlan[]) => withQuickMoveInPictures(withQuickMoveInPrices(linkQuickMoveIns(list)));
   // What is true of every plan this builder offers, whatever its pages say
   // (Settings → Builders; Jeff, 2026-09-22: Stock builds single-family homes
   // and its pages name no type at all).
