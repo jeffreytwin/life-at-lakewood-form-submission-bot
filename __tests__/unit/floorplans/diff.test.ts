@@ -134,6 +134,11 @@ describe("mergeForUpdate", () => {
   it("is the plain scrape when nothing was edited", () => {
     expect(mergeForUpdate(plan({ price: 1 }), plan()).price).toBe(807995);
   });
+
+  it("keeps the record's home type when the run read none", () => {
+    expect(mergeForUpdate(plan(), plan({ homeType: null })).homeType).toBe("Single-Family Home");
+    expect(mergeForUpdate(plan(), plan({ homeType: "Townhome" })).homeType).toBe("Townhome");
+  });
 });
 
 describe("describeGallery and galleryOf", () => {
