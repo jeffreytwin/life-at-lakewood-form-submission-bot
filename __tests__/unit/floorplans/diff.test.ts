@@ -96,6 +96,13 @@ describe("long text fields", () => {
     expect(describeText("   ")).toBe("");
   });
 
+  it("does not queue a description read again with other quotes or capitals (SimplyDwell's Jasmine 2 and Cypress)", () => {
+    const curly = "the Jasmine 2 is a 2-story home that fits a family\u2019s every need.";
+    expect(fieldChanges(plan({ description: curly }), plan({ description: curly.replace("\u2019", "'") }))).toEqual([]);
+    expect(fieldChanges(plan({ description: "Discover the Cypress" }), plan({ description: "Discover The Cypress" }))).toEqual([]);
+    expect(fieldChanges(plan({ description: "Discover the Cypress" }), plan({ description: "Discover the Cypress II" }))).toHaveLength(1);
+  });
+
   it("shows square feet with a thousands separator", () => {
     expect(fieldChanges(plan({ sqft: 2443 }), plan({ sqft: 3908 }))).toEqual([
       { field: "sqft", label: "sqft", oldValue: "2,443", newValue: "3,908" },
