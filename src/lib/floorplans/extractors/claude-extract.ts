@@ -184,6 +184,20 @@ function listOf<T>(value: unknown): T[] {
 }
 
 /**
+ * The picture addresses in a list Claude gave, and nothing else. Asked for
+ * the pictures of a page whose images carry their names but not yet their
+ * addresses, Claude handed back the names — "Exterior CO2", "Elevation
+ * FM1" — as if they were pictures (Pulte, 2026-09-23), and a name is not
+ * something a site can show. Only an absolute web address is kept.
+ * Exported for tests.
+ */
+export function pictureAddresses(value: unknown): string[] {
+  return listOf<unknown>(value).filter(
+    (u): u is string => typeof u === "string" && /^https?:\/\/[^\s]+$/i.test(u.trim())
+  ).map((u) => u.trim());
+}
+
+/**
  * How a page is got. Everything after this point is the same whichever it
  * is — the same distillation, the same reads, the same diff — so a builder
  * whose pages are empty without a browser differs from the rest in one
@@ -484,7 +498,7 @@ export async function readPlanPageWithClaude(
   const kept = new Set<string>();
   const photos = [
     ...plan.galleryImages,
-    ...listOf<string>(page.photoImages),
+    ...pictureAddresses(page.photoImages),
     ...gallery.first.map((i) => i.src),
     ...carried.map((i) => i.src),
   ]
@@ -510,7 +524,7 @@ export async function readPlanPageWithClaude(
   const outside = Object.fromEntries(
     carried.filter((i) => i.outside).map((i) => [fullSize(i.src, html), OUTSIDE_META])
   );
-  const blueprints = [...plan.blueprintImages, ...listOf<string>(page.blueprintImages)].filter(
+  const blueprints = [...plan.blueprintImages, ...pictureAddresses(page.blueprintImages)].filter(
     (src, i, all) => src && all.indexOf(src) === i
   );
   // A list gives the plans it prices; the rest carry their price on their
@@ -642,8 +656,8 @@ async function listPage(
       sourceUrl: p.sourceUrl ?? page.url ?? url,
       description: p.description?.trim() || null,
       virtualTourUrl: p.virtualTourUrl?.trim() || null,
-      galleryImages: listOf<string>(p.photoImages),
-      blueprintImages: listOf<string>(p.blueprintImages),
+      galleryImages: pictureAddresses(p.photoImages),
+      blueprintImages: pictureAddresses(p.blueprintImages),
     };
   });
   return { url: page.url || url, plans: listed, pressed: page.pressed ?? null };

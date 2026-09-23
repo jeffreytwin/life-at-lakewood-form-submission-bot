@@ -128,10 +128,14 @@ async function sitePlans(conn: Connection): Promise<{ name: string; qmi: boolean
     .eq("collection_id", "FloorPlans");
   const short = conn.community.name.split(/\s*-\s*/).pop()!.toLowerCase();
   const builderWord = conn.builder.name.split(/[\s.]+/)[0].toLowerCase();
-  return (data ?? [])
+  const mine = (data ?? [])
     .map((r) => r.data as Record<string, unknown>)
-    .filter((d) => String(d.builder ?? "").toLowerCase().includes(builderWord))
-    .filter((d) => String(d.village ?? "").toLowerCase().includes(short))
+    .filter((d) => String(d.builder ?? "").toLowerCase().includes(builderWord));
+  // The village named exactly, where there is one: Pulte's "North River
+  // Ranch" is not its "Del Webb Explore North River Ranch".
+  const village = (d: Record<string, unknown>) => String(d.village ?? "").toLowerCase().trim();
+  const exact = mine.filter((d) => village(d) === short || village(d) === conn.community.name.toLowerCase());
+  return (exact.length ? exact : mine.filter((d) => village(d).includes(short)))
     .map((d) => ({
       name: String(d.floorPlanName ?? ""),
       qmi: /move/i.test(String(d.newConstructionOrMoveIn ?? "")) || Boolean(d.relatedFloorPlanQuickMoveInOnly),

@@ -7,6 +7,7 @@ import {
   tourLinkIn,
   tourUrlIn,
   withoutBlanks,
+  pictureAddresses,
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
@@ -379,5 +380,14 @@ describe("the strict second ask", () => {
     expect(strict.required.sort()).toEqual(Object.keys(loose.properties).sort());
     expect(strict.additionalProperties).toBe(false);
     for (const field of Object.values(strict.properties)) expect(field.description ?? "").not.toMatch(/omit/i);
+  });
+});
+
+describe("pictureAddresses: a picture is an address, not its name (Pulte, 2026-09-23)", () => {
+  it("keeps web addresses and drops the names Claude handed back in their place", () => {
+    expect(
+      pictureAddresses(["Exterior CO2", "https://res.cloudinary.com/x/image/fetch/w_1200/a.jpg", "Elevation FM1", " https://cdn.example.com/b.png ", 7, "/relative/c.jpg"])
+    ).toEqual(["https://res.cloudinary.com/x/image/fetch/w_1200/a.jpg", "https://cdn.example.com/b.png"]);
+    expect(pictureAddresses("not a list")).toEqual([]);
   });
 });
