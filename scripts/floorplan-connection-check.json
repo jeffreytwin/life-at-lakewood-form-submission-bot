@@ -74,6 +74,23 @@
     {
       "builder": "Pulte Homes",
       "community": "North River Ranch"
+    },
+    {
+      "builder": "Neal Communities",
+      "community": "Everly",
+      "params": {
+        "url": "https://www.wellenpark.com/available-homes/",
+        "engine": "mpc_aggregator",
+        "builderSlug": "neal-signature-homes"
+      }
+    },
+    {
+      "builder": "M/I Homes",
+      "community": "Palmera"
+    },
+    {
+      "builder": "ICI Homes",
+      "all": true
     }
   ]
 }

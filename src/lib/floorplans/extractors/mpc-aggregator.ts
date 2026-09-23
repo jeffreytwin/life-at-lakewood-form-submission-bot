@@ -173,6 +173,11 @@ export function readDetailPage(html: string): {
   };
 }
 
+/** The builder's folder a listing picture sits in: ".../Images/Homes/NealC9425/82211950.jpg" is "nealc9425". Exported for tests. */
+export function folderOf(url: string): string | null {
+  return url.match(/\/Images\/Homes\/([^/]+)\//i)?.[1]?.toLowerCase() ?? null;
+}
+
 /** Runs `fn` over the items a few at a time, keeping order. */
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -200,12 +205,19 @@ async function withDetailPage(plan: NormalizedPlan, origin: string): Promise<Nor
     });
     if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
     const page = readDetailPage(await res.text());
-    const photos = [...plan.galleryImages, ...page.photos].filter((u, i, all) => all.indexOf(u) === i);
+    // Only the builder's own pictures: a to-be-built page with no gallery
+    // of its own shows other builders' homes instead, and Ravenna came back
+    // with 258 of Mattamy's, Toll's and Lennar's (Everly, 2026-09-23). The
+    // listing files each builder's under its own folder.
+    const folder = folderOf(plan.galleryImages[0] ?? "") ?? folderOf(page.photos[0] ?? "");
+    const ours = (u: string) => !folder || folderOf(u) === folder;
+    const photos = [...plan.galleryImages, ...page.photos.filter(ours)].filter((u, i, all) => all.indexOf(u) === i);
+    const drawings = page.drawings.filter(ours);
     return {
       ...plan,
       sourceUrl: url,
       galleryImages: photos,
-      blueprintImages: page.drawings.length ? page.drawings : plan.blueprintImages,
+      blueprintImages: drawings.length ? drawings : plan.blueprintImages,
       virtualTourUrl: plan.virtualTourUrl ?? page.tour,
       homeType: plan.homeType ?? page.homeType,
       description: plan.description ?? page.description,

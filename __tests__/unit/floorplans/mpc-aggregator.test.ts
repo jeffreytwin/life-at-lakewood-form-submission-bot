@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -92,5 +92,13 @@ describe("a Wellen Park home's page names its type and describes it (M/I's Palm,
     expect(mpcHomeType("multi-family")).toBe("Townhome");
     expect(mpcHomeType("single-family")).toBe("Single Family Home");
     expect(mpcHomeType(null)).toBeNull();
+  });
+});
+
+describe("folderOf", () => {
+  it("reads the builder's folder a listing picture sits in", () => {
+    expect(folderOf("https://static.wellenpark.com/Images/Homes/NealC9425/82211950-240808.jpg")).toBe("nealc9425");
+    expect(folderOf("https://static.wellenpark.com/Images/Homes/MattamyCorp/99831138-251007.jpg")).toBe("mattamycorp");
+    expect(folderOf("https://example.com/other.jpg")).toBeNull();
   });
 });
