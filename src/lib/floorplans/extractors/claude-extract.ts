@@ -1124,7 +1124,16 @@ async function extractPages(
   // that cannot be read costs that plan its extras, never the run.
   // Base plans first: where a community has more pages than a run has
   // time for, it is the homes' pages that go unread, not the plans'.
-  const byPlansFirst = [...listed.keys()].sort((a, b) => Number(listed[a].quickMoveIn) - Number(listed[b].quickMoveIn) || a - b);
+  // And the homes in an order that turns with the day, so the homes a run
+  // has no time for are not the same homes every night (Richmond's last
+  // five, 2026-09-23); what a home's page gave before stays until then.
+  const homes = [...listed.keys()].filter((i) => listed[i].quickMoveIn);
+  const turn = homes.length ? Math.floor(Date.now() / 86_400_000) % homes.length : 0;
+  const byPlansFirst = [
+    ...[...listed.keys()].filter((i) => !listed[i].quickMoveIn),
+    ...homes.slice(turn),
+    ...homes.slice(0, turn),
+  ];
   const deadline = params.runDeadline ?? Infinity;
   const readInOrder = await mapLimit(byPlansFirst, atOnce, async (i) => {
     const plan = listed[i];
