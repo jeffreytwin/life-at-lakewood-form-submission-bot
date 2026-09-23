@@ -193,9 +193,14 @@ export async function discoverCommunityUrl(
   builder: { base_url: string | null; engine_config: Record<string, unknown> | null },
   communityName: string,
   /** Where the site is ("Lakewood Ranch"): a page in that market wins over a same-named community elsewhere. */
-  regionHints: string[] = []
+  regionHints: string[] = [],
+  /** Told each step, for a person working out why nothing was found (the connection check). */
+  trace: (line: string) => void = () => {}
 ): Promise<string | null> {
-  if (!builder.base_url) return null;
+  if (!builder.base_url) {
+    trace("no base URL for the builder");
+    return null;
+  }
   const keys = nameKeys(communityName);
   const region = regionKeys(regionHints);
   const candidates = new Map<string, number>();
@@ -213,14 +218,22 @@ export async function discoverCommunityUrl(
   // Verify the best untried candidates: the page must be the community's own.
   const verify = async (limit: number): Promise<string | null> => {
     const ranked = [...candidates.entries()].sort((a, b) => b[1] - a[1]).map(([u]) => u);
+    trace(`${candidates.size} candidates; best: ${ranked.slice(0, 6).map((u) => `${u} (${Math.round(candidates.get(u)!)})`).join(" , ") || "none"}`);
     for (const url of ranked.filter((u) => !tried.has(u)).slice(0, limit)) {
       tried.add(url);
       const html = await get(url);
-      if (!html) continue;
+      if (!html) {
+        trace(`  ${url}: would not load`);
+        continue;
+      }
       if (pageIsCommunity(url, html, communityName, regionHints)) {
         logger.info("Discovered community URL", { communityName, url });
+        trace(`  ${url}: taken`);
         return url;
       }
+      const lower = html.toLowerCase();
+      const shortName = communityName.split(/\s*-\s*/).pop()!.toLowerCase();
+      trace(`  ${url}: passed over (${!lower.includes(shortName) ? "does not name the community" : !readsLikeHomes(lower) ? "does not read like homes for sale" : "not in the site's market"}; ${html.length} chars)`);
       logger.info("Skipped a page that is not the community's own", { communityName, url });
     }
     return null;
@@ -235,13 +248,17 @@ export async function discoverCommunityUrl(
   const hubs = stored.filter((u) => score(u, keys, region) === 0 && !ARTICLE_PATH.test(u)).slice(0, 4);
   for (const hub of hubs) {
     const html = await get(hub);
-    if (html) addCandidates(linksOn(html, hub));
+    const links = html ? linksOn(html, hub) : [];
+    trace(`area page ${hub}: ${html ? `${links.length} links` : "would not load"}`);
+    addCandidates(links);
   }
   const fromStored = await verify(4);
   if (fromStored) return fromStored;
 
   // 2. Sitemap sweep.
-  addCandidates(await sitemapUrls(builder.base_url, keys, deadline));
+  const mapped = await sitemapUrls(builder.base_url, keys, deadline);
+  trace(`sitemap: ${mapped.length} addresses`);
+  addCandidates(mapped);
   const fromSitemap = await verify(4);
   if (fromSitemap) return fromSitemap;
 
@@ -250,12 +267,19 @@ export async function discoverCommunityUrl(
   const home = await get(builder.base_url);
   if (home) {
     const links = linksOn(home, builder.base_url);
+    trace(`homepage: ${links.length} links`);
     addCandidates(links);
     const lists = links.filter((u) => /communit|where-we-build|locations?|find-(?:a|your)-home|new-homes/i.test(u) && score(u, keys, region) === 0).slice(0, 4);
     for (const list of lists) {
       const html = await get(list);
-      if (html) addCandidates(linksOn(html, list));
+      const found = html ? linksOn(html, list) : [];
+      trace(`list page ${list}: ${html ? `${found.length} links` : "would not load"}`);
+      addCandidates(found);
     }
+  } else {
+    trace("homepage would not load");
   }
-  return verify(4);
+  const last = await verify(4);
+  if (!last) trace(Date.now() > deadline ? "ran out of time" : "nothing verified");
+  return last;
 }

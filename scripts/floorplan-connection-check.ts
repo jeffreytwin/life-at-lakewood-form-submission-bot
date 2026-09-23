@@ -426,7 +426,12 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
   let params = { ...conn.params, ...(target.params ?? {}) };
   let how = target.params ? "override" : params.url ? "saved" : "none";
   if (!params.url && !URLLESS_BUILDERS.has(conn.builder.name) && !target.surveyOnly) {
-    const found = await discoverCommunityUrl(conn.builder, conn.community.name, conn.site.name ? [conn.site.name] : []).catch(() => null);
+    const found = await discoverCommunityUrl(conn.builder, conn.community.name, conn.site.name ? [conn.site.name] : [], (line) =>
+      out(`    discovery: ${line}`)
+    ).catch((error) => {
+      out(`    discovery failed: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    });
     if (found) {
       params = { ...params, url: found };
       how = "discovered";
