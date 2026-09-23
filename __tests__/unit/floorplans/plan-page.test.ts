@@ -7,6 +7,7 @@ import {
   pictureKey,
   captionedCarousel,
   drawingsNamed,
+  joinedPicture,
   sectionsOf,
 } from "@/lib/floorplans/extractors/plan-page";
 
@@ -348,5 +349,46 @@ describe("drawingsNamed (Homes by Towne's Floor Plan tab, 2026-09-23)", () => {
   it("does not take a photo, or a word inside another word", () => {
     expect(drawingsNamed(page, BASE, ["Palm"])).toEqual([]);
     expect(drawingsNamed(`<img src="${cdn}/gallery/banyan-kitchen.jpg">`, BASE, ["Banyan"])).toEqual([]);
+  });
+});
+
+describe("Pulte's carousel as the page writes it (Daylen at Riversong, 2026-09-23)", () => {
+  // As fetched: no src at all — the script joins data-dam and data-name.
+  const slide = (id: number, caption: string) => `
+    <div class="Carousel-slide" data-type="image">
+      <button class="image-wrapper" type="button">
+        <span class="sr-only">Expand carousel image. </span>
+        <img loading="lazy" class="u-responsiveMedia cld-responsive" alt="${caption} "
+             data-dam="//res.cloudinary.com/dv0jqjrc3/image/fetch/"
+             data-name="https://pultegroup.picturepark.com/Go/mLJpMux8/V/${id}/13"
+             data-size="{&quot;0&quot;:&quot;ar_1.5&quot;,&quot;768&quot;:&quot;ar_1.5&quot;,&quot;1025&quot;:&quot;ar_1.5&quot;,&quot;1920&quot;:&quot;ar_1.5&quot;}"
+             data-transformations="c_fill,f_auto,q_auto,w_auto"
+             data-alt="${caption} ">
+      </button>
+      <h5 class="Image-caption mr-lg-6" title="${caption} " tabindex="-1">
+        ${caption.replace("'", "&#39;")}
+      </h5>
+      <div class="Social-links"><button type="button"><i data-image-caption="${caption} "></i></button></div>
+    </div>`;
+  const page = `<section class="Carousel-v2">${[
+    [650661, "Daylen Exterior"],
+    [650640, "Designer Kitchen"],
+    [650639, "Large Center Island"],
+    [650648, "Owner's Suite"],
+    [650650, "Owner's Bath"],
+  ]
+    .map(([id, caption]) => slide(id as number, caption as string))
+    .join("")}</section>`;
+
+  it("joins each slide's two halves at the largest size the page asks for", () => {
+    expect(joinedPicture(page.match(/<img\b[^>]*>/)![0])).toBe(
+      "https://res.cloudinary.com/dv0jqjrc3/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_1920/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13"
+    );
+  });
+
+  it("reads the carousel whole, captions and all", () => {
+    const { first } = captionedCarousel(page, "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105");
+    expect(first.map((i) => i.alt)).toEqual(["Daylen Exterior", "Designer Kitchen", "Large Center Island", "Owner's Suite", "Owner's Bath"]);
+    expect(first[0].src).toContain("/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_1920/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13");
   });
 });

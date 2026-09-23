@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, drawingsNamed, firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsNamed, firstGallery, fullSize, joinedPicture, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -85,7 +85,7 @@ export const EXTRACT_TOOL: Anthropic.Tool = {
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
-            relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address" },
+            relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address. Where the page gives a plan both a code and a name (\"Plan B929 The Waterway\"), the name (\"The Waterway\")" },
             sourceUrl: { type: "string", description: "Absolute URL of the plan's detail page if linked" },
             description: { type: "string", description: "The builder's own description of the plan, as written; omit if the page gives none" },
             virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour / 3D walkthrough for this plan; omit if none" },
@@ -251,7 +251,7 @@ function attrOf(tag: string, name: string): string | null {
  * data-src behind a placeholder, or the largest of the sizes it offers.
  */
 function pictureOf(tag: string): string | null {
-  const offered = [attrOf(tag, "data-src"), attrOf(tag, "src"), largestInSrcSet(attrOf(tag, "srcset") ?? attrOf(tag, "data-srcset"))];
+  const offered = [attrOf(tag, "data-src"), attrOf(tag, "src"), largestInSrcSet(attrOf(tag, "srcset") ?? attrOf(tag, "data-srcset")), joinedPicture(tag)];
   return offered.find((u): u is string => Boolean(u) && !/^data:/i.test(u!)) ?? null;
 }
 

@@ -64,6 +64,36 @@ export function largestInSrcSet(value: string | null): string | null {
   return best?.url ?? null;
 }
 
+/**
+ * A picture a page writes as two halves for its script to join rather
+ * than as a src: Pulte's carousels give each slide
+ * data-dam="//res.cloudinary.com/…/image/fetch/" and
+ * data-name="https://pultegroup.picturepark.com/Go/…", with the sizes it
+ * draws at in data-size and data-transformations (Daylen at Riversong,
+ * 2026-09-23). Joined here at the largest size the page itself asks for,
+ * which is an address the site uses. Exported for tests.
+ */
+export function joinedPicture(tag: string): string | null {
+  const dam = attr(tag, "data-dam");
+  const name = attr(tag, "data-name");
+  if (!dam || !name || !/^https?:\/\//i.test(name)) return null;
+  const base = (dam.startsWith("//") ? `https:${dam}` : dam).replace(/\/?$/, "/");
+  let sizes: Record<string, string> = {};
+  try {
+    sizes = JSON.parse((attr(tag, "data-size") ?? "{}").replace(/&quot;/g, '"'));
+  } catch {
+    // no sizes: the transformations alone
+  }
+  const widest = Object.keys(sizes)
+    .map(Number)
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => b - a)[0];
+  const transforms = [widest ? sizes[String(widest)] : null, (attr(tag, "data-transformations") ?? "").replace(/\bw_auto\b/, `w_${widest ?? 1920}`)]
+    .filter(Boolean)
+    .join(",");
+  return `${base}${transforms ? `${transforms}/` : ""}${name}`;
+}
+
 /** A heading's words, with the spans, comments and entities a framework leaves in it. */
 function readable(html: string): string {
   return html
@@ -123,7 +153,8 @@ export function sectionsOf(html: string, pageUrl: string): PageSection[] {
     const src =
       attr(m[0], "src") ||
       attr(m[0], "data-src") ||
-      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset"));
+      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset")) ||
+      joinedPicture(m[0]);
     if (!src || src.startsWith("data:")) continue;
     marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: attr(m[0], "alt") ?? "" } });
   }
@@ -277,7 +308,8 @@ export function captionedCarousel(html: string, pageUrl: string): PlanPageGaller
     const src =
       attr(m[0], "src") ||
       attr(m[0], "data-src") ||
-      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset"));
+      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset")) ||
+      joinedPicture(m[0]);
     if (!src || src.startsWith("data:")) continue;
     marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: readable(attr(m[0], "alt") ?? "") } });
   }
