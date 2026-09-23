@@ -8,18 +8,33 @@
   "raw": [
     {
       "url": "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
-      "around": ["Floor Plan", "floorplan", "FloorPlan", "Floorplan"],
+      "around": [
+        "Floor Plan",
+        "floorplan",
+        "FloorPlan",
+        "Floorplan"
+      ],
       "chars": 1500,
       "count": 3
     },
     {
       "url": "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407",
-      "around": ["16817 Harmony", "1154558"],
+      "around": [
+        "16817 Harmony",
+        "1154558"
+      ],
       "chars": 1200,
       "count": 2
     }
   ],
   "concurrency": 3,
   "detailPlans": 2,
-  "checks": []
+  "checks": [],
+  "probe": [
+    "https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13",
+    "https://pultegroup.cdn.picturepark.com/v/j5OTPxJ5/",
+    "https://res.cloudinary.com/dv0jqjrc3/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_1920/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13",
+    "https://res.cloudinary.com/dv0jqjrc3/image/fetch/f_auto,q_auto,w_1920,c_limit/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13",
+    "https://res.cloudinary.com/dv0jqjrc3/image/fetch/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13"
+  ]
 }

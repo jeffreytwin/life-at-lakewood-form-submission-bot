@@ -56,6 +56,8 @@ interface Config {
   anatomy?: string[];
   /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
   raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
+  /** Addresses fetched as a picture would be: the status, the type and the size that come back. */
+  probe?: string[];
   concurrency?: number;
   /** Plans printed with every picture; the rest get one line each. */
   detailPlans?: number;
@@ -809,6 +811,21 @@ async function main() {
   for (const { url, around, chars, after, count } of config.raw ?? []) {
     await keep(`raw: ${url}`, await rawAround(url, around, chars, after, count));
     say(`markup of ${url} kept`);
+  }
+  if (config.probe?.length) {
+    const lines = await Promise.all(
+      config.probe.map(async (url) => {
+        try {
+          const res = await fetch(url, { headers: { "user-agent": UA }, redirect: "follow", signal: AbortSignal.timeout(30_000) });
+          const body = await res.arrayBuffer();
+          return `${res.status} ${res.headers.get("content-type") ?? "?"} ${body.byteLength} bytes ← ${url}${res.url !== url ? ` (answered from ${res.url})` : ""}`;
+        } catch (error) {
+          return `failed ${error instanceof Error ? error.message : String(error)} ← ${url}`;
+        }
+      })
+    );
+    await keep("probe", lines.join("\n"));
+    say(`${lines.length} addresses probed`);
   }
   const all = await loadConnections();
   const jobs: { conn: Connection; target: Target }[] = [];
