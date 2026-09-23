@@ -72,7 +72,7 @@ const LOOK_TOOL: Anthropic.Tool = {
 
 const PROMPT =
   `These are photographs of one new home, in no particular order. Say what each one shows, one answer per picture, in the order they are given.\n\n` +
-  `Use "front" only for a picture of the front of the house seen from the street — the one a listing would lead with. ` +
+  `Use "front" only for a picture of the front of the house seen from the street — the one a listing would lead with — whether a photograph or a rendering. ` +
   `Use "exterior" for any other outside view: the back of the house, an aerial, a streetscape, an alternative elevation, a floor plan drawing. ` +
   `Use "outdoor" for a lanai, pool, patio or summer kitchen — an outdoor room of this house rather than a view of the building. ` +
   `Use "living" for a great room or family room, "office" for a study or den, "hallway" for a foyer or entry. ` +
@@ -206,20 +206,36 @@ export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabe
  * picture nothing could be read from keeps its place among the unplaced,
  * and where nothing at all could be read the gallery is returned as it
  * came. Pure.
+ *
+ * Where no picture was called the front, the first outside view leads,
+ * in the order the gallery came: never a room. Pulte's homes open on
+ * "Exterior Rendering; Elevation CO1", which Claude called an outside view
+ * rather than the front, and with nothing to lead them the kitchen did,
+ * and a quick move-in shows the site its first picture alone (Jeff,
+ * 2026-09-23).
  */
 export function sortByRooms(urls: string[], labels: Map<string, PhotoLabel | null>): OrderedGallery {
-  let leadTaken = false;
+  const lead = urls.find((src) => labels.get(src) === "front") ?? urls.find((src) => labels.get(src) === "exterior");
   const items: GalleryInput[] = urls.map((src) => {
     const label = labels.get(src) ?? null;
-    if (label === "front" && !leadTaken) {
-      leadTaken = true;
-      return { src, kind: "primary" as const };
-    }
+    if (src === lead) return { src, kind: "primary" as const };
     // Another picture of the front is an alternative elevation, like any other outside view.
     if (label === "front" || label === "exterior") return { src, kind: "exterior" as const };
     return { src, room: label as Room | null };
   });
   return orderGallery(items);
+}
+
+/**
+ * Whether a gallery leads with a room while it holds an outside view of
+ * the house: sorted before sortByRooms fell back to the first outside
+ * view, it is sorted again. Exported for tests.
+ */
+export function leadsWithARoom(plan: Pick<NormalizedPlan, "galleryImages" | "galleryMeta">): boolean {
+  const urls = plan.galleryImages ?? [];
+  const label = (url: string) => labelFromMeta(plan.galleryMeta?.[url]);
+  const first = urls.length ? label(urls[0]) : null;
+  return Boolean(first && first !== "front" && first !== "exterior") && urls.slice(1).some((url) => label(url) === "exterior" || label(url) === "front");
 }
 
 /**

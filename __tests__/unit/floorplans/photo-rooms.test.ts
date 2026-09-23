@@ -3,6 +3,7 @@ import {
   PHOTO_LABELS,
   batches,
   labelFromMeta,
+  leadsWithARoom,
   mostlyPlaced,
   sortByRooms,
   withLookedAtRooms,
@@ -66,16 +67,43 @@ describe("sortByRooms", () => {
   });
 
   it("keeps the pictures it could not place in their own order, after the rooms", () => {
-    const urls = [pic("a"), pic("b"), pic("c"), pic("d")];
-    const [unplacedFirst, kitchen, unplacedSecond, exterior] = urls;
+    const urls = [pic("a"), pic("b"), pic("c"), pic("d"), pic("e")];
+    const [unplacedFirst, kitchen, unplacedSecond, front, aerial] = urls;
     const ordered = sortByRooms(urls, labelled([
       [unplacedFirst, null],
       [kitchen, "kitchen"],
       [unplacedSecond, null],
-      [exterior, "exterior"],
+      [front, "front"],
+      [aerial, "exterior"],
     ]));
-    expect(ordered.urls).toEqual([kitchen, unplacedFirst, unplacedSecond, exterior]);
+    expect(ordered.urls).toEqual([front, kitchen, unplacedFirst, unplacedSecond, aerial]);
     expect(ordered.meta[unplacedFirst].room).toBeNull();
+  });
+
+  it("leads with the first outside view where none was called the front, never a room (Pulte's quick move-ins)", () => {
+    const urls = [pic("rendering"), pic("kitchen"), pic("living"), pic("amenities")];
+    const [rendering, kitchen, living, amenities] = urls;
+    const ordered = sortByRooms(urls, labelled([
+      [rendering, "exterior"],
+      [kitchen, "kitchen"],
+      [living, "living"],
+      [amenities, "exterior"],
+    ]));
+    expect(ordered.urls).toEqual([rendering, kitchen, living, amenities]);
+    expect(ordered.meta[rendering].kind).toBe("primary");
+    // A gallery already sorted with the rendering sent back is put right the same way.
+    const labels = labelled([
+      [rendering, "exterior"],
+      [kitchen, "kitchen"],
+      [living, "living"],
+      [amenities, "exterior"],
+    ]);
+    expect(sortByRooms([kitchen, living, rendering, amenities], labels).urls).toEqual([rendering, kitchen, living, amenities]);
+  });
+
+  it("leads with a room only where the gallery has no outside view at all", () => {
+    const urls = [pic("living"), pic("kitchen")];
+    expect(sortByRooms(urls, labelled([[urls[0], "living"], [urls[1], "kitchen"]])).urls).toEqual([urls[1], urls[0]]);
   });
 
   it("reads nothing into a file name when the picture itself said nothing", () => {
@@ -144,5 +172,15 @@ describe("which waiting galleries are worth looking at", () => {
     const placed = Object.fromEntries(urls.map((u) => [u, { kind: "photo" as const, room: "kitchen" as const }]));
     expect(wantsSorting(plan(urls, placed))).toBe(false);
     expect(wantsSorting(plan(urls.slice(0, 2)))).toBe(false);
+  });
+
+  it("and the ones sorted with a room in front of an outside view", () => {
+    const meta: NonNullable<NormalizedPlan["galleryMeta"]> = Object.fromEntries(urls.map((u) => [u, { kind: "photo" as const, room: "kitchen" as const }]));
+    meta[urls[3]] = { kind: "exterior", room: "exterior" };
+    expect(leadsWithARoom(plan(urls, meta))).toBe(true);
+    expect(wantsSorting(plan(urls, meta))).toBe(true);
+    expect(wantsSorting(plan(urls, meta, { userEditedFields: ["galleryImages"] }))).toBe(false);
+    meta[urls[0]] = { kind: "primary", room: "primary" };
+    expect(leadsWithARoom(plan(urls, meta))).toBe(false);
   });
 });
