@@ -251,7 +251,12 @@ function attrOf(tag: string, name: string): string | null {
  * data-src behind a placeholder, or the largest of the sizes it offers.
  */
 function pictureOf(tag: string): string | null {
-  const offered = [attrOf(tag, "data-src"), attrOf(tag, "data-lazy-src"), attrOf(tag, "data-lazy"), attrOf(tag, "src"), imageAddress(tag)];
+  // Not a picture a script joins from two halves (Pulte's carousels): a
+  // community page carries every plan's carousel, and handed all of them
+  // Riversong's page ran past what Claude is given before its plans began
+  // (2026-09-23). A plan's own carousel is read off its markup instead
+  // (captionedCarousel).
+  const offered = [attrOf(tag, "data-src"), attrOf(tag, "data-lazy-src"), attrOf(tag, "data-lazy"), attrOf(tag, "src"), imageAddress(tag, { joined: false })];
   return offered.find((u): u is string => Boolean(u) && !/^data:/i.test(u!)) ?? null;
 }
 

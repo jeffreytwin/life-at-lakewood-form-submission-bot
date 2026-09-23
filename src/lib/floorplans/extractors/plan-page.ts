@@ -100,11 +100,15 @@ export function joinedPicture(tag: string): string | null {
  * data-lazy-src, D.R. Horton's data-lazy, data-original), or the largest
  * of the sizes it offers, or two halves for a script to join (Pulte).
  */
-export function imageAddress(tag: string): string | null {
+export function imageAddress(tag: string, opts: { joined?: boolean } = {}): string | null {
   const plain = [attr(tag, "src"), attr(tag, "data-src"), attr(tag, "data-lazy-src"), attr(tag, "data-lazy"), attr(tag, "data-original")].find(
     (u): u is string => Boolean(u) && !/^data:/i.test(u!)
   );
-  return plain || largestInSrcSet(attr(tag, "srcset") || attr(tag, "data-srcset") || attr(tag, "data-lazy-srcset")) || joinedPicture(tag);
+  return (
+    plain ||
+    largestInSrcSet(attr(tag, "srcset") || attr(tag, "data-srcset") || attr(tag, "data-lazy-srcset")) ||
+    (opts.joined === false ? null : joinedPicture(tag))
+  );
 }
 
 /**

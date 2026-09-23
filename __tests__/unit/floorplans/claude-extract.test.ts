@@ -560,3 +560,12 @@ describe("distill keeps a menu that lists homes (Kolter's Woodland Preserve, 202
     expect(text).not.toContain("Privacy");
   });
 });
+
+describe("distill leaves a carousel's joined pictures out (Pulte's Riversong, 2026-09-23)", () => {
+  it("does not hand Claude a picture the page writes as two halves", () => {
+    const slide = `<img alt="Kitchen" data-dam="//res.cloudinary.com/x/image/fetch/" data-name="https://pultegroup.picturepark.com/Go/a/V/1/13" data-transformations="c_fill,w_auto"><h5>Kitchen</h5>`;
+    const text = distill(`<main><h1>Riversong</h1>${slide}<p>Daylen from $342,990</p></main>`, "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407");
+    expect(text).not.toContain("picturepark");
+    expect(text).toContain("$342,990");
+  });
+});
