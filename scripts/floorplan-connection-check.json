@@ -1,11 +1,8 @@
 {
   "anatomy": [
-    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
-    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote/17768-stillness-ct&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
-    "https://mattamyhomes.com/florida/sarasota/venice/wellen-park/sunstone/anclote",
-    "https://www.lennar.com/new-homes/florida/tampa-manatee/parrish/prosperity-lakes",
-    "https://www.lennar.com/new-homes/florida/tampa-manatee/parrish/prosperity-lakes/the-estates/dover",
-    "https://www.pulte.com/homes/florida/sarasota/parrish/longmeadow-at-north-river-ranch-211403/pinecrest-699574"
+    "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
+    "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
+    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D"
   ],
   "concurrency": 4,
   "detailPlans": 99,
