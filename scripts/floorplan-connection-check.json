@@ -1,21 +1,37 @@
 {
-  "anatomy": [
-    "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i"
-  ],
+  "anatomy": [],
   "raw": [
     {
-      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i",
+      "url": "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/281/",
       "around": [
-        "List = [",
-        "MoveIn",
-        "moveIn",
-        "homesite"
+        "4a6363de",
+        "floorplan",
+        "floorPlan",
+        "Floor Plan"
       ],
-      "chars": 300,
-      "count": 6
+      "chars": 700,
+      "count": 3
+    },
+    {
+      "url": "https://simplydwellhomes.com/new-homes/broadleaf/jasmine-2/",
+      "around": [
+        "Jasmine-2.jpg",
+        "Floor Plan"
+      ],
+      "chars": 600,
+      "count": 3
     }
   ],
   "concurrency": 3,
-  "detailPlans": 1,
-  "checks": []
+  "detailPlans": 3,
+  "checks": [
+    {
+      "builder": "Stock Luxury Homes",
+      "all": true
+    },
+    {
+      "builder": "SimplyDwell Homes",
+      "all": true
+    }
+  ]
 }
