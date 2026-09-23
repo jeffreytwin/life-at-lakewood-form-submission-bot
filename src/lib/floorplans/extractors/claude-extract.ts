@@ -468,6 +468,27 @@ export function orderPhotos(srcs: string[], said: Record<string, GalleryMeta> = 
   );
 }
 
+/**
+ * The floor plan drawings Claude gave, with the pictures of the outside of
+ * the house taken back out: asked for a plan's drawings, it has handed
+ * back its elevation renderings too — SimplyDwell's
+ * "Jasmine-30-2413_Elevation-A-2-scaled-1.webp", Pulte's elevations
+ * (2026-09-23). A file named for an elevation, an exterior or a rendering,
+ * and not for a plan, is a view of the house and goes with the photos.
+ * Exported for tests.
+ */
+export function sortDrawings(urls: string[]): { drawings: string[]; views: string[] } {
+  const drawings: string[] = [];
+  const views: string[] = [];
+  for (const url of urls) {
+    const name = fileNameWords(url).toLowerCase();
+    const namesPlan = /\b(fp|floor ?plans?|floorplans?|plan|plans|layout|blueprint)\b/.test(name);
+    const namesView = /\b(elevation|elevations|exterior|exteriors|rendering|renderings|rend|front|rear|facade|streetscape)\b/.test(name);
+    (namesView && !namesPlan ? views : drawings).push(url);
+  }
+  return { drawings, views };
+}
+
 /** Runs `fn` over the items a few at a time, keeping order. */
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -887,8 +908,11 @@ async function extractPages(
   });
 
   return toured.map((plan) => {
-    const ordered = orderPhotos(plan.galleryImages, plan.galleryMeta ?? {});
-    return { ...plan, galleryImages: ordered.urls, galleryMeta: ordered.meta };
+    const { drawings, views } = sortDrawings(plan.blueprintImages);
+    const outside = Object.fromEntries(views.map((u) => [u, OUTSIDE_META]));
+    const photos = [...plan.galleryImages, ...views.filter((u) => !plan.galleryImages.includes(u))];
+    const ordered = orderPhotos(photos, { ...outside, ...plan.galleryMeta });
+    return { ...plan, blueprintImages: drawings, galleryImages: ordered.urls, galleryMeta: ordered.meta };
   });
 }
 

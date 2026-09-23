@@ -9,6 +9,7 @@ import {
   withoutBlanks,
   pictureAddresses,
   distill,
+  sortDrawings,
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
@@ -429,5 +430,25 @@ describe("distill honours a page's <base href>", () => {
     expect(distill(html, "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/")).toContain(
       "[LINK https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/fraser/]"
     );
+  });
+});
+
+describe("sortDrawings: an elevation is a view of the house, not its floor plan", () => {
+  it("moves elevation renderings out of the drawings and keeps the plans", () => {
+    const up = (n: string) => `https://simplydwellhomes.com/wp-content/uploads/2026/06/${n}`;
+    const got = sortDrawings([
+      up("Jasmine-2.jpg"),
+      up("Jasmine-30-2413_Elevation-A-2-scaled-1.webp"),
+      up("Juniper_fp.jpg"),
+      up("Jasmine-Floor-Plan-Elevation-B.jpg"),
+      "https://cdn.lennar.com/api/images/x/tpu_1551_fp_dover_mod1_ow_07_03_23.svg",
+    ]);
+    expect(got.views).toEqual([up("Jasmine-30-2413_Elevation-A-2-scaled-1.webp")]);
+    expect(got.drawings).toEqual([
+      up("Jasmine-2.jpg"),
+      up("Juniper_fp.jpg"),
+      up("Jasmine-Floor-Plan-Elevation-B.jpg"),
+      "https://cdn.lennar.com/api/images/x/tpu_1551_fp_dover_mod1_ow_07_03_23.svg",
+    ]);
   });
 });
