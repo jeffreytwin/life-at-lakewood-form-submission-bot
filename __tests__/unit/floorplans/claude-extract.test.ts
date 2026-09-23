@@ -544,3 +544,19 @@ describe("homesPageIn (Kolter's Woodland Preserve, 2026-09-23)", () => {
     expect(homesPageIn(html, PAGE)).toBeNull();
   });
 });
+
+describe("distill keeps a menu that lists homes (Kolter's Woodland Preserve, 2026-09-23)", () => {
+  it("drops the site's menus and footer, but not a nav that carries plans", () => {
+    const html = `<nav><a href="/about">About</a><a href="/contact">Contact</a><a href="/new-homes/parrish-florida-woodland-preserve/">Woodland Preserve</a></nav>
+      <nav class="floorplans"><a href="/floorplan/eva/">Eva</a> 4 Beds · 2 Baths · 1,668 Sq Ft · From $428,990</nav>
+      <nav class="models"><a href="/new-homes/parrish-florida-woodland-preserve/5289/floorplan/jade/"><img src="/r/jade.jpg" alt="Jade">Jade</a></nav>
+      <main><h1>Woodland Preserve</h1></main>
+      <footer>© Kolter Homes · Privacy</footer>`;
+    const text = distill(html, "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/");
+    expect(text).toContain("Eva");
+    expect(text).toContain("$428,990");
+    expect(text).toContain("floorplan/jade");
+    expect(text).not.toContain("Contact");
+    expect(text).not.toContain("Privacy");
+  });
+});

@@ -300,6 +300,26 @@ export interface RenderOptions {
 }
 
 /**
+ * The page's markup, once it has stopped moving. A page can send itself
+ * somewhere else after it has drawn — Richmond American's did, and the
+ * read failed with "Execution context was destroyed" (2026-09-23) — so a
+ * read that loses its page waits for the next one to arrive and reads
+ * that, twice at most.
+ */
+async function settledContent(page: Page): Promise<string> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await page.content();
+    } catch (error) {
+      const moved = /context was destroyed|navigat/i.test(error instanceof Error ? error.message : String(error));
+      if (!moved || attempt >= 2) throw error;
+      await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15_000 }).catch(() => {});
+      await page.waitForSelector("body", { timeout: 5_000 }).catch(() => {});
+    }
+  }
+}
+
+/**
  * The page's HTML once it has drawn itself, and the address it settled on.
  *
  * "Drawn itself" is the same test the plain engine uses to tell an empty
@@ -389,7 +409,7 @@ export async function renderPage(
       return 0;
     });
 
-    const html = await page.content();
+    const html = await settledContent(page);
     logger.info("Floor plan page rendered", { url, quiet, ready, pressed, gathered, bytes: html.length });
     return { url: page.url(), html, pressed };
   } finally {

@@ -270,6 +270,29 @@ export function distill(html: string, pageUrl: string): string {
   // the rest of the page: Homes by Towne's plan pages distilled to 3.4
   // million characters and every read was cut at the ceiling (2026-09-23).
   const marker = (kind: string, url: string) => (/^data:/i.test(url) ? " " : ` [${kind} ${abs(url)}] `);
+  // A menu or footer is dropped unless it carries what a list of homes
+  // does — a price, a size, a bed or bath count — or links to pages
+  // beneath this one: Kolter keeps Woodland Preserve's plans in a <nav>
+  // of names and pictures, and they came back as none once menus went
+  // (2026-09-23).
+  const beneath = (() => {
+    try {
+      const u = new URL(pageUrl);
+      return `${u.origin}${u.pathname.replace(/\/+$/, "")}/`;
+    } catch {
+      return null;
+    }
+  })();
+  const chromeOnly = (block: string): string => {
+    const words = block.replace(/<[^>]+>/g, " ");
+    if (/\$\s?\d{2,3}(?:,\d{3}|k\b)|\bsq\.?\s?ft\b|square feet|\b\d\s*(?:beds?|bedrooms?|baths?|bathrooms?)\b/i.test(words)) return block;
+    const linksBeneath = [...block.matchAll(A_TAG)].some((m) => {
+      const href = attrOf(m[0], "href");
+      const to = href ? abs(href) : "";
+      return Boolean(beneath) && to.startsWith(beneath!) && to.length > beneath!.length;
+    });
+    return linksBeneath ? block : " ";
+  };
   const withImgs = html
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -277,9 +300,11 @@ export function distill(html: string, pageUrl: string): string {
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
     // The site's own menus and footer say nothing about a community, and on
-    // a big builder's page they are much of what there is to read.
-    .replace(/<nav\b[\s\S]*?<\/nav>/gi, " ")
-    .replace(/<footer\b[\s\S]*?<\/footer>/gi, " ")
+    // a big builder's page they are much of what there is to read. Only
+    // those that say nothing about homes, though: Kolter's plans came back
+    // as none once its menus went (Woodland Preserve, 2026-09-23).
+    .replace(/<nav\b[\s\S]*?<\/nav>/gi, chromeOnly)
+    .replace(/<footer\b[\s\S]*?<\/footer>/gi, chromeOnly)
     .replace(IMG_TAG, (tag) => {
       const src = pictureOf(tag);
       return src ? marker("IMG", src) : " ";
