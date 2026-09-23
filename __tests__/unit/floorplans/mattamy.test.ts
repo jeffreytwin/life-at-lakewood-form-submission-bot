@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { plansFromSearchData, normalizeMattamyCard } from "@/lib/floorplans/extractors/mattamy";
+import { plansFromSearchData, normalizeMattamyCard, readPlanLayout } from "@/lib/floorplans/extractors/mattamy";
+import { standardHomeType } from "@/lib/floorplans/standardize";
 
 // Real /search-data layout-service payload captured in round-7 discovery
 // (pruned: arrays capped at 5, long strings truncated).
@@ -51,5 +52,89 @@ describe("a community whose market was renamed in its address (Sunstone, 2026-09
     const current = plansFromSearchData(capture.data, "/florida/palm-city-stuart/jensen-beach/avila");
     expect(renamed.length).toBeGreaterThan(0);
     expect(renamed.map((p) => p.planKey)).toEqual(current.map((p) => p.planKey));
+  });
+});
+
+describe("readPlanLayout (Mattamy plan pages, Anclote at Sunstone, 2026-09-23)", () => {
+  // Shaped like the layout service's answer for a plan page, pruned.
+  const layout = {
+    sitecore: {
+      route: {
+        fields: {
+          "Product Line": { displayName: "Attached Villa" },
+          "Home Type": { displayName: "Villa", fields: { homeType: { value: "Villa" } } },
+        },
+        placeholders: {
+          main: [
+            {
+              componentName: "TitleDetailsBlock",
+              fields: { image: { value: { src: "https://cdn.mattamy.com/anclote-hero.jpg", alt: "Anclote" } } },
+            },
+            {
+              componentName: "Container",
+              placeholders: {
+                inner: [
+                  {
+                    componentName: "ExtendedGallery",
+                    fields: {
+                      media: {
+                        value: [
+                          { type: "image", src: "https://cdn.mattamy.com/a1.jpg", alt: "Dining" },
+                          { type: "image", src: "https://cdn.mattamy.com/a2.jpg", alt: "Kitchen" },
+                          { type: "image", src: "https://cdn.mattamy.com/owners-bath.jpg", alt: "" },
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    componentName: "StaticCarousel",
+                    fields: { media: { value: [{ type: "floorplan", src: "https://cdn.mattamy.com/anclote-fp.png" }] } },
+                  },
+                  {
+                    componentName: "ExteriorStyles",
+                    fields: {
+                      styles: {
+                        value: [
+                          { imageUrl: "https://cdn.mattamy.com/anclote-a.jpg", imageCaption: "Coastal" },
+                          { imageUrl: "https://cdn.mattamy.com/anclote-b.jpg", imageCaption: "Craftsman" },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    },
+  };
+
+  it("leads with the hero, sorts the gallery by the rooms Mattamy names, and puts the styles last", () => {
+    const page = readPlanLayout(layout);
+    expect(page.photos).toEqual([
+      "https://cdn.mattamy.com/anclote-hero.jpg",
+      "https://cdn.mattamy.com/a2.jpg",
+      "https://cdn.mattamy.com/a1.jpg",
+      "https://cdn.mattamy.com/owners-bath.jpg",
+      "https://cdn.mattamy.com/anclote-a.jpg",
+      "https://cdn.mattamy.com/anclote-b.jpg",
+    ]);
+    expect(page.meta["https://cdn.mattamy.com/a2.jpg"].room).toBe("kitchen");
+    expect(page.meta["https://cdn.mattamy.com/owners-bath.jpg"].room).toBe("bathroom");
+    expect(page.meta["https://cdn.mattamy.com/anclote-b.jpg"]).toMatchObject({ kind: "exterior", caption: "Craftsman" });
+  });
+
+  it("takes the floor plan drawing apart from the photos", () => {
+    expect(readPlanLayout(layout).drawings).toEqual(["https://cdn.mattamy.com/anclote-fp.png"]);
+  });
+
+  it("reads the product line as the home type", () => {
+    expect(readPlanLayout(layout).homeType).toBe(standardHomeType("Attached Villa"));
+    expect(readPlanLayout(layout).homeType).not.toBeNull();
+  });
+
+  it("gives nothing for a layout it cannot read", () => {
+    expect(readPlanLayout(null)).toMatchObject({ photos: [], drawings: [], homeType: null });
   });
 });
