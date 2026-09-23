@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { communityIdIn, homeFromRecord, planFromRecord } from "@/lib/floorplans/extractors/westbay";
+import { communityIdIn, homeFromRecord, planFromRecord, residenceName } from "@/lib/floorplans/extractors/westbay";
 
 // Star Farms at Lakewood Ranch as WestBay's page and feeds gave it (2026-09-23).
 describe("communityIdIn", () => {
@@ -83,5 +83,14 @@ describe("homeFromRecord", () => {
 
   it("leaves out a record with no street", () => {
     expect(homeFromRecord({ title: "Egret III at Star Farms", price: 1 })).toBeNull();
+  });
+});
+
+describe("residenceName", () => {
+  it("names the plan a residence is of, however the feed spells it", () => {
+    expect(residenceName({ name: "Sandpiper", series_name: "Innovation" })).toBe("Sandpiper");
+    expect(residenceName({ plan_name: "Heron II", name: "Heron II - Star Farms" })).toBe("Heron II");
+    expect(residenceName({ plan: { name: "Pelican" } })).toBe("Pelican");
+    expect(residenceName({ title: "Egret III at Star Farms at Lakewood Ranch" })).toBe("Egret III");
   });
 });

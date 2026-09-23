@@ -1,24 +1,22 @@
 {
-  "anatomy": [],
+  "anatomy": [
+    "json https://www.homesbywestbay.com/api/residences?community=24&page=1"
+  ],
   "raw": [],
   "concurrency": 3,
-  "detailPlans": 2,
+  "detailPlans": 1,
   "checks": [
     {
       "builder": "Homes by WestBay",
-      "all": true
+      "community": "Star Farms"
     },
     {
-      "builder": "KB Home",
-      "all": true
+      "builder": "Homes by WestBay",
+      "community": "Oakfield"
     },
     {
-      "builder": "Highland Homes",
-      "all": true
-    },
-    {
-      "builder": "Lee Wetherington",
-      "all": true
+      "builder": "Homes by WestBay",
+      "community": "Crosswind Ranch"
     }
   ]
 }
