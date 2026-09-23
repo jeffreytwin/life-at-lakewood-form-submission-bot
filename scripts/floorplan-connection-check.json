@@ -25,6 +25,15 @@
       ],
       "chars": 1200,
       "count": 2
+    },
+    {
+      "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch",
+      "around": [
+        "aurora-at-lakewood-ranch",
+        "lorraine-lakes"
+      ],
+      "chars": 300,
+      "count": 4
     }
   ],
   "concurrency": 3,
@@ -37,6 +46,51 @@
     {
       "builder": "Mattamy Homes",
       "community": "Sunstone Lakeside"
+    },
+    {
+      "builder": "Lennar",
+      "community": "Aurora",
+      "params": {
+        "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch",
+        "urls": [
+          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch/townhomes",
+          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch/patio-homes"
+        ]
+      }
+    },
+    {
+      "builder": "Lennar",
+      "community": "Lorraine Lakes",
+      "params": {
+        "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch",
+        "urls": [
+          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/executive-homes",
+          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/estate-homes",
+          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/manor-homes",
+          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/townhomes"
+        ]
+      }
+    },
+    {
+      "builder": "Neal Communities",
+      "community": "Boca Royale",
+      "preferCandidate": true
+    },
+    {
+      "builder": "Neal Communities",
+      "community": "Everly",
+      "params": {
+        "url": "https://nealsignaturehomes.com/everly/",
+        "engine": "render_claude"
+      }
+    },
+    {
+      "builder": "Neal Signature Homes",
+      "community": "Waterbury Park",
+      "params": {
+        "url": "https://nealsignaturehomes.com/waterbury-park/",
+        "engine": "render_claude"
+      }
     }
   ],
   "probe": [
