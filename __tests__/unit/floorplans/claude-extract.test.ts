@@ -10,6 +10,7 @@ import {
   pictureAddresses,
   distill,
   sortDrawings,
+  planName,
   EXTRACT_TOOL,
   EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
@@ -450,5 +451,16 @@ describe("sortDrawings: an elevation is a view of the house, not its floor plan"
       up("Jasmine-Floor-Plan-Elevation-B.jpg"),
       "https://cdn.lennar.com/api/images/x/tpu_1551_fp_dover_mod1_ow_07_03_23.svg",
     ]);
+  });
+});
+
+describe("planName: a plan's code without the word in front of it (Perry, 2026-09-23)", () => {
+  it("drops Design before a numbered code, and leaves other names alone", () => {
+    expect(planName("Design 3368F")).toBe("3368F");
+    expect(planName("Plan 2016")).toBe("Plan 2016");
+    expect(planName("3368F")).toBe("3368F");
+    expect(planName("Plan B")).toBe("Plan B");
+    expect(planName("The Design House")).toBe("The Design House");
+    expect(planName("Model Home Aspen")).toBe("Model Home Aspen");
   });
 });

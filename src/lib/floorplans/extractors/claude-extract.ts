@@ -692,9 +692,10 @@ async function listPage(
 
   const listed = plans.map((p) => {
     const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true;
+    const name = planName(p.name);
     return {
-      planKey: normKey(p.name),
-      name: p.name.trim(),
+      planKey: normKey(name),
+      name,
       price: p.price ?? null,
       priceDisplay: money(p.price),
       beds: p.beds ?? "",
@@ -715,6 +716,19 @@ async function listPage(
     };
   });
   return { url: page.url || url, plans: listed, pressed: page.pressed ?? null };
+}
+
+/**
+ * A plan's name as the builder files it, without the word a page puts in
+ * front of a plan's code: Perry lists the same design as "3368F" on one
+ * lot width's page and "Design 3368F" on the next (2026-09-23), and the
+ * two would be taken for different plans. Only "Design" in front of a
+ * numbered code goes — "Plan 2016" may be what a builder and the site
+ * both call a plan, and "The Design House" is a name.
+ * Exported for tests.
+ */
+export function planName(name: string): string {
+  return name.trim().replace(/^design\s+(?=\d{3,5}[a-z]{0,2}\b)/i, "");
 }
 
 /**
@@ -783,23 +797,32 @@ async function extractPages(
   const listed: NormalizedPlan[] = [];
   const refused: string[] = [];
   const readPages: string[] = [];
-  for (const pageUrl of planPages) {
+  // The list pages at once, not one after another: Perry's Star Farms is
+  // four rendered pages, each a long answer, and read in turn they took
+  // most of a run before a single plan page was opened (2026-09-23). The
+  // plans are still taken in the pages' order, so keys come out the same.
+  const lists = await mapLimit(planPages, 4, async (pageUrl) => {
     try {
-      const page = await listPage(pageUrl, { hint: params.hint, read });
-      listPages.add(page.url);
-      readPages.push(page.url || pageUrl);
-      for (const plan of page.plans) {
-        const planKey = distinctKey(plan, taken);
-        taken.add(planKey);
-        listed.push({ ...plan, planKey });
-      }
+      return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read }) };
     } catch (error) {
+      return { pageUrl, error: error instanceof Error ? error.message : String(error) };
+    }
+  });
+  for (const { pageUrl, page, error } of lists) {
+    if (!page) {
       // One page of four going down should cost the run that page, not the
       // other three — but a run that read nothing at all has failed, and
       // says which page said what.
-      const why = error instanceof Error ? error.message : String(error);
-      logger.warn("Plan list page could not be read", { url: pageUrl, error: why });
-      refused.push(`${pageUrl}: ${why}`);
+      logger.warn("Plan list page could not be read", { url: pageUrl, error });
+      refused.push(`${pageUrl}: ${error}`);
+      continue;
+    }
+    listPages.add(page.url);
+    readPages.push(page.url || pageUrl);
+    for (const plan of page.plans) {
+      const planKey = distinctKey(plan, taken);
+      taken.add(planKey);
+      listed.push({ ...plan, planKey });
     }
   }
   if (refused.length === planPages.length) throw new Error(refused.join("; "));
