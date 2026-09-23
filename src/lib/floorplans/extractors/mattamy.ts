@@ -147,6 +147,8 @@ interface LayoutMedia {
   src?: string;
   alt?: string;
   title?: string;
+  /** The room Mattamy files the picture under: "Exterior", "Kitchen". */
+  description?: string;
 }
 
 /** Every component of a layout, however deep its placeholders nest them. */
@@ -192,8 +194,13 @@ export function readPlanLayout(data: unknown): {
         if (!drawings.includes(m.src)) drawings.push(m.src);
       } else if (m.type === "image") {
         const caption = (m.alt || m.title || "").trim() || null;
-        // The room Mattamy names; a caption that names none leaves the file name to be read.
-        items.push({ src: m.src, caption, room: (caption && classifyRoom(caption)) || undefined });
+        // The room Mattamy files the picture under ("Exterior", "Kitchen"),
+        // then its prose; one that names none leaves the file name to be
+        // read. Isle Royal's alt reads "Model photos Lakeside in Sunstone
+        // Isle Royal" on eighteen pictures of eighteen rooms (2026-09-23).
+        const filed = (m.description ?? "").trim();
+        const room = (filed && classifyRoom(filed)) || (caption && classifyRoom(caption)) || undefined;
+        items.push({ src: m.src, caption: caption ?? (filed || null), room });
       }
     }
     const styles = c.fields?.styles?.value;

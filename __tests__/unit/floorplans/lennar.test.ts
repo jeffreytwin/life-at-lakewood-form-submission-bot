@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, planDrawings, planGallery, plansFromPage, seriesLinks } from "@/lib/floorplans/extractors/lennar";
+import { communityHomeType, planDrawings, planGallery, plansFromPage, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
+import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
 // caches a plan's first elevation under `elevationImages({"first":1})`; a
@@ -107,5 +108,35 @@ describe("seriesLinks", () => {
 
   it("does not take a neighbouring community whose name begins the same", () => {
     expect(seriesLinks(`"${aurora}-west/townhomes"`, aurora)).toEqual([]);
+  });
+});
+
+describe("withPlanPictures", () => {
+  const base = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "x", name: "x", price: null, priceDisplay: null, beds: "", baths: "", sqft: null, garages: null,
+    homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  // 6028 Mound Key Run, whose page shows its own front and then The Princeton's twelve.
+  const princeton = base({
+    planKey: "the princeton", name: "The Princeton", raw: { planId: "PlanType:p_71321" },
+    galleryImages: ["princeton-f.jpg", "kitchen.jpg"],
+    galleryMeta: { "princeton-f.jpg": { kind: "primary", room: "primary" }, "kitchen.jpg": { room: "kitchen", caption: "Kitchen" } },
+    blueprintImages: ["fp.svg"], virtualTourUrl: "https://my.matterport.com/show/?m=x", description: "Single-story.",
+  });
+  const home = base({ planKey: "6028 mound key run", name: "6028 Mound Key Run", quickMoveIn: true, galleryImages: ["lot-front.jpg"], raw: { planId: "PlanType:p_71321" } });
+
+  it("gives a home its plan's gallery, drawings and tour after its own front", () => {
+    const [, got] = withPlanPictures([princeton, home]);
+    expect(got.galleryImages).toEqual(["lot-front.jpg", "princeton-f.jpg", "kitchen.jpg"]);
+    expect(got.galleryMeta?.["lot-front.jpg"]?.kind).toBe("primary");
+    expect(got.galleryMeta?.["princeton-f.jpg"]?.kind).toBe("exterior");
+    expect(got.blueprintImages).toEqual(["fp.svg"]);
+    expect(got.virtualTourUrl).toBe("https://my.matterport.com/show/?m=x");
+    expect(got.description).toBe("Single-story.");
+  });
+
+  it("leaves a home whose plan did not come back as it was", () => {
+    const [got] = withPlanPictures([{ ...home, raw: { planId: "PlanType:elsewhere" } }]);
+    expect(got.galleryImages).toEqual(["lot-front.jpg"]);
   });
 });

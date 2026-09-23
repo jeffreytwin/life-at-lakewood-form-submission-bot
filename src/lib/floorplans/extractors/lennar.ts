@@ -139,7 +139,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       galleryImages: gallery.urls,
       galleryMeta: gallery.meta,
       blueprintImages: planDrawings(e),
-      raw: { lennarId: e.id },
+      raw: { lennarId: e.id, planId: key },
     });
   }
 
@@ -168,7 +168,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       sourceUrl: e.url ? `https://www.lennar.com${e.url}` : null,
       galleryImages: photo ? [photo] : [],
       blueprintImages: [],
-      raw: { lennarId: e.id, relatedPlan: planName },
+      raw: { lennarId: e.id, relatedPlan: planName, planId: planRef },
     });
   }
   return out;
@@ -296,5 +296,41 @@ export async function extractLennar(params: {
       }
     }
   }
-  return mapLimit([...byKey.values()], 6, withPlanPage);
+  return withPlanPictures(await mapLimit([...byKey.values()], 6, withPlanPage));
+}
+
+/**
+ * Each home with its plan's pictures after its own. A homesite's page shows
+ * the home's elevation and then its plan's whole gallery ("+13 photos" on
+ * 6028 Mound Key Run, whose plan, The Princeton, has twelve), and carries
+ * nothing else; the plan's page has already been read, so the home is
+ * given what it shows without reading its page (Calusa Country Club,
+ * 2026-09-23). The plan's drawings and tour are the home's too. Exported
+ * for tests.
+ */
+export function withPlanPictures(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const byId = new Map(plans.filter((p) => !p.quickMoveIn && p.raw?.planId).map((p) => [String(p.raw!.planId), p]));
+  return plans.map((home) => {
+    if (!home.quickMoveIn) return home;
+    const plan = home.raw?.planId ? byId.get(String(home.raw.planId)) : undefined;
+    if (!plan?.galleryImages.length) return home;
+    const own = home.galleryImages[0];
+    const galleryImages = [...new Set([...(own ? [own] : []), ...plan.galleryImages])];
+    const galleryMeta: NonNullable<NormalizedPlan["galleryMeta"]> = {};
+    for (const src of galleryImages) {
+      const meta = plan.galleryMeta?.[src];
+      // The home's own front leads; the plan's front is one of its elevations here.
+      if (src === own) galleryMeta[src] = { caption: null, room: "primary", kind: "primary" };
+      else if (meta?.kind === "primary") galleryMeta[src] = { ...meta, room: "exterior", kind: "exterior" };
+      else if (meta) galleryMeta[src] = meta;
+    }
+    return {
+      ...home,
+      galleryImages,
+      galleryMeta,
+      blueprintImages: home.blueprintImages.length ? home.blueprintImages : plan.blueprintImages,
+      virtualTourUrl: home.virtualTourUrl ?? plan.virtualTourUrl ?? null,
+      description: home.description ?? plan.description ?? null,
+    };
+  });
 }

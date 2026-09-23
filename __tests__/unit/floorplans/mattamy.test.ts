@@ -134,6 +134,34 @@ describe("readPlanLayout (Mattamy plan pages, Anclote at Sunstone, 2026-09-23)",
     expect(readPlanLayout(layout).homeType).not.toBeNull();
   });
 
+  it("files a picture under the room Mattamy names in its description before its prose", () => {
+    // Isle Royal (2026-09-23): eighteen alts saying only where the model is.
+    const isleRoyal = {
+      sitecore: {
+        route: {
+          placeholders: {
+            main: [
+              {
+                componentName: "ExtendedGallery",
+                fields: {
+                  media: {
+                    value: [
+                      { type: "image", src: "https://cdn.mattamy.com/ir-1", alt: "Model photos Lakeside in Sunstone Isle Royal", description: "Kitchen" },
+                      { type: "image", src: "https://cdn.mattamy.com/ir-2", alt: "Model photos Lakeside in Sunstone Isle Royal", description: "" },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    };
+    const page = readPlanLayout(isleRoyal);
+    expect(page.meta["https://cdn.mattamy.com/ir-1"]).toMatchObject({ room: "kitchen", caption: "Model photos Lakeside in Sunstone Isle Royal" });
+    expect(page.meta["https://cdn.mattamy.com/ir-2"].room ?? null).toBeNull();
+  });
+
   it("gives nothing for a layout it cannot read", () => {
     expect(readPlanLayout(null)).toMatchObject({ photos: [], drawings: [], homeType: null });
   });

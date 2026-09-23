@@ -29,7 +29,16 @@
   ],
   "concurrency": 3,
   "detailPlans": 2,
-  "checks": [],
+  "checks": [
+    {
+      "builder": "Lennar",
+      "community": "Calusa Country Club"
+    },
+    {
+      "builder": "Mattamy Homes",
+      "community": "Sunstone Lakeside"
+    }
+  ],
   "probe": [
     "https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13",
     "https://pultegroup.cdn.picturepark.com/v/j5OTPxJ5/",
