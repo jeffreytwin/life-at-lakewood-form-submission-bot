@@ -1139,7 +1139,12 @@ async function extractPages(
     const outside = Object.fromEntries(views.map((u) => [u, OUTSIDE_META]));
     const photos = [...plan.galleryImages, ...views.filter((u) => !plan.galleryImages.includes(u))];
     const ordered = orderPhotos(photos, { ...outside, ...plan.galleryMeta });
-    return { ...plan, blueprintImages: drawings, galleryImages: ordered.urls, galleryMeta: ordered.meta };
+    // A "drawing" that is one of the plan's photographs in another format
+    // is that photograph: Richmond's Palm came back with its own main
+    // picture, as .webp, for a floor plan (2026-09-23).
+    const photoKeys = new Set(ordered.urls.map(pictureKey));
+    const ownDrawings = drawings.filter((u) => !photoKeys.has(pictureKey(u)));
+    return { ...plan, blueprintImages: ownDrawings, galleryImages: ordered.urls, galleryMeta: ordered.meta };
   });
 }
 
