@@ -58,22 +58,6 @@ function getClient(): Anthropic {
   return client;
 }
 
-/**
- * Both tools are strict: the answer is held to the schema as it is written,
- * so a list comes back as a list. Without it, Perry's and KB's list pages
- * came back with the whole list written out as one string of text that
- * would not parse (2026-09-23). A strict schema with a dozen optional
- * fields is refused as "too complex", so every field is required and a
- * blank — "" or 0 — is how the page says nothing (withoutBlanks).
- */
-const PLAN_FIELDS = [
-  "name", "price", "beds", "baths", "sqft", "garages", "homeType", "quickMoveIn", "relatedPlanName",
-  "sourceUrl", "description", "virtualTourUrl", "photoImages", "blueprintImages",
-];
-const PLAN_PAGE_FIELDS = [
-  "price", "garages", "beds", "baths", "sqft", "description", "virtualTourUrl", "photoImages", "blueprintImages",
-];
-
 /** A tool answer with its blanks taken out, so "" and 0 read as the page saying nothing. Exported for tests. */
 export function withoutBlanks<T extends object>(value: T): T {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
@@ -81,10 +65,10 @@ export function withoutBlanks<T extends object>(value: T): T {
     Object.entries(value).filter(([, v]) => v !== 0 && !(typeof v === "string" && !v.trim()))
   ) as T;
 }
-const EXTRACT_TOOL: Anthropic.Tool = {
+
+export const EXTRACT_TOOL: Anthropic.Tool = {
   name: "report_floor_plans",
   description: "Report every floor plan / home model found on the page.",
-  strict: true,
   input_schema: {
     type: "object" as const,
     properties: {
@@ -94,29 +78,63 @@ const EXTRACT_TOOL: Anthropic.Tool = {
           type: "object",
           properties: {
             name: { type: "string", description: "Plan/model name exactly as shown" },
-            price: { type: "number", description: "Base price in dollars; 0 if not shown" },
+            price: { type: "number", description: "Base price in dollars; omit if not shown" },
             beds: { type: "string", description: "Bedrooms, e.g. '3' or '3 - 4'" },
             baths: { type: "string", description: "Bathrooms, e.g. '2' or '2.5 - 3'" },
-            sqft: { type: "number", description: "Square footage; 0 if not shown" },
+            sqft: { type: "number", description: "Square footage" },
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
             relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address" },
             sourceUrl: { type: "string", description: "Absolute URL of the plan's detail page if linked" },
-            description: { type: "string", description: "The builder's own description of the plan, as written; empty if the page gives none" },
-            virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour / 3D walkthrough for this plan; empty if none" },
+            description: { type: "string", description: "The builder's own description of the plan, as written; omit if the page gives none" },
+            virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour / 3D walkthrough for this plan; omit if none" },
             photoImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of photo/rendering images for this plan, in display order" },
             blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of floor plan DRAWINGS/blueprints for this plan (not photos)" },
           },
-          required: PLAN_FIELDS,
-          additionalProperties: false,
+          required: ["name"],
         },
       },
     },
     required: ["plans"],
-    additionalProperties: false,
   },
 };
+
+/**
+ * The same tool held to its schema, for the page whose list came back as
+ * one string of text that would not parse — Perry's and KB's did, at
+ * both ceilings (2026-09-23). Strict is the second ask, not the first: a
+ * strict schema with a dozen optional fields is refused as "too complex",
+ * so every field is required and a blank ("" or 0) says the page gave
+ * none (withoutBlanks) — and asked that way, Claude left out the plans'
+ * own page links that the loose ask gives (Homes by Towne), which is what
+ * the rest of the run reads each plan's pictures and facts from.
+ */
+export const EXTRACT_TOOL_STRICT: Anthropic.Tool = (() => {
+  const loose = EXTRACT_TOOL.input_schema as { properties: { plans: { items: { properties: Record<string, { description?: string }> } } } };
+  const fields = loose.properties.plans.items.properties;
+  const properties = Object.fromEntries(
+    Object.entries(fields).map(([key, field]) => [
+      key,
+      { ...field, description: (field.description ?? "").replace(/;?\s*omit if (?:not shown|none|the page gives none)/i, "; 0 or empty if the page gives none") },
+    ])
+  );
+  return {
+    ...EXTRACT_TOOL,
+    strict: true,
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        plans: {
+          type: "array",
+          items: { type: "object", properties, required: Object.keys(properties), additionalProperties: false },
+        },
+      },
+      required: ["plans"],
+      additionalProperties: false,
+    },
+  };
+})();
 
 interface ExtractedPlan {
   name: string;
@@ -198,7 +216,8 @@ const fetchPage: PageReader = async (url) => {
   return { url: res.url || url, html: await res.text() };
 };
 
-function distill(html: string, baseUrl: string): string {
+/** A page as Claude is given it: its text, with its pictures and links as markers. Exported for the connection check. */
+export function distill(html: string, baseUrl: string): string {
   const abs = (u: string) => {
     try {
       return new URL(u, baseUrl).href;
@@ -320,16 +339,15 @@ function decodeEntities(text: string): string {
 const PLAN_PAGE_TOOL: Anthropic.Tool = {
   name: "report_plan_page",
   description: "Report what this one floor plan's own page says about it.",
-  strict: true,
   input_schema: {
     type: "object" as const,
     properties: {
-      price: { type: "number", description: "The plan's price in dollars as the page shows it, e.g. 'Priced $353,999' or 'From $410,900'; 0 if the page shows none" },
+      price: { type: "number", description: "The plan's price in dollars as the page shows it, e.g. 'Priced $353,999' or 'From $410,900'; omit if the page shows none" },
       garages: { type: "string", description: "Garage count as the page gives it, e.g. '3 car' or 'Two 2-Car Garage'" },
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
       sqft: { type: "number", description: "Living square footage, if the page gives it" },
-      description: { type: "string", description: "The builder's own prose about the plan — sentences. Empty if the page only prints a spec line of rooms and counts" },
+      description: { type: "string", description: "The builder's own prose about the plan — sentences. Omit it if the page only prints a spec line of rooms and counts" },
       virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour, if one is linked" },
       photoImages: {
         type: "array",
@@ -338,8 +356,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       },
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
     },
-    required: PLAN_PAGE_FIELDS,
-    additionalProperties: false,
+    required: [],
   },
 };
 
@@ -556,13 +573,13 @@ async function listPage(
   // refuses a plain request whose ceiling could take it past ten minutes —
   // which is what the room this read needs amounts to (Jeff, 2026-09-22:
   // Ryan and Pulte both came back "Streaming is required").
-  const readList = async (maxTokens: number) => {
+  const readList = async (maxTokens: number, tool: Anthropic.Tool = EXTRACT_TOOL) => {
     const response = await getClient().messages
       .stream({
         model: MODEL,
         max_tokens: maxTokens,
-        tools: [EXTRACT_TOOL],
-        tool_choice: { type: "tool", name: "report_floor_plans" },
+        tools: [tool],
+        tool_choice: { type: "tool", name: tool.name },
         messages: [{ role: "user", content: ask }],
       })
       .finalMessage();
@@ -576,16 +593,18 @@ async function listPage(
 
   // An answer that runs out of room comes back half-written, and a
   // half-written list is not a list — which is how Ryan Homes and Pulte
-  // both failed (Jeff, 2026-09-22). One more go with room to spare fixes
-  // it; a page too big even for that says so rather than crashing.
+  // both failed (Jeff, 2026-09-22): one more go with room to spare. An
+  // answer that finished but wrote its list as text is asked again held
+  // to the schema (EXTRACT_TOOL_STRICT).
   let answer = await readList(LIST_TOKENS);
   if (answer.reported !== undefined && !asList(answer.reported)) {
-    logger.warn("Plan list came back half-written; asking again with more room", {
+    const cutShort = answer.stop === "max_tokens";
+    logger.warn(cutShort ? "Plan list came back half-written; asking again with more room" : "Plan list came back as text; asking again held to the schema", {
       url,
       stop: answer.stop,
       got: typeof answer.reported,
     });
-    answer = await readList(LIST_TOKENS_AGAIN);
+    answer = await readList(LIST_TOKENS_AGAIN, cutShort ? EXTRACT_TOOL : EXTRACT_TOOL_STRICT);
   }
   if (!answer.answered) throw new Error("Claude returned no extraction tool call");
   const reported = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);

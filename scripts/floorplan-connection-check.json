@@ -1,10 +1,8 @@
 {
   "anatomy": [
-    "https://wellenpark.com/home/3911998/detail/",
-    "https://www.lennar.com/new-homes/florida/tampa-manatee/parrish/prosperity-lakes",
-    "https://www.drhorton.com/florida/manatee-sarasota",
-    "https://lwhomes.com/listings/",
-    "https://nealcommunities.com/communities/palm-grove/"
+    "https://www.lennar.com/new-homes/florida/tampa-manatee/parrish/prosperity-lakes/the-estates/dover",
+    "https://www.lennar.com/new-homes/florida/tampa-manatee/parrish/prosperity-lakes/the-estates/dover/15198575097",
+    "https://homesbytowne.com/florida/shellstone-at-waterside"
   ],
   "concurrency": 4,
   "detailPlans": 99,
@@ -56,7 +54,8 @@
       "builder": "ICI Homes"
     },
     {
-      "builder": "KB Home"
+      "builder": "KB Home",
+      "method": "render_claude"
     },
     {
       "builder": "Kolter Homes"

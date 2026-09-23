@@ -7,6 +7,8 @@ import {
   tourLinkIn,
   tourUrlIn,
   withoutBlanks,
+  EXTRACT_TOOL,
+  EXTRACT_TOOL_STRICT,
 } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -363,5 +365,19 @@ describe("withoutBlanks: a strict tool answers every field, and a blank means th
     expect(
       withoutBlanks({ name: "Aspen", price: 0, sqft: 1850, garages: "", homeType: "  ", quickMoveIn: false, photoImages: [] })
     ).toEqual({ name: "Aspen", sqft: 1850, quickMoveIn: false, photoImages: [] });
+  });
+});
+
+describe("the strict second ask", () => {
+  it("requires every field the loose one offers, allows no others, and never says omit", () => {
+    const itemsOf = (tool: typeof EXTRACT_TOOL) =>
+      (tool.input_schema as unknown as { properties: { plans: { items: { properties: Record<string, { description?: string }>; required: string[]; additionalProperties?: boolean } } } }).properties.plans.items;
+    const loose = itemsOf(EXTRACT_TOOL);
+    const strict = itemsOf(EXTRACT_TOOL_STRICT);
+    expect(EXTRACT_TOOL.strict).toBeUndefined();
+    expect(EXTRACT_TOOL_STRICT.strict).toBe(true);
+    expect(strict.required.sort()).toEqual(Object.keys(loose.properties).sort());
+    expect(strict.additionalProperties).toBe(false);
+    for (const field of Object.values(strict.properties)) expect(field.description ?? "").not.toMatch(/omit/i);
   });
 });

@@ -27,6 +27,7 @@ import type { Browser, Page } from "puppeteer-core";
 import { supabase } from "@/lib/supabase/client";
 import { preparePlans, readsThroughBrowser, resolveExtractor, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
+import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
 interface Target {
@@ -347,6 +348,25 @@ const ANATOMY_SCRIPT = `(() => {
     re.lastIndex = m.index + 400;
   }
   out.push("");
+  const nd = document.getElementById("__NEXT_DATA__");
+  if (nd) {
+    out.push("== NEXT DATA ==");
+    try {
+      const j = JSON.parse(nd.textContent || "{}");
+      const props = (j.props && j.props.pageProps) || {};
+      out.push("pageProps keys: " + Object.keys(props).join(", "));
+      const apollo = props.initialApolloState;
+      if (apollo) {
+        const types = {};
+        for (const k of Object.keys(apollo)) { const t = k.split(":")[0]; (types[t] = types[t] || []).push(k); }
+        for (const t of Object.keys(types)) out.push(t + " x" + types[t].length + " " + types[t][0] + ": " + JSON.stringify(apollo[types[t][0]]).slice(0, 2500));
+      }
+    } catch (e) { out.push("unreadable: " + e); }
+    out.push("");
+  }
+  out.push("== TEXT ==");
+  out.push(clean(document.body ? document.body.innerText : "").slice(0, 6000));
+  out.push("");
   out.push("html " + html.length + " chars; scripts " + scripts.length + " chars; json-ld " + document.querySelectorAll("script[type='application/ld+json']").length);
   return out.join("\\n");
 })()`;
@@ -442,6 +462,26 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
   out(`  page (${how}): ${params.url ?? "(none — engine works without one)"}`);
   if (Array.isArray(params.listUrls)) out(`  list pages: ${(params.listUrls as string[]).join(" , ")}`);
   if (params.quickMoveInUrl) out(`  homes page: ${params.quickMoveInUrl}`);
+
+  // What Claude is handed for each list page, when the engine fetches it:
+  // a page that fetches differently from how it looks is the usual reason
+  // a run finds nothing.
+  if (conn.builder.extraction_method === "fetch_claude" && !target.surveyOnly) {
+    const pages = [...((params.listUrls as string[] | undefined) ?? (params.url ? [String(params.url)] : [])), ...(params.quickMoveInUrl ? [String(params.quickMoveInUrl)] : [])];
+    for (const page of pages.slice(0, 3)) {
+      try {
+        const res = await fetch(page, { headers: { "user-agent": UA, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(30_000) });
+        const html = await res.text();
+        const text = distill(html, res.url || page);
+        out(`  Claude is handed ${page}: ${res.status}, ${html.length} chars of HTML → ${text.length} chars of text, ${(text.match(/\[IMG /g) ?? []).length} pictures, ${(text.match(/\[LINK /g) ?? []).length} links, ${(text.match(/\$\s?\d{3},\d{3}/g) ?? []).length} prices`);
+        out(`    begins: ${text.slice(0, 700)}`);
+        const at = text.search(/floor ?plans?|quick move|move-in/i);
+        if (at > 700) out(`    around the plans: ${text.slice(Math.max(0, at - 100), at + 900)}`);
+      } catch (error) {
+        out(`  Claude is handed ${page}: fetch failed (${error instanceof Error ? error.message : String(error)})`);
+      }
+    }
+  }
 
   const site = await sitePlans(conn).catch(() => []);
   const siteBase = site.filter((p) => !p.qmi);
