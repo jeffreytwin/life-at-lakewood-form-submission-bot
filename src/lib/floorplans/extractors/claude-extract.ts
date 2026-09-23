@@ -893,7 +893,10 @@ async function extractPages(
 
 /** Builders whose pages carry their plans in the HTML: a plain fetch. */
 export async function extractWithClaude(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
-  return extractPages(params, fetchPage, 4);
+  // Six at a time: a community of two dozen plans, each page a read and a
+  // question, took 267 of its 300 seconds four at a time (Neal's Palm Grove,
+  // 2026-09-23).
+  return extractPages(params, fetchPage, 6);
 }
 
 /**
