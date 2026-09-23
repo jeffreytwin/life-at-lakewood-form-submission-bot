@@ -1170,8 +1170,8 @@ export async function extractWithClaude(params: ClaudeExtractParams): Promise<No
  */
 export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
   const { withRenderer } = await import("@/lib/floorplans/extractors/render");
-  // The browser's budget ends with the run's reading time, whichever comes first.
-  const budget = Math.max(0, Math.min(RENDER_RUN_MS, (params.runDeadline ?? Infinity) - Date.now()));
+  // The browser's budget is the run's reading time, where the run has one.
+  const budget = Math.max(0, params.runDeadline ? params.runDeadline - Date.now() : RENDER_RUN_MS);
   return withRenderer(budget, (renderPage) => {
     // A plan's own page is fetched first and rendered only if the fetch
     // shows no facts: Perry's community has thirty-nine plans and twenty

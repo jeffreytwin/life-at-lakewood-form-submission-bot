@@ -27,6 +27,8 @@ const SETTLE_MS = 20_000;
 const POLL_MS = 500;
 /** A page that will not even load in this long is not going to. */
 const NAVIGATE_MS = 45_000;
+/** The longest a page is given to stop fetching once it has loaded. */
+const QUIET_MS = 15_000;
 
 let browser: Browser | null = null;
 let starting: Promise<Browser> | null = null;
@@ -357,13 +359,18 @@ export async function renderPage(
     // shown one fact may still be loading the ones that matter (Jeff,
     // 2026-09-22). A page that never goes quiet — a chat widget, a poll —
     // is taken as it stands rather than failing.
-    let quiet = true;
-    try {
-      await page.goto(url, { waitUntil: "networkidle2", timeout: NAVIGATE_MS });
-    } catch {
-      quiet = false;
+    //
+    // Quiet within QUIET_MS, though: a page with a chat widget or a poll
+    // never goes quiet, and waiting out the whole navigation for each of
+    // Richmond's plan pages cost half a minute a page (2026-09-23). The
+    // facts check below is what says the page has drawn.
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAVIGATE_MS }).catch(async () => {
       await page.waitForSelector("body", { timeout: 5_000 }).catch(() => {});
-    }
+    });
+    const quiet = await page
+      .waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: QUIET_MS })
+      .then(() => true)
+      .catch(() => false);
 
     // And then the backstop, for a page still filling in after it went
     // quiet: wait until it shows a price, a size or a bed count.
