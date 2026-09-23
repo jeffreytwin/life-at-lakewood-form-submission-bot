@@ -516,6 +516,22 @@ export function orderPhotos(srcs: string[], said: Record<string, GalleryMeta> = 
   );
 }
 
+/** A file name that says it is a drawing: "Pearl-FP.jpg", "Haven_Floorplan.png". */
+const PLAN_WORDS = /\b(fp|floor ?plans?|floorplans?|plan|plans|layout|blueprint)\b/;
+
+/**
+ * The drawings Claude reported, less the pictures the page's own markup
+ * shows among its photos, unless a picture's name says it is a plan.
+ * Claude took one of the elevations in Dream Finders' Pearl gallery
+ * ("Bunaglow_Walk-Pearl-B-Gen3.jpg") for its floor plan on one run and
+ * not on the next (2026-09-23), and a picture in the gallery is a photo
+ * on the page's word. Pure; exported for tests.
+ */
+export function drawingsNotShownAsPhotos(said: string[], shown: string[]): string[] {
+  const photos = new Set(shown.map(pictureKey));
+  return said.filter((src) => !photos.has(pictureKey(src)) || PLAN_WORDS.test(fileNameWords(src).toLowerCase()));
+}
+
 /**
  * The floor plan drawings Claude gave, with the pictures of the outside of
  * the house taken back out: asked for a plan's drawings, it has handed
@@ -530,7 +546,7 @@ export function sortDrawings(urls: string[]): { drawings: string[]; views: strin
   const views: string[] = [];
   for (const url of urls) {
     const name = fileNameWords(url).toLowerCase();
-    const namesPlan = /\b(fp|floor ?plans?|floorplans?|plan|plans|layout|blueprint)\b/.test(name);
+    const namesPlan = PLAN_WORDS.test(name);
     // A view names itself, its architectural style (Dream Finders'
     // "Arlington-Traditional-With-Bonus", 2026-09-23) or its colour scheme
     // (Ashton Woods' "Griffin-U-Scheme"), or sits in a folder of them
@@ -708,10 +724,13 @@ export async function readPlanPageWithClaude(
   // Where the page marks its drawings in its markup, those are its drawings
   // and Claude's reading is not asked for them: Stock's came and went from
   // night to night as Claude did or did not report them (2026-09-23).
+  // Nor is a picture the markup puts in the page's photo gallery a drawing
+  // on Claude's word alone (drawingsNotShownAsPhotos).
   const markedDrawings = drawingsMarked(html, page_.url);
+  const shownAsPhotos = [...outsides, ...gallery.first, ...carried].map((i) => fullSize(i.src, html));
   const blueprints = [
     ...plan.blueprintImages,
-    ...(markedDrawings.length ? markedDrawings : pictureAddresses(page.blueprintImages)),
+    ...(markedDrawings.length ? markedDrawings : drawingsNotShownAsPhotos(pictureAddresses(page.blueprintImages), shownAsPhotos)),
     ...drawingsNamed(html, page_.url, [plan.name, plan.relatedPlanName, typeof plan.raw?.relatedPlan === "string" ? plan.raw.relatedPlan : null]),
     ...(lightbox?.drawings ?? []),
   ].filter((src, i, all) => src && all.indexOf(src) === i);

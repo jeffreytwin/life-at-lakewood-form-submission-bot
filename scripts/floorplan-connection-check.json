@@ -2,15 +2,33 @@
   "anatomy": [],
   "raw": [],
   "concurrency": 2,
-  "detailPlans": 8,
+  "detailPlans": 4,
   "checks": [
-    {
-      "builder": "Kolter Homes",
-      "community": "Woodland Preserve"
-    },
     {
       "builder": "Dream Finders Homes",
       "community": "Waterside - Bungalow Walk"
+    },
+    {
+      "builder": "Perry Homes"
+    },
+    {
+      "builder": "Medallion Home"
+    },
+    {
+      "builder": "Homes by Towne"
+    },
+    {
+      "builder": "Inland Homes"
+    },
+    {
+      "builder": "Adams Homes"
+    },
+    {
+      "builder": "Highland Homes"
+    },
+    {
+      "builder": "Cardel Homes",
+      "community": "North River Ranch"
     }
   ]
 }
