@@ -85,6 +85,12 @@ const METHOD_EXTRACTORS: Record<string, Extractor> = {
   // Builders whose pages carry nothing without their scripts (Richmond
   // American's Blazor site): the same engine, read through a browser.
   render_claude: extractWithRender,
+  // A master-planned community's own listings (mpc-aggregator.ts), for a
+  // connection whose builder's site will not be read: Neal Signature's
+  // Everly is behind a bot challenge, and Wellen Park lists its homes
+  // (2026-09-23). extractor_params.url is then the listing page, and
+  // builderSlug the builder as the listing names it.
+  mpc_aggregator: extractMpcAggregator,
 };
 
 // Builders whose extractor works from API ids rather than a page URL —

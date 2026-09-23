@@ -1,40 +1,6 @@
 {
-  "anatomy": [
-    "https://www.pulte.com/api/plan/homeplans?communityId=211407",
-    "https://www.pulte.com/api/plan/qmiplans?communityId=211407",
-    "https://www.delwebb.com/api/plan/homeplans?communityId=211202",
-    "https://www.centex.com/api/plan/qmiplans?communityId=211245"
-  ],
+  "anatomy": [],
   "raw": [
-    {
-      "url": "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
-      "around": [
-        "Floor Plan",
-        "floorplan",
-        "FloorPlan",
-        "Floorplan"
-      ],
-      "chars": 1500,
-      "count": 3
-    },
-    {
-      "url": "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407",
-      "around": [
-        "16817 Harmony",
-        "1154558"
-      ],
-      "chars": 1200,
-      "count": 2
-    },
-    {
-      "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch",
-      "around": [
-        "aurora-at-lakewood-ranch",
-        "lorraine-lakes"
-      ],
-      "chars": 300,
-      "count": 4
-    },
     {
       "url": "https://www.ashtonwoods.com/tampa/oakfield-trails-signature/signature-plant",
       "around": [
@@ -70,59 +36,6 @@
   "detailPlans": 2,
   "checks": [
     {
-      "builder": "Lennar",
-      "community": "Calusa Country Club"
-    },
-    {
-      "builder": "Mattamy Homes",
-      "community": "Sunstone Lakeside"
-    },
-    {
-      "builder": "Lennar",
-      "community": "Aurora",
-      "params": {
-        "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch",
-        "urls": [
-          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch/townhomes",
-          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/aurora-at-lakewood-ranch/patio-homes"
-        ]
-      }
-    },
-    {
-      "builder": "Lennar",
-      "community": "Lorraine Lakes",
-      "params": {
-        "url": "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch",
-        "urls": [
-          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/executive-homes",
-          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/estate-homes",
-          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/manor-homes",
-          "https://www.lennar.com/new-homes/florida/sarasota-manatee/lakewood-ranch/lorraine-lakes-at-lakewood-ranch/townhomes"
-        ]
-      }
-    },
-    {
-      "builder": "Neal Communities",
-      "community": "Boca Royale",
-      "preferCandidate": true
-    },
-    {
-      "builder": "Neal Communities",
-      "community": "Everly",
-      "params": {
-        "url": "https://nealsignaturehomes.com/everly/",
-        "engine": "render_claude"
-      }
-    },
-    {
-      "builder": "Neal Signature Homes",
-      "community": "Waterbury Park",
-      "params": {
-        "url": "https://nealsignaturehomes.com/waterbury-park/",
-        "engine": "render_claude"
-      }
-    },
-    {
       "builder": "Pulte Homes",
       "all": true
     },
@@ -133,13 +46,21 @@
     {
       "builder": "Ryan Homes",
       "all": true
+    },
+    {
+      "builder": "Neal Communities",
+      "community": "Everly",
+      "params": {
+        "url": "https://www.wellenpark.com/available-homes/",
+        "engine": "mpc_aggregator",
+        "builderSlug": "neal-signature-homes"
+      }
+    },
+    {
+      "builder": "Neal Communities",
+      "community": "Boca Royale",
+      "preferCandidate": true
     }
   ],
-  "probe": [
-    "https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13",
-    "https://pultegroup.cdn.picturepark.com/v/j5OTPxJ5/",
-    "https://res.cloudinary.com/dv0jqjrc3/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_1920/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13",
-    "https://res.cloudinary.com/dv0jqjrc3/image/fetch/f_auto,q_auto,w_1920,c_limit/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13",
-    "https://res.cloudinary.com/dv0jqjrc3/image/fetch/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13"
-  ]
+  "probe": []
 }
