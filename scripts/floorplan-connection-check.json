@@ -1,75 +1,24 @@
 {
-  "anatomy": [
-    "json https://www.homesbywestbay.com/api/plans?community=24&page=1",
-    "json https://www.homesbywestbay.com/api/homes?community=24&page=1",
-    "json https://www.homesbywestbay.com/api/communities/options?ids=24",
-    "POST https://www.highlandhomes.org/components/CommunityDetailSearch.cfc?method=getCommunity&returnFormat=json&s=1&metroarea=0&lowPrice=0&highprice=0&bed=0&bath=0&lowSqft=0&highsqft=0&amenities=&garage=0&additionalrooms=&hometype=&cityid=0&communityid=2",
-    "json https://argo.ml3ds-cloud.com/floorplansnorules/161487",
-    "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1541"
-  ],
-  "raw": [
-    {
-      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch",
-      "around": [
-        "\"floorPlanID\"",
-        "\"homesite",
-        "\"address"
-      ],
-      "chars": 3500,
-      "count": 1
-    },
-    {
-      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/sawgrass-lakes-i",
-      "around": [
-        "\"address",
-        "\"homesite",
-        "moveIn"
-      ],
-      "chars": 2500,
-      "count": 1
-    },
-    {
-      "url": "https://www.pulte.com/homes/florida/sarasota/venice/lakespur-wellen-park-211168/mystique-696223",
-      "around": [
-        "floor-container",
-        "data-ifp-id",
-        "PlanInteractiveTool"
-      ],
-      "chars": 800,
-      "count": 1
-    },
-    {
-      "url": "https://www.homesbywestbay.com/new-homes-sarasota-manatee-area/star-farms-at-lakewood-ranch-community",
-      "around": [
-        "community=",
-        "community-id",
-        "communityId",
-        ":community"
-      ],
-      "chars": 500,
-      "count": 2
-    },
-    {
-      "url": "https://www.highlandhomes.org/new-homes/florida/bradenton-sarasota/parrish/aviary-at-rutland-ranch",
-      "around": [
-        "communityid",
-        "communityId",
-        "CommunityDetailSearch"
-      ],
-      "chars": 600,
-      "count": 2
-    },
-    {
-      "url": "https://www.wellenpark.com/available-homes/",
-      "around": [
-        "data-neighborhood=\"oakbend\"",
-        "data-builder-name=\"ici-homes\""
-      ],
-      "chars": 700,
-      "count": 2
-    }
-  ],
+  "anatomy": [],
+  "raw": [],
   "concurrency": 3,
   "detailPlans": 2,
-  "checks": []
+  "checks": [
+    {
+      "builder": "Homes by WestBay",
+      "all": true
+    },
+    {
+      "builder": "KB Home",
+      "all": true
+    },
+    {
+      "builder": "Highland Homes",
+      "all": true
+    },
+    {
+      "builder": "Lee Wetherington",
+      "all": true
+    }
+  ]
 }

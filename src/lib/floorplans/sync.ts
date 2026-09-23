@@ -26,6 +26,9 @@ import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractDrHorton } from "@/lib/floorplans/extractors/drhorton";
 import { extractPulteGroup } from "@/lib/floorplans/extractors/pulte";
 import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
+import { extractKb } from "@/lib/floorplans/extractors/kb";
+import { extractHighland } from "@/lib/floorplans/extractors/highland";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
@@ -69,6 +72,12 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Pulte Homes": extractPulteGroup,
   "Centex Homes": extractPulteGroup,
   "Lee Wetherington": extractLeeWetherington,
+  // WestBay's pages draw their plans from its own feeds (westbay.ts).
+  "Homes by WestBay": extractWestBay,
+  // KB writes every plan card's record into its page (kb.ts).
+  "KB Home": extractKb,
+  // Highland's pages post to a feed for their plans and homes (highland.ts).
+  "Highland Homes": extractHighland,
   // Builders that block their own sites — sourced from the master-planned-
   // community aggregators instead (a different origin, so the blocks don't
   // apply). Wellen Park (default) is server-rendered and covers ICI (Oakbend

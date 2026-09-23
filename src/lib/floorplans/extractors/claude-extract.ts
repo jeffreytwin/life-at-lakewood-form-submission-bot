@@ -220,7 +220,7 @@ export type PageReader = (
   opts?: ReadOptions
 ) => Promise<{ url: string; html: string; pressed?: string | null }>;
 
-const fetchPage: PageReader = async (url) => {
+export const fetchPage: PageReader = async (url) => {
   const res = await fetch(url, {
     headers: { "user-agent": UA, accept: "text/html" },
     redirect: "follow",
@@ -1128,6 +1128,36 @@ async function extractPages(
     );
   }
 
+  return readPlanPages(listed, {
+    read,
+    atOnce,
+    runDeadline: params.runDeadline,
+    readPlanPage: can.readPlanPage,
+    renderAgain: can.renderAgain,
+    listPages,
+  });
+}
+
+
+/**
+ * Each plan's own page read for what the list left out — its gallery, its
+ * drawings, its tour, its description — then the drawings sorted from the
+ * views and the photos put in the order the site shows rooms in. The
+ * engines here read their lists with Claude; a builder whose list is a
+ * feed (WestBay, KB, Highland) reads its plans' pages the same way.
+ */
+export async function readPlanPages(
+  listed: NormalizedPlan[],
+  opts: {
+    read: PageReader;
+    atOnce: number;
+    runDeadline?: number;
+    readPlanPage?: PageReader;
+    renderAgain?: PageReader;
+    /** The list pages themselves, which are no plan's own page. */
+    listPages?: Set<string>;
+  }
+): Promise<NormalizedPlan[]> {
   // Each plan's own page, where the list linked one of its own. A page
   // that cannot be read costs that plan its extras, never the run.
   // Base plans first: where a community has more pages than a run has
@@ -1142,22 +1172,22 @@ async function extractPages(
     ...homes.slice(turn),
     ...homes.slice(0, turn),
   ];
-  const deadline = params.runDeadline ?? Infinity;
-  const readInOrder = await mapLimit(byPlansFirst, atOnce, async (i) => {
+  const deadline = opts.runDeadline ?? Infinity;
+  const readInOrder = await mapLimit(byPlansFirst, opts.atOnce, async (i) => {
     const plan = listed[i];
-    if (!plan.sourceUrl || listPages.has(plan.sourceUrl)) return plan;
+    if (!plan.sourceUrl || opts.listPages?.has(plan.sourceUrl)) return plan;
     // Out of time: this page is left for the next run, and what an earlier
     // run found on it stays (diff.ts).
     if (Date.now() + PAGE_READ_MS > deadline) return { ...plan, pageUnread: true };
     try {
       // Drawn again only while the run has time for it.
-      const renderAgain = can.renderAgain
-        ? (url: string, opts?: Parameters<PageReader>[1]) => {
+      const renderAgain = opts.renderAgain
+        ? (url: string, readOpts?: Parameters<PageReader>[1]) => {
             if (Date.now() + PAGE_READ_MS > deadline) throw new Error("no time to draw the page again");
-            return can.renderAgain!(url, opts);
+            return opts.renderAgain!(url, readOpts);
           }
         : undefined;
-      return await readPlanPageWithClaude(plan, can.readPlanPage ?? read, renderAgain);
+      return await readPlanPageWithClaude(plan, opts.readPlanPage ?? opts.read, renderAgain);
     } catch (error) {
       logger.warn("Plan page could not be read", {
         planKey: plan.planKey,
@@ -1174,13 +1204,13 @@ async function extractPages(
   // What remains pointing at a builder's own page about a tour is followed
   // to the tour it shows. Only those: a plan that already has a real tour,
   // or none at all, costs nothing.
-  const toured = await mapLimit(pages, atOnce, async (plan) => {
+  const toured = await mapLimit(pages, opts.atOnce, async (plan) => {
     // Not one a builder only calls a tour: Perry's "3D Tour" is an
     // interactive drawing, and there is nothing behind it to follow
     // (standardize.ts, which drops it either way).
     const tour = asTour(plan.virtualTourUrl);
     if (!tour || isTourUrl(tour) || Date.now() + PAGE_READ_MS > deadline) return plan;
-    const deeper = await tourBehind(tour, read);
+    const deeper = await tourBehind(tour, opts.read);
     return deeper ? { ...plan, virtualTourUrl: deeper } : plan;
   });
 
