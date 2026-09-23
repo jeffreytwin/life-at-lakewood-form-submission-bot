@@ -724,8 +724,8 @@ async function main() {
   // the rendering engine unpacks into the same place.
   await surveyBrowser().catch((error) => say(`survey browser would not start: ${error instanceof Error ? error.message : String(error)}`));
 
-  // Rendering builders share one browser per run (render.ts), so they go one
-  // at a time; the rest run a few at once.
+  // Rendering builders share one browser (render.ts, withRenderer), two at
+  // a time so seven of them fit in a build; the rest run a few at once.
   const browsed = (j: (typeof jobs)[number]) => readsThroughBrowser(j.conn.builder.name, j.conn.builder.extraction_method);
   const rendered = jobs.filter(browsed);
   const fetched = jobs.filter((j) => !browsed(j));
@@ -744,6 +744,7 @@ async function main() {
     }
   };
   await Promise.all([
+    lane(rendered),
     lane(rendered),
     ...Array.from({ length: Math.max(1, config.concurrency ?? 3) }, () => lane(fetched)),
   ]);

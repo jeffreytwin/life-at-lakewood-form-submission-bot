@@ -29,18 +29,31 @@ const POLL_MS = 500;
 const NAVIGATE_MS = 45_000;
 
 let browser: Browser | null = null;
-let deadline = Infinity;
+let starting: Promise<Browser> | null = null;
+/** Runs using the browser now; it is closed when the last of them ends. */
+let users = 0;
 
 /**
- * How long this run may spend in the browser. A rendered page takes
- * seconds rather than milliseconds, and a community with twenty of them
- * would otherwise outlive the function it runs in and be killed with
- * nothing written down. Past the budget, a page is refused: the list
- * pages come first, so what is refused is a plan's extras, which the
- * caller already treats as optional.
+ * A browser for one run, with a budget of its own. Runs in the same
+ * process share one browser — two connections run at once from the Hub
+ * can land on the same function instance — so it is started once and
+ * closed only when the last run using it ends; before this, the first run
+ * to finish closed the browser under the other. Past its budget a run's
+ * pages are refused: the list pages come first, so what is refused is a
+ * plan's extras, which the caller already treats as optional.
  */
-export function renderBudget(ms: number): void {
-  deadline = Date.now() + ms;
+export async function withRenderer<T>(
+  budgetMs: number,
+  work: (render: (url: string, opts?: RenderOptions) => Promise<{ url: string; html: string; pressed: string | null }>) => Promise<T>
+): Promise<T> {
+  users += 1;
+  const deadline = Date.now() + budgetMs;
+  try {
+    return await work((url, opts) => renderPage(url, opts, deadline));
+  } finally {
+    users -= 1;
+    if (users === 0) await closeRenderer();
+  }
 }
 
 /**
@@ -62,18 +75,23 @@ async function chromium(): Promise<{ executablePath: string; args: string[]; hea
 /** The run's browser, started on first use. */
 async function open(): Promise<Browser> {
   if (browser?.connected) return browser;
-  const { executablePath, args, headless } = await chromium();
-  const puppeteer = await import("puppeteer-core");
-  browser = await puppeteer.default.launch({ executablePath, args, headless });
-  logger.info("Floor plan renderer started", { executablePath });
-  return browser;
+  starting ??= (async () => {
+    const { executablePath, args, headless } = await chromium();
+    const puppeteer = await import("puppeteer-core");
+    const opened = await puppeteer.default.launch({ executablePath, args, headless });
+    logger.info("Floor plan renderer started", { executablePath });
+    browser = opened;
+    return opened;
+  })().finally(() => {
+    starting = null;
+  });
+  return starting;
 }
 
-/** Ends the run's browser. Safe to call when none was started. */
-export async function closeRenderer(): Promise<void> {
+/** Ends the browser. Safe to call when none was started. */
+async function closeRenderer(): Promise<void> {
   const open = browser;
   browser = null;
-  deadline = Infinity;
   if (!open) return;
   try {
     await open.close();
@@ -292,7 +310,8 @@ export interface RenderOptions {
  */
 export async function renderPage(
   url: string,
-  opts: RenderOptions = {}
+  opts: RenderOptions = {},
+  deadline = Infinity
 ): Promise<{ url: string; html: string; pressed: string | null }> {
   if (Date.now() > deadline) throw new Error(`out of rendering time before ${url}`);
   const page = await (await open()).newPage();

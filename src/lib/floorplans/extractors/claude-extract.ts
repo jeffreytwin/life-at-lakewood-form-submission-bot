@@ -960,25 +960,22 @@ export async function extractWithClaude(params: ClaudeExtractParams): Promise<No
  * that plan's gallery alone (diff.ts).
  */
 export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
-  const { renderPage, closeRenderer, renderBudget } = await import("@/lib/floorplans/extractors/render");
-  renderBudget(RENDER_RUN_MS);
-  // A plan's own page is fetched first and rendered only if the fetch
-  // shows no facts: Perry's community has thirty-nine plans and twenty
-  // homes, and rendering every one of their pages took the whole budget
-  // and more — fifty-nine pages went unread (2026-09-23). A page that
-  // needs a browser, like Richmond's, still gets one.
-  const fetchThenRender: PageReader = async (url, opts) => {
-    try {
-      const fetched = await fetchPage(url, opts);
-      if (!pageLooksUnrendered(distill(fetched.html, fetched.url))) return fetched;
-    } catch {
-      // a page that will not fetch may still render
-    }
-    return renderPage(url, opts);
-  };
-  try {
-    return await extractPages(params, renderPage, 5, { press: true, readPlanPage: fetchThenRender });
-  } finally {
-    await closeRenderer();
-  }
+  const { withRenderer } = await import("@/lib/floorplans/extractors/render");
+  return withRenderer(RENDER_RUN_MS, (renderPage) => {
+    // A plan's own page is fetched first and rendered only if the fetch
+    // shows no facts: Perry's community has thirty-nine plans and twenty
+    // homes, and rendering every one of their pages took the whole budget
+    // and more — fifty-nine pages went unread (2026-09-23). A page that
+    // needs a browser, like Richmond's, still gets one.
+    const fetchThenRender: PageReader = async (url, opts) => {
+      try {
+        const fetched = await fetchPage(url, opts);
+        if (!pageLooksUnrendered(distill(fetched.html, fetched.url))) return fetched;
+      } catch {
+        // a page that will not fetch may still render
+      }
+      return renderPage(url, opts);
+    };
+    return extractPages(params, renderPage, 5, { press: true, readPlanPage: fetchThenRender });
+  });
 }
