@@ -1,103 +1,54 @@
 {
-  "anatomy": [
-    "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
-    "https://rifp.ml3ds-icon.com/#/floorplan/524920?crmCommunityId=1116",
-    "https://lwhomes.com/where-we-build/",
-    "https://api.drbhomes.com/api/v1/public/community?search=seaire",
-    "https://argo.ml3ds-cloud.com/api/settings/application/42E6BCB5-7E2F-4D0D-B822-1CB9AE1D839C/categoryname/ICON%20Responsive%20Interactive%20FloorPlan%20%20(RIFP)/floorplan/524920"
-  ],
+  "anatomy": [],
   "concurrency": 4,
   "detailPlans": 99,
   "checks": [
     {
-      "builder": "Pulte Homes",
-      "community": "Riversong"
-    },
-    {
-      "builder": "Pulte Homes",
-      "community": "North River Ranch"
-    },
-    {
-      "builder": "Mattamy Homes",
-      "community": "Sunstone"
-    },
-    {
-      "builder": "Mattamy Homes",
-      "community": "Windwater"
-    },
-    {
-      "builder": "M/I Homes",
-      "community": "Palmera"
-    },
-    {
-      "builder": "ICI Homes",
-      "community": "Oakbend"
-    },
-    {
-      "builder": "Perry Homes"
-    },
-    {
-      "builder": "Richmond American Homes"
+      "builder": "D.R. Horton",
+      "community": "Oakfield"
     },
     {
       "builder": "Kolter Homes",
       "community": "Woodland Preserve"
     },
     {
-      "builder": "Homes by Towne"
-    },
-    {
-      "builder": "Ashton Woods"
-    },
-    {
-      "builder": "Cardel Homes",
-      "community": "North River Ranch",
-      "preferCandidate": true
+      "builder": "Pulte Homes",
+      "community": "Riversong"
     },
     {
       "builder": "Centex Homes"
     },
     {
-      "builder": "Adams Homes"
+      "builder": "Adams Homes",
+      "method": "render_claude"
     },
     {
-      "builder": "Dream Finders Homes"
+      "builder": "M/I Homes",
+      "community": "Palmera"
+    },
+    {
+      "builder": "Richmond American Homes"
+    },
+    {
+      "builder": "Perry Homes"
     }
   ],
   "raw": [
     {
-      "url": "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/5289/floorplan/eva/",
+      "url": "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
       "around": [
-        "Eva Model Home | Kitchen",
-        "eva%2D003"
+        "levation",
+        "2016F-E",
+        "E-1"
       ],
-      "chars": 900
-    },
-    {
-      "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes",
-      "around": [
-        "application/ld+json",
-        "Alford",
-        "12412 Hopscotch"
-      ],
-      "chars": 1500
+      "chars": 700
     },
     {
       "url": "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes/floor-plans/3eab",
       "around": [
-        "application/ld+json",
-        "1-kitchen",
-        "view-imx"
+        "About this floor plan"
       ],
-      "chars": 1500
-    },
-    {
-      "url": "https://www.adamshomes.com/communities/florida/tampa/aviary-at-rutland-ranch",
-      "around": [
-        "Plan 1720",
-        "FLOORPLAN 1970"
-      ],
-      "chars": 1200
+      "chars": 900
     }
   ]
 }
