@@ -60,10 +60,27 @@ function getClient(): Anthropic {
 
 /**
  * Both tools are strict: the answer is held to the schema as it is written,
- * so a list comes back as a list. Without it, Perry's list pages came back
- * with the whole list written out as one string of text that would not
- * parse, every time (2026-09-23).
+ * so a list comes back as a list. Without it, Perry's and KB's list pages
+ * came back with the whole list written out as one string of text that
+ * would not parse (2026-09-23). A strict schema with a dozen optional
+ * fields is refused as "too complex", so every field is required and a
+ * blank — "" or 0 — is how the page says nothing (withoutBlanks).
  */
+const PLAN_FIELDS = [
+  "name", "price", "beds", "baths", "sqft", "garages", "homeType", "quickMoveIn", "relatedPlanName",
+  "sourceUrl", "description", "virtualTourUrl", "photoImages", "blueprintImages",
+];
+const PLAN_PAGE_FIELDS = [
+  "price", "garages", "beds", "baths", "sqft", "description", "virtualTourUrl", "photoImages", "blueprintImages",
+];
+
+/** A tool answer with its blanks taken out, so "" and 0 read as the page saying nothing. Exported for tests. */
+export function withoutBlanks<T extends object>(value: T): T {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  return Object.fromEntries(
+    Object.entries(value).filter(([, v]) => v !== 0 && !(typeof v === "string" && !v.trim()))
+  ) as T;
+}
 const EXTRACT_TOOL: Anthropic.Tool = {
   name: "report_floor_plans",
   description: "Report every floor plan / home model found on the page.",
@@ -77,21 +94,21 @@ const EXTRACT_TOOL: Anthropic.Tool = {
           type: "object",
           properties: {
             name: { type: "string", description: "Plan/model name exactly as shown" },
-            price: { type: "number", description: "Base price in dollars; omit if not shown" },
+            price: { type: "number", description: "Base price in dollars; 0 if not shown" },
             beds: { type: "string", description: "Bedrooms, e.g. '3' or '3 - 4'" },
             baths: { type: "string", description: "Bathrooms, e.g. '2' or '2.5 - 3'" },
-            sqft: { type: "number", description: "Square footage" },
+            sqft: { type: "number", description: "Square footage; 0 if not shown" },
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
             relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address" },
             sourceUrl: { type: "string", description: "Absolute URL of the plan's detail page if linked" },
-            description: { type: "string", description: "The builder's own description of the plan, as written; omit if the page gives none" },
-            virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour / 3D walkthrough for this plan; omit if none" },
+            description: { type: "string", description: "The builder's own description of the plan, as written; empty if the page gives none" },
+            virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour / 3D walkthrough for this plan; empty if none" },
             photoImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of photo/rendering images for this plan, in display order" },
             blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of floor plan DRAWINGS/blueprints for this plan (not photos)" },
           },
-          required: ["name"],
+          required: PLAN_FIELDS,
           additionalProperties: false,
         },
       },
@@ -307,12 +324,12 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
   input_schema: {
     type: "object" as const,
     properties: {
-      price: { type: "number", description: "The plan's price in dollars as the page shows it, e.g. 'Priced $353,999' or 'From $410,900'; omit if the page shows none" },
+      price: { type: "number", description: "The plan's price in dollars as the page shows it, e.g. 'Priced $353,999' or 'From $410,900'; 0 if the page shows none" },
       garages: { type: "string", description: "Garage count as the page gives it, e.g. '3 car' or 'Two 2-Car Garage'" },
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
       sqft: { type: "number", description: "Living square footage, if the page gives it" },
-      description: { type: "string", description: "The builder's own prose about the plan — sentences. Omit it if the page only prints a spec line of rooms and counts" },
+      description: { type: "string", description: "The builder's own prose about the plan — sentences. Empty if the page only prints a spec line of rooms and counts" },
       virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour, if one is linked" },
       photoImages: {
         type: "array",
@@ -321,7 +338,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       },
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
     },
-    required: [],
+    required: PLAN_PAGE_FIELDS,
     additionalProperties: false,
   },
 };
@@ -436,7 +453,7 @@ export async function readPlanPageWithClaude(
     ],
   });
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-  const page = (toolUse?.input ?? {}) as ExtractedPlanPage;
+  const page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
 
   const gallery = firstGallery(html, page_.url);
   // A page whose galleries cannot be read off its headings may still be
@@ -579,7 +596,7 @@ async function listPage(
         : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
     );
   }
-  const plans = reported.filter((p) => p?.name?.trim());
+  const plans = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
   if (plans.length === 0 && pageLooksUnrendered(content)) {
     throw new Error(
       "the page carries no prices or sizes without its scripts — it draws its plans after loading, which a fetch cannot see (this builder needs a rendering engine)"

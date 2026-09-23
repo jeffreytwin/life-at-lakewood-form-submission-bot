@@ -6,6 +6,7 @@ import {
   orderPhotos,
   tourLinkIn,
   tourUrlIn,
+  withoutBlanks,
 } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -354,5 +355,13 @@ describe("orderPhotos, when the file names say nothing", () => {
     const ordered = orderPhotos([media(1), media(2), media(3)], said);
     expect(ordered.urls).toEqual([media(2), media(3), media(1)]);
     expect(ordered.meta[media(2)].kind).toBe("primary");
+  });
+});
+
+describe("withoutBlanks: a strict tool answers every field, and a blank means the page said nothing", () => {
+  it("drops empty text and zeros, keeps what was said", () => {
+    expect(
+      withoutBlanks({ name: "Aspen", price: 0, sqft: 1850, garages: "", homeType: "  ", quickMoveIn: false, photoImages: [] })
+    ).toEqual({ name: "Aspen", sqft: 1850, quickMoveIn: false, photoImages: [] });
   });
 });

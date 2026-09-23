@@ -45,6 +45,8 @@ interface Target {
 }
 
 interface Config {
+  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. */
+  anatomy?: string[];
   concurrency?: number;
   /** Plans printed with every picture; the rest get one line each. */
   detailPlans?: number;
@@ -265,6 +267,103 @@ function describeSeen(label: string, s: Seen): string[] {
   return lines;
 }
 
+// ─── Page anatomy ───────────────────────────────────────────────────────────
+
+/**
+ * How a page is built, compactly: its headings and the pictures under each,
+ * every picture with its caption and size, its tabs and buttons, its links,
+ * and where its scripts mention galleries, floor plans and elevations. What
+ * a person would look at in the browser's inspector to decide how to read
+ * the page, written where it can be read from here.
+ */
+const ANATOMY_SCRIPT = `(() => {
+  const clean = (s) => (s || "").replace(/\\s+/g, " ").trim();
+  const out = [];
+  out.push("URL " + location.href);
+  out.push("TITLE " + clean(document.title));
+  out.push("");
+  out.push("== OUTLINE (heading · pictures under it) ==");
+  const marks = [...document.querySelectorAll("h1,h2,h3,h4,h5,img")];
+  let current = "(top)";
+  const counts = new Map();
+  const order = ["(top)"];
+  for (const el of marks) {
+    if (el.tagName === "IMG") counts.set(current, (counts.get(current) || 0) + 1);
+    else { current = el.tagName + " " + clean(el.innerText).slice(0, 80); order.push(current); }
+  }
+  for (const h of order) out.push(h + " · " + (counts.get(h) || 0));
+  out.push("");
+  out.push("== PICTURES ==");
+  let heading = "(top)";
+  let n = 0;
+  for (const el of marks) {
+    if (el.tagName !== "IMG") { heading = clean(el.innerText).slice(0, 40); continue; }
+    if (n++ >= 160) break;
+    const src = el.currentSrc || el.src || el.getAttribute("data-src") || "";
+    if (src.startsWith("data:")) { n--; continue; }
+    const set = el.getAttribute("srcset") || el.getAttribute("data-srcset") || "";
+    out.push([el.naturalWidth + "x" + el.naturalHeight, "[" + heading + "]", "alt=" + JSON.stringify(clean(el.alt).slice(0, 60)), src.slice(0, 200), set ? "srcset:" + set.split(",").length : ""].join(" "));
+  }
+  out.push("");
+  out.push("== BACKGROUND PICTURES ==");
+  let bg = 0;
+  for (const el of document.querySelectorAll("*")) {
+    const b = getComputedStyle(el).backgroundImage;
+    if (b && b.startsWith("url(") && bg++ < 40) out.push(b.slice(0, 200));
+  }
+  out.push("");
+  out.push("== CONTROLS ==");
+  out.push([...new Set([...document.querySelectorAll("button,[role=tab],[role=button],a[href^='#'],a[href^='javascript']")].map((e) => clean(e.innerText)).filter((t) => t && t.length < 50))].slice(0, 120).join(" | "));
+  out.push("");
+  out.push("== LINKS ==");
+  const seen = new Set();
+  for (const a of document.querySelectorAll("a[href]")) {
+    const href = a.href.split("#")[0];
+    if (seen.has(href) || !href.startsWith("http")) continue;
+    seen.add(href);
+    if (seen.size > 200) break;
+    out.push(clean(a.innerText).slice(0, 50) + " -> " + href.slice(0, 180));
+  }
+  out.push("");
+  out.push("== IFRAMES ==");
+  for (const f of document.querySelectorAll("iframe")) out.push((f.src || "").slice(0, 200));
+  out.push("");
+  out.push("== SCRIPTS mentioning gallery / floor plan / elevation / image ==");
+  const html = document.documentElement.outerHTML;
+  const re = /(gallery|floor ?plan|floorplan|elevation|blueprint|interior|photos|images)/gi;
+  let m; let hits = 0;
+  const scripts = [...document.querySelectorAll("script")].map((s) => s.textContent || "").join("\\n");
+  while ((m = re.exec(scripts)) && hits < 60) {
+    hits++;
+    out.push("… " + scripts.slice(Math.max(0, m.index - 90), m.index + 160).replace(/\\s+/g, " "));
+    re.lastIndex = m.index + 400;
+  }
+  out.push("");
+  out.push("html " + html.length + " chars; scripts " + scripts.length + " chars; json-ld " + document.querySelectorAll("script[type='application/ld+json']").length);
+  return out.join("\\n");
+})()`;
+
+async function anatomy(url: string): Promise<string> {
+  let page: Page | null = null;
+  try {
+    page = await (await surveyBrowser()).newPage();
+    await page.setUserAgent(UA);
+    await page.setViewport({ width: 1440, height: 2000 });
+    const res = await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 }).catch(() => null);
+    await wait(4_000);
+    await page.evaluate(`(async () => { for (let n = 1; n <= 16; n++) { if (innerHeight * n > document.body.scrollHeight) break; scrollTo(0, innerHeight * n); await new Promise((r) => setTimeout(r, 300)); } scrollTo(0, 0); })()`);
+    await wait(1_500);
+    const fetched = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) })
+      .then(async (r) => `${r.status}, ${(await r.text()).length} chars`)
+      .catch((e) => `failed: ${e instanceof Error ? e.message : String(e)}`);
+    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n` + String(await page.evaluate(ANATOMY_SCRIPT));
+  } catch (error) {
+    return `could not open ${url}: ${error instanceof Error ? error.message : String(error)}`;
+  } finally {
+    await page?.close().catch(() => {});
+  }
+}
+
 // ─── The run ────────────────────────────────────────────────────────────────
 
 const ROOM_CODE: Record<Room, string> = {
@@ -478,6 +577,12 @@ async function main() {
   mkdirSync(REPORT_DIR, { recursive: true });
   claudeDown = await claudeAnswers();
   say(claudeDown ? `Claude is unavailable — pages will be surveyed but not extracted: ${claudeDown}` : "Claude answers");
+  for (const url of config.anatomy ?? []) {
+    mkdirSync(path.join(REPORT_DIR, "anatomy"), { recursive: true });
+    const file = `anatomy/${slug(url.replace(/^https?:\/\/(www\.)?/, "")).slice(0, 90)}.txt`;
+    writeFileSync(path.join(REPORT_DIR, file), await anatomy(url));
+    say(`anatomy of ${url} → /fp-check/${file}`);
+  }
   const all = await loadConnections();
   const jobs: { conn: Connection; target: Target }[] = [];
   for (const target of config.checks) {
