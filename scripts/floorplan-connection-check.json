@@ -29,7 +29,7 @@
       "count": 2
     }
   ],
-  "concurrency": 4,
+  "concurrency": 5,
   "detailPlans": 2,
   "checks": [
     {
@@ -77,6 +77,58 @@
       "params": {
         "url": "https://www.mihomes.com/new-homes/florida/sarasota-metro/lakewood-ranch/nautique-at-waterside",
         "engine": "render_claude"
+      }
+    },
+    {
+      "builder": "Neal Communities",
+      "all": true
+    },
+    {
+      "builder": "David Weekley Homes",
+      "all": true
+    },
+    {
+      "builder": "Dream Finders Homes",
+      "all": true
+    },
+    {
+      "builder": "Ashton Woods",
+      "all": true
+    },
+    {
+      "builder": "Medallion Home",
+      "all": true
+    },
+    {
+      "builder": "Inland Homes",
+      "all": true
+    },
+    {
+      "builder": "Ryan Homes",
+      "all": true
+    },
+    {
+      "builder": "SimplyDwell Homes",
+      "all": true
+    },
+    {
+      "builder": "Stock Luxury Homes",
+      "all": true
+    },
+    {
+      "builder": "Anchor Builders",
+      "all": true
+    },
+    {
+      "builder": "Arthur Rutenberg",
+      "all": true
+    },
+    {
+      "builder": "Neal Signature Homes",
+      "community": "Waterbury Park",
+      "params": {
+        "url": "https://nealsignaturehomes.com/waterbury-park/",
+        "engine": "fetch_claude"
       }
     }
   ]
