@@ -125,6 +125,11 @@ export function mergeForUpdate(current: CanonicalRecord, plan: NormalizedPlan): 
   if (overrides.has("priceDisplay")) merged.price = current.price;
   // The score is set in the Hub and no engine knows it: the canonical one stays.
   merged.score = current.score ?? plan.score ?? null;
+  // A home type is never proposed as a change (DIFF_FIELDS), so a run that
+  // read none keeps the record's rather than blanking it with whatever
+  // change is approved: SimplyDwell's pages name no type, and its runs
+  // read one on some nights and not others (2026-09-23).
+  if (!plan.homeType && current.homeType) merged.homeType = current.homeType;
   merged.userEditedFields = current.userEditedFields;
   return merged as unknown as NormalizedPlan;
 }

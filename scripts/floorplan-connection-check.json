@@ -1,18 +1,6 @@
 {
   "anatomy": [],
-  "raw": [
-    {
-      "url": "https://simplydwellhomes.com/new-homes/broadleaf/buttonwood/",
-      "around": [
-        "Buttonwood.jpg",
-        "Buttonwood_1",
-        "Buttonwood_2"
-      ],
-      "chars": 1800,
-      "after": 600,
-      "count": 2
-    }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 4,
   "checks": [
