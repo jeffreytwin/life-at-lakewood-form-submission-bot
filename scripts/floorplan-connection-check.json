@@ -53,6 +53,17 @@
       ],
       "chars": 2500,
       "count": 2
+    },
+    {
+      "url": "https://dreamfindershomes.com/new-homes/fl/lakewood-ranch/bungalow-walk-at-lakewood-ranch/haven/",
+      "around": [
+        "Floor Plan",
+        "floorplan",
+        "gallery",
+        "swiper"
+      ],
+      "chars": 1500,
+      "count": 2
     }
   ],
   "concurrency": 4,
