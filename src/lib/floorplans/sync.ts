@@ -32,6 +32,7 @@ import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
 import { withScrapedPictures } from "@/lib/floorplans/pictures";
+import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -286,6 +287,19 @@ export async function preparePlans(
     );
     const standInKeys = new Set(filled.map((p) => p.planKey));
     plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
+  }
+
+  // Photos someone has already looked at are put in the site's order by
+  // what they show (photo-rooms.ts); the builder's file names say nothing
+  // for most of them. Only remembered answers are used here, so the order
+  // is the same every run and no reordering is proposed night after night;
+  // the looking itself happens in the background (sort-queue.ts). A table
+  // that cannot be read costs the order, never the run.
+  try {
+    const looked = await rememberedRooms(plans.flatMap((p) => p.galleryImages));
+    if (looked.size) plans = plans.map((p) => withLookedAtRooms(p, looked));
+  } catch (err) {
+    logger.warn("Remembered photo rooms could not be applied", { error: err instanceof Error ? err.message : String(err) });
   }
 
   // A base plan whose builder writes no description gets one from its own
