@@ -94,6 +94,65 @@ export function joinedPicture(tag: string): string | null {
   return `${base}${transforms ? `${transforms}/` : ""}${name}`;
 }
 
+/**
+ * The address an <img> shows, however it is written: its src, or where a
+ * lazy page keeps it until it scrolls into view (data-src, Kolter's
+ * data-lazy-src, D.R. Horton's data-lazy, data-original), or the largest
+ * of the sizes it offers, or two halves for a script to join (Pulte).
+ */
+export function imageAddress(tag: string): string | null {
+  const plain = [attr(tag, "src"), attr(tag, "data-src"), attr(tag, "data-lazy-src"), attr(tag, "data-lazy"), attr(tag, "data-original")].find(
+    (u): u is string => Boolean(u) && !/^data:/i.test(u!)
+  );
+  return plain || largestInSrcSet(attr(tag, "srcset") || attr(tag, "data-srcset") || attr(tag, "data-lazy-srcset")) || joinedPicture(tag);
+}
+
+/**
+ * The pictures a page opens in a lightbox, which marks them as a gallery
+ * outright: Fancybox's data-fancybox="<group>", each with the full-size
+ * picture in data-src (or href) and its caption in data-caption. Kolter's
+ * plan pages keep every model photo this way — "Entry", "Dining room",
+ * "Kitchen" — under no heading at all, and the run kept one picture of
+ * thirty (Woodland Preserve, 2026-09-23). The first group of three or more
+ * is the plan's, and a group named for elevations, exteriors or floor plans
+ * is too; a picture captioned or named as a floor plan is a drawing.
+ * Pure; exported for tests.
+ */
+export function lightboxGallery(html: string, pageUrl: string): { first: PageImage[]; drawings: string[] } {
+  const baseUrl = documentBase(html, pageUrl);
+  const groups = new Map<string, PageImage[]>();
+  for (const m of html.matchAll(/<[a-z][a-z0-9]*\b[^>]*\sdata-fancybox\s*=\s*["']([^"']*)["'][^>]*>/gi)) {
+    const address = attr(m[0], "data-src") || attr(m[0], "href");
+    if (!address || !/\.(?:jpe?g|png|webp|avif|gif)(?:[?#]|$)/i.test(address.replace(/%2E/gi, "."))) continue;
+    let src: string;
+    try {
+      src = new URL(address, baseUrl).href;
+    } catch {
+      continue;
+    }
+    const caption = readable(attr(m[0], "data-caption") ?? attr(m[0], "title") ?? "");
+    const group = groups.get(m[1]) ?? [];
+    group.push({ src, alt: caption });
+    groups.set(m[1], group);
+  }
+  const named = /elev|exterior|floor|plan/i;
+  const firstName = [...groups.entries()].find(([, images]) => images.length >= 3)?.[0];
+  const seen = new Set<string>();
+  const first: PageImage[] = [];
+  const drawings: string[] = [];
+  for (const [name, images] of groups) {
+    if (name !== firstName && !named.test(name)) continue;
+    for (const image of images) {
+      const key = pictureKey(image.src);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (/\bfloor ?plans?\b/i.test(image.alt) || /floor[\s_-]?plan|[_-]fp[_.-]/i.test(decodeURIComponent(image.src))) drawings.push(image.src);
+      else first.push(image);
+    }
+  }
+  return { first, drawings };
+}
+
 /** A heading's words, with the spans, comments and entities a framework leaves in it. */
 function readable(html: string): string {
   return html
@@ -150,11 +209,7 @@ export function sectionsOf(html: string, pageUrl: string): PageSection[] {
     marks.push({ at: m.index ?? 0, heading: { level: Number(m[1]), text: readable(m[2]) } });
   }
   for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
-    const src =
-      attr(m[0], "src") ||
-      attr(m[0], "data-src") ||
-      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset")) ||
-      joinedPicture(m[0]);
+    const src = imageAddress(m[0]);
     if (!src || src.startsWith("data:")) continue;
     marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: attr(m[0], "alt") ?? "" } });
   }
@@ -305,11 +360,7 @@ export function captionedCarousel(html: string, pageUrl: string): PlanPageGaller
   const marks: Mark[] = [];
   for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) marks.push({ at: m.index ?? 0, heading: readable(m[2]) });
   for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
-    const src =
-      attr(m[0], "src") ||
-      attr(m[0], "data-src") ||
-      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset")) ||
-      joinedPicture(m[0]);
+    const src = imageAddress(m[0]);
     if (!src || src.startsWith("data:")) continue;
     marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: readable(attr(m[0], "alt") ?? "") } });
   }

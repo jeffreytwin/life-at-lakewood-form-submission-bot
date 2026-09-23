@@ -8,6 +8,8 @@ import {
   captionedCarousel,
   drawingsNamed,
   joinedPicture,
+  lightboxGallery,
+  imageAddress,
   sectionsOf,
 } from "@/lib/floorplans/extractors/plan-page";
 
@@ -390,5 +392,36 @@ describe("Pulte's carousel as the page writes it (Daylen at Riversong, 2026-09-2
     const { first } = captionedCarousel(page, "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105");
     expect(first.map((i) => i.alt)).toEqual(["Daylen Exterior", "Designer Kitchen", "Large Center Island", "Owner's Suite", "Owner's Bath"]);
     expect(first[0].src).toContain("/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_1920/https://pultegroup.picturepark.com/Go/mLJpMux8/V/650661/13");
+  });
+});
+
+describe("lightboxGallery (Kolter's Eva at Woodland Preserve, 2026-09-23)", () => {
+  const r = "https://cdn.kolterhomes.com/kh-includes/communities/parrish-florida-woodland-preserve/renderings";
+  const slide = (file: string, caption: string, group = "model-carousel") =>
+    `<div class="f-carousel__slide" data-fancybox="${group}" data-src="${r}/${file}" data-caption="${caption}"> <img data-lazy-src="${r}/tr:h-720,w-1280,c-maintain_ratio/${file}" alt="Eva Model Home | ${caption}"> </div>`;
+  const page = `<section id="model-images"><div class="f-carousel default">
+    ${slide("kolter%2Dwp%2Deva%2Ddusk%2D011%2Ejpg", "Transitional ")}
+    ${slide("woodland%2Dpreserve%2Deva%2D003%2Ejpg", "Entry")}
+    ${slide("woodland%2Dpreserve%2Deva%2D008%2Ejpg", "Dining room ")}
+    ${slide("woodland%2Dpreserve%2Deva%2D005%2Ejpg", "Kitchen")}
+    ${slide("eva%2Dfloorplan%2Ejpg", "Floor Plan", "floorplans")}
+    ${slide("clubhouse%2D1%2Ejpg", "Clubhouse", "community")}${slide("clubhouse%2D2%2Ejpg", "Pool", "community")}${slide("clubhouse%2D3%2Ejpg", "Gym", "community")}
+  </div></section>`;
+  const BASE = "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/5289/floorplan/eva/";
+
+  it("takes the first lightbox gallery whole, full size, with its captions", () => {
+    const { first } = lightboxGallery(page, BASE);
+    expect(first.map((i) => i.alt)).toEqual(["Transitional", "Entry", "Dining room", "Kitchen"]);
+    expect(first[1].src).toBe(`${r}/woodland%2Dpreserve%2Deva%2D003%2Ejpg`);
+  });
+
+  it("takes a floor plan group's pictures as drawings, and leaves the community's gallery out", () => {
+    const { first, drawings } = lightboxGallery(page, BASE);
+    expect(drawings).toEqual([`${r}/eva%2Dfloorplan%2Ejpg`]);
+    expect(first.some((i) => /clubhouse/.test(i.src))).toBe(false);
+  });
+
+  it("reads the lazy picture's address", () => {
+    expect(imageAddress(`<img data-lazy-src="${r}/x.jpg" alt="">`)).toBe(`${r}/x.jpg`);
   });
 });

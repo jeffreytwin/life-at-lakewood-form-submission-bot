@@ -58,8 +58,18 @@ export function fileNameWords(src: string): string {
   }
 }
 
+/**
+ * A caption that is nothing but an architectural style is an elevation:
+ * Kolter captions its renderings "Transitional", "Spanish Bonus",
+ * "Coastal B" (2026-09-23). Only the whole caption — "coastal-inspired
+ * kitchen" is a kitchen.
+ */
+const STYLE_ONLY =
+  /^(?:transitional|spanish|craftsman|coastal|colonial|farmhouse|mediterranean|prairie|tuscan|traditional|modern|contemporary|west indies|key west|french country)(?:\s+(?:transitional|spanish|craftsman|coastal|colonial|farmhouse|mediterranean|prairie|tuscan|traditional|modern|contemporary|bonus|elevation|exterior|model|[a-z]|\d{1,2})\b)*$/i;
+
 /** The room a caption, title or file name names first, or null when it names none. */
 export function classifyRoom(text: string): Room | null {
+  if (STYLE_ONLY.test(text.trim())) return "exterior";
   let best: { room: Room; at: number } | null = null;
   for (const [room, re] of ROOM_KEYWORDS) {
     const at = text.search(re);

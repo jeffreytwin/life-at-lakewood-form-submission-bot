@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, drawingsNamed, firstGallery, fullSize, joinedPicture, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsNamed, firstGallery, fullSize, imageAddress, lightboxGallery, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -251,7 +251,7 @@ function attrOf(tag: string, name: string): string | null {
  * data-src behind a placeholder, or the largest of the sizes it offers.
  */
 function pictureOf(tag: string): string | null {
-  const offered = [attrOf(tag, "data-src"), attrOf(tag, "src"), largestInSrcSet(attrOf(tag, "srcset") ?? attrOf(tag, "data-srcset")), joinedPicture(tag)];
+  const offered = [attrOf(tag, "data-src"), attrOf(tag, "data-lazy-src"), attrOf(tag, "data-lazy"), attrOf(tag, "src"), imageAddress(tag)];
   return offered.find((u): u is string => Boolean(u) && !/^data:/i.test(u!)) ?? null;
 }
 
@@ -592,8 +592,13 @@ export async function readPlanPageWithClaude(
   // Read off the page's gallery headings, or failing those its first
   // carousel of captioned slides (Pulte).
   const headed = firstGallery(html, page_.url);
-  const carousel = headed.first.length ? null : captionedCarousel(html, page_.url);
-  const gallery = carousel ? { first: carousel.first, drop: new Set([...headed.drop, ...carousel.drop]) } : headed;
+  const lightbox = headed.first.length ? null : lightboxGallery(html, page_.url);
+  const carousel = headed.first.length || lightbox?.first.length ? null : captionedCarousel(html, page_.url);
+  const gallery = lightbox?.first.length
+    ? { first: lightbox.first, drop: headed.drop }
+    : carousel
+      ? { first: carousel.first, drop: new Set([...headed.drop, ...carousel.drop]) }
+      : headed;
   // A page whose galleries cannot be read off its headings may still be
   // carrying them: Perry draws a hero and four thumbnails and keeps
   // twenty-three photographs in its payload (Jeff, 2026-09-22). Only
@@ -638,6 +643,7 @@ export async function readPlanPageWithClaude(
     ...plan.blueprintImages,
     ...pictureAddresses(page.blueprintImages),
     ...drawingsNamed(html, page_.url, [plan.name, plan.relatedPlanName, typeof plan.raw?.relatedPlan === "string" ? plan.raw.relatedPlan : null]),
+    ...(lightbox?.drawings ?? []),
   ].filter((src, i, all) => src && all.indexOf(src) === i);
   // A list gives the plans it prices; the rest carry their price on their
   // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
