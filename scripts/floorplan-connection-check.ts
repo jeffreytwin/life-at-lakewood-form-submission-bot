@@ -26,7 +26,7 @@ import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Browser, Page } from "puppeteer-core";
 import { supabase } from "@/lib/supabase/client";
-import { preparePlans, resolveExtractor, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
+import { preparePlans, readsThroughBrowser, resolveExtractor, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
@@ -38,6 +38,8 @@ interface Target {
   all?: boolean;
   /** Extractor params to try instead of the saved ones — a candidate fix, tested before it is saved. */
   params?: Record<string, unknown>;
+  /** An extraction method to try instead of the builder's saved one ("render_claude" for a page drawn after loading). */
+  method?: string;
   /** Skip the extraction and only look at the pages. */
   surveyOnly?: boolean;
   /** Skip the browser survey. */
@@ -100,7 +102,9 @@ async function loadConnections(): Promise<Connection[]> {
 }
 
 function pick(all: Connection[], target: Target): Connection[] {
-  const mine = all.filter((c) => c.builder.name === target.builder);
+  const mine = all
+    .filter((c) => c.builder.name === target.builder)
+    .map((c) => (target.method ? { ...c, builder: { ...c.builder, extraction_method: target.method } } : c));
   if (!mine.length) return [];
   if (target.all) return mine;
   if (target.community) return mine.filter((c) => c.community.name === target.community);
@@ -597,8 +601,9 @@ async function main() {
 
   // Rendering builders share one browser per run (render.ts), so they go one
   // at a time; the rest run a few at once.
-  const rendered = jobs.filter((j) => j.conn.builder.extraction_method === "render_claude");
-  const fetched = jobs.filter((j) => j.conn.builder.extraction_method !== "render_claude");
+  const browsed = (j: (typeof jobs)[number]) => readsThroughBrowser(j.conn.builder.name, j.conn.builder.extraction_method);
+  const rendered = jobs.filter(browsed);
+  const fetched = jobs.filter((j) => !browsed(j));
   const outcomes: Outcome[] = [];
   const lane = async (queue: typeof jobs) => {
     while (queue.length) {

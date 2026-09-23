@@ -37,13 +37,15 @@ import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
 // Lee Wetherington's real site (lwhomes.com; leewetherington.com is an
-// empty JS shell) server-renders all its for-sale homes on one shared
-// /listings/ page — route it through the generic Claude engine with the
-// community pinned in the hint so each connection only sees its own homes.
+// empty JS shell) lists all its for-sale homes on one shared /listings/
+// page — routed through the generic Claude engine with the community
+// pinned in the hint so each connection only sees its own homes. That page
+// now draws its homes after it loads ("carries no prices or sizes without
+// its scripts", 2026-09-23), so it is read through the browser.
 const extractLeeWetherington: Extractor = (params) => {
   const communityName = String(params.communityName ?? "");
   const shortName = communityName.split(/\s*-\s*/).pop() ?? communityName;
-  return extractWithClaude({
+  return extractWithRender({
     url: typeof params.url === "string" && params.url ? params.url : "https://lwhomes.com/listings/",
     hint: `The page lists Lee Wetherington homes across several communities. Only report homes/plans located in the "${shortName}" community; ignore every other community. If none are listed for it, report an empty list.`,
   });
@@ -84,6 +86,18 @@ export const URLLESS_BUILDERS = new Set([
   "Meritage Homes", "DRB Homes", "Lee Wetherington",
   "M/I Homes", "ICI Homes", "Neal Signature Homes",
 ]);
+
+/** Builders read through a browser though their method says otherwise: their own engine renders. */
+const BROWSER_BUILDERS = new Set(["Lee Wetherington"]);
+
+/**
+ * Whether a builder's run renders pages in a browser. Such runs share one
+ * browser per process and take minutes, so the nightly loop starts one only
+ * with most of a tick left, and never two at once.
+ */
+export function readsThroughBrowser(builderName: string, method: string | null): boolean {
+  return method === "render_claude" || BROWSER_BUILDERS.has(builderName);
+}
 
 export function resolveExtractor(builderName: string, method: string | null): Extractor | null {
   return BUILDER_EXTRACTORS[builderName] ?? (method ? METHOD_EXTRACTORS[method] : null) ?? null;
