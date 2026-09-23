@@ -1,29 +1,8 @@
 {
   "anatomy": [],
-  "raw": [
-    {
-      "url": "https://www.stockdevelopment.com/projects/wild-blue-at-waterside/floorplans/281/",
-      "around": [
-        "4a6363de",
-        "floorplan",
-        "floorPlan",
-        "Floor Plan"
-      ],
-      "chars": 700,
-      "count": 3
-    },
-    {
-      "url": "https://simplydwellhomes.com/new-homes/broadleaf/jasmine-2/",
-      "around": [
-        "Jasmine-2.jpg",
-        "Floor Plan"
-      ],
-      "chars": 600,
-      "count": 3
-    }
-  ],
+  "raw": [],
   "concurrency": 3,
-  "detailPlans": 3,
+  "detailPlans": 2,
   "checks": [
     {
       "builder": "Stock Luxury Homes",
@@ -32,6 +11,32 @@
     {
       "builder": "SimplyDwell Homes",
       "all": true
+    },
+    {
+      "builder": "Homes by Towne"
+    },
+    {
+      "builder": "Perry Homes"
+    },
+    {
+      "builder": "Kolter Homes",
+      "community": "Woodland Preserve"
+    },
+    {
+      "builder": "Dream Finders Homes",
+      "community": "Waterside - Bungalow Walk"
+    },
+    {
+      "builder": "Medallion Home"
+    },
+    {
+      "builder": "Inland Homes"
+    },
+    {
+      "builder": "Cardel Homes"
+    },
+    {
+      "builder": "Ryan Homes"
     }
   ]
 }

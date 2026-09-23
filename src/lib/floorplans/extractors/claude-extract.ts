@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { captionedCarousel, documentBase, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -705,9 +705,13 @@ export async function readPlanPageWithClaude(
   // The drawings Claude reported, and any the page names for this plan
   // that it passed over (a "Floor Plan" tab's picture, drawingsNamed); a
   // home is named for its address, so its plan's name is looked for too.
+  // Where the page marks its drawings in its markup, those are its drawings
+  // and Claude's reading is not asked for them: Stock's came and went from
+  // night to night as Claude did or did not report them (2026-09-23).
+  const markedDrawings = drawingsMarked(html, page_.url);
   const blueprints = [
     ...plan.blueprintImages,
-    ...pictureAddresses(page.blueprintImages),
+    ...(markedDrawings.length ? markedDrawings : pictureAddresses(page.blueprintImages)),
     ...drawingsNamed(html, page_.url, [plan.name, plan.relatedPlanName, typeof plan.raw?.relatedPlan === "string" ? plan.raw.relatedPlan : null]),
     ...(lightbox?.drawings ?? []),
   ].filter((src, i, all) => src && all.indexOf(src) === i);
@@ -1140,6 +1144,28 @@ async function extractPages(
 
 
 /**
+ * A picture read both as a photograph and as a drawing is one or the
+ * other. It is the photograph where it leads the gallery or its caption
+ * names a room or an outside view: Richmond's Palm came back with its own
+ * main picture, as .webp, for a floor plan (2026-09-23). Otherwise it is
+ * the drawing: SimplyDwell's "Jasmine-2.jpg" is its floor plan, and a run
+ * that also read it as a photo left the plan without one (2026-09-23).
+ * Pure; exported for tests.
+ */
+export function drawingsOrPhotos(
+  drawings: string[],
+  photos: { urls: string[]; meta: Record<string, GalleryMeta> }
+): { blueprintImages: string[]; galleryImages: string[]; galleryMeta: Record<string, GalleryMeta> } {
+  const room = (u: string) => photos.meta[u]?.room;
+  const photographs = new Set(photos.urls.filter((u, i) => i === 0 || (room(u) && room(u) !== "other")).map(pictureKey));
+  const blueprintImages = drawings.filter((u) => !photographs.has(pictureKey(u)));
+  const drawn = new Set(blueprintImages.map(pictureKey));
+  const galleryImages = photos.urls.filter((u, i) => i === 0 || !drawn.has(pictureKey(u)));
+  const galleryMeta = Object.fromEntries(Object.entries(photos.meta).filter(([u]) => galleryImages.includes(u)));
+  return { blueprintImages, galleryImages, galleryMeta };
+}
+
+/**
  * Each plan's own page read for what the list left out — its gallery, its
  * drawings, its tour, its description — then the drawings sorted from the
  * views and the photos put in the order the site shows rooms in. The
@@ -1219,12 +1245,7 @@ export async function readPlanPages(
     const outside = Object.fromEntries(views.map((u) => [u, OUTSIDE_META]));
     const photos = [...plan.galleryImages, ...views.filter((u) => !plan.galleryImages.includes(u))];
     const ordered = orderPhotos(photos, { ...outside, ...plan.galleryMeta });
-    // A "drawing" that is one of the plan's photographs in another format
-    // is that photograph: Richmond's Palm came back with its own main
-    // picture, as .webp, for a floor plan (2026-09-23).
-    const photoKeys = new Set(ordered.urls.map(pictureKey));
-    const ownDrawings = drawings.filter((u) => !photoKeys.has(pictureKey(u)));
-    return { ...plan, blueprintImages: ownDrawings, galleryImages: ordered.urls, galleryMeta: ordered.meta };
+    return { ...plan, ...drawingsOrPhotos(drawings, ordered) };
   });
 }
 
