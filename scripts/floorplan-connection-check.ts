@@ -334,6 +334,17 @@ const ANATOMY_SCRIPT = `(() => {
     out.push([el.naturalWidth + "x" + el.naturalHeight, "[" + heading + "]", "alt=" + JSON.stringify(clean(el.alt).slice(0, 60)), src.slice(0, 200), set ? "srcset:" + set.split(",").length : ""].join(" "));
   }
   out.push("");
+  out.push("== LAZY PICTURES (data-* and <source>) ==");
+  let lazy = 0;
+  for (const el of document.querySelectorAll("[data-src],[data-srcset],[data-bg],[data-background],[data-lazy],[data-original],[data-image],source[srcset]")) {
+    if (lazy++ >= 80) break;
+    const attrs = ["data-src", "data-srcset", "data-bg", "data-background", "data-lazy", "data-original", "data-image", "srcset"].map((a) => el.getAttribute(a)).filter(Boolean);
+    let heading = "";
+    let walk = el;
+    for (let n = 0; n < 30 && walk && !heading; n++) { const h = walk.querySelector && walk.querySelector("h1,h2,h3,h4"); if (h) heading = clean(h.innerText).slice(0, 30); walk = walk.parentElement; }
+    out.push(el.tagName + " [" + heading + "] alt=" + JSON.stringify(clean(el.getAttribute("alt") || el.getAttribute("title") || "").slice(0, 40)) + " " + String(attrs[0]).slice(0, 200));
+  }
+  out.push("");
   out.push("== BACKGROUND PICTURES ==");
   let bg = 0;
   for (const el of document.querySelectorAll("*")) {
