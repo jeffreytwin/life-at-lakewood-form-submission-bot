@@ -5,6 +5,7 @@ import {
   fullSize,
   largestInSrcSet,
   pictureKey,
+  captionedCarousel,
   sectionsOf,
 } from "@/lib/floorplans/extractors/plan-page";
 
@@ -256,5 +257,70 @@ describe("documentBase: a page's <base href> (Richmond American, 2026-09-23)", (
   });
   it("is the page itself where no base is named", () => {
     expect(documentBase("<html><body></body></html>", page)).toBe(page);
+  });
+});
+
+describe("captionedCarousel (Pulte plan pages, Daylen at Riversong, 2026-09-23)", () => {
+  const cdn = (id: number, w = 768) =>
+    `https://res.cloudinary.com/dv0jqjrc3/image/fetch/ar_1.5,c_fill,f_auto,q_auto,w_${w}/https://pultegroup.picturepark.com/Go/mLJpMux8/V/${id}/13`;
+  const slide = (id: number, caption: string) =>
+    `<div class="slide"><img src="${cdn(id)}" alt="${caption}"><div class="caption"><h5>${caption}</h5><button>Save Item</button></div></div>`;
+  const DAYLEN = [
+    [650661, "Daylen Exterior"],
+    [650640, "Designer Kitchen"],
+    [650639, "Large Center Island"],
+    [650642, "Gathering Room"],
+    [650648, "Owner's Suite"],
+    [650650, "Owner's Bath"],
+    [650641, "Perfect for Entertaining"],
+    [439080, "Elevation FM1"],
+  ] as const;
+  const PINECREST = [
+    [700001, "Pinecrest Exterior"],
+    [700002, "Designer Kitchen"],
+    [700003, "Versatile Loft"],
+    [700004, "Covered Lanai"],
+  ] as const;
+  const page = [
+    `<h2>Daylen</h2>`,
+    // The loop's clone of the last slide, before the first.
+    slide(439080, "Elevation FM1"),
+    ...DAYLEN.map(([id, caption]) => slide(id, caption)),
+    `<h1>Daylen At Riversong</h1><h3>Floor Plans</h3><img src="https://www.pulte.com/-/media/fp.png" alt="">`,
+    `<h2>Similar plans</h2>`,
+    ...PINECREST.map(([id, caption]) => slide(id, caption)),
+  ].join("\n");
+  const BASE = "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105";
+
+  it("takes the first carousel of captioned slides, each picture once", () => {
+    const { first } = captionedCarousel(page, BASE);
+    expect(first.map((i) => i.alt)).toEqual([
+      "Elevation FM1",
+      "Daylen Exterior",
+      "Designer Kitchen",
+      "Large Center Island",
+      "Gathering Room",
+      "Owner's Suite",
+      "Owner's Bath",
+      "Perfect for Entertaining",
+    ]);
+  });
+
+  it("marks the later carousels' pictures as somebody else's", () => {
+    const { drop } = captionedCarousel(page, BASE);
+    expect(drop.has(cdn(700002))).toBe(true);
+    expect(drop.has(cdn(650640))).toBe(false);
+  });
+
+  it("does not take a row of other plans' cards for a gallery", () => {
+    const cards = ["Daylen", "Pinecrest", "Crestmere", "Heston", "Mercer"]
+      .map((name, i) => `<a href="/p/${i}"><img src="https://x.com/${i}.jpg" alt="${name}"><h3>${name}</h3></a><p>From $400,000</p>`)
+      .join("");
+    expect(captionedCarousel(cards, BASE)).toEqual({ first: [], drop: new Set() });
+  });
+
+  it("knows one picture at two sizes of the same image service", () => {
+    expect(pictureKey(cdn(650661, 400))).toBe(pictureKey(cdn(650661, 768)));
+    expect(pictureKey(cdn(650661))).not.toBe(pictureKey(cdn(650640)));
   });
 });

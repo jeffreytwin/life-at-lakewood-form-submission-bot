@@ -22,6 +22,8 @@
 // gallery, a page that keeps no more than it draws yields what it draws,
 // and either way the plan keeps exactly what it had.
 
+import { classifyRoom } from "@/lib/floorplans/gallery-order";
+
 export interface PageImage {
   src: string;
   alt: string;
@@ -38,8 +40,11 @@ export interface PageSection {
   images: PageImage[];
 }
 
-const attr = (tag: string, name: string): string | null =>
-  tag.match(new RegExp(`\\s${name}=["']([^"']*)["']`, "i"))?.[1] ?? null;
+/** An attribute's value, in whichever quotes it is written: alt="Owner's Suite" holds an apostrophe. */
+const attr = (tag: string, name: string): string | null => {
+  const m = tag.match(new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i"));
+  return m ? (m[1] ?? m[2] ?? null) : null;
+};
 
 /**
  * The largest picture a responsive image offers, out of the set it lists:
@@ -66,6 +71,8 @@ function readable(html: string): string {
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
+    .replace(/&#0*39;|&#x0*27;|&apos;|&rsquo;|&#8217;|’/gi, "'")
+    .replace(/&quot;|&#0*34;/gi, '"')
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -240,6 +247,80 @@ export function firstGallery(html: string, baseUrl: string): PlanPageGallery {
   return { first: wholeGallery(html, drawn, elsewhere), drop };
 }
 
+/**
+ * The plan's photos where a page shows them as a carousel of captioned
+ * slides instead of under a gallery heading: each picture followed by a
+ * heading that repeats its alt text. Pulte's plan pages are built this way
+ * (Daylen at Riversong, 2026-09-23): twenty-two slides, "Daylen Exterior",
+ * "Designer Kitchen", "Owner's Bath", "Elevation FM1", under no heading
+ * that says gallery — and the same page carries every other plan's
+ * carousel further down, so only the first carousel is the plan's.
+ *
+ * A row of cards for other plans is built the same way (a picture, then a
+ * heading with the plan's name), so a carousel counts only when most of
+ * its captions name a room or a view of the house. A slide a carousel
+ * repeats to loop is one picture. Pure; exported for tests.
+ */
+export function captionedCarousel(html: string, pageUrl: string): PlanPageGallery {
+  const baseUrl = documentBase(html, pageUrl);
+  const absolute = (url: string) => {
+    try {
+      return new URL(url, baseUrl).href;
+    } catch {
+      return url;
+    }
+  };
+  type Mark = { at: number; heading?: string; image?: PageImage };
+  const marks: Mark[] = [];
+  for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) marks.push({ at: m.index ?? 0, heading: readable(m[2]) });
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const src =
+      attr(m[0], "src") ||
+      attr(m[0], "data-src") ||
+      largestInSrcSet(attr(m[0], "srcset") || attr(m[0], "data-srcset"));
+    if (!src || src.startsWith("data:")) continue;
+    marks.push({ at: m.index ?? 0, image: { src: absolute(src), alt: readable(attr(m[0], "alt") ?? "") } });
+  }
+  marks.sort((a, b) => a.at - b.at);
+
+  const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+  const runs: PageImage[][] = [];
+  let run: PageImage[] = [];
+  for (let i = 0; i < marks.length; i++) {
+    const image = marks[i].image;
+    const caption = marks[i + 1]?.heading;
+    if (image && image.alt && caption !== undefined && same(caption, image.alt)) {
+      run.push(image);
+      i++; // the caption
+    } else if (image || (marks[i].heading !== undefined && run.length)) {
+      if (run.length) runs.push(run);
+      run = [];
+    }
+  }
+  if (run.length) runs.push(run);
+
+  const first =
+    runs
+      .map((candidate) => {
+        const seen = new Set<string>();
+        return candidate.filter((image) => {
+          const key = pictureKey(image.src);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      })
+      .find((slides) => slides.length >= 4 && slides.filter((image) => classifyRoom(image.alt)).length * 2 >= slides.length) ?? [];
+  // The other carousels' pictures are other plans': not to be taken from
+  // anyone else's reading of the page either.
+  const mine = new Set(first.map((image) => pictureKey(image.src)));
+  const drop = new Set<string>();
+  if (first.length) {
+    for (const other of runs) for (const image of other) if (!mine.has(pictureKey(image.src))) drop.add(image.src);
+  }
+  return { first, drop };
+}
+
 const escapeRe = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The sizes a media store keeps one picture at, largest first. */
@@ -258,6 +339,11 @@ const THUMB = /^(.+)-thumbnail(\.[a-z0-9]+)$/i;
  * come off.
  */
 export function pictureKey(src: string): string {
+  // A picture an image service fetches and resizes is the picture it
+  // fetches, whatever size it is asked for: Pulte's are
+  // res.cloudinary.com/…/image/fetch/ar_1.5,c_fill,w_768/https://pultegroup.picturepark.com/….
+  const fetched = src.match(/\/image\/fetch\/(?:[^/]*\/)*?(https?:\/\/?[^/].*)$/i)?.[1];
+  if (fetched) return pictureKey(fetched.replace(/^(https?:)\/(?!\/)/i, "$1//"));
   const name = src.split("/").pop() ?? "";
   const sized = name.match(SIZED) ?? name.match(THUMB);
   const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(/\.(jpe?g|png|webp|avif|gif)$/i, "");

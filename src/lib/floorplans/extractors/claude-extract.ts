@@ -14,7 +14,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
-import { documentBase, firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, documentBase, firstGallery, fullSize, largestInSrcSet, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { asTour } from "@/lib/floorplans/standardize";
@@ -544,7 +544,11 @@ export async function readPlanPageWithClaude(
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
 
-  const gallery = firstGallery(html, page_.url);
+  // Read off the page's gallery headings, or failing those its first
+  // carousel of captioned slides (Pulte).
+  const headed = firstGallery(html, page_.url);
+  const carousel = headed.first.length ? null : captionedCarousel(html, page_.url);
+  const gallery = carousel ? { first: carousel.first, drop: new Set([...headed.drop, ...carousel.drop]) } : headed;
   // A page whose galleries cannot be read off its headings may still be
   // carrying them: Perry draws a hero and four thumbnails and keeps
   // twenty-three photographs in its payload (Jeff, 2026-09-22). Only
