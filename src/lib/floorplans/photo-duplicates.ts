@@ -7,10 +7,24 @@
 // Asked for from the edit overlay's "Sort the photos", beside the room
 // labels (photo-rooms.ts); the gallery as a whole is compared, so the
 // answer is not remembered picture by picture the way a room is.
+//
+// What decides is the picture, never its caption or its name: two photos
+// captioned differently are still one photo shown twice (Jeff,
+// 2026-09-23). Three things are asked:
+//   - its pixels: each picture's fingerprint (a difference hash of it
+//     shrunk to 9×8), which a copy at another size or quality keeps;
+//   - its file: one upload however spelled or sized (fileKey);
+//   - Claude, which looks at the whole gallery and can see a crop the
+//     fingerprint cannot. Claude found none of Medallion's four pairs
+//     of one rendering at two sizes on its own, and on one run called
+//     two different SimplyDwell pictures one (2026-09-23), so what it
+//     reports is taken only where the fingerprints are close as well.
 
 import Anthropic from "@anthropic-ai/sdk";
+import sharp from "sharp";
 import { logger } from "@/lib/shared/logger";
 import { askedSize, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { fetchImage } from "@/lib/floorplans/media";
 
 const MODEL = "claude-opus-5";
 
@@ -29,10 +43,20 @@ function getClient(): Anthropic {
 
 const SAME_TOOL: Anthropic.Tool = {
   name: "report_duplicates",
-  description: "Report the pictures that are the same photograph.",
+  description: "Report what each picture shows, then the pictures that are the same photograph.",
   input_schema: {
     type: "object" as const,
     properties: {
+      pictures: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { n: { type: "integer" }, shows: { type: "string" } },
+          required: ["n", "shows"],
+        },
+        description:
+          "Every picture in order: its number, and a few words on what it shows, from where, and a detail that tells it apart from the others",
+      },
       same: {
         type: "array",
         items: { type: "array", items: { type: "integer" } },
@@ -40,20 +64,23 @@ const SAME_TOOL: Anthropic.Tool = {
           "One entry per photograph that appears more than once: the numbers of every picture that is that photograph. Empty when every picture is a different photograph.",
       },
     },
-    required: ["same"],
+    required: ["pictures", "same"],
   },
 };
 
 const PROMPT =
   `These are the numbered pictures of one new home's photo gallery. Some may be the same photograph more than once: the same shot at another size, cropped a little differently, or saved again in another format. Find those.\n\n` +
-  `Two shots of the same room from another angle or at another moment are different photographs. So are two elevations (designs) of the house, however alike, and a daytime and a dusk shot of the same front. Report only pictures that are the same photograph.\n\n` +
+  `First look at each picture closely and say in a few words what it shows, from where, and a detail that tells it apart. Then compare every picture with every other. ` +
+  `Pictures that are one photograph show the same scene from the same spot: the same furniture in the same places, the same light, the same sky; one may be larger, smaller or cut down at its edges. ` +
+  `Two shots of the same room from another angle or at another moment are different photographs. So are two different elevations (designs) of the house, which differ in roof, windows, colours or materials, and a daytime and a dusk shot of the same front. ` +
+  `The same elevation rendering at two sizes is one photograph.\n\n` +
   `Report each set of numbers that are one photograph, and none when every picture is a different photograph.`;
 
 /** A picture Claude can look at: not a drawing's .svg, nor a format it does not read. */
 const readable = (url: string) => !/\.(svg|avif|heic|tiff?|bmp)(?:[?#]|$)/i.test(url);
 
-/** One request: the sets of these pictures that are one photograph, as positions in `urls`. */
-async function sameIn(urls: string[]): Promise<number[][]> {
+/** One request: the sets of these pictures that are one photograph, as positions in `urls`, and what Claude said each shows. */
+async function sameIn(urls: string[]): Promise<{ same: number[][]; shows: string[] }> {
   const content: Anthropic.ContentBlockParam[] = [{ type: "text", text: PROMPT }];
   urls.forEach((url, i) => {
     content.push({ type: "text", text: `Picture ${i + 1}:` });
@@ -61,15 +88,20 @@ async function sameIn(urls: string[]): Promise<number[][]> {
   });
   const response = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 8_000,
+    max_tokens: 16_000,
     // Telling one shot from a near one is closer work than naming a room.
-    output_config: { effort: "medium" },
+    output_config: { effort: "high" },
     tools: [SAME_TOOL],
     tool_choice: { type: "tool", name: SAME_TOOL.name },
     messages: [{ role: "user", content }],
   });
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-  return sameFromAnswer((toolUse?.input as { same?: unknown } | undefined)?.same, urls.length);
+  const input = (toolUse?.input ?? {}) as { same?: unknown; pictures?: { n?: unknown; shows?: unknown }[] };
+  const shows = urls.map((_, i) => {
+    const said = Array.isArray(input.pictures) ? input.pictures.find((p) => Number(p?.n) === i + 1) : undefined;
+    return typeof said?.shows === "string" ? said.shows : "";
+  });
+  return { same: sameFromAnswer(input.same, urls.length), shows };
 }
 
 /**
@@ -87,21 +119,19 @@ export function sameFromAnswer(same: unknown, count: number): number[][] {
     .filter((set) => set.length >= 2);
 }
 
-/**
- * The sets of a gallery's pictures that are one photograph, as positions
- * in `urls`, by looking at them. `checked` is false when a request failed
- * (an empty account, a picture that would not load): nothing is taken out
- * on a look that did not happen.
- */
-export async function samePhotos(urls: string[]): Promise<{ same: number[][]; checked: boolean }> {
+/** Claude's sets across the gallery, in batches it can see at once; `checked` is false where a request failed. */
+async function claudeSets(urls: string[]): Promise<{ same: number[][]; shows: string[]; checked: boolean }> {
   const lookable = urls.map((url, at) => ({ url, at })).filter(({ url }) => readable(url));
   const same: number[][] = [];
+  const shows = urls.map(() => "");
   let checked = true;
   for (let i = 0; i < lookable.length; i += AT_ONCE) {
     const batch = lookable.slice(i, i + AT_ONCE);
     if (batch.length < 2) continue;
     try {
-      for (const set of await sameIn(batch.map((p) => p.url))) same.push(set.map((n) => batch[n].at));
+      const answer = await sameIn(batch.map((p) => p.url));
+      for (const set of answer.same) same.push(set.map((n) => batch[n].at));
+      answer.shows.forEach((said, n) => (shows[batch[n].at] = said));
     } catch (err) {
       checked = false;
       logger.warn("Photos could not be compared for duplicates", {
@@ -110,7 +140,100 @@ export async function samePhotos(urls: string[]): Promise<{ same: number[][]; ch
       });
     }
   }
-  return { same, checked };
+  return { same, shows, checked };
+}
+
+/** Pictures fingerprinted at once. */
+const PRINTING = 6;
+
+/**
+ * A picture's fingerprint: 64 bits, each whether a pixel of the picture
+ * shrunk to 9×8 in grey is brighter than its right-hand neighbour. A copy
+ * at another size or quality keeps nearly all of them; another photograph
+ * keeps about half. Null when the picture cannot be fetched or read.
+ */
+async function printOf(url: string): Promise<string | null> {
+  const fetched = await fetchImage(url);
+  if (!fetched) return null;
+  try {
+    const { data } = await sharp(Buffer.from(fetched.data))
+      .rotate()
+      .flatten({ background: "#ffffff" })
+      .grayscale()
+      .resize(9, 8, { fit: "fill" })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    let bits = "";
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) bits += data[y * 9 + x] > data[y * 9 + x + 1] ? "1" : "0";
+    return bits;
+  } catch {
+    return null;
+  }
+}
+
+/** How many of two fingerprints' 64 bits differ. Exported for tests. */
+export function printDistance(a: string, b: string): number {
+  let n = 0;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) n++;
+  return n;
+}
+
+/** Fingerprints this close are one photograph, whatever anyone says: a copy at another size or quality. */
+export const SAME_PRINT = 6;
+/** Fingerprints this close may be one photograph cut down a little: taken as one where Claude says so. */
+export const NEAR_PRINT = 22;
+
+/**
+ * The pairs that are one photograph: the fingerprints alone where they
+ * all but match, and Claude's sets where the fingerprints are near too.
+ * A pair whose fingerprints are far apart, or that could not be
+ * fingerprinted, is not taken on Claude's word. Pure; exported for tests.
+ */
+export function confirmedSame(prints: (string | null)[], claude: number[][]): { same: number[][]; rejected: number[][] } {
+  const same: number[][] = [];
+  const rejected: number[][] = [];
+  const near = (i: number, j: number, most: number) => {
+    const [a, b] = [prints[i], prints[j]];
+    return a != null && b != null && printDistance(a, b) <= most;
+  };
+  for (let i = 0; i < prints.length; i++) for (let j = i + 1; j < prints.length; j++) if (near(i, j, SAME_PRINT)) same.push([i, j]);
+  for (const set of claude) {
+    for (let k = 1; k < set.length; k++) (near(set[0], set[k], NEAR_PRINT) ? same : rejected).push([set[0], set[k]]);
+  }
+  return { same, rejected };
+}
+
+export interface SamePhotos {
+  /** Pairs and sets that are one photograph, as positions in the gallery. */
+  same: number[][];
+  /** Whether Claude looked; false where a request failed. */
+  checked: boolean;
+  /** Sets Claude named that the fingerprints did not bear out. */
+  rejected: number[][];
+  /** What Claude said each picture shows. */
+  shows: string[];
+  prints: (string | null)[];
+}
+
+/**
+ * The sets of a gallery's pictures that are one photograph, as positions
+ * in `urls`: by their fingerprints and by Claude looking at them together
+ * (confirmedSame). Nothing is taken out on a look that did not happen.
+ */
+export async function samePhotos(urls: string[]): Promise<SamePhotos> {
+  const prints: (string | null)[] = new Array(urls.length).fill(null);
+  let next = 0;
+  const printing = Promise.all(
+    Array.from({ length: Math.min(PRINTING, urls.length) }, async () => {
+      while (next < urls.length) {
+        const i = next++;
+        prints[i] = await printOf(urls[i]);
+      }
+    })
+  );
+  const [claude] = await Promise.all([claudeSets(urls), printing]);
+  const { same, rejected } = confirmedSame(prints, claude.same);
+  return { same, checked: claude.checked, rejected, shows: claude.shows, prints };
 }
 
 /**

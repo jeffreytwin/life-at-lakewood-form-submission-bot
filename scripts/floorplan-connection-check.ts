@@ -29,7 +29,7 @@ import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, reso
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
-import { samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
+import { printDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
 interface Target {
@@ -840,10 +840,20 @@ async function main() {
     const found = await samePhotos(urls);
     const once = withoutDuplicates(urls, found.same);
     const name = (u: string) => u.replace(/[?#].*$/, "").split("/").pop();
+    const sets = (list: number[][]) => list.map((set) => `[${set.map((i) => i + 1).join(", ")}]`).join(" ") || "none";
+    const close: string[] = [];
+    for (let i = 0; i < urls.length; i++)
+      for (let j = i + 1; j < urls.length; j++) {
+        const [a, b] = [found.prints[i], found.prints[j]];
+        if (a && b && printDistance(a, b) <= 30) close.push(`${printDistance(a, b)}: ${i + 1}–${j + 1}`);
+      }
     const report = [
       `checked by Claude: ${found.checked} in ${Math.round((Date.now() - started) / 1000)}s`,
-      `Claude's sets: ${found.same.map((set) => `[${set.map((i) => i + 1).join(", ")}]`).join(" ") || "none"}`,
-      ...urls.map((u, i) => `  ${i + 1}. ${name(u)}`),
+      `same (fingerprints, and Claude where they agree): ${sets(found.same)}`,
+      `Claude's sets not borne out: ${sets(found.rejected)}`,
+      `fingerprints unread: ${found.prints.map((p, i) => (p ? null : i + 1)).filter(Boolean).join(", ") || "none"}`,
+      `closest fingerprints (bits apart of 64): ${close.sort((x, y) => parseInt(x) - parseInt(y)).join(" · ") || "none within 30"}`,
+      ...urls.map((u, i) => `  ${i + 1}. ${name(u)} — ${found.shows[i] || "?"}`),
       `kept ${once.urls.length} of ${urls.length}:`,
       ...once.urls.map((u) => `  ✓ ${name(u)}`),
       ...once.removed.map((u) => `  ✗ ${name(u)}`),
