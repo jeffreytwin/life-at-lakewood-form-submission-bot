@@ -28,6 +28,7 @@ import { supabase } from "@/lib/supabase/client";
 import { preparePlans, readsThroughBrowser, resolveExtractor, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
+import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
 interface Target {
@@ -51,6 +52,8 @@ interface Target {
 interface Config {
   /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. */
   anatomy?: string[];
+  /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
+  raw?: { url: string; around: string[]; chars?: number }[];
   concurrency?: number;
   /** Plans printed with every picture; the rest get one line each. */
   detailPlans?: number;
@@ -446,6 +449,41 @@ async function jsonAnatomy(url: string): Promise<string> {
   return out.join("\n");
 }
 
+/**
+ * A page's markup as a plain fetch receives it, around the words given —
+ * a caption, a price, a plan's name — and what the readers here make of
+ * the page: how long Claude's copy of it is, and which pictures the
+ * gallery readers take.
+ */
+async function rawAround(url: string, around: string[], chars = 1500): Promise<string> {
+  try {
+    const res = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(45_000) });
+    const html = await res.text();
+    const out = [`status ${res.status}; ${html.length} chars; answered from ${res.url}`];
+    const text = distill(html, res.url || url);
+    out.push("", `== CLAUDE IS HANDED (${text.length} chars) ==`, text.slice(0, 2500));
+    const gallery = firstGallery(html, res.url || url);
+    out.push("", `== FIRST GALLERY (${gallery.first.length}; ${gallery.drop.size} dropped) ==`, ...gallery.first.slice(0, 40).map((i) => `${i.src} alt=${JSON.stringify(i.alt)}`));
+    const carried = payloadGallery(html, res.url || url);
+    out.push("", `== PAYLOAD GALLERY (${carried.length}) ==`, ...carried.slice(0, 40).map((i) => `${i.src}${i.outside ? " (outside)" : ""}`));
+    for (const words of around) {
+      let from = 0;
+      for (let n = 0; n < 3; n++) {
+        const at = html.indexOf(words, from);
+        if (at < 0) {
+          if (n === 0) out.push("", `== "${words}" not in the markup ==`);
+          break;
+        }
+        out.push("", `== "${words}" #${n + 1} at ${at} ==`, html.slice(Math.max(0, at - chars), at + chars));
+        from = at + words.length;
+      }
+    }
+    return out.join("\n");
+  } catch (error) {
+    return `could not fetch ${url}: ${error instanceof Error ? error.message : String(error)}`;
+  }
+}
+
 async function anatomy(url: string): Promise<string> {
   if (/\/api\/|\.json(?:\?|$)/i.test(url)) return jsonAnatomy(url).catch((e) => `could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
   let page: Page | null = null;
@@ -711,6 +749,10 @@ async function main() {
   for (const url of config.anatomy ?? []) {
     await keep(`anatomy: ${url}`, await anatomy(url));
     say(`anatomy of ${url} kept`);
+  }
+  for (const { url, around, chars } of config.raw ?? []) {
+    await keep(`raw: ${url}`, await rawAround(url, around, chars));
+    say(`markup of ${url} kept`);
   }
   const all = await loadConnections();
   const jobs: { conn: Connection; target: Target }[] = [];

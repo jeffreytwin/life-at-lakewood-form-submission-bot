@@ -1,10 +1,5 @@
 {
-  "anatomy": [
-    "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
-    "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
-    "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=/florida/sarasota/venice/wellen-park/sunstone/anclote&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
-    "https://wellenpark.com/home/3336189/detail/"
-  ],
+  "anatomy": [],
   "concurrency": 4,
   "detailPlans": 99,
   "checks": [
@@ -17,34 +12,6 @@
       "community": "North River Ranch"
     },
     {
-      "builder": "Perry Homes"
-    },
-    {
-      "builder": "Richmond American Homes"
-    },
-    {
-      "builder": "Neal Communities",
-      "community": "Grand Palm"
-    },
-    {
-      "builder": "Lennar",
-      "community": "Stillwater"
-    },
-    {
-      "builder": "D.R. Horton",
-      "community": "Oakfield"
-    },
-    {
-      "builder": "Homes by WestBay",
-      "community": "Star Farms",
-      "method": "render_claude"
-    },
-    {
-      "builder": "John Cannon Homes",
-      "community": "Everly",
-      "method": "render_claude"
-    },
-    {
       "builder": "Mattamy Homes",
       "community": "Sunstone"
     },
@@ -53,86 +20,46 @@
       "community": "Windwater"
     },
     {
-      "builder": "Lee Wetherington",
-      "community": "Everly"
-    },
-    {
-      "builder": "David Weekley Homes",
-      "community": "Waterside - Emerald Landing"
-    },
-    {
       "builder": "M/I Homes",
       "community": "Palmera"
     },
     {
-      "builder": "Dream Finders Homes",
-      "community": "Seaire"
-    },
-    {
-      "builder": "Homes by Towne",
-      "community": "Waterside - Shellstone"
-    },
-    {
       "builder": "ICI Homes",
       "community": "Oakbend"
+    }
+  ],
+  "raw": [
+    {
+      "url": "https://www.pulte.com/homes/florida/sarasota/parrish/riversong-211407/daylen-699105",
+      "around": [
+        "Daylen Exterior",
+        "650640"
+      ],
+      "chars": 1500
     },
     {
-      "builder": "KB Home",
-      "community": "Sawgrass Lakes",
-      "method": "render_claude"
+      "url": "https://wellenpark.com/home/3336189/detail/",
+      "around": [
+        "Multi-Family",
+        "INTERACTIVE PLAN"
+      ],
+      "chars": 1200
     },
     {
-      "builder": "Kolter Homes",
-      "community": "Woodland Preserve"
+      "url": "https://wellenpark.com/home/2946210/detail/",
+      "around": [
+        "Broadleaf",
+        "Palm"
+      ],
+      "chars": 1200
     },
     {
-      "builder": "Adams Homes"
-    },
-    {
-      "builder": "Anchor Builders"
-    },
-    {
-      "builder": "Arthur Rutenberg"
-    },
-    {
-      "builder": "Ashton Woods"
-    },
-    {
-      "builder": "Cardel Homes",
-      "method": "render_claude"
-    },
-    {
-      "builder": "Centex Homes"
-    },
-    {
-      "builder": "DRB Homes"
-    },
-    {
-      "builder": "Highland Homes",
-      "method": "render_claude"
-    },
-    {
-      "builder": "Inland Homes"
-    },
-    {
-      "builder": "Medallion Home"
-    },
-    {
-      "builder": "Ryan Homes"
-    },
-    {
-      "builder": "SimplyDwell Homes"
-    },
-    {
-      "builder": "Stock Luxury Homes"
-    },
-    {
-      "builder": "Taylor Morrison",
-      "community": "Azario - Esplanade"
-    },
-    {
-      "builder": "Toll Brothers",
-      "community": "The Isles"
+      "url": "https://www.perryhomes.com/new-homes/florida/southwest-florida/star-farms-at-lakewood-ranch/star-farms-at-lakewood-ranch-50/2016f",
+      "around": [
+        "E-31",
+        "2016F-FP"
+      ],
+      "chars": 1200
     }
   ]
 }
