@@ -15,11 +15,11 @@
 //     colour with every other; a copy at another size or quality is all
 //     but the same, and another photograph is not;
 //   - its file: one upload however spelled or sized (fileKey);
-//   - Claude, which looks at the whole gallery and can see a crop or an
-//     edit the pixels only half match. Claude found none of Medallion's
-//     four renderings at two sizes on its own, and on one run called two
-//     different SimplyDwell photos one (2026-09-23), so what it reports is
-//     taken only where the pixels are near as well.
+//   - Claude, which looks at the whole gallery and can confirm a copy
+//     edited a little. Claude found none of Medallion's four renderings at
+//     two sizes on its first run, and on one run called two different
+//     SimplyDwell photos one (2026-09-23), so what it reports is taken
+//     only where the pixels are near as well.
 // A coarser fingerprint (a 64-bit difference hash) was tried first and
 // called Medallion's four elevations one photograph: renderings drawn from
 // one template differ in the house, not in the sky and lawn around it.
@@ -181,10 +181,23 @@ export function pixelDistance(a: Uint8Array, b: Uint8Array): number {
 /** Whether two pictures have the same shape, so their whole pictures can be laid one over the other. */
 const sameShape = (a: PictureLook, b: PictureLook) => Math.abs(a.aspect / b.aspect - 1) <= 0.03;
 
-/** Pictures of one shape this close are one photograph, whatever anyone says: a copy at another size or quality. */
-export const SAME_PIXELS = 6;
-/** Pictures this close, whole or in their middles, may be one photograph cut or edited a little: taken as one where Claude says so. */
-export const NEAR_PIXELS = 18;
+/**
+ * Pictures of one shape this close are one photograph, whatever anyone
+ * says. Measured on real galleries (2026-09-23): one picture at two sizes
+ * comes 0.4 to 0.6 apart (Medallion's four renderings at 800 and 1200
+ * wide, SimplyDwell's elevation and its hero copy); the nearest two
+ * different pictures came 5.8 apart (two of Medallion's elevations,
+ * drawn from one template), SimplyDwell's elevations A and B 17, and
+ * photographs of different rooms 20 and more.
+ */
+export const SAME_PIXELS = 2.5;
+/**
+ * Pictures this close, whole or in their middles, may be one photograph
+ * edited a little: taken as one where Claude says so. Under the nearest
+ * two different pictures measured (5.8), so Claude cannot take one
+ * elevation for another.
+ */
+export const NEAR_PIXELS = 5;
 
 /**
  * The pairs that are one photograph: the pixels alone where two pictures
