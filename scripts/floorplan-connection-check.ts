@@ -612,7 +612,9 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     // Quick move-ins.
     const unlinked = homes.filter((h) => !h.relatedPlanKey);
     if (homes.length) out(`  homes linked to a plan: ${homes.length - unlinked.length}/${homes.length}`);
-    if (unlinked.length) problems.push(`homes: ${unlinked.length}/${homes.length} not tied to a plan (${unlinked.map((h) => h.name).slice(0, 5).join("; ")})`);
+    // A community that sells only homes has no plans to tie them to (Meritage's Salt Meadows).
+    if (!base.length && homes.length && siteBase.length) problems.push(`plans: none came back, though the site shows ${siteBase.length} for this community`);
+    else if (base.length && unlinked.length) problems.push(`homes: ${unlinked.length}/${homes.length} not tied to a plan (${unlinked.map((h) => h.name).slice(0, 5).join("; ")})`);
 
     // The table.
     out(`  ${"plan".padEnd(30)} ${"type".padEnd(12)} ${"price".padEnd(11)} bd  ba   sqft  gar    ph  bp tour  order`);
