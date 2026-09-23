@@ -469,7 +469,22 @@ async function jsonAnatomy(url: string): Promise<string> {
     return null;
   };
   const items = firstList(data, 0);
-  const whole = items ? [`== FIRST ITEM (of ${items.length}) ==`, JSON.stringify(items[0], null, 1).slice(0, 12_000)] : [];
+  // Every key, with each list cut to its first two entries.
+  const brief = (_key: string, value: unknown) =>
+    Array.isArray(value) && value.length > 2 ? [...value.slice(0, 2), `…${value.length - 2} more`] : value;
+  const whole = items ? [`== FIRST ITEM (of ${items.length}; lists cut to two) ==`, JSON.stringify(items[0], brief, 1).slice(0, 16_000)] : [];
+  // What the labelling fields say across the whole feed: a picture's type, a plan's kind.
+  const labels = new Map<string, Set<string>>();
+  const collect = (value: unknown, key: string) => {
+    if (typeof value === "string" && /type|category|kind|status/i.test(key) && value.length < 80) {
+      const seen = labels.get(key) ?? new Set<string>();
+      if (seen.size < 30) seen.add(value);
+      labels.set(key, seen);
+    } else if (Array.isArray(value)) value.forEach((v) => collect(v, key));
+    else if (value && typeof value === "object") for (const [k, v] of Object.entries(value)) collect(v, k);
+  };
+  collect(data, "$");
+  whole.push("", "== LABELS ==", ...[...labels].map(([k, v]) => `${k}: ${[...v].join(" | ")}`));
   out.push("", ...whole, "", "== SAMPLES (first item of each list of pictures) ==", ...samples, "", "== SHAPE ==", ...shapes, "", "== BEGINS ==", text.slice(0, 3000));
   return out.join("\n");
 }
