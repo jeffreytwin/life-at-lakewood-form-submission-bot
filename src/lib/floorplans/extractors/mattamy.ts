@@ -226,9 +226,15 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return out;
 }
 
-/** A base plan with what its own page's layout adds; a layout that will not load leaves it as its card had it, marked unread. */
+/**
+ * A plan or a home with what its own page's layout adds; a layout that
+ * will not load leaves it as its card had it, marked unread. A home's page
+ * carries its own gallery — its kitchen, its dining room, staged — where
+ * its card carried one picture (5038 125th Avenue E. at Windwater,
+ * 2026-09-23).
+ */
 async function withPlanLayout(plan: NormalizedPlan): Promise<NormalizedPlan> {
-  if (plan.quickMoveIn || !plan.sourceUrl) return plan;
+  if (!plan.sourceUrl) return plan;
   const path = new URL(plan.sourceUrl).pathname;
   try {
     const res = await fetch(
