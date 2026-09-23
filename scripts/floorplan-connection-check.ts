@@ -15,10 +15,15 @@
 // many pictures each claims. Those counts are the answer key.
 //
 // Which connections are checked is scripts/floorplan-connection-check.json.
-// Everything is printed with the FP-CHECK prefix and read from the build log.
+// Everything is printed with the FP-CHECK prefix in the build log, and each
+// connection's report is also written into the preview deployment itself —
+// /fp-check/index.txt and /fp-check/<builder>--<community>.txt — so one
+// builder's can be read on its own. Only on the working branch; production
+// never builds this.
 
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import Anthropic from "@anthropic-ai/sdk";
 import type { Browser, Page } from "puppeteer-core";
 import { supabase } from "@/lib/supabase/client";
 import { preparePlans, resolveExtractor, URLLESS_BUILDERS } from "@/lib/floorplans/sync";
@@ -49,6 +54,8 @@ interface Config {
 const say = (...parts: unknown[]) => console.log("FP-CHECK", ...parts);
 const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
 const RUN_LIMIT_MS = 300_000;
+const REPORT_DIR = path.join(process.cwd(), "public", "fp-check");
+const slug = (s: string) => normKey(s).slice(0, 60);
 const CHECK_TIMEOUT_MS = 420_000;
 
 const config = JSON.parse(
@@ -284,8 +291,23 @@ function fileTail(url: string): string {
 
 interface Outcome {
   label: string;
+  file: string;
   verdict: string[];
 }
+
+/** Whether Claude can be asked anything at all: a one-token question, so an empty account is known before forty runs fail on it. */
+async function claudeAnswers(): Promise<string | null> {
+  try {
+    await new Anthropic().messages.create({ model: "claude-sonnet-5", max_tokens: 1, messages: [{ role: "user", content: "ok" }] });
+    return null;
+  } catch (error) {
+    return error instanceof Error ? error.message.slice(0, 200) : String(error);
+  }
+}
+
+/** Engines that read pages through Claude; the rest parse a builder's own data. */
+const NEEDS_CLAUDE = new Set(["fetch_claude", "render_claude"]);
+let claudeDown: string | null = null;
 
 async function check(conn: Connection, target: Target): Promise<Outcome> {
   const label = `${conn.builder.name} · ${conn.community.name} (${conn.site.name ?? "?"})`;
@@ -317,7 +339,12 @@ async function check(conn: Connection, target: Target): Promise<Outcome> {
   // The extraction.
   let plans: NormalizedPlan[] = [];
   let ms = 0;
-  if (!target.surveyOnly) {
+  const claudeBuilder = NEEDS_CLAUDE.has(conn.builder.extraction_method ?? "") && !["M/I Homes", "ICI Homes", "Neal Signature Homes", "Toll Brothers", "Taylor Morrison", "Lennar", "Meritage Homes", "Mattamy Homes", "DRB Homes"].includes(conn.builder.name);
+  if (claudeDown && claudeBuilder && !target.surveyOnly) {
+    problems.push("not extracted: Claude is unavailable this run");
+    out(`  extraction skipped: Claude unavailable (${claudeDown})`);
+  }
+  if (!target.surveyOnly && !(claudeDown && claudeBuilder)) {
     const extractor = resolveExtractor(conn.builder.name, conn.builder.extraction_method);
     const started = Date.now();
     try {
@@ -436,12 +463,21 @@ async function check(conn: Connection, target: Target): Promise<Outcome> {
     const verdict = problems.length ? problems : ["looks healthy"];
     out(`  VERDICT: ${verdict.join(" · ")}`);
     for (const l of lines) say(l);
-    return { label, verdict };
+    const file = `${slug(conn.builder.name)}--${slug(conn.community.name)}.txt`;
+    try {
+      writeFileSync(path.join(REPORT_DIR, file), lines.join("\n") + "\n");
+    } catch (error) {
+      say(`could not write ${file}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    return { label, file, verdict };
   }
 }
 
 async function main() {
   say(`start; Claude key ${process.env.ANTHROPIC_API_KEY ? "present" : "MISSING"}, Supabase ${process.env.SUPABASE_SERVICE_ROLE_KEY ? "present" : "MISSING"}`);
+  mkdirSync(REPORT_DIR, { recursive: true });
+  claudeDown = await claudeAnswers();
+  say(claudeDown ? `Claude is unavailable — pages will be surveyed but not extracted: ${claudeDown}` : "Claude answers");
   const all = await loadConnections();
   const jobs: { conn: Connection; target: Target }[] = [];
   for (const target of config.checks) {
@@ -466,7 +502,7 @@ async function main() {
         outcomes.push(await check(job.conn, job.target));
       } catch (error) {
         say(`check crashed for ${job.conn.builder.name} · ${job.conn.community.name}: ${error instanceof Error ? error.stack : String(error)}`);
-        outcomes.push({ label: `${job.conn.builder.name} · ${job.conn.community.name}`, verdict: ["check crashed"] });
+        outcomes.push({ label: `${job.conn.builder.name} · ${job.conn.community.name}`, file: "", verdict: ["check crashed"] });
       }
     }
   };
@@ -476,7 +512,11 @@ async function main() {
   ]);
 
   say("════ SUMMARY ════");
-  for (const o of outcomes.sort((a, b) => a.label.localeCompare(b.label))) say(`${o.label}: ${o.verdict.join(" · ")}`);
+  const summary = outcomes
+    .sort((a, b) => a.label.localeCompare(b.label))
+    .map((o) => `${o.label}: ${o.verdict.join(" · ")}${o.file ? `  [${o.file}]` : ""}`);
+  for (const line of summary) say(line);
+  writeFileSync(path.join(REPORT_DIR, "index.txt"), `checked ${new Date().toISOString()}\n` + summary.join("\n") + "\n");
   await browser?.close().catch(() => {});
 }
 

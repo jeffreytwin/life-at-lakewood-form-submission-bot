@@ -58,9 +58,16 @@ function getClient(): Anthropic {
   return client;
 }
 
+/**
+ * Both tools are strict: the answer is held to the schema as it is written,
+ * so a list comes back as a list. Without it, Perry's list pages came back
+ * with the whole list written out as one string of text that would not
+ * parse, every time (2026-09-23).
+ */
 const EXTRACT_TOOL: Anthropic.Tool = {
   name: "report_floor_plans",
   description: "Report every floor plan / home model found on the page.",
+  strict: true,
   input_schema: {
     type: "object" as const,
     properties: {
@@ -85,10 +92,12 @@ const EXTRACT_TOOL: Anthropic.Tool = {
             blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of floor plan DRAWINGS/blueprints for this plan (not photos)" },
           },
           required: ["name"],
+          additionalProperties: false,
         },
       },
     },
     required: ["plans"],
+    additionalProperties: false,
   },
 };
 
@@ -180,12 +189,18 @@ function distill(html: string, baseUrl: string): string {
       return u;
     }
   };
+  // A picture written into the page itself ("data:image/png;base64,...")
+  // is not an address anyone can use, and one of them can be longer than
+  // the rest of the page: Homes by Towne's plan pages distilled to 3.4
+  // million characters and every read was cut at the ceiling (2026-09-23).
+  const marker = (kind: string, url: string) => (/^data:/i.test(url) ? " " : ` [${kind} ${abs(url)}] `);
   const withImgs = html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<img\b[^>]*?src=["']([^"']+)["'][^>]*>/gi, (_, src) => ` [IMG ${abs(src)}] `)
-    .replace(/<a\b[^>]*?href=["']([^"'#]+)["'][^>]*>/gi, (_, href) => ` [LINK ${abs(href)}] `);
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<img\b[^>]*?src=["']([^"']+)["'][^>]*>/gi, (_, src) => marker("IMG", src))
+    .replace(/<a\b[^>]*?href=["']([^"'#]+)["'][^>]*>/gi, (_, href) => marker("LINK", href));
   const text = withImgs
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
@@ -288,6 +303,7 @@ function decodeEntities(text: string): string {
 const PLAN_PAGE_TOOL: Anthropic.Tool = {
   name: "report_plan_page",
   description: "Report what this one floor plan's own page says about it.",
+  strict: true,
   input_schema: {
     type: "object" as const,
     properties: {
@@ -306,6 +322,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
     },
     required: [],
+    additionalProperties: false,
   },
 };
 

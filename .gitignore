@@ -45,3 +45,6 @@ next-env.d.ts
 
 # CSV exports
 *.csv
+
+# connection check reports (scripts/floorplan-connection-check.ts)
+/public/fp-check/
