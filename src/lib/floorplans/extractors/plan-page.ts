@@ -514,6 +514,11 @@ const DRAWING_CLASS = /floor[-_]?plan|(?:^|[_-])fp[-_]?(?:img|image|drawing)\b/i
 /** …but not a list of other plans ("related-floorplans", "floorplan-card"). */
 const OTHER_PLANS_CLASS = /related|other|similar|more|card|list|grid|carousel|slider|nav|menu/i;
 
+/** A page's own furniture beside a drawing: Kolter puts ".../images/svg/sketch.svg" in its floor plan box (2026-09-23). */
+const UI_PICTURE = /\/(?:icons?|svg|sprites?)\/|(?:^|[\/_-])(?:icon|sketch|logo|sprite|arrow|close|zoom|expand|play|download|print)[^\/]*\.(?:svg|png|gif)(?:[?#]|$)/i;
+/** A picture drawn smaller than a drawing could be read at. */
+const tiny = (tag: string) => [attr(tag, "width"), attr(tag, "height")].some((v) => v != null && /^\d+$/.test(v) && Number(v) < 80);
+
 /**
  * The floor plan drawings a plan's page marks as such in its markup: the
  * pictures under a heading that is only "Floor Plan" (Stock: "<h2>Floor
@@ -528,7 +533,7 @@ export function drawingsMarked(html: string, pageUrl: string): string[] {
   const found: string[] = [];
   const take = (tag: string) => {
     const src = imageAddress(tag);
-    if (!src || src.startsWith("data:") || found.length >= 6) return;
+    if (!src || src.startsWith("data:") || found.length >= 6 || UI_PICTURE.test(src) || tiny(tag)) return;
     try {
       const url = new URL(src.replace(/&amp;/gi, "&"), baseUrl).href;
       if (!found.includes(url)) found.push(url);

@@ -1,23 +1,9 @@
 {
   "anatomy": [],
   "raw": [],
-  "concurrency": 3,
-  "detailPlans": 2,
+  "concurrency": 2,
+  "detailPlans": 8,
   "checks": [
-    {
-      "builder": "Stock Luxury Homes",
-      "all": true
-    },
-    {
-      "builder": "SimplyDwell Homes",
-      "all": true
-    },
-    {
-      "builder": "Homes by Towne"
-    },
-    {
-      "builder": "Perry Homes"
-    },
     {
       "builder": "Kolter Homes",
       "community": "Woodland Preserve"
@@ -25,18 +11,6 @@
     {
       "builder": "Dream Finders Homes",
       "community": "Waterside - Bungalow Walk"
-    },
-    {
-      "builder": "Medallion Home"
-    },
-    {
-      "builder": "Inland Homes"
-    },
-    {
-      "builder": "Cardel Homes"
-    },
-    {
-      "builder": "Ryan Homes"
     }
   ]
 }
