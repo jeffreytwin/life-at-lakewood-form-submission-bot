@@ -469,3 +469,10 @@ describe("picturesNamedFor (Perry's elevations, drawn in the browser, 2026-09-23
     expect(got.every((u) => u.includes("2016F%20E-"))).toBe(true);
   });
 });
+
+describe("elevationPictures does not take a slide's caption for a section (Pulte, 2026-09-23)", () => {
+  it("ignores what follows a heading like \"Elevation FM1\"", () => {
+    const html = `<h5>Elevation FM1</h5><img src="https://x.com/community-pool.jpg"><img src="https://x.com/clubhouse.jpg">`;
+    expect(elevationPictures(html, "https://x.com/plan")).toEqual([]);
+  });
+});

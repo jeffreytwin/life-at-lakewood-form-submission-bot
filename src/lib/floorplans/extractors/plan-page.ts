@@ -259,7 +259,11 @@ export function elevationPictures(html: string, pageUrl: string): PageImage[] {
   const seen = new Set<string>();
   const out: PageImage[] = [];
   for (const section of sectionsOf(html, pageUrl)) {
-    if (isTour(section) || !names(section).some((h) => /\b(elevations?|exteriors?)\b/i.test(h))) continue;
+    // A heading for the section, "Elevations" or "Exteriors" — not one
+    // slide's caption: Pulte captions each slide "Elevation FM1", and what
+    // followed those captions down the page was the community's pictures
+    // (Riversong, 2026-09-23).
+    if (isTour(section) || !names(section).some((h) => /\b(elevations|exteriors)\b|^\s*(elevation|exterior)s?\s*$/i.test(h))) continue;
     for (const image of section.images) {
       const key = pictureKey(image.src);
       if (seen.has(key) || /\.svg(?:[?#]|$)/i.test(image.src)) continue;
