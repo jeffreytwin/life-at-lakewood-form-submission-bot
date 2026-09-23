@@ -16,7 +16,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { labelPhotos, mostlyPlaced, rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
+import { labelPhotos, leadsWithARoom, mostlyPlaced, rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 /** Pictures looked at per tick: a few requests, so a tick is cheap and quick. */
@@ -28,11 +28,16 @@ interface QueuedRow {
   proposed_record: NormalizedPlan | null;
 }
 
-/** Whether a waiting change's gallery is one this should sort: photos to sort, and nobody's hand on it. Exported for tests. */
+/**
+ * Whether a waiting change's gallery is one this should sort: photos to
+ * sort, or a room leading an outside view (sorted before the rule that
+ * puts the house in front; Pulte's homes, 2026-09-23), and nobody's hand
+ * on it. Exported for tests.
+ */
 export function wantsSorting(record: NormalizedPlan | null): record is NormalizedPlan {
   if (!record || !Array.isArray(record.galleryImages)) return false;
   if ((record.userEditedFields ?? []).includes("galleryImages")) return false;
-  return !mostlyPlaced(record);
+  return !mostlyPlaced(record) || leadsWithARoom(record);
 }
 
 export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number; sorted: number }> {
