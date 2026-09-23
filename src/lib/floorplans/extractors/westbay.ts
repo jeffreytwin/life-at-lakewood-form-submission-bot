@@ -4,16 +4,16 @@
 // characters without a price, 2026-09-23). The page names the community's
 // id (`:community="24"`, Star Farms), and the feeds answer by it:
 //
-//   /api/residences?community=24&page=1   the plans offered in the community
-//   /api/plans?page=1                      every plan WestBay builds: name,
-//                                          series, price, beds, baths, size,
-//                                          garage, its page, its front
+//   /api/residences?community=24&page=1   every plan offered in the community,
+//                                          at its price there: name ("Sandpiper
+//                                          at Star Farms at Lakewood Ranch"),
+//                                          series, beds, baths, size, garage,
+//                                          its page in the community, its front
 //   /api/homes?community=24&page=1         every home for sale: address, plan,
 //                                          price, facts, its page, its front
 //
-// /api/plans answers the same eighty-four plans whatever community it is
-// asked for (every Star Farms run came back with all of them), so the
-// community's own are the ones its residences name.
+// (/api/plans answers all eighty-four of WestBay's plans whatever
+// community it is asked for, at their prices anywhere.)
 //
 // Each plan's and home's own page is then read for its gallery, drawings,
 // tour and description, as every other connection's are (claude-extract.ts).
@@ -76,9 +76,9 @@ export function communityIdIn(html: string): string | null {
   return html.match(/:community(?:-id)?=["'](\d+)["']/)?.[1] ?? html.match(/:context-community=["'](\d+)["']/)?.[1] ?? null;
 }
 
-/** A plan as the feed files it. Exported for tests. */
+/** A plan as the residences feed files it, named without the community it is offered in. Exported for tests. */
 export function planFromRecord(r: WestBayPlan): NormalizedPlan | null {
-  const name = clean(r.name);
+  const name = residenceName(r as Record<string, unknown>);
   if (!name) return null;
   const price = r.price && r.price > 0 ? r.price : null;
   const cover = clean(r.cover);
@@ -169,14 +169,10 @@ export async function extractWestBay(params: { url?: string; communityId?: strin
     id = communityIdIn(page.html);
     if (!id) throw new Error(`${url} names no community id (":community=") — not a WestBay community page?`);
   }
-  const [allPlans, residences, homeRecords] = await Promise.all([
-    everyPage<WestBayPlan>(origin, "/api/plans", id, url),
-    everyPage<Record<string, unknown>>(origin, "/api/residences", id, url),
+  const [planRecords, homeRecords] = await Promise.all([
+    everyPage<WestBayPlan>(origin, "/api/residences", id, url),
     everyPage<WestBayHome>(origin, "/api/homes", id, url),
   ]);
-  const offered = new Set(residences.map(residenceName).filter(Boolean).map(normKey));
-  if (!offered.size) throw new Error(`WestBay's residences name no plans for community ${id} — its feed has changed`);
-  const planRecords = allPlans.filter((r) => offered.has(normKey(clean(r.name))));
   // One plan once; a plan the feed lists in two series keeps its first.
   const byKey = new Map<string, NormalizedPlan>();
   for (const p of [...planRecords.map(planFromRecord), ...homeRecords.map(homeFromRecord)]) {

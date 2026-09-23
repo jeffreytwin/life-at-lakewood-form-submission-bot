@@ -1,22 +1,12 @@
 {
-  "anatomy": [
-    "json https://www.homesbywestbay.com/api/residences?community=24&page=1"
-  ],
+  "anatomy": [],
   "raw": [],
   "concurrency": 3,
   "detailPlans": 1,
   "checks": [
     {
       "builder": "Homes by WestBay",
-      "community": "Star Farms"
-    },
-    {
-      "builder": "Homes by WestBay",
-      "community": "Oakfield"
-    },
-    {
-      "builder": "Homes by WestBay",
-      "community": "Crosswind Ranch"
+      "all": true
     }
   ]
 }

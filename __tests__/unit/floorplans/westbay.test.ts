@@ -13,12 +13,12 @@ describe("communityIdIn", () => {
 });
 
 describe("planFromRecord", () => {
-  it("takes a plan's facts as the feed gives them, the smaller size and the larger ranges kept as ranges", () => {
+  it("takes a plan's facts as the residences feed gives them, named without its community, the smaller size and the larger ranges kept as ranges", () => {
     const plan = planFromRecord({
       id: 331,
       cover: "https://d3ep4ovemm7dcp.cloudfront.net/mixed-media/a02aeb27/large/Abruzzo-I-Coastal-D.jpg",
       coverAlt: null,
-      name: "Abruzzo I",
+      name: "Abruzzo I at Star Farms at Lakewood Ranch",
       series_name: "Masterpiece",
       price: 1070990,
       beds: "3 - 4",
