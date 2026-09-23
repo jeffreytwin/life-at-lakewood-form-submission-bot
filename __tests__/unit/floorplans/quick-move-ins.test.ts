@@ -193,6 +193,29 @@ describe("linkQuickMoveIns", () => {
   it("marks a base plan without quick move-ins as such", () => {
     expect(linkQuickMoveIns([plan({})])[0].hasQuickMoveIns).toBe(false);
   });
+
+  describe("a home listed by its address alone (M/I at Wellen Park, 2026-09-23)", () => {
+    const palm = plan({ planKey: "palm", name: "Palm", sqft: 2425, beds: "3" });
+    const sabal = plan({ planKey: "sabal", name: "Sabal", sqft: 1702, beds: "3" });
+    const home = (over: Partial<NormalizedPlan>) =>
+      plan({ planKey: "17966broadleafloop", name: "17966 Broadleaf Loop", quickMoveIn: true, sqft: 2425, beds: "3", ...over });
+
+    it("is tied to the one plan of its square footage", () => {
+      const [linked] = linkQuickMoveIns([home({}), palm, sabal]);
+      expect(linked).toMatchObject({ relatedPlanKey: "palm", relatedPlanName: "Palm", relatedPlanMatch: "plan-facts" });
+    });
+
+    it("is left unmatched when two plans are that size, or the bedrooms disagree", () => {
+      const twin = plan({ planKey: "palmii", name: "Palm II", sqft: 2425, beds: "3" });
+      expect(linkQuickMoveIns([home({}), palm, twin])[0].relatedPlanMatch).toBe("unmatched");
+      expect(linkQuickMoveIns([home({ beds: "4" }), palm, sabal])[0].relatedPlanMatch).toBe("unmatched");
+    });
+
+    it("never overrides a plan the engine named, even one missing from the run", () => {
+      const [linked] = linkQuickMoveIns([home({ raw: { relatedPlan: "Banyan" } }), palm]);
+      expect(linked).toMatchObject({ relatedPlanMatch: "unmatched", relatedPlanName: "Banyan" });
+    });
+  });
 });
 
 describe("priceTagOf", () => {

@@ -35,7 +35,7 @@ interface ProposedRecord {
   virtualTourUrl?: string | null;
   /** Quick move-ins: the base plan; base plans: whether any quick move-in of theirs is on offer. */
   relatedPlanName?: string | null;
-  relatedPlanMatch?: "extractor" | "plan-id" | "plan-name" | "plan-page" | "unmatched";
+  relatedPlanMatch?: "extractor" | "plan-id" | "plan-name" | "plan-page" | "plan-facts" | "unmatched";
   hasQuickMoveIns?: boolean;
   /** A plan built from the quick move-ins named here, because the builder no longer lists it (stand-ins.ts). */
   standInFor?: string[] | null;

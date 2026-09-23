@@ -99,7 +99,11 @@ function parentUrl(url: string | null | undefined): string | null {
  * builder's plan id, the base plan's name where the engine read one, the
  * page the quick move-in's page sits under, and last its own name with the
  * homesite taken off it — exactly, then allowing the builder a letter or
- * two ("Hawthorne Homesite 42" stands on "Hawthorn"). A quick move-in
+ * two ("Hawthorne Homesite 42" stands on "Hawthorn"). Last, a home that
+ * names no plan at all is tied to the one plan of the run with its square
+ * footage (and its bedrooms, where both say): Wellen Park lists M/I's
+ * homes by address alone, and "17966 Broadleaf Loop", 2,425 sq ft, is the
+ * Palm, the only plan of that size (2026-09-23). A quick move-in
  * whose base plan is not in the run keeps the engine's name for it and is
  * marked unmatched, so the review queue can say so. Pure; order and the
  * other fields are kept.
@@ -163,6 +167,17 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
           base = near[0];
           matchedBy = "plan-name";
         }
+      }
+    }
+    if (!base && !relatedNameOf(p) && typeof p.sqft === "number" && p.sqft > 0) {
+      // Only when the footage points at one plan: two plans that size is a guess.
+      const beds = (v: unknown) => (/^\d+$/.test(text(v)) ? text(v) : null);
+      const sized = bases.filter(
+        (b) => b.sqft === p.sqft && !(beds(b.beds) && beds(p.beds) && beds(b.beds) !== beds(p.beds))
+      );
+      if (sized.length === 1) {
+        base = sized[0];
+        matchedBy = "plan-facts";
       }
     }
     if (base) children.set(base.planKey, (children.get(base.planKey) ?? 0) + 1);
