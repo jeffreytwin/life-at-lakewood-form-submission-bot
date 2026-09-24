@@ -255,6 +255,20 @@ export async function samePhotos(urls: string[]): Promise<SamePhotos> {
 }
 
 /**
+ * The sets of a gallery's pictures that are one photograph by their pixels
+ * alone (SAME_PIXELS), with no question to Claude: cheap enough for the
+ * background sort to ask of every waiting gallery (sort-queue.ts). Neal
+ * files one photograph under two months' folders, "2019/12/…/Seastarden.jpg"
+ * and "2020/05/…/Seastarden.jpg", and every waiting gallery showed some
+ * twice (2026-09-24).
+ */
+export async function identicalPhotos(urls: string[]): Promise<number[][]> {
+  const pictures = await fetchPictures(urls);
+  const looks = await Promise.all(pictures.map((p) => (p ? lookOf(p) : Promise.resolve(null))));
+  return confirmedSame(looks, []).same;
+}
+
+/**
  * How large a picture's address says it is: a size in its file's name
  * ("-1200x801"), WordPress's "-scaled" original, a width its query asks
  * for; a file that names no size is the original, as large as there is.

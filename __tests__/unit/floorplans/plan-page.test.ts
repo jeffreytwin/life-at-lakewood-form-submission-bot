@@ -542,6 +542,24 @@ describe("pictureKey and askedSize", () => {
     expect(pictureKey(adams(front, "webp/30"))).not.toBe(pictureKey(adams("https://s3.amazonaws.com/buildercloud/2ad5275be471ce95852e47de5a1eb882.jpeg", "webp/30")));
   });
 
+  it("knows a WordPress upload from either of a site's hosts, and whichever copy of it (Neal, 2026-09-24)", () => {
+    const at = (host: string, folder: string) =>
+      `https://${host}/wp-content/uploads/2023/02/${folder}new-homes-englewood-florida-boca-royale-sandcastle-2-floorplan.png`;
+    const one = pictureKey(`${at("images.nealcommunities.com", "29100902/")}?auto=format%2Ccompress`);
+    expect(pictureKey(at("img.nealcommunities.com", "29100902/"))).toBe(one);
+    expect(pictureKey(at("images.nealcommunities.com", "29100902/"))).toBe(one);
+    expect(pictureKey(at("images.nealcommunities.com", "30144803/"))).toBe(one);
+    // The same file named with no copy's folder: an address that shows nothing.
+    expect(pictureKey(at("images.nealcommunities.com", ""))).toBe(one);
+  });
+
+  it("keeps apart uploads of another month, another site or another name", () => {
+    const neal = "https://images.nealcommunities.com/wp-content/uploads";
+    expect(pictureKey(`${neal}/2020/05/02174102/Seastarden.jpg`)).not.toBe(pictureKey(`${neal}/2019/12/02181502/Seastarden.jpg`));
+    expect(pictureKey(`${neal}/2020/05/02174102/Seastarden.jpg`)).not.toBe(pictureKey("https://images.example.com/wp-content/uploads/2020/05/02174102/Seastarden.jpg"));
+    expect(pictureKey(`${neal}/2020/05/02174102/Seastarden.jpg`)).not.toBe(pictureKey(`${neal}/2020/05/02174102/Seastarkitchen.jpg`));
+  });
+
   it("keeps apart pictures an address tells apart only by its query", () => {
     expect(pictureKey("https://x.com/photo?id=1")).not.toBe(pictureKey("https://x.com/photo?id=2"));
   });

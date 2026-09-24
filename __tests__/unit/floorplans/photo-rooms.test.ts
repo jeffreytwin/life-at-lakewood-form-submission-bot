@@ -9,7 +9,7 @@ import {
   withLookedAtRooms,
   type PhotoLabel,
 } from "@/lib/floorplans/photo-rooms";
-import { handsOff, wantsSorting } from "@/lib/floorplans/sort-queue";
+import { handsOff, wantsCopiesChecked, wantsSorting, withCopiesTakenOut } from "@/lib/floorplans/sort-queue";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 import { ROOM_ORDER } from "@/lib/floorplans/types";
 
@@ -198,5 +198,41 @@ describe("which waiting galleries are worth looking at", () => {
     expect(wantsSorting(plan(urls, meta, { userEditedFields: ["galleryImages"] }))).toBe(false);
     meta[urls[0]] = { kind: "primary", room: "primary" };
     expect(leadsWithARoom(plan(urls, meta))).toBe(false);
+  });
+});
+
+describe("waiting galleries checked once for one photograph shown twice (Neal, 2026-09-24)", () => {
+  const neal = "https://images.nealcommunities.com/wp-content/uploads";
+  const [front, den, kitchen, denAgain] = [
+    `${neal}/2020/05/23101712/Sea-Star-45-2379-Elevation-T3.jpg`,
+    `${neal}/2020/05/02174102/Seastarden.jpg`,
+    `${neal}/2020/05/02174059/Seastarkitchen.jpg`,
+    `${neal}/2019/12/02181502/Seastarden.jpg`,
+  ];
+  const meta = {
+    [front]: { kind: "primary" as const, room: "primary" as const, caption: "Sea Star" },
+    [denAgain]: { kind: "photo" as const, room: null, caption: null },
+  };
+
+  it("takes out the copy the pixels found, keeps the rest in place, and marks the gallery checked", () => {
+    const { record, removed } = withCopiesTakenOut(plan([front, den, kitchen, denAgain], meta), [[1, 3]]);
+    expect(record.galleryImages).toEqual([front, den, kitchen]);
+    expect(removed).toEqual([denAgain]);
+    expect(record.copiesChecked).toBe(true);
+    expect(Object.keys(record.galleryMeta ?? {})).toEqual([front]);
+  });
+
+  it("marks a gallery with no copies checked too, so it is not fetched again", () => {
+    const { record, removed } = withCopiesTakenOut(plan([front, den, kitchen]), []);
+    expect(record.galleryImages).toEqual([front, den, kitchen]);
+    expect(removed).toEqual([]);
+    expect(wantsCopiesChecked(record)).toBe(false);
+  });
+
+  it("checks a gallery nobody has arranged by hand, once", () => {
+    expect(wantsCopiesChecked(plan([front, den, kitchen]))).toBe(true);
+    expect(wantsCopiesChecked(plan([front, den, kitchen], {}, { copiesChecked: true }))).toBe(false);
+    expect(wantsCopiesChecked(plan([front, den, kitchen], {}, { userEditedFields: ["galleryImages"] }))).toBe(false);
+    expect(wantsCopiesChecked(plan([front]))).toBe(false);
   });
 });
