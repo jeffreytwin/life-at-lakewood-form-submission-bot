@@ -6,8 +6,13 @@
   "duplicates": [],
   "checks": [
     {
-      "builder": "Lennar",
-      "community": "Wellen Park Country Club",
+      "builder": "Mattamy Homes",
+      "community": "Sunstone Lakeside",
+      "noSurvey": true
+    },
+    {
+      "builder": "Meritage Homes",
+      "community": "Salt Meadows",
       "noSurvey": true
     }
   ]

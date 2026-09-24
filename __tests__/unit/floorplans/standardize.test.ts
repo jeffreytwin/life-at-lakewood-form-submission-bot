@@ -6,6 +6,7 @@ import {
   bathsStated,
   builderDefaults,
   largestInRange,
+  readableName,
   showablePicture,
   standardGarages,
   standardHomeType,
@@ -268,5 +269,46 @@ describe("showablePicture: only pictures the site can show (Lennar's Coming Soon
     expect(got.galleryImages).toEqual([front]);
     expect(Object.keys(got.galleryMeta ?? {})).toEqual([front]);
     expect(got.blueprintImages).toEqual(["https://x.com/fp.svg"]);
+  });
+});
+
+describe("readableName: no name in capitals (Jeff, 2026-09-24)", () => {
+  it("title-cases a home's address given in capitals, whole or in part", () => {
+    expect(readableName("18355 ARBOR VISTA DR")).toBe("18355 Arbor Vista Dr");
+    expect(readableName("12785 JADE EMPRESS LOOP, Unit 202")).toBe("12785 Jade Empress Loop, Unit 202");
+    expect(readableName("7910 Lake Powell PL")).toBe("7910 Lake Powell Pl");
+    expect(readableName("11316 CLAY AVENUE")).toBe("11316 Clay Avenue");
+  });
+
+  it("keeps small words small but for the first, and capitals after a hyphen or an O'", () => {
+    expect(readableName("THE RED ROCK")).toBe("The Red Rock");
+    expect(readableName("VILLAS AT THE PARK")).toBe("Villas at the Park");
+    expect(readableName("SEA-VIEW")).toBe("Sea-View");
+    expect(readableName("O'NEIL POINT")).toBe("O'Neil Point");
+    expect(readableName("BUILDER'S CHOICE")).toBe("Builder's Choice");
+  });
+
+  it("leaves Roman numerals, compass points, single letters and anything with a digit as they are", () => {
+    expect(readableName("GATEWAY II")).toBe("Gateway II");
+    expect(readableName("MAYFIELD GRANDE III")).toBe("Mayfield Grande III");
+    expect(readableName("123 NE MAIN ST")).toBe("123 NE Main St");
+    expect(readableName("PLAN A")).toBe("Plan A");
+    expect(readableName("2546F")).toBe("2546F");
+    expect(readableName("17660 Opal Sand Dr #303")).toBe("17660 Opal Sand Dr #303");
+  });
+
+  it("leaves a name already in title case alone", () => {
+    for (const name of ["The Hampton", "Birchwood III", "Carmel II", "Isles of Bayview"]) expect(readableName(name)).toBe(name);
+  });
+
+  it("is applied to a plan's name and its base plan's", () => {
+    const got = standardizePlan({
+      planKey: "18355-arbor-vista-dr", name: "18355 ARBOR VISTA DR", price: null, priceDisplay: null, beds: "", baths: "",
+      sqft: null, garages: null, homeType: null, quickMoveIn: true, comingSoon: false, sourceUrl: null,
+      galleryImages: [], blueprintImages: [], relatedPlanName: "HAMPTON II",
+    });
+    expect(got.name).toBe("18355 Arbor Vista Dr");
+    expect(got.relatedPlanName).toBe("Hampton II");
+    expect(got.planKey).toBe("18355-arbor-vista-dr");
   });
 });

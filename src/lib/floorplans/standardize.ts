@@ -162,6 +162,37 @@ export function asTour(url: string | null | undefined): string | null {
   return NOT_A_TOUR.test(address) ? null : address;
 }
 
+/** Words kept in capitals: Roman numerals ("Gateway II", "Cambria IV") and compass points ("NE 12th St"). */
+const KEPT_CAPITALS = /^(?:I{1,3}|IV|VI{0,3}|IX|XI{0,3}|N|S|E|W|NE|NW|SE|SW)$/;
+/** Words a title keeps small, but for its first. */
+const SMALL_WORDS = new Set(["a", "an", "and", "at", "by", "for", "in", "of", "on", "or", "the", "to"]);
+
+/**
+ * A plan's or a home's name with no word in capitals, in title case: the
+ * builders' feeds give homes as "18355 ARBOR VISTA DR", "12785 JADE
+ * EMPRESS LOOP, Unit 202" and "7910 Lake Powell PL", and the sites show
+ * none in capitals (Jeff, 2026-09-24). Only a word all in capitals is
+ * changed; a Roman numeral, a compass point, a single letter ("Elevation
+ * A") and anything with a digit in it ("2546F", "#303") are left as they
+ * are. Exported for tests.
+ */
+export function readableName(name: string): string {
+  let first = true;
+  return name.replace(/[A-Za-z0-9'’#.&/-]+/g, (word) => {
+    const isFirst = first;
+    first = false;
+    if (/\d/.test(word) || !/[A-Z]{2}/.test(word) || /[a-z]/.test(word)) return word;
+    const letters = word.replace(/[^A-Za-z]/g, "");
+    if (KEPT_CAPITALS.test(letters)) return word;
+    const lower = word.toLowerCase();
+    if (!isFirst && SMALL_WORDS.has(lower)) return lower;
+    // Each part of "SEA-VIEW" and "O'NEIL" begins with a capital; "BUILDER'S" does not grow one.
+    return lower
+      .replace(/(^|[-/&])([a-z])/g, (_, before: string, letter: string) => before + letter.toUpperCase())
+      .replace(/\b([a-z])(['’])([a-z])/gi, (_, a: string, mark: string, b: string) => a.toUpperCase() + mark + b.toUpperCase());
+  });
+}
+
 /** A builder's stand-in for a picture it does not have yet, by its file's name. */
 const STAND_IN_PICTURE = /(?:coming[-_ ]?soon|no[-_ ]?image|image[-_ ]?not[-_ ]?available|placeholder)(?=[-_.]|$)/i;
 
@@ -187,8 +218,9 @@ export function showablePicture(url: string | null | undefined): boolean {
 }
 
 /**
- * The plan as the site files it: standard home type, one number for beds,
- * baths and garages, and only pictures the site can show. A builder that
+ * The plan as the site files it: its name in title case (readableName),
+ * standard home type, one number for beds, baths and garages, and only
+ * pictures the site can show. A builder that
  * only builds one type has it written in whatever its page said; the
  * builder's own labels are kept in raw either way.
  */
@@ -203,6 +235,8 @@ export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults 
     : plan.galleryMeta;
   return {
     ...plan,
+    name: readableName(plan.name),
+    ...(plan.relatedPlanName ? { relatedPlanName: readableName(plan.relatedPlanName) } : {}),
     galleryImages,
     galleryMeta,
     blueprintImages: (plan.blueprintImages ?? []).filter(showablePicture),
