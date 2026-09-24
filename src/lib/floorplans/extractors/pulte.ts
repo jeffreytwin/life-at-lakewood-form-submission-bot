@@ -19,7 +19,7 @@
 // and a plan's gallery opened on whichever room its carousel drew first.
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
-import { standardHomeType } from "@/lib/floorplans/standardize";
+import { bathsOf, standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -95,8 +95,13 @@ const range = (low: number | null | undefined, high: number | null | undefined) 
   const b = high ?? low!;
   return a === b || b < a ? String(a) : `${a}-${b}`;
 };
-const baths = (full: number | null | undefined, half: number | null | undefined) =>
-  full == null ? null : full + (half ? 0.5 * half : 0);
+/** "5.3" or "4.5-5.3": the full baths with the half baths after the point (standardize.ts, bathsOf). */
+const bathsRange = (low: string | null, high: string | null) => {
+  if (low == null && high == null) return "";
+  const a = low ?? high!;
+  const b = high ?? low!;
+  return a === b || Number(b) < Number(a) ? a : `${a}-${b}`;
+};
 
 /** The community's id, the number its address ends with: ".../riversong-211407" is 211407. Exported for tests. */
 export function communityIdOf(url: string): string | null {
@@ -166,7 +171,7 @@ export function planFromRecord(r: PultePlan, origin: string, communityUrl: strin
     price,
     priceDisplay: money(price),
     beds: range(r.bedrooms, r.maxBedrooms),
-    baths: range(baths(r.bathrooms, r.halfBaths), baths(r.maxBathrooms, r.maxHalfBaths)),
+    baths: bathsRange(bathsOf(r.bathrooms, r.halfBaths), bathsOf(r.maxBathrooms, r.maxHalfBaths)),
     sqft: r.squareFeet && r.squareFeet > 0 ? r.squareFeet : null,
     garages: r.garages ? `${r.garages} car` : null,
     homeType: standardHomeType(r.planTypeNameActual ?? r.planTypeName ?? null),
@@ -189,14 +194,14 @@ export function homeFromRecord(r: PulteHome, origin: string, address?: (path: st
   const price = r.callForPricingFlag ? null : (r.finalPrice && r.finalPrice > 0 ? r.finalPrice : r.price && r.price > 0 ? r.price : null);
   const gallery = pulteGallery(r.images, address);
   const planName = clean(r.planName ?? r.plan?.planName) || null;
-  const total = r.totalBaths ?? baths(r.bathrooms, r.halfBaths);
+  const total = bathsOf(r.bathrooms, r.halfBaths) ?? (r.totalBaths != null ? String(r.totalBaths) : null);
   return {
     planKey: normKey(street),
     name: street,
     price,
     priceDisplay: money(price),
     beds: r.bedrooms != null ? String(r.bedrooms) : "",
-    baths: total != null ? String(total) : "",
+    baths: total ?? "",
     sqft: r.squareFeet && r.squareFeet > 0 ? r.squareFeet : null,
     garages: r.garages ? `${r.garages} car` : null,
     homeType: standardHomeType(r.plan?.planTypeNameActual ?? r.plan?.planTypeName ?? (r.isSingleFamily ? "Single Family Home" : null)),

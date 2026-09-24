@@ -37,6 +37,45 @@ export function standardHomeType(raw: string | null | undefined): HomeType | nul
 }
 
 /**
+ * Bathrooms from a builder's count of full baths and of half baths, as
+ * Perry, Pulte and Highland give them: the full baths, and the half baths
+ * after the point — five full and three half are "5.3", six and four
+ * "6.4" (Jeff, 2026-09-24). One half bath reads ".5", as every builder
+ * writes it and the site already shows it; none reads the full baths
+ * alone. Adding a half for each half bath made three full and two half
+ * "4". Null without a count of full baths.
+ */
+export function bathsOf(full: number | null | undefined, half: number | null | undefined): string | null {
+  if (full == null || !Number.isFinite(full)) return null;
+  const halves = half != null && Number.isFinite(half) && half > 0 ? Math.round(half) : 0;
+  if (!Number.isInteger(full) || halves === 0) return String(full);
+  return halves === 1 ? `${full}.5` : `${full}.${halves}`;
+}
+
+/**
+ * The bathrooms a page states as two counts, "2 Baths 2 Cars 1 Half Baths"
+ * (Perry's plan pages) or "3 Full Baths, 2 Half Baths": the first count of
+ * half baths on the page, with the count of baths nearest it. Null where
+ * the page states no half baths. Pure.
+ */
+export function bathsStated(text: string): string | null {
+  const half = /(\d+)\s*Half\s*Bath(?:room)?s?\b/i.exec(text);
+  if (!half) return null;
+  const from = Math.max(0, half.index - 120);
+  const around = text.slice(from, half.index + half[0].length + 120);
+  const at = half.index - from;
+  let nearest: { n: number; gap: number } | null = null;
+  for (const m of around.matchAll(/(\d+(?:\.\d+)?)\s*(?:Full\s*)?Bath(?:room)?s?\b/gi)) {
+    const start = m.index!;
+    if (start === at || /half\s*$/i.test(around.slice(Math.max(0, start - 8), start))) continue;
+    if (/\bhalf\s*bath/i.test(m[0])) continue;
+    const gap = Math.abs(start - at);
+    if (!nearest || gap < nearest.gap) nearest = { n: Number(m[1]), gap };
+  }
+  return nearest ? bathsOf(nearest.n, Number(half[1])) : null;
+}
+
+/**
  * The larger end of a range: "3-4" is "4", "2.5 - 3.5" is "3.5", "3 to 4"
  * is "4". A single number, "3+", or text without two numbers is kept as it
  * came; blank stays blank.

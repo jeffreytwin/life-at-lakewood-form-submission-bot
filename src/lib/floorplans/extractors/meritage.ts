@@ -12,6 +12,7 @@
 // client-side credentials embedded in meritagehomes.com's own JS bundle,
 // captured in pipeline/slice/discovery/round6/.
 
+import { bathsOf } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const DISCOVER_URL = "https://discover.sitecorecloud.io/discover/v2/173266879";
@@ -113,9 +114,7 @@ export function normalizeMeritageHome(h: DiscoverHome, pageUrl?: string): Normal
   const address = (h.address ?? "").trim();
   const name = address || (planName ? `${planName} (${h.id ?? ""})`.trim() : "");
   if (!name) return null;
-  const half = h.half_bathrooms ?? 0;
-  const baths =
-    h.full_bathrooms != null ? (half > 0 ? `${h.full_bathrooms}.5` : String(h.full_bathrooms)) : "";
+  const baths = bathsOf(h.full_bathrooms, h.half_bathrooms) ?? "";
   const photos = [h.image_url, ...(h.image_urls ?? [])].filter(
     (u, i, a): u is string => Boolean(u) && /^https?:\/\//.test(u ?? "") && a.indexOf(u) === i
   );

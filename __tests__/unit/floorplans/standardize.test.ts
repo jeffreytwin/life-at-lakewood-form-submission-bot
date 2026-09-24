@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   HOME_TYPES,
   asTour,
+  bathsOf,
+  bathsStated,
   builderDefaults,
   largestInRange,
   standardGarages,
@@ -196,5 +198,38 @@ describe("builderDefaults", () => {
     expect(out.raw?.homeTypeRaw).toBe("Townhome");
     // And with no setting the page still decides.
     expect(standardizePlan(plan).homeType).toBe("Townhome");
+  });
+});
+
+describe("bathsOf: full baths, and the half baths after the point", () => {
+  it("counts two half baths and more after the point (Jeff, 2026-09-24)", () => {
+    expect(bathsOf(5, 3)).toBe("5.3");
+    expect(bathsOf(6, 4)).toBe("6.4");
+    expect(bathsOf(3, 2)).toBe("3.2");
+  });
+
+  it("writes one half bath as .5, as the site does, and none as the full baths alone", () => {
+    expect(bathsOf(4, 1)).toBe("4.5");
+    expect(bathsOf(2, 0)).toBe("2");
+    expect(bathsOf(2, null)).toBe("2");
+    expect(bathsOf(null, 1)).toBeNull();
+  });
+});
+
+describe("bathsStated: the two counts a page gives", () => {
+  it("reads Perry's plan page", () => {
+    expect(bathsStated("2,016 Sq. Ft. 3 Beds 1 Stories 2 Baths 2 Cars 0 Half Baths Request More Information")).toBe("2");
+    expect(bathsStated("5,239 Sq. Ft. 5 Beds 2 Stories 5 Baths 3 Cars 3 Half Baths Request More Information")).toBe("5.3");
+    expect(bathsStated("3,741 Sq. Ft. 4 Beds 1 Stories 4 Baths 3 Cars 1 Half Baths")).toBe("4.5");
+  });
+
+  it("reads full and half baths written the other way round", () => {
+    expect(bathsStated("4 Bedrooms · 3 Full Baths · 2 Half Baths")).toBe("3.2");
+    expect(bathsStated("2 Half Baths and 6 Full Baths")).toBe("6.2");
+  });
+
+  it("says nothing for a page that states no half baths", () => {
+    expect(bathsStated("3 Beds 2.5 Baths 2 Cars")).toBeNull();
+    expect(bathsStated("A half bath off the foyer")).toBeNull();
   });
 });

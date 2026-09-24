@@ -8,6 +8,7 @@
 // Structure captured in pipeline/slice/discovery/round8/.
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
+import { bathsOf } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -87,12 +88,7 @@ export function normalizeDrbItem(item: DrbInventoryItem, pageUrl?: string): Norm
     price: typeof item.price === "number" && item.price > 0 ? item.price : null,
     priceDisplay: money(item.price),
     beds: item.beds != null ? String(item.beds) : "",
-    baths:
-      item.fullBaths != null
-        ? (item.halfBaths ?? 0) > 0
-          ? `${item.fullBaths}.5`
-          : String(item.fullBaths)
-        : "",
+    baths: bathsOf(item.fullBaths, item.halfBaths) ?? "",
     sqft: typeof item.sqFt === "number" ? item.sqFt : null,
     garages: item.garageSpaces != null ? `${item.garageSpaces} car` : null,
     homeType: null,
