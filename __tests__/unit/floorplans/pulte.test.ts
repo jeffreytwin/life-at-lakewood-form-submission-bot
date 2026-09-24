@@ -85,6 +85,11 @@ describe("planFromRecord", () => {
     expect(p.baths).toBe("2.5-3");
   });
 
+  it("writes several half baths as .5, not a half for each", () => {
+    const p = planFromRecord({ ...daylen, bathrooms: 3, halfBaths: 2, maxBathrooms: 3, maxHalfBaths: 2 }, ORIGIN, RIVERSONG)!;
+    expect(p.baths).toBe("3.5");
+  });
+
   it("leaves out a plan the builder has sold out or no longer offers", () => {
     expect(planFromRecord({ ...daylen, isSoldOut: true }, ORIGIN, RIVERSONG)).toBeNull();
     expect(planFromRecord({ ...daylen, isPlanActive: false }, ORIGIN, RIVERSONG)).toBeNull();

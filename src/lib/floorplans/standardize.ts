@@ -37,17 +37,19 @@ export function standardHomeType(raw: string | null | undefined): HomeType | nul
 }
 
 /**
- * Bathrooms from a count of full baths and a count of half baths: the full
- * baths, and the half baths after the point — five full and three half are
- * "5.3", six and four "6.4", four and one "4.1" (Jeff, 2026-09-24, and his
- * own edits to Perry's 3702F and 4436F). None gives the full baths alone.
- * Null without a count of full baths.
+ * Bathrooms from a count of full baths and a count of half baths, as the
+ * whole site writes them: the full baths, and ".5" for any half baths at
+ * all — four full and one half are "4.5", five full and three half "5.5"
+ * (Jeff, 2026-09-24: ".5 everywhere", as every builder on the site already
+ * shows it). None gives the full baths alone. Adding a half for each half
+ * bath, as Pulte's and Highland's readers did, made three full and two
+ * half "4". Null without a count of full baths.
  */
 export function bathsOf(full: number | null | undefined, half: number | null | undefined): string | null {
   if (full == null || !Number.isFinite(full)) return null;
-  const halves = half != null && Number.isFinite(half) && half > 0 ? Math.round(half) : 0;
-  if (!Number.isInteger(full) || halves === 0) return String(full);
-  return `${full}.${halves}`;
+  const halves = half != null && Number.isFinite(half) && half > 0;
+  if (!Number.isInteger(full) || !halves) return String(full);
+  return `${full}.5`;
 }
 
 /**

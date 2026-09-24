@@ -201,11 +201,11 @@ describe("builderDefaults", () => {
   });
 });
 
-describe("bathsOf: full baths, and the half baths after the point", () => {
-  it("puts the count of half baths after the point (Jeff, 2026-09-24)", () => {
-    expect(bathsOf(5, 3)).toBe("5.3");
-    expect(bathsOf(6, 4)).toBe("6.4");
-    expect(bathsOf(4, 1)).toBe("4.1");
+describe("bathsOf: .5 for any half baths, as the whole site writes them", () => {
+  it("adds .5 for one half bath or several (Jeff, 2026-09-24)", () => {
+    expect(bathsOf(4, 1)).toBe("4.5");
+    expect(bathsOf(5, 3)).toBe("5.5");
+    expect(bathsOf(6, 4)).toBe("6.5");
   });
 
   it("gives the full baths alone where there are no half baths", () => {
@@ -218,8 +218,8 @@ describe("bathsOf: full baths, and the half baths after the point", () => {
 describe("bathsStated: the two counts a page gives", () => {
   it("reads Perry's plan page", () => {
     expect(bathsStated("2,016 Sq. Ft. 3 Beds 1 Stories 2 Baths 2 Cars 0 Half Baths Request More Information")).toBe("2");
-    expect(bathsStated("5,239 Sq. Ft. 5 Beds 2 Stories 5 Baths 3 Cars 3 Half Baths Request More Information")).toBe("5.3");
-    expect(bathsStated("3,702 Sq. Ft. 4 Beds 1 Stories 4 Baths 3 Cars 1 Half Baths")).toBe("4.1");
+    expect(bathsStated("5,239 Sq. Ft. 5 Beds 2 Stories 5 Baths 3 Cars 3 Half Baths Request More Information")).toBe("5.5");
+    expect(bathsStated("2,844 Sq. Ft. 4 Beds 1 Stories 3 Baths 3 Cars 1 Half Baths")).toBe("3.5");
   });
 
   it("says nothing for other builders' layouts, which a reading of Perry's would pair wrongly", () => {

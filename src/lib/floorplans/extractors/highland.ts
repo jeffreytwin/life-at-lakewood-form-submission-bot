@@ -13,6 +13,7 @@
 // (claude-extract.ts); its address is the one the community page links.
 
 import { fetchPage, readPlanPages } from "@/lib/floorplans/extractors/claude-extract";
+import { bathsOf } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -92,7 +93,7 @@ export function fromRecord(r: HighlandRecord, links: ReturnType<typeof pageLinks
   const name = home ? street : planName;
   const price = positive(r.price);
   const full = positive(r.bath);
-  const baths = full != null ? full + (positive(r.halfbath) ? 0.5 * r.halfbath! : 0) : null;
+  const baths = bathsOf(full, positive(r.halfbath));
   const beds = positive(r.bed);
   const maxBeds = positive(r.maxbed);
   return {
@@ -101,7 +102,7 @@ export function fromRecord(r: HighlandRecord, links: ReturnType<typeof pageLinks
     price,
     priceDisplay: money(price),
     beds: beds == null ? "" : maxBeds && maxBeds > beds ? `${beds}-${maxBeds}` : String(beds),
-    baths: baths == null ? "" : String(baths),
+    baths: baths ?? "",
     sqft: positive(r.totalsqft),
     garages: positive(r.garage) ? `${r.garage} car` : null,
     // Highland builds single-family homes; its feed names no other kind.
