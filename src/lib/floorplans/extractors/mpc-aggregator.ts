@@ -178,25 +178,6 @@ export function folderOf(url: string): string | null {
   return url.match(/\/Images\/Homes\/([^/]+)\//i)?.[1]?.toLowerCase() ?? null;
 }
 
-/**
- * A picture two of a builder's plans both show is neither plan's own: a
- * to-be-built page with no gallery of its own falls back on the builder's
- * pictures of the neighborhood, and Everly's Ravenna and Palm Bay 2 came
- * back with the same 59 of Neal's (2026-09-23). Each listing keeps the
- * picture its card leads with. Pure; exported for tests.
- */
-export function withoutSharedPictures(plans: NormalizedPlan[]): NormalizedPlan[] {
-  const count = new Map<string, number>();
-  for (const p of plans) {
-    if (p.quickMoveIn) continue;
-    for (const u of new Set(p.galleryImages.slice(1))) count.set(u, (count.get(u) ?? 0) + 1);
-  }
-  const shared = (u: string) => (count.get(u) ?? 0) >= 2;
-  return plans.map((p) =>
-    p.galleryImages.slice(1).some(shared) ? { ...p, galleryImages: p.galleryImages.filter((u, i) => i === 0 || !shared(u)) } : p
-  );
-}
-
 /** Runs `fn` over the items a few at a time, keeping order. */
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -296,6 +277,9 @@ export async function extractMpcAggregator(params: {
     const plan = normalizeCard(card);
     if (plan && !byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
   }
-  // Each home's own page, for its gallery, its drawing and its tour.
-  return withoutSharedPictures(await mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin)));
+  // Each home's own page, for its gallery, its drawing and its tour. A
+  // picture is taken out only when it repeats within its own plan: sister
+  // plans show the same model (Foxtail and Foxtail II, M/I at Palmera), and
+  // each keeps every picture its page shows (Jeff, 2026-09-24).
+  return mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin));
 }

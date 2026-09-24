@@ -1,23 +1,24 @@
 {
-  "anatomy": ["https://wellenpark.com/home/3125777/detail/", "https://wellenpark.com/home/3392086/detail/"],
+  "anatomy": ["https://wellenpark.com/home/3125777/detail/ click button[data-target=\"virtual-tour\"]"],
   "raw": [
     {
       "url": "https://wellenpark.com/home/3125777/detail/",
-      "around": ["Virtual Tour", "VIRTUAL TOUR", "virtual-tour", "matterport", "iframe", "Interactive Plan"],
-      "chars": 500,
-      "count": 3
+      "around": ["wellen-park/js", "home-details", "data-tour", "tour_url", "virtual_tour"],
+      "chars": 220,
+      "count": 12
     },
     {
-      "url": "https://wellenpark.com/home/3392086/detail/",
+      "url": "https://wellenpark.com/home/3866064/detail/",
       "around": ["/Images/", "More Homes in"],
-      "chars": 160,
-      "count": 40
+      "chars": 120,
+      "count": 70
     }
   ],
   "concurrency": 2,
-  "detailPlans": 3,
+  "detailPlans": 4,
   "duplicates": [],
   "checks": [
-    { "builder": "M/I Homes", "community": "Palmera", "noSurvey": true }
+    { "builder": "M/I Homes", "community": "Palmera", "noSurvey": true },
+    { "builder": "Neal Communities", "community": "Everly", "noSurvey": true }
   ]
 }

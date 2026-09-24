@@ -53,7 +53,7 @@ interface Target {
 }
 
 interface Config {
-  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed. */
+  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed; "<url> click <selector>" opens a tab first. */
   anatomy?: string[];
   /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
   raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
@@ -73,8 +73,11 @@ const RUN_LIMIT_MS = 300_000;
 /** This build, as the reports are filed under: the commit and the minute. */
 const BUILD = `${(process.env.VERCEL_GIT_COMMIT_SHA ?? "local").slice(0, 7)} ${new Date().toISOString().slice(0, 16)}`;
 
+/** Text Postgres will store: no NUL character, no half of a surrogate pair (a page's bytes can carry either). */
+const storable = (s: string) => s.replace(/\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
+
 async function keep(label: string, report: string, verdict: string | null = null): Promise<void> {
-  const { error } = await supabase.from("fp_connection_checks").insert({ build: BUILD, label, verdict, report });
+  const { error } = await supabase.from("fp_connection_checks").insert({ build: BUILD, label, verdict, report: storable(report) });
   if (error) say(`could not keep the report for ${label}: ${error.message}`);
 }
 const CHECK_TIMEOUT_MS = 420_000;
@@ -534,6 +537,10 @@ async function anatomy(url: string): Promise<string> {
   const feed = url.match(/^(json|POST)\s+(\S+)$/i);
   if (feed) return jsonAnatomy(feed[2], feed[1] === "POST" ? "POST" : "GET").catch((e) => `could not read ${feed[2]}: ${e instanceof Error ? e.message : String(e)}`);
   if (/\/api\/|\.json(?:\?|$)/i.test(url)) return jsonAnatomy(url).catch((e) => `could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
+  // A tab to open before looking: what a page loads only when a visitor
+  // asks for it (Wellen Park's "Virtual Tour", 2026-09-24).
+  const [, address, tab] = url.match(/^(\S+)(?:\s+click\s+(.+))?$/) ?? [null, url, undefined];
+  url = address ?? url;
   let page: Page | null = null;
   try {
     page = await (await surveyBrowser()).newPage();
@@ -561,11 +568,20 @@ async function anatomy(url: string): Promise<string> {
     await wait(4_000);
     await page.evaluate(`(async () => { for (let n = 1; n <= 16; n++) { if (innerHeight * n > document.body.scrollHeight) break; scrollTo(0, innerHeight * n); await new Promise((r) => setTimeout(r, 300)); } scrollTo(0, 0); })()`);
     await wait(1_500);
+    let clicked = "";
+    if (tab) {
+      const before = calls.length;
+      clicked = await page
+        .click(tab)
+        .then(() => wait(5_000))
+        .then(() => `clicked ${tab}: ${calls.length - before} calls after\n\n`)
+        .catch((e) => `could not click ${tab}: ${e instanceof Error ? e.message : String(e)}\n\n`);
+    }
     const fetched = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) })
       .then(async (r) => `${r.status}, ${(await r.text()).length} chars`)
       .catch((e) => `failed: ${e instanceof Error ? e.message : String(e)}`);
     const body = String(await page.evaluate(ANATOMY_SCRIPT));
-    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n== CALLS ==\n${calls.join("\n") || "(none)"}\n\n== ADMIN-AJAX ANSWERS ==\n${answers.join("\n\n") || "(none)"}\n\n` + body;
+    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n${clicked}== CALLS ==\n${calls.join("\n") || "(none)"}\n\n== ADMIN-AJAX ANSWERS ==\n${answers.join("\n\n") || "(none)"}\n\n` + body;
   } catch (error) {
     return `could not open ${url}: ${error instanceof Error ? error.message : String(error)}`;
   } finally {
