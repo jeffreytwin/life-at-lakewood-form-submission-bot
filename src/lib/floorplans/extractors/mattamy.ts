@@ -162,18 +162,35 @@ function componentsOf(list: LayoutComponent[] | undefined): LayoutComponent[] {
 }
 
 /**
+ * The address a tour item of Mattamy's gallery opens: the page its iframe
+ * shows ("<iframe … src='https://my.matterport.com/show/?m=of1T1UYQHiB'>"),
+ * or the address itself where it gives one. Null for anything else. Pure;
+ * exported for tests.
+ */
+export function tourAddress(src: string | null | undefined): string | null {
+  const text = (src ?? "").trim();
+  const framed = text.match(/\bsrc\s*=\s*['"]([^'"]+)['"]/i)?.[1];
+  const url = (framed ?? text).trim().replace(/&amp;/g, "&");
+  return /^https?:\/\/\S+$/i.test(url) ? url : null;
+}
+
+/**
  * What a plan's own page carries, read from the layout service that draws
  * it (sitecore/api/layout/render/jss?item=<plan path>): its hero, the
  * gallery's pictures each with the room Mattamy names in its alt text
  * ("Kitchen", "Dining"), the exterior styles, the floor plan drawing, and
  * the product line ("Attached Villa") — Anclote at Sunstone, 2026-09-23.
- * The search cards carry one picture and no type. Pure; exported for tests.
+ * The search cards carry one picture and no type. And its virtual tour:
+ * the gallery's "360 Tours" tab is an item of type "tour" holding the
+ * Matterport it embeds (Carmel II at Lakespur, Jeff, 2026-09-24); its
+ * "Videos" tab, a Vimeo, is not one. Pure; exported for tests.
  */
 export function readPlanLayout(data: unknown): {
   photos: string[];
   meta: NonNullable<NormalizedPlan["galleryMeta"]>;
   drawings: string[];
   homeType: string | null;
+  tour: string | null;
 } {
   const route = (data as { sitecore?: { route?: LayoutComponent & { fields?: Record<string, unknown> } } })?.sitecore?.route;
   const components = componentsOf(Object.values(route?.placeholders ?? {}).flat());
@@ -183,6 +200,7 @@ export function readPlanLayout(data: unknown): {
   };
   const items: GalleryInput[] = [];
   const drawings: string[] = [];
+  let tour: string | null = null;
   for (const c of components) {
     if (c.componentName === "TitleDetailsBlock") {
       const hero = (c.fields?.image?.value as { src?: string; alt?: string } | undefined)?.src;
@@ -192,6 +210,8 @@ export function readPlanLayout(data: unknown): {
       if (!m.src) continue;
       if (m.type === "floorplan") {
         if (!drawings.includes(m.src)) drawings.push(m.src);
+      } else if (m.type === "tour") {
+        tour = tour ?? tourAddress(m.src);
       } else if (m.type === "image") {
         const caption = (m.alt || m.title || "").trim() || null;
         // The room Mattamy files the picture under ("Exterior", "Kitchen"),
@@ -215,7 +235,7 @@ export function readPlanLayout(data: unknown): {
   const homeType =
     standardHomeType(field("Product Line")?.displayName ?? null) ??
     standardHomeType(field("Home Type")?.fields?.homeType?.value ?? field("Home Type")?.displayName ?? null);
-  return { photos: ordered.urls, meta: ordered.meta, drawings, homeType };
+  return { photos: ordered.urls, meta: ordered.meta, drawings, homeType, tour };
 }
 
 /** Runs `fn` over the items a few at a time, keeping order. */
@@ -256,6 +276,7 @@ async function withPlanLayout(plan: NormalizedPlan): Promise<NormalizedPlan> {
       galleryMeta: page.photos.length ? page.meta : plan.galleryMeta,
       blueprintImages: page.drawings.length ? page.drawings : plan.blueprintImages,
       homeType: plan.homeType ?? page.homeType,
+      virtualTourUrl: plan.virtualTourUrl ?? page.tour,
     };
   } catch {
     return { ...plan, pageUnread: true };

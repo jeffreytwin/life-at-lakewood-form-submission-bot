@@ -1,22 +1,18 @@
 {
-  "anatomy": [
-    "json https://mattamyhomes.com/sitecore/api/layout/render/jss?item=%2Fflorida%2Fsarasota%2Fvenice%2Fwellen-park%2Flakespur%2Fcarmel-ii&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D"
-  ],
-  "raw": [
-    {
-      "url": "https://mattamyhomes.com/sitecore/api/layout/render/jss?item=%2Fflorida%2Fsarasota%2Fvenice%2Fwellen-park%2Flakespur%2Fcarmel-ii&sc_apikey=%7B8C3D041E-BB12-4CC6-908A-4CF43E542E5B%7D",
-      "around": ["360", "Tour", "tour", "matterport", "Matterport", "video", "\"type\":", "3D"],
-      "chars": 500,
-      "count": 4
-    }
-  ],
+  "anatomy": [],
+  "raw": [],
   "concurrency": 2,
-  "detailPlans": 2,
+  "detailPlans": 0,
   "duplicates": [],
   "checks": [
     {
       "builder": "Mattamy Homes",
       "community": "Lakespur",
+      "noSurvey": true
+    },
+    {
+      "builder": "Mattamy Homes",
+      "community": "Sunstone Lakeside",
       "noSurvey": true
     }
   ]
