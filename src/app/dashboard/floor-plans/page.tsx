@@ -44,6 +44,8 @@ interface ProposedRecord {
   /** Set here in the Hub; the sites list high scores first. Required before a base plan is approved. */
   score?: number | null;
   userEditedFields?: string[];
+  /** Every photo looked at and the gallery put in order in the background (sort-queue.ts). */
+  photosSorted?: boolean;
 }
 
 interface PendingChange {
@@ -1073,6 +1075,15 @@ export default function FloorPlansPage() {
                         )}
                         {(rec?.userEditedFields?.length ?? 0) > 0 && (
                           <div className="text-muted text-sm">✎ edited: {rec?.userEditedFields?.join(", ")}</div>
+                        )}
+                        {isPending && photoCount > 1 && !rec?.photosSorted && !rec?.userEditedFields?.includes("galleryImages") && (
+                          <div
+                            className="text-sm"
+                            style={{ color: "var(--info, #60a5fa)" }}
+                            title="Its photos are being looked at and put in order in the background, a few minutes after a run. No need to sort them by hand."
+                          >
+                            ⟳ Sorting photos…
+                          </div>
                         )}
                         {rec?.quickMoveIn && (
                           <div className="text-muted text-sm">

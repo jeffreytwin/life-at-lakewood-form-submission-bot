@@ -58,6 +58,8 @@ export interface NormalizedPlan {
   galleryMeta?: Record<string, GalleryMeta>;
   /** A waiting change only: its gallery has been checked for one photograph shown twice (sort-queue.ts). */
   copiesChecked?: boolean;
+  /** A waiting change only: every photo of its gallery has been looked at and the gallery put in order (sort-queue.ts). */
+  photosSorted?: boolean;
   /** The builder's own description of the plan, when the page gives one. */
   description?: string | null;
   /** Virtual tour link: a Matterport share link, an InsideMaps walkthrough, whatever the builder offers. */

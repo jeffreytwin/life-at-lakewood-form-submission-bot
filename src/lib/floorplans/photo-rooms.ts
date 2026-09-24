@@ -159,7 +159,7 @@ export async function rememberedRooms(urls: string[]): Promise<Map<string, Photo
  * looking at it now and remembering the answer. A picture Claude cannot
  * place is remembered as unplaced, so it is not paid for twice.
  */
-export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabel | null>> {
+export async function labelPhotos(urls: string[], parallel = PARALLEL): Promise<Map<string, PhotoLabel | null>> {
   const wanted = urls.filter((url, i) => url && urls.indexOf(url) === i);
   const known = await rememberedRooms(wanted);
   const fresh = wanted.filter((url) => !known.has(url));
@@ -168,7 +168,7 @@ export async function labelPhotos(urls: string[]): Promise<Map<string, PhotoLabe
   // A request that failed says nothing about its pictures — an empty
   // account, a timeout — so they are not remembered, and are looked at
   // again next time rather than filed as unplaced for good.
-  const looked = await mapLimit(batches(fresh), PARALLEL, async (batch) => {
+  const looked = await mapLimit(batches(fresh), parallel, async (batch) => {
     try {
       return await lookAt(batch);
     } catch (err) {
