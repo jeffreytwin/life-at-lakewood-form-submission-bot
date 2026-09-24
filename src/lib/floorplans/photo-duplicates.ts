@@ -257,10 +257,10 @@ export async function samePhotos(urls: string[]): Promise<SamePhotos> {
 /**
  * The sets of a gallery's pictures that are one photograph by their pixels
  * alone (SAME_PIXELS), with no question to Claude: cheap enough for the
- * background sort to ask of every waiting gallery (sort-queue.ts). Neal
- * files one photograph under two months' folders, "2019/12/…/Seastarden.jpg"
- * and "2020/05/…/Seastarden.jpg", and every waiting gallery showed some
- * twice (2026-09-24).
+ * background sort to ask of every waiting gallery (sort-queue.ts), so a
+ * copy no rule about addresses pairs is gone before anyone presses Sort.
+ * One name is not one photograph: Neal's "2019/12/…/Seastarden.jpg" and
+ * "2020/05/…/Seastarden.jpg" are two different dens, 39 apart (2026-09-24).
  */
 export async function identicalPhotos(urls: string[]): Promise<number[][]> {
   const pictures = await fetchPictures(urls);

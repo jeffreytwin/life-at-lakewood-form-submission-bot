@@ -15,9 +15,10 @@
 // order the queue already shows.
 //
 // Each waiting gallery is also checked once for one photograph shown
-// twice, by its pixels (photo-duplicates.ts, identicalPhotos): Neal's
-// galleries all came in with copies filed under another month's folder,
-// and were put right one by one with the Sort button (2026-09-24).
+// twice, by its pixels (photo-duplicates.ts, identicalPhotos), as the Sort
+// button checks it: a copy at another address no rule pairs is gone
+// before anyone opens the gallery (Jeff, 2026-09-24: Neal's galleries
+// were put right one by one with the button).
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";

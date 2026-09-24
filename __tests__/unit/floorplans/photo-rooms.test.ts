@@ -207,7 +207,7 @@ describe("waiting galleries checked once for one photograph shown twice (Neal, 2
     `${neal}/2020/05/23101712/Sea-Star-45-2379-Elevation-T3.jpg`,
     `${neal}/2020/05/02174102/Seastarden.jpg`,
     `${neal}/2020/05/02174059/Seastarkitchen.jpg`,
-    `${neal}/2019/12/02181502/Seastarden.jpg`,
+    `${neal}/2020/05/02174102/Seastarden-copy.jpg`,
   ];
   const meta = {
     [front]: { kind: "primary" as const, room: "primary" as const, caption: "Sea Star" },

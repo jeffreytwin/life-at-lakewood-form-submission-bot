@@ -1,61 +1,22 @@
 {
-  "anatomy": [
-    "https://lakewoodranch.com/home-finder/?build[]=34712"
-  ],
-  "raw": [
-    {
-      "url": "https://lakewoodranch.com/home-finder/?build[]=34712",
-      "around": [
-        "data-comp",
-        "Palm Bay",
-        "Waterbury",
-        "admin-ajax",
-        "results"
-      ],
-      "chars": 1500,
-      "count": 2
-    },
-    {
-      "url": "https://lakewoodranch.com/home-finder/",
-      "around": [
-        "<form",
-        "name=\"vil",
-        "name=\"ht",
-        "admin-ajax"
-      ],
-      "chars": 700,
-      "count": 2
-    }
-  ],
+  "anatomy": [],
+  "raw": [],
   "concurrency": 2,
-  "detailPlans": 2,
-  "duplicates": [
-    {
-      "label": "Neal Sea Star: one photo under two months' folders",
-      "urls": [
-        "https://images.nealcommunities.com/wp-content/uploads/2020/05/02174102/Seastarden.jpg?auto=format%2Ccompress",
-        "https://images.nealcommunities.com/wp-content/uploads/2019/12/02181502/Seastarden.jpg?auto=format%2Ccompress",
-        "https://images.nealcommunities.com/wp-content/uploads/2020/05/02174059/Seastarkitchen.jpg?auto=format%2Ccompress",
-        "https://images.nealcommunities.com/wp-content/uploads/2019/08/02183205/Seastarkitchen.jpg?auto=format%2Ccompress",
-        "https://images.nealcommunities.com/wp-content/uploads/2020/05/02174103/Seastarpool2.jpg?auto=format%2Ccompress",
-        "https://images.nealcommunities.com/wp-content/uploads/2019/12/02181512/Seastarpool2.jpg?auto=format%2Ccompress"
-      ]
-    }
-  ],
+  "detailPlans": 3,
+  "duplicates": [],
   "checks": [
+    {
+      "builder": "Neal Communities",
+      "community": "Boca Royale",
+      "noSurvey": true
+    },
     {
       "builder": "Neal Signature Homes",
       "community": "Waterbury Park",
       "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build[]=34712"
+        "url": "https://nealsignaturehomes.com/waterbury-park/",
+        "engine": "render_claude"
       },
-      "noSurvey": true
-    },
-    {
-      "builder": "Neal Communities",
-      "community": "Boca Royale",
       "noSurvey": true
     }
   ]

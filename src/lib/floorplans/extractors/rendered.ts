@@ -20,3 +20,16 @@ export function pageLooksUnrendered(text: string): boolean {
   if (/\b\d(?:\.\d)?\s*(?:bd|ba|bed|bath)/i.test(text)) return false;
   return true;
 }
+
+/**
+ * Whether a page is a bot check standing in front of the page asked for:
+ * Cloudflare's "Just a moment..." with "Performing security verification".
+ * Neal Signature's plan pages give only that, even in the browser, and a
+ * run that read it as the plan's page would have proposed taking every
+ * photo off the plan (2026-09-24). A page that merely carries the check's
+ * script, as Lakewood Ranch's own pages do, is not one. Pure.
+ */
+export function pageIsBotCheck(html: string): boolean {
+  if (/<title[^>]*>\s*Just a moment\.\.\.\s*<\/title>/i.test(html)) return true;
+  return /Performing security verification|Verify you are human by completing|Checking (?:if the site connection is secure|your browser before accessing)/i.test(html);
+}
