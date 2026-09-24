@@ -1,20 +1,18 @@
 {
   "anatomy": [
-    "https://www.lakewoodranch.com/home-finder/",
-    "https://nealsignaturehomes.com/waterbury-park/",
-    "https://nealsignaturehomes.com/waterbury-park/palm-bay-2/"
+    "https://lakewoodranch.com/home-finder/?build[]=34712"
   ],
   "raw": [
     {
-      "url": "https://www.lakewoodranch.com/home-finder/",
-      "around": ["neal-signature", "Neal Signature", "waterbury", "data-comp", "/api/", "wp-json"],
-      "chars": 400,
-      "count": 3
+      "url": "https://lakewoodranch.com/home-finder/?build[]=34712",
+      "around": ["data-comp", "Palm Bay", "Waterbury", "admin-ajax", "results"],
+      "chars": 1500,
+      "count": 2
     },
     {
-      "url": "https://www.lakewoodranch.com/available-homes/",
-      "around": ["neal-signature", "waterbury", "data-comp"],
-      "chars": 600,
+      "url": "https://lakewoodranch.com/home-finder/",
+      "around": ["<form", "name=\"vil", "name=\"ht", "admin-ajax"],
+      "chars": 700,
       "count": 2
     }
   ],
@@ -26,9 +24,11 @@
       "builder": "Neal Signature Homes",
       "community": "Waterbury Park",
       "params": {
-        "url": "https://nealsignaturehomes.com/waterbury-park/",
-        "engine": "render_claude"
-      }
+        "engine": "mpc_aggregator",
+        "source": "lakewoodranch",
+        "url": "https://lakewoodranch.com/home-finder/?build[]=34712"
+      },
+      "noSurvey": true
     }
   ]
 }
