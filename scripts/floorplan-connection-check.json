@@ -2,21 +2,12 @@
   "anatomy": [],
   "raw": [],
   "concurrency": 2,
-  "detailPlans": 3,
+  "detailPlans": 5,
   "duplicates": [],
   "checks": [
     {
-      "builder": "Neal Communities",
-      "community": "Boca Royale",
-      "noSurvey": true
-    },
-    {
-      "builder": "Neal Signature Homes",
-      "community": "Waterbury Park",
-      "params": {
-        "url": "https://nealsignaturehomes.com/waterbury-park/",
-        "engine": "render_claude"
-      },
+      "builder": "Mattamy Homes",
+      "community": "Lakespur",
       "noSurvey": true
     }
   ]

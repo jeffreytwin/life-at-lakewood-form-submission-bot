@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { plansFromSearchData, normalizeMattamyCard, readPlanLayout } from "@/lib/floorplans/extractors/mattamy";
+import { plansFromSearchData, normalizeMattamyCard, readPlanLayout, tourAddress } from "@/lib/floorplans/extractors/mattamy";
 import { standardHomeType } from "@/lib/floorplans/standardize";
 
 // Real /search-data layout-service payload captured in round-7 discovery
@@ -91,6 +91,21 @@ describe("readPlanLayout (Mattamy plan pages, Anclote at Sunstone, 2026-09-23)",
                     fields: { media: { value: [{ type: "floorplan", src: "https://cdn.mattamy.com/anclote-fp.png" }] } },
                   },
                   {
+                    componentName: "MediaGallery",
+                    fields: {
+                      media: {
+                        value: [
+                          {
+                            type: "tour",
+                            src: "<iframe title='' style='min-height: 500px; width: 100%;' src='https://my.matterport.com/show/?m=of1T1UYQHiB' frameborder='0'></iframe>",
+                            thumbnail: "https://cdn.mattamy.com/Image-Coming-Soon.png",
+                          },
+                          { type: "external", src: "https://vimeo.com/1071164024?share=copy" },
+                        ],
+                      },
+                    },
+                  },
+                  {
                     componentName: "ExteriorStyles",
                     fields: {
                       styles: {
@@ -127,6 +142,20 @@ describe("readPlanLayout (Mattamy plan pages, Anclote at Sunstone, 2026-09-23)",
 
   it("takes the floor plan drawing apart from the photos", () => {
     expect(readPlanLayout(layout).drawings).toEqual(["https://cdn.mattamy.com/anclote-fp.png"]);
+  });
+
+  it("reads the Matterport a tour item embeds as the virtual tour, and not the video (Carmel II, 2026-09-24)", () => {
+    const page = readPlanLayout(layout);
+    expect(page.tour).toBe("https://my.matterport.com/show/?m=of1T1UYQHiB");
+    // Neither the tour's placeholder picture nor the video joins the photos.
+    expect(page.photos.some((u) => /Image-Coming-Soon|vimeo/.test(u))).toBe(false);
+  });
+
+  it("reads a tour's address from its iframe or as given, and nothing else", () => {
+    expect(tourAddress("<iframe src=\"https://my.matterport.com/show/?m=abc&amp;play=1\"></iframe>")).toBe("https://my.matterport.com/show/?m=abc&play=1");
+    expect(tourAddress("https://my.matterport.com/show/?m=abc")).toBe("https://my.matterport.com/show/?m=abc");
+    expect(tourAddress("<iframe></iframe>")).toBeNull();
+    expect(tourAddress(null)).toBeNull();
   });
 
   it("reads the product line as the home type", () => {
