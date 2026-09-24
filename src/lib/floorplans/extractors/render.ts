@@ -1,6 +1,6 @@
 import type { Browser, Page } from "puppeteer-core";
 import { logger } from "@/lib/shared/logger";
-import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
+import { pageIsBotCheck, pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 
 /**
  * A real browser, for the builders whose pages are empty without one.
@@ -29,6 +29,9 @@ const POLL_MS = 500;
 const NAVIGATE_MS = 45_000;
 /** The longest a page is given to stop fetching once it has loaded. */
 const QUIET_MS = 15_000;
+
+/** How long a bot check in front of a page is given to let the browser through. */
+const BOT_CHECK_MS = 10_000;
 
 let browser: Browser | null = null;
 let starting: Promise<Browser> | null = null;
@@ -371,6 +374,17 @@ export async function renderPage(
       .waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: QUIET_MS })
       .then(() => true)
       .catch(() => false);
+
+    // A bot check in front of the page sometimes lets a browser through
+    // after a few seconds; one that does not is not the page, and saying
+    // so leaves what an earlier run found alone (diff.ts, pageUnread).
+    const checkUntil = Date.now() + BOT_CHECK_MS;
+    while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() < checkUntil) {
+      await new Promise((done) => setTimeout(done, POLL_MS));
+    }
+    if (pageIsBotCheck(await page.content().catch(() => ""))) {
+      throw new Error(`${url}: stopped at the site's bot check ("Just a moment...")`);
+    }
 
     // And then the backstop, for a page still filling in after it went
     // quiet: wait until it shows a price, a size or a bed count.

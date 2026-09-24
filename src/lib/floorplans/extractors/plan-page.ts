@@ -670,6 +670,16 @@ export function pictureKey(src: string): string {
   const path = src.replace(/[?#].*$/, "");
   const folder = path.slice(0, path.lastIndexOf("/") + 1);
   let file = path.slice(folder.length);
+  // A WordPress upload served from a store of its own is that upload,
+  // whichever of the site's hosts serves it and whichever copy of it:
+  // Neal gives one floor plan as images.nealcommunities.com/…/uploads/2023/02/29100902/…-floorplan.png,
+  // as img.nealcommunities.com/… and again with a query, and the queue
+  // showed it three times; and a photograph whose copy is in
+  // …/uploads/2026/05/23101259/ is named once more as …/uploads/2026/05/,
+  // an address that shows nothing (Jeff, 2026-09-24). The folder of eight
+  // digits is the time the copy was made, and the site keeps its name.
+  const upload = folder.match(/^https?:\/\/(?:[^/]*\.)?([^./]+\.[^./]+)(\/(?:[^/]+\/)*?wp-content\/uploads\/\d{4}\/\d{2}\/)(?:\d{8}\/)?$/i);
+  const place = upload ? `${upload[1].toLowerCase()}${upload[2]}` : folder;
   try {
     file = decodeURIComponent(file);
   } catch {
@@ -678,7 +688,7 @@ export function pictureKey(src: string): string {
   const name = IMAGE_FILE.test(file) ? file : src.slice(folder.length);
   const sized = name.match(SIZED) ?? name.match(THUMB);
   const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(IMAGE_FILE, "");
-  return folder + plain;
+  return place + plain;
 }
 
 const IMAGE_FILE = /\.(jpe?g|png|webp|avif|gif)$/i;

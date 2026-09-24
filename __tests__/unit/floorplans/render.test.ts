@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
+import { pageIsBotCheck, pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 
 describe("pageLooksUnrendered", () => {
   it("knows a page that draws its plans after loading", () => {
@@ -26,5 +26,22 @@ describe("pageLooksUnrendered", () => {
 
   it("is not fooled by a phone number or a year", () => {
     expect(pageLooksUnrendered("Call 941.263.5638 · © 2026 Richmond American Homes")).toBe(true);
+  });
+});
+
+describe("pageIsBotCheck", () => {
+  it("knows Cloudflare's check standing in front of a plan's page (Neal Signature, 2026-09-24)", () => {
+    const check =
+      "<html><head><title>Just a moment...</title></head><body><h1>nealsignaturehomes.com</h1>" +
+      "<h2>Performing security verification</h2><p>This website uses a security service to protect against malicious bots.</p></body></html>";
+    expect(pageIsBotCheck(check)).toBe(true);
+    expect(pageIsBotCheck("<title>x</title><p>Verify you are human by completing the action below.</p>")).toBe(true);
+  });
+
+  it("leaves a page that only carries the check's script alone (Lakewood Ranch)", () => {
+    const page =
+      "<title>Home Finder - Lakewood Ranch</title><script src='/cdn-cgi/challenge-platform/h/b/jsd/oneshot/d76008a69eab/x'></script>" +
+      "<h1>Find Your perfect Florida home.</h1>";
+    expect(pageIsBotCheck(page)).toBe(false);
   });
 });

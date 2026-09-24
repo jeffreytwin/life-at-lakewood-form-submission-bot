@@ -1176,6 +1176,9 @@ async function extractPages(
  * main picture, as .webp, for a floor plan (2026-09-23). Otherwise it is
  * the drawing: SimplyDwell's "Jasmine-2.jpg" is its floor plan, and a run
  * that also read it as a photo left the plan without one (2026-09-23).
+ * And each drawing once, however it is spelled: Neal's list, its page
+ * and Claude's reading gave one floor plan from two hosts, with and
+ * without a query, and the queue showed it three times (2026-09-24).
  * Pure; exported for tests.
  */
 export function drawingsOrPhotos(
@@ -1184,7 +1187,8 @@ export function drawingsOrPhotos(
 ): { blueprintImages: string[]; galleryImages: string[]; galleryMeta: Record<string, GalleryMeta> } {
   const room = (u: string) => photos.meta[u]?.room;
   const photographs = new Set(photos.urls.filter((u, i) => i === 0 || (room(u) && room(u) !== "other")).map(pictureKey));
-  const blueprintImages = drawings.filter((u) => !photographs.has(pictureKey(u)));
+  const keys = drawings.map(pictureKey);
+  const blueprintImages = drawings.filter((u, i) => !photographs.has(keys[i]) && keys.indexOf(keys[i]) === i);
   const drawn = new Set(blueprintImages.map(pictureKey));
   const galleryImages = photos.urls.filter((u, i) => i === 0 || !drawn.has(pictureKey(u)));
   const galleryMeta = Object.fromEntries(Object.entries(photos.meta).filter(([u]) => galleryImages.includes(u)));

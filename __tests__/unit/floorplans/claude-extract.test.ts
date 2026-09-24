@@ -591,6 +591,18 @@ describe("drawingsOrPhotos", () => {
     expect(got).toMatchObject({ blueprintImages: [], galleryImages: [main] });
   });
 
+  it("keeps each drawing once however it is spelled, the first spelling (Neal's Fresh Spring, 2026-09-24)", () => {
+    const at = (host: string) =>
+      `https://${host}/wp-content/uploads/2018/08/14134322/new-home-construction-englewood-florida-boca-royale-fresh-spring-floorplan.jpg`;
+    const first = `${at("images.nealcommunities.com")}?auto=format%2Ccompress`;
+    const other = "https://images.nealcommunities.com/wp-content/uploads/2018/08/14134322/fresh-spring-options.jpg";
+    const got = drawingsOrPhotos([first, at("img.nealcommunities.com"), at("images.nealcommunities.com"), other], {
+      urls: ["https://x.com/front.jpg"],
+      meta: {},
+    });
+    expect(got.blueprintImages).toEqual([first, other]);
+  });
+
   it("keeps a photo whose caption names a room", () => {
     const kitchen = "https://www.richmondamerican.com/content/pln/media-267142.webp";
     const got = drawingsOrPhotos([kitchen], {

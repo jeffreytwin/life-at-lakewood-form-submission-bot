@@ -542,9 +542,20 @@ async function anatomy(url: string): Promise<string> {
     // The data a page asks for after it loads: where a builder keeps its
     // plans when the markup does not carry them.
     const calls: string[] = [];
+    const answers: string[] = [];
+    // A page's own requests too, whatever they answer with: Lakewood Ranch's
+    // home finder posts to admin-ajax.php and is answered in markup, so
+    // the form it posts is printed with it (2026-09-24).
     page.on("response", (r) => {
       const type = r.headers()["content-type"] ?? "";
-      if (/json/i.test(type) && calls.length < 80) calls.push(`${r.status()} ${r.request().method()} ${r.url().slice(0, 400)}`);
+      const own = ["xhr", "fetch"].includes(r.request().resourceType());
+      if ((/json/i.test(type) || own) && calls.length < 80) {
+        const posted = r.request().postData();
+        calls.push(`${r.status()} ${r.request().method()} ${r.url().slice(0, 400)} (${type.split(";")[0] || "?"})${posted ? ` posted: ${posted.slice(0, 600)}` : ""}`);
+        if (/admin-ajax/i.test(r.url()) && answers.length < 4) {
+          r.text().then((t) => answers.push(`${r.url().slice(0, 200)} → ${t.length} chars: ${t.slice(0, 2500)}`)).catch(() => {});
+        }
+      }
     });
     const res = await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 }).catch(() => null);
     await wait(4_000);
@@ -554,7 +565,7 @@ async function anatomy(url: string): Promise<string> {
       .then(async (r) => `${r.status}, ${(await r.text()).length} chars`)
       .catch((e) => `failed: ${e instanceof Error ? e.message : String(e)}`);
     const body = String(await page.evaluate(ANATOMY_SCRIPT));
-    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n== JSON CALLS ==\n${calls.join("\n") || "(none)"}\n\n` + body;
+    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n== CALLS ==\n${calls.join("\n") || "(none)"}\n\n== ADMIN-AJAX ANSWERS ==\n${answers.join("\n\n") || "(none)"}\n\n` + body;
   } catch (error) {
     return `could not open ${url}: ${error instanceof Error ? error.message : String(error)}`;
   } finally {

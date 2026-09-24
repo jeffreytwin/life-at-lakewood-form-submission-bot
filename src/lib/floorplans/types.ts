@@ -56,6 +56,8 @@ export interface NormalizedPlan {
   blueprintImages: string[];
   /** Caption, room and origin of each gallery image, keyed by URL. */
   galleryMeta?: Record<string, GalleryMeta>;
+  /** A waiting change only: its gallery has been checked for one photograph shown twice (sort-queue.ts). */
+  copiesChecked?: boolean;
   /** The builder's own description of the plan, when the page gives one. */
   description?: string | null;
   /** Virtual tour link: a Matterport share link, an InsideMaps walkthrough, whatever the builder offers. */

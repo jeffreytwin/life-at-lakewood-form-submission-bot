@@ -6,7 +6,18 @@
   "duplicates": [],
   "checks": [
     {
-      "builder": "Perry Homes"
+      "builder": "Neal Communities",
+      "community": "Boca Royale",
+      "noSurvey": true
+    },
+    {
+      "builder": "Neal Signature Homes",
+      "community": "Waterbury Park",
+      "params": {
+        "url": "https://nealsignaturehomes.com/waterbury-park/",
+        "engine": "render_claude"
+      },
+      "noSurvey": true
     }
   ]
 }
