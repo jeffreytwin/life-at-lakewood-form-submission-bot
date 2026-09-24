@@ -44,6 +44,8 @@ interface ProposedRecord {
   /** Set here in the Hub; the sites list high scores first. Required before a base plan is approved. */
   score?: number | null;
   userEditedFields?: string[];
+  /** Every photo looked at and the gallery put in order in the background (sort-queue.ts). */
+  photosSorted?: boolean;
 }
 
 interface PendingChange {
@@ -234,6 +236,11 @@ export default function FloorPlansPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  // Plans ticked in the list, by group key, and the row the last tick was
+  // on, so a shift-click ticks everything between (Jeff, 2026-09-24).
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [lastPicked, setLastPicked] = useState<string | null>(null);
+  const [rejectingSelected, setRejectingSelected] = useState(false);
   /** Seconds the run is waiting out a Wix throttle, so the buttons say so instead of looking stuck. */
   const [throttleWait, setThrottleWait] = useState(0);
   const [editing, setEditing] = useState<Group | null>(null);
@@ -354,6 +361,39 @@ export default function FloorPlansPage() {
     () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g)),
     [siteGroups]
   );
+  // The ticked plans still pending in this view: a plan approved, rejected
+  // or filtered out of view is never acted on by a tick left behind.
+  const selectedGroups = useMemo(() => pendingGroups.filter((g) => selected.has(g.key)), [pendingGroups, selected]);
+  const allSelected = pendingGroups.length > 0 && selectedGroups.length === pendingGroups.length;
+  const selectedBlocked = useMemo(
+    () => selectedGroups.filter((g) => approvalBlocker(g.kind, g.lead.proposed_record)).length,
+    [selectedGroups]
+  );
+
+  /** Ticks or unticks one plan, or with shift every pending plan between it and the last one ticked. */
+  function pick(index: number, shift: boolean) {
+    const on = !selected.has(groups[index]?.key);
+    // The last tick by its plan, not its row, so a list re-read or filtered since still finds it.
+    const anchor = shift && lastPicked != null ? groups.findIndex((g) => g.key === lastPicked) : -1;
+    const [from, to] = anchor >= 0 ? [Math.min(anchor, index), Math.max(anchor, index)] : [index, index];
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (let i = from; i <= to; i++) {
+        const g = groups[i];
+        if (!g || pendingIds(g).length === 0) continue;
+        if (on) next.add(g.key);
+        else next.delete(g.key);
+      }
+      return next;
+    });
+    setLastPicked(groups[index]?.key ?? null);
+  }
+
+  function pickAll() {
+    setSelected(allSelected ? new Set() : new Set(pendingGroups.map((g) => g.key)));
+    setLastPicked(null);
+  }
+
   // Plans the server is writing right now; each leaves the list as its write finishes.
   const approvingCount = useMemo(() => siteGroups.filter((g) => g.status === "approving").length, [siteGroups]);
   // Wix refuses a client that asks too often, and a full run asks far
@@ -582,8 +622,8 @@ export default function FloorPlansPage() {
    * it is written. What did not fit in the server's time budget comes back
    * as `remaining` and is sent again from here.
    */
-  async function approveGroups(list: Group[], what: string) {
-    if (!confirm(`Approve ${list.length} ${what}? Approved plans are written to Wix as published items.`)) return;
+  async function approveGroups(list: Group[], what: string): Promise<boolean> {
+    if (!confirm(`Approve ${list.length} ${what}? Approved plans are written to Wix as published items.`)) return false;
     const names = new Map<string, string>();
     const blocked = new Set<string>();
     const slices: string[][] = [];
@@ -647,6 +687,45 @@ export default function FloorPlansPage() {
       if (requestError) notes.push(`The approval request failed (${requestError}). Plans the server had started are still being written and leave the list as they finish; whatever is still pending can be approved again.`);
       if (notes.length) alert(notes.join("\n"));
     }
+    return true;
+  }
+
+  /** Approves the ticked plans, as Approve All does, and clears the ticks once they are sent. */
+  async function approveSelected() {
+    if (await approveGroups(selectedGroups, `selected plan${selectedGroups.length === 1 ? "" : "s"}`)) setSelected(new Set());
+  }
+
+  /**
+   * Rejects the ticked plans. A rejection sticks, so each can be brought
+   * back one by one with Restore under the Rejected filter.
+   */
+  async function rejectSelected() {
+    const list = selectedGroups;
+    if (!confirm(`Reject ${list.length} selected plan${list.length === 1 ? "" : "s"}? A rejected change is not raised again; Restore under the Rejected filter brings one back.`)) return;
+    const ids = list.flatMap((g) => pendingIds(g));
+    setRejectingSelected(true);
+    let problem: string | null = null;
+    try {
+      for (let i = 0; i < ids.length; i += MAX_IDS_PER_REQUEST) {
+        const res = await fetch("/api/internal/floorplans/changes/bulk", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "reject", ids: ids.slice(i, i + MAX_IDS_PER_REQUEST) }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          problem = data?.error ?? `HTTP ${res.status}`;
+          break;
+        }
+      }
+      if (!problem) setSelected(new Set());
+    } catch (e) {
+      problem = e instanceof Error ? e.message : String(e);
+    } finally {
+      setRejectingSelected(false);
+      fetchChanges();
+      if (problem) alert(`Rejecting the selected plans stopped part way (${problem}). Whatever is still pending can be rejected again.`);
+    }
   }
 
   // Whether the plan in the overlay has builder pictures to bring back.
@@ -684,14 +763,14 @@ export default function FloorPlansPage() {
               <button
                 className="btn btn-secondary"
                 onClick={() => approveGroups(pendingQuickMoveIns, "quick move-ins")}
-                disabled={bulkBusy}
+                disabled={bulkBusy || rejectingSelected}
                 title="Every pending quick move-in the site and builder filters allow, whatever the view shows"
               >
                 {bulkBusy ? busyLabel : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
               </button>
             )}
             {pendingGroups.length > 0 && (
-              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy}>
+              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy || rejectingSelected}>
                 {bulkBusy ? busyLabel : `Approve All (${pendingGroups.length})`}
               </button>
             )}
@@ -831,11 +910,53 @@ export default function FloorPlansPage() {
           No {statusFilter === "all" ? "" : statusFilter} floor plan changes.
         </div>
       ) : (
-        <div className="card">
+        <div className="card has-selection-bar">
+          {pendingGroups.length > 0 && (
+            <div className="selection-bar">
+              {selectedGroups.length === 0 ? (
+                <span className="text-muted text-sm">
+                  Tick plans to approve or reject several at once. Shift-click ticks every plan between two.
+                </span>
+              ) : (
+                <>
+                  <strong className="text-sm">{selectedGroups.length} selected</strong>
+                  <button className="btn btn-primary" onClick={approveSelected} disabled={bulkBusy || rejectingSelected}>
+                    {bulkBusy ? busyLabel : `Approve selected (${selectedGroups.length})`}
+                  </button>
+                  <button className="btn btn-secondary" onClick={rejectSelected} disabled={bulkBusy || rejectingSelected}>
+                    {rejectingSelected ? "Rejecting…" : `Reject selected (${selectedGroups.length})`}
+                  </button>
+                  <button className="btn btn-secondary" onClick={() => setSelected(new Set())} disabled={bulkBusy || rejectingSelected}>
+                    Clear
+                  </button>
+                  {selectedBlocked > 0 && (
+                    <span className="text-sm" style={{ color: "var(--warning, #b45309)" }}>
+                      {selectedBlocked} still need{selectedBlocked === 1 ? "s" : ""} something (see the ⚠ under each) and will stay pending
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
           <div className="table-wrapper">
             <table>
               <thead>
                 <tr>
+                  <th style={{ width: 32 }}>
+                    {pendingGroups.length > 0 && (
+                      <input
+                        type="checkbox"
+                        aria-label="Select every pending plan in view"
+                        title="Select every pending plan in view"
+                        checked={allSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = selectedGroups.length > 0 && !allSelected;
+                        }}
+                        onChange={pickAll}
+                        disabled={bulkBusy || rejectingSelected}
+                      />
+                    )}
+                  </th>
                   <th></th>
                   <th>Type</th>
                   <th>Plan</th>
@@ -846,7 +967,7 @@ export default function FloorPlansPage() {
                 </tr>
               </thead>
               <tbody>
-                {groups.map((g) => {
+                {groups.map((g, index) => {
                   const c = g.lead;
                   const rec = c.proposed_record;
                   // The main image is the gallery's first photo; primaryImage is the first slice's field.
@@ -872,7 +993,26 @@ export default function FloorPlansPage() {
                       style={{ ...(isPending ? { cursor: "pointer" } : {}), ...(colors ? { background: colors.tint } : {}) }}
                       title={isPending ? "Click to edit this plan before approving" : undefined}
                     >
-                      <td style={{ width: 92, ...(colors ? { borderLeft: `3px solid ${colors.accent}` } : {}) }}>
+                      <td
+                        style={{ width: 32, ...(colors ? { borderLeft: `3px solid ${colors.accent}` } : {}) }}
+                        onClick={(e) => {
+                          // A miss beside the box ticks it too, rather than opening the overlay.
+                          if (!isPending || (e.target as HTMLElement).closest("input")) return;
+                          e.stopPropagation();
+                          pick(index, e.shiftKey);
+                        }}
+                      >
+                        {isPending && (
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${rec?.name ?? c.plan_key}`}
+                            checked={selected.has(g.key)}
+                            onChange={(e) => pick(index, (e.nativeEvent as MouseEvent).shiftKey === true)}
+                            disabled={bulkBusy || rejectingSelected}
+                          />
+                        )}
+                      </td>
+                      <td style={{ width: 92 }}>
                         {thumb ? (
                           <button
                             type="button"
@@ -935,6 +1075,15 @@ export default function FloorPlansPage() {
                         )}
                         {(rec?.userEditedFields?.length ?? 0) > 0 && (
                           <div className="text-muted text-sm">✎ edited: {rec?.userEditedFields?.join(", ")}</div>
+                        )}
+                        {isPending && photoCount > 1 && !rec?.photosSorted && !rec?.userEditedFields?.includes("galleryImages") && (
+                          <div
+                            className="text-sm"
+                            style={{ color: "var(--info, #60a5fa)" }}
+                            title="Its photos are being looked at and put in order in the background, a few minutes after a run. No need to sort them by hand."
+                          >
+                            ⟳ Sorting photos…
+                          </div>
                         )}
                         {rec?.quickMoveIn && (
                           <div className="text-muted text-sm">

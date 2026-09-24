@@ -175,13 +175,15 @@ describe("withLookedAtRooms: the same order every run for the same answers", () 
 
 describe("which waiting galleries are worth looking at", () => {
   const urls = [pic("1"), pic("2"), pic("3"), pic("4")];
-  it("the ones whose photos are mostly unplaced, and nobody has edited", () => {
+  it("every one nobody has edited, until all its photos have been looked at (Neal, 2026-09-24)", () => {
     expect(mostlyPlaced(plan(urls))).toBe(false);
     expect(wantsSorting(plan(urls))).toBe(true);
     expect(wantsSorting(plan(urls, {}, { userEditedFields: ["galleryImages"] }))).toBe(false);
+    // A gallery its builder captions is looked at too: what the photos show decides.
     const placed = Object.fromEntries(urls.map((u) => [u, { kind: "photo" as const, room: "kitchen" as const }]));
-    expect(wantsSorting(plan(urls, placed))).toBe(false);
-    expect(wantsSorting(plan(urls.slice(0, 2)))).toBe(false);
+    expect(wantsSorting(plan(urls, placed))).toBe(true);
+    expect(wantsSorting(plan(urls, placed, { photosSorted: true }))).toBe(false);
+    expect(wantsSorting(plan(urls.slice(0, 1)))).toBe(false);
   });
 
   it("never one arranged by hand, or of a single picture", () => {
