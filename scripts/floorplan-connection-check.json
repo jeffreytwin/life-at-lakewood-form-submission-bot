@@ -2,12 +2,12 @@
   "anatomy": [],
   "raw": [],
   "concurrency": 2,
-  "detailPlans": 5,
+  "detailPlans": 0,
   "duplicates": [],
   "checks": [
     {
-      "builder": "Mattamy Homes",
-      "community": "Lakespur",
+      "builder": "Lennar",
+      "community": "Wellen Park Country Club",
       "noSurvey": true
     }
   ]

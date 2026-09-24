@@ -162,18 +162,50 @@ export function asTour(url: string | null | undefined): string | null {
   return NOT_A_TOUR.test(address) ? null : address;
 }
 
+/** A builder's stand-in for a picture it does not have yet, by its file's name. */
+const STAND_IN_PICTURE = /(?:coming[-_ ]?soon|no[-_ ]?image|image[-_ ]?not[-_ ]?available|placeholder)(?=[-_.]|$)/i;
+
+/**
+ * Whether a picture is one the site can show: a whole web address, and not
+ * a builder's stand-in for a photo it does not have yet. Lennar gives a
+ * home with no photos of its own "/images/com/images/version10/default/qmi/
+ * ComingSoon.jpg", an address on no host at all, and five homes led with
+ * it into the queue as a broken picture (Jeff, 2026-09-24). Exported for
+ * tests.
+ */
+export function showablePicture(url: string | null | undefined): boolean {
+  const address = (url ?? "").trim();
+  if (!/^https?:\/\/[^\s/]+\/\S*$/i.test(address)) return false;
+  let file = address.replace(/[?#].*$/, "");
+  file = file.slice(file.lastIndexOf("/") + 1);
+  try {
+    file = decodeURIComponent(file);
+  } catch {
+    // left as written
+  }
+  return !STAND_IN_PICTURE.test(file);
+}
+
 /**
  * The plan as the site files it: standard home type, one number for beds,
- * baths and garages. A builder that only builds one type has it written in
- * whatever its page said; the builder's own labels are kept in raw either
- * way.
+ * baths and garages, and only pictures the site can show. A builder that
+ * only builds one type has it written in whatever its page said; the
+ * builder's own labels are kept in raw either way.
  */
 export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults = {}): NormalizedPlan {
   const homeType = defaults.homeType ?? standardHomeType(plan.homeType);
   const garages = standardGarages(plan.garages);
   const tour = asTour(plan.virtualTourUrl);
+  const galleryImages = (plan.galleryImages ?? []).filter(showablePicture);
+  const shown = new Set(galleryImages);
+  const galleryMeta = plan.galleryMeta
+    ? Object.fromEntries(Object.entries(plan.galleryMeta).filter(([url]) => shown.has(url)))
+    : plan.galleryMeta;
   return {
     ...plan,
+    galleryImages,
+    galleryMeta,
+    blueprintImages: (plan.blueprintImages ?? []).filter(showablePicture),
     homeType,
     beds: largestInRange(plan.beds),
     baths: largestInRange(plan.baths),

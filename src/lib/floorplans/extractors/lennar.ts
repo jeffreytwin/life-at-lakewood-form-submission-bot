@@ -13,7 +13,7 @@
 // every plan's page is read too — a plain fetch and a parse, no model.
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
-import { standardHomeType } from "@/lib/floorplans/standardize";
+import { showablePicture, standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -152,7 +152,11 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
     const name = address || `${planName} (Quick Move-In ${String(e.id ?? "")})`;
     const price = typeof e.price === "number" && e.price > 0 ? e.price
       : typeof e.wasPrice === "number" && e.wasPrice > 0 ? e.wasPrice : null;
-    const photo = imgUrl(e.elevationImage);
+    // A home with no photo of its own is given Lennar's "Coming Soon"
+    // stand-in, which is not the home: it is led by its plan's pictures
+    // instead (withPlanPictures; Jeff, 2026-09-24).
+    const own = imgUrl(e.elevationImage);
+    const photo = own && showablePicture(own) ? own : null;
     out.push({
       planKey: normKey(name),
       name,
@@ -319,9 +323,10 @@ export function withPlanPictures(plans: NormalizedPlan[]): NormalizedPlan[] {
     const galleryMeta: NonNullable<NormalizedPlan["galleryMeta"]> = {};
     for (const src of galleryImages) {
       const meta = plan.galleryMeta?.[src];
-      // The home's own front leads; the plan's front is one of its elevations here.
+      // The home's own front leads; the plan's front is one of its elevations
+      // here, unless the home has no front of its own and the plan's leads.
       if (src === own) galleryMeta[src] = { caption: null, room: "primary", kind: "primary" };
-      else if (meta?.kind === "primary") galleryMeta[src] = { ...meta, room: "exterior", kind: "exterior" };
+      else if (meta?.kind === "primary" && own) galleryMeta[src] = { ...meta, room: "exterior", kind: "exterior" };
       else if (meta) galleryMeta[src] = meta;
     }
     return {
