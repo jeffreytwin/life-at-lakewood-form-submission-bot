@@ -1,15 +1,23 @@
 {
-  "anatomy": ["https://wellenpark.com/home/3125777/detail/"],
+  "anatomy": ["https://wellenpark.com/home/3125777/detail/", "https://wellenpark.com/home/3392086/detail/"],
   "raw": [
     {
       "url": "https://wellenpark.com/home/3125777/detail/",
-      "around": ["Virtual Tour", "VIRTUAL TOUR", "virtual-tour", "matterport", "iframe", "Interactive Plan", "tour"],
+      "around": ["Virtual Tour", "VIRTUAL TOUR", "virtual-tour", "matterport", "iframe", "Interactive Plan"],
       "chars": 500,
       "count": 3
+    },
+    {
+      "url": "https://wellenpark.com/home/3392086/detail/",
+      "around": ["/Images/", "More Homes in"],
+      "chars": 160,
+      "count": 40
     }
   ],
   "concurrency": 2,
-  "detailPlans": 0,
+  "detailPlans": 3,
   "duplicates": [],
-  "checks": []
+  "checks": [
+    { "builder": "M/I Homes", "community": "Palmera", "noSurvey": true }
+  ]
 }
