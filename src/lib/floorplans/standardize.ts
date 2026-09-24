@@ -37,6 +37,35 @@ export function standardHomeType(raw: string | null | undefined): HomeType | nul
 }
 
 /**
+ * Bathrooms from a count of full baths and a count of half baths, as the
+ * whole site writes them: the full baths, and ".5" for any half baths at
+ * all — four full and one half are "4.5", five full and three half "5.5"
+ * (Jeff, 2026-09-24: ".5 everywhere", as every builder on the site already
+ * shows it). None gives the full baths alone. Adding a half for each half
+ * bath, as Pulte's and Highland's readers did, made three full and two
+ * half "4". Null without a count of full baths.
+ */
+export function bathsOf(full: number | null | undefined, half: number | null | undefined): string | null {
+  if (full == null || !Number.isFinite(full)) return null;
+  const halves = half != null && Number.isFinite(half) && half > 0;
+  if (!Number.isInteger(full) || !halves) return String(full);
+  return `${full}.5`;
+}
+
+/**
+ * The bathrooms Perry's plan pages give as two counts in their strip of
+ * facts, "2 Baths 2 Cars 1 Half Baths", as bathsOf writes them. Only that
+ * strip: other builders lay their counts out differently — David Weekley's
+ * "Bedrooms 3 Full Baths 2 Half Bath 1" puts each number after its label,
+ * and read the other way it pairs the wrong numbers — so a page without
+ * the strip says nothing here. Pure.
+ */
+export function bathsStated(text: string): string | null {
+  const strip = /(\d+)\s*Baths?\s+\d+\s*Cars?\s+(\d+)\s*Half\s*Baths?\b/i.exec(text);
+  return strip ? bathsOf(Number(strip[1]), Number(strip[2])) : null;
+}
+
+/**
  * The larger end of a range: "3-4" is "4", "2.5 - 3.5" is "3.5", "3 to 4"
  * is "4". A single number, "3+", or text without two numbers is kept as it
  * came; blank stays blank.

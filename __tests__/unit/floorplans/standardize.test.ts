@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   HOME_TYPES,
   asTour,
+  bathsOf,
+  bathsStated,
   builderDefaults,
   largestInRange,
   standardGarages,
@@ -196,5 +198,38 @@ describe("builderDefaults", () => {
     expect(out.raw?.homeTypeRaw).toBe("Townhome");
     // And with no setting the page still decides.
     expect(standardizePlan(plan).homeType).toBe("Townhome");
+  });
+});
+
+describe("bathsOf: .5 for any half baths, as the whole site writes them", () => {
+  it("adds .5 for one half bath or several (Jeff, 2026-09-24)", () => {
+    expect(bathsOf(4, 1)).toBe("4.5");
+    expect(bathsOf(5, 3)).toBe("5.5");
+    expect(bathsOf(6, 4)).toBe("6.5");
+  });
+
+  it("gives the full baths alone where there are no half baths", () => {
+    expect(bathsOf(2, 0)).toBe("2");
+    expect(bathsOf(2, null)).toBe("2");
+    expect(bathsOf(null, 1)).toBeNull();
+  });
+});
+
+describe("bathsStated: the two counts a page gives", () => {
+  it("reads Perry's plan page", () => {
+    expect(bathsStated("2,016 Sq. Ft. 3 Beds 1 Stories 2 Baths 2 Cars 0 Half Baths Request More Information")).toBe("2");
+    expect(bathsStated("5,239 Sq. Ft. 5 Beds 2 Stories 5 Baths 3 Cars 3 Half Baths Request More Information")).toBe("5.5");
+    expect(bathsStated("2,844 Sq. Ft. 4 Beds 1 Stories 3 Baths 3 Cars 1 Half Baths")).toBe("3.5");
+  });
+
+  it("says nothing for other builders' layouts, which a reading of Perry's would pair wrongly", () => {
+    expect(bathsStated("Sq. Ft: 1746 Stories 2 Bedrooms 3 Full Baths 2 Half Bath 1 Car Garage 2")).toBeNull(); // David Weekley
+    expect(bathsStated("3 Bed 1,674 Sq.Ft. 2 Bathroom 1 Half Bath 1 Car Garage")).toBeNull(); // Ryan
+    expect(bathsStated("Flex Room, 3 Full and 1 Half Bath, Great Room, 2-Car Garage")).toBeNull(); // Kolter
+  });
+
+  it("says nothing for a page that states no half baths", () => {
+    expect(bathsStated("3 Beds 2.5 Baths 2 Cars")).toBeNull();
+    expect(bathsStated("A half bath off the foyer")).toBeNull();
   });
 });

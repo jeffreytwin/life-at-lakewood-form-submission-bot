@@ -17,7 +17,7 @@ import { logger } from "@/lib/shared/logger";
 import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
-import { asTour } from "@/lib/floorplans/standardize";
+import { asTour, bathsStated } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -745,7 +745,11 @@ export async function readPlanPageWithClaude(
     price,
     priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
     beds: plan.beds || (page.beds ?? ""),
-    baths: plan.baths || (page.baths ?? ""),
+    // Where Perry's page gives full and half baths as two counts ("4 Baths
+    // 3 Cars 1 Half Baths"), those counts decide, not a reading that dropped
+    // the half baths or added them up (standardize.ts, bathsStated; Jeff,
+    // 2026-09-24).
+    baths: bathsStated(content) ?? (plan.baths || (page.baths ?? "")),
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
     description: plan.description ?? page.description?.trim() ?? null,
