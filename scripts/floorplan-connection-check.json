@@ -1,16 +1,11 @@
 {
   "anatomy": [
-    "https://nealsignaturehomes.com/waterbury-park/monterey-2/",
-    "https://nealsignaturehomes.com/waterbury-park",
-    "https://www.mihomes.com/new-homes/florida/sarasota-metro/venice/palmera-at-wellen-park/candor-plan"
-  ],
-  "raw": [
-    {
-      "url": "https://nealsignaturehomes.com/waterbury-park/monterey-2/",
-      "around": ["<title", "wp-content", "matterport", "gallery"],
-      "chars": 200,
-      "count": 3
-    }
+    "fresh https://nealsignaturehomes.com/waterbury-park",
+    "fresh https://nealsignaturehomes.com/waterbury-park/palm-bay-2/",
+    "fresh https://nealsignaturehomes.com/waterbury-park/kingfisher-2/",
+    "https://nealsignaturehomes.com/waterbury-park/seaside-2/",
+    "fresh https://nealsignaturehomes.com/waterbury-park/seaside-2/",
+    "https://www.mihomes.com/new-homes/florida/sarasota-metro/venice/palmera-at-wellen-park"
   ],
   "concurrency": 2,
   "detailPlans": 2,
