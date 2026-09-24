@@ -13,16 +13,13 @@
 // every plan's page is read too — a plain fetch and a parse, no model.
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
-import { bathsOf, standardHomeType } from "@/lib/floorplans/standardize";
+import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
 type ApolloEntity = Record<string, unknown>;
-
-/** A count the feed may give as a number or as text; null for none. */
-const numberOf = (v: unknown): number | null => (v == null || v === "" ? null : Number(v));
 type Apollo = Record<string, ApolloEntity>;
 
 const money = (n: unknown) =>
@@ -130,7 +127,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       price: typeof e.startingPrice === "number" && e.startingPrice > 0 ? e.startingPrice : null,
       priceDisplay: money(e.startingPrice),
       beds: e.beds != null ? String(e.beds) : "",
-      baths: bathsOf(numberOf(e.baths), numberOf(e.halfBaths)) ?? (e.baths != null ? String(e.baths) : ""),
+      baths: e.halfBaths ? `${e.baths}.5` : e.baths != null ? String(e.baths) : "",
       sqft: typeof e.sqft === "number" ? e.sqft : null,
       garages: garages ? `${garages} car` : null,
       homeType,
@@ -162,7 +159,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       price,
       priceDisplay: money(price),
       beds: e.beds != null ? String(e.beds) : "",
-      baths: bathsOf(numberOf(e.baths), numberOf(e.halfBaths)) ?? (e.baths != null ? String(e.baths) : ""),
+      baths: e.halfBaths ? `${e.baths}.5` : e.baths != null ? String(e.baths) : "",
       sqft: typeof e.sqft === "number" ? e.sqft : null,
       garages: null,
       homeType: planRef ? planTypes.get(planRef) ?? null : null,

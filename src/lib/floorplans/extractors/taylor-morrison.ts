@@ -20,7 +20,7 @@
 // run; a quick move-in keeps its listing photo.
 
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
-import { bathsOf, standardHomeType, type HomeType } from "@/lib/floorplans/standardize";
+import { standardHomeType, type HomeType } from "@/lib/floorplans/standardize";
 import { classifyRoom, fileNameWords, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 
 const UA =
@@ -146,11 +146,9 @@ const plainText = (html: string | null | undefined): string | null => {
 };
 
 function baths(minFull?: string | number, maxFull?: string | number, minHalf?: number, maxHalf?: number): string {
-  // The full baths with the half baths after the point (standardize.ts, bathsOf).
-  const lo = minFull != null && minFull !== "" ? bathsOf(Number(minFull), minHalf) : null;
-  const hi = maxFull != null && maxFull !== "" ? bathsOf(Number(maxFull), maxHalf) : null;
-  if (lo == null || lo === "NaN") return "";
-  return hi != null && hi !== "NaN" && hi !== lo ? `${lo} - ${hi}` : lo;
+  const lo = minFull != null ? Number(minFull) + ((minHalf ?? 0) > 0 ? 0.5 : 0) : null;
+  const hi = maxFull != null ? Number(maxFull) + ((maxHalf ?? 0) > 0 ? 0.5 : 0) : null;
+  return range(lo, hi);
 }
 
 /** Map one scDataStore entry set to plans; exported for tests. */
@@ -225,7 +223,12 @@ export function plansFromScData(
           price: typeof home.price === "number" && home.price > 0 ? home.price : null,
           priceDisplay: money(home.price),
           beds: home.bed != null ? String(home.bed) : "",
-          baths: bathsOf(home.fullBath, home.halfBath) ?? "",
+          baths:
+            home.fullBath != null
+              ? (home.halfBath ?? 0) > 0
+                ? `${home.fullBath}.5`
+                : String(home.fullBath)
+              : "",
           sqft: typeof home.sqft === "number" ? home.sqft : null,
           garages: home.garages != null ? `${home.garages} car` : null,
           homeType: homeTypeOf(series, (home.community_Name ?? "").trim() || communityName),

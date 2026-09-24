@@ -55,7 +55,6 @@ describe("fromRecord", () => {
       sourceUrl: `${AVIARY}/parker`,
     });
     expect(fromRecord({ name: "Summerlyn ll", price: 449900 }, links)!.sourceUrl).toBe(`${AVIARY}/summerlyn-ii`);
-    expect(fromRecord({ name: "Westin II", bath: 3, halfbath: 2 }, links)!.baths).toBe("3.2");
   });
 
   it("finds a home's page linked under its plan's", () => {

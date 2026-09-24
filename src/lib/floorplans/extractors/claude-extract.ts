@@ -745,9 +745,10 @@ export async function readPlanPageWithClaude(
     price,
     priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
     beds: plan.beds || (page.beds ?? ""),
-    // Where the page gives full and half baths as two counts (Perry's "4 Baths
-    // 2 Cars 3 Half Baths"), those counts decide, not a reading that adds
-    // them up (standardize.ts, bathsStated; Jeff, 2026-09-24).
+    // Where Perry's page gives full and half baths as two counts ("4 Baths
+    // 3 Cars 1 Half Baths"), those counts decide, the half baths after the
+    // point, not a reading that dropped them or added them up (standardize.ts,
+    // bathsStated; Jeff, 2026-09-24).
     baths: bathsStated(content) ?? (plan.baths || (page.baths ?? "")),
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,

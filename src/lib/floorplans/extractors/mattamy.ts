@@ -7,7 +7,7 @@
 // captured in pipeline/slice/discovery/round7/mattamy-search.*.
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
-import { bathsOf, standardHomeType } from "@/lib/floorplans/standardize";
+import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -57,7 +57,7 @@ export function normalizeMattamyCard(
     price,
     priceDisplay: price ? "$" + price.toLocaleString("en-US") : null,
     beds: attrNumber(card, "bed") != null ? String(attrNumber(card, "bed")) : "",
-    baths: bathsOf(full, half) ?? "",
+    baths: full != null ? ((half ?? 0) > 0 ? `${full}.5` : String(full)) : "",
     sqft,
     garages: garages != null ? `${garages} car` : null,
     homeType: standardHomeType(card.homeType ?? null),
