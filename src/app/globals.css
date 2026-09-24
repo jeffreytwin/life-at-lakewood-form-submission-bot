@@ -249,6 +249,21 @@ a.sidebar-footer-active:hover {
   overflow-x: auto;
 }
 
+/* The bar over a list whose rows can be ticked: stays in view while the list scrolls. */
+.selection-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0 0 12px;
+  margin-bottom: 8px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -878,6 +893,12 @@ select.form-input {
     z-index: 90;
   }
 
+  /* Below the fixed top bar rather than under it. */
+  .selection-bar {
+    top: 56px;
+    padding-top: 8px;
+  }
+
   .hamburger-btn {
     background: none;
     border: none;
@@ -1061,6 +1082,12 @@ select.form-input {
   /* Email hub: tighter card padding for list items */
   .card {
     overflow: hidden;
+  }
+
+  /* Clipped all the same, but without becoming the box a selection bar
+     sticks to, so the bar stays in view as the page scrolls. */
+  .card.has-selection-bar {
+    overflow: clip;
   }
 
   /* Tables: horizontal scroll hint */
