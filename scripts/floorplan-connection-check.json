@@ -1,19 +1,15 @@
 {
-  "anatomy": [],
-  "raw": [],
+  "anatomy": ["https://wellenpark.com/home/3125777/detail/"],
+  "raw": [
+    {
+      "url": "https://wellenpark.com/home/3125777/detail/",
+      "around": ["Virtual Tour", "VIRTUAL TOUR", "virtual-tour", "matterport", "iframe", "Interactive Plan", "tour"],
+      "chars": 500,
+      "count": 3
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 0,
   "duplicates": [],
-  "checks": [
-    {
-      "builder": "Mattamy Homes",
-      "community": "Sunstone Lakeside",
-      "noSurvey": true
-    },
-    {
-      "builder": "Meritage Homes",
-      "community": "Salt Meadows",
-      "noSurvey": true
-    }
-  ]
+  "checks": []
 }
