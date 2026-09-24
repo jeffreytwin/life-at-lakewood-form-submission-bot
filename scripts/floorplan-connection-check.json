@@ -2,17 +2,12 @@
   "anatomy": [],
   "raw": [],
   "concurrency": 2,
-  "detailPlans": 0,
+  "detailPlans": 5,
   "duplicates": [],
   "checks": [
     {
       "builder": "Mattamy Homes",
       "community": "Lakespur",
-      "noSurvey": true
-    },
-    {
-      "builder": "Mattamy Homes",
-      "community": "Sunstone Lakeside",
       "noSurvey": true
     }
   ]
