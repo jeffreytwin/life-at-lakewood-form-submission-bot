@@ -92,6 +92,20 @@ describe("Lennar: what a community builds", () => {
     expect(home.homeType).toBe("Single Family Home");
     expect(home.raw?.relatedPlan).toBe("Dover");
   });
+
+  it("takes no front for a home whose picture is Lennar's Coming Soon stand-in (Jeff, 2026-09-24)", () => {
+    const apollo = {
+      "PlanType:p_61238": dover,
+      "CommunityType:c_7239": { name: "The Estates", types: ["SINGLE_FAMILY"] },
+      "HomesiteType:h_2": {
+        plan: { __ref: "PlanType:p_61238" }, address: "2805 Sweet Pepper Way", price: 404990, beds: 4, baths: 3,
+        url: "/x/sorrento/23414600478", elevationImage: { url: "/images/com/images/version10/default/qmi/ComingSoon.jpg" },
+      },
+    };
+    const home = plansFromPage(apollo, "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes").find((p) => p.quickMoveIn)!;
+    expect(home.name).toBe("2805 Sweet Pepper Way");
+    expect(home.galleryImages).toEqual([]);
+  });
 });
 
 describe("seriesLinks", () => {
@@ -133,6 +147,12 @@ describe("withPlanPictures", () => {
     expect(got.blueprintImages).toEqual(["fp.svg"]);
     expect(got.virtualTourUrl).toBe("https://my.matterport.com/show/?m=x");
     expect(got.description).toBe("Single-story.");
+  });
+
+  it("leads a home with no front of its own with its plan's front", () => {
+    const [, got] = withPlanPictures([princeton, { ...home, galleryImages: [] }]);
+    expect(got.galleryImages).toEqual(["princeton-f.jpg", "kitchen.jpg"]);
+    expect(got.galleryMeta?.["princeton-f.jpg"]?.kind).toBe("primary");
   });
 
   it("leaves a home whose plan did not come back as it was", () => {

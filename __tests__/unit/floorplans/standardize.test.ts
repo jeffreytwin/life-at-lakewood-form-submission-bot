@@ -6,6 +6,7 @@ import {
   bathsStated,
   builderDefaults,
   largestInRange,
+  showablePicture,
   standardGarages,
   standardHomeType,
   standardizePlan,
@@ -231,5 +232,41 @@ describe("bathsStated: the two counts a page gives", () => {
   it("says nothing for a page that states no half baths", () => {
     expect(bathsStated("3 Beds 2.5 Baths 2 Cars")).toBeNull();
     expect(bathsStated("A half bath off the foyer")).toBeNull();
+  });
+});
+
+describe("showablePicture: only pictures the site can show (Lennar's Coming Soon, 2026-09-24)", () => {
+  it("refuses an address on no host", () => {
+    expect(showablePicture("/images/com/images/version10/default/qmi/ComingSoon.jpg")).toBe(false);
+    expect(showablePicture("images/front.jpg")).toBe(false);
+    expect(showablePicture("")).toBe(false);
+    expect(showablePicture(null)).toBe(false);
+  });
+
+  it("refuses a builder's stand-in for a photo it does not have", () => {
+    expect(showablePicture("https://www.lennar.com/images/com/images/version10/default/qmi/ComingSoon.jpg")).toBe(false);
+    expect(showablePicture("https://prodmh.b-cdn.net/-/media/misc/Image-Coming-Soon.png")).toBe(false);
+    expect(showablePicture("https://x.com/assets/no-image.png?w=400")).toBe(false);
+    expect(showablePicture("https://x.com/assets/placeholder.jpg")).toBe(false);
+  });
+
+  it("keeps a real photo, whatever words its folders or name hold", () => {
+    expect(showablePicture("https://cdn.lennar.com/api/images/contentassets/b32/leh_3283_manor_ryeranch_rend_sorrento_ds.jpg?d=20250220")).toBe(true);
+    expect(showablePicture("https://x.com/coming-soon/elevation-a.jpg")).toBe(true);
+    expect(showablePicture("https://x.com/sooner-lakes-front.jpg")).toBe(true);
+  });
+
+  it("takes stand-ins and addresses on no host out of a plan's pictures and their captions", () => {
+    const soon = "/images/com/images/version10/default/qmi/ComingSoon.jpg";
+    const front = "https://cdn.lennar.com/front.jpg";
+    const got = standardizePlan({
+      planKey: "2805", name: "2805 Sweet Pepper Way", price: null, priceDisplay: null, beds: "", baths: "", sqft: null,
+      garages: null, homeType: null, quickMoveIn: true, comingSoon: false, sourceUrl: null,
+      galleryImages: [soon, front], blueprintImages: ["https://x.com/placeholder.png", "https://x.com/fp.svg"],
+      galleryMeta: { [soon]: { kind: "primary" }, [front]: { kind: "exterior" } },
+    });
+    expect(got.galleryImages).toEqual([front]);
+    expect(Object.keys(got.galleryMeta ?? {})).toEqual([front]);
+    expect(got.blueprintImages).toEqual(["https://x.com/fp.svg"]);
   });
 });
