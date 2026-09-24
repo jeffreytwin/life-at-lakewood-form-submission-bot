@@ -4,6 +4,7 @@ import {
   describeFieldType,
   diffFields,
   findItemNamed,
+  itemNamedAtStart,
   referencedCollectionOf,
   type FieldSpec,
 } from "@/lib/floorplans/collection-schema";
@@ -137,5 +138,25 @@ describe("findItemNamed", () => {
     expect(findItemNamed(twice, "The Isles")).toBeNull();
     expect(findItemNamed(items, "")).toBeNull();
     expect(findItemNamed(items, "Nowhere")).toBeNull();
+  });
+});
+
+describe("itemNamedAtStart", () => {
+  const villages = [
+    { id: "dw", data: { title: "Del Webb" } },
+    { id: "dwe", data: { title: "Del Webb Explore" } },
+    { id: "cw", data: { title: "Crosswind" } },
+    { id: "cwr", data: { title: "Crosswind Ranch" } },
+  ];
+
+  it("takes the longest title the name begins with, word for word", () => {
+    expect(itemNamedAtStart(villages, "Del Webb Explore North River Ranch")?.id).toBe("dwe");
+    expect(itemNamedAtStart(villages, "Crosswind Ranch East")?.id).toBe("cwr");
+  });
+
+  it("never a title that is the whole name, part of a word, or one of two equally long", () => {
+    expect(itemNamedAtStart(villages, "Del Webb Explore")?.id).toBe("dw");
+    expect(itemNamedAtStart(villages, "Crosswinds Point")).toBeNull();
+    expect(itemNamedAtStart([...villages, { id: "twin", data: { title: "Del Webb Explore" } }], "Del Webb Explore Parrish")).toBeNull();
   });
 });

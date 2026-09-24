@@ -36,7 +36,7 @@ import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
 import { virtualTourButtonFor } from "@/lib/floorplans/site-assets";
 import { alertIfTracked, basePlanOf, planRow, type CampaignTaskType } from "@/lib/floorplans/campaign";
 import { fieldChangeDetail, homeChangeDetail } from "@/lib/floorplans/campaign-text";
-import { findItemNamed, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
+import { findItemNamed, itemNamedAtStart, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
 import { wixImageUri } from "@/lib/listings/types";
 import { measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta } from "@/lib/floorplans/types";
@@ -446,27 +446,35 @@ const REFERENCE_SCAN_CAP = 500;
  * title first, then a contains-match whose normalized title is the same, or
  * the only match; then, since a collection may keep its name in another
  * field, the collection read and matched on any title or name field
- * (collection-schema.ts, findItemNamed). Null when there is no such item or
- * the lookup fails: the row is then written without the reference, and one
- * set by hand survives the read-merge on update.
+ * (collection-schema.ts, findItemNamed), and failing that the item whose
+ * title the name begins with (itemNamedAtStart: "Del Webb Explore North
+ * River Ranch" is the neighborhood "Del Webb Explore"). Draft items count:
+ * Parrish's "Richmond American Homes" is a draft in its Builders, and a
+ * read that asks for published items alone never found it (Jeff,
+ * 2026-09-23); a published item wins over a draft of the same name. Null
+ * when there is no such item or the lookup fails: the row is then written
+ * without the reference, and one set by hand survives the read-merge on
+ * update. Exported for tests.
  */
-async function referenceIdOf(wixSiteId: string, collectionId: string, title: string): Promise<string | null> {
+export async function referenceIdOf(wixSiteId: string, collectionId: string, title: string): Promise<string | null> {
   const wanted = title.trim();
   if (!wanted) return null;
   const cacheKey = `${wixSiteId}|${collectionId}|${wanted.toLowerCase()}`;
   const cached = referenceCache.get(cacheKey);
   if (cached) return cached;
   try {
-    let { items } = await queryItems(wixSiteId, collectionId, { filter: { title: { $eq: wanted } }, limit: 1 });
+    let { items } = await queryItems(wixSiteId, collectionId, { filter: { title: { $eq: wanted } }, limit: 10, includeDrafts: true });
     if (!items.length) {
-      const loose = await queryItems(wixSiteId, collectionId, { filter: { title: { $contains: wanted } }, limit: 10 });
+      const loose = await queryItems(wixSiteId, collectionId, { filter: { title: { $contains: wanted } }, limit: 10, includeDrafts: true });
       const same = loose.items.filter((it) => normKey(String(it.data?.title ?? "")) === normKey(wanted));
       items = same.length ? same : loose.items.length === 1 ? loose.items : [];
     }
     if (!items.length) {
-      const found = findItemNamed(await queryItemsUpTo(wixSiteId, collectionId, REFERENCE_SCAN_CAP), wanted);
+      const all = await queryItemsUpTo(wixSiteId, collectionId, REFERENCE_SCAN_CAP);
+      const found = findItemNamed(all, wanted) ?? itemNamedAtStart(all, wanted);
       items = found ? [found] : [];
     }
+    items = publishedFirst(items);
     const id = items[0]?.id ?? (typeof items[0]?.data?._id === "string" ? items[0].data._id : null);
     if (!id) {
       logger.warn("No Wix item to reference by name", { collectionId, title: wanted });
@@ -484,13 +492,18 @@ async function referenceIdOf(wixSiteId: string, collectionId: string, title: str
   }
 }
 
-/** The first `cap` items of a collection, a page at a time. */
+/** Published items before drafts, each kept in its order. */
+const publishedFirst = (items: WixDataItem[]) =>
+  [...items].sort((a, b) => Number(a.data?._publishStatus === "DRAFT") - Number(b.data?._publishStatus === "DRAFT"));
+
+/** The first `cap` items of a collection, drafts included, a page at a time. */
 async function queryItemsUpTo(wixSiteId: string, collectionId: string, cap: number): Promise<WixDataItem[]> {
   const all: WixDataItem[] = [];
   while (all.length < cap) {
     const { items, total } = await queryItems(wixSiteId, collectionId, {
       limit: Math.min(100, cap - all.length),
       offset: all.length,
+      includeDrafts: true,
     });
     all.push(...items);
     if (!items.length || all.length >= total) break;

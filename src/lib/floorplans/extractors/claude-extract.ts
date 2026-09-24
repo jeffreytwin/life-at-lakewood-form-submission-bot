@@ -1265,7 +1265,9 @@ export async function readPlanPages(
   return toured.map((plan) => {
     const { drawings, views } = sortDrawings(plan.blueprintImages);
     const outside = Object.fromEntries(views.map((u) => [u, OUTSIDE_META]));
-    const photos = [...plan.galleryImages, ...views.filter((u) => !plan.galleryImages.includes(u))];
+    // A view already in the gallery under another spelling is not added again (pictureKey).
+    const shown = new Set(plan.galleryImages.map(pictureKey));
+    const photos = [...plan.galleryImages, ...views.filter((u) => !shown.has(pictureKey(u)))];
     const ordered = orderPhotos(photos, { ...outside, ...plan.galleryMeta });
     return { ...plan, ...drawingsOrPhotos(drawings, ordered) };
   });

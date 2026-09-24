@@ -262,7 +262,15 @@ export function labelFromMeta(meta: GalleryMeta | undefined): PhotoLabel | null 
 export function withLookedAtRooms(plan: NormalizedPlan, looked: Map<string, PhotoLabel | null>): NormalizedPlan {
   const urls = plan.galleryImages;
   if (urls.length < 2 || !urls.some((url) => looked.get(url))) return plan;
-  const labels = new Map(urls.map((url) => [url, looked.get(url) ?? labelFromMeta(plan.galleryMeta?.[url])] as const));
+  // A picture seen to be the front outranks one only presumed to be: Pulte
+  // led 12510 Adobe Street with a "Peace of Mind" graphic its feed ranked
+  // first, and put "Elevation C1" last (2026-09-23).
+  const seenFront = urls.some((url) => looked.get(url) === "front");
+  const presumed = (url: string) => {
+    const label = labelFromMeta(plan.galleryMeta?.[url]);
+    return label === "front" && seenFront ? null : label;
+  };
+  const labels = new Map(urls.map((url) => [url, looked.get(url) ?? presumed(url)] as const));
   const ordered = sortByRooms(urls, labels);
   const meta = Object.fromEntries(
     ordered.urls.map((url) => [url, { ...ordered.meta[url], caption: plan.galleryMeta?.[url]?.caption ?? null }])

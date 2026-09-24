@@ -177,3 +177,25 @@ export function findItemNamed<T extends NamedItem>(items: T[], wanted: string): 
   );
   return byName.length === 1 ? byName[0] : null;
 }
+
+/** A name's words, lowercased and without punctuation. */
+const wordsOf = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
+
+/**
+ * The item whose title is how `wanted` begins, word for word, for a name no
+ * item carries outright: Parrish files the community "Del Webb Explore North
+ * River Ranch" under its neighborhood "Del Webb Explore" (Jeff, 2026-09-23).
+ * The longest such title; null when there is none, or two of that length.
+ */
+export function itemNamedAtStart<T extends NamedItem>(items: T[], wanted: string): T | null {
+  const want = wordsOf(wanted);
+  let best: T[] = [];
+  let bestLength = 0;
+  for (const item of items) {
+    const words = wordsOf(String(item.data?.title ?? ""));
+    if (!words.length || words.length >= want.length || !words.every((w, i) => want[i] === w)) continue;
+    if (words.length > bestLength) [best, bestLength] = [[item], words.length];
+    else if (words.length === bestLength) best.push(item);
+  }
+  return best.length === 1 ? best[0] : null;
+}

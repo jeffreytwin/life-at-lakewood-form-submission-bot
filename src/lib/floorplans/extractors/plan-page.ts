@@ -652,6 +652,9 @@ export function pictureKey(src: string): string {
   // res.cloudinary.com/…/image/fetch/ar_1.5,c_fill,w_768/https://pultegroup.picturepark.com/….
   const fetched = src.match(/\/image\/fetch\/(?:[^/]*\/)*?(https?:\/\/?[^/].*)$/i)?.[1];
   if (fetched) return pictureKey(fetched.replace(/^(https?:)\/(?!\/)/i, "$1//"));
+  // And a picture uploaded to one is its public id (cloudinaryUpload).
+  const uploaded = cloudinaryUpload(src);
+  if (uploaded) return uploaded;
   // And so is one whose address it carries written in base64: Adams draws
   // a plan's front at ".../adamshomes.com/aHR0cHM6Ly9zMy…/exact/w1200"
   // and again at ".../<the same>/webp/30" (2026-09-23).
@@ -679,6 +682,30 @@ export function pictureKey(src: string): string {
 }
 
 const IMAGE_FILE = /\.(jpe?g|png|webp|avif|gif)$/i;
+
+/** A segment of a Cloudinary address that says how to draw the picture: "f_auto,c_limit,w_2048", "l_text:Arial_700_bold_24:…". */
+const CLOUDINARY_STEP =
+  /^(?:\$|(?:a|ac|af|ar|b|bo|br|c|co|cs|d|dl|dn|dpr|du|e|eo|f|fl|fn|fps|g|h|ki|l|o|p|pg|q|r|so|sp|t|u|vc|vs|w|x|y|z)_)/;
+
+/**
+ * A picture uploaded to Cloudinary as its public id, whatever it is drawn
+ * as and whichever upload of it: Perry gives a plan's front as
+ * ".../upload/f_auto,c_limit,w_2048,q_auto/…/l_text:…DESIGN 2016F E-1…/2016F_E1_Web_xl0q1t"
+ * with its label drawn on, and again as ".../upload/v1753884838/2016F_E1_Web_xl0q1t.jpg"
+ * and ".../upload/v1733169041/2016F_E1_Web_xl0q1t.jpg", and the gallery
+ * showed it three times (Jeff, 2026-09-23). The steps, the version and the
+ * format come off; the folders stay. Null for any other address.
+ */
+function cloudinaryUpload(src: string): string | null {
+  const m = src.match(/^(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload)\/([^?#]*)/i);
+  if (!m) return null;
+  const kept = m[2]
+    .split("/")
+    .filter((part) => part && !/^v\d+$/.test(part) && !part.split(",").every((step) => CLOUDINARY_STEP.test(step)));
+  if (!kept.length) return null;
+  kept[kept.length - 1] = kept[kept.length - 1].replace(/\.[a-z0-9]+$/i, "");
+  return `${m[1].toLowerCase()}/${kept.join("/")}`;
+}
 
 /**
  * The size a picture's address asks for, the larger of its width and its

@@ -603,3 +603,25 @@ describe("drawingsMarked", () => {
     expect(drawingsMarked(page, "https://r.com/fraser/")).toEqual([]);
   });
 });
+
+describe("pictureKey: a Cloudinary upload is its public id", () => {
+  const up = "https://res.cloudinary.com/perryhomes/image/upload";
+  const labelled = `${up}/f_auto,c_limit,w_2048,q_auto/b_rgb:1B1919,co_rgb:fafafa,l_text:Arial_700_bold_24:%20%20DESIGN%202016F%20E-1%20%20/c_scale,fl_relative,w_0.15/fl_layer_apply,g_south,y_0.04,bo_3px_solid_rgb:1B1919//2016F_E1_Web_xl0q1t`;
+
+  it("whatever it is drawn as and whichever upload of it (Perry's 2016F front)", () => {
+    const key = pictureKey(`${up}/v1753884838/2016F_E1_Web_xl0q1t.jpg`);
+    expect(pictureKey(labelled)).toBe(key);
+    expect(pictureKey(`${up}/v1733169041/2016F_E1_Web_xl0q1t.jpg`)).toBe(key);
+    expect(pictureKey(`${up}/v1753884846/2016F_E31_Web_hvttov.jpg`)).not.toBe(key);
+  });
+
+  it("keeps the folders, which are not drawing steps", () => {
+    expect(pictureKey(`${up}/v1/web_images/plans/front.jpg`)).not.toBe(pictureKey(`${up}/v1/web_images/homes/front.jpg`));
+    expect(pictureKey(`${up}/w_800/web_images/plans/front.jpg`)).toBe(pictureKey(`${up}/v2/web_images/plans/front.png`));
+  });
+
+  it("shows each once in a gallery, where the page first put it", () => {
+    const gallery = [labelled, `${up}/v1753884838/2016F_E1_Web_xl0q1t.jpg`, `${up}/v1753884846/2016F_E31_Web_hvttov.jpg`, `${up}/v1733169043/2016F_E31_Web_hvttov.jpg`];
+    expect(onePerPicture(gallery).photos).toEqual([labelled, `${up}/v1753884846/2016F_E31_Web_hvttov.jpg`]);
+  });
+});

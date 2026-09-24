@@ -35,9 +35,13 @@ interface QueuedRow {
  * on it. Exported for tests.
  */
 export function wantsSorting(record: NormalizedPlan | null): record is NormalizedPlan {
-  if (!record || !Array.isArray(record.galleryImages)) return false;
-  if ((record.userEditedFields ?? []).includes("galleryImages")) return false;
-  return !mostlyPlaced(record) || leadsWithARoom(record);
+  return handsOff(record) && (!mostlyPlaced(record) || leadsWithARoom(record));
+}
+
+/** A waiting gallery of two pictures or more that nobody has arranged by hand. Exported for tests. */
+export function handsOff(record: NormalizedPlan | null): record is NormalizedPlan {
+  if (!record || !Array.isArray(record.galleryImages) || record.galleryImages.length < 2) return false;
+  return !(record.userEditedFields ?? []).includes("galleryImages");
 }
 
 export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number; sorted: number }> {
@@ -50,7 +54,12 @@ export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number
     .order("created_at", { ascending: true })
     .limit(300);
   if (error) throw new Error(`queued changes: ${error.message}`);
-  const rows = ((data ?? []) as QueuedRow[]).filter((r) => wantsSorting(r.proposed_record));
+  // A gallery worth sorting, or one whose lead picture nobody has looked
+  // at: the lead is the one picture a quick move-in shows, and a builder's
+  // feed can rank a graphic first (Pulte's "Peace of Mind", 2026-09-23).
+  const candidates = ((data ?? []) as QueuedRow[]).filter((r) => handsOff(r.proposed_record));
+  const leads = await rememberedRooms(candidates.map((r) => r.proposed_record!.galleryImages[0]).filter(Boolean));
+  const rows = candidates.filter((r) => wantsSorting(r.proposed_record) || !leads.has(r.proposed_record!.galleryImages[0]));
   if (!rows.length) return { rows: 0, looked: 0, sorted: 0 };
 
   // The pictures nobody has looked at, oldest change first, up to the tick's share.
