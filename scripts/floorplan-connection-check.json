@@ -1,24 +1,19 @@
 {
-  "anatomy": ["https://wellenpark.com/home/3125777/detail/ click button[data-target=\"virtual-tour\"]"],
+  "anatomy": [
+    "https://nealsignaturehomes.com/waterbury-park/monterey-2/",
+    "https://nealsignaturehomes.com/waterbury-park",
+    "https://www.mihomes.com/new-homes/florida/sarasota-metro/venice/palmera-at-wellen-park/candor-plan"
+  ],
   "raw": [
     {
-      "url": "https://wellenpark.com/home/3125777/detail/",
-      "around": ["wellen-park/js", "home-details", "data-tour", "tour_url", "virtual_tour"],
-      "chars": 220,
-      "count": 12
-    },
-    {
-      "url": "https://wellenpark.com/home/3866064/detail/",
-      "around": ["/Images/", "More Homes in"],
-      "chars": 120,
-      "count": 70
+      "url": "https://nealsignaturehomes.com/waterbury-park/monterey-2/",
+      "around": ["<title", "wp-content", "matterport", "gallery"],
+      "chars": 200,
+      "count": 3
     }
   ],
   "concurrency": 2,
-  "detailPlans": 4,
+  "detailPlans": 2,
   "duplicates": [],
-  "checks": [
-    { "builder": "M/I Homes", "community": "Palmera", "noSurvey": true },
-    { "builder": "Neal Communities", "community": "Everly", "noSurvey": true }
-  ]
+  "checks": []
 }

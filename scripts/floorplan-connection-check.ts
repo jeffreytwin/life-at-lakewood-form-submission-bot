@@ -29,6 +29,7 @@ import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, reso
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
+import { pageIsBotCheck } from "@/lib/floorplans/extractors/rendered";
 import { pixelDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
@@ -566,6 +567,17 @@ async function anatomy(url: string): Promise<string> {
     });
     const res = await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 }).catch(() => null);
     await wait(4_000);
+    // How long a bot check in front of the page holds a browser, when one
+    // does (Neal Signature's plan pages, 2026-09-24): the run gives it ten
+    // seconds.
+    let checked = "";
+    if (pageIsBotCheck(await page.content().catch(() => ""))) {
+      const began = Date.now();
+      while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() - began < 40_000) await wait(1_000);
+      const held = Math.round((Date.now() - began) / 1000) + 4;
+      checked = pageIsBotCheck(await page.content().catch(() => "")) ? `still at the bot check after ${held}s\n\n` : `bot check let the browser through after ${held}s\n\n`;
+      await page.waitForNetworkIdle({ idleTime: 500, timeout: 15_000 }).catch(() => {});
+    }
     await page.evaluate(`(async () => { for (let n = 1; n <= 16; n++) { if (innerHeight * n > document.body.scrollHeight) break; scrollTo(0, innerHeight * n); await new Promise((r) => setTimeout(r, 300)); } scrollTo(0, 0); })()`);
     await wait(1_500);
     let clicked = "";
@@ -581,7 +593,7 @@ async function anatomy(url: string): Promise<string> {
       .then(async (r) => `${r.status}, ${(await r.text()).length} chars`)
       .catch((e) => `failed: ${e instanceof Error ? e.message : String(e)}`);
     const body = String(await page.evaluate(ANATOMY_SCRIPT));
-    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n${clicked}== CALLS ==\n${calls.join("\n") || "(none)"}\n\n== ADMIN-AJAX ANSWERS ==\n${answers.join("\n\n") || "(none)"}\n\n` + body;
+    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n${checked}${clicked}== CALLS ==\n${calls.join("\n") || "(none)"}\n\n== ADMIN-AJAX ANSWERS ==\n${answers.join("\n\n") || "(none)"}\n\n` + body;
   } catch (error) {
     return `could not open ${url}: ${error instanceof Error ? error.message : String(error)}`;
   } finally {
