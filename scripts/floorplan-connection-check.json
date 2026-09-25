@@ -1,45 +1,61 @@
 {
   "raw": [
     {
-      "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc",
-      "around": ["data-comp=\"property\"", "data-builder-name", "Wetherington", "data-neighborhood"],
-      "chars": 1800,
-      "count": 3
-    },
-    {
-      "url": "https://wellenpark.com/builder/lee-wheterington-homes/",
-      "around": ["data-comp=\"property\"", "data-builder-name", "Wetherington", "data-neighborhood", "/home/"],
-      "chars": 1800,
-      "count": 3
+      "url": "https://lakewoodranch.com/homes/azure/",
+      "around": [
+        "<h1",
+        "wp-content/uploads",
+        "matterport",
+        "floor",
+        "<footer"
+      ],
+      "chars": 1500,
+      "count": 4
     }
   ],
   "concurrency": 2,
-  "detailPlans": 1,
+  "detailPlans": 3,
   "duplicates": [],
   "checks": [
     {
       "builder": "Lee Wetherington",
       "community": "Star Farms",
       "noSurvey": true,
-      "params": { "engine": "mpc_aggregator", "source": "lakewoodranch", "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc" }
+      "params": {
+        "engine": "mpc_aggregator",
+        "source": "lakewoodranch",
+        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc"
+      }
     },
     {
       "builder": "Lee Wetherington",
       "community": "Waterside - Shellstone",
       "noSurvey": true,
-      "params": { "engine": "mpc_aggregator", "source": "lakewoodranch", "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc" }
+      "params": {
+        "engine": "mpc_aggregator",
+        "source": "lakewoodranch",
+        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc"
+      }
     },
     {
       "builder": "Lee Wetherington",
       "community": "Waterside - Wild Blue",
       "noSurvey": true,
-      "params": { "engine": "mpc_aggregator", "source": "lakewoodranch", "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc" }
+      "params": {
+        "engine": "mpc_aggregator",
+        "source": "lakewoodranch",
+        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc"
+      }
     },
     {
       "builder": "Lee Wetherington",
       "community": "Everly",
       "noSurvey": true,
-      "params": { "engine": "mpc_aggregator", "source": "wellenpark", "url": "https://wellenpark.com/builder/lee-wheterington-homes/" }
+      "params": {
+        "engine": "mpc_aggregator",
+        "source": "wellenpark",
+        "url": "https://wellenpark.com/builder/lee-wheterington-homes/"
+      }
     }
   ]
 }
