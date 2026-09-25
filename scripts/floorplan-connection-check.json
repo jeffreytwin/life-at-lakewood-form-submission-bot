@@ -1,9 +1,45 @@
 {
+  "raw": [
+    {
+      "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc",
+      "around": ["data-comp=\"property\"", "data-builder-name", "Wetherington", "data-neighborhood"],
+      "chars": 1800,
+      "count": 3
+    },
+    {
+      "url": "https://wellenpark.com/builder/lee-wheterington-homes/",
+      "around": ["data-comp=\"property\"", "data-builder-name", "Wetherington", "data-neighborhood", "/home/"],
+      "chars": 1800,
+      "count": 3
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
   "checks": [
-    { "builder": "Neal Communities", "community": "Canoe Creek", "noSurvey": true },
-    { "builder": "Meritage Homes", "community": "Salt Meadows", "noSurvey": true }
+    {
+      "builder": "Lee Wetherington",
+      "community": "Star Farms",
+      "noSurvey": true,
+      "params": { "engine": "mpc_aggregator", "source": "lakewoodranch", "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc" }
+    },
+    {
+      "builder": "Lee Wetherington",
+      "community": "Waterside - Shellstone",
+      "noSurvey": true,
+      "params": { "engine": "mpc_aggregator", "source": "lakewoodranch", "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc" }
+    },
+    {
+      "builder": "Lee Wetherington",
+      "community": "Waterside - Wild Blue",
+      "noSurvey": true,
+      "params": { "engine": "mpc_aggregator", "source": "lakewoodranch", "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc" }
+    },
+    {
+      "builder": "Lee Wetherington",
+      "community": "Everly",
+      "noSurvey": true,
+      "params": { "engine": "mpc_aggregator", "source": "wellenpark", "url": "https://wellenpark.com/builder/lee-wheterington-homes/" }
+    }
   ]
 }
