@@ -29,6 +29,7 @@ import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, reso
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
+import { pageIsBotCheck } from "@/lib/floorplans/extractors/rendered";
 import { pixelDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 
@@ -53,7 +54,7 @@ interface Target {
 }
 
 interface Config {
-  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed. */
+  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed; "<url> click <selector>" opens a tab first; "clean <url>" clears cookies first, "relaunch <url>" starts a new browser. */
   anatomy?: string[];
   /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
   raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
@@ -73,8 +74,11 @@ const RUN_LIMIT_MS = 300_000;
 /** This build, as the reports are filed under: the commit and the minute. */
 const BUILD = `${(process.env.VERCEL_GIT_COMMIT_SHA ?? "local").slice(0, 7)} ${new Date().toISOString().slice(0, 16)}`;
 
+/** Text Postgres will store: no NUL character, no half of a surrogate pair (a page's bytes can carry either). */
+const storable = (s: string) => s.replace(/\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
+
 async function keep(label: string, report: string, verdict: string | null = null): Promise<void> {
-  const { error } = await supabase.from("fp_connection_checks").insert({ build: BUILD, label, verdict, report });
+  const { error } = await supabase.from("fp_connection_checks").insert({ build: BUILD, label, verdict, report: storable(report) });
   if (error) say(`could not keep the report for ${label}: ${error.message}`);
 }
 const CHECK_TIMEOUT_MS = 420_000;
@@ -534,9 +538,28 @@ async function anatomy(url: string): Promise<string> {
   const feed = url.match(/^(json|POST)\s+(\S+)$/i);
   if (feed) return jsonAnatomy(feed[2], feed[1] === "POST" ? "POST" : "GET").catch((e) => `could not read ${feed[2]}: ${e instanceof Error ? e.message : String(e)}`);
   if (/\/api\/|\.json(?:\?|$)/i.test(url)) return jsonAnatomy(url).catch((e) => `could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
+  // "<url> click <selector>": a tab opened before looking, for what a page
+  // loads only when a visitor asks (Wellen Park's "Virtual Tour",
+  // 2026-09-24). "clean <url>": with the cookies and storage the pages before it left
+  // cleared; "relaunch <url>": in a browser started for it. Neal
+  // Signature's bot check lets a browser's first visit through and stops
+  // the next (2026-09-24), and the serverless Chromium opens no second
+  // session.
+  const [, how] = url.match(/^(clean|relaunch)\s+/i) ?? [];
+  const [, address, tab] = url.replace(/^(?:clean|relaunch)\s+/i, "").match(/^(\S+)(?:\s+click\s+(.+))?$/) ?? [null, url, undefined];
+  url = address ?? url;
   let page: Page | null = null;
   try {
+    if (how === "relaunch" && browser) {
+      await browser.close().catch(() => {});
+      browser = null;
+    }
     page = await (await surveyBrowser()).newPage();
+    if (how === "clean") {
+      const cdp = await page.createCDPSession();
+      await cdp.send("Network.clearBrowserCookies");
+      await cdp.send("Storage.clearDataForOrigin", { origin: new URL(url).origin, storageTypes: "all" });
+    }
     await page.setUserAgent(UA);
     await page.setViewport({ width: 1440, height: 2000 });
     // The data a page asks for after it loads: where a builder keeps its
@@ -559,13 +582,33 @@ async function anatomy(url: string): Promise<string> {
     });
     const res = await page.goto(url, { waitUntil: "networkidle2", timeout: 45_000 }).catch(() => null);
     await wait(4_000);
+    // How long a bot check in front of the page holds a browser, when one
+    // does (Neal Signature's plan pages, 2026-09-24): the run gives it ten
+    // seconds.
+    let checked = "";
+    if (pageIsBotCheck(await page.content().catch(() => ""))) {
+      const began = Date.now();
+      while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() - began < 40_000) await wait(1_000);
+      const held = Math.round((Date.now() - began) / 1000) + 4;
+      checked = pageIsBotCheck(await page.content().catch(() => "")) ? `still at the bot check after ${held}s\n\n` : `bot check let the browser through after ${held}s\n\n`;
+      await page.waitForNetworkIdle({ idleTime: 500, timeout: 15_000 }).catch(() => {});
+    }
     await page.evaluate(`(async () => { for (let n = 1; n <= 16; n++) { if (innerHeight * n > document.body.scrollHeight) break; scrollTo(0, innerHeight * n); await new Promise((r) => setTimeout(r, 300)); } scrollTo(0, 0); })()`);
     await wait(1_500);
+    let clicked = "";
+    if (tab) {
+      const before = calls.length;
+      clicked = await page
+        .click(tab)
+        .then(() => wait(5_000))
+        .then(() => `clicked ${tab}: ${calls.length - before} calls after\n\n`)
+        .catch((e) => `could not click ${tab}: ${e instanceof Error ? e.message : String(e)}\n\n`);
+    }
     const fetched = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) })
       .then(async (r) => `${r.status}, ${(await r.text()).length} chars`)
       .catch((e) => `failed: ${e instanceof Error ? e.message : String(e)}`);
     const body = String(await page.evaluate(ANATOMY_SCRIPT));
-    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n== CALLS ==\n${calls.join("\n") || "(none)"}\n\n== ADMIN-AJAX ANSWERS ==\n${answers.join("\n\n") || "(none)"}\n\n` + body;
+    return `status ${res?.status() ?? "?"}; plain fetch ${fetched}\n\n${checked}${clicked}== CALLS ==\n${calls.join("\n") || "(none)"}\n\n== ADMIN-AJAX ANSWERS ==\n${answers.join("\n\n") || "(none)"}\n\n` + body;
   } catch (error) {
     return `could not open ${url}: ${error instanceof Error ? error.message : String(error)}`;
   } finally {

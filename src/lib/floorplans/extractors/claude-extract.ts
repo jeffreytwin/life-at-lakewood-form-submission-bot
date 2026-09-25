@@ -17,6 +17,7 @@ import { logger } from "@/lib/shared/logger";
 import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
+import { planViewerExtras } from "@/lib/floorplans/extractors/planviewer";
 import { asTour, bathsStated } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
@@ -737,6 +738,18 @@ export async function readPlanPageWithClaude(
     ...drawingsNamed(html, page_.url, [plan.name, plan.relatedPlanName, typeof plan.raw?.relatedPlan === "string" ? plan.raw.relatedPlan : null]),
     ...(lightbox?.drawings ?? []),
   ].filter((src, i, all) => src && all.indexOf(src) === i);
+  // A plan viewer in the page (CPS's, Neal Signature's "Personalize this
+  // floorplan"): the page shows no drawing of its own, the viewer draws
+  // each floor, and its floors are the plan's drawings, its elevations
+  // views of the house, and its tour the tour where the builder gave one
+  // (planviewer.ts, 2026-09-24).
+  const viewer = await planViewerExtras(html);
+  for (const src of viewer.drawings) if (!blueprints.includes(src)) blueprints.push(src);
+  for (const src of viewer.elevations) {
+    if (kept.has(pictureKey(src))) continue;
+    kept.add(pictureKey(src));
+    photos.push(src);
+  }
   // A list gives the plans it prices; the rest carry their price on their
   // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
   const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);
@@ -763,6 +776,7 @@ export async function readPlanPageWithClaude(
       tourLinkIn(html),
       tourUrlIn(html),
       page.virtualTourUrl?.trim(),
+      viewer.tour,
     ]),
     galleryImages: photos,
     blueprintImages: blueprints,
@@ -771,6 +785,7 @@ export async function readPlanPageWithClaude(
       ...Object.fromEntries(Object.entries(plan.galleryMeta ?? {}).map(([src, meta]) => [enlarged.get(src) ?? src, meta])),
       ...said,
       ...outside,
+      ...viewer.meta,
     },
     // The code a base plan's homes may name it by (David Weekley's "F057"
     // is The Wagoner): what ties them when the home gives no name.
@@ -1302,7 +1317,7 @@ export async function extractWithClaude(params: ClaudeExtractParams): Promise<No
  * that plan's gallery alone (diff.ts).
  */
 export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
-  const { withRenderer } = await import("@/lib/floorplans/extractors/render");
+  const { withRenderer, siteStopsBrowsers } = await import("@/lib/floorplans/extractors/render");
   // The browser's budget is the run's reading time, where the run has one.
   const budget = Math.max(0, params.runDeadline ? params.runDeadline - Date.now() : RENDER_RUN_MS);
   return withRenderer(budget, (renderPage) => {
@@ -1316,6 +1331,9 @@ export async function extractWithRender(params: ClaudeExtractParams): Promise<No
     // nothing (Perry's fifty-four pages, 2026-09-23).
     const renderSlot = slots(3);
     const fetchThenRender: PageReader = async (url, opts) => {
+      // A site whose bot check stops browsers stops a plain fetch too,
+      // and every refused request counts against the next page.
+      if (siteStopsBrowsers(url)) return renderSlot(() => renderPage(url, opts));
       try {
         const fetched = await fetchPage(url, opts);
         if (!pageLooksUnrendered(distill(fetched.html, fetched.url))) return fetched;

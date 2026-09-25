@@ -1,8 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage, withoutSharedPictures } from "@/lib/floorplans/extractors/mpc-aggregator";
-import type { NormalizedPlan } from "@/lib/floorplans/types";
+import { builderPlanPage, extractMpcAggregator, folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -104,26 +103,71 @@ describe("folderOf", () => {
   });
 });
 
-describe("withoutSharedPictures", () => {
-  const neal = (n: number) => `https://static.wellenpark.com/Images/Homes/NealC9425/${n}.jpg`;
-  const listing = (name: string, pictures: number[], quickMoveIn = false) =>
-    ({ planKey: name.toLowerCase(), name, quickMoveIn, galleryImages: pictures.map(neal), blueprintImages: [] }) as unknown as NormalizedPlan;
+describe("sister plans keep the pictures they share (M/I's Foxtail and Foxtail II, 2026-09-24)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const mi = (n: number) => `https://static.wellenpark.com/Images/Homes/MIHomes/${n}-260803.jpg`;
+  const card = (id: number, name: string) => `
+    <article data-comp="property" data-builder-name="mi-homes" data-neighborhood="palmera" data-type="multi-family"
+      data-beds="3" data-baths="2" data-sqft="1706" data-availability="">
+      <a href="https://wellenpark.com/home/${id}/detail/" class="box"><figure class="img-box"><img src="${mi(111508119)}"></figure>
+      <div class="content"><h3>${name}</h3><h4>FROM $373,990</h4></div></a>
+    </article>`;
+  const page = (name: string, pictures: number[]) =>
+    `<h1>${name}</h1>${pictures.map((n) => `<figure class="img-box"><img src="${mi(n)}"></figure>`).join("")}<h2>More Homes in Palmera At Wellen Park</h2>`;
+  const pages: Record<string, string> = {
+    "https://wellenpark.com/available-homes/": card(3072060, "Foxtail") + card(3392086, "Foxtail II"),
+    "https://wellenpark.com/home/3072060/detail/": page("Foxtail", [111508119, 111508702, 111508714]),
+    "https://wellenpark.com/home/3392086/detail/": page("Foxtail II", [111508119, 111508702, 111508714, 111508702]),
+  };
 
-  it("takes from each plan the pictures another plan shows too, and leaves each its card's", () => {
-    const fallback = [10, 11, 12, 13, 14];
-    const [ravenna, palmBay, genoa] = withoutSharedPictures([
-      listing("Ravenna", [1, ...fallback]),
-      listing("Palm Bay 2", [2, ...fallback]),
-      listing("Genoa", [3, 30, 31]),
-    ]);
-    expect(ravenna.galleryImages).toEqual([neal(1)]);
-    expect(palmBay.galleryImages).toEqual([neal(2)]);
-    expect(genoa.galleryImages).toEqual([3, 30, 31].map(neal));
+  it("keeps every picture each page shows, once within each plan", async () => {
+    vi.stubGlobal("fetch", async (url: string) => new Response(pages[url] ?? "", { status: pages[url] ? 200 : 404 }));
+    const plans = await extractMpcAggregator({ builderName: "M/I Homes", neighborhood: "palmera", url: "https://wellenpark.com/available-homes/" });
+    const gallery = (name: string) => plans.find((p) => p.name === name)?.galleryImages;
+    expect(gallery("Foxtail")).toEqual([111508119, 111508702, 111508714].map(mi));
+    expect(gallery("Foxtail II")).toEqual([111508119, 111508702, 111508714].map(mi));
+  });
+});
+
+describe("a plan's tour from its builder's own page (M/I's Candor, 2026-09-24)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const mi = (n: number) => `https://static.wellenpark.com/Images/Homes/MIHomes/${n}-260803.jpg`;
+  const card = (id: number, name: string, availability = "") => `
+    <article data-comp="property" data-builder-name="mi-homes" data-neighborhood="palmera" data-type="single-family"
+      data-beds="3" data-baths="2" data-sqft="2291" data-availability="${availability}">
+      <a href="https://wellenpark.com/home/${id}/detail/" class="box"><figure class="img-box"><img src="${mi(id)}"></figure>
+      <div class="content"><h3>${name}</h3><h4>FROM $654,990</h4></div></a>
+    </article>`;
+  // Wellen Park's page: a Virtual Tour tab with nothing behind it.
+  const listing = (name: string) =>
+    `<h1>${name}</h1><button data-target="virtual-tour">VIRTUAL TOUR</button><div data-target="virtual-tour"></div><h2>More Homes in Palmera At Wellen Park</h2>`;
+  const own = "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park";
+  const pages: Record<string, string> = {
+    "https://wellenpark.com/available-homes/": card(3125777, "Candor") + card(3392086, "Foxtail II") + card(3336518, "17524 Macarthur Loop", "move-in-ready"),
+    "https://wellenpark.com/home/3125777/detail/": listing("Candor"),
+    "https://wellenpark.com/home/3392086/detail/": listing("Foxtail II"),
+    "https://wellenpark.com/home/3336518/detail/": listing("17524 Macarthur Loop"),
+    [`${own}/candor-plan`]: `<a href="https://my.matterport.com/show/?m=nKg37BMHmc4">Virtual Tour</a>`,
+    [`${own}/foxtail-ii-plan`]: `<p>No tour for this one</p>`,
+  };
+
+  it("spells the builder's address for a plan the way the builder does", () => {
+    expect(builderPlanPage(`${own}/{plan}-plan`, "Foxtail II")).toBe(`${own}/foxtail-ii-plan`);
+    expect(builderPlanPage(`${own}/plans`, "Candor")).toBeNull();
   });
 
-  it("leaves a home the pictures it shares with its one plan", () => {
-    const [plan, home] = withoutSharedPictures([listing("Positano 2", [1, 20, 21]), listing("11446 Brightly Drive", [5, 20, 21], true)]);
-    expect(plan.galleryImages).toEqual([1, 20, 21].map(neal));
-    expect(home.galleryImages).toEqual([5, 20, 21].map(neal));
+  it("takes the builder's tour for a plan the listing gives none, and leaves the rest as they were", async () => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      asked.push(url);
+      return new Response(pages[url] ?? "", { status: pages[url] ? 200 : 404 });
+    });
+    const plans = await extractMpcAggregator({ builderName: "M/I Homes", communityName: "Palmera", url: "https://wellenpark.com/available-homes/" });
+    const tour = (name: string) => plans.find((p) => p.name === name)?.virtualTourUrl ?? null;
+    expect(tour("Candor")).toBe("https://my.matterport.com/show/?m=nKg37BMHmc4");
+    expect(tour("Foxtail II")).toBeNull();
+    // A home's tour is of the house itself: its plan's page is not asked.
+    expect(tour("17524 Macarthur Loop")).toBeNull();
+    expect(asked.some((u) => /macarthur/i.test(u) && u.startsWith(own))).toBe(false);
   });
 });

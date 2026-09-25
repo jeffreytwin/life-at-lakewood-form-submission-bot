@@ -1,19 +1,9 @@
 {
-  "anatomy": [],
-  "raw": [],
   "concurrency": 2,
-  "detailPlans": 0,
+  "detailPlans": 1,
   "duplicates": [],
   "checks": [
-    {
-      "builder": "Mattamy Homes",
-      "community": "Sunstone Lakeside",
-      "noSurvey": true
-    },
-    {
-      "builder": "Meritage Homes",
-      "community": "Salt Meadows",
-      "noSurvey": true
-    }
+    { "builder": "Neal Signature Homes", "community": "Waterbury Park", "noSurvey": true },
+    { "builder": "M/I Homes", "community": "Palmera", "noSurvey": true }
   ]
 }
