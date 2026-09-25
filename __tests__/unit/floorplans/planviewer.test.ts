@@ -1,4 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { NextRequest } from "next/server";
+import { GET } from "@/app/api/floorplans/planviewer/[company]/[plan]/[floor]/route";
+import { rasterizeSvg } from "@/lib/floorplans/media";
 import { elevationsOf, floorDrawingUrl, floorSvg, floorsOf, planViewerDataUrl, planViewersIn, tourOf } from "@/lib/floorplans/extractors/planviewer";
 
 // The shape of CPS's plan data for Neal Signature's Monterey 2 at Waterbury
@@ -60,5 +63,33 @@ describe("CPS's plan viewer (Neal Signature's floor plans, 2026-09-24)", () => {
   it("takes a tour only where the builder gave one", () => {
     expect(tourOf(data)).toBeNull();
     expect(tourOf({ links: { tour3DUrl: " https://my.matterport.com/show/?m=abc " } })).toBe("https://my.matterport.com/show/?m=abc");
+  });
+});
+
+describe("the Hub's address for a floor's drawing", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const call = (company: string, plan: string, floor: string) =>
+    GET(new NextRequest(`http://hub.test/api/floorplans/planviewer/${company}/${plan}/${floor}`), { params: Promise.resolve({ company, plan, floor }) });
+
+  it("serves the floor as an SVG drawing the write-back can turn into a PNG", async () => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      asked.push(url);
+      return new Response(JSON.stringify(data), { status: 200, headers: { "content-type": "application/json" } });
+    });
+    const res = await call("nealsh", "2056774", "First_Floor.svg");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toMatch(/^image\/svg\+xml/);
+    const svg = await res.text();
+    expect(svg).toBe(drawing("First_Floor"));
+    expect(asked).toEqual(["https://planviewer.cpsusa.com/nealsh/api/planviewer/2056774"]);
+    const png = await rasterizeSvg(new TextEncoder().encode(svg));
+    expect(png?.width).toBeGreaterThan(0);
+  });
+
+  it("answers a floor the plan does not have, or an address that is not one, without asking the viewer for it", async () => {
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify(data), { status: 200 }));
+    expect((await call("nealsh", "2056774", "Attic.svg")).status).toBe(404);
+    expect((await call("nealsh", "../etc", "First_Floor.svg")).status).toBe(400);
   });
 });
