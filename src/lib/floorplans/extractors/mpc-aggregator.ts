@@ -163,7 +163,7 @@ export function readDetailPage(html: string): {
       [...own.matchAll(/https?:\/\/[^"'\s()<>]+?\/Images\/Homes\/[^"'\s()<>]+?\.(?:jpe?g|png|webp|svg)/gi)].map((m) => m[0])
     ),
   ];
-  const tour = own.match(/https?:\/\/my\.matterport\.com\/show\/\?m=[A-Za-z0-9]+/i)?.[0] ?? null;
+  const tour = own.match(MATTERPORT)?.[0] ?? null;
   return {
     photos: pictures.filter((u) => !/\.svg$/i.test(u)),
     drawings: pictures.filter((u) => /\.svg$/i.test(u)),
@@ -171,6 +171,51 @@ export function readDetailPage(html: string): {
     homeType: mpcHomeType(header),
     description,
   };
+}
+
+const MATTERPORT = /https?:\/\/my\.matterport\.com\/show\/\?m=[A-Za-z0-9]+/i;
+
+/**
+ * A builder's own page for each of its plans in a neighborhood, where the
+ * listing's page has no tour and the builder's does. Wellen Park shows a
+ * "Virtual Tour" tab on M/I's Candor with nothing behind it, and M/I's own
+ * page for the plan carries the Matterport (2026-09-24). "{plan}" is the
+ * plan's name as the builder spells its addresses: "Foxtail II" is
+ * ".../foxtail-ii-plan". extractor_params.planPage overrides.
+ */
+const BUILDER_PLAN_PAGES: Record<string, Record<string, string>> = {
+  "mi-homes": {
+    palmera: "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park/{plan}-plan",
+  },
+};
+
+/** The builder's own page for a plan, from the neighborhood's pattern. Pure; exported for tests. */
+export function builderPlanPage(pattern: string, planName: string): string | null {
+  const slug = normKey(planName);
+  return slug && pattern.includes("{plan}") ? pattern.replace("{plan}", slug) : null;
+}
+
+/**
+ * The plan with the tour its builder's own page shows, where the listing
+ * gave it none. A base plan only: a home's tour is of the house itself. A
+ * page that will not load, or shows no tour, leaves the plan as it was.
+ */
+async function withBuilderTour(plan: NormalizedPlan, pattern: string): Promise<NormalizedPlan> {
+  if (plan.quickMoveIn || plan.virtualTourUrl) return plan;
+  const url = builderPlanPage(pattern, plan.name);
+  if (!url) return plan;
+  try {
+    const res = await fetch(url, {
+      headers: { "user-agent": UA, accept: "text/html" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(20_000),
+    });
+    if (!res.ok) return plan;
+    const tour = (await res.text()).match(MATTERPORT)?.[0];
+    return tour ? { ...plan, virtualTourUrl: tour } : plan;
+  } catch {
+    return plan;
+  }
 }
 
 /** The builder's folder a listing picture sits in: ".../Images/Homes/NealC9425/82211950.jpg" is "nealc9425". Exported for tests. */
@@ -242,6 +287,8 @@ export async function extractMpcAggregator(params: {
   communityName?: string;
   neighborhood?: string;
   url?: string;
+  /** The builder's own page for each plan, "{plan}" standing for its name (BUILDER_PLAN_PAGES). */
+  planPage?: string;
 }): Promise<NormalizedPlan[]> {
   const sourceKey = params.source ?? "wellenpark";
   const source = SOURCES[sourceKey];
@@ -281,5 +328,7 @@ export async function extractMpcAggregator(params: {
   // picture is taken out only when it repeats within its own plan: sister
   // plans show the same model (Foxtail and Foxtail II, M/I at Palmera), and
   // each keeps every picture its page shows (Jeff, 2026-09-24).
-  return mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin));
+  const read = await mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin));
+  const planPage = params.planPage ?? (neighborhood ? BUILDER_PLAN_PAGES[builderSlug]?.[neighborhood] : undefined);
+  return planPage ? mapLimit(read, 4, (plan) => withBuilderTour(plan, planPage)) : read;
 }

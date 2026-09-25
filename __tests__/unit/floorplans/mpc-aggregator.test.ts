@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { extractMpcAggregator, folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { builderPlanPage, extractMpcAggregator, folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -126,5 +126,48 @@ describe("sister plans keep the pictures they share (M/I's Foxtail and Foxtail I
     const gallery = (name: string) => plans.find((p) => p.name === name)?.galleryImages;
     expect(gallery("Foxtail")).toEqual([111508119, 111508702, 111508714].map(mi));
     expect(gallery("Foxtail II")).toEqual([111508119, 111508702, 111508714].map(mi));
+  });
+});
+
+describe("a plan's tour from its builder's own page (M/I's Candor, 2026-09-24)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const mi = (n: number) => `https://static.wellenpark.com/Images/Homes/MIHomes/${n}-260803.jpg`;
+  const card = (id: number, name: string, availability = "") => `
+    <article data-comp="property" data-builder-name="mi-homes" data-neighborhood="palmera" data-type="single-family"
+      data-beds="3" data-baths="2" data-sqft="2291" data-availability="${availability}">
+      <a href="https://wellenpark.com/home/${id}/detail/" class="box"><figure class="img-box"><img src="${mi(id)}"></figure>
+      <div class="content"><h3>${name}</h3><h4>FROM $654,990</h4></div></a>
+    </article>`;
+  // Wellen Park's page: a Virtual Tour tab with nothing behind it.
+  const listing = (name: string) =>
+    `<h1>${name}</h1><button data-target="virtual-tour">VIRTUAL TOUR</button><div data-target="virtual-tour"></div><h2>More Homes in Palmera At Wellen Park</h2>`;
+  const own = "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park";
+  const pages: Record<string, string> = {
+    "https://wellenpark.com/available-homes/": card(3125777, "Candor") + card(3392086, "Foxtail II") + card(3336518, "17524 Macarthur Loop", "move-in-ready"),
+    "https://wellenpark.com/home/3125777/detail/": listing("Candor"),
+    "https://wellenpark.com/home/3392086/detail/": listing("Foxtail II"),
+    "https://wellenpark.com/home/3336518/detail/": listing("17524 Macarthur Loop"),
+    [`${own}/candor-plan`]: `<a href="https://my.matterport.com/show/?m=nKg37BMHmc4">Virtual Tour</a>`,
+    [`${own}/foxtail-ii-plan`]: `<p>No tour for this one</p>`,
+  };
+
+  it("spells the builder's address for a plan the way the builder does", () => {
+    expect(builderPlanPage(`${own}/{plan}-plan`, "Foxtail II")).toBe(`${own}/foxtail-ii-plan`);
+    expect(builderPlanPage(`${own}/plans`, "Candor")).toBeNull();
+  });
+
+  it("takes the builder's tour for a plan the listing gives none, and leaves the rest as they were", async () => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      asked.push(url);
+      return new Response(pages[url] ?? "", { status: pages[url] ? 200 : 404 });
+    });
+    const plans = await extractMpcAggregator({ builderName: "M/I Homes", communityName: "Palmera", url: "https://wellenpark.com/available-homes/" });
+    const tour = (name: string) => plans.find((p) => p.name === name)?.virtualTourUrl ?? null;
+    expect(tour("Candor")).toBe("https://my.matterport.com/show/?m=nKg37BMHmc4");
+    expect(tour("Foxtail II")).toBeNull();
+    // A home's tour is of the house itself: its plan's page is not asked.
+    expect(tour("17524 Macarthur Loop")).toBeNull();
+    expect(asked.some((u) => /macarthur/i.test(u) && u.startsWith(own))).toBe(false);
   });
 });
