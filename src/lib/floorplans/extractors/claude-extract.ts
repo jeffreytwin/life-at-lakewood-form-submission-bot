@@ -747,7 +747,13 @@ export async function readPlanPageWithClaude(
   // the viewer's are the same plan and houses drawn again — Canoe Creek's
   // Azure carried its floor plan three times and its elevations twice
   // (Jeff, 2026-09-25).
-  const ownElevations = outsides.length > 0 || Object.values(said).some((m) => m.room === "exterior");
+  // The page's own outside of the house: what its markup or Claude calls
+  // one, or a photo its file name calls an elevation (Neal's
+  // "…Azure-60-4443-Elevation-I1.jpg"), read as orderPhotos reads it.
+  const ownElevations =
+    outsides.length > 0 ||
+    Object.values(said).some((m) => m.room === "exterior") ||
+    photos.some((src) => !OPAQUE_NAME.test(src.split("/").pop() ?? "") && classifyRoom(fileNameWords(src)) === "exterior");
   const viewer = viewerFills({ blueprints, photos, ownElevations }, await planViewerExtras(html));
   blueprints.splice(0, blueprints.length, ...viewer.blueprints);
   photos.splice(0, photos.length, ...viewer.photos);
