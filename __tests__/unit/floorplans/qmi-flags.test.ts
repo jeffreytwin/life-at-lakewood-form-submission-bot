@@ -52,4 +52,9 @@ describe("quick move-in flags (Jeff, 2026-09-25)", () => {
     expect(fixes).toEqual([]);
     expect(problems.map((p) => p.kind).sort()).toEqual(["no-plan", "same-name", "same-name"]);
   });
+
+  it("adds no markers to a row that shows none and has nothing under it (it may be a home missing its floor plan)", () => {
+    const bare = row({ floorPlanName: "2207 Anders Drive", builder: "Richmond American Homes", village: "Estates at Rivers Edge" });
+    expect(flagFixes([bare]).fixes).toEqual([]);
+  });
 });

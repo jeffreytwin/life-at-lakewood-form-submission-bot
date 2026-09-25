@@ -108,6 +108,10 @@ export function flagFixes(items: WixDataItem[]): { fixes: FlagFix[]; problems: F
       continue;
     }
     for (const plan of same) {
+      // A row that shows none of the markers and has nothing under it is
+      // left as it is: it may be a quick move-in whose floor plan was never
+      // named, and a quick move-in's row carries no markers.
+      if (n === 0 && MARKERS.every((k) => !plan.data[k])) continue;
       if (!shows(plan.data, markersFor(n > 0))) fixes.push({ ...describe(plan), has: n > 0, homes: n });
     }
   }
