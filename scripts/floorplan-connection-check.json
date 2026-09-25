@@ -1,10 +1,6 @@
 {
   "anatomy": [
-    "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park/candor-plan"
-  ],
-  "probe": [
-    "https://planviewer.cpsusa.com/nealsh/api/attachment/2056784",
-    "https://planviewer.cpsusa.com/nealsh/api/planviewer/2056774"
+    "json https://planviewer.cpsusa.com/nealsh/api/planviewer/2056774"
   ],
   "concurrency": 2,
   "detailPlans": 2,

@@ -97,6 +97,9 @@ async function open(): Promise<Browser> {
 async function closeRenderer(): Promise<void> {
   const open = browser;
   browser = null;
+  // A new browser is a first visit everywhere.
+  checkedSites.clear();
+  turns.clear();
   if (!open) return;
   try {
     await open.close();
@@ -361,9 +364,56 @@ export async function renderPage(
   opts: RenderOptions = {},
   deadline = Infinity
 ): Promise<{ url: string; html: string; pressed: string | null }> {
+  // A site whose bot check has stopped this browser once is visited one
+  // page at a time from then on, each as a first visit. Neal Signature's
+  // lets a browser's first visit through and stops every page after it
+  // for as long as the browser keeps the site's cookies, and three of its
+  // plan pages asked for at once were all stopped even with the cookies
+  // cleared; one at a time and cleared, each loads (2026-09-24).
+  const site = siteOf(url);
+  if (!checkedSites.has(site)) {
+    try {
+      return await renderOnce(url, opts, deadline, false);
+    } catch (error) {
+      if (!(error instanceof StoppedAtBotCheck)) throw error;
+      checkedSites.add(site);
+    }
+  }
+  return inTurn(site, () => renderOnce(url, opts, deadline, true));
+}
+
+/** Stopped at the site's bot check: not the page asked for. */
+class StoppedAtBotCheck extends Error {}
+
+/** Sites whose bot check has stopped this browser, and each one's queue of pages. */
+const checkedSites = new Set<string>();
+const turns = new Map<string, Promise<unknown>>();
+const siteOf = (url: string) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+};
+
+/** The work done once the site's pages before it are done, one at a time. */
+function inTurn<T>(site: string, work: () => Promise<T>): Promise<T> {
+  const mine = (turns.get(site) ?? Promise.resolve()).catch(() => {}).then(work);
+  turns.set(site, mine.catch(() => {}));
+  return mine;
+}
+
+async function renderOnce(
+  url: string,
+  opts: RenderOptions,
+  deadline: number,
+  firstVisit: boolean
+): Promise<{ url: string; html: string; pressed: string | null }> {
   if (Date.now() > deadline) throw new Error(`out of rendering time before ${url}`);
   const page = await (await open()).newPage();
   try {
+    // As if this browser had never been to the site.
+    if (firstVisit) await forgetSite(page, url);
     await page.setUserAgent(UA);
     await page.setViewport({ width: 1440, height: 2400 });
     // The pictures themselves are never wanted here — only their
@@ -401,21 +451,12 @@ export async function renderPage(
     // A bot check in front of the page sometimes lets a browser through
     // after a few seconds; one that does not is not the page, and saying
     // so leaves what an earlier run found alone (diff.ts, pageUnread).
-    // Neal Signature's lets a browser's first visit through and stops every
-    // page after it, for as long as the browser keeps the site's cookies;
-    // with them cleared, each page is a first visit again (2026-09-24).
-    for (let attempt = 0; ; attempt++) {
-      const checkUntil = Date.now() + BOT_CHECK_MS;
-      while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() < checkUntil) {
-        await new Promise((done) => setTimeout(done, POLL_MS));
-      }
-      if (!pageIsBotCheck(await page.content().catch(() => ""))) break;
-      if (attempt >= 1 || Date.now() + BOT_CHECK_MS > deadline) {
-        throw new Error(`${url}: stopped at the site's bot check ("Just a moment...")`);
-      }
-      await forgetSite(page, url);
-      await page.reload({ waitUntil: "domcontentloaded", timeout: NAVIGATE_MS }).catch(() => {});
-      await page.waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: QUIET_MS }).catch(() => {});
+    const checkUntil = Date.now() + BOT_CHECK_MS;
+    while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() < checkUntil) {
+      await new Promise((done) => setTimeout(done, POLL_MS));
+    }
+    if (pageIsBotCheck(await page.content().catch(() => ""))) {
+      throw new StoppedAtBotCheck(`${url}: stopped at the site's bot check ("Just a moment...")`);
     }
 
     // And then the backstop, for a page still filling in after it went
