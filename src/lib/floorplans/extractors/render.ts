@@ -111,18 +111,16 @@ async function closeRenderer(): Promise<void> {
 }
 
 /**
- * The browser forgets what a site told it: the cookies that would go with
- * a request for this address, and the site's own storage. Only that site's,
- * so a page of another builder open at the same moment keeps its own.
+ * The browser forgets what sites told it: every cookie it holds, the
+ * bot check's own among them (they are not all the site's), and the
+ * site's storage. What cleared Neal Signature's check in a browser that
+ * had already been stopped once (2026-09-24).
  */
 async function forgetSite(page: Page, url: string): Promise<void> {
   const cdp = await page.createCDPSession();
   try {
-    const { cookies } = (await cdp.send("Network.getCookies", { urls: [url] })) as {
-      cookies: { name: string; domain: string; path: string }[];
-    };
-    for (const c of cookies) await cdp.send("Network.deleteCookies", { name: c.name, domain: c.domain, path: c.path });
-    await cdp.send("Storage.clearDataForOrigin", { origin: new URL(url).origin, storageTypes: "local_storage,session_storage,indexeddb,cache_storage" });
+    await cdp.send("Network.clearBrowserCookies");
+    await cdp.send("Storage.clearDataForOrigin", { origin: new URL(url).origin, storageTypes: "all" });
   } catch (error) {
     logger.warn("Floor plan renderer could not clear a site's cookies", {
       url,
@@ -381,6 +379,9 @@ export async function renderPage(
   }
   return inTurn(site, () => renderOnce(url, opts, deadline, true));
 }
+
+/** Whether this site's bot check has stopped the browser: its pages are not worth a plain fetch. */
+export const siteStopsBrowsers = (url: string): boolean => checkedSites.has(siteOf(url));
 
 /** Stopped at the site's bot check: not the page asked for. */
 class StoppedAtBotCheck extends Error {}

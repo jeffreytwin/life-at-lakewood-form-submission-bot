@@ -1,6 +1,22 @@
 {
-  "anatomy": [
-    "json https://planviewer.cpsusa.com/nealsh/api/planviewer/2056774"
+  "raw": [
+    {
+      "url": "https://planviewer.cpsusa.com/nealsh/api/planviewer/2056774",
+      "around": ["\"links\"", "\"elevations\"", "\"planPictures\""],
+      "chars": 700,
+      "count": 1
+    },
+    {
+      "url": "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park/candor-plan",
+      "around": ["matterport", "-plan\"", "-plan'"],
+      "chars": 200,
+      "count": 30
+    }
+  ],
+  "probe": [
+    "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park/foxtail-ii-plan",
+    "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park/foxtail-2-plan",
+    "https://www.mihomes.com/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park/palm-plan"
   ],
   "concurrency": 2,
   "detailPlans": 2,

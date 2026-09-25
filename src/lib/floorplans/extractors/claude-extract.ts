@@ -1302,7 +1302,7 @@ export async function extractWithClaude(params: ClaudeExtractParams): Promise<No
  * that plan's gallery alone (diff.ts).
  */
 export async function extractWithRender(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
-  const { withRenderer } = await import("@/lib/floorplans/extractors/render");
+  const { withRenderer, siteStopsBrowsers } = await import("@/lib/floorplans/extractors/render");
   // The browser's budget is the run's reading time, where the run has one.
   const budget = Math.max(0, params.runDeadline ? params.runDeadline - Date.now() : RENDER_RUN_MS);
   return withRenderer(budget, (renderPage) => {
@@ -1316,6 +1316,9 @@ export async function extractWithRender(params: ClaudeExtractParams): Promise<No
     // nothing (Perry's fifty-four pages, 2026-09-23).
     const renderSlot = slots(3);
     const fetchThenRender: PageReader = async (url, opts) => {
+      // A site whose bot check stops browsers stops a plain fetch too,
+      // and every refused request counts against the next page.
+      if (siteStopsBrowsers(url)) return renderSlot(() => renderPage(url, opts));
       try {
         const fetched = await fetchPage(url, opts);
         if (!pageLooksUnrendered(distill(fetched.html, fetched.url))) return fetched;
