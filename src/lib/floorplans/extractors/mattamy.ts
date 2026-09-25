@@ -202,6 +202,16 @@ export function readPlanLayout(data: unknown): {
   const items: GalleryInput[] = [];
   const drawings: string[] = [];
   let tour: string | null = null;
+  // The exterior styles, known before the gallery is read: a style's
+  // rendering the gallery shows too is still a style, not a photo, when
+  // its first appearance is the one kept (orderGallery). 11898 Mandala Ct's
+  // "Topsail Craftsman" is both (2026-09-25).
+  const styleUrls = new Set(
+    components.flatMap((c) => {
+      const styles = c.fields?.styles?.value;
+      return Array.isArray(styles) ? (styles as { imageUrl?: string }[]).map((st) => st.imageUrl ?? "").filter(Boolean) : [];
+    })
+  );
   for (const c of components) {
     if (c.componentName === "TitleDetailsBlock") {
       const hero = (c.fields?.image?.value as { src?: string; alt?: string } | undefined)?.src;
@@ -221,7 +231,8 @@ export function readPlanLayout(data: unknown): {
         // Isle Royal" on eighteen pictures of eighteen rooms (2026-09-23).
         const filed = (m.description ?? "").trim();
         const room = (filed && classifyRoom(filed)) || (caption && classifyRoom(caption)) || undefined;
-        items.push({ src: m.src, caption: caption ?? (filed || null), room });
+        if (styleUrls.has(m.src)) items.push({ src: m.src, kind: "exterior", caption: caption ?? (filed || null) });
+        else items.push({ src: m.src, caption: caption ?? (filed || null), room });
       }
     }
     const styles = c.fields?.styles?.value;

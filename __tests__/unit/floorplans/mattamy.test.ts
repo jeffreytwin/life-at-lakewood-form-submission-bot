@@ -140,6 +140,13 @@ describe("readPlanLayout (Mattamy plan pages, Anclote at Sunstone, 2026-09-23)",
     expect(page.meta["https://cdn.mattamy.com/anclote-b.jpg"]).toMatchObject({ kind: "exterior", caption: "Craftsman" });
   });
 
+  it("keeps a style's rendering a style where the gallery shows it too (11898 Mandala Ct, 2026-09-25)", () => {
+    const shown = JSON.parse(JSON.stringify(layout).replace('"alt":"Kitchen"}', '"alt":"Kitchen"},{"type":"image","src":"https://cdn.mattamy.com/anclote-b.jpg","alt":"TPA_Sunstone_Villa_Anclote_Topsail_Craftsman","description":"Exterior"}'));
+    const page = readPlanLayout(shown);
+    expect(page.meta["https://cdn.mattamy.com/anclote-b.jpg"]).toMatchObject({ kind: "exterior" });
+    expect(page.photos.filter((u) => u === "https://cdn.mattamy.com/anclote-b.jpg")).toHaveLength(1);
+  });
+
   it("takes the floor plan drawing apart from the photos", () => {
     expect(readPlanLayout(layout).drawings).toEqual(["https://cdn.mattamy.com/anclote-fp.png"]);
   });
