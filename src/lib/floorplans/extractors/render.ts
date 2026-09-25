@@ -107,6 +107,29 @@ async function closeRenderer(): Promise<void> {
   }
 }
 
+/**
+ * The browser forgets what a site told it: the cookies that would go with
+ * a request for this address, and the site's own storage. Only that site's,
+ * so a page of another builder open at the same moment keeps its own.
+ */
+async function forgetSite(page: Page, url: string): Promise<void> {
+  const cdp = await page.createCDPSession();
+  try {
+    const { cookies } = (await cdp.send("Network.getCookies", { urls: [url] })) as {
+      cookies: { name: string; domain: string; path: string }[];
+    };
+    for (const c of cookies) await cdp.send("Network.deleteCookies", { name: c.name, domain: c.domain, path: c.path });
+    await cdp.send("Storage.clearDataForOrigin", { origin: new URL(url).origin, storageTypes: "local_storage,session_storage,indexeddb,cache_storage" });
+  } catch (error) {
+    logger.warn("Floor plan renderer could not clear a site's cookies", {
+      url,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  } finally {
+    await cdp.detach().catch(() => {});
+  }
+}
+
 /** What a page is showing right now, as a person would read it. */
 const shownText = (page: Page) => page.evaluate(() => document.body?.innerText ?? "");
 
@@ -378,12 +401,21 @@ export async function renderPage(
     // A bot check in front of the page sometimes lets a browser through
     // after a few seconds; one that does not is not the page, and saying
     // so leaves what an earlier run found alone (diff.ts, pageUnread).
-    const checkUntil = Date.now() + BOT_CHECK_MS;
-    while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() < checkUntil) {
-      await new Promise((done) => setTimeout(done, POLL_MS));
-    }
-    if (pageIsBotCheck(await page.content().catch(() => ""))) {
-      throw new Error(`${url}: stopped at the site's bot check ("Just a moment...")`);
+    // Neal Signature's lets a browser's first visit through and stops every
+    // page after it, for as long as the browser keeps the site's cookies;
+    // with them cleared, each page is a first visit again (2026-09-24).
+    for (let attempt = 0; ; attempt++) {
+      const checkUntil = Date.now() + BOT_CHECK_MS;
+      while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() < checkUntil) {
+        await new Promise((done) => setTimeout(done, POLL_MS));
+      }
+      if (!pageIsBotCheck(await page.content().catch(() => ""))) break;
+      if (attempt >= 1 || Date.now() + BOT_CHECK_MS > deadline) {
+        throw new Error(`${url}: stopped at the site's bot check ("Just a moment...")`);
+      }
+      await forgetSite(page, url);
+      await page.reload({ waitUntil: "domcontentloaded", timeout: NAVIGATE_MS }).catch(() => {});
+      await page.waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: QUIET_MS }).catch(() => {});
     }
 
     // And then the backstop, for a page still filling in after it went
