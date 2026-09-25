@@ -11,20 +11,14 @@ import Anthropic from "@anthropic-ai/sdk";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
+import { speaksAsOwner } from "@/lib/floorplans/owner-words";
 
 const MODEL = "claude-opus-5";
 /** Descriptions reworded at once, and the longest one rewording is allowed. */
 const REWORD_AT_ONCE = 8;
 const REWORD_MS = 40_000;
 
-/** First-person ownership words, as whole words. "US" the country is not one of them. */
-const OWNER_WORDS = /\b(we|we're|we've|we'll|we'd|our|ours|ourselves|us)\b/gi;
-
-/** Whether a description speaks as the plan's owner: "we", "our", "us" and their contractions. */
-export function speaksAsOwner(text: string | null | undefined): boolean {
-  if (!text) return false;
-  return [...text.matchAll(OWNER_WORDS)].some((m) => m[0] !== "US");
-}
+export { speaksAsOwner };
 
 /** The cache key for a rewrite: the builder and the exact text. */
 export function rewriteKey(builderName: string, text: string): string {

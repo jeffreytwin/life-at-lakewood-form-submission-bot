@@ -5,6 +5,8 @@
 
 import { createHash } from "node:crypto";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
+import { speaksAsOwner } from "@/lib/floorplans/owner-words";
+import { asTour } from "@/lib/floorplans/standardize";
 
 /** Canonical records written by the first slice carry the main image here instead of in galleryImages. */
 export type CanonicalRecord = NormalizedPlan & { primaryImage?: string | null };
@@ -56,6 +58,88 @@ const wordsOf = (value: unknown): string =>
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
+
+/** A text as its words alone, its punctuation aside: "Homesite #124." and "Homesite #124" read the same. */
+const bareWords = (value: unknown): string =>
+  wordsOf(value)
+    .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const wordCount = (text: string): number => (text ? text.split(" ").length : 0);
+
+/**
+ * Whether a text reads as a description: a sentence or more, not a tag
+ * line. Medallion's cards carry "1 Story, Den/Office" and "Preserve View
+ * Villa", and a run that read one of those where the plan's paragraph
+ * was proposed the paragraph's replacement by it (2026-09-25). Exported
+ * for tests.
+ */
+export function readsAsProse(text: string | null | undefined): boolean {
+  const words = wordCount(bareWords(text));
+  return words >= 10 || (words >= 8 && /[.!?]["')\]]?\s*$/.test(String(text ?? "").trim()));
+}
+
+/**
+ * Whether two readings of a description say the same thing. The reading
+ * of a page is not word-for-word the same from one run to the next: Neal's
+ * homes come with or without the "MOVE IN READY – Vision 2 at Windward –
+ * Homesite #478." line their page leads with, its plans with or without
+ * "Come by and visit Boca Royale… Call today to schedule a private tour."
+ * at the end, and a full stop comes and goes (Jeff, 2026-09-25). Either
+ * way is the same description: one reading holding the other whole, most
+ * of it, is not a change. Exported for tests.
+ */
+export function sameDescription(a: string | null | undefined, b: string | null | undefined): boolean {
+  const x = bareWords(a);
+  const y = bareWords(b);
+  if (x === y) return true;
+  const [shorter, longer] = x.length <= y.length ? [x, y] : [y, x];
+  const few = wordCount(shorter);
+  return few >= 12 && few >= 0.5 * wordCount(longer) && ` ${longer} `.includes(` ${shorter} `);
+}
+
+/** What the builder wrote: the text before it was reworded in the third person (description.ts), where it was. */
+const builderText = (plan: NormalizedPlan): string => {
+  const original = plan.raw?.descriptionOriginal;
+  return typeof original === "string" && original.trim() ? original : plan.description ?? "";
+};
+
+/**
+ * Whether a run's description is a change worth a person's look. Not when
+ * the run read none — a blank is not the builder taking its description
+ * away (Jeff, 2026-09-25) — nor a tag line where a paragraph stands, nor
+ * the same description read a little differently, nor the same one
+ * before and after it was reworded; and not while it still speaks as the
+ * builder, which the next run rewords before it is put to anyone.
+ * Exported for tests.
+ */
+export function descriptionChanged(current: NormalizedPlan, plan: NormalizedPlan): boolean {
+  const next = plan.description?.trim() ?? "";
+  const before = current.description?.trim() ?? "";
+  if (!next || next === before) return false;
+  if (!before) return true;
+  if (readsAsProse(before) && !readsAsProse(next)) return false;
+  const was = [before, builderText(current)];
+  const now = [next, builderText(plan)];
+  if (was.some((a) => now.some((b) => sameDescription(a, b)))) return false;
+  return !speaksAsOwner(next);
+}
+
+/**
+ * Whether a run's tour is a change worth a person's look. A run that
+ * found no tour does not take away one that works — the plan's page may
+ * simply not have shown it this time — but does take away a link that is
+ * not a tour at all (an interactive floor plan, a Lennar link that shows
+ * a broken tour; standardize.ts, asTour). Exported for tests.
+ */
+export function tourChanged(current: NormalizedPlan, plan: NormalizedPlan): boolean {
+  const next = plan.virtualTourUrl?.trim() ?? "";
+  const before = current.virtualTourUrl?.trim() ?? "";
+  if (next === before) return false;
+  if (!next) return Boolean(before) && !asTour(before);
+  return true;
+}
 
 /** "Contemporary elegance. The Avery's welcoming covered entry and fo… · 5f2a9c1e", or "" for nothing. */
 export function describeText(value: unknown): string {
@@ -114,8 +198,17 @@ const sameList = (a: string[], b: string[]): boolean => a.length === b.length &&
  * propose reverting an override, and then the write-back reverted it anyway,
  * because the proposed record carried the builder's value for every field.
  */
-export function mergeForUpdate(current: CanonicalRecord, plan: NormalizedPlan): NormalizedPlan {
-  const overrides = new Set(current.userEditedFields ?? []);
+export function mergeForUpdate(
+  current: CanonicalRecord,
+  plan: NormalizedPlan,
+  kept: Iterable<keyof NormalizedPlan> = []
+): NormalizedPlan {
+  // Kept as they are, besides a person's edits: fields whose change was
+  // rejected. Approving a price change on Lennar's Stanford wrote the
+  // tour link that had been rejected the same morning, because the
+  // record an approval writes carried every field the run read (Jeff,
+  // 2026-09-25).
+  const overrides = new Set<string>([...(current.userEditedFields ?? []), ...kept]);
   const merged: Record<string, unknown> = { ...current, ...plan };
   const source = current as unknown as Record<string, unknown>;
   for (const field of overrides) {
@@ -130,12 +223,48 @@ export function mergeForUpdate(current: CanonicalRecord, plan: NormalizedPlan): 
   // change is approved: SimplyDwell's pages name no type, and its runs
   // read one on some nights and not others (2026-09-23).
   if (!plan.homeType && current.homeType) merged.homeType = current.homeType;
+  // Nor a description or a tour the run read differently, or not at all,
+  // when that is not a change (descriptionChanged, tourChanged): the record
+  // keeps its own, and the site is not rewritten with a variant of it.
+  if (!overrides.has("description") && !descriptionChanged(current, plan)) {
+    merged.description = current.description ?? null;
+    const original = current.raw?.descriptionOriginal;
+    const raw = { ...((merged.raw as Record<string, unknown> | undefined) ?? {}) };
+    if (typeof original === "string") raw.descriptionOriginal = original;
+    else delete raw.descriptionOriginal;
+    merged.raw = raw;
+  }
+  if (!overrides.has("virtualTourUrl") && !tourChanged(current, plan)) {
+    merged.virtualTourUrl = current.virtualTourUrl ?? null;
+    if ("virtualTourImage" in source) merged.virtualTourImage = current.virtualTourImage ?? null;
+  }
   merged.userEditedFields = current.userEditedFields;
   return merged as unknown as NormalizedPlan;
 }
 
 /** What only a plan's own page tells a run; a list page never carries these. */
 const PAGE_ONLY_FIELDS = new Set(["description", "virtualTourUrl", "virtualTourImage", "garages"]);
+
+/**
+ * The queue labels of the fields a run's reading of a plan speaks for:
+ * the ones fieldChanges compares. A pending change to one of these that
+ * the run no longer finds is out of date (sync.ts).
+ */
+export function comparedFields(current: CanonicalRecord, plan: NormalizedPlan): string[] {
+  const overrides = new Set(current.userEditedFields ?? []);
+  const unread = plan.pageUnread === true;
+  const quickMoveIn = plan.quickMoveIn === true;
+  const labels: string[] = [];
+  for (const [field, label] of DIFF_FIELDS) {
+    if (overrides.has(field) || (unread && PAGE_ONLY_FIELDS.has(field)) || (quickMoveIn && !QMI_FIELDS.has(field))) continue;
+    labels.push(label);
+  }
+  for (const [field, label] of GALLERY_FIELDS) {
+    if (overrides.has(field) || unread || (quickMoveIn && field === "blueprintImages")) continue;
+    labels.push(label);
+  }
+  return labels;
+}
 
 /**
  * Every field whose scraped value differs from the canonical one and that no
@@ -159,6 +288,8 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
     const oldVal = BOOLEAN_FIELDS.has(field) ? current[field] === true : current[field];
     const newVal = BOOLEAN_FIELDS.has(field) ? plan[field] === true : plan[field];
     if (String(oldVal ?? "") === String(newVal ?? "")) continue;
+    if (field === "description" && !descriptionChanged(current, plan)) continue;
+    if (field === "virtualTourUrl" && !tourChanged(current, plan)) continue;
     if (LONG_TEXT_FIELDS.has(field) && wordsOf(oldVal) === wordsOf(newVal)) continue;
     const show = LONG_TEXT_FIELDS.has(field)
       ? describeText

@@ -108,6 +108,59 @@ describe("standardizePlan", () => {
   });
 });
 
+describe("asTour: interactive floor plans and Lennar's own links (Jeff, 2026-09-25)", () => {
+  const fixture = (): NormalizedPlan => ({
+    planKey: "fresh-spring",
+    name: "Fresh Spring",
+    price: null,
+    priceDisplay: null,
+    beds: "3",
+    baths: "2",
+    sqft: 1800,
+    garages: null,
+    homeType: null,
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl: null,
+    galleryImages: [],
+    blueprintImages: [],
+  });
+
+  it("is no tour for an interactive floor plan", () => {
+    expect(asTour("https://ifp.thebdxinteractive.com/NealCommunities-Windward-Kiawah")).toBeNull();
+    expect(asTour("https://rifp.ml3ds-iconstage.com/#/floorplan/514358?floorId=651218")).toBeNull();
+    expect(asTour("https://planviewer.cpsusa.com/nealsh/floorplan/2056774")).toBeNull();
+  });
+
+  it("is no tour for Lennar's own tour link, which shows a broken tour", () => {
+    expect(asTour("https://hd.lennar.com/tours/3914/")).toBeNull();
+  });
+
+  it("reads Lennar's viewer link as the modsy viewer it stands for, by the same number", () => {
+    expect(asTour("https://hd.lennar.com/apps/home-viewer?vtid=24198")).toBe("https://hd.modsy.com/apps/home-viewer?vtid=24198");
+  });
+
+  it("keeps real tours as they are", () => {
+    for (const tour of [
+      "https://my.matterport.com/show/?m=15m2bU6rz8n",
+      "https://www.modsy.com/apps/home-viewer?vtid=15489",
+      "https://www.zillow.com/view-imx/04195163-6c68-47ae-bbd5-8465f26af991",
+      "https://panoviewer.ml3ds-icon.com/mattamy-homes/tampa/greenway",
+    ]) {
+      expect(asTour(tour)).toBe(tour);
+    }
+  });
+
+  it("keeps the link it dropped, as an interactive plan or a dropped tour", () => {
+    const ifp = standardizePlan({ ...fixture(), virtualTourUrl: "https://ifp.thebdxinteractive.com/NealCommunities-BR-Fresh_Spring" });
+    expect(ifp.virtualTourUrl).toBeNull();
+    expect(ifp.raw?.interactivePlanUrl).toBe("https://ifp.thebdxinteractive.com/NealCommunities-BR-Fresh_Spring");
+    const lennar = standardizePlan({ ...fixture(), virtualTourUrl: "https://hd.lennar.com/tours/3944/" });
+    expect(lennar.virtualTourUrl).toBeNull();
+    expect(lennar.raw?.droppedTourUrl).toBe("https://hd.lennar.com/tours/3944/");
+  });
+});
+
 describe("asTour", () => {
   it("knows an interactive floor plan from a tour", () => {
     expect(asTour("https://blu-plan.com/x/")).toBeNull();

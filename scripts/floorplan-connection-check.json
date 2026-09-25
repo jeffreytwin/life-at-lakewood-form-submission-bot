@@ -1,9 +1,9 @@
 {
   "concurrency": 2,
   "detailPlans": 1,
+  "detailNames": ["11898 Mandala Ct", "11925 Mandala Ct"],
   "duplicates": [],
   "checks": [
-    { "builder": "Neal Signature Homes", "community": "Waterbury Park", "noSurvey": true },
-    { "builder": "M/I Homes", "community": "Palmera", "noSurvey": true }
+    { "builder": "Mattamy Homes", "community": "Sunstone", "noSurvey": true }
   ]
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeGallery, describeText, fieldChanges, galleryOf, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { comparedFields, describeGallery, describeText, descriptionChanged, fieldChanges, galleryOf, mergeForUpdate, readsAsProse, tourChanged, type CanonicalRecord } from "@/lib/floorplans/diff";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 const plan = (over: Partial<NormalizedPlan> = {}): NormalizedPlan => ({
@@ -153,5 +153,108 @@ describe("describeGallery and galleryOf", () => {
     const early: CanonicalRecord = { ...plan({ galleryImages: [], blueprintImages: [] }), primaryImage: "https://cdn/a.jpg" };
     expect(galleryOf(early, "galleryImages")).toEqual(["https://cdn/a.jpg"]);
     expect(galleryOf(early, "blueprintImages")).toEqual([]);
+  });
+});
+
+describe("descriptions that are not a change (Jeff, 2026-09-25)", () => {
+  const seaStar =
+    "The Sea Star, a new home plan by Neal Communities, offers an open design, accommodating living spaces and flexibility so you can personalize it to reflect your preferences. The great room opens to the island kitchen and breakfast nook.";
+  const labels = (a: Partial<NormalizedPlan>, b: Partial<NormalizedPlan>) => fieldChanges(plan(a), plan(b)).map((c) => c.label);
+
+  it("is not a change when the run read none: a blank never replaces a description", () => {
+    expect(labels({ description: seaStar }, { description: "" })).toEqual([]);
+    expect(labels({ description: seaStar }, { description: null })).toEqual([]);
+    expect(descriptionChanged(plan({ description: seaStar }), plan({ description: "  " }))).toBe(false);
+  });
+
+  it("is not a change when a page's closing sentences or leading status line come and go", () => {
+    const withClose = `${seaStar} Come by and visit Boca Royale in Venice and learn more about the Sea Star and other plans. Call today to schedule a private tour.`;
+    expect(labels({ description: seaStar }, { description: withClose })).toEqual([]);
+    expect(labels({ description: withClose }, { description: seaStar })).toEqual([]);
+    const body =
+      "Experience the perfect blend of luxury and comfort in the Vision plan by Neal Communities, with an open great room, a gourmet kitchen and a covered lanai made for Florida living.";
+    const led = `MOVE IN READY – Vision 2 at Windward – Homesite #478. ${body}`;
+    expect(labels({ description: led }, { description: body })).toEqual([]);
+    expect(labels({ description: body }, { description: led })).toEqual([]);
+  });
+
+  it("is not a change when only the punctuation differs", () => {
+    const a = "UNDER CONSTRUCTION – Imagination 2 at Boca Royale – Homesite #124. The Imagination offers a split bedroom design with an open great room and kitchen.";
+    const b = "UNDER CONSTRUCTION – Imagination 2 at Boca Royale – Homesite #124 The Imagination offers a split bedroom design with an open great room and kitchen.";
+    expect(labels({ description: a }, { description: b })).toEqual([]);
+  });
+
+  it("is a change when the builder's words did change, or its status did", () => {
+    const body = "The Heritage 2 is a 2-story, 4 bedroom, 2.5 bath single-family home featuring 2,500 square feet of living space and a loft.";
+    expect(labels({ description: `UNDER CONSTRUCTION – Heritage 2 – Homesite #101. ${body}` }, { description: `MOVE IN READY – Heritage 2 – Homesite #101. ${body}` })).toEqual([
+      "description",
+    ]);
+    expect(labels({ description: seaStar }, { description: "The Sea Star has been redesigned with a larger lanai, a summer kitchen and a fourth bedroom off the entry." })).toEqual([
+      "description",
+    ]);
+  });
+
+  it("does not let a tag line replace a paragraph, and does let a paragraph replace a tag line", () => {
+    const paragraph = "The Aruba 2 floor plan is designed to bring together open living, flexible space and everyday comfort for the way families live.";
+    expect(labels({ description: paragraph }, { description: "1 Story, Den/Office" })).toEqual([]);
+    expect(labels({ description: paragraph }, { description: "Preserve View Villa" })).toEqual([]);
+    expect(labels({ description: "Pond Views Pool Included Single Family Home" }, { description: paragraph })).toEqual(["description"]);
+    expect(readsAsProse("1 Story, Den/Office, New Plan!")).toBe(false);
+    expect(readsAsProse(paragraph)).toBe(true);
+  });
+
+  it("compares what the builder wrote, not our rewording of it", () => {
+    const original = "Our Lori plan gives you a gourmet kitchen, a split owner's suite and a covered lanai for year-round Florida living.";
+    const reworded = "The Lori plan by Toll Brothers offers a gourmet kitchen, a split owner's suite and a covered lanai for year-round Florida living.";
+    const stored = plan({ description: reworded, raw: { descriptionOriginal: original } });
+    // A run that reworded it again in other words, and one that had no time to reword it at all.
+    const again = plan({ description: "Toll Brothers' Lori plan includes a gourmet kitchen, a split owner's suite and a covered lanai for year-round Florida living.", raw: { descriptionOriginal: original } });
+    const unreworded = plan({ description: original });
+    expect(fieldChanges(stored, again).map((c) => c.label)).toEqual([]);
+    expect(fieldChanges(stored, unreworded).map((c) => c.label)).toEqual([]);
+    // Nor is a changed text that still speaks as the builder put to anyone before it is reworded.
+    expect(fieldChanges(stored, plan({ description: "We rebuilt our Lori plan with a larger lanai, a summer kitchen and a fourth bedroom off the entry." })).map((c) => c.label)).toEqual([]);
+  });
+
+  it("keeps the record's own description when an approved change writes the record", () => {
+    const withClose = `${seaStar} Call today to schedule a private tour of the model and see the options in person.`;
+    const merged = mergeForUpdate(plan({ description: seaStar }), plan({ description: withClose, priceDisplay: "$819,995" }));
+    expect(merged.description).toBe(seaStar);
+    expect(merged.priceDisplay).toBe("$819,995");
+    expect(mergeForUpdate(plan({ description: seaStar }), plan({ description: "" })).description).toBe(seaStar);
+  });
+});
+
+describe("tours that are not a change (Jeff, 2026-09-25)", () => {
+  const modsy = "https://www.modsy.com/homejourney/embed/lennar/community/878/modelhome/3893/virtualtour/3944";
+  const labels = (a: Partial<NormalizedPlan>, b: Partial<NormalizedPlan>) => fieldChanges(plan(a), plan(b)).map((c) => c.label);
+
+  it("does not take away a working tour because a run found none", () => {
+    expect(labels({ virtualTourUrl: modsy }, { virtualTourUrl: null })).toEqual([]);
+    expect(tourChanged(plan({ virtualTourUrl: modsy }), plan({ virtualTourUrl: null }))).toBe(false);
+    expect(mergeForUpdate(plan({ virtualTourUrl: modsy }), plan({ virtualTourUrl: null, priceDisplay: "$1" })).virtualTourUrl).toBe(modsy);
+  });
+
+  it("does take away a link that is not a tour", () => {
+    expect(labels({ virtualTourUrl: "https://ifp.thebdxinteractive.com/NealCommunities-Windward-Kiawah" }, { virtualTourUrl: null })).toEqual(["virtual tour"]);
+    expect(labels({ virtualTourUrl: "https://hd.lennar.com/tours/3914/" }, { virtualTourUrl: null })).toEqual(["virtual tour"]);
+    expect(labels({ virtualTourUrl: "https://hd.lennar.com/tours/3944/" }, { virtualTourUrl: modsy })).toEqual(["virtual tour"]);
+  });
+});
+
+describe("a rejected change does not ride along with an approved one (Jeff, 2026-09-25)", () => {
+  it("keeps the field a person rejected at its current value in the record an approval writes", () => {
+    const current = plan({ virtualTourUrl: "https://www.modsy.com/homejourney/embed/lennar/community/1128/modelhome/4648/virtualtour/4679" });
+    const scraped = plan({ virtualTourUrl: "https://my.matterport.com/show/?m=abc", priceDisplay: "$819,995" });
+    const merged = mergeForUpdate(current, scraped, ["virtualTourUrl"]);
+    expect(merged.virtualTourUrl).toBe(current.virtualTourUrl);
+    expect(merged.priceDisplay).toBe("$819,995");
+    expect(merged.userEditedFields).toEqual(current.userEditedFields);
+  });
+
+  it("names the fields a run speaks for, so a pending change it no longer finds can be withdrawn", () => {
+    expect(comparedFields(plan(), plan())).toContain("description");
+    expect(comparedFields(plan(), plan({ pageUnread: true }))).not.toContain("description");
+    expect(comparedFields(plan({ userEditedFields: ["priceDisplay"] }), plan())).not.toContain("price");
   });
 });

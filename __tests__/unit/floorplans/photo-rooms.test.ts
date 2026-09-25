@@ -167,6 +167,17 @@ describe("withLookedAtRooms: the same order every run for the same answers", () 
     expect(withLookedAtRooms(plan([graphic, living, dining, elevation], presumed), noFront).galleryImages[0]).toBe(graphic);
   });
 
+  it("keeps the builder's own lead first until it has been looked at (7733 Satterfield Ter, 2026-09-25)", () => {
+    // Meritage gave the home a new front photo; the rest were looked at the day before.
+    const [newFront, kitchen, bath, oldElevation] = [pic("5fcad250"), pic("kitchen"), pic("bath"), pic("elevation")];
+    const looked = labelled([[kitchen, "kitchen"], [bath, "bathroom"], [oldElevation, "exterior"]]);
+    expect(withLookedAtRooms(plan([newFront, kitchen, bath]), looked).galleryImages).toEqual([newFront, kitchen, bath]);
+    // Once seen, it goes where it belongs: an interior leads no longer...
+    expect(withLookedAtRooms(plan([newFront, kitchen, bath, oldElevation]), labelled([...looked, [newFront, "bathroom"]])).galleryImages[0]).toBe(oldElevation);
+    // ...and a picture seen to be the front outranks an unseen lead.
+    expect(withLookedAtRooms(plan([newFront, kitchen, oldElevation]), labelled([[kitchen, "kitchen"], [oldElevation, "front"]])).galleryImages[0]).toBe(oldElevation);
+  });
+
   it("leaves a gallery nobody has looked at exactly as it came", () => {
     const untouched = plan([hero, a, b], meta);
     expect(withLookedAtRooms(untouched, new Map())).toBe(untouched);
