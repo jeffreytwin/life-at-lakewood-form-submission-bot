@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeCard, parseCards, parseHotelCards } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { normalizeCard, parseCards, parseHotelCards, readSitePlanPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Lakewood Ranch's home finder, Lee Wetherington only (build[]=34708), as served 2026-09-25.
 const hotel = (name: string, price: string, village: string, picture: string, slug: string, baths = "3", sf = "2,380") => `
@@ -80,5 +80,20 @@ describe("Lee Wetherington from Wellen Park's builder page (Jeff, 2026-09-25)", 
     expect(plan).toMatchObject({ name: "Solstice II", price: 1348000, beds: "3", baths: "4", sqft: 3480, garages: "3 car" });
     expect(plan.raw?.builderSlug).toBe("lee-wetherington-homes");
     expect(plan.sourceUrl).toBe("https://wellenpark.com/home/2987870/detail/");
+  });
+});
+
+describe("a plan's page on Lakewood Ranch's site", () => {
+  it("takes its photos, not WordPress's smaller copies, the site's icons or a brochure's pages", () => {
+    const up = "https://lakewoodranch.com/wp-content/uploads";
+    const page = `<link rel="apple-touch-icon" href="${up}/2023/10/apple-touch-icon-brown.png">
+      <img src="${up}/2026/04/LWR_HORIZONTAL_FLA_RED-lg-1024x170.png">
+      <a href="${up}/2025/06/sand-dollar-custom-built-home-foyer-study-001.jpg"><img src="${up}/2025/06/sand-dollar-custom-built-home-foyer-study-001-300x200.jpg"></a>
+      <a href="${up}/2025/06/LWH-24103-Sand-Dollar-4-pager-FIN-FOR-WEB-1.jpg"></a>
+      <iframe src="https://my.matterport.com/show/?m=bxTr9izXr4F"></iframe>
+      <footer><img src="${up}/2024/01/footer-promo.jpg"></footer>`;
+    const read = readSitePlanPage(page);
+    expect(read.photos).toEqual([`${up}/2025/06/sand-dollar-custom-built-home-foyer-study-001.jpg`]);
+    expect(read.tour).toBe("https://my.matterport.com/show/?m=bxTr9izXr4F");
   });
 });

@@ -1,60 +1,76 @@
 {
   "raw": [
     {
-      "url": "https://lakewoodranch.com/homes/azure/",
+      "url": "https://wellenpark.com/builder/john-cannon-homes/",
       "around": [
-        "<h1",
-        "wp-content/uploads",
-        "matterport",
-        "floor",
-        "<footer"
+        "data-neighborhood=",
+        "Country Club",
+        "country-club"
       ],
-      "chars": 1500,
-      "count": 4
+      "chars": 250,
+      "count": 8
+    },
+    {
+      "url": "https://wellenpark.com/home/2566416/detail/",
+      "around": [
+        "Neighborhood",
+        "Country Club",
+        "Everly",
+        "country-club"
+      ],
+      "chars": 500,
+      "count": 3
+    },
+    {
+      "url": "https://wellenpark.com/neighborhood/wellen-park-golf-country-club/overview/",
+      "around": [
+        "John Cannon",
+        "john-cannon",
+        "Kylie",
+        "Akarra"
+      ],
+      "chars": 500,
+      "count": 3
     }
   ],
   "concurrency": 2,
-  "detailPlans": 3,
+  "detailPlans": 1,
   "duplicates": [],
   "checks": [
     {
-      "builder": "Lee Wetherington",
-      "community": "Star Farms",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc"
-      }
-    },
-    {
-      "builder": "Lee Wetherington",
-      "community": "Waterside - Shellstone",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc"
-      }
-    },
-    {
-      "builder": "Lee Wetherington",
+      "builder": "John Cannon Homes",
       "community": "Waterside - Wild Blue",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34708&home-search=Search+Homes&submitted=1&sortby=price-asc"
-      }
+      "noSurvey": true
     },
     {
-      "builder": "Lee Wetherington",
+      "builder": "John Cannon Homes",
+      "community": "Waterside - Kingfisher Estates",
+      "noSurvey": true
+    },
+    {
+      "builder": "John Cannon Homes",
+      "community": "Monarch Acres",
+      "noSurvey": true
+    },
+    {
+      "builder": "John Cannon Homes",
+      "community": "Star Farms",
+      "noSurvey": true
+    },
+    {
+      "builder": "John Cannon Homes",
       "community": "Everly",
+      "noSurvey": true
+    },
+    {
+      "builder": "John Cannon Homes",
+      "community": "Wellen Park Country Club",
       "noSurvey": true,
       "params": {
         "engine": "mpc_aggregator",
         "source": "wellenpark",
-        "url": "https://wellenpark.com/builder/lee-wheterington-homes/"
+        "url": "https://wellenpark.com/builder/john-cannon-homes/",
+        "neighborhood": "wellen-park-golf-country-club"
       }
     }
   ]

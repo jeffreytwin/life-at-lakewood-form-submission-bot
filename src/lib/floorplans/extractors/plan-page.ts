@@ -587,7 +587,12 @@ export function drawingsNamed(html: string, pageUrl: string, planNames: (string 
       continue;
     }
     const file = wordsOf((parts.pop() ?? "").replace(/\.[a-z0-9]+$/i, ""));
-    const said = [...file, ...parts.flatMap(wordsOf)];
+    // The file and the folder it sits in, not the folders above: KB keeps
+    // a plan's photos under ".../floor-plan/interior-images/…" and its
+    // cameos under ".../floor-plan/cameos/…", and Creekside's Plan 1707
+    // had its great room and owner's suite taken for its drawings (Jeff,
+    // 2026-09-25). Homes by Towne's ".../uploads/floorplan/…-fp-…" still says so.
+    const said = [...file, ...wordsOf(parts.pop() ?? "")];
     const saysDrawing = said.some((w, i) => DRAWING_WORD.test(w) || (w === "floor" && /^plans?$/.test(said[i + 1] ?? "")));
     if (!saysDrawing) continue;
     const forThisPlan = names.some((words) => words.every((w) => file.includes(w)) || file.includes(words.join("")));

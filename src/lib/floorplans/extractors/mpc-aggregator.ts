@@ -379,6 +379,9 @@ export function readSitePlanPage(html: string): { photos: string[]; drawings: st
         // WordPress's smaller copies of a picture already listed whole.
         .filter((u) => !/-\d{2,4}x\d{2,4}\.(?:jpe?g|png|webp)$/i.test(u))
         .filter((u) => !/logo|icon|badge|placeholder|hotel-ph/i.test(u))
+        // Nor the pages of a sales brochure: Sand Dollar's page shows its
+        // "4-pager" among the photos (2026-09-25).
+        .filter((u) => !/\d-pager|brochure|flyer/i.test(u.split("/").pop() ?? ""))
     ),
   ];
   const drawing = (u: string) => /floor[\s_-]*plan|floorplan|\bplan[\s_-]*\d|blueprint/i.test(u.split("/").pop() ?? "");
