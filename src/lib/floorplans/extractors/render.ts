@@ -218,8 +218,8 @@ const NOT_PICTURES = "(tour|video|map|matterport|3-? ?d|film|walk-?through|floor
 /** And what it calls the button that draws the rest of a gallery. */
 const MORE_LABELS = ["load more", "view more", "show more", "see more", "load all", "view all", "see all"];
 
-/** How long the whole unfolding may take, per page. */
-const GALLERY_MS = 25_000;
+/** How long the whole unfolding may take, per page: a tab that is slow to answer is waited on, and pressed again. */
+const GALLERY_MS = 35_000;
 
 /**
  * Unfold a page's galleries: press the tabs that hold photographs, press
@@ -285,12 +285,48 @@ async function openGalleries(page: Page): Promise<number> {
         return Boolean(label) && wanted.has(label) && !notPictures.test(label);
       });
 
+      /**
+       * Press a tab and wait for what it shows: until the pictures it
+       * counts ("Interiors (13)") are there, or until new ones stop
+       * arriving. A page answers a press from its server, and slower
+       * the more pages are open: Richmond's Fraser was read with its
+       * one rendering and none of its thirteen interiors, pressed and
+       * passed over in a second and a half (Jeff, 2026-09-25). A press
+       * that shows nothing new is made once more — one made before the
+       * page was listening does nothing.
+       */
+      const pressAndWait = async (tab: Element, box: Element) => {
+        const counted = Number((tab.textContent ?? "").match(/\((\d+)\)\s*$/)?.[1] ?? NaN);
+        for (let press = 0; press < 2 && Date.now() < until; press++) {
+          const before = new Set(pictures(box).map((p) => p.src));
+          (tab as HTMLElement).click();
+          // Long enough for a slow answer where one is owed: the tab
+          // counts pictures, or its gallery shows none yet. A tab that
+          // was already showing its pictures has nothing new to show.
+          const owed = Number.isFinite(counted) || before.size === 0;
+          const waitUntil = Math.min(until, Date.now() + (owed ? 8_000 : 2_500));
+          let seen = -1;
+          let steady = 0;
+          while (Date.now() < waitUntil) {
+            await sleep(300);
+            const now = pictures(box);
+            const fresh = now.some((p) => !before.has(p.src));
+            steady = now.length === seen ? steady + 1 : 0;
+            seen = now.length;
+            if (fresh && ((Number.isFinite(counted) && now.length >= counted) || steady >= 3)) break;
+          }
+          // What is still behind a "Load more" is drawn after (drawTheRest).
+          const shown = pictures(box);
+          if (shown.some((p) => !before.has(p.src))) return;
+          if (Number.isFinite(counted) ? shown.length >= counted : shown.length > 0) return;
+        }
+      };
+
       const gathered = new Map<Element, Map<string, { src: string; alt: string }>>();
       for (const tab of tabs) {
         if (Date.now() > until) break;
         const box = boxOf(tab);
-        (tab as HTMLElement).click();
-        await sleep(1_500);
+        await pressAndWait(tab, box);
         await drawTheRest(box);
         const found = gathered.get(box) ?? new Map();
         for (const picture of pictures(box)) if (!found.has(picture.src)) found.set(picture.src, picture);

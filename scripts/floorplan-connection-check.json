@@ -1,9 +1,9 @@
 {
   "concurrency": 2,
   "detailPlans": 1,
-  "detailNames": ["11898 Mandala Ct", "11925 Mandala Ct"],
+  "detailNames": ["Fraser", "Palm", "Pine", "Tourmaline", "Ammolite"],
   "duplicates": [],
   "checks": [
-    { "builder": "Mattamy Homes", "community": "Sunstone", "noSurvey": true }
+    { "builder": "Richmond American Homes", "community": "Estates at Rivers Edge", "noSurvey": true }
   ]
 }
