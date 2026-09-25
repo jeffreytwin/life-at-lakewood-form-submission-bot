@@ -1,11 +1,12 @@
 {
   "anatomy": [
-    "fresh https://nealsignaturehomes.com/waterbury-park",
-    "fresh https://nealsignaturehomes.com/waterbury-park/palm-bay-2/",
-    "fresh https://nealsignaturehomes.com/waterbury-park/kingfisher-2/",
-    "https://nealsignaturehomes.com/waterbury-park/seaside-2/",
-    "fresh https://nealsignaturehomes.com/waterbury-park/seaside-2/",
-    "https://www.mihomes.com/new-homes/florida/sarasota-metro/venice/palmera-at-wellen-park"
+    "https://nealsignaturehomes.com/waterbury-park",
+    "clean https://nealsignaturehomes.com/waterbury-park/palm-bay-2/",
+    "clean https://nealsignaturehomes.com/waterbury-park/kingfisher-2/",
+    "relaunch https://nealsignaturehomes.com/waterbury-park/seaside-2/",
+    "relaunch https://nealsignaturehomes.com/waterbury-park/monterey-2/",
+    "https://planviewer.cpsusa.com/nealsh/floorplan/2056774?hideheader=true&elevations=false",
+    "https://www.mihomes.com/new-homes/florida/sarasota-metro/communities"
   ],
   "concurrency": 2,
   "detailPlans": 2,

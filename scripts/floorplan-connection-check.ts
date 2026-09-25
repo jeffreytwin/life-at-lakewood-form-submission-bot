@@ -54,7 +54,7 @@ interface Target {
 }
 
 interface Config {
-  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed; "<url> click <selector>" opens a tab first; "fresh <url>" uses a browser session of its own. */
+  /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed; "<url> click <selector>" opens a tab first; "clean <url>" clears cookies first, "relaunch <url>" starts a new browser. */
   anatomy?: string[];
   /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
   raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
@@ -538,18 +538,28 @@ async function anatomy(url: string): Promise<string> {
   const feed = url.match(/^(json|POST)\s+(\S+)$/i);
   if (feed) return jsonAnatomy(feed[2], feed[1] === "POST" ? "POST" : "GET").catch((e) => `could not read ${feed[2]}: ${e instanceof Error ? e.message : String(e)}`);
   if (/\/api\/|\.json(?:\?|$)/i.test(url)) return jsonAnatomy(url).catch((e) => `could not read ${url}: ${e instanceof Error ? e.message : String(e)}`);
-  // A tab to open before looking: what a page loads only when a visitor
-  // asks for it (Wellen Park's "Virtual Tour", 2026-09-24).
-  // "fresh <url>": in a browser session of its own, with none of the
-  // cookies the pages before it left (Neal Signature's bot check lets a
-  // first visit through and stops the next, 2026-09-24).
-  const fresh = /^fresh\s+/i.test(url);
-  const [, address, tab] = url.replace(/^fresh\s+/i, "").match(/^(\S+)(?:\s+click\s+(.+))?$/) ?? [null, url, undefined];
+  // "<url> click <selector>": a tab opened before looking, for what a page
+  // loads only when a visitor asks (Wellen Park's "Virtual Tour",
+  // 2026-09-24). "clean <url>": with the cookies and storage the pages before it left
+  // cleared; "relaunch <url>": in a browser started for it. Neal
+  // Signature's bot check lets a browser's first visit through and stops
+  // the next (2026-09-24), and the serverless Chromium opens no second
+  // session.
+  const [, how] = url.match(/^(clean|relaunch)\s+/i) ?? [];
+  const [, address, tab] = url.replace(/^(?:clean|relaunch)\s+/i, "").match(/^(\S+)(?:\s+click\s+(.+))?$/) ?? [null, url, undefined];
   url = address ?? url;
   let page: Page | null = null;
-  const context = fresh ? await (await surveyBrowser()).createBrowserContext() : null;
   try {
-    page = context ? await context.newPage() : await (await surveyBrowser()).newPage();
+    if (how === "relaunch" && browser) {
+      await browser.close().catch(() => {});
+      browser = null;
+    }
+    page = await (await surveyBrowser()).newPage();
+    if (how === "clean") {
+      const cdp = await page.createCDPSession();
+      await cdp.send("Network.clearBrowserCookies");
+      await cdp.send("Storage.clearDataForOrigin", { origin: new URL(url).origin, storageTypes: "all" });
+    }
     await page.setUserAgent(UA);
     await page.setViewport({ width: 1440, height: 2000 });
     // The data a page asks for after it loads: where a builder keeps its
@@ -603,7 +613,6 @@ async function anatomy(url: string): Promise<string> {
     return `could not open ${url}: ${error instanceof Error ? error.message : String(error)}`;
   } finally {
     await page?.close().catch(() => {});
-    await context?.close().catch(() => {});
   }
 }
 
