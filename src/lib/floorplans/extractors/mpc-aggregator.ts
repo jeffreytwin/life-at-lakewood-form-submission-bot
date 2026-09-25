@@ -82,6 +82,69 @@ const num = (s: string | undefined): number | null => {
 };
 
 /**
+ * The builder a card names: Wellen Park's home search writes it as
+ * data-builder-name, a builder's own page there as data-builder
+ * (wellenpark.com/builder/lee-wheterington-homes, 2026-09-25).
+ */
+const builderOf = (card: Card): string | null => card.attrs["builder-name"] ?? card.attrs.builder ?? null;
+
+/**
+ * One card of Lakewood Ranch's home finder, which draws its own: a
+ * "hotel" block with the picture as its background, the plan's name and
+ * "Homes From $1,368,000" as headings, the beds, baths, garage and size
+ * over the picture, and the village and builder spelled out
+ * (lakewoodranch.com/home-finder/?build[]=34708, Lee Wetherington; Jeff
+ * 2026-09-25). Pure; exported for tests.
+ */
+export function parseHotelCards(html: string, origin: string): { plan: NormalizedPlan; village: string; builder: string }[] {
+  const out: { plan: NormalizedPlan; village: string; builder: string }[] = [];
+  const blocks = html.split(/<div class="hotel\b[^"]*">/i).slice(1);
+  for (const raw of blocks) {
+    const block = raw.split(/<div class="hotel\b[^"]*">/i)[0];
+    const name = stripTags(block.match(/<h4 class="[^"]*\bcoral\b[^"]*">([\s\S]*?)<\/h4>/i)?.[1] ?? "").replace(/&#8217;/g, "'");
+    if (!name) continue;
+    const said = (label: string) =>
+      stripTags(block.match(new RegExp(`<strong>\\s*${label}:\\s*</strong>([\\s\\S]*?)</p>`, "i"))?.[1] ?? "")
+        .replace(/&#8211;|&ndash;/g, "–")
+        .replace(/&#8217;/g, "'");
+    const item = (cls: string) => stripTags(block.match(new RegExp(`<li class="${cls}\\b[^"]*">([\\s\\S]*?)</li>`, "i"))?.[1] ?? "");
+    const priceText = stripTags(block.match(/<h4 class="[^"]*\bdark-grey\b[^"]*">([\s\S]*?)<\/h4>/i)?.[1] ?? "");
+    const price = num(priceText);
+    const kinds = stripTags(block.match(/<p class="subhead[^"]*">([\s\S]*?)<\/p>/i)?.[1] ?? "").split(/\s*,\s*/).filter(Boolean);
+    const picture = block.match(/background-image:\s*url\(([^)]+)\)/i)?.[1]?.replace(/^['"]|['"]$/g, "") ?? null;
+    const link = block.match(/<a class="full-link" href="([^"]+)"/i)?.[1] ?? null;
+    const beds = num(item("bed"));
+    const baths = num(item("bath"));
+    const garage = num(item("garages"));
+    const sqft = num(item("sf"));
+    // A home already built is named for its address, and says it can be moved into.
+    const quickMoveIn = /^\d+\s+\S/.test(name) || kinds.some((k) => /move[\s-]*in/i.test(k));
+    out.push({
+      village: said("Village"),
+      builder: said("Builder"),
+      plan: {
+        planKey: normKey(name),
+        name,
+        price,
+        priceDisplay: price ? "$" + price.toLocaleString("en-US") : null,
+        beds: beds != null ? String(beds) : "",
+        baths: baths != null ? String(baths) : "",
+        sqft,
+        garages: garage ? `${garage} car` : null,
+        homeType: kinds.map((k) => standardHomeType(k)).find(Boolean) ?? mpcHomeType(kinds[kinds.length - 1] ?? null),
+        quickMoveIn,
+        comingSoon: false,
+        sourceUrl: link ? new URL(link, origin).href : null,
+        galleryImages: picture ? [new URL(picture, origin).href] : [],
+        blueprintImages: [],
+        raw: { relatedPlan: quickMoveIn ? null : name, village: said("Village") || null },
+      },
+    });
+  }
+  return out;
+}
+
+/**
  * The site's home type for what the aggregator calls a home. Wellen Park
  * files M/I's Palm, Sabal, Foxtail and Bismark as "Multi-Family", and the
  * site carries every one of them as a townhome (2026-09-23).
@@ -123,7 +186,7 @@ export function normalizeCard(card: Card): NormalizedPlan | null {
     raw: {
       mpcHomeId: attrs.home_id ?? null,
       neighborhood: attrs.neighborhood ?? null,
-      builderSlug: attrs["builder-name"] ?? null,
+      builderSlug: builderOf(card),
       stories: attrs.stories ?? null,
       is55: attrs.is55 === "true",
       // For QMIs the plan name isn't in the card; the address is the identity.
@@ -272,6 +335,62 @@ async function withDetailPage(plan: NormalizedPlan, origin: string): Promise<Nor
   }
 }
 
+/**
+ * What a plan's page on Lakewood Ranch's own site adds to its card: the
+ * pictures WordPress keeps for it (…/wp-content/uploads/…), the drawings
+ * among them by name, and a Matterport where one is embedded. Only the
+ * part of the page about the plan is read — from its heading to the
+ * footer — and the site's own furniture (logos, icons) is left out. A page
+ * that will not load leaves the card as it was.
+ */
+async function withSitePage(plan: NormalizedPlan): Promise<NormalizedPlan> {
+  if (!plan.sourceUrl) return plan;
+  try {
+    const res = await fetch(plan.sourceUrl, {
+      headers: { "user-agent": UA, accept: "text/html" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) throw new Error(`fetch ${plan.sourceUrl}: ${res.status}`);
+    const page = readSitePlanPage(await res.text());
+    const photos = [...plan.galleryImages, ...page.photos].filter((u, i, all) => all.indexOf(u) === i);
+    return {
+      ...plan,
+      galleryImages: photos,
+      blueprintImages: page.drawings.length ? page.drawings : plan.blueprintImages,
+      virtualTourUrl: plan.virtualTourUrl ?? page.tour,
+      description: plan.description ?? page.description,
+    };
+  } catch {
+    return { ...plan, pageUnread: true };
+  }
+}
+
+/** The pictures, drawings, tour and description of a plan's page on Lakewood Ranch's site. Pure; exported for tests. */
+export function readSitePlanPage(html: string): { photos: string[]; drawings: string[]; tour: string | null; description: string | null } {
+  const start = html.search(/<h1\b/i);
+  const rest = start >= 0 ? html.slice(start) : html;
+  const end = rest.search(/<footer\b/i);
+  const own = end > 0 ? rest.slice(0, end) : rest;
+  const pictures = [
+    ...new Set(
+      [...own.matchAll(/https?:\/\/(?:www\.)?lakewoodranch\.com\/wp-content\/uploads\/[^"'\s()<>]+?\.(?:jpe?g|png|webp)/gi)]
+        .map((m) => m[0])
+        // WordPress's smaller copies of a picture already listed whole.
+        .filter((u) => !/-\d{2,4}x\d{2,4}\.(?:jpe?g|png|webp)$/i.test(u))
+        .filter((u) => !/logo|icon|badge|placeholder|hotel-ph/i.test(u))
+    ),
+  ];
+  const drawing = (u: string) => /floor[\s_-]*plan|floorplan|\bplan[\s_-]*\d|blueprint/i.test(u.split("/").pop() ?? "");
+  const paragraph = own.match(/<div class="[^"]*\b(?:entry-content|content)\b[^"]*">[\s\S]*?<p>([\s\S]*?)<\/p>/i)?.[1];
+  return {
+    photos: pictures.filter((u) => !drawing(u)),
+    drawings: pictures.filter(drawing),
+    tour: own.match(MATTERPORT)?.[0] ?? null,
+    description: paragraph ? stripTags(paragraph).replace(/&#8217;/g, "'") || null : null,
+  };
+}
+
 function resolveBuilderSlug(builderName: string, override?: string): string | null {
   if (override) return override;
   if (BUILDER_SLUGS[builderName]) return BUILDER_SLUGS[builderName];
@@ -310,6 +429,23 @@ export async function extractMpcAggregator(params: {
   });
   if (!res.ok) throw new Error(`fetch ${listUrl}: ${res.status}`);
   const html = await res.text();
+  const origin = new URL(listUrl).origin;
+  // Lakewood Ranch draws its own cards: filtered by the builder and village
+  // they spell out, and read no further than the card (a plan's page there
+  // is the site's own, not the builder's listing).
+  const hotels = parseHotelCards(html, origin);
+  if (hotels.length) {
+    const village = (v: string) => normKey(v);
+    const wanted = normKey(params.communityName ?? "");
+    const seen = new Map<string, NormalizedPlan>();
+    for (const h of hotels) {
+      if (normKey(h.builder) !== builderSlug && !normKey(h.builder).includes(builderSlug)) continue;
+      const v = village(h.village);
+      if (wanted && v !== wanted && !(neighborhood && v.endsWith(neighborhood))) continue;
+      if (!seen.has(h.plan.planKey)) seen.set(h.plan.planKey, h.plan);
+    }
+    return mapLimit([...seen.values()], 4, (plan) => withSitePage(plan));
+  }
   const cards = parseCards(html);
   if (!cards.length) {
     throw new Error(
@@ -319,7 +455,7 @@ export async function extractMpcAggregator(params: {
 
   const byKey = new Map<string, NormalizedPlan>();
   for (const card of cards) {
-    if ((card.attrs["builder-name"] ?? "") !== builderSlug) continue;
+    if ((builderOf(card) ?? "") !== builderSlug) continue;
     if (neighborhood && (card.attrs.neighborhood ?? "") !== neighborhood) continue;
     const plan = normalizeCard(card);
     if (plan && !byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
