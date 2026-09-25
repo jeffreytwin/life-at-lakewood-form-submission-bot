@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { comparedFields, describeGallery, describeText, descriptionChanged, fieldChanges, galleryOf, mergeForUpdate, readsAsProse, tourChanged, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { comparedFields, describeGallery, describeText, descriptionChanged, fieldChanges, galleryOf, galleryRead, mergeForUpdate, readsAsProse, tourChanged, type CanonicalRecord } from "@/lib/floorplans/diff";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 const plan = (over: Partial<NormalizedPlan> = {}): NormalizedPlan => ({
@@ -256,5 +256,41 @@ describe("a rejected change does not ride along with an approved one (Jeff, 2026
     expect(comparedFields(plan(), plan())).toContain("description");
     expect(comparedFields(plan(), plan({ pageUnread: true }))).not.toContain("description");
     expect(comparedFields(plan({ userEditedFields: ["priceDisplay"] }), plan())).not.toContain("price");
+  });
+});
+
+describe("a gallery read only in part (Richmond's Fraser, Jeff 2026-09-25)", () => {
+  const fraser = Array.from({ length: 14 }, (_, i) => `https://cdn/fraser-${i}.webp`);
+  const current = plan({ galleryImages: fraser, galleryMeta: { [fraser[1]]: { room: "kitchen" } } });
+
+  it("does not propose taking down the pictures a run missed", () => {
+    const partial = plan({ galleryImages: [fraser[0]] });
+    expect(galleryRead(current, partial, "galleryImages")).toBe(false);
+    expect(fieldChanges(current, partial).map((c) => c.label)).not.toContain("photos");
+    expect(comparedFields(current, partial)).not.toContain("photos");
+    // Nor a run that found no pictures at all.
+    expect(fieldChanges(current, plan({ galleryImages: [] })).map((c) => c.label)).not.toContain("photos");
+  });
+
+  it("keeps the record's gallery when another change is approved", () => {
+    const partial = plan({ galleryImages: [fraser[0]], priceDisplay: "$819,995" });
+    const merged = mergeForUpdate(current, partial);
+    expect(merged.galleryImages).toEqual(fraser);
+    expect(merged.galleryMeta).toEqual(current.galleryMeta);
+    expect(merged.priceDisplay).toBe("$819,995");
+  });
+
+  it("still reads new pictures, a few dropped, or a new set as a change", () => {
+    expect(galleryRead(current, plan({ galleryImages: [...fraser, "https://cdn/new.webp"] }), "galleryImages")).toBe(true);
+    expect(galleryRead(current, plan({ galleryImages: fraser.slice(0, 12) }), "galleryImages")).toBe(true);
+    expect(galleryRead(current, plan({ galleryImages: ["https://cdn/replaced.webp"] }), "galleryImages")).toBe(true);
+    expect(fieldChanges(current, plan({ galleryImages: ["https://cdn/replaced.webp"] })).map((c) => c.label)).toContain("photos");
+  });
+
+  it("keeps what only the plan's page says when that page went unread", () => {
+    const unread = plan({ pageUnread: true, garages: null, galleryImages: [fraser[0]], priceDisplay: "$819,995" });
+    const merged = mergeForUpdate(plan({ galleryImages: fraser, garages: "2 car" }), unread);
+    expect(merged.garages).toBe("2 car");
+    expect(merged.galleryImages).toEqual(fraser);
   });
 });

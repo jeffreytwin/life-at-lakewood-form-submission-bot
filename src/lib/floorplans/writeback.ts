@@ -33,6 +33,7 @@ import {
   type WixDataItem,
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
+import { checkFlagsAfterWrite } from "@/lib/floorplans/qmi-flags";
 import { virtualTourButtonFor } from "@/lib/floorplans/site-assets";
 import { alertIfTracked, basePlanOf, planRow, type CampaignTaskType } from "@/lib/floorplans/campaign";
 import { fieldChangeDetail, homeChangeDetail } from "@/lib/floorplans/campaign-text";
@@ -728,7 +729,7 @@ export async function applyPendingChange(changeId: string): Promise<{
   const { data: change, error: loadError } = await supabase
     .from("fp_pending_changes")
     .select(
-      "*, fp_sites:site_id(id, domain, wix_site_id, wix_collection_id, insert_publish_mode), fp_communities:community_id(id, name), fp_builders:builder_id(id, name)"
+      "*, fp_sites:site_id(id, name, domain, wix_site_id, wix_collection_id, insert_publish_mode), fp_communities:community_id(id, name), fp_builders:builder_id(id, name)"
     )
     .eq("id", changeId)
     .single();
@@ -768,6 +769,11 @@ export async function applyPendingChange(changeId: string): Promise<{
       const base = await basePlanOf(scope, rec?.relatedPlanKey ?? own?.record?.relatedPlanKey ?? null);
       await alertIfTracked(base, "other_change", homeDetail ?? detail, change.id);
     }
+
+    // The floor plans' quick move-in flags, recounted for this builder and
+    // community now that a row has changed (qmi-flags.ts): approving a
+    // quick move-in used to leave its floor plan's flag as it was.
+    const recountFlags = () => checkFlagsAfterWrite(site, builder.name, community.name);
 
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
@@ -817,6 +823,7 @@ export async function applyPendingChange(changeId: string): Promise<{
           rec
         );
       }
+      await recountFlags();
       return { status: newStatus };
     }
 
@@ -857,6 +864,7 @@ export async function applyPendingChange(changeId: string): Promise<{
         rec,
         homeChangeDetail(rec.name, rec.relatedPlanName, `${change.field_changed ?? "updated"} ${change.old_value ?? "—"} → ${change.new_value ?? "—"}`)
       );
+      await recountFlags();
       return { status: updateStatus };
     }
 
@@ -886,6 +894,7 @@ export async function applyPendingChange(changeId: string): Promise<{
         null,
         homeChangeDetail(gone?.name ?? change.plan_key, gone?.record?.relatedPlanName, "no longer offered")
       );
+      await recountFlags();
       return { status: "synced" };
     }
 

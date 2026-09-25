@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { clearConnection } from "@/lib/floorplans/connection-clear";
+import { runIsGoing } from "@/lib/floorplans/runs";
 import { describeError } from "@/lib/shared/describe-error";
 
 export const dynamic = "force-dynamic";
@@ -123,6 +124,10 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
+    // A run going on in the background would queue its changes again after the remove.
+    if (await runIsGoing(id)) {
+      return NextResponse.json({ error: "This connection is running; remove it once the run has finished." }, { status: 409 });
+    }
     const outcome = await clearConnection(id);
     if (!outcome.ok) return NextResponse.json({ error: outcome.error }, { status: outcome.status });
     const { error } = await supabase.from("fp_builder_communities").delete().eq("id", id);

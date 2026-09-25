@@ -9,7 +9,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("fp_builders")
       .select(
-        "id, name, base_url, extraction_method, audit_notes, active, engine_config, fp_builder_communities(id, active, last_run_at, last_run_status, last_plan_count, consecutive_failures, attention_dismissed_at, extractor_params, fp_communities:community_id(name, fp_sites:site_id(domain)))"
+        "id, name, base_url, extraction_method, audit_notes, active, engine_config, fp_builder_communities(id, active, run_started_at, last_run_at, last_run_status, last_plan_count, consecutive_failures, attention_dismissed_at, extractor_params, fp_communities:community_id(name, fp_sites:site_id(domain)))"
       )
       .order("name");
     if (error) throw error;

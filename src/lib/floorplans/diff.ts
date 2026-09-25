@@ -11,7 +11,12 @@ import { asTour } from "@/lib/floorplans/standardize";
 /** Canonical records written by the first slice carry the main image here instead of in galleryImages. */
 export type CanonicalRecord = NormalizedPlan & { primaryImage?: string | null };
 
-/** Scalar fields diffed for updates: record key -> label shown in the review queue. */
+/**
+ * Scalar fields diffed for updates: record key -> label shown in the review
+ * queue. Not whether a floor plan has quick move-ins: that is counted from
+ * the quick move-ins in Wix and kept without a review (qmi-flags.ts; Jeff,
+ * 2026-09-25).
+ */
 export const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
   ["priceDisplay", "price"],
   ["name", "name"],
@@ -21,7 +26,6 @@ export const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
   ["garages", "garages"],
   ["quickMoveIn", "quick move-in"],
   ["relatedPlanName", "base plan"],
-  ["hasQuickMoveIns", "quick move-ins available"],
   ["virtualTourUrl", "virtual tour"],
   ["description", "description"],
 ];
@@ -192,6 +196,28 @@ export function describeGallery(urls: string[], noun: string): string {
 const sameList = (a: string[], b: string[]): boolean => a.length === b.length && a.every((u, i) => u === b[i]);
 
 /**
+ * Whether a run read enough of a gallery to speak for it. It did not when
+ * it could not read the plan's own page, when it found none of the plan's
+ * pictures, or when it found only a part of what the record already has
+ * and nothing new: Richmond's Fraser came back with its one rendering and
+ * none of its thirteen interiors, whose tab the browser pressed before the
+ * page answered, and the queue proposed taking the thirteen down (Jeff,
+ * 2026-09-25). A builder that replaces its pictures shows new ones; one
+ * that only drops a few is still read as a change. Pure; exported for tests.
+ */
+export function galleryRead(current: CanonicalRecord, plan: NormalizedPlan, field: GalleryField): boolean {
+  if (plan.pageUnread === true) return false;
+  const before = galleryOf(current, field);
+  const after = galleryOf(plan, field);
+  if (!before.length) return true;
+  if (!after.length) return false;
+  const had = new Set(before);
+  const lost = before.length - after.length;
+  const onlyPart = after.every((u) => had.has(u)) && lost >= 3 && after.length * 2 <= before.length;
+  return !onlyPart;
+}
+
+/**
  * The record an approved update writes. The scrape wins for every field
  * except the ones a person edited in the Hub, which keep the edited value.
  * Before this the merge was {...current, ...plan}: the diff declined to
@@ -238,6 +264,25 @@ export function mergeForUpdate(
     merged.virtualTourUrl = current.virtualTourUrl ?? null;
     if ("virtualTourImage" in source) merged.virtualTourImage = current.virtualTourImage ?? null;
   }
+  // Nor what the run could not speak for (fieldChanges skips the same):
+  // a page it never read, or a gallery it read only part of. Approving
+  // another change wrote the list page's one picture over the gallery.
+  if (plan.pageUnread === true) {
+    for (const field of PAGE_ONLY_FIELDS) if (field in source && !overrides.has(field)) merged[field] = source[field];
+  }
+  for (const [field] of GALLERY_FIELDS) {
+    if (overrides.has(field) || galleryRead(current, plan, field)) continue;
+    merged[field] = galleryOf(current, field);
+    if (field === "galleryImages") {
+      for (const f of ["galleryMeta", "photosSorted", "copiesChecked"]) {
+        if (f in source) merged[f] = source[f];
+        else delete merged[f];
+      }
+    }
+  }
+  // Whether it has quick move-ins is what Wix holds under it, kept by the
+  // flag check (qmi-flags.ts), not what this run counted.
+  if (typeof current.hasQuickMoveIns === "boolean") merged.hasQuickMoveIns = current.hasQuickMoveIns;
   merged.userEditedFields = current.userEditedFields;
   return merged as unknown as NormalizedPlan;
 }
@@ -260,7 +305,7 @@ export function comparedFields(current: CanonicalRecord, plan: NormalizedPlan): 
     labels.push(label);
   }
   for (const [field, label] of GALLERY_FIELDS) {
-    if (overrides.has(field) || unread || (quickMoveIn && field === "blueprintImages")) continue;
+    if (overrides.has(field) || !galleryRead(current, plan, field) || (quickMoveIn && field === "blueprintImages")) continue;
     labels.push(label);
   }
   return labels;
@@ -302,7 +347,7 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
   }
   for (const [field, label] of GALLERY_FIELDS) {
     if (overrides.has(field)) continue;
-    if (unread) continue;
+    if (!galleryRead(current, plan, field)) continue;
     // A quick move-in shows one picture and no drawings.
     if (quickMoveIn && field === "blueprintImages") continue;
     const before = quickMoveIn ? galleryOf(current, field).slice(0, 1) : galleryOf(current, field);

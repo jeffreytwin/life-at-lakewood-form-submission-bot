@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   // External is not enough on its own: those binaries are brotli archives,
   // not code, so nothing imports them and the tracer leaves them behind —
   // the function then starts and finds no browser to run (Jeff,
-  // 2026-09-22). They are named here for the two routes that launch one,
+  // 2026-09-22). They are named here for the routes that launch one,
   // and nowhere else: they weigh 68MB. The run route is matched with a
   // wildcard rather than written out, because these keys are globs and a
   // dynamic segment's brackets read as a character class — "[id]" matches
@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/internal/floorplans/connections/*/run": ["./node_modules/@sparticuz/chromium/bin/**"],
     "/api/cron/floorplan-nightly": ["./node_modules/@sparticuz/chromium/bin/**"],
+    // Sync now works the first tick of its cycle itself (nightly.ts).
+    "/api/internal/floorplans/sync-now": ["./node_modules/@sparticuz/chromium/bin/**"],
   },
 };
 

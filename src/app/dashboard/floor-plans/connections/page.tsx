@@ -2,11 +2,14 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { HOME_TYPES } from "@/lib/floorplans/standardize";
+import { runGoing } from "@/lib/floorplans/run-state";
 import FloorPlanTabs from "../tabs";
 
 interface Connection {
   id: string;
   active: boolean;
+  /** Set while a run of this connection is going, wherever it was started (runs.ts). */
+  run_started_at: string | null;
   last_run_at: string | null;
   last_run_status: string | null;
   last_plan_count: number | null;
@@ -45,7 +48,38 @@ interface SyncSettings {
   fp_nightly_enabled: boolean;
   fp_nightly_hour: number;
   fp_digest_phone: string | null;
-  fp_nightly_state: { cycleDate?: string; completedAt?: string; ran?: number; failed?: number } | null;
+  fp_nightly_state: {
+    cycleDate?: string;
+    startedAt?: string;
+    completedAt?: string;
+    ran?: number;
+    failed?: number;
+    manual?: boolean;
+  } | null;
+  /** While a sync is going: the connections it still owes a run. */
+  fp_sync_owed?: number | null;
+}
+
+/** How often the page looks again while a run or a sync is going. */
+const FOLLOW_MS = 5_000;
+
+interface FlagEntry {
+  id?: string;
+  plan_name: string | null;
+  village: string | null;
+  builder: string | null;
+  action: string;
+  detail: string | null;
+  created_at: string;
+  fp_sites: { name: string | null } | null;
+}
+
+/** What the quick move-in flag check has done (qmi-flags.ts). */
+interface FlagLog {
+  checked: { site_id: string; detail: string | null; created_at: string; fp_sites: { name: string | null } | null }[];
+  fixes: FlagEntry[];
+  problems: FlagEntry[];
+  days: number;
 }
 
 export default function BuildersSettingsPage() {
@@ -57,6 +91,10 @@ export default function BuildersSettingsPage() {
   const [switching, setSwitching] = useState<Set<string>>(new Set());
   const [sync, setSync] = useState<SyncSettings | null>(null);
   const [savingSync, setSavingSync] = useState(false);
+  const [startingSync, setStartingSync] = useState(false);
+  const [flags, setFlags] = useState<FlagLog | null>(null);
+  const [flagsOpen, setFlagsOpen] = useState(false);
+  const [checkingFlags, setCheckingFlags] = useState(false);
 
   const fetchSync = useCallback(() => {
     fetch("/api/internal/floorplans/sync-settings")
@@ -71,6 +109,33 @@ export default function BuildersSettingsPage() {
     fetchSync();
   }, [fetchSync]);
 
+  const fetchFlags = useCallback(() => {
+    fetch("/api/internal/floorplans/qmi-flags")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.error) setFlags(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchFlags();
+  }, [fetchFlags]);
+
+  /** Checks every site's flags now; the page looks again as the check goes. */
+  async function checkFlagsNow() {
+    setCheckingFlags(true);
+    try {
+      await fetch("/api/internal/floorplans/qmi-flags", { method: "POST" });
+      for (const wait of [15_000, 30_000, 60_000]) {
+        await new Promise((done) => setTimeout(done, wait));
+        fetchFlags();
+      }
+    } finally {
+      setCheckingFlags(false);
+    }
+  }
+
   async function saveSync(updates: Partial<SyncSettings>) {
     if (!sync) return;
     setSavingSync(true);
@@ -81,9 +146,28 @@ export default function BuildersSettingsPage() {
         body: JSON.stringify(updates),
       });
       const data = await res.json();
-      if (data && !data.error) setSync(data);
+      if (data && !data.error) setSync((was) => ({ ...data, fp_sync_owed: was?.fp_sync_owed ?? null }));
     } finally {
       setSavingSync(false);
+    }
+  }
+
+  /**
+   * Runs every onboarded connection now, as the nightly sync does (Jeff,
+   * 2026-09-25). It goes on without this page; the page follows it.
+   */
+  async function syncNow() {
+    setStartingSync(true);
+    try {
+      const res = await fetch("/api/internal/floorplans/sync-now", { method: "POST" });
+      if (!res.ok && res.status !== 409) {
+        const body = await res.json().catch(() => null);
+        setError(body?.error ?? "The sync could not start");
+      }
+    } finally {
+      setStartingSync(false);
+      fetchSync();
+      fetchBuilders();
     }
   }
 
@@ -215,10 +299,19 @@ export default function BuildersSettingsPage() {
     fetchBuilders();
   }
 
+  /**
+   * Starts a run and leaves it to go on by itself: it keeps going if this
+   * page is closed, and the page follows it from the connection's mark
+   * (Jeff, 2026-09-25: "even if I leave the site").
+   */
   async function runConnection(c: Connection) {
     setRunning((s) => new Set(s).add(c.id));
     try {
-      await fetch(`/api/internal/floorplans/connections/${c.id}/run`, { method: "POST" });
+      const res = await fetch(`/api/internal/floorplans/connections/${c.id}/run`, { method: "POST" });
+      if (!res.ok && res.status !== 409) {
+        const body = await res.json().catch(() => null);
+        alert(`Run could not start: ${body?.error ?? res.status}`);
+      }
     } finally {
       setRunning((s) => {
         const next = new Set(s);
@@ -228,6 +321,21 @@ export default function BuildersSettingsPage() {
       fetchBuilders();
     }
   }
+
+  /** A run of this connection is going, started here or anywhere else. */
+  const isRunning = (c: Connection) => runGoing(c.run_started_at);
+  const syncGoing = Boolean(sync?.fp_nightly_state?.startedAt && !sync.fp_nightly_state.completedAt);
+  const anyRunning = builders.some((b) => b.fp_builder_communities.some(isRunning));
+
+  // While anything is going, look again every few seconds.
+  useEffect(() => {
+    if (!anyRunning && !syncGoing) return;
+    const timer = setInterval(() => {
+      fetchBuilders();
+      fetchSync();
+    }, FOLLOW_MS);
+    return () => clearInterval(timer);
+  }, [anyRunning, syncGoing, fetchBuilders, fetchSync]);
 
   /**
    * Deletes a connection for good, the way a sold-out neighborhood leaves
@@ -293,6 +401,8 @@ export default function BuildersSettingsPage() {
   function health(b: Builder) {
     if (!b.active) return { label: "Paused", cls: "badge-muted" };
     if (!b.extraction_method) return { label: "Needs setup", cls: "badge-warning" };
+    const going = b.fp_builder_communities.filter(isRunning).length;
+    if (going) return { label: going === 1 ? "Running…" : `${going} running…`, cls: "badge-info" };
     const fails = b.fp_builder_communities.reduce((m, c) => Math.max(m, c.consecutive_failures), 0);
     if (fails >= 2) return { label: `${fails} failures`, cls: "badge-danger" };
     const ran = b.fp_builder_communities.some((c) => c.last_run_at);
@@ -356,18 +466,100 @@ export default function BuildersSettingsPage() {
                 }}
               />
             </label>
-            {sync.fp_nightly_state?.cycleDate && (
+            <button
+              className="btn btn-primary"
+              style={{ padding: "4px 14px" }}
+              disabled={startingSync || syncGoing}
+              onClick={syncNow}
+              title="Run every onboarded connection now, as the nightly sync does. It keeps going if you leave this page."
+            >
+              {startingSync ? "Starting…" : syncGoing ? "Syncing…" : "Sync now"}
+            </button>
+            {syncGoing ? (
               <span className="text-muted text-sm">
-                Last cycle {sync.fp_nightly_state.cycleDate}: ran {sync.fp_nightly_state.ran ?? 0}
-                {sync.fp_nightly_state.failed ? `, ${sync.fp_nightly_state.failed} failed` : ""}
-                {sync.fp_nightly_state.completedAt ? " ✓" : " (in progress)"}
+                {sync.fp_nightly_state?.manual ? "Sync started " : "Nightly sync started "}
+                {new Date(sync.fp_nightly_state!.startedAt!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}: ran{" "}
+                {sync.fp_nightly_state?.ran ?? 0}
+                {sync.fp_nightly_state?.failed ? ` (${sync.fp_nightly_state.failed} failed)` : ""}
+                {sync.fp_sync_owed != null ? `, ${sync.fp_sync_owed} to go` : ""}
               </span>
+            ) : (
+              sync.fp_nightly_state?.cycleDate && (
+                <span className="text-muted text-sm">
+                  Last {sync.fp_nightly_state.manual ? "sync" : "cycle"} {sync.fp_nightly_state.cycleDate}: ran{" "}
+                  {sync.fp_nightly_state.ran ?? 0}
+                  {sync.fp_nightly_state.failed ? `, ${sync.fp_nightly_state.failed} failed` : ""} ✓
+                </span>
+              )
             )}
           </div>
           <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>
-            The nightly run only covers connections that have completed at least one
-            successful manual Run — onboard each builder by hand first.
+            The nightly sync and Sync now cover the connections that have completed at least
+            one successful manual Run — onboard each builder by hand first. A sync or a Run
+            keeps going if you leave this page.
           </p>
+        </div>
+      )}
+
+      {flags && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+            <strong>Quick move-in flags</strong>
+            <span className="text-muted text-sm">
+              {flags.checked.length
+                ? `Last checked ${new Date(
+                    flags.checked.map((c) => c.created_at).sort().pop()!
+                  ).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`
+                : "Not checked yet"}
+              {" · "}
+              {flags.fixes.length} fixed in the last {flags.days} days
+              {" · "}
+              {flags.problems.length} to look at
+            </span>
+            <button className="btn btn-secondary" style={{ padding: "2px 10px" }} disabled={checkingFlags} onClick={checkFlagsNow}>
+              {checkingFlags ? "Checking…" : "Check now"}
+            </button>
+            {(flags.fixes.length > 0 || flags.problems.length > 0) && (
+              <button className="btn btn-secondary" style={{ padding: "2px 10px" }} onClick={() => setFlagsOpen((o) => !o)}>
+                {flagsOpen ? "Hide details" : "Show details"}
+              </button>
+            )}
+          </div>
+          <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>
+            A floor plan&apos;s &quot;quick move-ins available&quot; flag, banner, badge and dot are set from the
+            published quick move-ins filed under it in Wix — right after every approved change, and four times a
+            day for every row — without a review.
+          </p>
+          {flagsOpen && (
+            <div style={{ marginTop: 12 }}>
+              {flags.problems.length > 0 && (
+                <>
+                  <div className="text-sm" style={{ fontWeight: 600, marginBottom: 4 }}>To look at</div>
+                  <ul className="text-sm" style={{ margin: "0 0 12px", paddingLeft: 18 }}>
+                    {flags.problems.map((p, i) => (
+                      <li key={p.id ?? i}>
+                        {p.fp_sites?.name} · {p.builder} · {p.village} · <strong>{p.plan_name}</strong>: {p.detail}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {flags.fixes.length > 0 && (
+                <>
+                  <div className="text-sm" style={{ fontWeight: 600, marginBottom: 4 }}>Fixed</div>
+                  <ul className="text-sm" style={{ margin: 0, paddingLeft: 18 }}>
+                    {flags.fixes.map((f, i) => (
+                      <li key={f.id ?? i}>
+                        {new Date(f.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}{" "}
+                        · {f.fp_sites?.name} · {f.builder} · {f.village} · <strong>{f.plan_name}</strong>:{" "}
+                        {f.action === "set" ? "now shows quick move-ins" : "no longer shows quick move-ins"} ({f.detail})
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -588,7 +780,11 @@ export default function BuildersSettingsPage() {
                               {c.last_plan_count != null ? `${c.last_plan_count} plans` : "—"}
                             </td>
                             <td className="text-muted text-sm">
-                              {c.consecutive_failures > 0 ? `${c.consecutive_failures} consecutive failures` : c.last_run_status ?? "—"}
+                              {isRunning(c)
+                                ? `running since ${new Date(c.run_started_at!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                                : c.consecutive_failures > 0
+                                  ? `${c.consecutive_failures} consecutive failures`
+                                  : c.last_run_status ?? "—"}
                             </td>
                             <td></td>
                             <td className="text-muted text-sm">
@@ -600,9 +796,9 @@ export default function BuildersSettingsPage() {
                                   className="btn btn-primary"
                                   style={{ padding: "2px 10px" }}
                                   onClick={() => runConnection(c)}
-                                  disabled={!b.active || !c.active || running.has(c.id)}
+                                  disabled={!b.active || !c.active || running.has(c.id) || isRunning(c)}
                                 >
-                                  {running.has(c.id) ? "Running…" : "Run"}
+                                  {running.has(c.id) || isRunning(c) ? "Running…" : "Run"}
                                 </button>
                                 <button
                                   className="btn btn-secondary"
@@ -617,7 +813,7 @@ export default function BuildersSettingsPage() {
                                   style={{ padding: "2px 10px" }}
                                   title="Remove every plan this connection has put in Floor Plans V2 and the Hub, and start over"
                                   onClick={() => resetConnection(b, c)}
-                                  disabled={running.has(c.id)}
+                                  disabled={running.has(c.id) || isRunning(c)}
                                 >
                                   Reset
                                 </button>
@@ -626,7 +822,7 @@ export default function BuildersSettingsPage() {
                                   style={{ padding: "2px 10px" }}
                                   title="Remove this connection for good: its plans leave the site and the Hub, then the connection goes (a sold-out neighborhood)"
                                   onClick={() => removeConnection(b, c)}
-                                  disabled={running.has(c.id)}
+                                  disabled={running.has(c.id) || isRunning(c)}
                                 >
                                   Remove
                                 </button>

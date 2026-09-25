@@ -1,9 +1,7 @@
 {
+  "qmiFlags": true,
   "concurrency": 2,
   "detailPlans": 1,
-  "detailNames": ["11898 Mandala Ct", "11925 Mandala Ct"],
   "duplicates": [],
-  "checks": [
-    { "builder": "Mattamy Homes", "community": "Sunstone", "noSurvey": true }
-  ]
+  "checks": []
 }
