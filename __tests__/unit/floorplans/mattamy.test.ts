@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { plansFromSearchData, normalizeMattamyCard, readPlanLayout, tourAddress } from "@/lib/floorplans/extractors/mattamy";
+import { ledByHome, normalizeMattamyCard, plansFromSearchData, readPlanLayout, tourAddress } from "@/lib/floorplans/extractors/mattamy";
 import { standardHomeType } from "@/lib/floorplans/standardize";
 
 // Real /search-data layout-service payload captured in round-7 discovery
@@ -193,5 +193,33 @@ describe("readPlanLayout (Mattamy plan pages, Anclote at Sunstone, 2026-09-23)",
 
   it("gives nothing for a layout it cannot read", () => {
     expect(readPlanLayout(null)).toMatchObject({ photos: [], drawings: [], homeType: null });
+  });
+});
+
+describe("a Mattamy home's pictures lead with the house itself (11898 Mandala Ct, Jeff, 2026-09-25)", () => {
+  const cdn = (name: string) => `https://prodmh.b-cdn.net//dfsmedia/a2/${name}`;
+  const porch = cdn("42164-50420/tpa-sunstone-anclote-ownersentry-jpg");
+  const kitchen = cdn("42159-50420/tpa-sunstone-anclote-kitchen1-jpg");
+  const home = cdn("42142-50420/tpa-sunstone-villa-anclote-topsail-craftsman-jpg");
+  const meta = {
+    [porch]: { kind: "primary" as const, room: "primary" as const, caption: "Front Porch" },
+    [kitchen]: { kind: "photo" as const, room: "kitchen" as const, caption: "Kitchen" },
+    [home]: { kind: "exterior" as const, room: "exterior" as const, caption: "Topsail Craftsman" },
+  };
+
+  it("leads with the home's one exterior style, and puts the model's porch back among the photos", () => {
+    // The card shows the model's porch too.
+    const led = ledByHome(porch, [porch, kitchen, home], meta);
+    expect(led.photos).toEqual([home, porch, kitchen]);
+    expect(led.meta[home]).toMatchObject({ kind: "primary", room: "primary", caption: "Topsail Craftsman" });
+    expect(led.meta[porch]).toMatchObject({ kind: "photo", room: null, caption: "Front Porch" });
+  });
+
+  it("leaves the card's picture to lead where the page names several styles, or none", () => {
+    const other = cdn("42143-50420/tpa-sunstone-villa-anclote-topsail-coastal-jpg");
+    const both = { ...meta, [other]: { kind: "exterior" as const, room: "exterior" as const, caption: "Coastal" } };
+    expect(ledByHome(porch, [porch, kitchen, home, other], both).photos[0]).toBe(porch);
+    expect(ledByHome(cdn("card.jpg"), [porch, kitchen], meta).photos).toEqual([cdn("card.jpg"), porch, kitchen]);
+    expect(ledByHome(undefined, [porch, kitchen], meta).photos).toEqual([porch, kitchen]);
   });
 });

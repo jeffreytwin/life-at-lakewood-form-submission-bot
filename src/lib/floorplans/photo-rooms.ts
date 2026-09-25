@@ -268,7 +268,13 @@ export function withLookedAtRooms(plan: NormalizedPlan, looked: Map<string, Phot
   const seenFront = urls.some((url) => looked.get(url) === "front");
   const presumed = (url: string) => {
     const label = labelFromMeta(plan.galleryMeta?.[url]);
-    return label === "front" && seenFront ? null : label;
+    if (label === "front" && seenFront) return null;
+    // The builder's own lead, not looked at yet, keeps the lead until it
+    // is: Meritage gave 7733 Satterfield Ter a new front photo, and ordered
+    // among photos already looked at, the one not yet seen went to the
+    // back and the kitchen led the home (Jeff, 2026-09-25).
+    if (!label && url === urls[0] && !seenFront && looked.get(url) == null) return "front";
+    return label;
   };
   const labels = new Map(urls.map((url) => [url, looked.get(url) ?? presumed(url)] as const));
   const ordered = sortByRooms(urls, labels);

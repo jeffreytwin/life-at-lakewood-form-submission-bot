@@ -255,24 +255,30 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 }
 
 /**
- * A home's pictures led by the one its card shows. A home's page leads
- * with the model's own picture — 11898 Mandala Ct's with the Anclote
- * model's front porch, a house elsewhere — and files the rendering of the
- * home itself among the exterior styles at the end; the card shows the
- * home (Jeff, 2026-09-25). The page's lead goes back among the photos for
- * the sorter to place. Pure; exported for tests.
+ * A home's pictures led by the house itself. A home's page leads with the
+ * model's picture — 11898 Mandala Ct's, like its card, with the Anclote
+ * model's front porch, a house at another address — and files the
+ * rendering of the home itself, its one exterior style ("Topsail
+ * Craftsman"), at the end (Jeff, 2026-09-25). A page that names one
+ * exterior style is naming this home's; one that names several, or none,
+ * leaves the card's picture to lead. The page's lead goes back among the
+ * photos for the sorter to place. Pure; exported for tests.
  */
-export function ledByCard(
+export function ledByHome(
   card: string | undefined,
   photos: string[],
   meta: Record<string, GalleryMeta>
 ): { photos: string[]; meta: Record<string, GalleryMeta> } {
-  if (!card || !photos.length) return { photos, meta };
-  const lead = { ...meta[card], kind: "primary" as const, room: "primary" as const };
+  const styles = photos.filter((u) => meta[u]?.kind === "exterior");
+  const lead = styles.length === 1 ? styles[0] : card;
+  if (!lead || !photos.length) return { photos, meta };
   const demoted = Object.fromEntries(
-    Object.entries(meta).map(([src, m]) => [src, src !== card && m.kind === "primary" ? { ...m, kind: "photo" as const, room: null } : m])
+    Object.entries(meta).map(([src, m]) => [src, src !== lead && m.kind === "primary" ? { ...m, kind: "photo" as const, room: null } : m])
   );
-  return { photos: [card, ...photos.filter((u) => u !== card)], meta: { ...demoted, [card]: lead } };
+  return {
+    photos: [lead, ...photos.filter((u) => u !== lead)],
+    meta: { ...demoted, [lead]: { ...meta[lead], kind: "primary" as const, room: "primary" as const } },
+  };
 }
 
 /**
@@ -292,7 +298,7 @@ async function withPlanLayout(plan: NormalizedPlan): Promise<NormalizedPlan> {
     );
     if (!res.ok) throw new Error(`layout ${path}: ${res.status}`);
     const page = readPlanLayout(await res.json());
-    const { photos, meta } = plan.quickMoveIn ? ledByCard(plan.galleryImages[0], page.photos, page.meta) : page;
+    const { photos, meta } = plan.quickMoveIn ? ledByHome(plan.galleryImages[0], page.photos, page.meta) : page;
     return {
       ...plan,
       galleryImages: photos.length ? photos : plan.galleryImages,

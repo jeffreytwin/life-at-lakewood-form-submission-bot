@@ -1,41 +1,4 @@
 {
-  "feeds": [
-    {
-      "url": "https://discover.sitecorecloud.io/discover/v2/173266879",
-      "headers": {
-        "authorization": "01-dec3a440-8879157175b163c5989f6b77622e5db6db864b6c",
-        "origin": "https://www.meritagehomes.com",
-        "referer": "https://www.meritagehomes.com/"
-      },
-      "body": {
-        "context": { "page": { "uri": "/" }, "user": { "uuid": "173266879-fp-check" } },
-        "widget": {
-          "items": [
-            {
-              "rfk_id": "rfkid_503",
-              "entity": "home",
-              "sources": ["xm_cloud_public_website"],
-              "search": {
-                "content": {},
-                "offset": 0,
-                "limit": 100,
-                "filter": {
-                  "type": "and",
-                  "filters": [
-                    { "type": "eq", "name": "community_id", "value": "a078a0000115gcVAAQ" },
-                    { "type": "anyOf", "name": "status", "values": ["Available", "Inventory"] }
-                  ]
-                }
-              }
-            }
-          ]
-        }
-      },
-      "around": ["7733 Satterfield", "dd0916dd56dd4dbfa71fbc84d2f19e7d"],
-      "chars": 5000,
-      "count": 2
-    }
-  ],
   "concurrency": 2,
   "detailPlans": 1,
   "detailNames": ["11898 Mandala Ct", "7733 Satterfield Ter"],
