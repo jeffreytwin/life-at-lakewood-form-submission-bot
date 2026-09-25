@@ -1,7 +1,9 @@
 {
-  "qmiFlags": true,
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": []
+  "checks": [
+    { "builder": "Neal Communities", "community": "Canoe Creek", "noSurvey": true },
+    { "builder": "Meritage Homes", "community": "Salt Meadows", "noSurvey": true }
+  ]
 }

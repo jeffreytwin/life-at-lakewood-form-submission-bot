@@ -29,7 +29,7 @@ import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator
 import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
 import { extractKb } from "@/lib/floorplans/extractors/kb";
 import { extractHighland } from "@/lib/floorplans/extractors/highland";
-import { comparedFields, fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { comparedFields, fieldChanges, mergeForUpdate, withDescriptionFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { withKnownTours } from "@/lib/floorplans/tours";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
@@ -38,7 +38,8 @@ import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
 import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
-import { withScrapedPictures } from "@/lib/floorplans/pictures";
+import { withKnownSpellings, withScrapedPictures } from "@/lib/floorplans/pictures";
+import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
@@ -267,6 +268,51 @@ async function withdrawOutdated(
   if (error) logger.warn("Outdated pending changes could not be withdrawn", { planKey: ids.planKey, error: error.message });
 }
 
+/**
+ * A change approved without a review: recorded as approved, for the sync
+ * tick to write to Wix (applyAutoApproved). One waiting per plan and field.
+ */
+async function approveOnItsOwn(args: {
+  siteId: string;
+  communityId: string;
+  builderId: string;
+  planKey: string;
+  fieldChanged: string;
+  oldValue: string | null;
+  newValue: string | null;
+  proposedRecord: NormalizedPlan;
+  wixRecordId: string;
+  floorPlanId: string;
+  runId: string;
+}): Promise<void> {
+  const row = {
+    site_id: args.siteId,
+    community_id: args.communityId,
+    builder_id: args.builderId,
+    floor_plan_id: args.floorPlanId,
+    plan_key: args.planKey,
+    change_type: "update",
+    field_changed: args.fieldChanged,
+    old_value: args.oldValue,
+    new_value: args.newValue,
+    proposed_record: args.proposedRecord,
+    wix_record_id: args.wixRecordId,
+    run_id: `${AUTO_RUN}${args.runId}`,
+    status: "approved",
+    updated_at: new Date().toISOString(),
+  };
+  const { data: waiting } = await supabase
+    .from("fp_pending_changes")
+    .select("id")
+    .match({ site_id: args.siteId, community_id: args.communityId, builder_id: args.builderId, plan_key: args.planKey, field_changed: args.fieldChanged, status: "approved" })
+    .like("run_id", `${AUTO_RUN}%`)
+    .maybeSingle();
+  const { error } = waiting
+    ? await supabase.from("fp_pending_changes").update(row).eq("id", waiting.id)
+    : await supabase.from("fp_pending_changes").insert(row);
+  if (error) logger.warn("Change approved without review could not be recorded", { planKey: args.planKey, error: error.message });
+}
+
 /** Queue one change unless an identical one was rejected or already pending. */
 export async function queueChange(args: {
   siteId: string;
@@ -368,7 +414,12 @@ export async function loadStandInRules(scope: PlanScopeIds): Promise<StandInRule
 export async function preparePlans(
   scraped: NormalizedPlan[],
   scope: { site: { id: string }; community: { id: string; name: string }; builder: { id: string; name: string } },
-  opts: { rewordDescriptions?: boolean; deadline?: number } = {}
+  opts: {
+    rewordDescriptions?: boolean;
+    deadline?: number;
+    /** The records the connection already has, by plan key: their pictures' addresses are kept (withKnownSpellings). */
+    known?: Map<string, Partial<NormalizedPlan> | null>;
+  } = {}
 ): Promise<NormalizedPlan[]> {
   const { site, community, builder } = scope;
   let plans = scraped;
@@ -411,6 +462,10 @@ export async function preparePlans(
     const standInKeys = new Set(filled.map((p) => p.planKey));
     plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
   }
+
+  // A photo the record already has keeps the address it has there, and so
+  // what was learned about it (pictures.ts).
+  if (opts.known) plans = plans.map((p) => withKnownSpellings(p, opts.known!.get(p.planKey)));
 
   // Photos someone has already looked at are put in the site's order by
   // what they show (photo-rooms.ts); the builder's file names say nothing
@@ -502,8 +557,6 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
     return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
   }
-  plans = await preparePlans(plans, { site, community, builder }, { deadline: startedAt + RUN_PREPARE_MS });
-
   const { data: canonical } = await supabase
     .from("fp_floor_plans")
     .select("id, plan_key, wix_record_id, record, last_seen_at")
@@ -512,6 +565,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     .eq("builder_id", builder.id)
     .is("removed_at", null);
   const canonicalByKey = new Map((canonical ?? []).map((c) => [c.plan_key, c]));
+  plans = await preparePlans(plans, { site, community, builder }, {
+    deadline: startedAt + RUN_PREPARE_MS,
+    known: new Map((canonical ?? []).map((c) => [c.plan_key, c.record as Partial<NormalizedPlan> | null])),
+  });
   // A tour link dropped as one that does not work (Lennar's own, since
   // 2026-09-25) gives way to the working tour with its number, where a
   // record of the community already shows it (tours.ts).
@@ -558,8 +615,25 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       if (await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue })) rejected.add(change.field);
     }
     const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, rejected), remembered), plan);
-    await withdrawOutdated(ids, comparedFields(current, plan), changes, current);
-    for (const change of changes.filter((c) => !rejected.has(c.field))) {
+    // A quick move-in's description is not shown on the site; it only
+    // helps a person tell which floor plan an unknown home is. Its change is
+    // approved without a review and written on its own (Jeff, 2026-09-25).
+    const described =
+      plan.quickMoveIn === true && existing.wix_record_id
+        ? changes.find((c) => c.field === "description" && !rejected.has(c.field))
+        : undefined;
+    const reviewed = changes.filter((c) => !rejected.has(c.field) && c !== described);
+    await withdrawOutdated(ids, comparedFields(current, plan), reviewed, current);
+    if (described) {
+      await approveOnItsOwn({
+        siteId: site.id, communityId: community.id, builderId: builder.id,
+        planKey: plan.planKey, fieldChanged: described.label,
+        oldValue: described.oldValue, newValue: described.newValue,
+        proposedRecord: withDescriptionFrom(current, plan), wixRecordId: existing.wix_record_id,
+        floorPlanId: existing.id, runId,
+      });
+    }
+    for (const change of reviewed) {
       if (
         await queueChange({
           siteId: site.id, communityId: community.id, builderId: builder.id,
