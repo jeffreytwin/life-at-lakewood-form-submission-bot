@@ -8,7 +8,7 @@
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { standardHomeType } from "@/lib/floorplans/standardize";
-import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
+import { type GalleryMeta, type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
@@ -68,6 +68,7 @@ export function normalizeMattamyCard(
     blueprintImages: [],
     raw: {
       mattamyId: card.id,
+      cardImage: image,
       relatedPlan: quickMoveIn ? card.planName ?? null : null,
       community: card.community ?? null,
     },
@@ -254,6 +255,27 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 }
 
 /**
+ * A home's pictures led by the one its card shows. A home's page leads
+ * with the model's own picture — 11898 Mandala Ct's with the Anclote
+ * model's front porch, a house elsewhere — and files the rendering of the
+ * home itself among the exterior styles at the end; the card shows the
+ * home (Jeff, 2026-09-25). The page's lead goes back among the photos for
+ * the sorter to place. Pure; exported for tests.
+ */
+export function ledByCard(
+  card: string | undefined,
+  photos: string[],
+  meta: Record<string, GalleryMeta>
+): { photos: string[]; meta: Record<string, GalleryMeta> } {
+  if (!card || !photos.length) return { photos, meta };
+  const lead = { ...meta[card], kind: "primary" as const, room: "primary" as const };
+  const demoted = Object.fromEntries(
+    Object.entries(meta).map(([src, m]) => [src, src !== card && m.kind === "primary" ? { ...m, kind: "photo" as const, room: null } : m])
+  );
+  return { photos: [card, ...photos.filter((u) => u !== card)], meta: { ...demoted, [card]: lead } };
+}
+
+/**
  * A plan or a home with what its own page's layout adds; a layout that
  * will not load leaves it as its card had it, marked unread. A home's page
  * carries its own gallery — its kitchen, its dining room, staged — where
@@ -270,10 +292,11 @@ async function withPlanLayout(plan: NormalizedPlan): Promise<NormalizedPlan> {
     );
     if (!res.ok) throw new Error(`layout ${path}: ${res.status}`);
     const page = readPlanLayout(await res.json());
+    const { photos, meta } = plan.quickMoveIn ? ledByCard(plan.galleryImages[0], page.photos, page.meta) : page;
     return {
       ...plan,
-      galleryImages: page.photos.length ? page.photos : plan.galleryImages,
-      galleryMeta: page.photos.length ? page.meta : plan.galleryMeta,
+      galleryImages: photos.length ? photos : plan.galleryImages,
+      galleryMeta: photos.length ? meta : plan.galleryMeta,
       blueprintImages: page.drawings.length ? page.drawings : plan.blueprintImages,
       homeType: plan.homeType ?? page.homeType,
       virtualTourUrl: plan.virtualTourUrl ?? page.tour,

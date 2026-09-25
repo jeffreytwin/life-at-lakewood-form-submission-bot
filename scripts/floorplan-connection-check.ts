@@ -65,6 +65,10 @@ interface Config {
   concurrency?: number;
   /** Plans printed with every picture; the rest get one line each. */
   detailPlans?: number;
+  /** Plans or homes printed with every picture, by name, whatever their size. */
+  detailNames?: string[];
+  /** Feeds read as a run would, printed around the words given: a POST with its body, as a builder's page sends it. */
+  feeds?: { url: string; method?: string; headers?: Record<string, string>; body?: unknown; around: string[]; chars?: number; count?: number }[];
   checks: Target[];
 }
 
@@ -432,6 +436,37 @@ const ANATOMY_SCRIPT = `(() => {
 })()`;
 
 /** The anatomy of a JSON answer: where its pictures are, and the shape around them. */
+/** A feed as a run reads it, pretty-printed around the words given. */
+async function feedAround(feed: NonNullable<Config["feeds"]>[number]): Promise<string> {
+  try {
+    const res = await fetch(feed.url, {
+      method: feed.method ?? (feed.body ? "POST" : "GET"),
+      headers: { "user-agent": UA, accept: "application/json", ...(feed.body ? { "content-type": "application/json" } : {}), ...(feed.headers ?? {}) },
+      body: feed.body ? JSON.stringify(feed.body) : undefined,
+      signal: AbortSignal.timeout(45_000),
+    });
+    const text = await res.text();
+    let pretty = text;
+    try {
+      pretty = JSON.stringify(JSON.parse(text), null, 1);
+    } catch {
+      // not JSON; printed as it came
+    }
+    const out = [`status ${res.status}; ${text.length} chars`];
+    for (const word of feed.around) {
+      let at = pretty.indexOf(word);
+      if (at < 0) out.push(`== "${word}" not in the feed ==`);
+      for (let n = 1; at >= 0 && n <= (feed.count ?? 2); n++, at = pretty.indexOf(word, at + word.length)) {
+        const half = Math.floor((feed.chars ?? 3000) / 2);
+        out.push(`== "${word}" #${n} at ${at} ==`, pretty.slice(Math.max(0, at - half), at + half));
+      }
+    }
+    return out.join("\n");
+  } catch (error) {
+    return `could not read ${feed.url}: ${error instanceof Error ? error.message : String(error)}`;
+  }
+}
+
 async function jsonAnatomy(url: string, method = "GET"): Promise<string> {
   const res = await fetch(url, { method, headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(45_000) });
   const text = await res.text();
@@ -826,7 +861,8 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     // A few plans in full, so the pictures themselves can be judged.
     // And the first plan the check found fault with, whatever its size.
     const faulted = [...printsLookLikePhotos, ...base.filter((p) => p.galleryImages.length <= 1)].slice(0, 1);
-    const detail = [...new Set([...[...base].sort((a, b) => b.galleryImages.length - a.galleryImages.length).slice(0, config.detailPlans ?? 1), ...faulted])];
+    const named = plans.filter((p) => (config.detailNames ?? []).some((n) => n.toLowerCase() === p.name.toLowerCase()));
+    const detail = [...new Set([...[...base].sort((a, b) => b.galleryImages.length - a.galleryImages.length).slice(0, config.detailPlans ?? 1), ...faulted, ...named])];
     for (const p of detail) {
       out(`  ▸ ${p.name}: ${p.sourceUrl}`);
       for (const src of p.galleryImages) {
@@ -869,6 +905,10 @@ async function main() {
   for (const url of config.anatomy ?? []) {
     await keep(`anatomy: ${url}`, await anatomy(url));
     say(`anatomy of ${url} kept`);
+  }
+  for (const feed of config.feeds ?? []) {
+    await keep(`feed: ${feed.url}`, await feedAround(feed));
+    say(`feed ${feed.url} kept`);
   }
   for (const { url, around, chars, after, count } of config.raw ?? []) {
     await keep(`raw: ${url}`, await rawAround(url, around, chars, after, count));

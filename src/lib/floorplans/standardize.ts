@@ -147,19 +147,39 @@ export function builderDefaults(config: Record<string, unknown> | null | undefin
 }
 
 /**
- * What a builder labels as a tour that is not one. Perry Homes puts a "3D
- * Tour" button on its plans that opens an interactive floor plan at
- * blu-plan.com — a drawing to click around, not a walkthrough of the
- * house (Jeff, 2026-09-22). Here rather than in one engine, because the
- * label is the builder's and any engine can be taken in by it.
+ * What a builder labels as a tour that is not one: an interactive floor
+ * plan — a drawing to click around, not a walkthrough of the house.
+ * Perry's "3D Tour" button opens one at blu-plan.com (Jeff, 2026-09-22);
+ * Neal Communities' at ifp.thebdxinteractive.com, ML3DS's at
+ * rifp.ml3ds-iconstage.com and CPS's at planviewer.cpsusa.com (Jeff,
+ * 2026-09-25). Here rather than in one engine, because the label is the
+ * builder's and any engine can be taken in by it.
  */
-const NOT_A_TOUR = /(?:^|\/\/|\.)blu-plan\.com(?:[/:?#]|$)/i;
+const INTERACTIVE_PLAN = /(?:^|\/\/|\.)(?:blu-plan\.com|thebdxinteractive\.com|ml3ds-iconstage\.com|planviewer\.cpsusa\.com)(?:[/:?#]|$)/i;
+
+/**
+ * Lennar's own tour links, which its feeds began giving in place of the
+ * modsy ones on 2026-09-25: hd.lennar.com/tours/3914/ shows a broken tour,
+ * where the modsy link it replaced still works (Jeff, 2026-09-25). One of
+ * these is never a plan's tour; the modsy tour it stands for is found by
+ * its number where one is known (tours.ts).
+ */
+const LENNAR_TOUR = /^https?:\/\/hd\.lennar\.com\//i;
 
 /** The address if it is a tour at all, and nothing if it only says it is. Exported for tests. */
 export function asTour(url: string | null | undefined): string | null {
   const address = url?.trim();
   if (!address) return null;
-  return NOT_A_TOUR.test(address) ? null : address;
+  if (INTERACTIVE_PLAN.test(address)) return null;
+  // Lennar's viewer link names the same tour modsy's does, by the same number.
+  const viewer = address.match(/^https?:\/\/hd\.lennar\.com\/apps\/home-viewer\?vtid=(\d+)/i);
+  if (viewer) return `https://hd.modsy.com/apps/home-viewer?vtid=${viewer[1]}`;
+  return LENNAR_TOUR.test(address) ? null : address;
+}
+
+/** Whether an address is an interactive floor plan rather than a tour. Exported for tests. */
+export function isInteractivePlan(url: string | null | undefined): boolean {
+  return Boolean(url && INTERACTIVE_PLAN.test(url.trim()));
 }
 
 /** Words kept in capitals: Roman numerals ("Gateway II", "Cambria IV") and compass points ("NE 12th St"). */
@@ -252,7 +272,11 @@ export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults 
       ...(plan.raw ?? {}),
       ...(plan.homeType && homeType !== plan.homeType ? { homeTypeRaw: plan.homeType } : {}),
       ...(plan.garages && garages !== plan.garages ? { garagesRaw: plan.garages } : {}),
-      ...(plan.virtualTourUrl && !tour ? { interactivePlanUrl: plan.virtualTourUrl } : {}),
+      ...(plan.virtualTourUrl && !tour
+        ? isInteractivePlan(plan.virtualTourUrl)
+          ? { interactivePlanUrl: plan.virtualTourUrl }
+          : { droppedTourUrl: plan.virtualTourUrl }
+        : {}),
     },
   };
 }

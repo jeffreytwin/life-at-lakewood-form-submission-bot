@@ -29,7 +29,8 @@ import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator
 import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
 import { extractKb } from "@/lib/floorplans/extractors/kb";
 import { extractHighland } from "@/lib/floorplans/extractors/highland";
-import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { comparedFields, fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { withKnownTours } from "@/lib/floorplans/tours";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
@@ -196,24 +197,18 @@ async function setRunStatus(
   await supabase.from("fp_builder_communities").update(updates).eq("id", connectionId);
 }
 
-/** Queue one change unless an identical one was rejected or already pending. */
-export async function queueChange(args: {
+/** Whether an identical change was rejected and the rejection still holds: rejections stick. */
+export async function stillRejected(args: {
   siteId: string;
   communityId: string;
   builderId: string;
   planKey: string;
   changeType: "add" | "update" | "remove";
   fieldChanged?: string;
-  oldValue?: string | null;
   newValue?: string | null;
   proposedRecord?: NormalizedPlan | null;
-  wixRecordId?: string | null;
-  floorPlanId?: string | null;
-  runId: string;
 }): Promise<boolean> {
   const fieldKey = args.fieldChanged ?? null;
-
-  // Rejections stick: an identical rejected change suppresses re-queueing.
   // Identical = same plan + change type + field + proposed new value. A
   // rejected new plan comes back once the builder fills in something it
   // lacked (approval.ts, rejectionStillApplies): a plan rejected for
@@ -235,10 +230,60 @@ export async function queueChange(args: {
     ? rejectedQuery.is("new_value", null)
     : rejectedQuery.eq("new_value", args.newValue);
   const { data: rejected } = await rejectedQuery;
-  const stillRejected = (rejected ?? []).some(
+  const holds = (rejected ?? []).some(
     (r) => args.changeType !== "add" || rejectionStillApplies(r.proposed_record, args.proposedRecord)
   );
-  if (stillRejected) return false;
+  return holds;
+}
+
+/**
+ * A pending change the run no longer finds is out of date: the builder put
+ * the price back, or the run reads the page the way the record already has
+ * it (a description read without its closing sentence, 2026-09-25). One
+ * that nobody has touched is taken off the queue; one a person edited
+ * stays for them to decide.
+ */
+async function withdrawOutdated(
+  ids: { siteId: string; communityId: string; builderId: string; planKey: string },
+  compared: string[],
+  changes: { label: string }[],
+  current: NormalizedPlan
+): Promise<void> {
+  const found = new Set(changes.map((c) => c.label));
+  const outdated = compared.filter((label) => !found.has(label));
+  if (!outdated.length) return;
+  const { data: rows } = await supabase
+    .from("fp_pending_changes")
+    .select("id, proposed_record")
+    .match({ site_id: ids.siteId, community_id: ids.communityId, builder_id: ids.builderId, plan_key: ids.planKey, change_type: "update", status: "pending" })
+    .in("field_changed", outdated);
+  const already = new Set(current.userEditedFields ?? []);
+  const untouched = (rows ?? []).filter((r) => {
+    const edited = (r.proposed_record as NormalizedPlan | null)?.userEditedFields ?? [];
+    return edited.every((f) => already.has(f));
+  });
+  if (!untouched.length) return;
+  const { error } = await supabase.from("fp_pending_changes").delete().in("id", untouched.map((r) => r.id));
+  if (error) logger.warn("Outdated pending changes could not be withdrawn", { planKey: ids.planKey, error: error.message });
+}
+
+/** Queue one change unless an identical one was rejected or already pending. */
+export async function queueChange(args: {
+  siteId: string;
+  communityId: string;
+  builderId: string;
+  planKey: string;
+  changeType: "add" | "update" | "remove";
+  fieldChanged?: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  proposedRecord?: NormalizedPlan | null;
+  wixRecordId?: string | null;
+  floorPlanId?: string | null;
+  runId: string;
+}): Promise<boolean> {
+  const fieldKey = args.fieldChanged ?? null;
+  if (await stillRejected(args)) return false;
 
   // Dedupe against an existing pending row for the same logical change.
   let pendingQuery = supabase
@@ -467,6 +512,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     .eq("builder_id", builder.id)
     .is("removed_at", null);
   const canonicalByKey = new Map((canonical ?? []).map((c) => [c.plan_key, c]));
+  // A tour link dropped as one that does not work (Lennar's own, since
+  // 2026-09-25) gives way to the working tour with its number, where a
+  // record of the community already shows it (tours.ts).
+  plans = withKnownTours(plans, (canonical ?? []).map((c) => (c.record as NormalizedPlan | null)?.virtualTourUrl));
   const scrapedKeys = new Set(plans.map((p) => p.planKey));
   // Scores set in the Hub outlive the plans (a Reset removes those): a
   // plan queued again comes back with the score it had.
@@ -500,8 +549,17 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       .update({ last_seen_at: new Date().toISOString() })
       .eq("id", existing.id);
     const current = (existing.record ?? {}) as CanonicalRecord;
-    const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan), remembered), plan);
-    for (const change of fieldChanges(current, plan)) {
+    // A field whose change was rejected keeps its value in the record any
+    // other approved change writes (mergeForUpdate).
+    const ids = { siteId: site.id, communityId: community.id, builderId: builder.id, planKey: plan.planKey, changeType: "update" as const };
+    const changes = fieldChanges(current, plan);
+    const rejected = new Set<keyof NormalizedPlan>();
+    for (const change of changes) {
+      if (await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue })) rejected.add(change.field);
+    }
+    const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, rejected), remembered), plan);
+    await withdrawOutdated(ids, comparedFields(current, plan), changes, current);
+    for (const change of changes.filter((c) => !rejected.has(c.field))) {
       if (
         await queueChange({
           siteId: site.id, communityId: community.id, builderId: builder.id,
