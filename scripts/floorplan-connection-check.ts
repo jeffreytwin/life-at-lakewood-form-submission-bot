@@ -33,6 +33,7 @@ import { pageIsBotCheck } from "@/lib/floorplans/extractors/rendered";
 import { pixelDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 import { checkAllFlags } from "@/lib/floorplans/qmi-flags";
+import { fieldChanges, type CanonicalRecord } from "@/lib/floorplans/diff";
 
 interface Target {
   builder: string;
@@ -157,6 +158,18 @@ function pick(all: Connection[], target: Target): Connection[] {
 }
 
 /** The plans the site shows today for this builder and community (the Wix import), by name. */
+/** The records the connection already has, by plan key: what a run compares against. */
+async function recordsOf(conn: Connection): Promise<Map<string, Partial<NormalizedPlan> | null>> {
+  const { data } = await supabase
+    .from("fp_floor_plans")
+    .select("plan_key, record")
+    .eq("site_id", conn.site.id)
+    .eq("community_id", conn.community.id)
+    .eq("builder_id", conn.builder.id)
+    .is("removed_at", null);
+  return new Map((data ?? []).map((r) => [r.plan_key as string, r.record as Partial<NormalizedPlan> | null]));
+}
+
 async function sitePlans(conn: Connection): Promise<{ name: string; qmi: boolean }[]> {
   const { data } = await supabase
     .from("fp_legacy_items")
@@ -759,6 +772,7 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
 
   // The extraction.
   let plans: NormalizedPlan[] = [];
+  let records = new Map<string, Partial<NormalizedPlan> | null>();
   let ms = 0;
   const claudeBuilder = NEEDS_CLAUDE.has(conn.builder.extraction_method ?? "") && !["M/I Homes", "ICI Homes", "Neal Signature Homes", "Toll Brothers", "Taylor Morrison", "Lennar", "Meritage Homes", "Mattamy Homes", "DRB Homes"].includes(conn.builder.name);
   if (claudeDown && claudeBuilder && !target.surveyOnly) {
@@ -780,8 +794,9 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
         }),
       ]);
       ms = Date.now() - started;
+      records = await recordsOf(conn);
       plans = scraped.length
-        ? await preparePlans(scraped, { site: conn.site, community: conn.community, builder: conn.builder }, { rewordDescriptions: false })
+        ? await preparePlans(scraped, { site: conn.site, community: conn.community, builder: conn.builder }, { rewordDescriptions: false, known: records })
         : [];
       if (!plans.length) problems.push("zero plans");
     } catch (error) {
@@ -793,6 +808,15 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
     const base = plans.filter((p) => !p.quickMoveIn);
     const homes = plans.filter((p) => p.quickMoveIn);
     out(`  result: ${plans.length} (${base.length} plans, ${homes.length} homes) in ${Math.round(ms / 1000)}s`);
+    // What a run would put in the queue for the plans the site already has.
+    const queued = plans.flatMap((p) => {
+      const record = records.get(p.planKey);
+      return record ? fieldChanges(record as CanonicalRecord, p).map((c) => ({ plan: p.name, ...c })) : [];
+    });
+    const byField = new Map<string, number>();
+    for (const c of queued) byField.set(c.label, (byField.get(c.label) ?? 0) + 1);
+    out(`  would queue for review: ${queued.length ? [...byField].map(([f, n]) => `${f} ×${n}`).join(", ") : "nothing"}`);
+    for (const c of queued.slice(0, 40)) out(`    ${c.plan}: ${c.label} ${c.oldValue.slice(0, 60)} → ${c.newValue.slice(0, 60)}`);
 
     // Right page? The names the site already carries should mostly come back.
     if (siteBase.length && base.length) {

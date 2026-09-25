@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { speaksAsOwner } from "@/lib/floorplans/owner-words";
 import { asTour } from "@/lib/floorplans/standardize";
+import { onePerPicture, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 
 /** Canonical records written by the first slice carry the main image here instead of in galleryImages. */
 export type CanonicalRecord = NormalizedPlan & { primaryImage?: string | null };
@@ -193,7 +194,23 @@ export function describeGallery(urls: string[], noun: string): string {
   return `${urls.length} ${word} · ${digest}`;
 }
 
-const sameList = (a: string[], b: string[]): boolean => a.length === b.length && a.every((u, i) => u === b[i]);
+/**
+ * The same pictures in the same order, however their addresses are
+ * spelled: Neal's "…Elevation-FH1.jpg?auto=format%2Ccompress&fit=max&w=1000"
+ * one night and "…Elevation-FH1.jpg" the next is one photo, and the queue
+ * showed it as a new one (Jeff, 2026-09-25). A photo that truly changed is
+ * still a change. Pure; exported for tests.
+ */
+export function samePictures(a: string[], b: string[]): boolean {
+  // Each photo once: a gallery that carried one at two sizes is the same
+  // gallery once it carries it at one.
+  const ka = onePerPicture(a).photos.map(pictureKey);
+  const kb = onePerPicture(b).photos.map(pictureKey);
+  return ka.length === kb.length && ka.every((k, i) => k === kb[i]);
+}
+
+/** A picture CPS's plan viewer drew, or the Hub drew from it (planviewer.ts). */
+const FROM_VIEWER = /planviewer\.cpsusa\.com\/|\/api\/floorplans\/planviewer\//i;
 
 /**
  * Whether a run read enough of a gallery to speak for it. It did not when
@@ -207,13 +224,16 @@ const sameList = (a: string[], b: string[]): boolean => a.length === b.length &&
  */
 export function galleryRead(current: CanonicalRecord, plan: NormalizedPlan, field: GalleryField): boolean {
   if (plan.pageUnread === true) return false;
-  const before = galleryOf(current, field);
-  const after = galleryOf(plan, field);
+  // The plan viewer's pictures are not the builder's page's: a run that
+  // leaves them out where the page draws its own (claude-extract.ts,
+  // viewerFills) has not read the page only in part.
+  const before = onePerPicture(galleryOf(current, field)).photos.filter((u) => !FROM_VIEWER.test(u));
+  const after = onePerPicture(galleryOf(plan, field)).photos;
   if (!before.length) return true;
   if (!after.length) return false;
-  const had = new Set(before);
+  const had = new Set(before.map(pictureKey));
   const lost = before.length - after.length;
-  const onlyPart = after.every((u) => had.has(u)) && lost >= 3 && after.length * 2 <= before.length;
+  const onlyPart = after.every((u) => had.has(pictureKey(u))) && lost >= 3 && after.length * 2 <= before.length;
   return !onlyPart;
 }
 
@@ -271,8 +291,13 @@ export function mergeForUpdate(
     for (const field of PAGE_ONLY_FIELDS) if (field in source && !overrides.has(field)) merged[field] = source[field];
   }
   for (const [field] of GALLERY_FIELDS) {
-    if (overrides.has(field) || galleryRead(current, plan, field)) continue;
-    merged[field] = galleryOf(current, field);
+    if (overrides.has(field)) continue;
+    // The same pictures under other addresses: the record's addresses stay,
+    // so an approval of something else does not bring them in again.
+    const same = samePictures(galleryOf(current, field), galleryOf(plan, field));
+    if (galleryRead(current, plan, field) && !same) continue;
+    // Each photo once, at the largest copy the record has of it.
+    merged[field] = same ? onePerPicture(galleryOf(current, field)).photos : galleryOf(current, field);
     if (field === "galleryImages") {
       for (const f of ["galleryMeta", "photosSorted", "copiesChecked"]) {
         if (f in source) merged[f] = source[f];
@@ -285,6 +310,19 @@ export function mergeForUpdate(
   if (typeof current.hasQuickMoveIns === "boolean") merged.hasQuickMoveIns = current.hasQuickMoveIns;
   merged.userEditedFields = current.userEditedFields;
   return merged as unknown as NormalizedPlan;
+}
+
+/**
+ * The record with only its description taken from the run: what an
+ * automatically approved quick move-in description writes, whatever else
+ * about the home is waiting for review (Jeff, 2026-09-25). Pure.
+ */
+export function withDescriptionFrom(current: CanonicalRecord, plan: NormalizedPlan): NormalizedPlan {
+  const raw = { ...(current.raw ?? {}) };
+  const original = plan.raw?.descriptionOriginal;
+  if (typeof original === "string") raw.descriptionOriginal = original;
+  else delete raw.descriptionOriginal;
+  return { ...current, description: plan.description ?? null, raw } as NormalizedPlan;
 }
 
 /** What only a plan's own page tells a run; a list page never carries these. */
@@ -352,7 +390,7 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
     if (quickMoveIn && field === "blueprintImages") continue;
     const before = quickMoveIn ? galleryOf(current, field).slice(0, 1) : galleryOf(current, field);
     const after = quickMoveIn ? galleryOf(plan, field).slice(0, 1) : galleryOf(plan, field);
-    if (sameList(before, after)) continue;
+    if (samePictures(before, after)) continue;
     changes.push({ field, label, oldValue: describeGallery(before, label), newValue: describeGallery(after, label) });
   }
   return changes;

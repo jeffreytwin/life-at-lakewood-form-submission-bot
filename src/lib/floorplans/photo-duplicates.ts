@@ -27,7 +27,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { logger } from "@/lib/shared/logger";
-import { askedSize, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { pictureKey, pictureSize } from "@/lib/floorplans/extractors/plan-page";
 import { fetchPictures, imageBlock, type FetchedPicture } from "@/lib/floorplans/claude-image";
 
 const MODEL = "claude-opus-5";
@@ -269,31 +269,18 @@ export async function identicalPhotos(urls: string[]): Promise<number[][]> {
 }
 
 /**
- * How large a picture's address says it is: a size in its file's name
- * ("-1200x801"), WordPress's "-scaled" original, a width its query asks
- * for; a file that names no size is the original, as large as there is.
+ * One file however it is spelled, and whatever size WordPress cut it to:
+ * "…_a_3_car_02-800x534.jpg" and "…-1200x801.jpg" are one upload, and so
+ * are "Elevation-A-1200x720-1.webp" and "Elevation-A-scaled-1.webp"
+ * (pictureKey).
  */
-function sizeOf(url: string): number {
-  const file = url.replace(/[?#].*$/, "").split("/").pop() ?? "";
-  const named = file.match(/-(\d{2,5})x(\d{2,5})(?=[-_.])/);
-  if (named) return Math.max(Number(named[1]), Number(named[2]));
-  if (/-scaled(?=[-_.])/i.test(file)) return 2560;
-  return askedSize(url) || Infinity;
-}
-
-/**
- * One file however it is spelled (pictureKey), and whatever size WordPress
- * cut it to: "…_a_3_car_02-800x534.jpg" and "…-1200x801.jpg" are one
- * upload, and so are "Elevation-A-1200x720-1.webp" and
- * "Elevation-A-scaled-1.webp".
- */
-const fileKey = (url: string) => pictureKey(url).replace(/-(?:\d{2,5}x\d{2,5}|scaled)(?=[-_.]|$)/gi, "");
+const fileKey = pictureKey;
 
 /**
  * The gallery with each photograph once. Pictures that are one photograph
  * — the same file however spelled or sized (fileKey), or a set Claude
  * found — keep the place of the first of them, at the largest size any of
- * them is (sizeOf); the others are `removed`. Pure; exported for tests.
+ * them is (pictureSize); the others are `removed`. Pure; exported for tests.
  */
 export function withoutDuplicates(urls: string[], same: number[][]): { urls: string[]; removed: string[] } {
   const parent = urls.map((_, i) => i);
@@ -318,7 +305,7 @@ export function withoutDuplicates(urls: string[], same: number[][]): { urls: str
     const group = members.get(find(i))!;
     if (group[0] !== i) return;
     // The largest; of equals, the first.
-    const best = group.reduce((a, b) => (sizeOf(urls[b]) > sizeOf(urls[a]) ? b : a));
+    const best = group.reduce((a, b) => (pictureSize(urls[b]) > pictureSize(urls[a]) ? b : a));
     kept.push(urls[best]);
     removed.push(...group.filter((g) => g !== best).map((g) => urls[g]));
   });

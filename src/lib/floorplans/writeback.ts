@@ -34,6 +34,7 @@ import {
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
 import { checkFlagsAfterWrite } from "@/lib/floorplans/qmi-flags";
+import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { virtualTourButtonFor } from "@/lib/floorplans/site-assets";
 import { alertIfTracked, basePlanOf, planRow, type CampaignTaskType } from "@/lib/floorplans/campaign";
 import { fieldChangeDetail, homeChangeDetail } from "@/lib/floorplans/campaign-text";
@@ -762,6 +763,9 @@ export async function applyPendingChange(changeId: string): Promise<{
     // quick move-in of one, raises an alert so the marketing can follow.
     const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
     async function alertCampaign(taskType: CampaignTaskType, detail: string, rec: ProposedRecord | null, homeDetail?: string) {
+      // A change approved without a review (a quick move-in's description)
+      // is nothing the marketing follows.
+      if (String(change.run_id ?? "").startsWith(AUTO_RUN)) return;
       const own = change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
       await alertIfTracked(own, taskType, detail, change.id);
       const isHome = rec?.quickMoveIn ?? own?.quick_move_in ?? false;

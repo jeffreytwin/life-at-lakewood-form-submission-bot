@@ -687,7 +687,14 @@ export function pictureKey(src: string): string {
   }
   const name = IMAGE_FILE.test(file) ? file : src.slice(folder.length);
   const sized = name.match(SIZED) ?? name.match(THUMB);
-  const plain = (sized ? `${sized[1]}${sized[2]}` : name).replace(IMAGE_FILE, "");
+  // And a WordPress upload is that upload at whatever size WordPress cut
+  // it to: Neal leads a home with "…Elevation-C1-300x180.jpg" one night
+  // and "…Elevation-C1-scaled.jpg" the next, and lists every photo of it
+  // at both sizes, and the queue read each spelling as a new photo (Jeff,
+  // 2026-09-25).
+  const plain = (sized ? `${sized[1]}${sized[2]}` : name)
+    .replace(IMAGE_FILE, "")
+    .replace(/-(?:\d{2,5}x\d{2,5}|scaled)(?=[-_.]|$)/gi, "");
   return place + plain;
 }
 
@@ -728,11 +735,27 @@ export function askedSize(src: string): number {
 }
 
 /**
+ * How large a picture's address says it is: a size in its file's name
+ * ("-1200x801"), WordPress's "-scaled" original, a width its query asks
+ * for; a file that names no size is the original, as large as there is.
+ * Pure; exported for tests.
+ */
+export function pictureSize(url: string): number {
+  const file = url.replace(/[?#].*$/, "").split("/").pop() ?? "";
+  const named = file.match(/-(\d{2,5})x(\d{2,5})(?=[-_.])/);
+  if (named) return Math.max(Number(named[1]), Number(named[2]));
+  if (/-scaled(?=[-_.])/i.test(file)) return 2560;
+  return askedSize(url) || Infinity;
+}
+
+/**
  * One photograph once, in the place its first spelling came: a list's
  * picture and a gallery's are often the same file in two formats. Where a
- * later spelling asks for it larger, that one takes the place — Dream
- * Finders' list draws a plan's front 400 wide and its gallery 1,000 — and
- * `enlarged` says which address it replaced. Pure; exported for tests.
+ * later spelling is larger, that one takes the place — Dream Finders'
+ * list draws a plan's front 400 wide and its gallery 1,000, and Neal's
+ * list leads a home with a 300-pixel copy of the photo its page shows
+ * whole (2026-09-25) — and `enlarged` says which address it replaced.
+ * Pure; exported for tests.
  */
 export function onePerPicture(sources: string[]): { photos: string[]; enlarged: Map<string, string> } {
   const at = new Map<string, number>();
@@ -744,7 +767,7 @@ export function onePerPicture(sources: string[]): { photos: string[]; enlarged: 
     if (n === undefined) {
       at.set(key, photos.length);
       photos.push(src);
-    } else if (askedSize(photos[n]) && askedSize(src) > askedSize(photos[n])) {
+    } else if (pictureSize(src) > pictureSize(photos[n])) {
       enlarged.set(photos[n], src);
       photos[n] = src;
     }
@@ -762,7 +785,9 @@ export function onePerPicture(sources: string[]): { photos: string[]; enlarged: 
  * photo twice wherever a page shows both sizes.
  */
 export function fullSize(src: string, html: string): string {
-  const name = src.split("/").pop() ?? "";
+  // The file's name, without the query Neal's image service is asked with
+  // ("…-300x172.jpg?auto=format%2Ccompress", 2026-09-25).
+  const name = src.replace(/[?#].*$/, "").split("/").pop() ?? "";
 
   // Richmond American writes a gallery's picture at two sizes and picks
   // between them by window width, so the thumbnail is what a narrow

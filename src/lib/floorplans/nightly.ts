@@ -20,6 +20,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { readsThroughBrowser } from "@/lib/floorplans/sync";
+import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { holdRun, runHeld, sweepCutOffRuns } from "@/lib/floorplans/runs";
 
 const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
@@ -162,22 +163,54 @@ export async function runNightlyTick(): Promise<Record<string, unknown>> {
   }
 }
 
+/** How long a tick spends writing changes approved without a review, before its sync work. */
+const AUTO_APPLY_MS = 60_000;
+
+/**
+ * Changes approved without a review (a quick move-in's description; Jeff,
+ * 2026-09-25), written to Wix a few at a time. One Wix is slowing down
+ * waits for the next tick; one that fails shows under Failed.
+ */
+async function applyAutoApproved(): Promise<number> {
+  const { applyPendingChange } = await import("@/lib/floorplans/writeback");
+  const { data: rows } = await supabase
+    .from("fp_pending_changes")
+    .select("id")
+    .eq("status", "approved")
+    .like("run_id", `${AUTO_RUN}%`)
+    .order("created_at")
+    .limit(25);
+  const until = Date.now() + AUTO_APPLY_MS;
+  let applied = 0;
+  for (const row of rows ?? []) {
+    if (Date.now() > until) break;
+    const result = await applyPendingChange(row.id).catch((error) => {
+      logger.warn("Change approved without review could not be written", { id: row.id, error: error instanceof Error ? error.message : String(error) });
+      return null;
+    });
+    if (result?.throttled) break;
+    if (result && result.status !== "failed") applied += 1;
+  }
+  return applied;
+}
+
 async function tick(): Promise<Record<string, unknown>> {
   // Runs cut off by the function's time limit, whoever started them.
   const cutOff = await sweepCutOffRuns();
+  const autoApplied = await applyAutoApproved();
 
   const { data: settings, error } = await supabase
     .from("system_settings")
     .select("fp_nightly_enabled, fp_nightly_hour, fp_digest_phone, fp_nightly_state")
     .eq("id", 1)
     .single();
-  if (error || !settings) return { skipped: "no settings row" };
+  if (error || !settings) return { skipped: "no settings row", autoApplied };
 
   let state = (settings.fp_nightly_state ?? {}) as NightlyState;
   if (cycleInProgress(state)) {
     // A nightly cycle stops when the nightly sync is turned off; one
     // started by hand goes on.
-    if (!settings.fp_nightly_enabled && !state.manual) return { skipped: "nightly disabled", cutOff };
+    if (!settings.fp_nightly_enabled && !state.manual) return { skipped: "nightly disabled", cutOff, autoApplied };
   } else if (nightlyDue(state, settings)) {
     state = { cycleDate: etParts().date, startedAt: new Date().toISOString(), ran: 0, failed: 0 };
     await supabase.from("system_settings").update({ fp_nightly_state: state }).eq("id", 1);
@@ -186,6 +219,7 @@ async function tick(): Promise<Record<string, unknown>> {
     return {
       skipped: !settings.fp_nightly_enabled ? "nightly disabled" : state.completedAt ? "already completed today" : `waiting for ${settings.fp_nightly_hour}:00 ET`,
       cutOff,
+      autoApplied,
     };
   }
 
@@ -253,5 +287,5 @@ async function tick(): Promise<Record<string, unknown>> {
   }
 
   await supabase.from("system_settings").update({ fp_nightly_state: nextState }).eq("id", 1);
-  return { processed, busy, cutOff, remaining: Math.max(0, remaining), ran, failed, complete: remaining <= 0 };
+  return { processed, busy, cutOff, autoApplied, remaining: Math.max(0, remaining), ran, failed, complete: remaining <= 0 };
 }
