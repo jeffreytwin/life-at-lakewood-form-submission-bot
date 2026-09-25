@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { cycleInProgress, owedRuns, type NightlyState } from "@/lib/floorplans/nightly";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,10 @@ export async function GET() {
     .eq("id", 1)
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  // How far a sync that is going has got: the connections it still owes a run.
+  const state = data.fp_nightly_state as NightlyState | null;
+  const owed = cycleInProgress(state) ? (await owedRuns(state!.startedAt!)).length : null;
+  return NextResponse.json({ ...data, fp_sync_owed: owed });
 }
 
 export async function PUT(request: NextRequest) {

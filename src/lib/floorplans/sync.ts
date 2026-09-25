@@ -165,7 +165,7 @@ export function readsWithoutPage(builderName: string, params?: Record<string, un
   return URLLESS_BUILDERS.has(builderName) && !connectionEngine(params);
 }
 
-interface RunResult {
+export interface RunResult {
   /** partial: plans came back, but far fewer than last time (coverage.ts); counted as a failure, removals held. */
   status: "ok" | "partial" | "failed" | "skipped";
   detail: string;
