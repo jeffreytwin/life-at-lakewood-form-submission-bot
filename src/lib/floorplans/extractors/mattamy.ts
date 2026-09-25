@@ -231,7 +231,11 @@ export function readPlanLayout(data: unknown): {
         // Isle Royal" on eighteen pictures of eighteen rooms (2026-09-23).
         const filed = (m.description ?? "").trim();
         const room = (filed && classifyRoom(filed)) || (caption && classifyRoom(caption)) || undefined;
-        if (styleUrls.has(m.src)) items.push({ src: m.src, kind: "exterior", caption: caption ?? (filed || null) });
+        // A rendering Mattamy files as an elevation ("Craftsman Elevation")
+        // is the house as built, a style like those listed apart: a home's
+        // page lists no styles and files its own this way (11898 Mandala
+        // Ct, 2026-09-25).
+        if (styleUrls.has(m.src) || /\belevation\b/i.test(filed)) items.push({ src: m.src, kind: "exterior", caption: caption ?? (filed || null) });
         else items.push({ src: m.src, caption: caption ?? (filed || null), room });
       }
     }
@@ -267,13 +271,13 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 
 /**
  * A home's pictures led by the house itself. A home's page leads with the
- * model's picture — 11898 Mandala Ct's, like its card, with the Anclote
- * model's front porch, a house at another address — and files the
- * rendering of the home itself, its one exterior style ("Topsail
- * Craftsman"), at the end (Jeff, 2026-09-25). A page that names one
- * exterior style is naming this home's; one that names several, or none,
- * leaves the card's picture to lead. The page's lead goes back among the
- * photos for the sorter to place. Pure; exported for tests.
+ * model's pictures — 11898 Mandala Ct's with a staged great room and the
+ * Anclote model's front porch, a house at another address — and files the
+ * rendering of the home itself, "Craftsman Elevation", among them (Jeff,
+ * 2026-09-25). A page that shows one elevation is showing this home's;
+ * one that shows several, or none, leaves the card's picture to lead. The
+ * page's lead goes back among the photos for the sorter to place. Pure;
+ * exported for tests.
  */
 export function ledByHome(
   card: string | undefined,
