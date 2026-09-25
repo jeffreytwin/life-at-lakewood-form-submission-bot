@@ -295,12 +295,10 @@ describe("fieldChanges for quick move-ins", () => {
     expect(withPhoto.map((c) => c.label).sort()).toEqual(["base plan", "photos", "price"]);
   });
 
-  it("reports a base plan gaining its first quick move-in as yes/no, and a missing flag as no", () => {
+  it("never asks for a review of whether a base plan has quick move-ins: the flag check keeps it (Jeff, 2026-09-25)", () => {
     const current = plan({});
     expect(fieldChanges(current, { ...current, hasQuickMoveIns: false })).toEqual([]);
-    expect(fieldChanges(current, { ...current, hasQuickMoveIns: true })).toEqual([
-      { field: "hasQuickMoveIns", label: "quick move-ins available", oldValue: "no", newValue: "yes" },
-    ]);
+    expect(fieldChanges(current, { ...current, hasQuickMoveIns: true })).toEqual([]);
   });
 });
 
@@ -317,7 +315,7 @@ describe("withQuickMoveInPrices", () => {
     expect(bianca.price).toBe(1_249_000);
     expect(bianca.priceDisplay).toBe("$1,249,000");
     expect(bianca.priceFromHome).toBe("17900 Palmiste Dr");
-    expect(fieldChanges({ ...priceless, priceFromHome: null }, bianca).map((c) => c.label)).toEqual(["price", "quick move-ins available"]);
+    expect(fieldChanges({ ...priceless, priceFromHome: null }, bianca).map((c) => c.label)).toEqual(["price"]);
   });
 
   it("leaves a priced base plan alone and clears the marker once the builder prices the plan", () => {
