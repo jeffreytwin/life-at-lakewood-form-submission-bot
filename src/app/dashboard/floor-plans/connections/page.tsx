@@ -63,6 +63,25 @@ interface SyncSettings {
 /** How often the page looks again while a run or a sync is going. */
 const FOLLOW_MS = 5_000;
 
+interface FlagEntry {
+  id?: string;
+  plan_name: string | null;
+  village: string | null;
+  builder: string | null;
+  action: string;
+  detail: string | null;
+  created_at: string;
+  fp_sites: { name: string | null } | null;
+}
+
+/** What the quick move-in flag check has done (qmi-flags.ts). */
+interface FlagLog {
+  checked: { site_id: string; detail: string | null; created_at: string; fp_sites: { name: string | null } | null }[];
+  fixes: FlagEntry[];
+  problems: FlagEntry[];
+  days: number;
+}
+
 export default function BuildersSettingsPage() {
   const [builders, setBuilders] = useState<Builder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +92,9 @@ export default function BuildersSettingsPage() {
   const [sync, setSync] = useState<SyncSettings | null>(null);
   const [savingSync, setSavingSync] = useState(false);
   const [startingSync, setStartingSync] = useState(false);
+  const [flags, setFlags] = useState<FlagLog | null>(null);
+  const [flagsOpen, setFlagsOpen] = useState(false);
+  const [checkingFlags, setCheckingFlags] = useState(false);
 
   const fetchSync = useCallback(() => {
     fetch("/api/internal/floorplans/sync-settings")
@@ -86,6 +108,33 @@ export default function BuildersSettingsPage() {
   useEffect(() => {
     fetchSync();
   }, [fetchSync]);
+
+  const fetchFlags = useCallback(() => {
+    fetch("/api/internal/floorplans/qmi-flags")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && !data.error) setFlags(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchFlags();
+  }, [fetchFlags]);
+
+  /** Checks every site's flags now; the page looks again as the check goes. */
+  async function checkFlagsNow() {
+    setCheckingFlags(true);
+    try {
+      await fetch("/api/internal/floorplans/qmi-flags", { method: "POST" });
+      for (const wait of [15_000, 30_000, 60_000]) {
+        await new Promise((done) => setTimeout(done, wait));
+        fetchFlags();
+      }
+    } finally {
+      setCheckingFlags(false);
+    }
+  }
 
   async function saveSync(updates: Partial<SyncSettings>) {
     if (!sync) return;
@@ -449,6 +498,68 @@ export default function BuildersSettingsPage() {
             one successful manual Run — onboard each builder by hand first. A sync or a Run
             keeps going if you leave this page.
           </p>
+        </div>
+      )}
+
+      {flags && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+            <strong>Quick move-in flags</strong>
+            <span className="text-muted text-sm">
+              {flags.checked.length
+                ? `Last checked ${new Date(
+                    flags.checked.map((c) => c.created_at).sort().pop()!
+                  ).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`
+                : "Not checked yet"}
+              {" · "}
+              {flags.fixes.length} fixed in the last {flags.days} days
+              {" · "}
+              {flags.problems.length} to look at
+            </span>
+            <button className="btn btn-secondary" style={{ padding: "2px 10px" }} disabled={checkingFlags} onClick={checkFlagsNow}>
+              {checkingFlags ? "Checking…" : "Check now"}
+            </button>
+            {(flags.fixes.length > 0 || flags.problems.length > 0) && (
+              <button className="btn btn-secondary" style={{ padding: "2px 10px" }} onClick={() => setFlagsOpen((o) => !o)}>
+                {flagsOpen ? "Hide details" : "Show details"}
+              </button>
+            )}
+          </div>
+          <p className="text-muted text-sm" style={{ marginTop: 8, marginBottom: 0 }}>
+            A floor plan&apos;s &quot;quick move-ins available&quot; flag, banner, badge and dot are set from the
+            published quick move-ins filed under it in Wix — right after every approved change, and four times a
+            day for every row — without a review.
+          </p>
+          {flagsOpen && (
+            <div style={{ marginTop: 12 }}>
+              {flags.problems.length > 0 && (
+                <>
+                  <div className="text-sm" style={{ fontWeight: 600, marginBottom: 4 }}>To look at</div>
+                  <ul className="text-sm" style={{ margin: "0 0 12px", paddingLeft: 18 }}>
+                    {flags.problems.map((p, i) => (
+                      <li key={p.id ?? i}>
+                        {p.fp_sites?.name} · {p.builder} · {p.village} · <strong>{p.plan_name}</strong>: {p.detail}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {flags.fixes.length > 0 && (
+                <>
+                  <div className="text-sm" style={{ fontWeight: 600, marginBottom: 4 }}>Fixed</div>
+                  <ul className="text-sm" style={{ margin: 0, paddingLeft: 18 }}>
+                    {flags.fixes.map((f, i) => (
+                      <li key={f.id ?? i}>
+                        {new Date(f.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}{" "}
+                        · {f.fp_sites?.name} · {f.builder} · {f.village} · <strong>{f.plan_name}</strong>:{" "}
+                        {f.action === "set" ? "now shows quick move-ins" : "no longer shows quick move-ins"} ({f.detail})
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 

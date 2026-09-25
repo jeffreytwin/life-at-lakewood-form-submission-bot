@@ -21,6 +21,10 @@
       "schedule": "*/15 * * * *"
     },
     {
+      "path": "/api/cron/floorplan-qmi-flags",
+      "schedule": "41 1,7,13,19 * * *"
+    },
+    {
       "path": "/api/cron/floorplan-photo-sort",
       "schedule": "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
     }

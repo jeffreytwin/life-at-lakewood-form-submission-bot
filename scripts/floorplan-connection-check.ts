@@ -32,6 +32,7 @@ import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-p
 import { pageIsBotCheck } from "@/lib/floorplans/extractors/rendered";
 import { pixelDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
+import { checkAllFlags } from "@/lib/floorplans/qmi-flags";
 
 interface Target {
   builder: string;
@@ -67,6 +68,8 @@ interface Config {
   detailPlans?: number;
   /** Plans or homes printed with every picture, by name, whatever their size. */
   detailNames?: string[];
+  /** The quick move-in flag check (qmi-flags.ts) over every site, only looking: what it would set, clear and report. */
+  qmiFlags?: boolean;
   /** Feeds read as a run would, printed around the words given: a POST with its body, as a builder's page sends it. */
   feeds?: { url: string; method?: string; headers?: Record<string, string>; body?: unknown; around: string[]; chars?: number; count?: number }[];
   checks: Target[];
@@ -905,6 +908,16 @@ async function main() {
   for (const url of config.anatomy ?? []) {
     await keep(`anatomy: ${url}`, await anatomy(url));
     say(`anatomy of ${url} kept`);
+  }
+  if (config.qmiFlags) {
+    const lines: string[] = [];
+    for (const c of await checkAllFlags({ dryRun: true, reason: "preview check" })) {
+      lines.push(`══ ${c.site}: ${c.plans} floor plans, ${c.homes} quick move-ins; would set ${c.fixes.filter((f) => f.has).length}, clear ${c.fixes.filter((f) => !f.has).length}; ${c.problems.length} to look at${c.error ? ` (${c.error})` : ""}`);
+      for (const f of c.fixes) lines.push(`  ${f.has ? "set  " : "clear"} ${f.builder} · ${f.village} · ${f.name} (${f.homes} homes)`);
+      for (const p of c.problems) lines.push(`  ${p.kind} ${p.builder} · ${p.village} · ${p.name}: ${p.detail}`);
+    }
+    await keep("qmi flags (dry run)", lines.join("\n"));
+    say("quick move-in flags looked at");
   }
   for (const feed of config.feeds ?? []) {
     await keep(`feed: ${feed.url}`, await feedAround(feed));

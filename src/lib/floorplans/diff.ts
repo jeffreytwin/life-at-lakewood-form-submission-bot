@@ -11,7 +11,12 @@ import { asTour } from "@/lib/floorplans/standardize";
 /** Canonical records written by the first slice carry the main image here instead of in galleryImages. */
 export type CanonicalRecord = NormalizedPlan & { primaryImage?: string | null };
 
-/** Scalar fields diffed for updates: record key -> label shown in the review queue. */
+/**
+ * Scalar fields diffed for updates: record key -> label shown in the review
+ * queue. Not whether a floor plan has quick move-ins: that is counted from
+ * the quick move-ins in Wix and kept without a review (qmi-flags.ts; Jeff,
+ * 2026-09-25).
+ */
 export const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
   ["priceDisplay", "price"],
   ["name", "name"],
@@ -21,7 +26,6 @@ export const DIFF_FIELDS: [keyof NormalizedPlan, string][] = [
   ["garages", "garages"],
   ["quickMoveIn", "quick move-in"],
   ["relatedPlanName", "base plan"],
-  ["hasQuickMoveIns", "quick move-ins available"],
   ["virtualTourUrl", "virtual tour"],
   ["description", "description"],
 ];
@@ -276,6 +280,9 @@ export function mergeForUpdate(
       }
     }
   }
+  // Whether it has quick move-ins is what Wix holds under it, kept by the
+  // flag check (qmi-flags.ts), not what this run counted.
+  if (typeof current.hasQuickMoveIns === "boolean") merged.hasQuickMoveIns = current.hasQuickMoveIns;
   merged.userEditedFields = current.userEditedFields;
   return merged as unknown as NormalizedPlan;
 }

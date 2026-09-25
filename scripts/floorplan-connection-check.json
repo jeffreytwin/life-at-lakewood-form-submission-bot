@@ -1,4 +1,6 @@
 {
+  "qmiFlags": true,
+  "anatomy": ["https://www.richmondamerican.com/florida/tampa-new-homes/parrish/estates-at-rivers-edge/palm/"],
   "concurrency": 2,
   "detailPlans": 1,
   "detailNames": ["Fraser", "Palm", "Pine", "Tourmaline", "Ammolite"],
