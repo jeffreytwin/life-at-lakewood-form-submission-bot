@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fieldChanges, mergeForUpdate, samePictures, withDescriptionFrom } from "@/lib/floorplans/diff";
 import { fullSize, onePerPicture, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { viewerFills } from "@/lib/floorplans/extractors/claude-extract";
 import { withKnownSpellings } from "@/lib/floorplans/pictures";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -94,5 +95,38 @@ describe("a quick move-in's description written on its own (Jeff, 2026-09-25)", 
     expect(written.raw).toEqual({ lot: "7" });
     expect(written.galleryImages).toEqual(azureOld);
     expect(written.priceDisplay).toBe("$600,000");
+  });
+});
+
+describe("a plan viewer adds only what the page lacks (Neal Communities' Canoe Creek, Jeff 2026-09-25)", () => {
+  const hub = "https://life-at-lakewood-form-submission-bo.vercel.app/api/floorplans/planviewer/nealcom/2081144";
+  const viewer = {
+    drawings: [`${hub}/First_Floor.svg`, `${hub}/Second_Floor.svg`],
+    elevations: ["https://planviewer.cpsusa.com/nealcom/api/attachment/2299711"],
+    meta: { "https://planviewer.cpsusa.com/nealcom/api/attachment/2299711": { caption: "Elevation FH1", room: "exterior" as const, kind: "exterior" as const } },
+    tour: null,
+  };
+  const ownPlan = `${up}/2025/01/10093224/new-homes-parrish-florida-canoe-creek-azure-floorplan-1.jpg?auto=format%2Ccompress`;
+
+  it("draws no floor plan twice where the page shows its own, nor the house", () => {
+    const filled = viewerFills({ blueprints: [ownPlan], photos: azureNew.slice(0, 2), ownElevations: true }, viewer);
+    expect(filled.blueprints).toEqual([ownPlan]);
+    expect(filled.photos).toEqual(azureNew.slice(0, 2));
+    expect(filled.meta).toEqual({});
+  });
+
+  it("gives a page with no drawing and no outside of the house the viewer's (Neal Signature)", () => {
+    const filled = viewerFills({ blueprints: [], photos: [], ownElevations: false }, viewer);
+    expect(filled.blueprints).toEqual(viewer.drawings);
+    expect(filled.photos).toEqual(viewer.elevations);
+    expect(filled.meta).toEqual(viewer.meta);
+  });
+});
+
+describe("the viewer's duplicates leave the record (Jeff, 2026-09-25)", () => {
+  it("proposes taking out the viewer's elevations where the page shows its own", () => {
+    const viewer = ["2299711", "2299713", "2299715"].map((id) => `https://planviewer.cpsusa.com/nealcom/api/attachment/${id}`);
+    const own = [azureNew[0], azureNew[1], `${up}/2026/02/10104754/Canoe-Creek_-Azure-60-4443-Elevation-C1.jpg${q1600}`];
+    expect(fieldChanges(plan({ galleryImages: [...own, ...viewer] }), plan({ galleryImages: own })).map((c) => c.label)).toContain("photos");
   });
 });

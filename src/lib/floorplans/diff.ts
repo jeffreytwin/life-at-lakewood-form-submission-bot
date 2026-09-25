@@ -209,6 +209,9 @@ export function samePictures(a: string[], b: string[]): boolean {
   return ka.length === kb.length && ka.every((k, i) => k === kb[i]);
 }
 
+/** A picture CPS's plan viewer drew, or the Hub drew from it (planviewer.ts). */
+const FROM_VIEWER = /planviewer\.cpsusa\.com\/|\/api\/floorplans\/planviewer\//i;
+
 /**
  * Whether a run read enough of a gallery to speak for it. It did not when
  * it could not read the plan's own page, when it found none of the plan's
@@ -221,7 +224,10 @@ export function samePictures(a: string[], b: string[]): boolean {
  */
 export function galleryRead(current: CanonicalRecord, plan: NormalizedPlan, field: GalleryField): boolean {
   if (plan.pageUnread === true) return false;
-  const before = onePerPicture(galleryOf(current, field)).photos;
+  // The plan viewer's pictures are not the builder's page's: a run that
+  // leaves them out where the page draws its own (claude-extract.ts,
+  // viewerFills) has not read the page only in part.
+  const before = onePerPicture(galleryOf(current, field)).photos.filter((u) => !FROM_VIEWER.test(u));
   const after = onePerPicture(galleryOf(plan, field)).photos;
   if (!before.length) return true;
   if (!after.length) return false;

@@ -17,7 +17,7 @@ import { logger } from "@/lib/shared/logger";
 import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
-import { planViewerExtras } from "@/lib/floorplans/extractors/planviewer";
+import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
 import { asTour, bathsStated } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
@@ -742,14 +742,15 @@ export async function readPlanPageWithClaude(
   // floorplan"): the page shows no drawing of its own, the viewer draws
   // each floor, and its floors are the plan's drawings, its elevations
   // views of the house, and its tour the tour where the builder gave one
-  // (planviewer.ts, 2026-09-24).
-  const viewer = await planViewerExtras(html);
-  for (const src of viewer.drawings) if (!blueprints.includes(src)) blueprints.push(src);
-  for (const src of viewer.elevations) {
-    if (kept.has(pictureKey(src))) continue;
-    kept.add(pictureKey(src));
-    photos.push(src);
-  }
+  // (planviewer.ts, 2026-09-24). Only what the page itself lacks, though:
+  // Neal Communities' pages show their own floor plan and elevations, and
+  // the viewer's are the same plan and houses drawn again — Canoe Creek's
+  // Azure carried its floor plan three times and its elevations twice
+  // (Jeff, 2026-09-25).
+  const ownElevations = outsides.length > 0 || Object.values(said).some((m) => m.room === "exterior");
+  const viewer = viewerFills({ blueprints, photos, ownElevations }, await planViewerExtras(html));
+  blueprints.splice(0, blueprints.length, ...viewer.blueprints);
+  photos.splice(0, photos.length, ...viewer.photos);
   // A list gives the plans it prices; the rest carry their price on their
   // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
   const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);
@@ -1183,6 +1184,23 @@ async function extractPages(
   });
 }
 
+
+/**
+ * What a plan viewer adds to a plan page: its floors where the page shows
+ * no drawing of its own, and its elevations where the page shows no
+ * outside of the house — never the same plan or house drawn again (Neal
+ * Communities' Canoe Creek, Jeff 2026-09-25). Pure; exported for tests.
+ */
+export function viewerFills(
+  page: { blueprints: string[]; photos: string[]; ownElevations: boolean },
+  viewer: PlanViewerExtras
+): { blueprints: string[]; photos: string[]; meta: Record<string, GalleryMeta>; tour: string | null } {
+  const blueprints = page.blueprints.length ? page.blueprints : [...viewer.drawings];
+  if (page.ownElevations) return { blueprints, photos: page.photos, meta: {}, tour: viewer.tour };
+  const kept = new Set(page.photos.map(pictureKey));
+  const added = viewer.elevations.filter((src) => !kept.has(pictureKey(src)));
+  return { blueprints, photos: [...page.photos, ...added], meta: viewer.meta, tour: viewer.tour };
+}
 
 /**
  * A picture read both as a photograph and as a drawing is one or the
