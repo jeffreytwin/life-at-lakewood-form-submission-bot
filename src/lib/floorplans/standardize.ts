@@ -166,11 +166,20 @@ const INTERACTIVE_PLAN = /(?:^|\/\/|\.)(?:blu-plan\.com|thebdxinteractive\.com|m
  */
 const LENNAR_TOUR = /^https?:\/\/hd\.lennar\.com\//i;
 
+/**
+ * Addresses that are never a tour, whatever a page calls them: KB's
+ * "kb-vu.com/reservu/…" is its reservation app, and a picture or a
+ * document is a picture or a document — KB's Plan 1707 at Creekside came
+ * back with its front elevation (".../exterior-images-front/…-exterior_4050-1.jpg")
+ * as its tour (Jeff, 2026-09-25).
+ */
+const NOT_A_TOUR = /(?:^|\/\/|\.)kb-vu\.com(?:[/:?#]|$)|\.(?:jpe?g|png|webp|avif|gif|svg|pdf)(?:[?#]|$)/i;
+
 /** The address if it is a tour at all, and nothing if it only says it is. Exported for tests. */
 export function asTour(url: string | null | undefined): string | null {
   const address = url?.trim();
   if (!address) return null;
-  if (INTERACTIVE_PLAN.test(address)) return null;
+  if (INTERACTIVE_PLAN.test(address) || NOT_A_TOUR.test(address)) return null;
   // Lennar's viewer link names the same tour modsy's does, by the same number.
   const viewer = address.match(/^https?:\/\/hd\.lennar\.com\/apps\/home-viewer\?vtid=(\d+)/i);
   if (viewer) return `https://hd.modsy.com/apps/home-viewer?vtid=${viewer[1]}`;

@@ -1,8 +1,16 @@
 {
+  "raw": [
+    {
+      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1707-modeled",
+      "around": ["floor-plan/", "floorplan", "_fp", "kb-vu", "Floor Plan", ".svg"],
+      "chars": 1400,
+      "count": 3
+    }
+  ],
   "concurrency": 2,
-  "detailPlans": 1,
+  "detailPlans": 2,
   "duplicates": [],
   "checks": [
-    { "builder": "Lee Wetherington", "all": true, "noSurvey": true }
+    { "builder": "KB Home", "community": "Creekside at Rutland Ranch", "noSurvey": true }
   ]
 }

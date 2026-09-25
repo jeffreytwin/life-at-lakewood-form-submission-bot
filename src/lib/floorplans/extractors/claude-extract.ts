@@ -558,7 +558,14 @@ export function sortDrawings(urls: string[]): { drawings: string[]; views: strin
     const namesView =
       /\b(elevation|elevations|exterior|exteriors|rendering|renderings|rend|front|rear|facade|streetscape|scheme|schemes|sch|traditional|transitional|craftsman|coastal|colonial|farmhouse|mediterranean|contemporary|modern|prairie|tuscan|spanish)\b/.test(name) ||
       /\b(elevations?|exteriors?|renderings?)\b/.test(folderWords(url));
-    (namesView && !namesPlan ? views : drawings).push(url);
+    // And a photo: one named for a room, or in a folder of photos — KB's
+    // ".../floor-plan/interior-images/..._1707-greatroom-1.jpg" and
+    // ".../floor-plan/cameos/..." were taken for drawings (2026-09-25).
+    const photo =
+      Boolean(classifyRoom(fileNameWords(url))) ||
+      /\b(interiors?|interior images|photos?|gallery|cameos?)\b/.test(folderWords(url).split(" ").slice(-2).join(" "));
+    if ((namesView || photo) && !namesPlan) views.push(url);
+    else drawings.push(url);
   }
   return { drawings, views };
 }
