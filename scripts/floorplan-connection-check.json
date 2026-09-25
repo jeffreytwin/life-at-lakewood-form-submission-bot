@@ -1,26 +1,36 @@
 {
   "raw": [
     {
-      "url": "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/plan-1707-modeled",
+      "url": "https://wellenpark.com/builder/john-cannon-homes/",
       "around": [
-        "floor-plan/",
-        "floorplan",
-        "_fp",
-        "kb-vu",
-        "Floor Plan",
-        ".svg"
+        "data-neighborhood=",
+        "Country Club",
+        "country-club"
       ],
-      "chars": 1400,
+      "chars": 250,
+      "count": 8
+    },
+    {
+      "url": "https://wellenpark.com/home/2566416/detail/",
+      "around": [
+        "Neighborhood",
+        "Country Club",
+        "Everly",
+        "country-club"
+      ],
+      "chars": 500,
       "count": 3
     },
     {
-      "url": "https://wellenpark.com/builder/john-cannon-homes/",
+      "url": "https://wellenpark.com/neighborhood/wellen-park-golf-country-club/overview/",
       "around": [
-        "data-builder=",
-        "data-neighborhood="
+        "John Cannon",
+        "john-cannon",
+        "Kylie",
+        "Akarra"
       ],
-      "chars": 900,
-      "count": 6
+      "chars": 500,
+      "count": 3
     }
   ],
   "concurrency": 2,
@@ -28,59 +38,29 @@
   "duplicates": [],
   "checks": [
     {
-      "builder": "KB Home",
-      "community": "Creekside at Rutland Ranch",
+      "builder": "John Cannon Homes",
+      "community": "Waterside - Wild Blue",
       "noSurvey": true
     },
     {
       "builder": "John Cannon Homes",
-      "community": "Waterside - Wild Blue",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34707&home-search=Search+Homes&submitted=1&sortby=price-asc"
-      }
-    },
-    {
-      "builder": "John Cannon Homes",
       "community": "Waterside - Kingfisher Estates",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34707&home-search=Search+Homes&submitted=1&sortby=price-asc"
-      }
+      "noSurvey": true
     },
     {
       "builder": "John Cannon Homes",
       "community": "Monarch Acres",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34707&home-search=Search+Homes&submitted=1&sortby=price-asc"
-      }
+      "noSurvey": true
     },
     {
       "builder": "John Cannon Homes",
       "community": "Star Farms",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "lakewoodranch",
-        "url": "https://lakewoodranch.com/home-finder/?build%5B%5D=34707&home-search=Search+Homes&submitted=1&sortby=price-asc"
-      }
+      "noSurvey": true
     },
     {
       "builder": "John Cannon Homes",
       "community": "Everly",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "wellenpark",
-        "url": "https://wellenpark.com/builder/john-cannon-homes/"
-      }
+      "noSurvey": true
     },
     {
       "builder": "John Cannon Homes",

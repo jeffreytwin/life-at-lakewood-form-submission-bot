@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { sortDrawings } from "@/lib/floorplans/extractors/claude-extract";
 import { drawingsNamed } from "@/lib/floorplans/extractors/plan-page";
 import { asTour } from "@/lib/floorplans/standardize";
+import { descriptionChanged, mergeForUpdate } from "@/lib/floorplans/diff";
 
 // KB's Creekside at Rutland Ranch, as a run read it (Jeff, 2026-09-25).
 const kb = "https://www.kbhome.com/globalassets/images/community-images/florida/sarasota-bradenton/creekside-at-rutland-ranch/floor-plan";
@@ -30,5 +31,30 @@ describe("addresses that are never a tour (KB, Jeff 2026-09-25)", () => {
     expect(asTour(`${kb}/exterior-images-front/kbtpa_creeksideatrutlandranch_1707-exterior_4050-1.jpg`)).toBeNull();
     expect(asTour("https://example.com/brochure.pdf?x=1")).toBeNull();
     expect(asTour("https://my.matterport.com/show/?m=bxTr9izXr4F")).toBe("https://my.matterport.com/show/?m=bxTr9izXr4F");
+  });
+});
+
+describe("a description we wrote never replaces the builder's (KB Creekside, Jeff 2026-09-25)", () => {
+  const plan = (description: string | null, generated = false) => ({
+    planKey: "plan-1989", name: "Plan 1989", price: 350000, priceDisplay: "$350,000", beds: "3", baths: "2", sqft: 1989,
+    garages: "2 car", homeType: "Single Family Home", quickMoveIn: false, comingSoon: false, sourceUrl: null,
+    galleryImages: [], blueprintImages: [], description, raw: generated ? { descriptionGenerated: true } : {},
+  });
+  const builders = "Explore roomy living areas and great features. Highlights include an open great room, a flex space and a covered patio.";
+  const ours = "The Plan 1989 is available to be built in Creekside at Rutland Ranch. The price shown is the base price. This plan features 3 Bedrooms, 2 Baths and a 2 car garage.";
+
+  it("keeps the builder's text when a run read none and wrote its own", () => {
+    expect(descriptionChanged(plan(builders), plan(ours, true))).toBe(false);
+    expect(mergeForUpdate(plan(builders), { ...plan(ours, true), priceDisplay: "$355,000" })).toMatchObject({ description: builders, raw: {} });
+  });
+
+  it("still takes the builder's text over one we wrote, and ours where there was none", () => {
+    expect(descriptionChanged(plan(ours, true), plan(builders))).toBe(true);
+    expect(descriptionChanged(plan(null), plan(ours, true))).toBe(true);
+  });
+
+  it("lets ours replace ours written before the mark, when the plan's facts moved", () => {
+    const before = ours.replace("3 Bedrooms", "4 Bedrooms");
+    expect(descriptionChanged(plan(before), plan(ours, true))).toBe(true);
   });
 });

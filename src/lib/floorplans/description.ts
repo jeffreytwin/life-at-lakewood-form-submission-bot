@@ -211,6 +211,7 @@ export function withDescriptions(plans: NormalizedPlan[], communityName: string)
     if (own && !looksLikeSpecList(own)) return plan;
     const raw = own ? { ...(plan.raw ?? {}), featuresLine: own } : plan.raw;
     if (plan.quickMoveIn) return own ? { ...plan, description: null, raw } : plan;
-    return { ...plan, description: describePlan(plan, communityName), raw };
+    // Marked, so it never replaces a description the builder wrote (diff.ts).
+    return { ...plan, description: describePlan(plan, communityName), raw: { ...(raw ?? {}), descriptionGenerated: true } };
   });
 }

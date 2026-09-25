@@ -111,6 +111,15 @@ const builderText = (plan: NormalizedPlan): string => {
 };
 
 /**
+ * Whether a plan's description is one we wrote (description.ts,
+ * describePlan): marked so since 2026-09-25, and known by its words on
+ * records written before.
+ */
+const OUR_SENTENCE = /\bis available to be built in\b[\s\S]*?\bThe price shown is the base price\./;
+const weWrote = (plan: NormalizedPlan): boolean =>
+  plan.raw?.descriptionGenerated === true || OUR_SENTENCE.test(plan.description ?? "");
+
+/**
  * Whether a run's description is a change worth a person's look. Not when
  * the run read none — a blank is not the builder taking its description
  * away (Jeff, 2026-09-25) — nor a tag line where a paragraph stands, nor
@@ -120,6 +129,11 @@ const builderText = (plan: NormalizedPlan): string => {
  * Exported for tests.
  */
 export function descriptionChanged(current: NormalizedPlan, plan: NormalizedPlan): boolean {
+  // One we wrote because this run read none never replaces the builder's:
+  // KB's Creekside pages give their text on one read and only a list of
+  // features on the next, and the queue proposed our stock sentence over
+  // the builder's own (Jeff, 2026-09-25).
+  if (weWrote(plan) && current.description?.trim() && !weWrote(current)) return false;
   const next = plan.description?.trim() ?? "";
   const before = current.description?.trim() ?? "";
   if (!next || next === before) return false;
@@ -278,6 +292,8 @@ export function mergeForUpdate(
     const raw = { ...((merged.raw as Record<string, unknown> | undefined) ?? {}) };
     if (typeof original === "string") raw.descriptionOriginal = original;
     else delete raw.descriptionOriginal;
+    if (weWrote(current)) raw.descriptionGenerated = true;
+    else delete raw.descriptionGenerated;
     merged.raw = raw;
   }
   if (!overrides.has("virtualTourUrl") && !tourChanged(current, plan)) {
