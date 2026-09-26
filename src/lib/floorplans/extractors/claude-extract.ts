@@ -86,6 +86,7 @@ export const EXTRACT_TOOL: Anthropic.Tool = {
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
+            seriesOfPlans: { type: "boolean", description: "True when this entry is not one plan but a group of plans with a page of its own — a series, collection or lot width (\"Seaire 40'\", \"The Townhomes\"), usually showing its own counts of plans and homes (\"3 Plans\", \"9 Homes\") and ranges of sizes and prices. Report it once, with its page link in sourceUrl; its plans are read from that page" },
             relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address. Where the page gives a plan both a code and a name (\"Plan B929 The Waterway\"), the name (\"The Waterway\")" },
             sourceUrl: { type: "string", description: "Absolute URL of the plan's detail page if linked" },
             description: { type: "string", description: "The builder's own description of the plan, as written; omit if the page gives none" },
@@ -152,6 +153,7 @@ interface ExtractedPlan {
   virtualTourUrl?: string;
   photoImages?: string[];
   blueprintImages?: string[];
+  seriesOfPlans?: boolean;
 }
 
 /** Strip HTML to visible text; keep img/link URLs as annotations. */
@@ -845,7 +847,7 @@ async function listPage(
     press?: readonly string[];
     read?: PageReader;
   }
-): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null; homesPage?: string | null }> {
+): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null; homesPage?: string | null; series?: string[] }> {
   const page = await (opts.read ?? fetchPage)(url, opts.press ? { press: opts.press } : undefined);
   // Asked to open a tab and the page has no such tab: there is nothing
   // behind it to read, and nothing to pay a model to read.
@@ -912,9 +914,19 @@ async function listPage(
         : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
     );
   }
-  const plans = reported
-    .filter((p) => p?.name?.trim())
-    .map(withoutBlanks)
+  const answered = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
+  // A series is a page of plans, not a plan (Dream Finders' Seaire, Jeff
+  // 2026-09-26): its page is read in its turn (extractPages).
+  const series = [
+    ...new Set(
+      answered
+        .filter((p) => p.seriesOfPlans === true && !opts.quickMoveIns)
+        .map((p) => linkOnPage(p.sourceUrl, page.html, page.url || url))
+        .filter((u): u is string => Boolean(u))
+    ),
+  ];
+  const plans = answered
+    .filter((p) => p.seriesOfPlans !== true)
     // Asked for plans only, a home that came back anyway is left to its own page.
     .filter((p) => !opts.plansOnly || (p.quickMoveIn !== true && !namesAnAddress(planName(p.name)) && !planInHomeLabel(p.name)));
   if (plans.length === 0 && pageLooksUnrendered(content)) {
@@ -950,7 +962,7 @@ async function listPage(
       blueprintImages: pictureAddresses(p.blueprintImages),
     };
   });
-  return { url: page.url || url, plans: listed, pressed: page.pressed ?? null, homesPage: homesPageIn(page.html, page.url || url) };
+  return { url: page.url || url, plans: listed, pressed: page.pressed ?? null, homesPage: homesPageIn(page.html, page.url || url), series };
 }
 
 /** What a community calls the page of its homes for sale, as the last part of its address. */
@@ -1207,6 +1219,21 @@ async function extractPages(
       return { pageUrl, error: error instanceof Error ? error.message : String(error) };
     }
   });
+  const take = (plan: NormalizedPlan) => {
+    // A base plan another of the community's pages already listed is
+    // that plan again, not a second one (mergeRepeatedPlan).
+    const twin = plan.quickMoveIn ? -1 : listed.findIndex((p) => !p.quickMoveIn && p.planKey === plan.planKey);
+    if (twin >= 0) {
+      listed[twin] = mergeRepeatedPlan(listed[twin], plan);
+      return;
+    }
+    // And a home another page listed is that home again (sameHome).
+    if (plan.quickMoveIn && listed.some((p) => p.quickMoveIn && sameHome(p, plan))) return;
+    const planKey = distinctKey(plan, taken);
+    taken.add(planKey);
+    listed.push({ ...plan, planKey });
+  };
+  const series = new Set<string>();
   for (const { pageUrl, page, error } of lists) {
     if (!page) {
       // One page of four going down should cost the run that page, not the
@@ -1218,20 +1245,31 @@ async function extractPages(
     }
     listPages.add(page.url);
     readPages.push(page.url || pageUrl);
-    for (const plan of page.plans) {
-      // A base plan another of the community's pages already listed is
-      // that plan again, not a second one (mergeRepeatedPlan).
-      const twin = plan.quickMoveIn ? -1 : listed.findIndex((p) => !p.quickMoveIn && p.planKey === plan.planKey);
-      if (twin >= 0) {
-        listed[twin] = mergeRepeatedPlan(listed[twin], plan);
-        continue;
-      }
-      const planKey = distinctKey(plan, taken);
-      taken.add(planKey);
-      listed.push({ ...plan, planKey });
-    }
+    for (const plan of page.plans) take(plan);
+    for (const u of page.series ?? []) series.add(u);
   }
   if (refused.length === planPages.length) throw new Error(refused.join("; "));
+
+  // The pages of the series the lists pointed to, one level down, for the
+  // plans each one holds: Dream Finders' Seaire lists four series and not
+  // one plan, and a run that took the series for plans offered four
+  // "plans" and left twenty-nine homes with nothing to file under (Jeff,
+  // 2026-09-26).
+  const seriesPages = [...series].filter((u) => !listPages.has(u)).slice(0, 8);
+  const seriesRead = await mapLimit(seriesPages, 4, async (pageUrl) => {
+    try {
+      return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read, plansOnly: homesEarly !== null }) };
+    } catch (error) {
+      logger.warn("A series' page could not be read", { url: pageUrl, error: error instanceof Error ? error.message : String(error) });
+      return { pageUrl, page: null };
+    }
+  });
+  for (const { pageUrl, page } of seriesRead) {
+    if (!page) continue;
+    listPages.add(pageUrl).add(page.url);
+    readPages.push(page.url || pageUrl);
+    for (const plan of page.plans) take(plan);
+  }
 
   // The builder's own page of homes for sale, where it keeps one away from
   // its plans (Stock's /inventory/, Jeff 2026-09-22). A page that cannot be

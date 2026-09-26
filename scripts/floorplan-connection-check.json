@@ -1,18 +1,21 @@
 {
-  "raw": [
-    {
-      "url": "https://homesbytowne.com/florida/palmera-at-wellen-park/tideland",
-      "around": [
-        "&quot;bedrooms&quot;",
-        "floorplan_image"
-      ],
-      "chars": 900,
-      "after": 6000,
-      "count": 1
-    }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": []
+  "checks": [
+    {
+      "builder": "Dream Finders Homes",
+      "community": "Seaire",
+      "noSurvey": true
+    },
+    {
+      "builder": "Dream Finders Homes",
+      "community": "Waterside - Bungalow Walk",
+      "noSurvey": true
+    }
+  ],
+  "anatomy": [
+    "https://apps.zondavirtual.com/alphaplan/index.html?plan=1146a39d-4a7a-4f96-b5ca-3e20cc352913"
+  ]
 }
