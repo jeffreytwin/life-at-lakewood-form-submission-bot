@@ -29,7 +29,7 @@ import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator
 import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
 import { extractKb } from "@/lib/floorplans/extractors/kb";
 import { extractHighland } from "@/lib/floorplans/extractors/highland";
-import { comparedFields, fieldChanges, mergeForUpdate, withDescriptionFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { comparedFields, fieldChanges, mergeForUpdate, splitOnItsOwn, withDescriptionFrom, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { withKnownTours } from "@/lib/floorplans/tours";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
@@ -266,6 +266,17 @@ async function withdrawOutdated(
   if (!untouched.length) return;
   const { error } = await supabase.from("fp_pending_changes").delete().in("id", untouched.map((r) => r.id));
   if (error) logger.warn("Outdated pending changes could not be withdrawn", { planKey: ids.planKey, error: error.message });
+}
+
+/** Whether anything of the plan's other than its price is waiting for a person. */
+async function othersWaiting(ids: { siteId: string; communityId: string; builderId: string; planKey: string }): Promise<boolean> {
+  const { data } = await supabase
+    .from("fp_pending_changes")
+    .select("id, field_changed")
+    .match({ site_id: ids.siteId, community_id: ids.communityId, builder_id: ids.builderId, plan_key: ids.planKey })
+    .in("status", ["pending", "approving"])
+    .limit(5);
+  return (data ?? []).some((r) => r.field_changed !== "price");
 }
 
 /**
@@ -615,22 +626,27 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       if (await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue })) rejected.add(change.field);
     }
     const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, rejected), remembered), plan);
-    // A quick move-in's description is not shown on the site; it only
-    // helps a person tell which floor plan an unknown home is. Its change is
-    // approved without a review and written on its own (Jeff, 2026-09-25).
-    const described =
-      plan.quickMoveIn === true && existing.wix_record_id
-        ? changes.find((c) => c.field === "description" && !rejected.has(c.field))
-        : undefined;
-    const reviewed = changes.filter((c) => !rejected.has(c.field) && c !== described);
+    // Approved without a review, and written on their own: a quick move-in's
+    // description, and a price that moved by a fifth or less when it is all
+    // that changed (splitOnItsOwn).
+    const split = splitOnItsOwn(current, plan, changes.filter((c) => !rejected.has(c.field)), Boolean(existing.wix_record_id));
+    const onItsOwn = [...split.onItsOwn];
+    const reviewed = [...split.reviewed];
     await withdrawOutdated(ids, comparedFields(current, plan), reviewed, current);
-    if (described) {
+    // Nor with anything of the plan's still waiting for a person from an
+    // earlier run: then the price waits with it.
+    const price = onItsOwn.find((c) => c.field === "priceDisplay");
+    if (price && (await othersWaiting(ids))) {
+      onItsOwn.splice(onItsOwn.indexOf(price), 1);
+      reviewed.push(price);
+    }
+    for (const change of onItsOwn) {
       await approveOnItsOwn({
         siteId: site.id, communityId: community.id, builderId: builder.id,
-        planKey: plan.planKey, fieldChanged: described.label,
-        oldValue: described.oldValue, newValue: described.newValue,
-        proposedRecord: withDescriptionFrom(current, plan), wixRecordId: existing.wix_record_id,
-        floorPlanId: existing.id, runId,
+        planKey: plan.planKey, fieldChanged: change.label,
+        oldValue: change.oldValue, newValue: change.newValue,
+        proposedRecord: change.field === "description" ? withDescriptionFrom(current, plan) : withPriceFrom(current, plan),
+        wixRecordId: existing.wix_record_id!, floorPlanId: existing.id, runId,
       });
     }
     for (const change of reviewed) {

@@ -3,15 +3,7 @@
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": [
-    {
-      "builder": "D.R. Horton",
-      "community": "Star Farms",
-      "noSurvey": true
-    }
-  ],
+  "checks": [],
   "anatomy": [],
-  "detailNames": [
-    "Torino"
-  ]
+  "detailNames": []
 }

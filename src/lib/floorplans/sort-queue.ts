@@ -53,13 +53,21 @@ interface QueuedRow {
 }
 
 /**
- * Whether a waiting change's gallery is still to be sorted: nobody's hand
- * on it, and not every photo of it looked at and put in order yet. A
- * gallery a builder captions is sorted too, so what the sites show is what
- * its photos show, not what the builder called them. Exported for tests.
+ * Galleries this small are left in the order the run gave them, and their
+ * photos are not looked at: a look is a model's read of every picture,
+ * and five pictures are put right at a glance (Jeff, 2026-09-26).
+ */
+export const FEW_PHOTOS = 5;
+
+/**
+ * Whether a waiting change's gallery is still to be sorted: more than a few
+ * photos, nobody's hand on it, and not every photo of it looked at and put
+ * in order yet. A gallery a builder captions is sorted too, so what the
+ * sites show is what its photos show, not what the builder called them.
+ * Exported for tests.
  */
 export function wantsSorting(record: NormalizedPlan | null): record is NormalizedPlan {
-  return handsOff(record) && !record.photosSorted;
+  return handsOff(record) && record.galleryImages.length > FEW_PHOTOS && !record.photosSorted;
 }
 
 /** Whether a waiting change's gallery is still to be checked for a photograph shown twice. Exported for tests. */
@@ -105,7 +113,9 @@ export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number
   // galleries finish one after another; looked at a wave at a time while
   // the tick has time. A wave whose request failed is looked at again on
   // a later tick (photo-rooms.ts).
-  const all = [...new Set(rows.flatMap((r) => r.proposed_record!.galleryImages))];
+  // Only the galleries to be sorted: one waiting only to be checked for
+  // copies costs no look.
+  const all = [...new Set(rows.filter((r) => wantsSorting(r.proposed_record)).flatMap((r) => r.proposed_record!.galleryImages))];
   const known = await rememberedRooms(all);
   const fresh = all.filter((url) => !known.has(url));
   let looked = 0;

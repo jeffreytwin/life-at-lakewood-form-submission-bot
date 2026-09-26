@@ -41,7 +41,8 @@ import { fieldChangeDetail, homeChangeDetail } from "@/lib/floorplans/campaign-t
 import { findItemNamed, itemNamedAtStart, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
 import { wixImageUri } from "@/lib/listings/types";
 import { measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
-import { normKey, type GalleryMeta } from "@/lib/floorplans/types";
+import { normKey, type GalleryMeta, type NormalizedPlan } from "@/lib/floorplans/types";
+import { ownFieldOnto } from "@/lib/floorplans/diff";
 
 /** A plan is builder + community + name (migration 065); the same trio keys the Wix row's syncKey. */
 const PLAN_IDENTITY = "site_id,community_id,builder_id,plan_key";
@@ -763,9 +764,10 @@ export async function applyPendingChange(changeId: string): Promise<{
     // quick move-in of one, raises an alert so the marketing can follow.
     const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
     async function alertCampaign(taskType: CampaignTaskType, detail: string, rec: ProposedRecord | null, homeDetail?: string) {
-      // A change approved without a review (a quick move-in's description)
-      // is nothing the marketing follows.
-      if (String(change.run_id ?? "").startsWith(AUTO_RUN)) return;
+      // A change approved without a review is nothing the marketing
+      // follows (a quick move-in's description), unless it is a price: a
+      // small price change is approved on its own, and still followed.
+      if (String(change.run_id ?? "").startsWith(AUTO_RUN) && change.field_changed !== "price") return;
       const own = change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
       await alertIfTracked(own, taskType, detail, change.id);
       const isHome = rec?.quickMoveIn ?? own?.quick_move_in ?? false;
@@ -833,7 +835,13 @@ export async function applyPendingChange(changeId: string): Promise<{
 
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
-      const rec = change.proposed_record as ProposedRecord;
+      // One approved without a review writes its own field onto the record
+      // as it stands now (ownFieldOnto), not the record as the run found it.
+      const auto = String(change.run_id ?? "").startsWith(AUTO_RUN);
+      const latest = auto && change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
+      const rec = (
+        auto ? ownFieldOnto((latest?.record as NormalizedPlan | null) ?? null, change.proposed_record as NormalizedPlan, change.field_changed) : change.proposed_record
+      ) as ProposedRecord;
       const { wixRecordId, asDraft: recreatedAsDraft, urlSlug } = await writePlanToWix(
         { site, community, builder },
         change.plan_key,
