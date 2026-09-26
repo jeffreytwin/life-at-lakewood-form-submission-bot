@@ -166,6 +166,10 @@ describe("a card's line of facts is not a description (Kolter's Cresswind)", () 
     expect(looksLikeSpecList("NEW PLAN Island Collection 2,871 Total Sq. Ft. 2,129 Living Area Sq. Ft.")).toBe(true);
   });
 
+  it("knows a spec line that leads with the plan's series", () => {
+    expect(looksLikeSpecList("Island Collection 2 Bedroom (up to 3 Bedroom), Den, 2 Bath, Great Room, 2-Car Garage")).toBe(true);
+  });
+
   it("does not take a written description for one", () => {
     const written = "The Lido offers 1,675 square feet of open living, with a great room that opens to the lanai and a kitchen made for gathering.";
     expect(looksLikeFactsLine(written)).toBe(false);

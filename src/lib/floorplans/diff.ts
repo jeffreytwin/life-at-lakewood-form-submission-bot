@@ -134,6 +134,11 @@ export function descriptionChanged(current: NormalizedPlan, plan: NormalizedPlan
   // features on the next, and the queue proposed our stock sentence over
   // the builder's own (Jeff, 2026-09-25).
   if (weWrote(plan) && current.description?.trim() && !weWrote(current)) return false;
+  // Nor ours over ours: it says only what the plan's own fields say, and
+  // those are proposed as themselves (Kolter's baths, 2026-09-26). An
+  // approval writes the run's, so it says what the record then does
+  // (mergeForUpdate).
+  if (weWrote(plan) && weWrote(current)) return false;
   const next = plan.description?.trim() ?? "";
   const before = current.description?.trim() ?? "";
   if (!next || next === before) return false;
@@ -288,7 +293,7 @@ export function mergeForUpdate(
   // Nor a description or a tour the run read differently, or not at all,
   // when that is not a change (descriptionChanged, tourChanged): the record
   // keeps its own, and the site is not rewritten with a variant of it.
-  if (!overrides.has("description") && !descriptionChanged(current, plan)) {
+  if (!overrides.has("description") && !(weWrote(current) && weWrote(plan)) && !descriptionChanged(current, plan)) {
     merged.description = current.description ?? null;
     const original = current.raw?.descriptionOriginal;
     const raw = { ...((merged.raw as Record<string, unknown> | undefined) ?? {}) };

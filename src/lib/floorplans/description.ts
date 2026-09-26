@@ -214,7 +214,9 @@ export function looksLikeSpecList(text: string | null | undefined): boolean {
   if (!s || /[.!?]["')\]]?$/.test(s)) return false;
   const pieces = s.split(",").map((p) => p.trim()).filter(Boolean);
   if (pieces.length < 3) return false;
-  return pieces.every((piece) => /^[A-Z0-9(]/.test(piece) && piece.split(/\s+/).length <= 6);
+  // A piece may lead with the plan's series: Kolter's "Island Collection 2
+  // Bedroom (up to 3 Bedroom), Den, 2 Bath, …" (2026-09-26).
+  return pieces.every((piece) => /^[A-Z0-9(]/.test(piece) && piece.split(/\s+/).length <= 8);
 }
 
 /**

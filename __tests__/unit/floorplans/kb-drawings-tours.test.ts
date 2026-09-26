@@ -53,8 +53,9 @@ describe("a description we wrote never replaces the builder's (KB Creekside, Jef
     expect(descriptionChanged(plan(null), plan(ours, true))).toBe(true);
   });
 
-  it("lets ours replace ours written before the mark, when the plan's facts moved", () => {
+  it("does not propose ours over ours, and an approval writes the run's", () => {
     const before = ours.replace("3 Bedrooms", "4 Bedrooms");
-    expect(descriptionChanged(plan(before), plan(ours, true))).toBe(true);
+    expect(descriptionChanged(plan(before), plan(ours, true))).toBe(false);
+    expect(mergeForUpdate(plan(before), { ...plan(ours, true), priceDisplay: "$355,000" }).description).toBe(ours);
   });
 });
