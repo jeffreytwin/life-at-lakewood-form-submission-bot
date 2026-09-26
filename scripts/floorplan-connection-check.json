@@ -1,12 +1,22 @@
 {
   "raw": [
     {
+      "url": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/home-plans",
+      "around": [
+        "api.drbhomes.com",
+        "planId",
+        "\"plans\"",
+        "basePrice"
+      ],
+      "chars": 400,
+      "count": 3
+    },
+    {
       "url": "https://apps.zondavirtual.com/alphaplanjson/1146a39d-4a7a-4f96-b5ca-3e20cc352913.json",
       "around": [
         "\"Model\"",
         "Bedroom",
-        "Bathroom",
-        "NumberOf"
+        "Bathroom"
       ],
       "chars": 400,
       "count": 2
@@ -15,24 +25,8 @@
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": [
-    {
-      "builder": "DRB Homes",
-      "community": "Seaire",
-      "noSurvey": true
-    },
-    {
-      "builder": "David Weekley Homes",
-      "community": "Palmera",
-      "noSurvey": true,
-      "params": {
-        "url": "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-at-wellen-park",
-        "listUrls": [
-          "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-at-wellen-park",
-          "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-wellen-park-executive-series"
-        ]
-      }
-    }
-  ],
-  "anatomy": []
+  "checks": [],
+  "anatomy": [
+    "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/home-plans"
+  ]
 }
