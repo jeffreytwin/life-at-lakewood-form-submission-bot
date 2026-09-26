@@ -118,4 +118,23 @@ describe("what D.R. Horton's pages say besides their pictures", () => {
       "https://www.drhorton.com/-/media/x/hawthorne_bonus_room_floorplan.jpg",
     ]);
   });
+
+  it("takes a bonus room, an 'elev' and the next numbered photo titled Floor Plan as photos (Star Farms, Bella Lago, 2026-09-26)", () => {
+    const page = readDrhPage(`<div class="PropertyGallery-container">
+      <img data-lazy="/-/media/x/3emb/01.jpg?w=494" alt="Harper">
+      <img data-lazy="/-/media/x/3emb/13.jpg?w=494" alt="Harper">
+      <img data-lazy="/-/media/x/3emb/14.jpg?w=494" alt="Floor Plan">
+      <img data-lazy="/-/media/x/2795/14-saddlestone-camden-bonus_room.jpg?w=494" alt="Floor Plan">
+      <img data-lazy="/-/media/x/4eab/aria-c-siding-stone-gen3-elev_ind.jpg?w=494" alt="Floor Plan">
+      <img data-lazy="/-/media/x/3emb/harper-fp.jpg?w=494" alt="Floor Plan">
+    </div><div class="mobile-carousel"></div>`);
+    expect(page.drawings).toEqual(["https://www.drhorton.com/-/media/x/3emb/harper-fp.jpg"]);
+    expect(page.gallery.map((g) => g.src)).toEqual([
+      "https://www.drhorton.com/-/media/x/3emb/01.jpg",
+      "https://www.drhorton.com/-/media/x/3emb/13.jpg",
+      "https://www.drhorton.com/-/media/x/2795/14-saddlestone-camden-bonus_room.jpg",
+      "https://www.drhorton.com/-/media/x/3emb/14.jpg",
+      "https://www.drhorton.com/-/media/x/4eab/aria-c-siding-stone-gen3-elev_ind.jpg",
+    ]);
+  });
 });

@@ -59,3 +59,37 @@ describe("a description we wrote never replaces the builder's (KB Creekside, Jef
     expect(mergeForUpdate(plan(before), { ...plan(ours, true), priceDisplay: "$355,000" }).description).toBe(ours);
   });
 });
+
+describe("D.R. Horton's photos filed as drawings (Jeff, 2026-09-26)", () => {
+  const drh = "https://www.drhorton.com/-/media/drhorton/productcatalog/397-sarasota";
+  const bonus = `${drh}/39429-saddlestone/397770000-saddlestone-60-drh/2795/14-saddlestone-camden-bonus_room.jpg`;
+  const cladding = `${drh}/39411-legacy-preserve-master/397390000-legacy-preserve-50-exp/4eab/aria-c-siding-stone-gen3-elev_ind.jpg`;
+  const elev = `${drh}/39292-rye-crossing/397620000-rye-crossing-60-exp/e502/covington-g-gen3-elev_ind.jpg`;
+  const harper = `${drh}/39227-bella-lago/392300000-bella-lago-40-exp/3emb`;
+
+  it("takes a bonus room, an elevation by its cladding or by 'elev' for photos", () => {
+    expect(sortDrawings([bonus, cladding, elev])).toEqual({ drawings: [], views: [bonus, cladding, elev] });
+  });
+
+  it("takes a numbered file for the next photo where the plan's photos are numbered in its folder", () => {
+    const photos = [`${harper}/01.jpg`, `${harper}/02.jpg`, `${harper}/13.jpg`];
+    expect(sortDrawings([`${harper}/14.jpg`], photos).views).toEqual([`${harper}/14.jpg`]);
+    // Not where the photos in its folder are named otherwise.
+    expect(sortDrawings([`${harper}/14.jpg`], [`${harper}/front.jpg`]).drawings).toEqual([`${harper}/14.jpg`]);
+  });
+
+  it("takes the next of a numbered series of named photos for a photo (Torino at Star Farms)", () => {
+    const torino = `${drh}/39429-saddlestone/397770000-saddlestone-60-drh/3975`;
+    const photos = [`${torino}/1-oakfield-trails-torino-kitchen.jpg`, `${torino}/30-oakfield-trails-torino-secondary_bed.jpg`];
+    const bonusSpace = `${torino}/31-oakfield-trails-torino-bonus_space.jpg`;
+    expect(sortDrawings([bonusSpace], photos).views).toEqual([bonusSpace]);
+    // A numbered drawing of another series in the folder is still a drawing.
+    const drawing = `${torino}/1-torino-first-floor-plan.jpg`;
+    expect(sortDrawings([drawing], photos).drawings).toEqual([drawing]);
+  });
+
+  it("still keeps a drawing that names the plan's floor plan", () => {
+    const plan = `${drh}/39429-star-farms/394330000-star-farms-50-drh-emerald/2767/caroline-floorplan.jpg`;
+    expect(sortDrawings([plan]).drawings).toEqual([plan]);
+  });
+});

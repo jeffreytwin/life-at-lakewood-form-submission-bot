@@ -38,7 +38,10 @@ const ROOM_KEYWORDS: [Room, RegExp][] = [
   ["living", /\b(great room|great rooms|living|family room|gathering|lounge|open-concept|open concept)\b/i],
   ["office", /\b(office|study|den|library|flex room|flex space)\b/i],
   ["stairs", /\b(stair|stairs|staircase|stairway|landing)\b/i],
-  ["loft", /\b(loft|lofts)\b/i],
+  // A bonus room is upstairs with the loft; "bonus" alone is not a room —
+  // "Arlington w/Bonus" is a plan (D.R. Horton's "camden-bonus_room",
+  // Jeff 2026-09-26).
+  ["loft", /\b(loft|lofts|bonus ?(?:room|space|area)|game room|media room|rec room|recreation room|theater room|home theater)\b/i],
   ["hallway", /\b(hall|hallway|foyer|entry|entryway|entrance)\b/i],
   ["bedroom", /\b(bedroom|bedrooms|bed|owner'?s? suite|primary suite|master suite|guest suite|suite)\b/i],
   ["exterior", /\b(exterior|exteriors|elevation|elevations|facade|curb|garage|streetscape|rendering)\b/i],

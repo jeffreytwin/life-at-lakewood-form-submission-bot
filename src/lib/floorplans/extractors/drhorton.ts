@@ -15,7 +15,7 @@
 // plans and forty-odd homes ran past seven minutes and brought nothing
 // back. Read here, it is a fetch per page.
 
-import { mergeRepeatedPlan, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
+import { mergeRepeatedPlan, sortDrawings, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
 import { classifyRoom, fileNameWords, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
@@ -155,7 +155,7 @@ export function readDrhPage(html: string): {
   const stop = start >= 0 ? html.indexOf('class="mobile-carousel"', start) : -1;
   const block = start >= 0 ? html.slice(start, stop > start ? stop : start + 60_000) : "";
   const gallery: { src: string; caption: string }[] = [];
-  const drawings: string[] = [];
+  const titled: string[] = [];
   const seen = new Set<string>();
   for (const m of block.matchAll(/<img\b[^>]*>/gi)) {
     const tag = m[0];
@@ -180,10 +180,18 @@ export function readDrhPage(html: string): {
     const namedView = /elevation|exterior|rendering|front|rear/i.test(fileWords);
     const namedRoom = !namedView && classifyRoom(fileWords) !== null && !/\b(fp|floor ?plans?|floorplans?)\b/i.test(fileWords);
     const titledPlan = /\bfloor ?plan\b/i.test(caption);
-    if (titledPlan && !namedView && !namedRoom) drawings.push(url);
+    if (titledPlan && !namedView && !namedRoom) titled.push(url);
     // The title said nothing true; the file name is left to say what it shows.
     else gallery.push({ src: url, caption: titledPlan ? (namedView ? "Exterior" : "") : caption });
   }
+
+  // And what the drawings' own names say, as every reader hears them
+  // (sortDrawings): Aria's "…-siding-stone-gen3-elev_ind.jpg" is an
+  // elevation, and Harper's "14.jpg" the next of its "01.jpg" to "13.jpg"
+  // photos, though the page titles both "Floor Plan" (Jeff, 2026-09-26).
+  const sorted = sortDrawings(titled, gallery.map((g) => g.src));
+  const drawings = sorted.drawings;
+  for (const src of sorted.views) gallery.push({ src, caption: "" });
 
   // schema.org's FloorPlan block: the plan's own facts.
   let facts: { numberOfBedrooms?: number; numberOfBathroomsTotal?: number; floorSize?: number } = {};
