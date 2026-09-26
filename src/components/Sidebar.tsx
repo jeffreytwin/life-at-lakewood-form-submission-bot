@@ -59,13 +59,12 @@ export default function Sidebar({
   // Poll for pending floor plan change count
   useEffect(() => {
     function fetchFloorPlanCount() {
-      fetch("/api/internal/floorplans/changes?status=pending&limit=200")
+      // The badge counts plans, all of them: a list capped at two hundred
+      // rows read "200" with more waiting (Jeff, 2026-09-26).
+      fetch("/api/internal/floorplans/changes?status=pending&count=plans")
         .then((r) => r.json())
         .then((data) => {
-          // One row per changed field comes back; the badge counts plans.
-          if (Array.isArray(data)) {
-            setFloorPlanCount(new Set(data.map((c) => `${c.site_id}|${c.community_id}|${c.builder_id}|${c.plan_key}`)).size);
-          }
+          if (typeof data?.plans === "number") setFloorPlanCount(data.plans);
         })
         .catch(() => {});
     }

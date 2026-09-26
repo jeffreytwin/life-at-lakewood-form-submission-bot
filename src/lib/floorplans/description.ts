@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 import { speaksAsOwner } from "@/lib/floorplans/owner-words";
+import { fullAndHalfBaths } from "@/lib/floorplans/standardize";
 
 const MODEL = "claude-opus-5";
 /** Descriptions reworded at once, and the longest one rewording is allowed. */
@@ -182,6 +183,22 @@ export function describePlan(plan: NormalizedPlan, communityName: string): strin
   return sentences.join(" ");
 }
 
+/** A word of a line of facts: a number, or a word of the areas builders measure. */
+const FACT_WORD = /^(?:\$?\d[\d,.]*\+?|sq\.?|ft\.?|sqft|sf|total|living|area|heated|under|air)$/i;
+
+/**
+ * Whether a "description" is the line of facts a card prints — Kolter's
+ * "Key Collection 2,383 Total Sq. Ft. 1,675 Living Area Sq. Ft." — which a
+ * run read once where the plan's description belongs, and the queue
+ * proposed it over the plan's own (Jeff, 2026-09-26). Short, and mostly
+ * numbers and the words of an area. Exported for tests.
+ */
+export function looksLikeFactsLine(text: string | null | undefined): boolean {
+  const words = String(text ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length < 4 || words.length > 30) return false;
+  return words.filter((w) => FACT_WORD.test(w)).length / words.length >= 0.4;
+}
+
 /**
  * Whether a "description" is really the spec line a page prints under the
  * plan name — "Four Bedroom (Opt. Bonus Room), Four Full and 1/2 Bath,
@@ -193,10 +210,13 @@ export function describePlan(plan: NormalizedPlan, communityName: string): strin
  */
 export function looksLikeSpecList(text: string | null | undefined): boolean {
   const s = (text ?? "").trim();
+  if (looksLikeFactsLine(s)) return true;
   if (!s || /[.!?]["')\]]?$/.test(s)) return false;
   const pieces = s.split(",").map((p) => p.trim()).filter(Boolean);
   if (pieces.length < 3) return false;
-  return pieces.every((piece) => /^[A-Z0-9(]/.test(piece) && piece.split(/\s+/).length <= 6);
+  // A piece may lead with the plan's series: Kolter's "Island Collection 2
+  // Bedroom (up to 3 Bedroom), Den, 2 Bath, …" (2026-09-26).
+  return pieces.every((piece) => /^[A-Z0-9(]/.test(piece) && piece.split(/\s+/).length <= 8);
 }
 
 /**
@@ -210,8 +230,12 @@ export function withDescriptions(plans: NormalizedPlan[], communityName: string)
     const own = plan.description?.trim() ?? "";
     if (own && !looksLikeSpecList(own)) return plan;
     const raw = own ? { ...(plan.raw ?? {}), featuresLine: own } : plan.raw;
-    if (plan.quickMoveIn) return own ? { ...plan, description: null, raw } : plan;
+    // The line says the baths in words ("3 Full and 1 Half Bath"), and the
+    // words decide (standardize.ts, fullAndHalfBaths).
+    const baths = fullAndHalfBaths(own);
+    const counted = baths ? { ...plan, baths } : plan;
+    if (plan.quickMoveIn) return own ? { ...counted, description: null, raw } : plan;
     // Marked, so it never replaces a description the builder wrote (diff.ts).
-    return { ...plan, description: describePlan(plan, communityName), raw: { ...(raw ?? {}), descriptionGenerated: true } };
+    return { ...counted, description: describePlan(counted, communityName), raw: { ...(raw ?? {}), descriptionGenerated: true } };
   });
 }

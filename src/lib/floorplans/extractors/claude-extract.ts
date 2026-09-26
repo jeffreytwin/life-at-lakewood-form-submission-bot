@@ -18,7 +18,8 @@ import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevati
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
-import { asTour, bathsStated } from "@/lib/floorplans/standardize";
+import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
+import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -86,6 +87,7 @@ export const EXTRACT_TOOL: Anthropic.Tool = {
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
+            seriesOfPlans: { type: "boolean", description: "True when this entry is not one plan but a group of plans with a page of its own — a series, collection or lot width (\"Seaire 40'\", \"The Townhomes\"), usually showing its own counts of plans and homes (\"3 Plans\", \"9 Homes\") and ranges of sizes and prices. Report it once, with its page link in sourceUrl; its plans are read from that page" },
             relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address. Where the page gives a plan both a code and a name (\"Plan B929 The Waterway\"), the name (\"The Waterway\")" },
             sourceUrl: { type: "string", description: "Absolute URL of the plan's detail page if linked" },
             description: { type: "string", description: "The builder's own description of the plan, as written; omit if the page gives none" },
@@ -152,6 +154,7 @@ interface ExtractedPlan {
   virtualTourUrl?: string;
   photoImages?: string[];
   blueprintImages?: string[];
+  seriesOfPlans?: boolean;
 }
 
 /** Strip HTML to visible text; keep img/link URLs as annotations. */
@@ -438,6 +441,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       },
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
       planCode: { type: "string", description: "The builder's own code or number for this plan where the page shows one beside its name, e.g. 'F057' or 'B929'; omit if the page shows none" },
+      address: { type: "string", description: "For a home for sale: its street address as the page titles it, e.g. '18366 Rockport Place'; omit for a floor plan's page or where the page gives none" },
     },
     required: [],
   },
@@ -466,6 +470,7 @@ interface ExtractedPlanPage {
   photoImages?: string[];
   blueprintImages?: string[];
   planCode?: string;
+  address?: string;
 }
 
 /** A media store's own id, which says nothing about the picture: "6e8cfe1d-66ee-4b88-b752-30e7579fd4bf_lg.jpg". */
@@ -609,6 +614,26 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
     })
   );
   return out;
+}
+
+/**
+ * A home named by its address, where the list named it by something else
+ * and its own page gives the address: Kolter's Cresswind list reads
+ * "Casey - Move-In Ready" above each home's address, and a run that took
+ * the one for the other offered five homes the site already has as five
+ * new ones (Jeff, 2026-09-26). The label's plan becomes the home's base
+ * plan where the list gave none. Nothing changes for a floor plan, a home
+ * already named by its address, or an address the page does not give.
+ * Pure; exported for tests.
+ */
+export function homeAddressed(plan: NormalizedPlan, address: string | null | undefined): Partial<NormalizedPlan> {
+  const street = address?.trim().replace(/\s+/g, " ");
+  if (!plan.quickMoveIn || namesAnAddress(plan.name) || !street || !namesAnAddress(street)) return {};
+  return {
+    name: street,
+    planKey: normKey(street),
+    relatedPlanName: plan.relatedPlanName || planInHomeLabel(plan.name) || null,
+  };
 }
 
 /**
@@ -767,16 +792,21 @@ export async function readPlanPageWithClaude(
   // A list gives the plans it prices; the rest carry their price on their
   // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
   const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);
+  // A floor plan whose page embeds Zonda's viewer has its counts from the
+  // viewer, as ranges whose top the site shows (zonda.ts; Homes by Towne,
+  // Jeff 2026-09-26). A home's own counts are its own.
+  const zonda = plan.quickMoveIn ? null : await zondaCountsFor(html, plan.name);
   return {
     ...plan,
+    ...homeAddressed(plan, page.address),
     price,
     priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
-    beds: plan.beds || (page.beds ?? ""),
+    beds: zonda?.beds || plan.beds || (page.beds ?? ""),
     // Where Perry's page gives full and half baths as two counts ("4 Baths
     // 3 Cars 1 Half Baths"), those counts decide, not a reading that dropped
     // the half baths or added them up (standardize.ts, bathsStated; Jeff,
     // 2026-09-24).
-    baths: bathsStated(content) ?? (plan.baths || (page.baths ?? "")),
+    baths: zonda?.baths || bathsStated(content) || plan.baths || (page.baths ?? ""),
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
     description: plan.description ?? page.description?.trim() ?? null,
@@ -814,8 +844,15 @@ export async function readPlanPageWithClaude(
  */
 async function listPage(
   url: string,
-  opts: { hint?: string; quickMoveIns?: boolean; press?: readonly string[]; read?: PageReader }
-): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null; homesPage?: string | null }> {
+  opts: {
+    hint?: string;
+    quickMoveIns?: boolean;
+    /** Floor plans only: the connection names a page of its own for the homes (extractPages). */
+    plansOnly?: boolean;
+    press?: readonly string[];
+    read?: PageReader;
+  }
+): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null; homesPage?: string | null; series?: string[] }> {
   const page = await (opts.read ?? fetchPage)(url, opts.press ? { press: opts.press } : undefined);
   // Asked to open a tab and the page has no such tab: there is nothing
   // behind it to read, and nothing to pay a model to read.
@@ -830,7 +867,9 @@ async function listPage(
   // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
   const what = opts.quickMoveIns
     ? `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`
-    : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
+    : opts.plansOnly
+      ? `Extract every floor plan / home model from this new-home community page. Leave out the homes for sale — a home named by its street address or marked "Move-in Ready", "Quick Move-in" or with a move-in date — which are read from their own page. Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`
+      : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
 
   const ask = `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 
@@ -880,7 +919,21 @@ async function listPage(
         : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
     );
   }
-  const plans = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
+  const answered = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
+  // A series is a page of plans, not a plan (Dream Finders' Seaire, Jeff
+  // 2026-09-26): its page is read in its turn (extractPages).
+  const series = [
+    ...new Set(
+      answered
+        .filter((p) => p.seriesOfPlans === true && !opts.quickMoveIns)
+        .map((p) => linkOnPage(p.sourceUrl, page.html, page.url || url))
+        .filter((u): u is string => Boolean(u))
+    ),
+  ];
+  const plans = answered
+    .filter((p) => p.seriesOfPlans !== true)
+    // Asked for plans only, a home that came back anyway is left to its own page.
+    .filter((p) => !opts.plansOnly || (p.quickMoveIn !== true && !namesAnAddress(planName(p.name)) && !planInHomeLabel(p.name)));
   if (plans.length === 0 && pageLooksUnrendered(content)) {
     throw new Error(
       "the page carries no prices or sizes without its scripts — it draws its plans after loading, which a fetch cannot see (this builder needs a rendering engine)"
@@ -888,8 +941,10 @@ async function listPage(
   }
 
   const listed = plans.map((p) => {
-    const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true;
     const name = planName(p.name);
+    // A home named by its street address is a home, whatever this reading
+    // said (namesAnAddress).
+    const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true || namesAnAddress(name);
     return {
       planKey: normKey(name),
       name,
@@ -903,16 +958,16 @@ async function listPage(
       quickMoveIn,
       // Only a home stands on a plan; a plan named as its own base plan is
       // Claude reading the field too eagerly, and means nothing downstream.
-      relatedPlanName: (quickMoveIn ? p.relatedPlanName?.trim() : "") || null,
+      relatedPlanName: (quickMoveIn ? p.relatedPlanName?.trim() || planInHomeLabel(name) : "") || null,
       comingSoon: false,
-      sourceUrl: p.sourceUrl ?? page.url ?? url,
+      sourceUrl: linkOnPage(p.sourceUrl, page.html, page.url || url) ?? page.url ?? url,
       description: p.description?.trim() || null,
       virtualTourUrl: p.virtualTourUrl?.trim() || null,
       galleryImages: pictureAddresses(p.photoImages),
       blueprintImages: pictureAddresses(p.blueprintImages),
     };
   });
-  return { url: page.url || url, plans: listed, pressed: page.pressed ?? null, homesPage: homesPageIn(page.html, page.url || url) };
+  return { url: page.url || url, plans: listed, pressed: page.pressed ?? null, homesPage: homesPageIn(page.html, page.url || url), series };
 }
 
 /** What a community calls the page of its homes for sale, as the last part of its address. */
@@ -953,6 +1008,56 @@ export function homesPageIn(html: string, pageUrl: string): string | null {
     }
   }
   return null;
+}
+
+/**
+ * A plan's link as the page has it. Claude gives back the links it read,
+ * mostly as written, but not always: Kolter's Cresswind page links a home
+ * at ".../cresswind-lakewood-ranch/5804/move-in-ready/qd-556/", and one
+ * run reported ".../cresswind-lakewood-ranch//5804/qd-556/", a page that
+ * is not there — so the home's own page went unread and it came through
+ * with no price and no picture (Jeff, 2026-09-26). A link the page does
+ * not have is taken for the one page link that ends the same way and
+ * holds every part of it, in order; where no one link does, it stays as
+ * reported. Pure; exported for tests.
+ */
+export function linkOnPage(reported: string | null | undefined, html: string, pageUrl: string): string | null {
+  const said = reported?.trim();
+  if (!said) return null;
+  const baseUrl = documentBase(html, pageUrl);
+  let wanted: URL;
+  try {
+    wanted = new URL(said, baseUrl);
+  } catch {
+    return said;
+  }
+  const host = (u: URL) => u.host.replace(/^www\./i, "").toLowerCase();
+  const parts = (u: URL) => u.pathname.split("/").filter(Boolean);
+  const bare = (u: URL) => `${host(u)}/${parts(u).join("/")}`;
+  const want = parts(wanted);
+  const links: URL[] = [];
+  for (const tag of html.match(A_TAG) ?? []) {
+    const href = attrOf(tag, "href");
+    if (!href || href.startsWith("#")) continue;
+    try {
+      links.push(new URL(href, baseUrl));
+    } catch {
+      continue;
+    }
+  }
+  if (!want.length || links.some((l) => bare(l) === bare(wanted))) return said;
+  const holds = (link: URL) => {
+    const have = parts(link);
+    if (host(link) !== host(wanted) || have[have.length - 1] !== want[want.length - 1]) return false;
+    let next = 0;
+    for (const part of have) if (part === want[next]) next += 1;
+    return next === want.length;
+  };
+  const found = new Map(links.filter(holds).map((l) => [bare(l), l]));
+  if (found.size !== 1) return said;
+  const [link] = found.values();
+  link.hash = "";
+  return link.href;
 }
 
 /**
@@ -1099,14 +1204,41 @@ async function extractPages(
     }
   };
   const pressedEarly = can.press && planPages.length === 1 ? pressForHomes(planPages[0]) : null;
+  // A homes page the connection names is read beside the plans' pages, not
+  // after them: Kolter's Cresswind lists twenty plans on one page and its
+  // homes on another, each a long answer, and read in turn they took the
+  // run's reading time and left all twenty-nine plan pages unread (Jeff,
+  // 2026-09-26).
+  const namedHomes = params.quickMoveInUrl?.trim() || null;
+  const homesRead = (homesUrl: string) =>
+    listPage(homesUrl, { hint: params.hint, quickMoveIns: true, read }).then(
+      (page) => ({ page, error: null }),
+      (error: unknown) => ({ page: null, error })
+    );
+  const homesEarly = namedHomes && !listPages.has(namedHomes) ? homesRead(namedHomes) : null;
 
   const lists = await mapLimit(planPages, 4, async (pageUrl) => {
     try {
-      return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read }) };
+      return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read, plansOnly: homesEarly !== null }) };
     } catch (error) {
       return { pageUrl, error: error instanceof Error ? error.message : String(error) };
     }
   });
+  const take = (plan: NormalizedPlan) => {
+    // A base plan another of the community's pages already listed is
+    // that plan again, not a second one (mergeRepeatedPlan).
+    const twin = plan.quickMoveIn ? -1 : listed.findIndex((p) => !p.quickMoveIn && p.planKey === plan.planKey);
+    if (twin >= 0) {
+      listed[twin] = mergeRepeatedPlan(listed[twin], plan);
+      return;
+    }
+    // And a home another page listed is that home again (sameHome).
+    if (plan.quickMoveIn && listed.some((p) => p.quickMoveIn && sameHome(p, plan))) return;
+    const planKey = distinctKey(plan, taken);
+    taken.add(planKey);
+    listed.push({ ...plan, planKey });
+  };
+  const series = new Set<string>();
   for (const { pageUrl, page, error } of lists) {
     if (!page) {
       // One page of four going down should cost the run that page, not the
@@ -1118,32 +1250,51 @@ async function extractPages(
     }
     listPages.add(page.url);
     readPages.push(page.url || pageUrl);
-    for (const plan of page.plans) {
-      // A base plan another of the community's pages already listed is
-      // that plan again, not a second one (mergeRepeatedPlan).
-      const twin = plan.quickMoveIn ? -1 : listed.findIndex((p) => !p.quickMoveIn && p.planKey === plan.planKey);
-      if (twin >= 0) {
-        listed[twin] = mergeRepeatedPlan(listed[twin], plan);
-        continue;
-      }
-      const planKey = distinctKey(plan, taken);
-      taken.add(planKey);
-      listed.push({ ...plan, planKey });
-    }
+    for (const plan of page.plans) take(plan);
+    for (const u of page.series ?? []) series.add(u);
   }
   if (refused.length === planPages.length) throw new Error(refused.join("; "));
+
+  // The pages of the series the lists pointed to, one level down, for the
+  // plans each one holds: Dream Finders' Seaire lists four series and not
+  // one plan, and a run that took the series for plans offered four
+  // "plans" and left twenty-nine homes with nothing to file under (Jeff,
+  // 2026-09-26).
+  const seriesPages = [...series].filter((u) => !listPages.has(u)).slice(0, 8);
+  const seriesRead = await mapLimit(seriesPages, 4, async (pageUrl) => {
+    try {
+      return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read, plansOnly: homesEarly !== null }) };
+    } catch (error) {
+      logger.warn("A series' page could not be read", { url: pageUrl, error: error instanceof Error ? error.message : String(error) });
+      return { pageUrl, page: null };
+    }
+  });
+  for (const { pageUrl, page } of seriesRead) {
+    if (!page) continue;
+    listPages.add(pageUrl).add(page.url);
+    readPages.push(page.url || pageUrl);
+    for (const plan of page.plans) take(plan);
+  }
 
   // The builder's own page of homes for sale, where it keeps one away from
   // its plans (Stock's /inventory/, Jeff 2026-09-22). A page that cannot be
   // read costs the run its homes, never its plans.
   // Named in the connection, or linked from beneath the community's own page.
-  const homesUrl = params.quickMoveInUrl?.trim() || lists.map((l) => l.page?.homesPage).find(Boolean) || undefined;
-  if (homesUrl && !listPages.has(homesUrl)) {
+  const homesUrl = namedHomes || lists.map((l) => l.page?.homesPage).find(Boolean) || undefined;
+  if (homesUrl && (homesEarly || !listPages.has(homesUrl))) {
     try {
-      const homesPage = await listPage(homesUrl, { hint: params.hint, quickMoveIns: true, read });
+      const { page: homesPage, error } = await (homesEarly ?? homesRead(homesUrl));
+      if (!homesPage) throw error;
       listPages.add(homesUrl).add(homesPage.url);
       // A home named for the plan it is built from would take that plan's key.
       for (const home of homesPage.plans) {
+        // One the plans' page listed too is that home once, as this page
+        // lists it (sameHome).
+        const twin = listed.findIndex((p) => p.quickMoveIn && sameHome(p, home));
+        if (twin >= 0) {
+          taken.delete(listed[twin].planKey);
+          listed.splice(twin, 1);
+        }
         const planKey = distinctKey(home, taken);
         taken.add(planKey);
         listed.push({ ...home, planKey });
@@ -1187,14 +1338,69 @@ async function extractPages(
     );
   }
 
-  return readPlanPages(listed, {
-    read,
-    atOnce,
-    runDeadline: params.runDeadline,
-    readPlanPage: can.readPlanPage,
-    renderAgain: can.renderAgain,
-    listPages,
-  });
+  return oneHomeEach(
+    await readPlanPages(listed, {
+      read,
+      atOnce,
+      runDeadline: params.runDeadline,
+      readPlanPage: can.readPlanPage,
+      renderAgain: can.renderAgain,
+      listPages,
+    })
+  );
+}
+
+/** A link's host and path parts, "www." and the empty parts aside. */
+function linkParts(url: string | null | undefined): { host: string; parts: string[] } | null {
+  try {
+    const u = new URL(String(url ?? ""));
+    return { host: u.host.replace(/^www\./i, "").toLowerCase(), parts: u.pathname.split("/").filter(Boolean) };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Whether two listings are one home: the same street address, or links to
+ * the same home's page however the two pages spell them. Kolter lists each
+ * Cresswind home on the community's plans page as ".../cresswind-lakewood-
+ * ranch//5804/qd-556/" and on its move-in-ready page as ".../5804/move-in-
+ * ready/qd-556/" — one home, whose page was read twice and offered twice
+ * (Jeff, 2026-09-26). The links end in the same part, one carrying a
+ * number, and one holds every part of the other in order. Pure; exported
+ * for tests.
+ */
+export function sameHome(a: NormalizedPlan, b: NormalizedPlan): boolean {
+  if (namesAnAddress(a.name) && normKey(a.name) === normKey(b.name)) return true;
+  const x = linkParts(a.sourceUrl);
+  const y = linkParts(b.sourceUrl);
+  if (!x || !y || x.host !== y.host || !x.parts.length || !y.parts.length) return false;
+  const last = x.parts[x.parts.length - 1];
+  if (last !== y.parts[y.parts.length - 1] || !/\d/.test(last)) return false;
+  const [short, long] = x.parts.length <= y.parts.length ? [x.parts, y.parts] : [y.parts, x.parts];
+  let next = 0;
+  for (const part of long) if (part === short[next]) next += 1;
+  return next === short.length;
+}
+
+/**
+ * Each home once, by its key: a home the list named by a label takes its
+ * address from its own page (homeAddressed), and may then be a home
+ * already listed under that address. The one read more fully stays: its
+ * page read, then more pictures, then a price. Pure; exported for tests.
+ */
+export function oneHomeEach(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const score = (p: NormalizedPlan) => (p.pageUnread ? 0 : 1000) + p.galleryImages.length * 2 + (p.price ? 1 : 0);
+  const kept = new Map<string, NormalizedPlan>();
+  for (const plan of plans) {
+    const had = kept.get(plan.planKey);
+    if (!had || !plan.quickMoveIn || !had.quickMoveIn) {
+      if (!had) kept.set(plan.planKey, plan);
+      continue;
+    }
+    if (score(plan) > score(had)) kept.set(plan.planKey, plan);
+  }
+  return plans.filter((p) => kept.get(p.planKey) === p);
 }
 
 
@@ -1267,12 +1473,17 @@ export async function readPlanPages(
   // And the homes in an order that turns with the day, so the homes a run
   // has no time for are not the same homes every night (Richmond's last
   // five, 2026-09-23); what a home's page gave before stays until then.
-  const homes = [...listed.keys()].filter((i) => listed[i].quickMoveIn);
-  const turn = homes.length ? Math.floor(Date.now() / 86_400_000) % homes.length : 0;
+  // The plans take turns the same way: Kolter's Cresswind has twenty, and
+  // a run with time for twelve read the same twelve every night (Jeff,
+  // 2026-09-26).
+  const day = Math.floor(Date.now() / 86_400_000);
+  const turned = (list: number[]) => {
+    const turn = list.length ? day % list.length : 0;
+    return [...list.slice(turn), ...list.slice(0, turn)];
+  };
   const byPlansFirst = [
-    ...[...listed.keys()].filter((i) => !listed[i].quickMoveIn),
-    ...homes.slice(turn),
-    ...homes.slice(0, turn),
+    ...turned([...listed.keys()].filter((i) => !listed[i].quickMoveIn)),
+    ...turned([...listed.keys()].filter((i) => listed[i].quickMoveIn)),
   ];
   const deadline = opts.runDeadline ?? Infinity;
   const readInOrder = await mapLimit(byPlansFirst, opts.atOnce, async (i) => {
