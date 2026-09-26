@@ -1174,6 +1174,18 @@ async function extractPages(
     }
   };
   const pressedEarly = can.press && planPages.length === 1 ? pressForHomes(planPages[0]) : null;
+  // A homes page the connection names is read beside the plans' pages, not
+  // after them: Kolter's Cresswind lists twenty plans on one page and its
+  // homes on another, each a long answer, and read in turn they took the
+  // run's reading time and left all twenty-nine plan pages unread (Jeff,
+  // 2026-09-26).
+  const namedHomes = params.quickMoveInUrl?.trim() || null;
+  const homesRead = (homesUrl: string) =>
+    listPage(homesUrl, { hint: params.hint, quickMoveIns: true, read }).then(
+      (page) => ({ page, error: null }),
+      (error: unknown) => ({ page: null, error })
+    );
+  const homesEarly = namedHomes && !listPages.has(namedHomes) ? homesRead(namedHomes) : null;
 
   const lists = await mapLimit(planPages, 4, async (pageUrl) => {
     try {
@@ -1212,10 +1224,11 @@ async function extractPages(
   // its plans (Stock's /inventory/, Jeff 2026-09-22). A page that cannot be
   // read costs the run its homes, never its plans.
   // Named in the connection, or linked from beneath the community's own page.
-  const homesUrl = params.quickMoveInUrl?.trim() || lists.map((l) => l.page?.homesPage).find(Boolean) || undefined;
-  if (homesUrl && !listPages.has(homesUrl)) {
+  const homesUrl = namedHomes || lists.map((l) => l.page?.homesPage).find(Boolean) || undefined;
+  if (homesUrl && (homesEarly || !listPages.has(homesUrl))) {
     try {
-      const homesPage = await listPage(homesUrl, { hint: params.hint, quickMoveIns: true, read });
+      const { page: homesPage, error } = await (homesEarly ?? homesRead(homesUrl));
+      if (!homesPage) throw error;
       listPages.add(homesUrl).add(homesPage.url);
       // A home named for the plan it is built from would take that plan's key.
       for (const home of homesPage.plans) {
