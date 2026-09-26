@@ -5,10 +5,10 @@
 // pages and filters client-side by community. Structure captured in
 // pipeline/slice/discovery/round8/.
 //
-// The plans a community builds come from the same API's plan resource
-// (api/v1/public/plan), which names the communities each plan is offered
-// in (availableLocations): the homes alone left Biscayne Landing at Seaire
-// with no floor plans at all (Jeff, 2026-09-26).
+// The plans a community builds come from the list its own Home Plans page
+// loads (api/v1/public/community/<id>/plans), the community's number found
+// from the state, region and name in its address: the homes alone left
+// Biscayne Landing at Seaire with no floor plans at all (Jeff, 2026-09-26).
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { bathsOf } from "@/lib/floorplans/standardize";
@@ -17,7 +17,7 @@ import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 const API = "https://api.drbhomes.com/api/v1/public/inventory";
-const PLAN_API = "https://api.drbhomes.com/api/v1/public/plan";
+const COMMUNITY_API = "https://api.drbhomes.com/api/v1/public/community";
 const PAGE_SIZE = 50;
 const MAX_PAGES = 40;
 
@@ -150,7 +150,6 @@ interface DrbPlan {
   elevationImages?: DrbPlanImage[];
   interiorImages?: DrbPlanImage[];
   floorplanImages?: DrbPlanImage[];
-  availableLocations?: ({ communityName?: string; id?: number } | string)[];
 }
 
 /** A plan's pictures of one kind, active and in DRB's own order. */
@@ -212,9 +211,14 @@ export function normalizeDrbPlan(plan: DrbPlan, pageUrl?: string): NormalizedPla
   };
 }
 
-/** Whether DRB offers a plan in this community, by the communities it names. */
-export function planOfferedIn(plan: DrbPlan, nameKey: string): boolean {
-  return Boolean(nameKey) && (plan.availableLocations ?? []).some((l) => normKey(typeof l === "string" ? l : l?.communityName ?? "").includes(nameKey));
+/**
+ * The state, region and name a community's address gives:
+ * ".../communities/florida/tampa/biscayne-landing-at-seaire/overview".
+ * Pure; exported for tests.
+ */
+export function communityPath(url: string | undefined): { state: string; region: string; name: string } | null {
+  const m = String(url ?? "").match(/\/communities\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)/i);
+  return m ? { state: m[1], region: m[2], name: m[3] } : null;
 }
 
 /** The community's page of plans, from its overview page's address. */
@@ -222,44 +226,45 @@ export function plansPageOf(url: string | undefined): string | undefined {
   return url?.replace(/\/(?:overview|home-plans|available-homes)\/?$/i, "/home-plans");
 }
 
-/** One page of a DRB resource; a page that is slow to answer is asked once more. */
-async function drbPage<T>(url: string): Promise<{ items?: T[]; meta?: { totalPages?: number } }> {
+/** A DRB resource; one slow to answer is asked once more. */
+async function drbJson<T>(url: string): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     try {
       const res = await fetch(url, {
         headers: { "user-agent": UA, accept: "application/json" },
         redirect: "follow",
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.timeout(45_000),
       });
       if (!res.ok) throw new Error(`${url}: ${res.status}`);
-      return (await res.json()) as { items?: T[]; meta?: { totalPages?: number } };
+      return (await res.json()) as T;
     } catch (error) {
       if (attempt >= 2) throw new Error(`${url}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }
 
-/** Every plan DRB offers in the community: the plan resource swept, three pages at a time. */
-async function drbPlans(nameKey: string, pageUrl?: string): Promise<NormalizedPlan[]> {
-  const first = await drbPage<DrbPlan>(`${PLAN_API}?limit=${PAGE_SIZE}&page=1`);
-  const pages = Math.min(first.meta?.totalPages ?? 1, MAX_PAGES);
-  const rest: DrbPlan[][] = [];
-  for (let from = 2; from <= pages; from += 3) {
-    const batch = await Promise.all(
-      Array.from({ length: Math.min(3, pages - from + 1) }, (_, n) => drbPage<DrbPlan>(`${PLAN_API}?limit=${PAGE_SIZE}&page=${from + n}`).then((d) => d.items ?? []))
-    );
-    rest.push(...batch);
-  }
+/** The community's number: given, or found from the state, region and name in its address. */
+async function drbCommunityId(params: { communityId?: number; url?: string }): Promise<number | null> {
+  if (params.communityId != null) return params.communityId;
+  const path = communityPath(params.url);
+  if (!path) return null;
+  const q = new URLSearchParams(path);
+  const found = await drbJson<{ id?: number | string }>(`${COMMUNITY_API}/state/region/by-name?${q}`);
+  const id = Number(found?.id);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+/** The plans DRB offers in the community, as its Home Plans page lists them. */
+async function drbPlans(params: { communityId?: number; url?: string }): Promise<NormalizedPlan[]> {
+  const id = await drbCommunityId(params);
+  if (id == null) throw new Error(`no DRB community found for ${params.url ?? "this connection"}`);
+  const data = await drbJson<{ items?: DrbPlan[] } | DrbPlan[]>(`${COMMUNITY_API}/${id}/plans?sortBy=sqFt&sortOrder=ASC&page=1&limit=1000`);
+  const items = Array.isArray(data) ? data : (data.items ?? []);
   const byKey = new Map<string, NormalizedPlan>();
-  for (const plan of [...(first.items ?? []), ...rest.flat()]) {
-    if ((plan.status ?? "active") !== "active" || !planOfferedIn(plan, nameKey)) continue;
-    const normalized = normalizeDrbPlan(plan, plansPageOf(pageUrl));
-    if (!normalized) continue;
-    // A plan and the template it was made from may both name the
-    // community: the one with a price and pictures stands.
-    const had = byKey.get(normalized.planKey);
-    const worth = (p: NormalizedPlan) => (p.price ? 100 : 0) + p.galleryImages.length + p.blueprintImages.length;
-    if (!had || worth(normalized) > worth(had)) byKey.set(normalized.planKey, normalized);
+  for (const plan of items) {
+    if ((plan.status ?? "active") !== "active") continue;
+    const normalized = normalizeDrbPlan(plan, plansPageOf(params.url));
+    if (normalized && !byKey.has(normalized.planKey)) byKey.set(normalized.planKey, normalized);
   }
   return [...byKey.values()];
 }
@@ -287,7 +292,7 @@ export async function extractDrb(params: {
   // the run rather than leave the community with its homes and no plans.
   // Its failure is held until the homes are read: a rejection nothing is
   // waiting on yet stops the whole process (the check's build, 2026-09-26).
-  const plansRead: Promise<{ plans: NormalizedPlan[] } | { error: unknown }> = (nameKey ? drbPlans(nameKey, params.url) : Promise.resolve([])).then(
+  const plansRead: Promise<{ plans: NormalizedPlan[] } | { error: unknown }> = drbPlans(params).then(
     (plans) => ({ plans }),
     (error: unknown) => ({ error })
   );

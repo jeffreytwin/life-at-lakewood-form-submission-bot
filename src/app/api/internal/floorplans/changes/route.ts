@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { releaseStaleApproving } from "@/lib/floorplans/approving";
+import { forTheList } from "@/lib/floorplans/queue-list";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       else if (status !== "all") query = query.eq("status", status);
       const { data, error } = await query;
       if (error) throw error;
-      rows.push(...(data ?? []));
+      rows.push(...(data ?? []).map(forTheList));
       if ((data ?? []).length < Math.min(PAGE, limit - from)) break;
     }
     return NextResponse.json(rows);

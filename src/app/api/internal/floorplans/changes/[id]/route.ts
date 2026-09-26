@@ -54,6 +54,18 @@ const EDITABLE_FIELDS = [
  * are recorded as manual overrides (userEditedFields) so the nightly diff
  * will not propose reverting them to the builder's values.
  */
+/** One queued change whole, for the edit overlay: the list leaves its heaviest fields out (changes/route.ts). */
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { data, error } = await supabase.from("fp_pending_changes").select("id, status, proposed_record").eq("id", id).maybeSingle();
+  if (error) {
+    logger.error("Failed to read floor plan change", { id, error: error.message });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+  if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(data);
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

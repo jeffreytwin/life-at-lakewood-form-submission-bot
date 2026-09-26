@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
@@ -130,6 +130,9 @@ const SORT_COLUMNS: { key: ChangeSortKey; label: string; hint: string }[] = [
   { key: "where", label: "Site / Community / Builder", hint: "by site, then community, then builder" },
   { key: "detected", label: "Detected", hint: "by when it was found" },
 ];
+
+/** Plans shown on one page of the queue (Jeff, 2026-09-26: the whole queue at once was slow). */
+const PAGE_SIZE = 50;
 
 /** Where this browser remembers the column the queue was last sorted by. */
 const SORT_STORAGE_KEY = "floor-plans-changes-sort";
@@ -272,6 +275,12 @@ export default function FloorPlansPage() {
   /** Seconds the run is waiting out a Wix throttle, so the buttons say so instead of looking stuck. */
   const [throttleWait, setThrottleWait] = useState(0);
   const [editing, setEditing] = useState<Group | null>(null);
+  // The plan in the overlay, whole: the list leaves out its captions and the
+  // builder's own picture sets (changes/route.ts), which the overlay reads.
+  const [editWhole, setEditWhole] = useState<ProposedRecord | null>(null);
+  const openKey = useRef<string | null>(null);
+  // The page of the queue shown, from 0.
+  const [page, setPage] = useState(0);
   const [editForm, setEditForm] = useState({
     name: "",
     priceDisplay: "",
@@ -416,6 +425,14 @@ export default function FloorPlansPage() {
     });
   }, []);
   const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0), [groups]);
+  // One page of the list. A filter or a sort starts again from the first
+  // page; a page emptied by approvals falls back to the last one left.
+  const pages = Math.max(1, Math.ceil(groups.length / PAGE_SIZE));
+  const shownPage = Math.min(page, pages - 1);
+  const offset = shownPage * PAGE_SIZE;
+  const pageGroups = useMemo(() => groups.slice(offset, offset + PAGE_SIZE), [groups, offset]);
+  const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0), [pageGroups]);
+  useEffect(() => setPage(0), [statusFilter, siteFilter, builderFilter, kindFilter, sort]);
   const pendingQuickMoveIns = useMemo(
     () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g)),
     [siteGroups]
@@ -423,18 +440,26 @@ export default function FloorPlansPage() {
   // The ticked plans still pending in this view: a plan approved, rejected
   // or filtered out of view is never acted on by a tick left behind.
   const selectedGroups = useMemo(() => pendingGroups.filter((g) => selected.has(g.key)), [pendingGroups, selected]);
-  const allSelected = pendingGroups.length > 0 && selectedGroups.length === pendingGroups.length;
+  // The box atop the table ticks the plans on this page; ticks on other pages stay.
+  const allSelected = pagePending.length > 0 && pagePending.every((g) => selected.has(g.key));
   const selectedBlocked = useMemo(
     () => selectedGroups.filter((g) => approvalBlocker(g.kind, g.lead.proposed_record)).length,
     [selectedGroups]
   );
 
-  /** Ticks or unticks one plan, or with shift every pending plan between it and the last one ticked. */
+  /**
+   * Ticks or unticks one plan, or with shift every pending plan between it
+   * and the last one ticked — on this page only, so no plan out of sight is
+   * ticked by it.
+   */
   function pick(index: number, shift: boolean) {
     const on = !selected.has(groups[index]?.key);
     // The last tick by its plan, not its row, so a list re-read or filtered since still finds it.
     const anchor = shift && lastPicked != null ? groups.findIndex((g) => g.key === lastPicked) : -1;
-    const [from, to] = anchor >= 0 ? [Math.min(anchor, index), Math.max(anchor, index)] : [index, index];
+    const [from, to] =
+      anchor >= 0
+        ? [Math.max(offset, Math.min(anchor, index)), Math.min(offset + PAGE_SIZE - 1, Math.max(anchor, index))]
+        : [index, index];
     setSelected((prev) => {
       const next = new Set(prev);
       for (let i = from; i <= to; i++) {
@@ -449,7 +474,14 @@ export default function FloorPlansPage() {
   }
 
   function pickAll() {
-    setSelected(allSelected ? new Set() : new Set(pendingGroups.map((g) => g.key)));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const g of pagePending) {
+        if (allSelected) next.delete(g.key);
+        else next.add(g.key);
+      }
+      return next;
+    });
     setLastPicked(null);
   }
 
@@ -536,7 +568,17 @@ export default function FloorPlansPage() {
     setEditBlueprints(rec.blueprintImages ?? []);
     setPreview(null);
     setSorted(null);
+    setEditWhole(null);
     setEditing(group);
+    openKey.current = group.key;
+    fetch(`/api/internal/floorplans/changes/${group.lead.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const whole = (data?.proposed_record ?? null) as ProposedRecord | null;
+        // Only while this plan is still the one open.
+        if (whole && openKey.current === group.key) setEditWhole(whole);
+      })
+      .catch(() => {});
   }
 
   /** Writes the form onto every pending row of the plan, so whichever row is approved carries the edits. */
@@ -788,7 +830,7 @@ export default function FloorPlansPage() {
   }
 
   // Whether the plan in the overlay has builder pictures to bring back.
-  const editRec = editing?.lead.proposed_record ?? null;
+  const editRec = editing ? (editWhole ?? editing.lead.proposed_record ?? null) : null;
   const restorable =
     (editRec?.scrapedGalleryImages ?? editRec?.galleryImages ?? []).length +
       (editRec?.scrapedBlueprintImages ?? editRec?.blueprintImages ?? []).length >
@@ -997,6 +1039,9 @@ export default function FloorPlansPage() {
               )}
             </div>
           )}
+          {pages > 1 && (
+            <Pager page={shownPage} pages={pages} offset={offset} shown={pageGroups.length} total={groups.length} onPage={setPage} />
+          )}
           <div className="table-wrapper">
             <table>
               <thead>
@@ -1005,8 +1050,8 @@ export default function FloorPlansPage() {
                     {pendingGroups.length > 0 && (
                       <input
                         type="checkbox"
-                        aria-label="Select every pending plan in view"
-                        title="Select every pending plan in view"
+                        aria-label="Select every pending plan on this page"
+                        title="Select every pending plan on this page"
                         checked={allSelected}
                         ref={(el) => {
                           if (el) el.indeterminate = selectedGroups.length > 0 && !allSelected;
@@ -1049,7 +1094,8 @@ export default function FloorPlansPage() {
                 </tr>
               </thead>
               <tbody>
-                {groups.map((g, index) => {
+                {pageGroups.map((g, onPage) => {
+                  const index = offset + onPage;
                   const c = g.lead;
                   const rec = c.proposed_record;
                   // The main image is the gallery's first photo; primaryImage is the first slice's field.
@@ -1284,6 +1330,9 @@ export default function FloorPlansPage() {
               </tbody>
             </table>
           </div>
+          {pages > 1 && (
+            <Pager page={shownPage} pages={pages} offset={offset} shown={pageGroups.length} total={groups.length} onPage={setPage} />
+          )}
         </div>
       )}
 
@@ -1396,7 +1445,7 @@ export default function FloorPlansPage() {
                   label="Photo gallery (first image is the main image; blueprints follow the photos on the site)"
                   list={editGallery}
                   setList={setEditGallery}
-                  meta={editing.lead.proposed_record?.galleryMeta}
+                  meta={editRec?.galleryMeta}
                   isPhotos
                   onPreview={setPreview}
                 />
@@ -1505,6 +1554,52 @@ export default function FloorPlansPage() {
           {preview.caption && <div className="text-sm" style={{ marginTop: 6 }}>{preview.caption}</div>}
         </div>
       )}
+    </div>
+  );
+}
+
+/** "Plans 51–100 of 276", with the pages either side. */
+function Pager({
+  page,
+  pages,
+  offset,
+  shown,
+  total,
+  onPage,
+}: {
+  page: number;
+  pages: number;
+  offset: number;
+  shown: number;
+  total: number;
+  onPage: (page: number) => void;
+}) {
+  // The first, the last, and the two either side of this one.
+  const near = [...new Set([0, page - 2, page - 1, page, page + 1, page + 2, pages - 1])].filter((p) => p >= 0 && p < pages).sort((a, b) => a - b);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", margin: "10px 0" }}>
+      <span className="text-muted text-sm" style={{ marginRight: 8 }}>
+        Plans {offset + 1}–{offset + shown} of {total}
+      </span>
+      <button className="btn btn-secondary" disabled={page === 0} onClick={() => onPage(page - 1)} aria-label="Previous page">
+        ‹ Prev
+      </button>
+      {near.map((p, i) => (
+        <span key={p} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          {i > 0 && p - near[i - 1] > 1 && <span className="text-muted">…</span>}
+          <button
+            className={`btn ${p === page ? "btn-primary" : "btn-secondary"}`}
+            onClick={() => onPage(p)}
+            aria-current={p === page ? "page" : undefined}
+            style={{ minWidth: 36 }}
+          >
+            {p + 1}
+          </button>
+        </span>
+      ))}
+      <button className="btn btn-secondary" disabled={page >= pages - 1} onClick={() => onPage(page + 1)} aria-label="Next page">
+        Next ›
+      </button>
     </div>
   );
 }

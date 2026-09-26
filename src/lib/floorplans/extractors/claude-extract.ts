@@ -18,6 +18,7 @@ import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevati
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
+import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
 import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
@@ -791,17 +792,21 @@ export async function readPlanPageWithClaude(
   // A list gives the plans it prices; the rest carry their price on their
   // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
   const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);
+  // A floor plan whose page embeds Zonda's viewer has its counts from the
+  // viewer, as ranges whose top the site shows (zonda.ts; Homes by Towne,
+  // Jeff 2026-09-26). A home's own counts are its own.
+  const zonda = plan.quickMoveIn ? null : await zondaCountsFor(html, plan.name);
   return {
     ...plan,
     ...homeAddressed(plan, page.address),
     price,
     priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
-    beds: plan.beds || (page.beds ?? ""),
+    beds: zonda?.beds || plan.beds || (page.beds ?? ""),
     // Where Perry's page gives full and half baths as two counts ("4 Baths
     // 3 Cars 1 Half Baths"), those counts decide, not a reading that dropped
     // the half baths or added them up (standardize.ts, bathsStated; Jeff,
     // 2026-09-24).
-    baths: bathsStated(content) ?? (plan.baths || (page.baths ?? "")),
+    baths: zonda?.baths || bathsStated(content) || plan.baths || (page.baths ?? ""),
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
     description: plan.description ?? page.description?.trim() ?? null,

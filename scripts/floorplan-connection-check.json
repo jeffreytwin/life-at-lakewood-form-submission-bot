@@ -1,33 +1,21 @@
 {
-  "raw": [
-    {
-      "url": "https://api.drbhomes.com/api/v1/public-drb/community/281",
-      "around": [
-        "\"plans\"",
-        "bedsMax",
-        "basePrice",
-        "\"Eider\""
-      ],
-      "chars": 500,
-      "count": 2
-    },
-    {
-      "url": "https://apps.zondavirtual.com/alphaplanjson/1146a39d-4a7a-4f96-b5ca-3e20cc352913.json",
-      "around": [
-        "Tideland",
-        "\"Bedrooms\"",
-        "Beds",
-        "MinBed"
-      ],
-      "chars": 500,
-      "count": 3
-    }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": [],
+  "checks": [
+    {
+      "builder": "DRB Homes",
+      "community": "Seaire",
+      "noSurvey": true
+    },
+    {
+      "builder": "Homes by Towne",
+      "community": "Palmera",
+      "noSurvey": true
+    }
+  ],
   "anatomy": [
-    "json https://api.drbhomes.com/api/v1/public-drb/community/281"
+    "json https://api.drbhomes.com/api/v1/public/community/281/plans?sortBy=sqFt&sortOrder=ASC&page=1&limit=1000"
   ]
 }

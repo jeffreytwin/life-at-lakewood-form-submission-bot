@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { normalizeDrbItem, normalizeDrbPlan, planOfferedIn, plansPageOf } from "@/lib/floorplans/extractors/drb";
+import { communityPath, normalizeDrbItem, normalizeDrbPlan, plansPageOf } from "@/lib/floorplans/extractors/drb";
 
 // Real inventory item for Biscayne Landing at Seaire (communityId 281),
 // captured in round-8 discovery and slimmed to the mapped fields.
@@ -95,9 +95,13 @@ describe("DRB's plans (Biscayne Landing at Seaire, Jeff 2026-09-26)", () => {
     expect(p.description).toBe("Gourmet kitchen with a large island. Jack & Jill bath.");
   });
 
-  it("is the community's when DRB offers it there", () => {
-    expect(planOfferedIn(plan, "seaire")).toBe(true);
-    expect(planOfferedIn({ ...plan, availableLocations: [{ communityName: "Adagio" }] }, "seaire")).toBe(false);
+  it("finds the community by the state, region and name in its address", () => {
+    expect(communityPath("https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview")).toEqual({
+      state: "florida",
+      region: "tampa",
+      name: "biscayne-landing-at-seaire",
+    });
+    expect(communityPath("https://www.drbhomes.com/")).toBeNull();
   });
 
   it("links the community's plans page", () => {
