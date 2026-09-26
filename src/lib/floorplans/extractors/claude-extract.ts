@@ -553,10 +553,11 @@ export function drawingsNotShownAsPhotos(said: string[], shown: string[]): strin
 export function sortDrawings(urls: string[], photos: string[] = []): { drawings: string[]; views: string[] } {
   const drawings: string[] = [];
   const views: string[] = [];
-  // The folders whose photos are numbered, "…/3emb/01.jpg" to "13.jpg": a
-  // "drawing" there named by a number alone is the next photo in the
-  // series (D.R. Horton's Harper at Bella Lago, 2026-09-26).
-  const numberedFolders = new Set(photos.filter((u) => numberedFile(u)).map(folderOf));
+  // The series the photos are numbered in, "…/3emb/01.jpg" to "13.jpg" or
+  // "…/3975/1-oakfield-trails-torino-kitchen.jpg" on: a "drawing" numbered
+  // in the same series is the next photo in it (D.R. Horton's Harper at
+  // Bella Lago, Torino at Star Farms, 2026-09-26).
+  const series = new Set(photos.map(seriesOf).filter((k): k is string => k !== null));
   for (const url of urls) {
     const name = fileNameWords(url).toLowerCase();
     const namesPlan = PLAN_WORDS.test(name);
@@ -574,7 +575,7 @@ export function sortDrawings(urls: string[], photos: string[] = []): { drawings:
     // ".../floor-plan/cameos/..." were taken for drawings (2026-09-25).
     const photo =
       Boolean(classifyRoom(fileNameWords(url))) ||
-      (numberedFile(url) && numberedFolders.has(folderOf(url))) ||
+      series.has(seriesOf(url) ?? "") ||
       /\b(interiors?|interior images|photos?|gallery|cameos?)\b/.test(folderWords(url).split(" ").slice(-2).join(" "));
     if ((namesView || photo) && !namesPlan) views.push(url);
     else drawings.push(url);
@@ -582,11 +583,18 @@ export function sortDrawings(urls: string[], photos: string[] = []): { drawings:
   return { drawings, views };
 }
 
-/** A file named by a number alone: "14.jpg". */
-const numberedFile = (url: string): boolean => /\/\d{1,3}\.[a-z0-9]+(?:[?#]|$)/i.test(url);
-
-/** The folder a file sits in, its address up to the last "/". */
-const folderOf = (url: string): string => url.replace(/[?#].*$/, "").replace(/\/[^/]*$/, "");
+/**
+ * The numbered series a file belongs to: its folder and the first word
+ * after its number — "…/3emb/" for "14.jpg", "…/3975/oakfield" for
+ * "31-oakfield-trails-torino-bonus_space.jpg". Null for a file not
+ * numbered so.
+ */
+function seriesOf(url: string): string | null {
+  const bare = url.replace(/[?#].*$/, "");
+  const cut = bare.lastIndexOf("/");
+  const m = bare.slice(cut + 1).match(/^\d{1,3}(?:\.[a-z0-9]+$|[-_]+([a-z]+))/i);
+  return m ? `${bare.slice(0, cut + 1)}${(m[1] ?? "").toLowerCase()}` : null;
+}
 
 /** The words of the folders a file sits in: ".../30ft-kb-2020-series/elevations/1511_a.jpg" gives "... series elevations". */
 function folderWords(url: string): string {
