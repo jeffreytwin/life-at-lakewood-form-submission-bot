@@ -837,7 +837,14 @@ export async function readPlanPageWithClaude(
  */
 async function listPage(
   url: string,
-  opts: { hint?: string; quickMoveIns?: boolean; press?: readonly string[]; read?: PageReader }
+  opts: {
+    hint?: string;
+    quickMoveIns?: boolean;
+    /** Floor plans only: the connection names a page of its own for the homes (extractPages). */
+    plansOnly?: boolean;
+    press?: readonly string[];
+    read?: PageReader;
+  }
 ): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null; homesPage?: string | null }> {
   const page = await (opts.read ?? fetchPage)(url, opts.press ? { press: opts.press } : undefined);
   // Asked to open a tab and the page has no such tab: there is nothing
@@ -853,7 +860,9 @@ async function listPage(
   // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
   const what = opts.quickMoveIns
     ? `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`
-    : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
+    : opts.plansOnly
+      ? `Extract every floor plan / home model from this new-home community page. Leave out the homes for sale — a home named by its street address or marked "Move-in Ready", "Quick Move-in" or with a move-in date — which are read from their own page. Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`
+      : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
 
   const ask = `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 
@@ -903,7 +912,11 @@ async function listPage(
         : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
     );
   }
-  const plans = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
+  const plans = reported
+    .filter((p) => p?.name?.trim())
+    .map(withoutBlanks)
+    // Asked for plans only, a home that came back anyway is left to its own page.
+    .filter((p) => !opts.plansOnly || (p.quickMoveIn !== true && !namesAnAddress(planName(p.name)) && !planInHomeLabel(p.name)));
   if (plans.length === 0 && pageLooksUnrendered(content)) {
     throw new Error(
       "the page carries no prices or sizes without its scripts — it draws its plans after loading, which a fetch cannot see (this builder needs a rendering engine)"
@@ -1189,7 +1202,7 @@ async function extractPages(
 
   const lists = await mapLimit(planPages, 4, async (pageUrl) => {
     try {
-      return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read }) };
+      return { pageUrl, page: await listPage(pageUrl, { hint: params.hint, read, plansOnly: homesEarly !== null }) };
     } catch (error) {
       return { pageUrl, error: error instanceof Error ? error.message : String(error) };
     }
@@ -1417,12 +1430,17 @@ export async function readPlanPages(
   // And the homes in an order that turns with the day, so the homes a run
   // has no time for are not the same homes every night (Richmond's last
   // five, 2026-09-23); what a home's page gave before stays until then.
-  const homes = [...listed.keys()].filter((i) => listed[i].quickMoveIn);
-  const turn = homes.length ? Math.floor(Date.now() / 86_400_000) % homes.length : 0;
+  // The plans take turns the same way: Kolter's Cresswind has twenty, and
+  // a run with time for twelve read the same twelve every night (Jeff,
+  // 2026-09-26).
+  const day = Math.floor(Date.now() / 86_400_000);
+  const turned = (list: number[]) => {
+    const turn = list.length ? day % list.length : 0;
+    return [...list.slice(turn), ...list.slice(0, turn)];
+  };
   const byPlansFirst = [
-    ...[...listed.keys()].filter((i) => !listed[i].quickMoveIn),
-    ...homes.slice(turn),
-    ...homes.slice(0, turn),
+    ...turned([...listed.keys()].filter((i) => !listed[i].quickMoveIn)),
+    ...turned([...listed.keys()].filter((i) => listed[i].quickMoveIn)),
   ];
   const deadline = opts.runDeadline ?? Infinity;
   const readInOrder = await mapLimit(byPlansFirst, opts.atOnce, async (i) => {

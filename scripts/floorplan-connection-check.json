@@ -1,5 +1,17 @@
 {
-  "raw": [],
+  "raw": [
+    {
+      "url": "https://homesbytowne.com/florida/palmera-at-wellen-park/tideland",
+      "around": [
+        "Bedrooms",
+        "Bathrooms",
+        "planviewer",
+        "iframe"
+      ],
+      "chars": 500,
+      "count": 2
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],

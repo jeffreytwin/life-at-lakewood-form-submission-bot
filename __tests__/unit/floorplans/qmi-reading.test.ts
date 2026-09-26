@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { homeAddressed, linkOnPage, oneHomeEach, sameHome } from "@/lib/floorplans/extractors/claude-extract";
 import { fullAndHalfBaths, namesAnAddress, planInHomeLabel, roomCount, standardizePlan } from "@/lib/floorplans/standardize";
-import { withDescriptions } from "@/lib/floorplans/description";
+import { looksLikeFactsLine, looksLikeSpecList, withDescriptions } from "@/lib/floorplans/description";
 import { comparedFields, fieldChanges, mergeForUpdate } from "@/lib/floorplans/diff";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -157,5 +157,24 @@ describe("bedrooms and bathrooms as numbers", () => {
     const [plan] = withDescriptions([home({ quickMoveIn: false, name: "Palm Beach", baths: "3", description: line })], "Cresswind");
     expect(plan.baths).toBe("3.5");
     expect(plan.raw?.featuresLine).toBe(line);
+  });
+});
+
+describe("a card's line of facts is not a description (Kolter's Cresswind)", () => {
+  it("knows a line of facts", () => {
+    expect(looksLikeFactsLine("Key Collection 2,383 Total Sq. Ft. 1,675 Living Area Sq. Ft.")).toBe(true);
+    expect(looksLikeSpecList("NEW PLAN Island Collection 2,871 Total Sq. Ft. 2,129 Living Area Sq. Ft.")).toBe(true);
+  });
+
+  it("does not take a written description for one", () => {
+    const written = "The Lido offers 1,675 square feet of open living, with a great room that opens to the lanai and a kitchen made for gathering.";
+    expect(looksLikeFactsLine(written)).toBe(false);
+    expect(looksLikeSpecList(written)).toBe(false);
+  });
+
+  it("writes the plan's own description in its place", () => {
+    const [plan] = withDescriptions([home({ quickMoveIn: false, name: "Lido", description: "Key Collection 2,383 Total Sq. Ft. 1,675 Living Area Sq. Ft." })], "Cresswind");
+    expect(plan.description).toMatch(/^The Lido is available to be built in Cresswind\./);
+    expect(plan.raw?.descriptionGenerated).toBe(true);
   });
 });

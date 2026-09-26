@@ -183,6 +183,22 @@ export function describePlan(plan: NormalizedPlan, communityName: string): strin
   return sentences.join(" ");
 }
 
+/** A word of a line of facts: a number, or a word of the areas builders measure. */
+const FACT_WORD = /^(?:\$?\d[\d,.]*\+?|sq\.?|ft\.?|sqft|sf|total|living|area|heated|under|air)$/i;
+
+/**
+ * Whether a "description" is the line of facts a card prints — Kolter's
+ * "Key Collection 2,383 Total Sq. Ft. 1,675 Living Area Sq. Ft." — which a
+ * run read once where the plan's description belongs, and the queue
+ * proposed it over the plan's own (Jeff, 2026-09-26). Short, and mostly
+ * numbers and the words of an area. Exported for tests.
+ */
+export function looksLikeFactsLine(text: string | null | undefined): boolean {
+  const words = String(text ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length < 4 || words.length > 30) return false;
+  return words.filter((w) => FACT_WORD.test(w)).length / words.length >= 0.4;
+}
+
 /**
  * Whether a "description" is really the spec line a page prints under the
  * plan name — "Four Bedroom (Opt. Bonus Room), Four Full and 1/2 Bath,
@@ -194,6 +210,7 @@ export function describePlan(plan: NormalizedPlan, communityName: string): strin
  */
 export function looksLikeSpecList(text: string | null | undefined): boolean {
   const s = (text ?? "").trim();
+  if (looksLikeFactsLine(s)) return true;
   if (!s || /[.!?]["')\]]?$/.test(s)) return false;
   const pieces = s.split(",").map((p) => p.trim()).filter(Boolean);
   if (pieces.length < 3) return false;
