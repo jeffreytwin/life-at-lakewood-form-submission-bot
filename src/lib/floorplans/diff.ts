@@ -363,6 +363,29 @@ export function priceWithin(current: NormalizedPlan, plan: NormalizedPlan, share
   return Math.abs(next - before) / before <= share + 1e-9;
 }
 
+/**
+ * The changes a run approves without a review, and the ones it puts to a
+ * person. A quick move-in's description is approved on its own whatever
+ * else changed (the site does not show it; Jeff, 2026-09-25). A price that
+ * moved by a fifth or less is approved on its own only when it is all that
+ * changed: with anything else, the plan is put to a person whole (Jeff,
+ * 2026-09-26). Nothing is approved on its own for a plan not yet on the
+ * site. Pure; exported for tests.
+ */
+export function splitOnItsOwn(
+  current: NormalizedPlan,
+  plan: NormalizedPlan,
+  changes: FieldChange[],
+  published: boolean
+): { onItsOwn: FieldChange[]; reviewed: FieldChange[] } {
+  if (!published) return { onItsOwn: [], reviewed: changes };
+  const described = plan.quickMoveIn === true ? changes.find((c) => c.field === "description") : undefined;
+  const price = changes.find((c) => c.field === "priceDisplay" && priceWithin(current, plan));
+  const others = changes.filter((c) => c !== described && c !== price);
+  const onItsOwn = [described, others.length === 0 ? price : undefined].filter((c): c is FieldChange => Boolean(c));
+  return { onItsOwn, reviewed: changes.filter((c) => !onItsOwn.includes(c)) };
+}
+
 /** The record with only its price taken from the run: what a small price change approved without a review writes. Pure. */
 export function withPriceFrom(current: CanonicalRecord, plan: NormalizedPlan): NormalizedPlan {
   return { ...current, price: plan.price ?? null, priceDisplay: plan.priceDisplay ?? null } as NormalizedPlan;
