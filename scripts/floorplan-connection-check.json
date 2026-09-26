@@ -1,5 +1,17 @@
 {
-  "raw": [],
+  "raw": [
+    {
+      "url": "https://apps.zondavirtual.com/alphaplanjson/1146a39d-4a7a-4f96-b5ca-3e20cc352913.json",
+      "around": [
+        "\"Model\"",
+        "Bedroom",
+        "Bathroom",
+        "NumberOf"
+      ],
+      "chars": 400,
+      "count": 2
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
@@ -22,7 +34,5 @@
       }
     }
   ],
-  "anatomy": [
-    "json https://apps.zondavirtual.com/alphaplanjson/1146a39d-4a7a-4f96-b5ca-3e20cc352913.json"
-  ]
+  "anatomy": []
 }

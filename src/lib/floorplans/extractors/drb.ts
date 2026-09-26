@@ -222,24 +222,31 @@ export function plansPageOf(url: string | undefined): string | undefined {
   return url?.replace(/\/(?:overview|home-plans|available-homes)\/?$/i, "/home-plans");
 }
 
+/** One page of a DRB resource; a page that is slow to answer is asked once more. */
 async function drbPage<T>(url: string): Promise<{ items?: T[]; meta?: { totalPages?: number } }> {
-  const res = await fetch(url, {
-    headers: { "user-agent": UA, accept: "application/json" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(45_000),
-  });
-  if (!res.ok) throw new Error(`${url}: ${res.status}`);
-  return (await res.json()) as { items?: T[]; meta?: { totalPages?: number } };
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { "user-agent": UA, accept: "application/json" },
+        redirect: "follow",
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (!res.ok) throw new Error(`${url}: ${res.status}`);
+      return (await res.json()) as { items?: T[]; meta?: { totalPages?: number } };
+    } catch (error) {
+      if (attempt >= 2) throw new Error(`${url}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }
 
-/** Every plan DRB offers in the community: the plan resource swept, four pages at a time. */
+/** Every plan DRB offers in the community: the plan resource swept, three pages at a time. */
 async function drbPlans(nameKey: string, pageUrl?: string): Promise<NormalizedPlan[]> {
   const first = await drbPage<DrbPlan>(`${PLAN_API}?limit=${PAGE_SIZE}&page=1`);
   const pages = Math.min(first.meta?.totalPages ?? 1, MAX_PAGES);
   const rest: DrbPlan[][] = [];
-  for (let from = 2; from <= pages; from += 4) {
+  for (let from = 2; from <= pages; from += 3) {
     const batch = await Promise.all(
-      Array.from({ length: Math.min(4, pages - from + 1) }, (_, n) => drbPage<DrbPlan>(`${PLAN_API}?limit=${PAGE_SIZE}&page=${from + n}`).then((d) => d.items ?? []))
+      Array.from({ length: Math.min(3, pages - from + 1) }, (_, n) => drbPage<DrbPlan>(`${PLAN_API}?limit=${PAGE_SIZE}&page=${from + n}`).then((d) => d.items ?? []))
     );
     rest.push(...batch);
   }
@@ -278,7 +285,12 @@ export async function extractDrb(params: {
   }
   // The plans beside the homes; a plan resource that cannot be read fails
   // the run rather than leave the community with its homes and no plans.
-  const plans = params.communityId == null || nameKey ? drbPlans(nameKey, params.url) : Promise.resolve([]);
+  // Its failure is held until the homes are read: a rejection nothing is
+  // waiting on yet stops the whole process (the check's build, 2026-09-26).
+  const plansRead: Promise<{ plans: NormalizedPlan[] } | { error: unknown }> = (nameKey ? drbPlans(nameKey, params.url) : Promise.resolve([])).then(
+    (plans) => ({ plans }),
+    (error: unknown) => ({ error })
+  );
   const byKey = new Map<string, NormalizedPlan>();
   for (let page = 1; page <= MAX_PAGES; page++) {
     const res = await fetch(`${API}?limit=${PAGE_SIZE}&page=${page}`, {
@@ -295,6 +307,8 @@ export async function extractDrb(params: {
     }
     if (page >= (data.meta?.totalPages ?? 0)) break;
   }
-  const offered = await plans;
+  const read = await plansRead;
+  if ("error" in read) throw new Error(`drb plans: ${read.error instanceof Error ? read.error.message : String(read.error)}`);
+  const offered = read.plans;
   return [...offered, ...[...byKey.values()].filter((home) => !offered.some((p) => p.planKey === home.planKey))];
 }
