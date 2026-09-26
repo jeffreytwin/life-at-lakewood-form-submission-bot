@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { normalizeDrbItem } from "@/lib/floorplans/extractors/drb";
+import { normalizeDrbItem, normalizeDrbPlan, planOfferedIn, plansPageOf } from "@/lib/floorplans/extractors/drb";
 
 // Real inventory item for Biscayne Landing at Seaire (communityId 281),
 // captured in round-8 discovery and slimmed to the mapped fields.
@@ -58,5 +58,51 @@ describe("a DRB home's gallery, in the site's order from its titles", () => {
     expect(plan.galleryImages).toEqual([u("front"), u("kitchen"), u("bath"), u("rear")]);
     expect(plan.blueprintImages).toEqual([u("plan")]);
     expect(plan.galleryMeta?.[u("kitchen")]?.room).toBe("kitchen");
+  });
+});
+
+describe("DRB's plans (Biscayne Landing at Seaire, Jeff 2026-09-26)", () => {
+  const img = (url: string, sequence: number, title = "") => ({ url, sequence, title, status: "active" });
+  const plan = {
+    id: 2006,
+    name: "Eider",
+    status: "active",
+    basePrice: 589990,
+    bedsMin: 3,
+    bedsMax: 4,
+    bathsFullMin: 2,
+    bathsFullMax: 3,
+    bathsHalfMin: 0,
+    bathsHalfMax: 1,
+    sqFtMin: 2480,
+    sqFtMax: 2480,
+    garageSpacesMin: 3,
+    garageSpacesMax: 3,
+    marketingDescription: "<ul><li>Gourmet kitchen with a large island</li><li>Jack &amp; Jill bath</li></ul>",
+    planType: { valueForFeed: "Single Family" },
+    elevationImages: [img("https://assets.drbhomes.com/e2.jpg", 2), img("https://assets.drbhomes.com/e1.jpg", 1)],
+    interiorImages: [img("https://assets.drbhomes.com/kitchen.jpg", 1, "Kitchen")],
+    floorplanImages: [img("https://assets.drbhomes.com/fp1.jpg", 1, "First Floor")],
+    availableLocations: [{ communityName: "Biscayne Landing at Seaire", id: 281 }],
+  };
+
+  it("takes the top of each range, the base price, and its pictures and drawings", () => {
+    const p = normalizeDrbPlan(plan, "https://www.drbhomes.com/x/home-plans")!;
+    expect(p).toMatchObject({ name: "Eider", quickMoveIn: false, price: 589990, priceDisplay: "$589,990", beds: "4", baths: "3.5", sqft: 2480, garages: "3 car" });
+    expect(p.galleryImages[0]).toBe("https://assets.drbhomes.com/e1.jpg");
+    expect(p.galleryImages).toContain("https://assets.drbhomes.com/kitchen.jpg");
+    expect(p.blueprintImages).toEqual(["https://assets.drbhomes.com/fp1.jpg"]);
+    expect(p.description).toBe("Gourmet kitchen with a large island. Jack & Jill bath.");
+  });
+
+  it("is the community's when DRB offers it there", () => {
+    expect(planOfferedIn(plan, "seaire")).toBe(true);
+    expect(planOfferedIn({ ...plan, availableLocations: [{ communityName: "Adagio" }] }, "seaire")).toBe(false);
+  });
+
+  it("links the community's plans page", () => {
+    expect(plansPageOf("https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview")).toBe(
+      "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/home-plans"
+    );
   });
 });

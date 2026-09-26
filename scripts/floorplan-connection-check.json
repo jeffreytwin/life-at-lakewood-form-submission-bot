@@ -5,17 +5,24 @@
   "duplicates": [],
   "checks": [
     {
-      "builder": "Dream Finders Homes",
+      "builder": "DRB Homes",
       "community": "Seaire",
       "noSurvey": true
     },
     {
-      "builder": "Dream Finders Homes",
-      "community": "Waterside - Bungalow Walk",
-      "noSurvey": true
+      "builder": "David Weekley Homes",
+      "community": "Palmera",
+      "noSurvey": true,
+      "params": {
+        "url": "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-at-wellen-park",
+        "listUrls": [
+          "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-at-wellen-park",
+          "https://www.davidweekleyhomes.com/new-homes/fl/tampa/venice/palmera-wellen-park-executive-series"
+        ]
+      }
     }
   ],
   "anatomy": [
-    "https://apps.zondavirtual.com/alphaplan/index.html?plan=1146a39d-4a7a-4f96-b5ca-3e20cc352913"
+    "json https://apps.zondavirtual.com/alphaplanjson/1146a39d-4a7a-4f96-b5ca-3e20cc352913.json"
   ]
 }
