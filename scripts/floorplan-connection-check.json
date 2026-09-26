@@ -6,12 +6,22 @@
   "checks": [
     {
       "builder": "D.R. Horton",
-      "community": "Star Farms",
+      "community": "Bella Lago",
       "noSurvey": true
     },
     {
       "builder": "D.R. Horton",
-      "community": "Bella Lago",
+      "community": "Legacy Preserve",
+      "noSurvey": true
+    },
+    {
+      "builder": "D.R. Horton",
+      "community": "Rye Crossing",
+      "noSurvey": true
+    },
+    {
+      "builder": "D.R. Horton",
+      "community": "Star Farms",
       "noSurvey": true
     }
   ],
