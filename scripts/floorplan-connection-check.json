@@ -1,25 +1,26 @@
 {
   "raw": [
     {
-      "url": "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/home-plans",
+      "url": "https://api.drbhomes.com/api/v1/public-drb/community/281",
       "around": [
-        "api.drbhomes.com",
-        "planId",
         "\"plans\"",
-        "basePrice"
+        "bedsMax",
+        "basePrice",
+        "\"Eider\""
       ],
-      "chars": 400,
-      "count": 3
+      "chars": 500,
+      "count": 2
     },
     {
       "url": "https://apps.zondavirtual.com/alphaplanjson/1146a39d-4a7a-4f96-b5ca-3e20cc352913.json",
       "around": [
-        "\"Model\"",
-        "Bedroom",
-        "Bathroom"
+        "Tideland",
+        "\"Bedrooms\"",
+        "Beds",
+        "MinBed"
       ],
-      "chars": 400,
-      "count": 2
+      "chars": 500,
+      "count": 3
     }
   ],
   "concurrency": 2,
@@ -27,6 +28,6 @@
   "duplicates": [],
   "checks": [],
   "anatomy": [
-    "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/home-plans"
+    "json https://api.drbhomes.com/api/v1/public-drb/community/281"
   ]
 }
