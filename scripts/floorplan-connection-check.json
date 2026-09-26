@@ -1,36 +1,13 @@
 {
   "raw": [
     {
-      "url": "https://wellenpark.com/builder/john-cannon-homes/",
+      "url": "https://www.kolterhomes.com/new-homes/sarasota-bradenton-cresswind-lakewood-ranch/move-in-ready/",
       "around": [
-        "data-neighborhood=",
-        "Country Club",
-        "country-club"
+        "qd-556",
+        "Move-In Ready"
       ],
-      "chars": 250,
-      "count": 8
-    },
-    {
-      "url": "https://wellenpark.com/home/2566416/detail/",
-      "around": [
-        "Neighborhood",
-        "Country Club",
-        "Everly",
-        "country-club"
-      ],
-      "chars": 500,
-      "count": 3
-    },
-    {
-      "url": "https://wellenpark.com/neighborhood/wellen-park-golf-country-club/overview/",
-      "around": [
-        "John Cannon",
-        "john-cannon",
-        "Kylie",
-        "Akarra"
-      ],
-      "chars": 500,
-      "count": 3
+      "chars": 700,
+      "count": 2
     }
   ],
   "concurrency": 2,
@@ -38,40 +15,14 @@
   "duplicates": [],
   "checks": [
     {
-      "builder": "John Cannon Homes",
-      "community": "Waterside - Wild Blue",
+      "builder": "Kolter Homes",
+      "community": "Cresswind",
       "noSurvey": true
     },
     {
-      "builder": "John Cannon Homes",
-      "community": "Waterside - Kingfisher Estates",
+      "builder": "Medallion Home",
+      "community": "Cross Creek",
       "noSurvey": true
-    },
-    {
-      "builder": "John Cannon Homes",
-      "community": "Monarch Acres",
-      "noSurvey": true
-    },
-    {
-      "builder": "John Cannon Homes",
-      "community": "Star Farms",
-      "noSurvey": true
-    },
-    {
-      "builder": "John Cannon Homes",
-      "community": "Everly",
-      "noSurvey": true
-    },
-    {
-      "builder": "John Cannon Homes",
-      "community": "Wellen Park Country Club",
-      "noSurvey": true,
-      "params": {
-        "engine": "mpc_aggregator",
-        "source": "wellenpark",
-        "url": "https://wellenpark.com/builder/john-cannon-homes/",
-        "neighborhood": "wellen-park-golf-country-club"
-      }
     }
   ]
 }

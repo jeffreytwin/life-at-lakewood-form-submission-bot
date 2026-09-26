@@ -18,7 +18,7 @@ import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevati
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
-import { asTour, bathsStated } from "@/lib/floorplans/standardize";
+import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -438,6 +438,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       },
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
       planCode: { type: "string", description: "The builder's own code or number for this plan where the page shows one beside its name, e.g. 'F057' or 'B929'; omit if the page shows none" },
+      address: { type: "string", description: "For a home for sale: its street address as the page titles it, e.g. '18366 Rockport Place'; omit for a floor plan's page or where the page gives none" },
     },
     required: [],
   },
@@ -466,6 +467,7 @@ interface ExtractedPlanPage {
   photoImages?: string[];
   blueprintImages?: string[];
   planCode?: string;
+  address?: string;
 }
 
 /** A media store's own id, which says nothing about the picture: "6e8cfe1d-66ee-4b88-b752-30e7579fd4bf_lg.jpg". */
@@ -609,6 +611,26 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
     })
   );
   return out;
+}
+
+/**
+ * A home named by its address, where the list named it by something else
+ * and its own page gives the address: Kolter's Cresswind list reads
+ * "Casey - Move-In Ready" above each home's address, and a run that took
+ * the one for the other offered five homes the site already has as five
+ * new ones (Jeff, 2026-09-26). The label's plan becomes the home's base
+ * plan where the list gave none. Nothing changes for a floor plan, a home
+ * already named by its address, or an address the page does not give.
+ * Pure; exported for tests.
+ */
+export function homeAddressed(plan: NormalizedPlan, address: string | null | undefined): Partial<NormalizedPlan> {
+  const street = address?.trim().replace(/\s+/g, " ");
+  if (!plan.quickMoveIn || namesAnAddress(plan.name) || !street || !namesAnAddress(street)) return {};
+  return {
+    name: street,
+    planKey: normKey(street),
+    relatedPlanName: plan.relatedPlanName || planInHomeLabel(plan.name) || null,
+  };
 }
 
 /**
@@ -769,6 +791,7 @@ export async function readPlanPageWithClaude(
   const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);
   return {
     ...plan,
+    ...homeAddressed(plan, page.address),
     price,
     priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
     beds: plan.beds || (page.beds ?? ""),
@@ -888,8 +911,10 @@ async function listPage(
   }
 
   const listed = plans.map((p) => {
-    const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true;
     const name = planName(p.name);
+    // A home named by its street address is a home, whatever this reading
+    // said (namesAnAddress).
+    const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true || namesAnAddress(name);
     return {
       planKey: normKey(name),
       name,
@@ -903,9 +928,9 @@ async function listPage(
       quickMoveIn,
       // Only a home stands on a plan; a plan named as its own base plan is
       // Claude reading the field too eagerly, and means nothing downstream.
-      relatedPlanName: (quickMoveIn ? p.relatedPlanName?.trim() : "") || null,
+      relatedPlanName: (quickMoveIn ? p.relatedPlanName?.trim() || planInHomeLabel(name) : "") || null,
       comingSoon: false,
-      sourceUrl: p.sourceUrl ?? page.url ?? url,
+      sourceUrl: linkOnPage(p.sourceUrl, page.html, page.url || url) ?? page.url ?? url,
       description: p.description?.trim() || null,
       virtualTourUrl: p.virtualTourUrl?.trim() || null,
       galleryImages: pictureAddresses(p.photoImages),
@@ -953,6 +978,56 @@ export function homesPageIn(html: string, pageUrl: string): string | null {
     }
   }
   return null;
+}
+
+/**
+ * A plan's link as the page has it. Claude gives back the links it read,
+ * mostly as written, but not always: Kolter's Cresswind page links a home
+ * at ".../cresswind-lakewood-ranch/5804/move-in-ready/qd-556/", and one
+ * run reported ".../cresswind-lakewood-ranch//5804/qd-556/", a page that
+ * is not there — so the home's own page went unread and it came through
+ * with no price and no picture (Jeff, 2026-09-26). A link the page does
+ * not have is taken for the one page link that ends the same way and
+ * holds every part of it, in order; where no one link does, it stays as
+ * reported. Pure; exported for tests.
+ */
+export function linkOnPage(reported: string | null | undefined, html: string, pageUrl: string): string | null {
+  const said = reported?.trim();
+  if (!said) return null;
+  const baseUrl = documentBase(html, pageUrl);
+  let wanted: URL;
+  try {
+    wanted = new URL(said, baseUrl);
+  } catch {
+    return said;
+  }
+  const host = (u: URL) => u.host.replace(/^www\./i, "").toLowerCase();
+  const parts = (u: URL) => u.pathname.split("/").filter(Boolean);
+  const bare = (u: URL) => `${host(u)}/${parts(u).join("/")}`;
+  const want = parts(wanted);
+  const links: URL[] = [];
+  for (const tag of html.match(A_TAG) ?? []) {
+    const href = attrOf(tag, "href");
+    if (!href || href.startsWith("#")) continue;
+    try {
+      links.push(new URL(href, baseUrl));
+    } catch {
+      continue;
+    }
+  }
+  if (!want.length || links.some((l) => bare(l) === bare(wanted))) return said;
+  const holds = (link: URL) => {
+    const have = parts(link);
+    if (host(link) !== host(wanted) || have[have.length - 1] !== want[want.length - 1]) return false;
+    let next = 0;
+    for (const part of have) if (part === want[next]) next += 1;
+    return next === want.length;
+  };
+  const found = new Map(links.filter(holds).map((l) => [bare(l), l]));
+  if (found.size !== 1) return said;
+  const [link] = found.values();
+  link.hash = "";
+  return link.href;
 }
 
 /**

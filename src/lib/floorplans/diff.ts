@@ -283,6 +283,8 @@ export function mergeForUpdate(
   // change is approved: SimplyDwell's pages name no type, and its runs
   // read one on some nights and not others (2026-09-23).
   if (!plan.homeType && current.homeType) merged.homeType = current.homeType;
+  // Nor a home's base plan, which a run may not read (baseUnread).
+  if (baseUnread(current, plan) && !overrides.has("relatedPlanName")) merged.relatedPlanName = current.relatedPlanName;
   // Nor a description or a tour the run read differently, or not at all,
   // when that is not a change (descriptionChanged, tourChanged): the record
   // keeps its own, and the site is not rewritten with a variant of it.
@@ -341,6 +343,16 @@ export function withDescriptionFrom(current: CanonicalRecord, plan: NormalizedPl
   return { ...current, description: plan.description ?? null, raw } as NormalizedPlan;
 }
 
+/**
+ * Whether a run read no base plan for a home that has one. That is the
+ * reading, not the builder: Medallion's River Preserve Estates page gives
+ * each home's plan on one read and not the next, and the queue proposed
+ * taking "Belize" off 12422 Stonegate Trail (Jeff, 2026-09-26). A base
+ * plan the run reads differently is still a change.
+ */
+const baseUnread = (current: CanonicalRecord, plan: NormalizedPlan): boolean =>
+  !plan.relatedPlanName?.trim() && Boolean(current.relatedPlanName?.trim());
+
 /** What only a plan's own page tells a run; a list page never carries these. */
 const PAGE_ONLY_FIELDS = new Set(["description", "virtualTourUrl", "virtualTourImage", "garages"]);
 
@@ -356,6 +368,7 @@ export function comparedFields(current: CanonicalRecord, plan: NormalizedPlan): 
   const labels: string[] = [];
   for (const [field, label] of DIFF_FIELDS) {
     if (overrides.has(field) || (unread && PAGE_ONLY_FIELDS.has(field)) || (quickMoveIn && !QMI_FIELDS.has(field))) continue;
+    if (field === "relatedPlanName" && baseUnread(current, plan)) continue;
     labels.push(label);
   }
   for (const [field, label] of GALLERY_FIELDS) {
@@ -384,6 +397,7 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
     if (overrides.has(field)) continue;
     if (unread && PAGE_ONLY_FIELDS.has(field)) continue;
     if (quickMoveIn && !QMI_FIELDS.has(field)) continue;
+    if (field === "relatedPlanName" && baseUnread(current, plan)) continue;
     const oldVal = BOOLEAN_FIELDS.has(field) ? current[field] === true : current[field];
     const newVal = BOOLEAN_FIELDS.has(field) ? plan[field] === true : plan[field];
     if (String(oldVal ?? "") === String(newVal ?? "")) continue;

@@ -222,6 +222,38 @@ export function readableName(name: string): string {
   });
 }
 
+/** The last word of a street's name, spelled out or cut short. */
+const STREET_WORD =
+  "(?:street|st|avenue|ave|road|rd|drive|dr|lane|ln|way|court|ct|circle|cir|place|pl|terrace|ter|trail|trl|boulevard|blvd|loop|run|cove|cv|path|pass|parkway|pkwy|point|pt|row|glen|bend|crossing|xing|highway|hwy|square|sq|landing|trace|walk)";
+const STREET_ADDRESS = new RegExp(`^\\d{1,6}[a-z]?\\s+(?:[a-z0-9'’.&-]+\\s+){0,4}${STREET_WORD}\\.?(?=$|[\\s,#])`, "i");
+
+/**
+ * Whether a name is a street address — "12422 Stonegate Trail", "4931
+ * Carova Way", "12785 JADE EMPRESS LOOP, Unit 202" — which only a home
+ * for sale is named by: a floor plan never is. Medallion's River Preserve
+ * Estates lists its plans and its homes on one page, and a run that read
+ * two of its homes as plans proposed turning them into base plans (Jeff,
+ * 2026-09-26). Exported for tests.
+ */
+export function namesAnAddress(name: string | null | undefined): boolean {
+  return STREET_ADDRESS.test(String(name ?? "").trim());
+}
+
+const HOME_LABEL =
+  /^(.+?)\s*[-–—|:]\s*(?:move[\s-]*in[\s-]*ready|quick[\s-]*move[\s-]*in|ready\s+now|available\s+now|under\s+construction)\b/i;
+
+/**
+ * The plan a home's list label names, where the label is a plan and what
+ * state the home is in rather than an address: Kolter's Cresswind cards
+ * read "Casey - Move-In Ready" above "18366 Rockport Place", and a run
+ * that took the label for the name offered the home again as a new one
+ * (Jeff, 2026-09-26). Null where the name says nothing of the kind.
+ * Exported for tests.
+ */
+export function planInHomeLabel(name: string | null | undefined): string | null {
+  return String(name ?? "").trim().match(HOME_LABEL)?.[1]?.trim() || null;
+}
+
 /** A builder's stand-in for a picture it does not have yet, by its file's name. */
 const STAND_IN_PICTURE = /(?:coming[-_ ]?soon|no[-_ ]?image|image[-_ ]?not[-_ ]?available|placeholder)(?=[-_.]|$)/i;
 
