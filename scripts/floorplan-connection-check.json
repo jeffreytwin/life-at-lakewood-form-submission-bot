@@ -3,13 +3,12 @@
     {
       "url": "https://homesbytowne.com/florida/palmera-at-wellen-park/tideland",
       "around": [
-        "contradovip",
-        "&quot;Tideland&quot;",
-        "3-4 Bed",
-        "3.5-4"
+        "&quot;bedrooms&quot;",
+        "floorplan_image"
       ],
-      "chars": 600,
-      "count": 6
+      "chars": 900,
+      "after": 6000,
+      "count": 1
     }
   ],
   "concurrency": 2,
