@@ -5,17 +5,15 @@
   "duplicates": [],
   "checks": [
     {
-      "builder": "DRB Homes",
-      "community": "Seaire",
+      "builder": "D.R. Horton",
+      "community": "Star Farms",
       "noSurvey": true
     },
     {
-      "builder": "Homes by Towne",
-      "community": "Palmera",
+      "builder": "D.R. Horton",
+      "community": "Bella Lago",
       "noSurvey": true
     }
   ],
-  "anatomy": [
-    "json https://api.drbhomes.com/api/v1/public/community/281/plans?sortBy=sqFt&sortOrder=ASC&page=1&limit=1000"
-  ]
+  "anatomy": []
 }
