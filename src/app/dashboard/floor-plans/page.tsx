@@ -6,6 +6,7 @@ import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
 import { HOME_TYPES, standardGarages } from "@/lib/floorplans/standardize";
 import { siteColors } from "@/app/dashboard/listings/format";
+import { FIRST_DIRECTION, priceOf, sortChanges, type ChangeSort, type ChangeSortKey } from "@/lib/floorplans/sort-changes";
 import FloorPlanTabs from "./tabs";
 
 interface GalleryMeta {
@@ -16,6 +17,7 @@ interface GalleryMeta {
 
 interface ProposedRecord {
   name?: string;
+  price?: number | null;
   priceDisplay?: string | null;
   beds?: string;
   baths?: string;
@@ -107,6 +109,30 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
 const idsAt = (g: Group, status: string) => g.rows.filter((r) => r.status === status).map((r) => r.id);
 const pendingIds = (g: Group) => idsAt(g, "pending");
 const isQuickMoveIn = (g: Group) => g.lead.proposed_record?.quickMoveIn === true;
+
+/** What each sortable column orders a plan by (sort-changes.ts). */
+const sortFacts = (g: Group) => ({
+  kind: g.kind,
+  quickMoveIn: isQuickMoveIn(g),
+  name: g.lead.proposed_record?.name ?? g.lead.plan_key,
+  price: priceOf(g.lead.proposed_record?.price, g.lead.proposed_record?.priceDisplay),
+  site: g.lead.fp_sites?.domain ?? "",
+  community: g.lead.fp_communities?.name ?? "",
+  builder: g.lead.fp_builders?.name ?? "",
+  detected: g.createdAt,
+});
+
+/** The sortable columns, in the table's order. */
+const SORT_COLUMNS: { key: ChangeSortKey; label: string; hint: string }[] = [
+  { key: "type", label: "Type", hint: "new plans, then updates, then removals" },
+  { key: "plan", label: "Plan", hint: "by name" },
+  { key: "details", label: "Details", hint: "by price" },
+  { key: "where", label: "Site / Community / Builder", hint: "by site, then community, then builder" },
+  { key: "detected", label: "Detected", hint: "by when it was found" },
+];
+
+/** Where this browser remembers the column the queue was last sorted by. */
+const SORT_STORAGE_KEY = "floor-plans-changes-sort";
 
 /** 1 to 10 as the freelancers used it; 11 for a plan that must come first on the site (Jeff, 2026-09-21). */
 const SCORES = Array.from({ length: 11 }, (_, i) => i + 1);
@@ -230,6 +256,8 @@ export default function FloorPlansPage() {
   const [siteFilter, setSiteFilter] = useState("all");
   const [builderFilter, setBuilderFilter] = useState("all");
   const [kindFilter, setKindFilter] = useState<"all" | "plans" | "qmi">("all");
+  // The column the queue is sorted by, or the queue's own order (Jeff, 2026-09-26).
+  const [sort, setSort] = useState<ChangeSort | null>(null);
   const [troubled, setTroubled] = useState<TroubledConnection[]>([]);
   const coarse = useCoarsePointer();
   const [loading, setLoading] = useState(true);
@@ -351,11 +379,42 @@ export default function FloorPlansPage() {
       ),
     [changes, siteFilter, builderFilter]
   );
-  // Floor plans only, quick move-ins only, or both (Jeff, 2026-09-19).
+  // Floor plans only, quick move-ins only, or both (Jeff, 2026-09-19),
+  // in the order of the column chosen. Shift-click ticks every plan between
+  // two in this order, as shown.
   const groups = useMemo(
-    () => siteGroups.filter((g) => (kindFilter === "all" ? true : kindFilter === "qmi" ? isQuickMoveIn(g) : !isQuickMoveIn(g))),
-    [siteGroups, kindFilter]
+    () =>
+      sortChanges(
+        siteGroups.filter((g) => (kindFilter === "all" ? true : kindFilter === "qmi" ? isQuickMoveIn(g) : !isQuickMoveIn(g))),
+        sort,
+        sortFacts
+      ),
+    [siteGroups, kindFilter, sort]
   );
+  // The last column chosen in this browser, once the page is showing.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(SORT_STORAGE_KEY) ?? "null") as ChangeSort | null;
+      if (saved && SORT_COLUMNS.some((c) => c.key === saved.key) && (saved.dir === "asc" || saved.dir === "desc")) setSort(saved);
+    } catch {
+      // nothing remembered, or storage refused: the queue's own order
+    }
+  }, []);
+  // A column clicked once sorts by it, again turns it around, and a third
+  // time goes back to the queue's own order.
+  const sortBy = useCallback((key: ChangeSortKey) => {
+    setSort((now) => {
+      const next: ChangeSort | null =
+        now?.key !== key ? { key, dir: FIRST_DIRECTION[key] } : now.dir === FIRST_DIRECTION[key] ? { key, dir: now.dir === "asc" ? "desc" : "asc" } : null;
+      try {
+        if (next) window.localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(next));
+        else window.localStorage.removeItem(SORT_STORAGE_KEY);
+      } catch {
+        // remembered for this visit only
+      }
+      return next;
+    });
+  }, []);
   const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0), [groups]);
   const pendingQuickMoveIns = useMemo(
     () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g)),
@@ -958,11 +1017,34 @@ export default function FloorPlansPage() {
                     )}
                   </th>
                   <th></th>
-                  <th>Type</th>
-                  <th>Plan</th>
-                  <th>Details</th>
-                  <th>Site / Community / Builder</th>
-                  <th>Detected</th>
+                  {SORT_COLUMNS.map((col) => {
+                    const on = sort?.key === col.key;
+                    return (
+                      <th key={col.key} aria-sort={on ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}>
+                        <button
+                          type="button"
+                          onClick={() => sortBy(col.key)}
+                          title={`Sort ${col.hint}${on ? " — click again to reverse, a third time for the queue's own order" : ""}`}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            font: "inherit",
+                            letterSpacing: "inherit",
+                            textTransform: "inherit",
+                            color: on ? "var(--text)" : "inherit",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {col.label}
+                          <span aria-hidden="true" style={{ marginLeft: 4, opacity: on ? 1 : 0.35 }}>
+                            {on ? (sort.dir === "asc" ? "▲" : "▼") : "↕"}
+                          </span>
+                        </button>
+                      </th>
+                    );
+                  })}
                   <th></th>
                 </tr>
               </thead>

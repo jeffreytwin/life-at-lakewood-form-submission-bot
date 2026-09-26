@@ -1,15 +1,5 @@
 {
-  "raw": [
-    {
-      "url": "https://www.kolterhomes.com/new-homes/sarasota-bradenton-cresswind-lakewood-ranch/move-in-ready/",
-      "around": [
-        "qd-556",
-        "Move-In Ready"
-      ],
-      "chars": 700,
-      "count": 2
-    }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
@@ -22,6 +12,11 @@
     {
       "builder": "Medallion Home",
       "community": "Cross Creek",
+      "noSurvey": true
+    },
+    {
+      "builder": "Homes by Towne",
+      "community": "Waterside - Shellstone",
       "noSurvey": true
     }
   ]

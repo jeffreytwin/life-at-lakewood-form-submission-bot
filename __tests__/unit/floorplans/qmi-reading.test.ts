@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { homeAddressed, linkOnPage } from "@/lib/floorplans/extractors/claude-extract";
-import { namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
+import { homeAddressed, linkOnPage, oneHomeEach, sameHome } from "@/lib/floorplans/extractors/claude-extract";
+import { fullAndHalfBaths, namesAnAddress, planInHomeLabel, roomCount, standardizePlan } from "@/lib/floorplans/standardize";
+import { withDescriptions } from "@/lib/floorplans/description";
 import { comparedFields, fieldChanges, mergeForUpdate } from "@/lib/floorplans/diff";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -97,5 +98,64 @@ describe("a run that read no base plan does not take one away (Medallion's River
 
   it("still proposes a base plan read differently", () => {
     expect(fieldChanges(home(), home({ relatedPlanName: "Aruba 2" })).map((c) => c.label)).toEqual(["base plan"]);
+  });
+});
+
+describe("one home listed on two pages is one home (Kolter's Cresswind)", () => {
+  const cresswind = "https://www.kolterhomes.com/new-homes/sarasota-bradenton-cresswind-lakewood-ranch";
+  const onPlansPage = home({ planKey: "casey-move-in-ready", name: "Casey Move-in Ready", sourceUrl: `${cresswind}//5804/qd-556/` });
+  const onHomesPage = home({ planKey: "18366-rockport-place", name: "18366 Rockport Place", sourceUrl: `${cresswind}/5804/move-in-ready/qd-556/` });
+
+  it("knows the two links for one home's page", () => {
+    expect(sameHome(onPlansPage, onHomesPage)).toBe(true);
+    expect(sameHome(onPlansPage, home({ name: "Lido Move-in Ready", sourceUrl: `${cresswind}/5823/move-in-ready/qd-550/` }))).toBe(false);
+  });
+
+  it("knows one address", () => {
+    expect(sameHome(home({ sourceUrl: "https://a.example/x/1/" }), home({ sourceUrl: "https://b.example/y/2/" }))).toBe(true);
+  });
+
+  it("does not take two plans' pages for one home", () => {
+    const plan = (slug: string) => home({ name: slug, quickMoveIn: false, sourceUrl: `${cresswind}/4020/floorplan/${slug}/` });
+    expect(sameHome(plan("casey"), plan("lido"))).toBe(false);
+  });
+
+  it("keeps the home read more fully where two take one key", () => {
+    const unread = home({ planKey: "18373-rockport-place", pageUnread: true, galleryImages: ["https://x/1.jpg"] });
+    const read = home({ planKey: "18373-rockport-place", galleryImages: ["https://x/1.jpg", "https://x/2.jpg"] });
+    const other = home({ planKey: "4924-edisto-court", name: "4924 Edisto Court" });
+    expect(oneHomeEach([unread, other, read])).toEqual([other, read]);
+  });
+});
+
+describe("bedrooms and bathrooms as numbers", () => {
+  it("counts the bedrooms, not the rooms beside them (Homes by Towne)", () => {
+    expect(roomCount("4 + Den + Bonus Room")).toBe("4");
+    expect(roomCount("3 + Den")).toBe("3");
+    expect(roomCount("2 + Study")).toBe("2");
+    expect(roomCount("4 Bedrooms")).toBe("4");
+    expect(roomCount("3 - 4")).toBe("4");
+    expect(roomCount("5+")).toBe("5+");
+    expect(roomCount("")).toBe("");
+  });
+
+  it("reads full and half baths from the words (Kolter)", () => {
+    expect(fullAndHalfBaths("3 Bedroom, Den, 3 Full and 1 Half Bath, Great Room")).toBe("3.5");
+    expect(roomCount("2 Full & 1 Half Baths")).toBe("2.5");
+    expect(fullAndHalfBaths("Bedrooms 3 Full Baths 2 Half Bath 1")).toBeNull();
+    expect(fullAndHalfBaths("3 Bath")).toBeNull();
+  });
+
+  it("keeps what the builder said beside the count", () => {
+    const plan = standardizePlan(home({ quickMoveIn: false, beds: "4 + Den + Bonus Room", baths: "3" }));
+    expect(plan.beds).toBe("4");
+    expect(plan.raw?.bedsRaw).toBe("4 + Den + Bonus Room");
+  });
+
+  it("takes the baths a spec line gives in words over Claude's count", () => {
+    const line = "3 Bedroom, Den, 3 Full and 1 Half Bath, Great Room, 2-Car Garage (up to 3 Car-Garage)";
+    const [plan] = withDescriptions([home({ quickMoveIn: false, name: "Palm Beach", baths: "3", description: line })], "Cresswind");
+    expect(plan.baths).toBe("3.5");
+    expect(plan.raw?.featuresLine).toBe(line);
   });
 });

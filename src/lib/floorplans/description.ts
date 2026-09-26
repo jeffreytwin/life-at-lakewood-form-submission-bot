@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 import { speaksAsOwner } from "@/lib/floorplans/owner-words";
+import { fullAndHalfBaths } from "@/lib/floorplans/standardize";
 
 const MODEL = "claude-opus-5";
 /** Descriptions reworded at once, and the longest one rewording is allowed. */
@@ -210,8 +211,12 @@ export function withDescriptions(plans: NormalizedPlan[], communityName: string)
     const own = plan.description?.trim() ?? "";
     if (own && !looksLikeSpecList(own)) return plan;
     const raw = own ? { ...(plan.raw ?? {}), featuresLine: own } : plan.raw;
-    if (plan.quickMoveIn) return own ? { ...plan, description: null, raw } : plan;
+    // The line says the baths in words ("3 Full and 1 Half Bath"), and the
+    // words decide (standardize.ts, fullAndHalfBaths).
+    const baths = fullAndHalfBaths(own);
+    const counted = baths ? { ...plan, baths } : plan;
+    if (plan.quickMoveIn) return own ? { ...counted, description: null, raw } : plan;
     // Marked, so it never replaces a description the builder wrote (diff.ts).
-    return { ...plan, description: describePlan(plan, communityName), raw: { ...(raw ?? {}), descriptionGenerated: true } };
+    return { ...counted, description: describePlan(counted, communityName), raw: { ...(raw ?? {}), descriptionGenerated: true } };
   });
 }

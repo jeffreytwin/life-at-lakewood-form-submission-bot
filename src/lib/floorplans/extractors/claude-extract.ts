@@ -1219,6 +1219,13 @@ async function extractPages(
       listPages.add(homesUrl).add(homesPage.url);
       // A home named for the plan it is built from would take that plan's key.
       for (const home of homesPage.plans) {
+        // One the plans' page listed too is that home once, as this page
+        // lists it (sameHome).
+        const twin = listed.findIndex((p) => p.quickMoveIn && sameHome(p, home));
+        if (twin >= 0) {
+          taken.delete(listed[twin].planKey);
+          listed.splice(twin, 1);
+        }
         const planKey = distinctKey(home, taken);
         taken.add(planKey);
         listed.push({ ...home, planKey });
@@ -1262,14 +1269,69 @@ async function extractPages(
     );
   }
 
-  return readPlanPages(listed, {
-    read,
-    atOnce,
-    runDeadline: params.runDeadline,
-    readPlanPage: can.readPlanPage,
-    renderAgain: can.renderAgain,
-    listPages,
-  });
+  return oneHomeEach(
+    await readPlanPages(listed, {
+      read,
+      atOnce,
+      runDeadline: params.runDeadline,
+      readPlanPage: can.readPlanPage,
+      renderAgain: can.renderAgain,
+      listPages,
+    })
+  );
+}
+
+/** A link's host and path parts, "www." and the empty parts aside. */
+function linkParts(url: string | null | undefined): { host: string; parts: string[] } | null {
+  try {
+    const u = new URL(String(url ?? ""));
+    return { host: u.host.replace(/^www\./i, "").toLowerCase(), parts: u.pathname.split("/").filter(Boolean) };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Whether two listings are one home: the same street address, or links to
+ * the same home's page however the two pages spell them. Kolter lists each
+ * Cresswind home on the community's plans page as ".../cresswind-lakewood-
+ * ranch//5804/qd-556/" and on its move-in-ready page as ".../5804/move-in-
+ * ready/qd-556/" — one home, whose page was read twice and offered twice
+ * (Jeff, 2026-09-26). The links end in the same part, one carrying a
+ * number, and one holds every part of the other in order. Pure; exported
+ * for tests.
+ */
+export function sameHome(a: NormalizedPlan, b: NormalizedPlan): boolean {
+  if (namesAnAddress(a.name) && normKey(a.name) === normKey(b.name)) return true;
+  const x = linkParts(a.sourceUrl);
+  const y = linkParts(b.sourceUrl);
+  if (!x || !y || x.host !== y.host || !x.parts.length || !y.parts.length) return false;
+  const last = x.parts[x.parts.length - 1];
+  if (last !== y.parts[y.parts.length - 1] || !/\d/.test(last)) return false;
+  const [short, long] = x.parts.length <= y.parts.length ? [x.parts, y.parts] : [y.parts, x.parts];
+  let next = 0;
+  for (const part of long) if (part === short[next]) next += 1;
+  return next === short.length;
+}
+
+/**
+ * Each home once, by its key: a home the list named by a label takes its
+ * address from its own page (homeAddressed), and may then be a home
+ * already listed under that address. The one read more fully stays: its
+ * page read, then more pictures, then a price. Pure; exported for tests.
+ */
+export function oneHomeEach(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const score = (p: NormalizedPlan) => (p.pageUnread ? 0 : 1000) + p.galleryImages.length * 2 + (p.price ? 1 : 0);
+  const kept = new Map<string, NormalizedPlan>();
+  for (const plan of plans) {
+    const had = kept.get(plan.planKey);
+    if (!had || !plan.quickMoveIn || !had.quickMoveIn) {
+      if (!had) kept.set(plan.planKey, plan);
+      continue;
+    }
+    if (score(plan) > score(had)) kept.set(plan.planKey, plan);
+  }
+  return plans.filter((p) => kept.get(p.planKey) === p);
 }
 
 

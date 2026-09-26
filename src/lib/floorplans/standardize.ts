@@ -78,6 +78,39 @@ export function largestInRange(text: string | null | undefined): string {
   return String(Math.max(...numbers.map(Number)));
 }
 
+const FULL_AND_HALF = /(\d+)\s*full(?:\s*baths?)?\s*(?:and|&|\+|,|\/)\s*(\d+)\s*half\b/i;
+
+/**
+ * Bathrooms where the words give full and half baths: Kolter's "3 Full and
+ * 1 Half Bath" is "3.5" (bathsOf). Read from the words, not from Claude's
+ * count of them, which came back "3" one night and "3.5" the next and put
+ * the change in the queue both ways (Jeff, 2026-09-26). Null where the
+ * words give no such pair. Pure.
+ */
+export function fullAndHalfBaths(text: string | null | undefined): string | null {
+  const pair = FULL_AND_HALF.exec(String(text ?? ""));
+  return pair ? bathsOf(Number(pair[1]), Number(pair[2])) : null;
+}
+
+/**
+ * A count of bedrooms or bathrooms as the sites show one: a number. Homes
+ * by Towne gives bedrooms as "4 + Den + Bonus Room" and "3 + Study" (Jeff,
+ * 2026-09-26); the rooms besides the bedrooms are not bedrooms, so the
+ * count is the number. "4 Bedrooms" is "4", full and half baths are
+ * written as bathsOf writes them, a range is its larger end
+ * (largestInRange), and a bare "5+" is kept as it came. Pure; exported
+ * for tests.
+ */
+export function roomCount(text: string | null | undefined): string {
+  const s = (text ?? "").trim();
+  if (!s) return "";
+  const split = fullAndHalfBaths(s);
+  if (split) return split;
+  const count = largestInRange(s.replace(/\s*\+\s*[a-z].*$/i, ""));
+  const number = count.match(/^\d+(?:\.\d+)?/)?.[0];
+  return number && /[a-z]/i.test(count) ? number : count;
+}
+
 /** The numbers builders spell out: "Three Car Garage", "Two 2-Car Garage", "Double Garage". */
 const WORD_NUMBERS: Record<string, number> = {
   one: 1,
@@ -302,8 +335,8 @@ export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults 
     galleryMeta,
     blueprintImages: (plan.blueprintImages ?? []).filter(showablePicture),
     homeType,
-    beds: largestInRange(plan.beds),
-    baths: largestInRange(plan.baths),
+    beds: roomCount(plan.beds),
+    baths: roomCount(plan.baths),
     garages,
     virtualTourUrl: tour,
     // A plan whose tour turned out to be an interactive drawing has no
@@ -312,6 +345,8 @@ export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults 
     raw: {
       ...(plan.raw ?? {}),
       ...(plan.homeType && homeType !== plan.homeType ? { homeTypeRaw: plan.homeType } : {}),
+      // What the builder said beside the count ("4 + Den + Bonus Room").
+      ...(/[a-z]/i.test(plan.beds ?? "") ? { bedsRaw: plan.beds } : {}),
       ...(plan.garages && garages !== plan.garages ? { garagesRaw: plan.garages } : {}),
       ...(plan.virtualTourUrl && !tour
         ? isInteractivePlan(plan.virtualTourUrl)
