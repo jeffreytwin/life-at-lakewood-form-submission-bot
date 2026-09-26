@@ -348,6 +348,45 @@ export function withDescriptionFrom(current: CanonicalRecord, plan: NormalizedPl
   return { ...current, description: plan.description ?? null, raw } as NormalizedPlan;
 }
 
+/** How far a price may move and be approved without a review: a fifth of what it was (Jeff, 2026-09-26). */
+export const PRICE_SHARE_ON_ITS_OWN = 0.2;
+
+/**
+ * Whether a price change is small enough to approve without a review:
+ * both prices known, and the new one within a fifth of the old, up or
+ * down. A price first given, or taken away, is still for a person. Pure.
+ */
+export function priceWithin(current: NormalizedPlan, plan: NormalizedPlan, share = PRICE_SHARE_ON_ITS_OWN): boolean {
+  const before = current.price;
+  const next = plan.price;
+  if (typeof before !== "number" || typeof next !== "number" || before <= 0 || next <= 0) return false;
+  return Math.abs(next - before) / before <= share + 1e-9;
+}
+
+/** The record with only its price taken from the run: what a small price change approved without a review writes. Pure. */
+export function withPriceFrom(current: CanonicalRecord, plan: NormalizedPlan): NormalizedPlan {
+  return { ...current, price: plan.price ?? null, priceDisplay: plan.priceDisplay ?? null } as NormalizedPlan;
+}
+
+/**
+ * What a change approved without a review writes, onto the record as it
+ * stands when it is written rather than as it stood when the run queued
+ * it: a change a person approved in between (the photos, say) stays.
+ * Only the change's own field is taken from the queued record. Pure.
+ */
+export function ownFieldOnto(latest: NormalizedPlan | null, queued: NormalizedPlan, label: string | null): NormalizedPlan {
+  if (!latest) return queued;
+  if (label === "price") return { ...latest, price: queued.price ?? null, priceDisplay: queued.priceDisplay ?? null };
+  if (label === "description") {
+    const raw = { ...(latest.raw ?? {}) };
+    const original = queued.raw?.descriptionOriginal;
+    if (typeof original === "string") raw.descriptionOriginal = original;
+    else delete raw.descriptionOriginal;
+    return { ...latest, description: queued.description ?? null, raw };
+  }
+  return queued;
+}
+
 /**
  * Whether a run read no base plan for a home that has one. That is the
  * reading, not the builder: Medallion's River Preserve Estates page gives

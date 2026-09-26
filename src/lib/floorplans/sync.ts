@@ -29,7 +29,7 @@ import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator
 import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
 import { extractKb } from "@/lib/floorplans/extractors/kb";
 import { extractHighland } from "@/lib/floorplans/extractors/highland";
-import { comparedFields, fieldChanges, mergeForUpdate, withDescriptionFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { comparedFields, fieldChanges, mergeForUpdate, priceWithin, withDescriptionFrom, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { withKnownTours } from "@/lib/floorplans/tours";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
@@ -615,22 +615,26 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       if (await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue })) rejected.add(change.field);
     }
     const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, rejected), remembered), plan);
-    // A quick move-in's description is not shown on the site; it only
-    // helps a person tell which floor plan an unknown home is. Its change is
-    // approved without a review and written on its own (Jeff, 2026-09-25).
-    const described =
-      plan.quickMoveIn === true && existing.wix_record_id
-        ? changes.find((c) => c.field === "description" && !rejected.has(c.field))
-        : undefined;
-    const reviewed = changes.filter((c) => !rejected.has(c.field) && c !== described);
+    // Approved without a review, and written on their own: a quick move-in's
+    // description, which the site does not show and which only helps a
+    // person tell which floor plan an unknown home is (Jeff, 2026-09-25);
+    // and a price that moved by a fifth or less, up or down (2026-09-26).
+    const onItsOwn = existing.wix_record_id
+      ? changes.filter(
+          (c) =>
+            !rejected.has(c.field) &&
+            ((c.field === "description" && plan.quickMoveIn === true) || (c.field === "priceDisplay" && priceWithin(current, plan)))
+        )
+      : [];
+    const reviewed = changes.filter((c) => !rejected.has(c.field) && !onItsOwn.includes(c));
     await withdrawOutdated(ids, comparedFields(current, plan), reviewed, current);
-    if (described) {
+    for (const change of onItsOwn) {
       await approveOnItsOwn({
         siteId: site.id, communityId: community.id, builderId: builder.id,
-        planKey: plan.planKey, fieldChanged: described.label,
-        oldValue: described.oldValue, newValue: described.newValue,
-        proposedRecord: withDescriptionFrom(current, plan), wixRecordId: existing.wix_record_id,
-        floorPlanId: existing.id, runId,
+        planKey: plan.planKey, fieldChanged: change.label,
+        oldValue: change.oldValue, newValue: change.newValue,
+        proposedRecord: change.field === "description" ? withDescriptionFrom(current, plan) : withPriceFrom(current, plan),
+        wixRecordId: existing.wix_record_id!, floorPlanId: existing.id, runId,
       });
     }
     for (const change of reviewed) {

@@ -185,7 +185,8 @@ describe("withLookedAtRooms: the same order every run for the same answers", () 
 });
 
 describe("which waiting galleries are worth looking at", () => {
-  const urls = [pic("1"), pic("2"), pic("3"), pic("4")];
+  // More than five: a gallery of five or fewer is not looked at (sort-queue.ts, FEW_PHOTOS).
+  const urls = [pic("1"), pic("2"), pic("3"), pic("4"), pic("5"), pic("6")];
   it("every one nobody has edited, until all its photos have been looked at (Neal, 2026-09-24)", () => {
     expect(mostlyPlaced(plan(urls))).toBe(false);
     expect(wantsSorting(plan(urls))).toBe(true);
