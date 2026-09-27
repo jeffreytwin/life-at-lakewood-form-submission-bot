@@ -1,37 +1,25 @@
 {
-  "raw": [
-    {
-      "url": "https://www1.cardelhomes.com/florida/quick-move-ins",
-      "around": [
-        "\"north-river-ranch\":[{",
-        "<script",
-        "kit.start",
-        "__NUXT",
-        "__sveltekit"
-      ],
-      "chars": 1200,
-      "count": 2
-    }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
   "checks": [
     {
-      "builder": "Anchor Builders",
+      "builder": "Arthur Rutenberg",
       "community": "Waterside - Wild Blue",
+      "noSurvey": true
+    },
+    {
+      "builder": "Cardel Homes",
+      "community": "North River Ranch",
       "noSurvey": true
     }
   ],
-  "anatomy": [
-    "json https://www.arhomes.com/wp-json/wp/v2/community/32027",
-    "json https://www.arhomes.com/wp-json/wp/v2/plan?include=19584,25916,25912,34050,19438,34712,34669,23567,35209,21388,36086,41542&per_page=24"
+  "anatomy": [],
+  "detailNames": [
+    "Talise II",
+    "10709 Wading River Ave"
   ],
-  "detailNames": [],
-  "probe": [
-    "https://www1.cardelhomes.com/florida/quick-move-ins/timberland-paired-10721-wading-river-ave-parrish-fl",
-    "https://www1.cardelhomes.com/florida/north-river-ranch/homes/timberland-paired-10721-wading-river-ave-parrish-fl",
-    "https://www1.cardelhomes.com/florida/north-river-ranch/quick-move-ins/timberland-paired-10721-wading-river-ave-parrish-fl"
-  ],
-  "v2Audit": true
+  "probe": [],
+  "v2Audit": false
 }
