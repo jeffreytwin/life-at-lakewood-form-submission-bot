@@ -4,7 +4,7 @@ import { cardelCommunityOf, homesIn, normalizeCardelHome, readLiteral, streetOf 
 // The quick move-ins page's data as Cardel's page carried it (2026-09-27), cut down.
 const page = `<script>kit.start(app, element, { node_ids: [0, 18], data: [{type:"data",data:{user:null}},{type:"data",data:{homes:{
 "coasterra":[{address:"2945 Stewart Creek Circle",community:"coasterra",pricing:{current:461990,previous:577685},status:"available"}],
-"north-river-ranch":[{flavorText:{text:"",foreground:"#ffffff",background:"#2e5d8e"},address:"10709 Wading River Ave Parrish, FL 34219 - Lot 17",bedroomsBasement:null,availability:"Move-in ready",community:"north-river-ranch",bathrooms:2.5,bedrooms:3,squareFootage:2104,name:"Sylvan Paired Home",poster:{src:{thumbnail:"https://firebasestorage.googleapis.com/x_200x200.webp",sm:"https://firebasestorage.googleapis.com/x_640x640.webp","2xl":"https://firebasestorage.googleapis.com/x_1536x1536.webp"},alt:"Sylvan"},slug:"sylvan-paired-10709-wading-river-ave-parrish-fl",gallery:[{paths:{thumbnail:"public/galleries/7-web_200x200.webp","2xl":"public/galleries/7-web_1536x1536.webp"}}],pricing:{current:389990,previous:436490,infoString:"",text:""},status:"available",extraInfo:"\\u003Cp>Ready\\u003C/p>",id:"H0pta8QudHkwtGLf6Efp"},
+"north-river-ranch":[{flavorText:{text:"",foreground:"#ffffff",background:"#2e5d8e"},address:"10709 Wading River Ave Parrish, FL 34219 - Lot 17",bedroomsBasement:null,availability:"Move-in ready",community:"north-river-ranch",bathrooms:2.5,bedrooms:3,squareFootage:2104,name:"Sylvan Paired Home",poster:{src:{thumbnail:"https://firebasestorage.googleapis.com/x_200x200.webp",sm:"https://firebasestorage.googleapis.com/x_640x640.webp","2xl":"https://firebasestorage.googleapis.com/x_1536x1536.webp"},alt:"Sylvan"},slug:"sylvan-paired-10709-wading-river-ave-parrish-fl",gallery:[{image:{alt:"Front",paths:{thumbnail:"public/galleries/7-web_200x200.webp","2xl":"public/galleries/7-web_1536x1536.webp"}}},{image:{src:{sm:"https://firebasestorage.googleapis.com/k_640x640.webp",xl:"https://firebasestorage.googleapis.com/k_1280x1280.webp"}}}],pricing:{current:389990,previous:436490,infoString:"",text:""},status:"available",extraInfo:"\\u003Cp>Ready\\u003C/p>",id:"H0pta8QudHkwtGLf6Efp"},
 {address:"10705 Wading River Ave",name:"Sylvan Paired Home",pricing:{current:null},status:"sold",slug:"sylvan-10705"},
 {address:"10721 Wading River Ave Parrish, FL ",availability:"Ready in 2026",bathrooms:2.5,bedrooms:3,squareFootage:2302,name:"Timberland Paired ",slug:"timberland-paired-10721-wading-river-ave-parrish-fl",gallery:[],pricing:{current:457390},status:"available",when:new Date(1790000000000),ref:a}]
 }}}] });</script>`;
@@ -48,6 +48,7 @@ describe("Cardel's homes for sale from its quick move-ins page (North River Ranc
       galleryImages: [
         "https://firebasestorage.googleapis.com/x_1536x1536.webp",
         "https://storage.googleapis.com/cardel-website.appspot.com/public/galleries/7-web_1536x1536.webp",
+        "https://firebasestorage.googleapis.com/k_1280x1280.webp",
       ],
     });
     expect(homes[2]).toMatchObject({ name: "10721 Wading River Ave", relatedPlanName: "Timberland Paired", price: 457390 });

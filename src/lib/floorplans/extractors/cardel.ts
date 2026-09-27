@@ -127,7 +127,7 @@ export interface CardelHome {
   status?: string;
   pricing?: { current?: number | null };
   poster?: { src?: Record<string, string> };
-  gallery?: { src?: Record<string, string>; paths?: Record<string, string> }[];
+  gallery?: unknown[];
 }
 
 /** A community's homes as the quick move-ins page's data lists them. Exported for tests. */
@@ -157,13 +157,31 @@ export function streetOf(address: string): string {
 const biggest = (src: Record<string, string> | undefined) =>
   src ? (src["2xl"] ?? src.xl ?? src.lg ?? src.md ?? src.sm ?? null) : null;
 
+/**
+ * A gallery entry's picture at its largest: an address under "src", or a
+ * path under "paths", on the entry or one level into it — the data wraps
+ * each photograph ({image:{src:{…},paths:{…}}}) where the poster is bare.
+ * Pure; exported for tests.
+ */
+export function pictureOf(entry: unknown, depth = 0): string | null {
+  if (!entry || typeof entry !== "object" || depth > 2) return null;
+  const e = entry as { src?: Record<string, string>; paths?: Record<string, string> };
+  const found = biggest(e.src) ?? (biggest(e.paths) ? STORAGE + biggest(e.paths) : null);
+  if (found) return found;
+  for (const inner of Object.values(entry)) {
+    const deeper = pictureOf(inner, depth + 1);
+    if (deeper) return deeper;
+  }
+  return null;
+}
+
 /** One home of the data as a quick move-in. Pure; exported for tests. */
 export function normalizeCardelHome(home: CardelHome, region: string, community: string): NormalizedPlan | null {
   if (!home.address || (home.status && home.status !== "available")) return null;
   const name = streetOf(home.address);
   const pictures = [
     biggest(home.poster?.src),
-    ...(home.gallery ?? []).map((g) => biggest(g.src) ?? (biggest(g.paths) ? STORAGE + biggest(g.paths) : null)),
+    ...(home.gallery ?? []).map((g) => pictureOf(g)),
   ].filter((u, i, all): u is string => Boolean(u) && all.indexOf(u) === i);
   const price = typeof home.pricing?.current === "number" && home.pricing.current > 0 ? home.pricing.current : null;
   return {

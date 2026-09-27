@@ -1,25 +1,21 @@
 {
-  "raw": [],
+  "raw": [
+    {
+      "url": "https://www1.cardelhomes.com/florida/quick-move-ins",
+      "around": [
+        "gallery:[{"
+      ],
+      "chars": 700,
+      "after": 1100000,
+      "count": 2
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": [
-    {
-      "builder": "Arthur Rutenberg",
-      "community": "Waterside - Wild Blue",
-      "noSurvey": true
-    },
-    {
-      "builder": "Cardel Homes",
-      "community": "North River Ranch",
-      "noSurvey": true
-    }
-  ],
+  "checks": [],
   "anatomy": [],
-  "detailNames": [
-    "Talise II",
-    "10709 Wading River Ave"
-  ],
+  "detailNames": [],
   "probe": [],
   "v2Audit": false
 }
