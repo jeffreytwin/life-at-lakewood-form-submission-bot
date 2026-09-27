@@ -33,6 +33,7 @@ import { pageIsBotCheck } from "@/lib/floorplans/extractors/rendered";
 import { pixelDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 import { checkAllFlags } from "@/lib/floorplans/qmi-flags";
+import { queryAllItems } from "@/lib/wix/client";
 import { fieldChanges, type CanonicalRecord } from "@/lib/floorplans/diff";
 
 interface Target {
@@ -71,6 +72,8 @@ interface Config {
   detailNames?: string[];
   /** The quick move-in flag check (qmi-flags.ts) over every site, only looking: what it would set, clear and report. */
   qmiFlags?: boolean;
+  /** Every site's Floor Plans V2 rows set beside the Hub's: rows nothing tracks, and one home or plan written twice. Only looking. */
+  v2Audit?: boolean;
   /** Feeds read as a run would, printed around the words given: a POST with its body, as a builder's page sends it. */
   feeds?: { url: string; method?: string; headers?: Record<string, string>; body?: unknown; around: string[]; chars?: number; count?: number }[];
   checks: Target[];
@@ -667,6 +670,79 @@ async function anatomy(url: string): Promise<string> {
   }
 }
 
+// ─── Floor Plans V2 against the Hub ─────────────────────────────────────────
+
+/**
+ * Each site's Floor Plans V2 rows beside the plans the Hub tracks: a row no
+ * plan points to is one the pipeline wrote and lost track of, and two rows
+ * for one home's own page, or of one name, are that home written twice
+ * (Jeff, 2026-09-27: "17602 Meandering Palms Crossing" and "17602
+ * Meandering Palms Crossing - Ready Feb 2027"). Reads only.
+ */
+async function v2Audit(): Promise<string> {
+  const tracked = new Map<string, { site: string; removed: boolean; key: string }>();
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("fp_floor_plans")
+      .select("site_id, wix_record_id, removed_at, plan_key")
+      .not("wix_record_id", "is", null)
+      .range(from, from + 999);
+    if (error) return `could not read the Hub's plans: ${error.message}`;
+    for (const r of data ?? []) tracked.set(r.wix_record_id as string, { site: r.site_id, removed: Boolean(r.removed_at), key: r.plan_key });
+    if (!data || data.length < 1000) break;
+  }
+  const { data: sites } = await supabase.from("fp_sites").select("id, name, wix_site_id, wix_collection_id").order("name");
+  const lines: string[] = [];
+  const seenIds = new Set<string>();
+  for (const site of sites ?? []) {
+    if (!site.wix_site_id || !site.wix_collection_id) continue;
+    let items: Awaited<ReturnType<typeof queryAllItems>>;
+    try {
+      items = await queryAllItems(site.wix_site_id, site.wix_collection_id, { includeDrafts: true });
+    } catch (error) {
+      lines.push(`══ ${site.name}: could not read Floor Plans V2: ${error instanceof Error ? error.message : String(error)}`);
+      continue;
+    }
+    const row = (i: (typeof items)[number]) => {
+      const d = (i.data ?? {}) as Record<string, unknown>;
+      return {
+        id: String(i.id ?? d._id ?? ""),
+        name: String(d.floorPlanName ?? ""),
+        builder: String(d.builder ?? ""),
+        village: String(d.village ?? ""),
+        page: String(d.sourceUrl ?? "").split(/[?#]/)[0].replace(/\/+$/, "").toLowerCase(),
+      };
+    };
+    const rows = items.map(row);
+    for (const r of rows) seenIds.add(r.id);
+    const untracked = rows.filter((r) => !tracked.has(r.id));
+    const gone = rows.filter((r) => tracked.get(r.id)?.removed);
+    const groups = (keyOf: (r: (typeof rows)[number]) => string | null, most = Infinity) => {
+      const by = new Map<string, typeof rows>();
+      for (const r of rows) {
+        const k = keyOf(r);
+        if (k) by.set(k, [...(by.get(k) ?? []), r]);
+      }
+      return [...by.values()].filter((g) => g.length > 1 && g.length <= most);
+    };
+    // One home's own page: a page two or three rows share. A page more
+    // share is a list page the builder gives every home (Meritage).
+    const samePage = groups((r) => (r.page ? `${r.builder}|${r.village}|${r.page}` : null), 3);
+    const sameName = groups((r) => `${r.builder}|${r.village}|${r.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}`);
+    lines.push(
+      `══ ${site.name}: ${rows.length} rows; ${untracked.length} no plan points to; ${gone.length} of plans the Hub removed; ${samePage.length} pages with more than one row; ${sameName.length} names on more than one row`
+    );
+    for (const r of untracked) lines.push(`  untracked  ${r.builder} · ${r.village} · ${r.name}  (${r.id})`);
+    for (const r of gone) lines.push(`  removed    ${r.builder} · ${r.village} · ${r.name}  (${r.id})`);
+    for (const g of samePage) lines.push(`  same page  ${g[0].builder} · ${g[0].village}: ${g.map((r) => `"${r.name}"${tracked.has(r.id) ? "" : " (untracked)"}`).join(" | ")}  ${g[0].page}`);
+    for (const g of sameName) lines.push(`  same name  ${g[0].builder} · ${g[0].village}: ${g.map((r) => `"${r.name}"${tracked.has(r.id) ? "" : " (untracked)"}`).join(" | ")}`);
+  }
+  const missing = [...tracked.entries()].filter(([id, t]) => !t.removed && !seenIds.has(id));
+  lines.push(`══ plans the Hub tracks whose row is not on their site: ${missing.length}`);
+  for (const [id, t] of missing.slice(0, 60)) lines.push(`  ${t.key} (${id})`);
+  return lines.join("\n");
+}
+
 // ─── The run ────────────────────────────────────────────────────────────────
 
 const ROOM_CODE: Record<Room, string> = {
@@ -942,6 +1018,10 @@ async function main() {
     }
     await keep("qmi flags (dry run)", lines.join("\n"));
     say("quick move-in flags looked at");
+  }
+  if (config.v2Audit) {
+    await keep("v2 audit", await v2Audit());
+    say("Floor Plans V2 audited");
   }
   for (const feed of config.feeds ?? []) {
     await keep(`feed: ${feed.url}`, await feedAround(feed));

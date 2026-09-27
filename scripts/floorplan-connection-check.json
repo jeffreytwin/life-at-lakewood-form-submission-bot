@@ -1,49 +1,37 @@
 {
   "raw": [
     {
-      "url": "https://www.arhomes.com/builder/nelson-homes-inc/communities/wild-blue-in-waterside/",
-      "around": [
-        "Talise",
-        "Atwater",
-        "Eventide",
-        "admin-ajax",
-        "wp-json",
-        "data-plans"
-      ],
-      "chars": 600,
-      "count": 3
-    },
-    {
-      "url": "https://www1.cardelhomes.com/florida/north-river-ranch/homes",
-      "around": [
-        "Wading River",
-        "Richmond Trail",
-        "Quick Move",
-        "Move-In",
-        "Available"
-      ],
-      "chars": 600,
-      "count": 3
-    },
-    {
       "url": "https://www1.cardelhomes.com/florida/quick-move-ins",
       "around": [
-        "North River",
-        "Wading River",
-        "Richmond Trail"
+        "\"north-river-ranch\":[{",
+        "<script",
+        "kit.start",
+        "__NUXT",
+        "__sveltekit"
       ],
-      "chars": 600,
-      "count": 4
+      "chars": 1200,
+      "count": 2
     }
   ],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": [],
-  "anatomy": [
-    "https://www.arhomes.com/builder/nelson-homes-inc/communities/wild-blue-in-waterside/",
-    "https://www1.cardelhomes.com/florida/north-river-ranch/homes",
-    "https://www1.cardelhomes.com/florida/quick-move-ins"
+  "checks": [
+    {
+      "builder": "Anchor Builders",
+      "community": "Waterside - Wild Blue",
+      "noSurvey": true
+    }
   ],
-  "detailNames": []
+  "anatomy": [
+    "json https://www.arhomes.com/wp-json/wp/v2/community/32027",
+    "json https://www.arhomes.com/wp-json/wp/v2/plan?include=19584,25916,25912,34050,19438,34712,34669,23567,35209,21388,36086,41542&per_page=24"
+  ],
+  "detailNames": [],
+  "probe": [
+    "https://www1.cardelhomes.com/florida/quick-move-ins/timberland-paired-10721-wading-river-ave-parrish-fl",
+    "https://www1.cardelhomes.com/florida/north-river-ranch/homes/timberland-paired-10721-wading-river-ave-parrish-fl",
+    "https://www1.cardelhomes.com/florida/north-river-ranch/quick-move-ins/timberland-paired-10721-wading-river-ave-parrish-fl"
+  ],
+  "v2Audit": true
 }
