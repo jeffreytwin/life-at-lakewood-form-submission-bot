@@ -29,8 +29,11 @@ import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator
 import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
 import { extractKb } from "@/lib/floorplans/extractors/kb";
 import { extractHighland } from "@/lib/floorplans/extractors/highland";
+import { extractArHomes } from "@/lib/floorplans/extractors/arhomes";
+import { extractCardel } from "@/lib/floorplans/extractors/cardel";
 import { comparedFields, fieldChanges, mergeForUpdate, splitOnItsOwn, withDescriptionFrom, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { withKnownTours } from "@/lib/floorplans/tours";
+import { alreadyFiled, filedAsBefore, type FiledHome } from "@/lib/floorplans/home-identity";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
@@ -78,6 +81,10 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Homes by WestBay": extractWestBay,
   // KB writes every plan card's record into its page (kb.ts).
   "KB Home": extractKb,
+  // AR Homes' community pages draw their plans from WordPress (arhomes.ts).
+  "Arthur Rutenberg": extractArHomes,
+  // Cardel's homes for sale are on Florida's quick move-ins page (cardel.ts).
+  "Cardel Homes": extractCardel,
   // Highland's pages post to a feed for their plans and homes (highland.ts).
   "Highland Homes": extractHighland,
   // Builders that block their own sites — sourced from the master-planned-
@@ -325,6 +332,19 @@ async function approveOnItsOwn(args: {
 }
 
 /** Queue one change unless an identical one was rejected or already pending. */
+/** Pending additions of homes the site already has under another name (alreadyFiled), taken out of the queue. */
+async function withdrawRefiledAdds(ids: { siteId: string; communityId: string; builderId: string }, filed: FiledHome[]): Promise<void> {
+  const { data: adds } = await supabase
+    .from("fp_pending_changes")
+    .select("id, plan_key, proposed_record")
+    .match({ site_id: ids.siteId, community_id: ids.communityId, builder_id: ids.builderId, change_type: "add", status: "pending" });
+  const stale = (adds ?? []).filter((a) => alreadyFiled({ ...(a.proposed_record as NormalizedPlan), planKey: a.plan_key }, filed));
+  if (!stale.length) return;
+  const { error } = await supabase.from("fp_pending_changes").delete().in("id", stale.map((a) => a.id));
+  if (error) logger.warn("Additions of homes already on the site could not be withdrawn", { error: error.message });
+  else logger.info("Withdrew additions of homes already on the site", { keys: stale.map((a) => a.plan_key) });
+}
+
 export async function queueChange(args: {
   siteId: string;
   communityId: string;
@@ -570,7 +590,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   }
   const { data: canonical } = await supabase
     .from("fp_floor_plans")
-    .select("id, plan_key, wix_record_id, record, last_seen_at")
+    .select("id, plan_key, wix_record_id, record, last_seen_at, created_at")
     .eq("site_id", site.id)
     .eq("community_id", community.id)
     .eq("builder_id", builder.id)
@@ -584,6 +604,9 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   // 2026-09-25) gives way to the working tour with its number, where a
   // record of the community already shows it (tours.ts).
   plans = withKnownTours(plans, (canonical ?? []).map((c) => (c.record as NormalizedPlan | null)?.virtualTourUrl));
+  // A home read under another name than it was filed by is that home, not
+  // a new one (home-identity.ts).
+  plans = filedAsBefore(plans, canonical ?? []);
   const scrapedKeys = new Set(plans.map((p) => p.planKey));
   // Scores set in the Hub outlive the plans (a Reset removes those): a
   // plan queued again comes back with the score it had.
@@ -661,6 +684,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       ) queued += 1;
     }
   }
+
+  // An addition queued by an earlier run for a home the site already has,
+  // under the name that run read, is withdrawn (home-identity.ts).
+  await withdrawRefiledAdds({ siteId: site.id, communityId: community.id, builderId: builder.id }, canonical ?? []);
 
   // Removal guard: plan must have been missing since before this run
   // (last_seen_at > 24h old) and the scrape must cover >= 60% of the last

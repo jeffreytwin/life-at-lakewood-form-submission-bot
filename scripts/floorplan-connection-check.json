@@ -5,5 +5,7 @@
   "duplicates": [],
   "checks": [],
   "anatomy": [],
-  "detailNames": []
+  "detailNames": [],
+  "probe": [],
+  "v2Audit": false
 }

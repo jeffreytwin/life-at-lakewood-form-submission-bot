@@ -783,7 +783,17 @@ export async function applyPendingChange(changeId: string): Promise<{
 
     if (change.change_type === "add") {
       const rec = change.proposed_record as ProposedRecord;
-      const { wixRecordId: itemId, asDraft, urlSlug } = await writePlanToWix({ site, community, builder }, change.plan_key, rec, null);
+      // A plan another approved addition already wrote is written over, not
+      // written again: two runs queued Toll's 17837 Palmiste Dr before the
+      // first was approved, and the site got it twice (2026-09-21).
+      const { data: written } = await supabase
+        .from("fp_floor_plans")
+        .select("wix_record_id")
+        .match({ site_id: site.id, community_id: community.id, builder_id: builder.id, plan_key: change.plan_key })
+        .is("removed_at", null)
+        .not("wix_record_id", "is", null)
+        .maybeSingle();
+      const { wixRecordId: itemId, asDraft, urlSlug } = await writePlanToWix({ site, community, builder }, change.plan_key, rec, written?.wix_record_id ?? null);
       rec.urlSlug = urlSlug;
 
       const { data: plan, error: planError } = await supabase
@@ -822,7 +832,7 @@ export async function applyPendingChange(changeId: string): Promise<{
           updated_at: new Date().toISOString(),
         })
         .eq("id", changeId);
-      if (rec.quickMoveIn) {
+      if (rec.quickMoveIn && !written) {
         await alertCampaign(
           "other_change",
           homeChangeDetail(rec.name, rec.relatedPlanName, `now offered${rec.priceDisplay ? ` at ${rec.priceDisplay}` : ""}`),
