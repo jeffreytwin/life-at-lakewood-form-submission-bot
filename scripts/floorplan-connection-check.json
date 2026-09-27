@@ -1,9 +1,49 @@
 {
-  "raw": [],
+  "raw": [
+    {
+      "url": "https://www.arhomes.com/builder/nelson-homes-inc/communities/wild-blue-in-waterside/",
+      "around": [
+        "Talise",
+        "Atwater",
+        "Eventide",
+        "admin-ajax",
+        "wp-json",
+        "data-plans"
+      ],
+      "chars": 600,
+      "count": 3
+    },
+    {
+      "url": "https://www1.cardelhomes.com/florida/north-river-ranch/homes",
+      "around": [
+        "Wading River",
+        "Richmond Trail",
+        "Quick Move",
+        "Move-In",
+        "Available"
+      ],
+      "chars": 600,
+      "count": 3
+    },
+    {
+      "url": "https://www1.cardelhomes.com/florida/quick-move-ins",
+      "around": [
+        "North River",
+        "Wading River",
+        "Richmond Trail"
+      ],
+      "chars": 600,
+      "count": 4
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
   "checks": [],
-  "anatomy": [],
+  "anatomy": [
+    "https://www.arhomes.com/builder/nelson-homes-inc/communities/wild-blue-in-waterside/",
+    "https://www1.cardelhomes.com/florida/north-river-ranch/homes",
+    "https://www1.cardelhomes.com/florida/quick-move-ins"
+  ],
   "detailNames": []
 }
