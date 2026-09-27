@@ -1,15 +1,5 @@
 {
-  "raw": [
-    {
-      "url": "https://www1.cardelhomes.com/florida/quick-move-ins",
-      "around": [
-        "gallery:[{"
-      ],
-      "chars": 700,
-      "after": 1100000,
-      "count": 2
-    }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
