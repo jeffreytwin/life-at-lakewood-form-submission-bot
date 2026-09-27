@@ -16,6 +16,7 @@
 // and each home has its own page at /florida/<community>/quick-move-ins/<slug>.
 
 import { extractWithClaude, type ClaudeExtractParams } from "@/lib/floorplans/extractors/claude-extract";
+import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -211,8 +212,20 @@ export function cardelCommunityOf(url: string): { region: string; community: str
   return m ? { region: m[1].toLowerCase(), community: m[2].toLowerCase() } : null;
 }
 
+/**
+ * A Cardel plan's home type, where its page gave none: its name says it —
+ * the "Paired" plans are Cardel's paired villas, and the rest of what it
+ * builds in Florida are single-family homes (the site's own rows,
+ * 2026-09-27: Birchwood, Sylvan and Timberland "Attached Villa", every
+ * other plan "Single Family Home"). Pure; exported for tests.
+ */
+export function cardelHomeType(plan: NormalizedPlan): NormalizedPlan {
+  if (plan.quickMoveIn || plan.homeType) return plan;
+  return { ...plan, homeType: standardHomeType(plan.name) === "Attached Villa" ? "Attached Villa" : "Single Family Home" };
+}
+
 export async function extractCardel(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
-  const plans = await extractWithClaude(params);
+  const plans = (await extractWithClaude(params)).map(cardelHomeType);
   const where = params.url ? cardelCommunityOf(params.url) : null;
   if (!where) return plans;
   const res = await fetch(`https://www1.cardelhomes.com/${where.region}/quick-move-ins`, {
