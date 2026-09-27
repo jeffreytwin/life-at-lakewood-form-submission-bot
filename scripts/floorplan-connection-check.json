@@ -1,5 +1,36 @@
 {
-  "raw": [],
+  "raw": [
+    {
+      "url": "https://www1.cardelhomes.com/florida/north-river-ranch/homes/brighton",
+      "around": [
+        "garage",
+        "Garage",
+        "homeType",
+        "productType",
+        "villa"
+      ],
+      "chars": 500,
+      "count": 3
+    },
+    {
+      "url": "https://www1.cardelhomes.com/florida/north-river-ranch/quick-move-ins/brighton-11830-richmond-trail-parrish-fl-34219-lot-91",
+      "around": [
+        "garage",
+        "Garage"
+      ],
+      "chars": 500,
+      "count": 3
+    },
+    {
+      "url": "https://www1.cardelhomes.com/florida/north-river-ranch/homes",
+      "around": [
+        "garage",
+        "Garage"
+      ],
+      "chars": 400,
+      "count": 2
+    }
+  ],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
