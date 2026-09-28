@@ -124,6 +124,24 @@ describe("the only home read from a page is the home filed from it (Ryan's Amber
   });
 });
 
+describe("a home whose own page went unread keeps its name (Homes by Towne's Shellstone, Jeff 2026-09-28)", () => {
+  const page = "https://homesbytowne.com/florida/shellstone-at-waterside/lot-656";
+  const filed = home({ planKey: "792-blue-shell-loop-lot-656", name: "9516 Lunar Dove Drive", sourceUrl: page });
+
+  it("under another address the list gave it", () => {
+    const read = home({ planKey: "792-blue-shell-loop-lot-656", name: "792 Blue Shell Loop, Lot 656", sourceUrl: page, pageUnread: true });
+    expect(filedAsBefore([read], [row(filed, "2026-09-26T00:00:00Z")])[0].name).toBe("9516 Lunar Dove Drive");
+    const other = home({ planKey: "lot-656", name: "Lot 656", sourceUrl: page, pageUnread: true });
+    expect(filedAsBefore([other], [row(filed, "2026-09-26T00:00:00Z")])[0]).toMatchObject({ planKey: "792-blue-shell-loop-lot-656", name: "9516 Lunar Dove Drive" });
+  });
+
+  it("and takes the address its page gives once it is read", () => {
+    const read = home({ planKey: "9516-lunar-dove-drive", name: "9516 Lunar Dove Drive", sourceUrl: page });
+    const listedFirst = home({ planKey: "792-blue-shell-loop-lot-656", name: "792 Blue Shell Loop, Lot 656", sourceUrl: page });
+    expect(filedAsBefore([read], [row(listedFirst, "2026-09-26T00:00:00Z")])[0]).toMatchObject({ planKey: "792-blue-shell-loop-lot-656", name: "9516 Lunar Dove Drive" });
+  });
+});
+
 describe("an addition left from a run that read the home under another name", () => {
   const rows = [row(home(), "2026-09-24T15:54:00Z")];
 

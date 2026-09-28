@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { homeAddressed, linkOnPage, oneHomeEach, sameHome } from "@/lib/floorplans/extractors/claude-extract";
+import { homeAddressed, linkOnPage, oneHomeEach, sameHome, withoutSharedAddress } from "@/lib/floorplans/extractors/claude-extract";
 import { fullAndHalfBaths, namesAnAddress, planInHomeLabel, roomCount, standardizePlan } from "@/lib/floorplans/standardize";
 import { looksLikeFactsLine, looksLikeSpecList, withDescriptions } from "@/lib/floorplans/description";
 import { comparedFields, fieldChanges, mergeForUpdate } from "@/lib/floorplans/diff";
@@ -80,11 +80,46 @@ describe("a home named by its list label takes the address its own page gives", 
     });
   });
 
-  it("is left alone where it is already named by its address, is a plan, or the page gives none", () => {
-    expect(homeAddressed(home(), "12418 Stonegate Trail")).toEqual({});
+  it("is left alone where the list already named it by that address, it is a plan, or the page gives none", () => {
+    expect(homeAddressed(home(), "12422 Stonegate Trail")).toEqual({});
+    expect(homeAddressed(home({ name: "12422 Stonegate Trail, Lot 14" }), "12422 Stonegate Trail")).toEqual({});
     expect(homeAddressed({ ...listed, quickMoveIn: false }, "18366 Rockport Place")).toEqual({});
     expect(homeAddressed(listed, undefined)).toEqual({});
     expect(homeAddressed(listed, "Key Collection")).toEqual({});
+  });
+
+  it("takes its own page's address over another the list gave it (Homes by Towne's Shellstone, Jeff 2026-09-28)", () => {
+    const lot = home({ planKey: "792-blue-shell-loop-lot-656", name: "792 Blue Shell Loop, Lot 656", relatedPlanName: "Galley" });
+    expect(homeAddressed(lot, "9516 Lunar Dove Drive")).toEqual({
+      name: "9516 Lunar Dove Drive",
+      planKey: "9516-lunar-dove-drive",
+      relatedPlanName: "Galley",
+    });
+  });
+});
+
+describe("an address several of a list's homes share is the community's (Homes by Towne's Shellstone, Jeff 2026-09-28)", () => {
+  const shellstone = "https://homesbytowne.com/florida/shellstone-at-waterside";
+  const lot = (name: string, n: number, plan = "Galley") => home({ planKey: name, name, relatedPlanName: plan, sourceUrl: `${shellstone}/lot-${n}` });
+
+  it("is taken off each, leaving the lot for the home's own page to name", () => {
+    const listed = [lot("792 Blue Shell Loop, Lot 656", 656), lot("792 Blue Shell Loop | Lot 658", 658), lot("792 Blue Shell Loop - Lot 669", 669, "Banyan")];
+    expect(withoutSharedAddress(listed).map((p) => [p.name, p.planKey])).toEqual([
+      ["Lot 656", "lot-656"],
+      ["Lot 658", "lot-658"],
+      ["Lot 669", "lot-669"],
+    ]);
+  });
+
+  it("leaves an address one home has, the units of one building, and floor plans", () => {
+    const listed = [
+      lot("9516 Lunar Dove Drive", 656),
+      lot("9508 Lunar Dove Drive", 658),
+      { ...lot("792 Blue Shell Loop", 1), quickMoveIn: false },
+      lot("12785 Jade Empress Loop, Unit 202", 202),
+      lot("12785 Jade Empress Loop, Unit 203", 203),
+    ];
+    expect(withoutSharedAddress(listed)).toEqual(listed);
   });
 });
 

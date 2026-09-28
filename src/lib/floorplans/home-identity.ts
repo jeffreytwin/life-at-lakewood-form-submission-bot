@@ -67,7 +67,14 @@ export function filedAsBefore(plans: NormalizedPlan[], filed: FiledHome[]): Norm
     const page = pageOf(plan.sourceUrl);
     const onlyHomeOn = (home: NormalizedPlan) => page !== "" && readOn.get(page) === 1 && pageOf(home.sourceUrl) === page;
     return homes.filter(
-      ({ row, home }) => (row.plan_key === plan.planKey || sameHome(home, plan) || onlyHomeOn(home)) && !twoAddresses(home.name, plan.name)
+      ({ row, home }) =>
+        row.plan_key === plan.planKey ||
+        // A home's own page is that house, whatever address a list gave it
+        // (Homes by Towne's Shellstone, 2026-09-28).
+        sameHome(home, plan) ||
+        // A page it was the only home read from, unless its own page names
+        // another house than the row: two addresses there are two houses.
+        (onlyHomeOn(home) && (plan.pageUnread === true || !twoAddresses(home.name, plan.name)))
     );
   });
   // A row more than one of this run's homes could be says nothing about either.
@@ -87,8 +94,9 @@ export function filedAsBefore(plans: NormalizedPlan[], filed: FiledHome[]): Norm
         Number(b.row.plan_key === plan.planKey) - Number(a.row.plan_key === plan.planKey) ||
         time(a.row) - time(b.row)
     )[0];
-    if (best.row.plan_key === plan.planKey) return plan;
-    return { ...plan, planKey: best.row.plan_key, name: nameKept(best.home.name, plan.name) };
+    if (best.row.plan_key === plan.planKey) return plan.pageUnread && best.home.name !== plan.name ? { ...plan, name: best.home.name } : plan;
+    // Its own page unread, a home keeps the name it has: the list's may be the community's address.
+    return { ...plan, planKey: best.row.plan_key, name: plan.pageUnread ? best.home.name : nameKept(best.home.name, plan.name) };
   });
 }
 
@@ -101,6 +109,6 @@ export function alreadyFiled(offered: NormalizedPlan | null, filed: FiledHome[])
   if (!offered?.quickMoveIn) return false;
   return filed.some((row) => {
     const home = asHome(row);
-    return home !== null && row.plan_key !== offered.planKey && sameHome(home, offered) && !twoAddresses(home.name, offered.name);
+    return home !== null && row.plan_key !== offered.planKey && sameHome(home, offered);
   });
 }
