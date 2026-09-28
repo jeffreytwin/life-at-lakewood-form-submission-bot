@@ -42,7 +42,7 @@ import { homesOfPlan, withStandIns, type StandInRule } from "@/lib/floorplans/st
 import { fetchOrRender, planPageCandidates, withPlanPageDescription } from "@/lib/floorplans/stand-in-pages";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
-import { withKnownSpellings, withScrapedPictures } from "@/lib/floorplans/pictures";
+import { inKnownOrder, withKnownSpellings, withScrapedPictures } from "@/lib/floorplans/pictures";
 import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 
@@ -534,7 +534,16 @@ export async function preparePlans(
   // that cannot be read costs the order, never the run.
   try {
     const looked = await rememberedRooms(plans.flatMap((p) => p.galleryImages));
-    if (looked.size) plans = plans.map((p) => withLookedAtRooms(p, looked));
+    // Within a room, the photos keep the record's order rather than the
+    // page's order that night (pictures.ts, inKnownOrder). A gallery that
+    // is not sorted by rooms keeps the page's order, as before.
+    if (looked.size) {
+      plans = plans.map((p) => {
+        const sorted = withLookedAtRooms(p, looked);
+        if (sorted === p || !opts.known) return sorted;
+        return withLookedAtRooms(inKnownOrder(p, opts.known.get(p.planKey)), looked);
+      });
+    }
   } catch (err) {
     logger.warn("Remembered photo rooms could not be applied", { error: err instanceof Error ? err.message : String(err) });
   }

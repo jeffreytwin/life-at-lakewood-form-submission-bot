@@ -77,3 +77,33 @@ export function picturesAdded(live: Partial<NormalizedPlan> | null | undefined, 
   const isKnown = (url: string) => known.has(pictureKey(url)) || (copies[url] !== undefined && known.has(pictureKey(copies[url])));
   return [...strings(proposed.galleryImages), ...strings(proposed.blueprintImages)].filter((url) => !isKnown(url));
 }
+
+/**
+ * The run's photos in the order the record shows them, each photo the
+ * record does not have kept just after the one the page put before it.
+ * Sorting by room keeps the order it is given within a room, and that was
+ * the page's order that night: D.R. Horton's Jordyn II listed its bedrooms
+ * 14, 10, 11, 12 one night and 10, 11, 12, 14 another, and each change of
+ * mind was proposed as the photos changed, the same photos in the same
+ * rooms (Jeff, 2026-09-28). Given the record's order, the rooms decide and
+ * nothing else moves. Pure.
+ */
+export function inKnownOrder(plan: NormalizedPlan, current: Partial<NormalizedPlan> | null | undefined): NormalizedPlan {
+  const known = (Array.isArray(current?.galleryImages) ? current.galleryImages : []).filter((u): u is string => typeof u === "string");
+  if (!known.length || plan.galleryImages.length < 2) return plan;
+  const at = new Map(known.map((url, i) => [url, i] as const));
+  let before = -1;
+  let step = 0;
+  const keyed = plan.galleryImages.map((url, i) => {
+    const place = at.get(url);
+    if (place !== undefined) {
+      before = place;
+      step = 0;
+      return { url, key: place, i };
+    }
+    step += 1;
+    return { url, key: before + step / (plan.galleryImages.length + 1), i };
+  });
+  const ordered = [...keyed].sort((a, b) => a.key - b.key || a.i - b.i).map((k) => k.url);
+  return ordered.every((url, i) => url === plan.galleryImages[i]) ? plan : { ...plan, galleryImages: ordered };
+}
