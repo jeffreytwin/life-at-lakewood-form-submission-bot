@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardelCommunityOf, homesIn, normalizeCardelHome, readLiteral, streetOf } from "@/lib/floorplans/extractors/cardel";
+import { cardelCommunityOf, cardelHomeType, homesIn, normalizeCardelHome, readLiteral, streetOf } from "@/lib/floorplans/extractors/cardel";
 
 // The quick move-ins page's data as Cardel's page carried it (2026-09-27), cut down.
 const page = `<script>kit.start(app, element, { node_ids: [0, 18], data: [{type:"data",data:{user:null}},{type:"data",data:{homes:{
@@ -57,5 +57,15 @@ describe("Cardel's homes for sale from its quick move-ins page (North River Ranc
   it("reads the community from the connection's page", () => {
     expect(cardelCommunityOf("https://www1.cardelhomes.com/florida/north-river-ranch/homes")).toEqual({ region: "florida", community: "north-river-ranch" });
     expect(cardelCommunityOf("https://example.com/")).toBeNull();
+  });
+
+  it("gives a plan its home type from its name: the paired plans are villas", () => {
+    const plan = normalizeCardelHome({ address: "1 Test Ave", status: "available" }, "florida", "north-river-ranch")!;
+    const asPlan = (name: string) => ({ ...plan, quickMoveIn: false, name, homeType: null });
+    expect(cardelHomeType(asPlan("Birchwood Paired")).homeType).toBe("Attached Villa");
+    expect(cardelHomeType(asPlan("Brighton")).homeType).toBe("Single Family Home");
+    expect(cardelHomeType(asPlan("Northwood Rf")).homeType).toBe("Single Family Home");
+    expect(cardelHomeType({ ...asPlan("Brighton"), homeType: "Townhome" }).homeType).toBe("Townhome");
+    expect(cardelHomeType(plan).homeType).toBeNull();
   });
 });
