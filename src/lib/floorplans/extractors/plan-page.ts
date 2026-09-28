@@ -652,6 +652,14 @@ const THUMB = /^(.+)-thumbnail(\.[a-z0-9]+)$/i;
  * come off.
  */
 export function pictureKey(src: string): string {
+  // A photo in a "mixed-media" store is its name, whichever upload of it
+  // and whichever size: WestBay's feed gives a plan's cover as
+  // ".../mixed-media/<id>/large/Lido-Key-I-Coastal-COA-…-elev_IND.jpg" and
+  // its page gives the same photo, uploaded again, as ".../<another
+  // id>/hd/Lido%20Key%20I-Coastal-COA-…-elev_IND%20%28Large%29.jpg", and
+  // each night the queue proposed it as one photo added (Jeff, 2026-09-28).
+  const media = src.replace(/[?#].*$/, "").match(/^https?:\/\/([^/]+)\/mixed-media\/[0-9a-f-]{32,36}\/[a-z]+\/([^/]+)$/i);
+  if (media) return `${media[1].toLowerCase()}/mixed-media/${mediaName(media[2])}`;
   // A picture an image service fetches and resizes is the picture it
   // fetches, whatever size it is asked for: Pulte's are
   // res.cloudinary.com/…/image/fetch/ar_1.5,c_fill,w_768/https://pultegroup.picturepark.com/….
@@ -710,6 +718,31 @@ export function pictureKey(src: string): string {
 }
 
 const IMAGE_FILE = /\.(jpe?g|png|webp|avif|gif)$/i;
+
+/**
+ * A media store's file name as the photo it names: decoded (WestBay's are
+ * sometimes encoded twice), in lower case, with its spaces as hyphens and
+ * without the size or copy number the upload added — "(Large)",
+ * "(Medium)", "(1)".
+ */
+function mediaName(file: string): string {
+  let name = file;
+  for (let i = 0; i < 2; i += 1) {
+    try {
+      const decoded = decodeURIComponent(name);
+      if (decoded === name) break;
+      name = decoded;
+    } catch {
+      break;
+    }
+  }
+  return name
+    .replace(IMAGE_FILE, "")
+    .toLowerCase()
+    .replace(/[\s-]*\((?:large|medium|small|\d+)\)$/, "")
+    .replace(/[\s-]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 /** A segment of a Cloudinary address that says how to draw the picture: "f_auto,c_limit,w_2048", "l_text:Arial_700_bold_24:…". */
 const CLOUDINARY_STEP =

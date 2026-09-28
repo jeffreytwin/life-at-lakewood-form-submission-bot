@@ -77,8 +77,9 @@ export function wantsCopiesChecked(record: NormalizedPlan | null): record is Nor
 
 /**
  * The gallery with each photograph once (withoutDuplicates), marked as
- * checked, and the captions of the pictures taken out dropped. Pure;
- * exported for tests.
+ * checked, the captions of the pictures taken out dropped, and each one
+ * taken out remembered with the photo kept in its place. Pure; exported
+ * for tests.
  */
 export function withCopiesTakenOut(record: NormalizedPlan, same: number[][]): { record: NormalizedPlan; removed: string[] } {
   const once = withoutDuplicates(record.galleryImages, same);
@@ -86,7 +87,14 @@ export function withCopiesTakenOut(record: NormalizedPlan, same: number[][]): { 
   const galleryMeta = record.galleryMeta
     ? Object.fromEntries(Object.entries(record.galleryMeta).filter(([url]) => kept.has(url)))
     : record.galleryMeta;
-  return { record: { ...record, galleryImages: once.urls, galleryMeta, copiesChecked: true }, removed: once.removed };
+  // Remembered with the record, so the next run's reading of a copy is
+  // not proposed as a new photo (Jeff, 2026-09-28: WestBay's single-photo
+  // additions were the copies this took out, back again the next night).
+  const copiesOf = { ...(record.copiesOf ?? {}), ...once.copyOf };
+  return {
+    record: { ...record, galleryImages: once.urls, galleryMeta, copiesChecked: true, ...(Object.keys(copiesOf).length ? { copiesOf } : {}) },
+    removed: once.removed,
+  };
 }
 
 /** A waiting gallery of two pictures or more that nobody has arranged by hand. Exported for tests. */

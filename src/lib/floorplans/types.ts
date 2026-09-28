@@ -58,6 +58,13 @@ export interface NormalizedPlan {
   galleryMeta?: Record<string, GalleryMeta>;
   /** A waiting change only: its gallery has been checked for one photograph shown twice (sort-queue.ts). */
   copiesChecked?: boolean;
+  /**
+   * The photos taken out of the gallery as copies of another, each with the
+   * photo kept in its place (sort-queue.ts). Kept on the record, so a run
+   * that reads a copy again files it under the photo the record shows
+   * rather than proposing it as new (pictures.ts, withKnownSpellings).
+   */
+  copiesOf?: Record<string, string>;
   /** A waiting change only: every photo of its gallery has been looked at and the gallery put in order (sort-queue.ts). */
   photosSorted?: boolean;
   /** The builder's own description of the plan, when the page gives one. */

@@ -234,6 +234,8 @@ describe("waiting galleries checked once for one photograph shown twice (Neal, 2
     expect(removed).toEqual([denAgain]);
     expect(record.copiesChecked).toBe(true);
     expect(Object.keys(record.galleryMeta ?? {})).toEqual([front]);
+    // Remembered, so the next run's reading of the copy is not a new photo.
+    expect(record.copiesOf).toEqual({ [denAgain]: den });
   });
 
   it("marks a gallery with no copies checked too, so it is not fetched again", () => {
