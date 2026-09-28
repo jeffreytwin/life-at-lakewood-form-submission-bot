@@ -79,6 +79,22 @@ export function picturesAdded(live: Partial<NormalizedPlan> | null | undefined, 
 }
 
 /**
+ * The picture a quick move-in's row shows now, where the change gives it
+ * another. A quick move-in shows one picture, so a new one in front is the
+ * whole of a photo change, though the home already had it further back:
+ * Neal's 2143 Sylvester Palm Lane came up as "1 photo → 1 photo" with
+ * nothing marked (Jeff, 2026-09-28). Null where the picture stays, and for
+ * a floor plan. Pure.
+ */
+export function primaryReplaced(live: Partial<NormalizedPlan> | null | undefined, proposed: Partial<NormalizedPlan> | null | undefined): string | null {
+  if (!live || !proposed || proposed.quickMoveIn !== true) return null;
+  const first = (v: unknown) => (Array.isArray(v) && typeof v[0] === "string" && v[0] ? (v[0] as string) : null);
+  const was = first(live.galleryImages) ?? first([(live as { primaryImage?: unknown }).primaryImage]);
+  const now = first(proposed.galleryImages);
+  return was && now && pictureKey(was) !== pictureKey(now) ? was : null;
+}
+
+/**
  * The run's photos in the order the record shows them, each photo the
  * record does not have kept just after the one the page put before it.
  * Sorting by room keeps the order it is given within a room, and that was

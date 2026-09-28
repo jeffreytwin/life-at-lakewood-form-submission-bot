@@ -304,6 +304,8 @@ export default function FloorPlansPage() {
   // builder's own picture sets (changes/route.ts), which the overlay reads.
   const [editWhole, setEditWhole] = useState<ProposedRecord | null>(null);
   const [editAdded, setEditAdded] = useState<Set<string>>(new Set());
+  // A quick move-in's picture on the site, where the change shows another in its place.
+  const [editReplaced, setEditReplaced] = useState<string | null>(null);
   const openKey = useRef<string | null>(null);
   // The page of the queue shown, from 0.
   const [page, setPage] = useState(0);
@@ -596,6 +598,7 @@ export default function FloorPlansPage() {
     setSorted(null);
     setEditWhole(null);
     setEditAdded(new Set());
+    setEditReplaced(null);
     setEditing(group);
     openKey.current = group.key;
     fetch(`/api/internal/floorplans/changes/${group.lead.id}`)
@@ -607,6 +610,7 @@ export default function FloorPlansPage() {
           setEditWhole(whole);
           const added = Array.isArray(data?.addedPictures) ? (data.addedPictures as unknown[]).filter((u): u is string => typeof u === "string") : [];
           setEditAdded(new Set(added));
+          setEditReplaced(typeof data?.replacedPrimary === "string" ? data.replacedPrimary : null);
         }
       })
       .catch(() => {});
@@ -1528,8 +1532,37 @@ export default function FloorPlansPage() {
               <div className="form-group">
                 <label>Primary image (the one picture a quick move-in shows)</label>
                 {editGallery[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={editGallery[0]} alt="" style={{ maxWidth: 320, maxHeight: 220, borderRadius: 6, display: "block", objectFit: "cover" }} />
+                  <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
+                    <div style={{ position: "relative" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={editGallery[0]}
+                        alt=""
+                        style={{
+                          maxWidth: 320, maxHeight: 220, borderRadius: 6, display: "block", objectFit: "cover",
+                          ...(editReplaced ? { outline: `3px solid ${NEW_PICTURE}`, outlineOffset: 1 } : {}),
+                        }}
+                      />
+                      {editReplaced && (
+                        <span
+                          className="text-sm"
+                          title="This change shows this picture in place of the one on the site"
+                          style={{ position: "absolute", top: 4, right: 6, background: NEW_PICTURE, color: "#fff", borderRadius: 4, padding: "0 4px", fontWeight: 600 }}
+                        >
+                          new
+                        </span>
+                      )}
+                    </div>
+                    {editReplaced && (
+                      <div>
+                        <div className="text-muted text-sm" style={{ marginBottom: 4 }}>
+                          On the site now
+                        </div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={editReplaced} alt="" style={{ width: 128, height: 88, borderRadius: 6, display: "block", objectFit: "cover", opacity: 0.8 }} />
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <span className="text-muted text-sm">no image</span>
                 )}
