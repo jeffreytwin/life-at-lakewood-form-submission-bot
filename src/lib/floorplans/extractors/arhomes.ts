@@ -6,17 +6,24 @@
 //
 //   <link rel="alternate" type="application/json" href=".../wp-json/wp/v2/community/32027">
 //
-// That record lists the grid's plans (acf.layout[].plans_list) and, in its
-// "featured" tiles, each plan's price with the lot and outdoor package
-// ("Avila 1427 … 3 Bedrooms | 3 Bathrooms | 3,134 Sq. Ft. | $2,255,300").
-// Each plan's own record has its counts, its photographs and its drawing:
+// That record lists the grid's plans (acf.layout[].plans_list). Each
+// plan's own record has its counts, its photographs and its drawing:
 //
 //   GET /wp-json/wp/v2/plan?include=<ids>&per_page=50&hideBuilderPlan=false
 //
 // (without hideBuilderPlan=false the feed leaves out the builder's own
-// plans: half of Wild Blue's twelve). Nothing here asks Claude.
+// plans: half of Wild Blue's twelve). A plan's tour is read off its own
+// page where the record names none. Nothing here asks Claude.
+//
+// Prices come from Lakewood Ranch's home finder, where AR's plans are
+// advertised ("Homes From $…"), not from arhomes.com: the prices in the
+// community record's "featured" tiles included the lot and a pool package,
+// and the page that showed them is gone (Jeff, 2026-09-28: "It means I
+// don't have anything publicly advertised").
 
 import { bathsOf } from "@/lib/floorplans/standardize";
+import { isTourUrl, tourLinkIn, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
+import { parseHotelCards } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -44,13 +51,17 @@ export interface ArPlan {
   };
 }
 
-interface ArTile {
-  title?: string;
-  description?: string;
+interface ArCommunity {
+  acf?: { layout?: { plans_list?: unknown }[] };
 }
 
-interface ArCommunity {
-  acf?: { layout?: { plans_list?: unknown; tiles?: ArTile[] }[] };
+/** Where AR's plans are advertised with a price: Lakewood Ranch's home finder, AR only. extractor_params.priceList overrides. */
+export const AR_PRICE_LIST = "https://lakewoodranch.com/home-finder/?build%5B%5D=34701&home-search=Search+Homes&submitted=1";
+
+/** A plan's price as it is advertised, by the plan's name. */
+export interface ListedPrice {
+  name: string;
+  price: number;
 }
 
 const decode = (s: string) =>
@@ -85,35 +96,30 @@ export function planIdsOf(community: ArCommunity): number[] {
   return ids;
 }
 
+/** A plan's name without its article or its number: "The Avila 1427" is the Avila. */
+const planName = (name: string) => normKey(name.replace(/^\s*the\s+/i, "").replace(/\s+\d{3,5}$/, ""));
+
 /**
- * Each featured tile's price, by the plan it names: "Avila 1427" is the
- * Avila, and its link ".../plan/avila-1427/" says the same. Exported for
- * tests.
+ * The prices Lakewood Ranch's home finder advertises for a village's
+ * plans: its cards name each plan and say "Homes From $…" (parseHotelCards).
+ * A home already built is left out; a plan is priced as a plan. Pure;
+ * exported for tests.
  */
-export function tilePrices(community: ArCommunity): { name: string; slug: string | null; price: number }[] {
-  const out: { name: string; slug: string | null; price: number }[] = [];
-  for (const block of community.acf?.layout ?? []) {
-    for (const tile of block.tiles ?? []) {
-      const text = decode(String(tile.description ?? "").replace(/<[^>]+>/g, " "));
-      const price = number(text.match(/\$\s?\d{1,3}(?:,\d{3})+/)?.[0]);
-      if (!price) continue;
-      const name = decode(String(tile.title ?? "")).replace(/\s+\d{3,5}$/, "");
-      const slug = String(tile.description ?? "").match(/\/plan\/([a-z0-9-]+)\/?["']/i)?.[1]?.replace(/-\d{3,5}$/, "") ?? null;
-      out.push({ name, slug, price });
-    }
-  }
-  return out;
+export function listedPrices(html: string, village: string): ListedPrice[] {
+  const wanted = normKey(village);
+  return parseHotelCards(html, "https://lakewoodranch.com")
+    .filter((c) => normKey(c.village.replace(/[–—]/g, "-")) === wanted && !c.plan.quickMoveIn && c.plan.price)
+    .map((c) => ({ name: c.plan.name, price: c.plan.price as number }));
 }
 
 const url = (img: WpImage | false | null | undefined) => (img && typeof img.url === "string" && img.url ? img.url : null);
 
-/** One plan's record as a plan, priced by its tile where the community gives one. Pure; exported for tests. */
-export function normalizeArPlan(plan: ArPlan, prices: ReturnType<typeof tilePrices>): NormalizedPlan | null {
+/** One plan's record as a plan, priced as Lakewood Ranch advertises it, where it does. Pure; exported for tests. */
+export function normalizeArPlan(plan: ArPlan, prices: ListedPrice[]): NormalizedPlan | null {
   const name = decode(plan.title?.rendered ?? "");
   if (!name) return null;
   const a = plan.acf ?? {};
-  const slug = (plan.slug ?? "").toLowerCase();
-  const tile = prices.find((t) => normKey(t.name) === normKey(name) || (t.slug !== null && slug !== "" && t.slug === slug));
+  const tile = prices.find((t) => planName(t.name) === planName(name));
   const photos = [url(a.banner_image), ...(a.gallery || []).map(url), ...(a.interior_gallery || []).map(url)].filter(
     (u, i, all): u is string => Boolean(u) && all.indexOf(u) === i
   );
@@ -136,7 +142,37 @@ export function normalizeArPlan(plan: ArPlan, prices: ReturnType<typeof tilePric
     galleryImages: photos,
     blueprintImages: drawing ? [drawing] : [],
     description: null,
+    // A tour the plan's record carries, in whatever field (its page's
+    // "Virtual Tour" is read where the record has none: planTour).
+    virtualTourUrl: tourUrlIn(JSON.stringify(plan)),
   };
+}
+
+/**
+ * The tour a plan's page offers: one embedded in it, or behind the link it
+ * labels "Virtual Tour" — Eventide's page has one and the record did not
+ * say (Jeff, 2026-09-28). A link that is a tour is taken as it is; one to
+ * a page of the builder's own is read for the tour it holds. Null when the
+ * page offers none. Exported for tests.
+ */
+export async function planTour(pageUrl: string, read: (url: string) => Promise<string>): Promise<string | null> {
+  const html = await read(pageUrl);
+  const embedded = tourUrlIn(html);
+  if (embedded) return embedded;
+  const link = tourLinkIn(html);
+  if (!link) return null;
+  if (isTourUrl(link)) return link;
+  try {
+    return tourUrlIn(await read(link));
+  } catch {
+    return null;
+  }
+}
+
+async function getText(address: string): Promise<string> {
+  const res = await fetch(address, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) });
+  if (!res.ok) throw new Error(`fetch ${address}: ${res.status}`);
+  return res.text();
 }
 
 async function getJson<T>(address: string): Promise<T> {
@@ -145,7 +181,7 @@ async function getJson<T>(address: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function extractArHomes(params: { url?: string }): Promise<NormalizedPlan[]> {
+export async function extractArHomes(params: { url?: string; priceList?: string; communityName?: string }): Promise<NormalizedPlan[]> {
   if (!params.url) throw new Error("this extractor requires extractor_params.url (the community's page)");
   const res = await fetch(params.url, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(45_000) });
   if (!res.ok) throw new Error(`fetch ${params.url}: ${res.status}`);
@@ -159,11 +195,29 @@ export async function extractArHomes(params: { url?: string }): Promise<Normaliz
   feed.searchParams.set("per_page", "50");
   feed.searchParams.set("hideBuilderPlan", "false");
   const plans = await getJson<ArPlan[]>(feed.href);
-  const prices = tilePrices(community);
+  // A list that cannot be read stops the run: read as no prices, every
+  // plan's price would be proposed away.
+  const prices = listedPrices(await getText(params.priceList || AR_PRICE_LIST), params.communityName ?? "");
   const byId = new Map(plans.map((p) => [p.id, p]));
-  return ids
+  const normalized = ids
     .map((id) => byId.get(id))
     .filter((p): p is ArPlan => Boolean(p))
     .map((p) => normalizeArPlan(p, prices))
     .filter((p): p is NormalizedPlan => p !== null);
+  // Each plan's page for the tour its record does not name, a few at a
+  // time. A page that cannot be read costs the tour, never the plan, and
+  // a run that finds none does not take a working tour away (diff.ts).
+  const out: NormalizedPlan[] = [];
+  for (let i = 0; i < normalized.length; i += 4) {
+    out.push(
+      ...(await Promise.all(
+        normalized.slice(i, i + 4).map(async (plan) => {
+          if (plan.virtualTourUrl || !plan.sourceUrl) return plan;
+          const tour = await planTour(plan.sourceUrl, getText).catch(() => null);
+          return tour ? { ...plan, virtualTourUrl: tour } : plan;
+        })
+      ))
+    );
+  }
+  return out;
 }
