@@ -224,8 +224,94 @@ export function cardelHomeType(plan: NormalizedPlan): NormalizedPlan {
   return { ...plan, homeType: standardHomeType(plan.name) === "Attached Villa" ? "Attached Villa" : "Single Family Home" };
 }
 
+/** A Cardel picture's file name, decoded: ".../o/public%2Fposters%2Fbirchwood-c-…_640x640.webp?alt=media" is "birchwood-c-…_640x640.webp". */
+const fileOf = (url: string) => {
+  let path = url.replace(/[?#].*$/, "");
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+    // left as written
+  }
+  return path.slice(path.lastIndexOf("/") + 1);
+};
+
+/** How large a Cardel picture is by its name ("…_1536x1536.webp"); the largest when it names no size. */
+const cardelSize = (url: string) => {
+  const m = fileOf(url).match(/_(\d{2,5})x(\d{2,5})\.[a-z]+$/i);
+  return m ? Math.max(Number(m[1]), Number(m[2])) : Infinity;
+};
+
+/** One picture however large it is drawn: its name without the size. */
+const cardelKey = (url: string) => fileOf(url).toLowerCase().replace(/_\d{2,5}x\d{2,5}(?=\.[a-z]+$)/i, "").replace(/\.[a-z]+$/i, "");
+
+/**
+ * The pictures of a plan's elevations page: each elevation Cardel draws
+ * the plan in ("Southern Prairie - A", "Coastal - B", "Modern Farmhouse -
+ * C"), which the plan's own page shows one of. Every picture the page
+ * carries from Cardel's store — as an address or as a path in its data —
+ * whose name is the plan's ("birchwood-c-modern-farmhouse-nrr-villa-…" for
+ * the Birchwood Paired), each once, at its largest. Pure; exported for
+ * tests.
+ */
+export function elevationPictures(html: string, planName: string): string[] {
+  const word = normKey(planName).split("-")[0];
+  if (!word) return [];
+  const text = html.replace(/\\u002F/gi, "/").replace(/\\\//g, "/");
+  const found = [
+    ...[...text.matchAll(/https?:\/\/(?:firebasestorage\.googleapis\.com\/v0\/b\/cardel-website\.appspot\.com\/o\/|storage\.googleapis\.com\/cardel-website\.appspot\.com\/)[^"'\s<>)\\]+/gi)].map((m) => m[0].replace(/&amp;/g, "&")),
+    ...[...text.matchAll(/["'](public\/[^"'\s]+?\.(?:webp|jpe?g|png))["']/gi)].map((m) => STORAGE + m[1]),
+  ].filter((url) => /\.(?:webp|jpe?g|png)$/i.test(fileOf(url)) && fileOf(url).toLowerCase().startsWith(word));
+  return largestOfEach(found);
+}
+
+/** Each picture once, at its largest, in the place its first size came. */
+function largestOfEach(urls: string[]): string[] {
+  const at = new Map<string, number>();
+  const out: string[] = [];
+  for (const url of urls) {
+    const key = cardelKey(url);
+    const i = at.get(key);
+    if (i === undefined) {
+      at.set(key, out.length);
+      out.push(url);
+    } else if (cardelSize(url) > cardelSize(out[i])) out[i] = url;
+  }
+  return out;
+}
+
+/**
+ * A plan with the pictures of its elevations page after its own: its page
+ * shows the plan in one elevation, and a gallery of one poster was all
+ * the plans had (Jeff, 2026-09-28: "only seeing one picture per floor
+ * plan"). A page that will not load leaves the plan as it was. Exported
+ * for tests.
+ */
+export async function withElevations(plan: NormalizedPlan, read: (url: string) => Promise<string>): Promise<NormalizedPlan> {
+  if (plan.quickMoveIn || !plan.sourceUrl) return plan;
+  let pictures: string[];
+  try {
+    pictures = elevationPictures(await read(`${plan.sourceUrl.replace(/\/+$/, "")}/elevations`), plan.name);
+  } catch {
+    return plan;
+  }
+  if (!pictures.length) return plan;
+  const galleryImages = largestOfEach([...plan.galleryImages, ...pictures]);
+  return galleryImages.length === plan.galleryImages.length && galleryImages.every((u, i) => u === plan.galleryImages[i])
+    ? plan
+    : { ...plan, galleryImages };
+}
+
+async function readCardelPage(url: string): Promise<string> {
+  const res = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) });
+  if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
+  return res.text();
+}
+
 export async function extractCardel(params: ClaudeExtractParams): Promise<NormalizedPlan[]> {
-  const plans = (await extractWithClaude(params)).map(cardelHomeType);
+  const read = (await extractWithClaude(params)).map(cardelHomeType);
+  // Each plan's elevations, a few pages at a time.
+  const plans: NormalizedPlan[] = [];
+  for (let i = 0; i < read.length; i += 4) plans.push(...(await Promise.all(read.slice(i, i + 4).map((p) => withElevations(p, readCardelPage)))));
   const where = params.url ? cardelCommunityOf(params.url) : null;
   if (!where) return plans;
   const res = await fetch(`https://www1.cardelhomes.com/${where.region}/quick-move-ins`, {
