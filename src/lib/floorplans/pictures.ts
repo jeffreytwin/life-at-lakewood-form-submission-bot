@@ -59,3 +59,21 @@ export function withKnownSpellings(plan: NormalizedPlan, current: Partial<Normal
     ...(plan.galleryMeta ? { galleryMeta: meta } : {}),
   };
 }
+
+/**
+ * The pictures a waiting change shows that the live plan does not, however
+ * either spells them (pictureKey) and counting a copy the record has
+ * already taken out (copiesOf) as the photo kept in its place: what the
+ * edit overlay marks as new, so a reviewer sees what the change adds
+ * (Jeff, 2026-09-28). Pure.
+ */
+export function picturesAdded(live: Partial<NormalizedPlan> | null | undefined, proposed: Partial<NormalizedPlan> | null | undefined): string[] {
+  if (!live || !proposed) return [];
+  const strings = (v: unknown) => (Array.isArray(v) ? v : []).filter((u): u is string => typeof u === "string" && u !== "");
+  const copies = { ...(live.copiesOf ?? {}), ...(proposed.copiesOf ?? {}) };
+  const known = new Set(
+    [...strings(live.galleryImages), ...strings(live.blueprintImages), ...strings([(live as { primaryImage?: unknown }).primaryImage])].map(pictureKey)
+  );
+  const isKnown = (url: string) => known.has(pictureKey(url)) || (copies[url] !== undefined && known.has(pictureKey(copies[url])));
+  return [...strings(proposed.galleryImages), ...strings(proposed.blueprintImages)].filter((url) => !isKnown(url));
+}

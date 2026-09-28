@@ -161,6 +161,9 @@ function useCoarsePointer(): boolean {
   );
 }
 
+/** The mark of a picture a change adds to the live plan. */
+const NEW_PICTURE = "#16a34a";
+
 /**
  * One gallery in the edit overlay. Photos move by drag and drop or by the
  * arrows; hovering shows the picture large (Jeff, 2026-09-19).
@@ -172,6 +175,7 @@ function GalleryEditor({
   meta,
   isPhotos,
   onPreview,
+  added,
 }: {
   label: string;
   list: string[];
@@ -179,10 +183,13 @@ function GalleryEditor({
   meta?: Record<string, GalleryMeta>;
   isPhotos: boolean;
   onPreview: (p: Preview | null) => void;
+  /** Pictures the change adds to the live plan, marked so a reviewer sees what changed (Jeff, 2026-09-28). */
+  added?: Set<string>;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const coarse = useCoarsePointer();
   if (list.length === 0) return null;
+  const newCount = added ? list.filter((url) => added.has(url)).length : 0;
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
     if (target < 0 || target >= list.length) return;
@@ -193,10 +200,17 @@ function GalleryEditor({
       <label>{label}</label>
       <p className="text-muted" style={{ fontSize: 11, margin: "0 0 6px" }}>
         {coarse ? "Use the arrows to move a picture." : "Drag a picture to where it belongs, or use the arrows. Hover to see it large."}
+        {newCount > 0 && (
+          <span style={{ color: NEW_PICTURE, fontWeight: 600 }}>
+            {" "}
+            {newCount} new {isPhotos ? `photo${newCount === 1 ? "" : "s"}` : `drawing${newCount === 1 ? "" : "s"}`} outlined in green.
+          </span>
+        )}
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {list.map((url, i) => {
           const m = meta?.[url];
+          const isNew = added?.has(url) === true;
           return (
             <div
               key={url}
@@ -223,8 +237,18 @@ function GalleryEditor({
                   width: 96, height: 64, objectFit: "cover", borderRadius: 6,
                   border: i === 0 && isPhotos ? "2px solid var(--accent, #2563eb)" : "1px solid #ccc",
                   display: "block",
+                  ...(isNew ? { outline: `3px solid ${NEW_PICTURE}`, outlineOffset: 1 } : {}),
                 }}
               />
+              {isNew && (
+                <span
+                  className="text-sm"
+                  title="Not on the live plan: this change adds it"
+                  style={{ position: "absolute", top: 2, right: 4, background: NEW_PICTURE, color: "#fff", borderRadius: 4, padding: "0 4px", fontWeight: 600 }}
+                >
+                  new
+                </span>
+              )}
               {i === 0 && isPhotos && (
                 <span className="text-sm" style={{ position: "absolute", top: 2, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", borderRadius: 4, padding: "0 4px" }}>
                   main
@@ -279,6 +303,7 @@ export default function FloorPlansPage() {
   // The plan in the overlay, whole: the list leaves out its captions and the
   // builder's own picture sets (changes/route.ts), which the overlay reads.
   const [editWhole, setEditWhole] = useState<ProposedRecord | null>(null);
+  const [editAdded, setEditAdded] = useState<Set<string>>(new Set());
   const openKey = useRef<string | null>(null);
   // The page of the queue shown, from 0.
   const [page, setPage] = useState(0);
@@ -570,6 +595,7 @@ export default function FloorPlansPage() {
     setPreview(null);
     setSorted(null);
     setEditWhole(null);
+    setEditAdded(new Set());
     setEditing(group);
     openKey.current = group.key;
     fetch(`/api/internal/floorplans/changes/${group.lead.id}`)
@@ -577,7 +603,11 @@ export default function FloorPlansPage() {
       .then((data) => {
         const whole = (data?.proposed_record ?? null) as ProposedRecord | null;
         // Only while this plan is still the one open.
-        if (whole && openKey.current === group.key) setEditWhole(whole);
+        if (whole && openKey.current === group.key) {
+          setEditWhole(whole);
+          const added = Array.isArray(data?.addedPictures) ? (data.addedPictures as unknown[]).filter((u): u is string => typeof u === "string") : [];
+          setEditAdded(new Set(added));
+        }
       })
       .catch(() => {});
   }
@@ -1518,6 +1548,7 @@ export default function FloorPlansPage() {
                   meta={editRec?.galleryMeta}
                   isPhotos
                   onPreview={setPreview}
+                  added={editAdded}
                 />
                 <GalleryEditor
                   label="Blueprints"
@@ -1525,6 +1556,7 @@ export default function FloorPlansPage() {
                   setList={setEditBlueprints}
                   isPhotos={false}
                   onPreview={setPreview}
+                  added={editAdded}
                 />
                 {editGallery.length > 1 && (
                   <div className="form-group">

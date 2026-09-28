@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { pictureKey } from "@/lib/floorplans/extractors/plan-page";
-import { withKnownSpellings } from "@/lib/floorplans/pictures";
+import { picturesAdded, withKnownSpellings } from "@/lib/floorplans/pictures";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Addresses from the queue (Homes by WestBay and D.R. Horton, Jeff 2026-09-28).
@@ -107,5 +107,26 @@ describe("a picture the run reads as a photo leaves the drawings (D.R. Horton's 
     const current = plan({ galleryImages: [`${drh}/front.jpg`], blueprintImages: [drawing, elevation], userEditedFields: ["blueprintImages"] }) as CanonicalRecord;
     const merged = mergeForUpdate(current, plan({ galleryImages: [`${drh}/front.jpg`, elevation], blueprintImages: [] }));
     expect(merged.blueprintImages).toEqual([drawing, elevation]);
+  });
+});
+
+describe("picturesAdded: what a change adds to the live plan, for the overlay to mark (Jeff, 2026-09-28)", () => {
+  const front = "https://cdn.example.com/verona/front.jpg";
+  const kitchen = "https://cdn.example.com/verona/kitchen.jpg";
+  const drawing = "https://cdn.example.com/verona/plan.png";
+
+  it("marks the photos and drawings the live plan does not have, however either spells them", () => {
+    const live = plan({ galleryImages: [veronaCover, front], blueprintImages: [drawing] });
+    const proposed = plan({ galleryImages: [veronaHd, front, kitchen], blueprintImages: [drawing, `${drawing}?w=800`, "https://cdn.example.com/verona/plan-2.png"] });
+    expect(picturesAdded(live, proposed)).toEqual([kitchen, "https://cdn.example.com/verona/plan-2.png"]);
+  });
+
+  it("does not mark a copy the record already took out", () => {
+    const copy = "https://cdn.example.com/verona/front-copy.jpg";
+    expect(picturesAdded(plan({ galleryImages: [front], copiesOf: { [copy]: front } }), plan({ galleryImages: [front, copy] }))).toEqual([]);
+  });
+
+  it("marks nothing without a live plan", () => {
+    expect(picturesAdded(null, plan({ galleryImages: [front] }))).toEqual([]);
   });
 });

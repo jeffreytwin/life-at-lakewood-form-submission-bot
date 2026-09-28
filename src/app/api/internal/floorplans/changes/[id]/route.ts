@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { HOME_TYPES, isHomeType, standardGarages } from "@/lib/floorplans/standardize";
-import { normKey } from "@/lib/floorplans/types";
+import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
+import { picturesAdded } from "@/lib/floorplans/pictures";
 
 /**
  * Whether a base plan of this name exists for the scope: live, or waiting
@@ -57,13 +58,29 @@ const EDITABLE_FIELDS = [
 /** One queued change whole, for the edit overlay: the list leaves its heaviest fields out (changes/route.ts). */
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { data, error } = await supabase.from("fp_pending_changes").select("id, status, proposed_record").eq("id", id).maybeSingle();
+  const { data, error } = await supabase
+    .from("fp_pending_changes")
+    .select("id, status, change_type, site_id, community_id, builder_id, plan_key, proposed_record")
+    .eq("id", id)
+    .maybeSingle();
   if (error) {
     logger.error("Failed to read floor plan change", { id, error: error.message });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
   if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(data);
+  // The pictures the change adds to the live plan, for the overlay to mark
+  // (Jeff, 2026-09-28). A new plan's are all new, and none are marked.
+  let addedPictures: string[] = [];
+  if (data.change_type === "update") {
+    const { data: live } = await supabase
+      .from("fp_floor_plans")
+      .select("record")
+      .match({ site_id: data.site_id, community_id: data.community_id, builder_id: data.builder_id, plan_key: data.plan_key })
+      .is("removed_at", null)
+      .maybeSingle();
+    addedPictures = picturesAdded(live?.record as Partial<NormalizedPlan> | null, data.proposed_record as Partial<NormalizedPlan> | null);
+  }
+  return NextResponse.json({ id: data.id, status: data.status, proposed_record: data.proposed_record, addedPictures });
 }
 
 export async function PATCH(
