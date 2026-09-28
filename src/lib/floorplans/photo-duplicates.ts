@@ -280,9 +280,13 @@ const fileKey = pictureKey;
  * The gallery with each photograph once. Pictures that are one photograph
  * — the same file however spelled or sized (fileKey), or a set Claude
  * found — keep the place of the first of them, at the largest size any of
- * them is (pictureSize); the others are `removed`. Pure; exported for tests.
+ * them is (pictureSize); the others are `removed`, and `copyOf` says
+ * which kept picture each is a copy of. Pure; exported for tests.
  */
-export function withoutDuplicates(urls: string[], same: number[][]): { urls: string[]; removed: string[] } {
+export function withoutDuplicates(
+  urls: string[],
+  same: number[][]
+): { urls: string[]; removed: string[]; copyOf: Record<string, string> } {
   const parent = urls.map((_, i) => i);
   const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
   const join = (a: number, b: number) => {
@@ -301,13 +305,17 @@ export function withoutDuplicates(urls: string[], same: number[][]): { urls: str
   urls.forEach((_, i) => members.set(find(i), [...(members.get(find(i)) ?? []), i]));
   const kept: string[] = [];
   const removed: string[] = [];
+  const copyOf: Record<string, string> = {};
   urls.forEach((url, i) => {
     const group = members.get(find(i))!;
     if (group[0] !== i) return;
     // The largest; of equals, the first.
     const best = group.reduce((a, b) => (pictureSize(urls[b]) > pictureSize(urls[a]) ? b : a));
     kept.push(urls[best]);
-    removed.push(...group.filter((g) => g !== best).map((g) => urls[g]));
+    for (const g of group.filter((g) => g !== best)) {
+      removed.push(urls[g]);
+      if (urls[g] !== urls[best]) copyOf[urls[g]] = urls[best];
+    }
   });
-  return { urls: kept, removed };
+  return { urls: kept, removed, copyOf };
 }

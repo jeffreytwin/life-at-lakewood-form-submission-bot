@@ -317,12 +317,23 @@ export function mergeForUpdate(
   if (plan.pageUnread === true) {
     for (const field of PAGE_ONLY_FIELDS) if (field in source && !overrides.has(field)) merged[field] = source[field];
   }
+  let photosFromRun = false;
   for (const [field] of GALLERY_FIELDS) {
     if (overrides.has(field)) continue;
     // The same pictures under other addresses: the record's addresses stay,
     // so an approval of something else does not bring them in again.
     const same = samePictures(galleryOf(current, field), galleryOf(plan, field));
-    if (galleryRead(current, plan, field) && !same) continue;
+    if (galleryRead(current, plan, field) && !same) {
+      if (field === "galleryImages") {
+        // The run's photos are not the ones the record's were checked and
+        // sorted as: checked again for copies and sorted again (sort-queue.ts).
+        // Carried over, they let every copy a run read reach the queue
+        // (Jeff, 2026-09-28).
+        for (const f of ["photosSorted", "copiesChecked"]) if (!(f in plan)) delete merged[f];
+        photosFromRun = true;
+      }
+      continue;
+    }
     // Each photo once, at the largest copy the record has of it.
     merged[field] = same ? onePerPicture(galleryOf(current, field)).photos : galleryOf(current, field);
     if (field === "galleryImages") {
@@ -331,6 +342,16 @@ export function mergeForUpdate(
         else delete merged[f];
       }
     }
+  }
+  // A picture the run now reads as a photo is no longer a drawing: D.R.
+  // Horton's elevations and bonus rooms moved to the photos (2026-09-26),
+  // but a run that read no drawings left the record's in place, and an
+  // approval would have shown each twice (Jeff, 2026-09-28).
+  if (photosFromRun && !overrides.has("blueprintImages")) {
+    const photos = new Set(galleryOf(merged as unknown as CanonicalRecord, "galleryImages").map(pictureKey));
+    const drawings = galleryOf(merged as unknown as CanonicalRecord, "blueprintImages");
+    const only = drawings.filter((url) => !photos.has(pictureKey(url)));
+    if (only.length !== drawings.length) merged.blueprintImages = only;
   }
   // Whether it has quick move-ins is what Wix holds under it, kept by the
   // flag check (qmi-flags.ts), not what this run counted.

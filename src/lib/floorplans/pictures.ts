@@ -22,8 +22,8 @@ export function withScrapedPictures<T extends NormalizedPlan>(record: T, scraped
  * what was learned about a photo (photo-rooms.ts) is filed under the
  * address it was seen at. Spelled as the record spells it, a photo keeps
  * its room and its place, and nothing is proposed for it (Jeff,
- * 2026-09-25). A photo the record does not have keeps its own address.
- * Pure.
+ * 2026-09-25). A photo taken out as a copy of another is filed under that
+ * other. A photo the record does not have keeps its own address. Pure.
  */
 export function withKnownSpellings(plan: NormalizedPlan, current: Partial<NormalizedPlan> | null | undefined): NormalizedPlan {
   if (!current) return plan;
@@ -35,7 +35,17 @@ export function withKnownSpellings(plan: NormalizedPlan, current: Partial<Normal
   };
   // Each once: two addresses of one photo become one.
   const once = (urls: string[], respell: (url: string) => string) => [...new Set(urls.map(respell))];
-  const photo = respeller(current.galleryImages);
+  // A photo taken out as a copy of another is that other (sort-queue.ts):
+  // WestBay's page gives the feed's cover photo again under a new upload,
+  // and each night it came back as one photo added (Jeff, 2026-09-28).
+  const copies = current.copiesOf ?? {};
+  const original = (url: string) => {
+    let at = url;
+    for (let hops = 0; hops < 5 && copies[at] && copies[at] !== at; hops += 1) at = copies[at];
+    return at;
+  };
+  const known = respeller(current.galleryImages);
+  const photo = (url: string) => known(original(url));
   const drawing = respeller(current.blueprintImages);
   const meta: NonNullable<NormalizedPlan["galleryMeta"]> = {};
   for (const [url, m] of Object.entries(plan.galleryMeta ?? {})) {

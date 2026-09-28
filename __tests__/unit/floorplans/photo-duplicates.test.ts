@@ -53,7 +53,7 @@ describe("withoutDuplicates", () => {
 
   it("changes nothing when every photograph is different", () => {
     const gallery = ["https://x.com/a.jpg", "https://x.com/b.jpg"];
-    expect(withoutDuplicates(gallery, [])).toEqual({ urls: gallery, removed: [] });
+    expect(withoutDuplicates(gallery, [])).toEqual({ urls: gallery, removed: [], copyOf: {} });
   });
 });
 
