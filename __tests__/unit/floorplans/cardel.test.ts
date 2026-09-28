@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardelCommunityOf, cardelHomeType, homesIn, normalizeCardelHome, readLiteral, streetOf } from "@/lib/floorplans/extractors/cardel";
+import { cardelCommunityOf, cardelHomeType, elevationPictures, homesIn, normalizeCardelHome, readLiteral, streetOf, withElevations } from "@/lib/floorplans/extractors/cardel";
 
 // The quick move-ins page's data as Cardel's page carried it (2026-09-27), cut down.
 const page = `<script>kit.start(app, element, { node_ids: [0, 18], data: [{type:"data",data:{user:null}},{type:"data",data:{homes:{
@@ -67,5 +67,55 @@ describe("Cardel's homes for sale from its quick move-ins page (North River Ranc
     expect(cardelHomeType(asPlan("Northwood Rf")).homeType).toBe("Single Family Home");
     expect(cardelHomeType({ ...asPlan("Brighton"), homeType: "Townhome" }).homeType).toBe("Townhome");
     expect(cardelHomeType(plan).homeType).toBeNull();
+  });
+});
+
+describe("a plan's elevations page (Birchwood Paired, Jeff 2026-09-28)", () => {
+  const fb = (file: string) => `https://firebasestorage.googleapis.com/v0/b/cardel-website.appspot.com/o/public%2Fposters%2F${file}?alt=media&amp;token=t`;
+  const page = `
+    <img src="${fb("birchwood-a-southern-prairie-nrr-villa-poster-1_640x640.webp")}" srcset="${fb("birchwood-a-southern-prairie-nrr-villa-poster-1_1536x1536.webp")} 1536w">
+    <img src="${fb("birchwood-b-coastal-nrr-villa-poster-2_640x640.webp")}">
+    <img src="https://www1.cardelhomes.com/logo.svg">
+    <script>const data = {elevations:[{name:"Modern Farmhouse - C",image:{paths:{sm:"public/elevations/birchwood-c-modern-farmhouse-nrr-villa-3_640x640.webp","2xl":"public/elevations/birchwood-c-modern-farmhouse-nrr-villa-3_1536x1536.webp"}}}],
+      related:[{poster:{paths:{sm:"public/posters/sylvan-a-southern-prairie-nrr-villa-poster_640x640.webp"}}}]}</script>`;
+
+  it("takes each elevation once, at its largest, and nothing of another plan's or the site's", () => {
+    expect(elevationPictures(page, "Birchwood Paired")).toEqual([
+      "https://firebasestorage.googleapis.com/v0/b/cardel-website.appspot.com/o/public%2Fposters%2Fbirchwood-a-southern-prairie-nrr-villa-poster-1_1536x1536.webp?alt=media&token=t",
+      "https://firebasestorage.googleapis.com/v0/b/cardel-website.appspot.com/o/public%2Fposters%2Fbirchwood-b-coastal-nrr-villa-poster-2_640x640.webp?alt=media&token=t",
+      "https://storage.googleapis.com/cardel-website.appspot.com/public/elevations/birchwood-c-modern-farmhouse-nrr-villa-3_1536x1536.webp",
+    ]);
+  });
+
+  it("adds them after the plan's own picture, which a larger copy replaces in place", async () => {
+    const plan = cardelHomeType({
+      planKey: "birchwood-paired",
+      name: "Birchwood Paired",
+      price: 429990,
+      priceDisplay: "$429,990",
+      beds: "3",
+      baths: "2.5",
+      sqft: 1920,
+      garages: null,
+      homeType: null,
+      quickMoveIn: false,
+      comingSoon: false,
+      sourceUrl: "https://www1.cardelhomes.com/florida/north-river-ranch/homes/birchwood-paired",
+      galleryImages: ["https://storage.googleapis.com/cardel-website.appspot.com/public/elevations/birchwood-c-modern-farmhouse-nrr-villa-3_640x640.webp"],
+      blueprintImages: [],
+    });
+    const asked: string[] = [];
+    const got = await withElevations(plan, async (url) => {
+      asked.push(url);
+      return page;
+    });
+    expect(asked).toEqual(["https://www1.cardelhomes.com/florida/north-river-ranch/homes/birchwood-paired/elevations"]);
+    expect(got.galleryImages).toHaveLength(3);
+    expect(got.galleryImages[0]).toBe("https://storage.googleapis.com/cardel-website.appspot.com/public/elevations/birchwood-c-modern-farmhouse-nrr-villa-3_1536x1536.webp");
+  });
+
+  it("leaves a plan as it was when its elevations page will not load", async () => {
+    const plan = { ...cardelHomeType({ planKey: "x", name: "Windsor", price: null, priceDisplay: null, beds: "", baths: "", sqft: null, garages: null, homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: "https://www1.cardelhomes.com/florida/north-river-ranch/homes/windsor", galleryImages: ["a.webp"], blueprintImages: [] }) };
+    expect(await withElevations(plan, async () => { throw new Error("fetch: 404"); })).toBe(plan);
   });
 });
