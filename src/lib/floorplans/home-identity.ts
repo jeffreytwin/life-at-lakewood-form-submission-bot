@@ -5,7 +5,12 @@
 // Palms Crossing - Ready Feb 2027", then "Ready February 2027", and each
 // new name was offered and written as a new home — three rows on the site
 // for one house (Jeff, 2026-09-27). Its own page stays the same, so a home
-// is known by that page first (sameHome), and by its name only after.
+// is known by that page first (sameHome), and by its name only after. A
+// page whose address ends in no number of the home's is still its own
+// where it is the only home read from it: Ryan's Amber Creek has one home,
+// read as "Mayport - Available in October 2026" one night and "12571
+// Amber Creek Circle" the next, on ".../specs/31336/.../amber-creek"
+// (Jeff, 2026-09-28).
 
 import { sameHome } from "@/lib/floorplans/extractors/claude-extract";
 import { namesAnAddress } from "@/lib/floorplans/standardize";
@@ -30,6 +35,13 @@ export function nameKept(filed: string, read: string): string {
   return normKey(read).startsWith(normKey(filed)) ? filed : read;
 }
 
+/** A link as one page: no query, no trailing slash, any case. */
+const pageOf = (url: string | null | undefined): string => (url ?? "").split(/[?#]/)[0].replace(/\/+$/, "").toLowerCase();
+
+/** Two names that are two street addresses: two houses, whatever else they share. */
+const twoAddresses = (a: string, b: string): boolean =>
+  namesAnAddress(a) && namesAnAddress(b) && a.trim().match(/^\d+/)?.[0] !== b.trim().match(/^\d+/)?.[0];
+
 const asHome = (row: FiledHome): NormalizedPlan | null => {
   const record = row.record as NormalizedPlan | null;
   return record?.quickMoveIn === true ? record : null;
@@ -46,9 +58,18 @@ const asHome = (row: FiledHome): NormalizedPlan | null => {
  */
 export function filedAsBefore(plans: NormalizedPlan[], filed: FiledHome[]): NormalizedPlan[] {
   const homes = filed.map((row) => ({ row, home: asHome(row) })).filter((h): h is { row: FiledHome; home: NormalizedPlan } => h.home !== null);
-  const candidates = plans.map((plan) =>
-    plan.quickMoveIn ? homes.filter(({ row, home }) => row.plan_key === plan.planKey || sameHome(home, plan)) : []
-  );
+  // How many of this run's homes each page was read for: a page only one
+  // of them came from is that home's, whatever its address ends in.
+  const readOn = new Map<string, number>();
+  for (const plan of plans) if (plan.quickMoveIn && pageOf(plan.sourceUrl)) readOn.set(pageOf(plan.sourceUrl), (readOn.get(pageOf(plan.sourceUrl)) ?? 0) + 1);
+  const candidates = plans.map((plan) => {
+    if (!plan.quickMoveIn) return [];
+    const page = pageOf(plan.sourceUrl);
+    const onlyHomeOn = (home: NormalizedPlan) => page !== "" && readOn.get(page) === 1 && pageOf(home.sourceUrl) === page;
+    return homes.filter(
+      ({ row, home }) => (row.plan_key === plan.planKey || sameHome(home, plan) || onlyHomeOn(home)) && !twoAddresses(home.name, plan.name)
+    );
+  });
   // A row more than one of this run's homes could be says nothing about either.
   const claims = new Map<string, number>();
   for (const found of candidates) for (const { row } of found) claims.set(row.plan_key, (claims.get(row.plan_key) ?? 0) + 1);
@@ -80,6 +101,6 @@ export function alreadyFiled(offered: NormalizedPlan | null, filed: FiledHome[])
   if (!offered?.quickMoveIn) return false;
   return filed.some((row) => {
     const home = asHome(row);
-    return home !== null && row.plan_key !== offered.planKey && sameHome(home, offered);
+    return home !== null && row.plan_key !== offered.planKey && sameHome(home, offered) && !twoAddresses(home.name, offered.name);
   });
 }
