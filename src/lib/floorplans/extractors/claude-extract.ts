@@ -1230,6 +1230,13 @@ export interface ClaudeExtractParams {
    * builders that sell so (SERIES_BUILDERS).
    */
   keepSeriesApart?: boolean;
+  /**
+   * Read through a browser (extractWithRender): a CSS selector the list
+   * page is read only once it shows, for a page that fetches its plans
+   * after its header has drawn (render.ts, RenderOptions.waitFor; Neal
+   * Signature's Waterbury Park, ".p7-home-card").
+   */
+  waitFor?: string;
 }
 
 /**
@@ -1682,7 +1689,10 @@ export async function extractWithRender(params: ClaudeExtractParams): Promise<No
       }
       return renderSlot(() => renderPage(url, opts));
     };
-    return extractPages(params, renderPage, 8, {
+    // A list page that fetches its plans after its header: read once it shows them.
+    const waitFor = typeof params.waitFor === "string" && params.waitFor.trim() ? params.waitFor.trim() : null;
+    const readList: PageReader = waitFor ? (url, opts) => renderPage(url, { ...opts, waitFor }) : renderPage;
+    return extractPages(params, readList, 8, {
       press: true,
       readPlanPage: fetchThenRender,
       renderAgain: (url, opts) => renderSlot(() => renderPage(url, opts)),

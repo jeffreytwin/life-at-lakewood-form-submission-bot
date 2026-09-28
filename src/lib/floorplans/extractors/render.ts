@@ -362,7 +362,19 @@ async function openGalleries(page: Page): Promise<number> {
 export interface RenderOptions {
   /** Press the page's own control for one of these before reading it. */
   press?: readonly string[];
+  /**
+   * A CSS selector the page is read only once it shows (WAIT_FOR_MS at
+   * most): the part it fetches on its own after its header has drawn.
+   * Neal Signature's Waterbury Park page says "3,138 – 4,189 Sq. Ft." at
+   * the top, which passed for drawn, and its four plan cards arrive after;
+   * a read taken before them found no plans, and the run failed as often
+   * as not (Jeff, 2026-09-28: ".p7-home-card").
+   */
+  waitFor?: string;
 }
+
+/** The longest a page is given to show what `waitFor` asks for. */
+const WAIT_FOR_MS = 20_000;
 
 /**
  * The page's markup, once it has stopped moving. A page can send itself
@@ -519,6 +531,23 @@ async function renderOnce(
       });
     });
 
+    // A part of the page asked for by name: waited for once the page has
+    // been seen whole, since it may load only in view, and walked again
+    // for the pictures it brought.
+    let waited: boolean | null = null;
+    if (opts.waitFor) {
+      waited = await page
+        .waitForSelector(opts.waitFor, { timeout: WAIT_FOR_MS })
+        .then(() => true)
+        .catch(() => false);
+      if (waited) {
+        await new Promise((done) => setTimeout(done, 1_500));
+        await seeWholePage(page).catch(() => {});
+      } else {
+        logger.warn("Floor plan page never showed what it was waited for", { url, waitFor: opts.waitFor });
+      }
+    }
+
     // A page that keeps part of itself behind a tab: press it, let what
     // it draws arrive, and walk the page again for what that loaded.
     let pressed: string | null = null;
@@ -541,7 +570,7 @@ async function renderOnce(
     });
 
     const html = await settledContent(page);
-    logger.info("Floor plan page rendered", { url, quiet, ready, pressed, gathered, bytes: html.length });
+    logger.info("Floor plan page rendered", { url, quiet, ready, waited, pressed, gathered, bytes: html.length });
     return { url: page.url(), html, pressed };
   } finally {
     await page.close().catch(() => {});
