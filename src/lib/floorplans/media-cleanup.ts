@@ -1,15 +1,16 @@
 // What a connection Reset does with the pictures it imported: their files
-// leave the site's Media Manager, their rendered drawings leave storage,
-// and their rows leave fp_media_map, so the next Run imports everything
-// afresh and tests the whole path from the builder's site (Jeff,
-// 2026-09-20: a Reset wipes everything). A picture another plan on the
-// site still uses is kept, since its row would break without the file.
+// leave the site's Media Manager, their rendered drawings and stored
+// copies leave storage, and their rows leave fp_media_map, so the next Run
+// imports everything afresh and tests the whole path from the builder's
+// site (Jeff, 2026-09-20: a Reset wipes everything). A picture another
+// plan on the site still uses is kept, since its row would break without
+// the file.
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { failedAt } from "@/lib/shared/describe-error";
 import { deleteMediaFiles } from "@/lib/wix/client";
-import { askableBatches, isSvgUrl, mediaUrlsOf, RASTER_BUCKET, rasterStoragePath, urlsToRelease, wixFileIdOf } from "@/lib/floorplans/media";
+import { askableBatches, copyStoragePaths, isSvgUrl, mediaUrlsOf, RASTER_BUCKET, rasterStoragePath, urlsToRelease, wixFileIdOf } from "@/lib/floorplans/media";
 
 export interface PlanScope {
   site_id: string;
@@ -22,6 +23,7 @@ export interface MediaRelease {
   urls: number;
   filesDeleted: number;
   filesFailed: string[];
+  /** Files removed from storage: rendered drawings and copies of pictures Wix would not take from the builder. */
   rasters: number;
   rows: number;
 }
@@ -93,12 +95,19 @@ export async function releaseConnectionMedia(wixSiteId: string | null, scope: Pl
     }
   }
 
-  const rasterPaths = rows
-    .filter((r) => r.content_hash && isSvgUrl(r.source_url))
-    .map((r) => rasterStoragePath(scope.site_id, r.content_hash as string));
-  for (let i = 0; i < rasterPaths.length; i += CHUNK) {
-    const { data, error } = await supabase.storage.from(RASTER_BUCKET).remove(rasterPaths.slice(i, i + CHUNK));
-    if (error) logger.warn("Reset could not remove rendered drawings from storage", { error: error.message });
+  // Rendered drawings, and the copies of pictures Wix would not take from
+  // the builder's link; a picture that was never copied has nothing there,
+  // and removing a path that is not there is not an error.
+  const storedPaths = rows
+    .filter((r) => r.content_hash)
+    .flatMap((r) =>
+      isSvgUrl(r.source_url)
+        ? [rasterStoragePath(scope.site_id, r.content_hash as string)]
+        : copyStoragePaths(scope.site_id, r.content_hash as string)
+    );
+  for (let i = 0; i < storedPaths.length; i += CHUNK) {
+    const { data, error } = await supabase.storage.from(RASTER_BUCKET).remove(storedPaths.slice(i, i + CHUNK));
+    if (error) logger.warn("Reset could not remove stored pictures from storage", { error: error.message });
     else result.rasters += data?.length ?? 0;
   }
 
