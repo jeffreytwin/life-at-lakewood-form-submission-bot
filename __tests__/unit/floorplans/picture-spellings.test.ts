@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fieldChanges, mergeForUpdate, samePictures, withDescriptionFrom } from "@/lib/floorplans/diff";
-import { fullSize, onePerPicture, pictureKey } from "@/lib/floorplans/extractors/plan-page";
-import { viewerFills } from "@/lib/floorplans/extractors/claude-extract";
+import { fullSize, onePerPicture, pictureKey, pictureSize } from "@/lib/floorplans/extractors/plan-page";
+import { drawingsOrPhotos, viewerFills } from "@/lib/floorplans/extractors/claude-extract";
 import { withKnownSpellings } from "@/lib/floorplans/pictures";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -128,5 +128,39 @@ describe("the viewer's duplicates leave the record (Jeff, 2026-09-25)", () => {
     const viewer = ["2299711", "2299713", "2299715"].map((id) => `https://planviewer.cpsusa.com/nealcom/api/attachment/${id}`);
     const own = [azureNew[0], azureNew[1], `${up}/2026/02/10104754/Canoe-Creek_-Azure-60-4443-Elevation-C1.jpg${q1600}`];
     expect(fieldChanges(plan({ galleryImages: [...own, ...viewer] }), plan({ galleryImages: own })).map((c) => c.label)).toContain("photos");
+  });
+});
+
+describe("an ImageKit step is the same picture (Kolter's Bahia with Bonus, Jeff 2026-09-28)", () => {
+  const plans = "https://cdn.kolterhomes.com/kh-includes/communities/cresswind-lakewood-ranch/floorplans";
+  const fp1 = `${plans}/bahia-fp_fp1-marketing-image-3-26-211.jpg`;
+  const fp2 = `${plans}/bahia-bonus-fp-fp2-marketing-image_1440w_rev_12-9-20.jpg`;
+  const fp2At1200 = `${plans}/tr:w-1200/bahia-bonus-fp-fp2-marketing-image_1440w_rev_12-9-20.jpg`;
+  const fp2Preview = `${plans}/tr:w-600,q-10/bahia-bonus-fp-fp2-marketing-image_1440w_rev_12-9-20.jpg`;
+  const renderings = "https://cdn.kolterhomes.com/kh-includes/communities/cresswind-lakewood-ranch/renderings";
+
+  it("knows every drawn size, the blurred preview and the encoded name for the one file", () => {
+    expect(pictureKey(fp2At1200)).toBe(pictureKey(fp2));
+    expect(pictureKey(fp2Preview)).toBe(pictureKey(fp2));
+    expect(pictureKey(`${renderings}/tr:h-250,w-444,c-maintain_ratio/0212.jpg`)).toBe(pictureKey(`${renderings}/0212%2Ejpg`));
+    expect(pictureKey(fp1)).not.toBe(pictureKey(fp2));
+  });
+
+  it("ranks the original over a drawn size, and a drawn size over a blurred preview", () => {
+    expect(pictureSize(fp2)).toBe(Infinity);
+    expect(pictureSize(fp2At1200)).toBe(1200);
+    expect(pictureSize(fp2Preview)).toBe(1);
+  });
+
+  it("keeps each drawing once, at its original, where the run read it", () => {
+    const got = drawingsOrPhotos([fp1, fp2At1200, fp2Preview, fp2], { urls: [], meta: {} });
+    expect(got.blueprintImages).toEqual([fp1, fp2]);
+  });
+
+  it("proposes no change for a drawing read at another size", () => {
+    expect(samePictures([fp1, fp2], [fp1, fp2At1200])).toBe(true);
+    const current = plan({ blueprintImages: [fp1, fp2] });
+    const run = plan({ blueprintImages: drawingsOrPhotos([fp1, fp2At1200, fp2], { urls: [], meta: {} }).blueprintImages });
+    expect(fieldChanges(current, run).map((c) => c.field)).not.toContain("blueprintImages");
   });
 });

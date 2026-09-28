@@ -77,7 +77,7 @@ export async function PATCH(
 
     const { data: change, error: loadError } = await supabase
       .from("fp_pending_changes")
-      .select("id, status, proposed_record, new_value, site_id, community_id, builder_id, plan_key")
+      .select("id, status, change_type, field_changed, proposed_record, new_value, site_id, community_id, builder_id, plan_key")
       .eq("id", id)
       .maybeSingle();
     if (loadError) throw loadError;
@@ -203,11 +203,17 @@ export async function PATCH(
       }
     }
 
+    // A new plan's row, and a price change's, show the price; every other
+    // field's row keeps its own value. Writing the price over a
+    // description's or a gallery's broke what the queue showed, the alert
+    // an approval sends, and the check that keeps a rejected change from
+    // coming back (Kolter's Bahia with Bonus, 2026-09-28).
+    const priceRow = change.change_type === "add" || change.field_changed === "price";
     const { data: updated, error } = await supabase
       .from("fp_pending_changes")
       .update({
         proposed_record: record,
-        new_value: (record.priceDisplay as string) ?? change.new_value,
+        new_value: priceRow ? ((record.priceDisplay as string) ?? change.new_value) : change.new_value,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

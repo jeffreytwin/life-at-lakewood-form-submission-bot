@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { speaksAsOwner } from "@/lib/floorplans/owner-words";
 import { asTour } from "@/lib/floorplans/standardize";
+import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { onePerPicture, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 
 /** Canonical records written by the first slice carry the main image here instead of in galleryImages. */
@@ -142,6 +143,9 @@ export function descriptionChanged(current: NormalizedPlan, plan: NormalizedPlan
   const next = plan.description?.trim() ?? "";
   const before = current.description?.trim() ?? "";
   if (!next || next === before) return false;
+  // A card's spec line is no description, whatever stands (Kolter's,
+  // 2026-09-28); a run that reads one gives the plan ours instead.
+  if (looksLikeSpecList(next)) return false;
   if (!before) return true;
   if (readsAsProse(before) && !readsAsProse(next)) return false;
   const was = [before, builderText(current)];

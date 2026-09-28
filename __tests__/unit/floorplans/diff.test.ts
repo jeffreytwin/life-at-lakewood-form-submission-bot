@@ -294,3 +294,19 @@ describe("a gallery read only in part (Richmond's Fraser, Jeff 2026-09-25)", () 
     expect(merged.galleryImages).toEqual(fraser);
   });
 });
+
+describe("a card's spec line is never proposed as a description (Kolter's Bahia with Bonus, 2026-09-28)", () => {
+  const ours = "The Bahia with Bonus is available to be built in Cresswind. The price shown is the base price. This plan features 4 Bedrooms, 3 Baths and a 2 car garage.";
+  const line = "Island Collection - 3,433 Total Sq. Ft. 3 Bedroom (up to 4 Bedroom), Den, 3 Bath, Great Room, Bonus Room, 2-Car Garage";
+
+  it("leaves our sentence, and the builder's, where they stand", () => {
+    expect(descriptionChanged(plan({ description: ours }), plan({ description: line }))).toBe(false);
+    expect(descriptionChanged(plan({ description: "A home made for gathering, with a lanai." }), plan({ description: line }))).toBe(false);
+    expect(descriptionChanged(plan({ description: null }), plan({ description: line }))).toBe(false);
+  });
+
+  it("still proposes a description the builder wrote", () => {
+    const written = "The Bahia with Bonus adds a bonus room upstairs to the Bahia's open plan, with a den off the foyer and a lanai beyond the great room.";
+    expect(descriptionChanged(plan({ description: ours }), plan({ description: written }))).toBe(true);
+  });
+});
