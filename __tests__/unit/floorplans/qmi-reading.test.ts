@@ -170,6 +170,14 @@ describe("a card's line of facts is not a description (Kolter's Cresswind)", () 
     expect(looksLikeSpecList("Island Collection 2 Bedroom (up to 3 Bedroom), Den, 2 Bath, Great Room, 2-Car Garage")).toBe(true);
   });
 
+  it("knows one led by its series and its area, whose comma is no break (2026-09-28)", () => {
+    const line = "Island Collection - 3,433 Total Sq. Ft. 3 Bedroom (up to 4 Bedroom), Den, 3 Bath, Great Room, Bonus Room, 2-Car Garage";
+    expect(looksLikeSpecList(line)).toBe(true);
+    const [plan] = withDescriptions([home({ quickMoveIn: false, name: "Bahia with Bonus", description: line })], "Cresswind");
+    expect(plan.description).toMatch(/^The Bahia with Bonus is available to be built in Cresswind\./);
+    expect(plan.raw?.featuresLine).toBe(line);
+  });
+
   it("does not take a written description for one", () => {
     const written = "The Lido offers 1,675 square feet of open living, with a great room that opens to the lanai and a kitchen made for gathering.";
     expect(looksLikeFactsLine(written)).toBe(false);

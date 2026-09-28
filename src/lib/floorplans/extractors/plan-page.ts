@@ -683,8 +683,14 @@ export function pictureKey(src: string): string {
   // …/uploads/2026/05/23101259/ is named once more as …/uploads/2026/05/,
   // an address that shows nothing (Jeff, 2026-09-24). The folder of eight
   // digits is the time the copy was made, and the site keeps its name.
-  const upload = folder.match(/^https?:\/\/(?:[^/]*\.)?([^./]+\.[^./]+)(\/(?:[^/]+\/)*?wp-content\/uploads\/\d{4}\/\d{2}\/)(?:\d{8}\/)?$/i);
-  const place = upload ? `${upload[1].toLowerCase()}${upload[2]}` : folder;
+  // And a picture an ImageKit store draws is that picture at any size:
+  // Kolter gives one drawing as ".../floorplans/bahia-bonus-fp2.jpg", as
+  // ".../floorplans/tr:w-1200/bahia-bonus-fp2.jpg" and as a blurred
+  // ".../tr:w-600,q-10/..." preview, and the queue proposed the same
+  // drawing twice (Jeff, 2026-09-28). The step is a folder of its own.
+  const bare = folder.replace(/\/tr:[^/]*(?=\/)/g, "");
+  const upload = bare.match(/^https?:\/\/(?:[^/]*\.)?([^./]+\.[^./]+)(\/(?:[^/]+\/)*?wp-content\/uploads\/\d{4}\/\d{2}\/)(?:\d{8}\/)?$/i);
+  const place = upload ? `${upload[1].toLowerCase()}${upload[2]}` : bare;
   try {
     file = decodeURIComponent(file);
   } catch {
@@ -741,11 +747,21 @@ export function askedSize(src: string): number {
 
 /**
  * How large a picture's address says it is: a size in its file's name
- * ("-1200x801"), WordPress's "-scaled" original, a width its query asks
- * for; a file that names no size is the original, as large as there is.
+ * ("-1200x801"), WordPress's "-scaled" original, a width its query or an
+ * ImageKit step asks for; a file that names no size is the original, as
+ * large as there is.
  * Pure; exported for tests.
  */
 export function pictureSize(url: string): number {
+  // An ImageKit step: its width or height, and a blurred preview (a low
+  // quality asked for) the smallest there is, never the one kept.
+  const step = url.replace(/[?#].*$/, "").match(/\/tr:([^/]*)\//)?.[1];
+  if (step) {
+    const quality = step.match(/(?:^|,)q-(\d+)/);
+    if (quality && Number(quality[1]) < 50) return 1;
+    const sides = [...step.matchAll(/(?:^|,)[wh]-(\d+)/g)].map((m) => Number(m[1]));
+    if (sides.length) return Math.max(...sides);
+  }
   const file = url.replace(/[?#].*$/, "").split("/").pop() ?? "";
   const named = file.match(/-(\d{2,5})x(\d{2,5})(?=[-_.])/);
   if (named) return Math.max(Number(named[1]), Number(named[2]));

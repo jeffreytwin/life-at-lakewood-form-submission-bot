@@ -1460,8 +1460,8 @@ export function drawingsOrPhotos(
 ): { blueprintImages: string[]; galleryImages: string[]; galleryMeta: Record<string, GalleryMeta> } {
   const room = (u: string) => photos.meta[u]?.room;
   const photographs = new Set(photos.urls.filter((u, i) => i === 0 || (room(u) && room(u) !== "other")).map(pictureKey));
-  const keys = drawings.map(pictureKey);
-  const blueprintImages = drawings.filter((u, i) => !photographs.has(keys[i]) && keys.indexOf(keys[i]) === i);
+  // Each drawing once, at its largest spelling (Kolter's, 2026-09-28).
+  const blueprintImages = onePerPicture(drawings).photos.filter((u) => !photographs.has(pictureKey(u)));
   const drawn = new Set(blueprintImages.map(pictureKey));
   const galleryImages = photos.urls.filter((u, i) => i === 0 || !drawn.has(pictureKey(u)));
   const galleryMeta = Object.fromEntries(Object.entries(photos.meta).filter(([u]) => galleryImages.includes(u)));
