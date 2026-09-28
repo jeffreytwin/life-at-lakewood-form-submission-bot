@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { builderPlanPage, extractMpcAggregator, folderOf, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { builderPlanPage, extractMpcAggregator, folderOf, listPageHtml, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -169,5 +169,35 @@ describe("a plan's tour from its builder's own page (M/I's Candor, 2026-09-24)",
     // A home's tour is of the house itself: its plan's page is not asked.
     expect(tour("17524 Macarthur Loop")).toBeNull();
     expect(asked.some((u) => /macarthur/i.test(u) && u.startsWith(own))).toBe(false);
+  });
+});
+
+describe("the list page asked for again when the first ask gets no answer (Neal's Everly, Jeff 2026-09-28)", () => {
+  const url = "https://www.wellenpark.com/available-homes/";
+  const answers = (...steps: (Response | Error)[]) => {
+    let n = 0;
+    const get = (async () => {
+      const step = steps[n++];
+      if (step instanceof Error) throw step;
+      return step;
+    }) as unknown as typeof fetch;
+    return { get, asked: () => n };
+  };
+
+  it("reads the page on the second ask", async () => {
+    const { get, asked } = answers(new TypeError("fetch failed"), new Response("<html>cards</html>"));
+    expect(await listPageHtml(url, get, 0)).toBe("<html>cards</html>");
+    expect(asked()).toBe(2);
+  });
+
+  it("says which page failed when both asks do", async () => {
+    const { get } = answers(new TypeError("fetch failed"), new TypeError("fetch failed"));
+    await expect(listPageHtml(url, get, 0)).rejects.toThrow(`fetch ${url}: fetch failed`);
+  });
+
+  it("does not ask again for a page that is not there", async () => {
+    const { get, asked } = answers(new Response("", { status: 404 }), new Response("<html></html>"));
+    await expect(listPageHtml(url, get, 0)).rejects.toThrow(`fetch ${url}: 404`);
+    expect(asked()).toBe(1);
   });
 });

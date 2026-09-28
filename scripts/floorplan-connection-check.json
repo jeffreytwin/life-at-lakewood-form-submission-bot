@@ -1,27 +1,9 @@
 {
-  "raw": [
-    {
-      "url": "https://www.ryanhomes.com/new-homes/communities/10222120152673/florida/lakewood-ranch/amber-creek",
-      "around": [
-        "12571",
-        "Amber Creek Circle",
-        "Quick Move",
-        "Available in"
-      ],
-      "chars": 500,
-      "count": 2
-    }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
-  "checks": [
-    {
-      "builder": "Neal Communities",
-      "community": "Everly",
-      "noSurvey": true
-    }
-  ],
+  "checks": [],
   "anatomy": [],
   "detailNames": [],
   "probe": [],

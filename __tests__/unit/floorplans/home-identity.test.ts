@@ -94,6 +94,36 @@ describe("a home read under another name is the home already filed", () => {
   });
 });
 
+describe("the only home read from a page is the home filed from it (Ryan's Amber Creek, Jeff 2026-09-28)", () => {
+  const spec = "https://www.ryanhomes.com/new-homes/communities/10222120152673/specs/31336/florida/lakewood-ranch/amber-creek";
+  const dated = home({ planKey: "mayport-available-in-october-2026", name: "Mayport - Available in October 2026", sourceUrl: spec, relatedPlanName: "Mayport" });
+
+  it("is filed under the row it was, and takes its street address", () => {
+    const read = home({ planKey: "12571-amber-creek-circle", name: "12571 Amber Creek Circle", sourceUrl: spec, relatedPlanName: "Mayport" });
+    const [plan] = filedAsBefore([read], [row(dated, "2026-09-22T20:48:00Z")]);
+    expect(plan.planKey).toBe("mayport-available-in-october-2026");
+    expect(plan.name).toBe("12571 Amber Creek Circle");
+  });
+
+  it("stays on its own row where the site already has it twice", () => {
+    const read = home({ planKey: "12571-amber-creek-circle", name: "12571 Amber Creek Circle", sourceUrl: spec });
+    const rows = [row(dated, "2026-09-22T20:48:00Z"), row(read, "2026-09-28T14:07:00Z")];
+    expect(filedAsBefore([read], rows)[0]).toBe(read);
+  });
+
+  it("is not another home the page was read for too", () => {
+    const one = home({ planKey: "12571-amber-creek-circle", name: "12571 Amber Creek Circle", sourceUrl: spec });
+    const two = home({ planKey: "12575-amber-creek-circle", name: "12575 Amber Creek Circle", sourceUrl: spec });
+    expect(filedAsBefore([one, two], [row(dated, "2026-09-22T20:48:00Z")])).toEqual([one, two]);
+  });
+
+  it("is never a home at another street address", () => {
+    const sold = home({ planKey: "12567-amber-creek-circle", name: "12567 Amber Creek Circle", sourceUrl: spec });
+    const read = home({ planKey: "12571-amber-creek-circle", name: "12571 Amber Creek Circle", sourceUrl: spec });
+    expect(filedAsBefore([read], [row(sold, "2026-09-20T00:00:00Z")])[0]).toBe(read);
+  });
+});
+
 describe("an addition left from a run that read the home under another name", () => {
   const rows = [row(home(), "2026-09-24T15:54:00Z")];
 

@@ -402,6 +402,33 @@ function resolveBuilderSlug(builderName: string, override?: string): string | nu
   return k || null;
 }
 
+/**
+ * The list page, asked for once more a few seconds later where the first
+ * ask got no answer at all or a server error: Wellen Park dropped one of
+ * a run of connections' requests, and Neal's Everly failed on "fetch
+ * failed" alone (Jeff, 2026-09-28). A second failure says which page.
+ * `wait` is for tests.
+ */
+export async function listPageHtml(listUrl: string, get: typeof fetch = fetch, wait = 3_000): Promise<string> {
+  for (let attempt = 1; ; attempt++) {
+    let retryable = true;
+    try {
+      const res = await get(listUrl, {
+        headers: { "user-agent": UA, accept: "text/html" },
+        redirect: "follow",
+        signal: AbortSignal.timeout(45_000),
+      });
+      if (res.ok) return await res.text();
+      retryable = res.status >= 500 || res.status === 429;
+      throw new Error(`fetch ${listUrl}: ${res.status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (attempt >= 2 || !retryable) throw new Error(message.startsWith(`fetch ${listUrl}:`) ? message : `fetch ${listUrl}: ${message}`);
+      await new Promise((done) => setTimeout(done, wait));
+    }
+  }
+}
+
 export async function extractMpcAggregator(params: {
   source?: string;
   builderName?: string;
@@ -425,13 +452,7 @@ export async function extractMpcAggregator(params: {
   const neighborhood = (params.neighborhood ?? normKey(communityShort)) || null;
 
   const listUrl = params.url ?? source.origin + source.listPath;
-  const res = await fetch(listUrl, {
-    headers: { "user-agent": UA, accept: "text/html" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(45_000),
-  });
-  if (!res.ok) throw new Error(`fetch ${listUrl}: ${res.status}`);
-  const html = await res.text();
+  const html = await listPageHtml(listUrl);
   const origin = new URL(listUrl).origin;
   // Lakewood Ranch draws its own cards: filtered by the builder and village
   // they spell out, and read no further than the card (a plan's page there
