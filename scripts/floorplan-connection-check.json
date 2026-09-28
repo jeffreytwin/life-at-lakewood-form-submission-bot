@@ -1,6 +1,6 @@
 {
   "raw": [],
-  "qmiFlags": true,
+  "qmiFlags": false,
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
