@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isBadge, withoutBadges, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
+import { isBadge, isBanner, withoutBadges, withoutBanners, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Ashton Woods' Duval (Signature) at Oakfield Trails, as the queue had it (Jeff, 2026-09-28).
@@ -73,5 +73,35 @@ describe("another plan's pictures are not this plan's (Ashton Woods' Oakfield Tr
     const got = withoutOtherPlansPictures([plan("Duval", [plant, front]), plan("Plant", [plant]), home]);
     expect(got[0].galleryImages).toEqual([plant, front]);
     expect(got[2]).toBe(home);
+  });
+});
+
+describe("a page's banner is no photo (Homes by Towne's Palmera, Jeff 2026-09-28)", () => {
+  const cdn = "https://d195jfz94fv5eb.cloudfront.net/uploads";
+  const hero = (n: number) => `${cdn}/hero/florida/palmera-at-wellen-park/fl-palmera-at-wellen-park-tideland-lot281-model-${n}-1920.jpg`;
+  const photo = (n: number) => `${cdn}/gallery/florida/palmera-at-wellen-park/fl-palmera-at-wellen-park-tideland-lot281-model-${n}-900.jpg`;
+
+  it("knows a banner by the folder the site keeps it in", () => {
+    expect(isBanner(hero(1))).toBe(true);
+    expect(isBanner("https://cdn.example.com/banners/spring-event.jpg?w=1920")).toBe(true);
+    expect(isBanner(photo(1))).toBe(false);
+    expect(isBanner("https://cdn.example.com/uploads/hero-kitchen.jpg")).toBe(false);
+  });
+
+  it("takes the banners out of a plan's photos, and what was said of them", () => {
+    const tideland = plan("Tideland", [hero(1), photo(3), hero(3), photo(2), hero(2), photo(1)], {
+      galleryMeta: { [hero(1)]: { kind: "primary", room: "primary", caption: null }, [photo(1)]: { kind: "exterior", room: "exterior", caption: null } },
+    });
+    const [kept] = withoutBanners([tideland]);
+    expect(kept.galleryImages).toEqual([photo(3), photo(2), photo(1)]);
+    expect(Object.keys(kept.galleryMeta ?? {})).toEqual([photo(1)]);
+  });
+
+  it("leaves a plan whose only pictures are banners, and one with none, as it is", () => {
+    const only = plan("Outrigger", [hero(1)]);
+    const clean = plan("Galley", [photo(1), photo(2)]);
+    const [a, b] = withoutBanners([only, clean]);
+    expect(a).toBe(only);
+    expect(b).toBe(clean);
   });
 });

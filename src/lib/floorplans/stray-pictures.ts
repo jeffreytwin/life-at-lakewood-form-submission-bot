@@ -9,7 +9,16 @@
 // community's other plans, each a picture named for its plan
 // ("cms_Plant-Q-Scheme-128.jpg", "cms_Coquina-A-3-Car-Scheme-102.jpg"),
 // and Duval (Signature), a two-story plan, came through with four
-// one-story homes after its own. No IO.
+// one-story homes after its own.
+//
+// A page's banner: Homes by Towne keeps the slides drawn across the top of
+// a community's page in a folder of their own (".../uploads/hero/florida/
+// palmera-at-wellen-park/...-tideland-lot281-model-1-1920.jpg"), wide crops
+// of photos its plans' galleries also carry at their own shape
+// (".../uploads/gallery/...-model-1-900.jpg"). Named for the model they
+// show, four came through as new photos of Palmera's Tideland and
+// Outrigger (Jeff, 2026-09-28: "they're really widescreen … I don't need
+// these"). No IO.
 
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -54,6 +63,23 @@ function withGallery(plan: NormalizedPlan, keep: (src: string, i: number) => boo
 /** The plans and homes without a badge among their photos. Pure; exported for tests. */
 export function withoutBadges(plans: NormalizedPlan[]): NormalizedPlan[] {
   return plans.map((plan) => withGallery(plan, (src) => !isBadge(src)));
+}
+
+/** A folder a site keeps its page banners in: ".../uploads/hero/...", ".../banners/...". */
+const BANNER_FOLDER = /\/(?:hero|heroes|banners?)\//i;
+
+/** Whether a picture is kept among a site's page banners. Pure; exported for tests. */
+export function isBanner(url: string): boolean {
+  return BANNER_FOLDER.test(url.replace(/[?#].*$/, ""));
+}
+
+/**
+ * The plans and homes without a page's banners among their photos, where
+ * they have a photo of their own to show instead; a plan that has only a
+ * banner keeps it. Pure; exported for tests.
+ */
+export function withoutBanners(plans: NormalizedPlan[]): NormalizedPlan[] {
+  return plans.map((plan) => (plan.galleryImages.every(isBanner) ? plan : withGallery(plan, (src) => !isBanner(src))));
 }
 
 /**

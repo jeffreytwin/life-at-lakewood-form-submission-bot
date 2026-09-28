@@ -1,9 +1,5 @@
 {
-  "raw": [
-    { "url": "https://homesbytowne.com/florida/palmera-at-wellen-park/tideland", "around": ["uploads/hero", "uploads/gallery"], "chars": 1200, "count": 2, "whole": true },
-    { "url": "https://homesbytowne.com/florida/palmera-at-wellen-park/outrigger", "around": ["uploads/hero"], "chars": 1200, "count": 1, "whole": true },
-    { "url": "https://homesbytowne.com/florida/shellstone-at-waterside/tideland", "around": ["uploads/hero"], "chars": 1200, "count": 1 }
-  ],
+  "raw": [],
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
