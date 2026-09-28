@@ -161,6 +161,9 @@ function useCoarsePointer(): boolean {
   );
 }
 
+/** The mark of a picture a change adds to the live plan. */
+const NEW_PICTURE = "#16a34a";
+
 /**
  * One gallery in the edit overlay. Photos move by drag and drop or by the
  * arrows; hovering shows the picture large (Jeff, 2026-09-19).
@@ -172,6 +175,7 @@ function GalleryEditor({
   meta,
   isPhotos,
   onPreview,
+  added,
 }: {
   label: string;
   list: string[];
@@ -179,10 +183,13 @@ function GalleryEditor({
   meta?: Record<string, GalleryMeta>;
   isPhotos: boolean;
   onPreview: (p: Preview | null) => void;
+  /** Pictures the change adds to the live plan, marked so a reviewer sees what changed (Jeff, 2026-09-28). */
+  added?: Set<string>;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const coarse = useCoarsePointer();
   if (list.length === 0) return null;
+  const newCount = added ? list.filter((url) => added.has(url)).length : 0;
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
     if (target < 0 || target >= list.length) return;
@@ -193,10 +200,17 @@ function GalleryEditor({
       <label>{label}</label>
       <p className="text-muted" style={{ fontSize: 11, margin: "0 0 6px" }}>
         {coarse ? "Use the arrows to move a picture." : "Drag a picture to where it belongs, or use the arrows. Hover to see it large."}
+        {newCount > 0 && (
+          <span style={{ color: NEW_PICTURE, fontWeight: 600 }}>
+            {" "}
+            {newCount} new {isPhotos ? `photo${newCount === 1 ? "" : "s"}` : `drawing${newCount === 1 ? "" : "s"}`} outlined in green.
+          </span>
+        )}
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {list.map((url, i) => {
           const m = meta?.[url];
+          const isNew = added?.has(url) === true;
           return (
             <div
               key={url}
@@ -223,8 +237,18 @@ function GalleryEditor({
                   width: 96, height: 64, objectFit: "cover", borderRadius: 6,
                   border: i === 0 && isPhotos ? "2px solid var(--accent, #2563eb)" : "1px solid #ccc",
                   display: "block",
+                  ...(isNew ? { outline: `3px solid ${NEW_PICTURE}`, outlineOffset: 1 } : {}),
                 }}
               />
+              {isNew && (
+                <span
+                  className="text-sm"
+                  title="Not on the live plan: this change adds it"
+                  style={{ position: "absolute", top: 2, right: 4, background: NEW_PICTURE, color: "#fff", borderRadius: 4, padding: "0 4px", fontWeight: 600 }}
+                >
+                  new
+                </span>
+              )}
               {i === 0 && isPhotos && (
                 <span className="text-sm" style={{ position: "absolute", top: 2, left: 4, background: "rgba(0,0,0,0.6)", color: "#fff", borderRadius: 4, padding: "0 4px" }}>
                   main
@@ -272,12 +296,14 @@ export default function FloorPlansPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [lastPicked, setLastPicked] = useState<string | null>(null);
   const [rejectingSelected, setRejectingSelected] = useState(false);
+  const [sortingSelected, setSortingSelected] = useState(false);
   /** Seconds the run is waiting out a Wix throttle, so the buttons say so instead of looking stuck. */
   const [throttleWait, setThrottleWait] = useState(0);
   const [editing, setEditing] = useState<Group | null>(null);
   // The plan in the overlay, whole: the list leaves out its captions and the
   // builder's own picture sets (changes/route.ts), which the overlay reads.
   const [editWhole, setEditWhole] = useState<ProposedRecord | null>(null);
+  const [editAdded, setEditAdded] = useState<Set<string>>(new Set());
   const openKey = useRef<string | null>(null);
   // The page of the queue shown, from 0.
   const [page, setPage] = useState(0);
@@ -569,6 +595,7 @@ export default function FloorPlansPage() {
     setPreview(null);
     setSorted(null);
     setEditWhole(null);
+    setEditAdded(new Set());
     setEditing(group);
     openKey.current = group.key;
     fetch(`/api/internal/floorplans/changes/${group.lead.id}`)
@@ -576,7 +603,11 @@ export default function FloorPlansPage() {
       .then((data) => {
         const whole = (data?.proposed_record ?? null) as ProposedRecord | null;
         // Only while this plan is still the one open.
-        if (whole && openKey.current === group.key) setEditWhole(whole);
+        if (whole && openKey.current === group.key) {
+          setEditWhole(whole);
+          const added = Array.isArray(data?.addedPictures) ? (data.addedPictures as unknown[]).filter((u): u is string => typeof u === "string") : [];
+          setEditAdded(new Set(added));
+        }
       })
       .catch(() => {});
   }
@@ -797,6 +828,67 @@ export default function FloorPlansPage() {
   }
 
   /**
+   * Sorts the photos of the ticked plans, as the Sort button in the edit
+   * overlay sorts one: each photograph once, then the front of the house,
+   * the rooms, the other outside views (Jeff, 2026-09-28: faster than
+   * opening every plan). Written straight to the queue, not as a hand
+   * edit, so a later run may still bring the builder's new photos. The
+   * ticks stay, for an approval after a look.
+   */
+  async function sortSelected() {
+    const list = selectedGroups;
+    const slices = list.map((g) => pendingIds(g)).filter((ids) => ids.length);
+    setSortingSelected(true);
+    let sorted = 0;
+    let removed = 0;
+    let skipped = 0;
+    const failed: string[] = [];
+    let problem: string | null = null;
+    try {
+      while (slices.length) {
+        // Whole plans per request, so no plan's rows are split across two.
+        const ids: string[] = [];
+        while (slices.length && ids.length + slices[0].length <= MAX_IDS_PER_REQUEST) ids.push(...slices.shift()!);
+        if (!ids.length) ids.push(...slices.shift()!);
+        const res = await fetch("/api/internal/floorplans/changes/sort-photos", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ids }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !Array.isArray(data?.results)) {
+          problem = data?.error ?? `HTTP ${res.status}`;
+          break;
+        }
+        for (const r of data.results as { planKey: string; status: string; removed: number }[]) {
+          if (r.status === "sorted") {
+            sorted += 1;
+            removed += r.removed;
+          } else if (r.status === "skipped") skipped += 1;
+          else failed.push(r.planKey);
+        }
+        const remaining = (Array.isArray(data.remaining) ? data.remaining : []).filter((x: unknown): x is string => typeof x === "string");
+        if (remaining.length >= ids.length) {
+          problem = "the server made no progress";
+          break;
+        }
+        if (remaining.length) slices.unshift(remaining);
+        fetchChanges();
+      }
+    } catch (e) {
+      problem = e instanceof Error ? e.message : String(e);
+    } finally {
+      setSortingSelected(false);
+      fetchChanges();
+      const notes = [`Sorted the photos of ${sorted} plan${sorted === 1 ? "" : "s"}${removed ? `, taking out ${removed} duplicate photo${removed === 1 ? "" : "s"}` : ""}.`];
+      if (skipped) notes.push(`${skipped} had fewer than two photos and were left as they are.`);
+      if (failed.length) notes.push(`${failed.length} could not be sorted: ${failed.join(", ")}. Try again, or use Sort in the plan's edit window.`);
+      if (problem) notes.push(`Sorting stopped part way (${problem}); the plans not reached can be sorted again.`);
+      alert(notes.join("\n"));
+    }
+  }
+
+  /**
    * Rejects the ticked plans. A rejection sticks, so each can be brought
    * back one by one with Restore under the Rejected filter.
    */
@@ -864,14 +956,14 @@ export default function FloorPlansPage() {
               <button
                 className="btn btn-secondary"
                 onClick={() => approveGroups(pendingQuickMoveIns, "quick move-ins")}
-                disabled={bulkBusy || rejectingSelected}
+                disabled={bulkBusy || rejectingSelected || sortingSelected}
                 title="Every pending quick move-in the site and builder filters allow, whatever the view shows"
               >
                 {bulkBusy ? busyLabel : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
               </button>
             )}
             {pendingGroups.length > 0 && (
-              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy || rejectingSelected}>
+              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                 {bulkBusy ? busyLabel : `Approve All (${pendingGroups.length})`}
               </button>
             )}
@@ -1016,18 +1108,26 @@ export default function FloorPlansPage() {
             <div className="selection-bar">
               {selectedGroups.length === 0 ? (
                 <span className="text-muted text-sm">
-                  Tick plans to approve or reject several at once. Shift-click ticks every plan between two.
+                  Tick plans to approve, reject or sort the photos of several at once. Shift-click ticks every plan between two.
                 </span>
               ) : (
                 <>
                   <strong className="text-sm">{selectedGroups.length} selected</strong>
-                  <button className="btn btn-primary" onClick={approveSelected} disabled={bulkBusy || rejectingSelected}>
+                  <button className="btn btn-primary" onClick={approveSelected} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                     {bulkBusy ? busyLabel : `Approve selected (${selectedGroups.length})`}
                   </button>
-                  <button className="btn btn-secondary" onClick={rejectSelected} disabled={bulkBusy || rejectingSelected}>
+                  <button className="btn btn-secondary" onClick={rejectSelected} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                     {rejectingSelected ? "Rejecting…" : `Reject selected (${selectedGroups.length})`}
                   </button>
-                  <button className="btn btn-secondary" onClick={() => setSelected(new Set())} disabled={bulkBusy || rejectingSelected}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={sortSelected}
+                    disabled={bulkBusy || rejectingSelected || sortingSelected}
+                    title="Show each photo once and put the front of the house first, then the rooms, as Sort does in the edit window"
+                  >
+                    {sortingSelected ? "Sorting photos…" : `Sort photos (${selectedGroups.length})`}
+                  </button>
+                  <button className="btn btn-secondary" onClick={() => setSelected(new Set())} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                     Clear
                   </button>
                   {selectedBlocked > 0 && (
@@ -1057,7 +1157,7 @@ export default function FloorPlansPage() {
                           if (el) el.indeterminate = selectedGroups.length > 0 && !allSelected;
                         }}
                         onChange={pickAll}
-                        disabled={bulkBusy || rejectingSelected}
+                        disabled={bulkBusy || rejectingSelected || sortingSelected}
                       />
                     )}
                   </th>
@@ -1136,7 +1236,7 @@ export default function FloorPlansPage() {
                             aria-label={`Select ${rec?.name ?? c.plan_key}`}
                             checked={selected.has(g.key)}
                             onChange={(e) => pick(index, (e.nativeEvent as MouseEvent).shiftKey === true)}
-                            disabled={bulkBusy || rejectingSelected}
+                            disabled={bulkBusy || rejectingSelected || sortingSelected}
                           />
                         )}
                       </td>
@@ -1448,6 +1548,7 @@ export default function FloorPlansPage() {
                   meta={editRec?.galleryMeta}
                   isPhotos
                   onPreview={setPreview}
+                  added={editAdded}
                 />
                 <GalleryEditor
                   label="Blueprints"
@@ -1455,6 +1556,7 @@ export default function FloorPlansPage() {
                   setList={setEditBlueprints}
                   isPhotos={false}
                   onPreview={setPreview}
+                  added={editAdded}
                 />
                 {editGallery.length > 1 && (
                   <div className="form-group">
