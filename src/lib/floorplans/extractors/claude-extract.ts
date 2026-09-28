@@ -21,6 +21,7 @@ import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extrac
 import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
 import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
 import { looksLikeSpecList } from "@/lib/floorplans/description";
+import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -1185,6 +1186,13 @@ export interface ClaudeExtractParams {
   hint?: string;
   /** When the run stops opening pages (sync.ts, RUN_READ_MS); pages not started by then are left unread. */
   runDeadline?: number;
+  /**
+   * A plan listed in two series of the community is two plans, not one
+   * listed twice (series-labels.ts): Ashton Woods' Duval in Oakfield
+   * Trails' Traditional and Signature series. Set by the run for the
+   * builders that sell so (SERIES_BUILDERS).
+   */
+  keepSeriesApart?: boolean;
 }
 
 /**
@@ -1270,17 +1278,24 @@ async function extractPages(
       return { pageUrl, error: error instanceof Error ? error.message : String(error) };
     }
   });
+  // The series a plan is listed in, where the builder sells one plan in two (series-labels.ts).
+  const seriesOfPlan = (plan: NormalizedPlan) => (params.keepSeriesApart && params.url ? seriesOfPage(plan.sourceUrl, params.url) : null);
   const take = (plan: NormalizedPlan) => {
     // A base plan another of the community's pages already listed is
-    // that plan again, not a second one (mergeRepeatedPlan).
-    const twin = plan.quickMoveIn ? -1 : listed.findIndex((p) => !p.quickMoveIn && p.planKey === plan.planKey);
+    // that plan again, not a second one (mergeRepeatedPlan) — unless the
+    // other listing is in another of its series.
+    const series = plan.quickMoveIn ? null : seriesOfPlan(plan);
+    const twin = plan.quickMoveIn
+      ? -1
+      : listed.findIndex((p) => !p.quickMoveIn && p.planKey === plan.planKey && seriesOfPlan(p) === series);
     if (twin >= 0) {
       listed[twin] = mergeRepeatedPlan(listed[twin], plan);
       return;
     }
     // And a home another page listed is that home again (sameHome).
     if (plan.quickMoveIn && listed.some((p) => p.quickMoveIn && sameHome(p, plan))) return;
-    const planKey = distinctKey(plan, taken);
+    const inSeries = series && taken.has(plan.planKey) ? { ...plan, planKey: `${plan.planKey}-${normKey(series)}` } : plan;
+    const planKey = distinctKey(inSeries, taken);
     taken.add(planKey);
     listed.push({ ...plan, planKey });
   };
