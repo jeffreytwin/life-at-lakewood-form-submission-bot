@@ -38,7 +38,8 @@ import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
-import { withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
+import { homesOfPlan, withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
+import { fetchOrRender, planPageCandidates, withPlanPageDescription } from "@/lib/floorplans/stand-in-pages";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
 import { withKnownSpellings, withScrapedPictures } from "@/lib/floorplans/pictures";
@@ -412,6 +413,29 @@ export async function readPlanInFull(builderName: string, plan: NormalizedPlan):
   return reader ? reader(plan) : plan;
 }
 
+/** How long a stand-in's own page may take to read where the caller set no deadline. */
+const STAND_IN_PAGE_MS = 90_000;
+
+/**
+ * A stand-in plan read in full: its builder's own reader where there is
+ * one (Toll's model page, Taylor's), then its own page's description where
+ * that page can be found (stand-in-pages.ts). Past the deadline the page
+ * is left unread rather than read in a hurry.
+ */
+export async function readStandInInFull(
+  builderName: string,
+  plan: NormalizedPlan,
+  listed: NormalizedPlan[],
+  homes: NormalizedPlan[],
+  deadline: number
+): Promise<NormalizedPlan> {
+  if (PAGE_READERS[builderName]) return readPlanInFull(builderName, plan);
+  const candidates = planPageCandidates(plan, listed, homes);
+  if (!candidates.length) return plan;
+  if (Date.now() >= deadline) return { ...plan, pageUnread: true };
+  return withPlanPageDescription(plan, candidates, fetchOrRender(deadline));
+}
+
 interface PlanScopeIds {
   site_id: string;
   community_id: string;
@@ -478,12 +502,16 @@ export async function preparePlans(
   // from its homes on offer (stand-ins.ts): each is read from the home's own
   // page so it carries every picture, then linked like the rest.
   const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
+  const listed = plans.filter((p) => !p.quickMoveIn);
   const standIns = withStandIns(plans, rules);
   if (standIns.standIns.length) {
+    const deadline = opts.deadline ?? Date.now() + STAND_IN_PAGE_MS;
     const filled = await Promise.all(
       standIns.standIns.map(async (p) => {
+        const rule = rules.find((r) => r.planKey === p.planKey);
+        const homes = rule ? homesOfPlan(rule, plans) : [];
         try {
-          return await readPlanInFull(builder.name, p);
+          return await readStandInInFull(builder.name, p, listed, homes, deadline);
         } catch (err) {
           logger.warn("Stand-in plan page could not be read", { planKey: p.planKey, error: err instanceof Error ? err.message : String(err) });
           return p;

@@ -37,9 +37,9 @@ const priceOf = (p: NormalizedPlan): number | null =>
   typeof p.price === "number" && Number.isFinite(p.price) && p.price > 0 ? p.price : null;
 
 /**
- * The floor plan its homes stand in for: the pictures, drawings, description
- * and tour of the home with the most photos, its specs, and the lowest of
- * the homes' prices (it is the only home of the plan left, or the cheapest).
+ * The floor plan its homes stand in for: the pictures, drawings and tour
+ * of the home with the most photos, its specs, the description of the home
+ * the plan was made from, and the lowest of the homes' prices (it is the only home of the plan left, or the cheapest).
  * Drawings from the other homes follow. No score: a person sets it, or the
  * remembered one comes back (scores.ts). Null without a home.
  */
@@ -48,13 +48,15 @@ export function standInPlan(rule: StandInRule, homes: NormalizedPlan[]): Normali
   const richest = [...homes].sort((a, b) => b.galleryImages.length - a.galleryImages.length)[0];
   const priced = homes.filter((h) => priceOf(h) !== null).sort((a, b) => priceOf(a)! - priceOf(b)!);
   const cheapest = priced[0] ?? null;
-  const first = <T>(pick: (h: NormalizedPlan) => T | null | undefined): T | null => {
-    for (const h of [richest, ...homes]) {
-      const v = pick(h);
+  const source = homes.find((h) => h.planKey === rule.sourcePlanKey);
+  const pick = <T>(order: (NormalizedPlan | undefined)[], value: (h: NormalizedPlan) => T | null | undefined): T | null => {
+    for (const h of order) {
+      const v = h ? value(h) : null;
       if (v !== null && v !== undefined && v !== "") return v;
     }
     return null;
   };
+  const first = <T>(value: (h: NormalizedPlan) => T | null | undefined): T | null => pick([richest, ...homes], value);
   const blueprintImages = [...new Set(homes.flatMap((h) => h.blueprintImages))];
   const { relatedPlanKey: _k, relatedPlanName: _n, relatedPlanMatch: _m, ...base } = richest;
   void _k; void _n; void _m;
@@ -74,7 +76,12 @@ export function standInPlan(rule: StandInRule, homes: NormalizedPlan[]): Normali
     galleryImages: richest.galleryImages,
     galleryMeta: richest.galleryMeta,
     blueprintImages: [...richest.blueprintImages, ...blueprintImages.filter((u) => !richest.blueprintImages.includes(u))],
-    description: first((h) => h.description),
+    // The home the plan was made from speaks for it, whichever home has the
+    // most photos tonight: taking the richest one's text had the plan's
+    // description change hands between its homes from run to run (Adams'
+    // 2200, 2026-09-28). The plan's own page, where there is one, has the
+    // last word (stand-in-pages.ts).
+    description: pick([source, richest, ...homes], (h) => h.description),
     virtualTourUrl: first((h) => h.virtualTourUrl),
     virtualTourImage: first((h) => h.virtualTourImage),
     hasQuickMoveIns: true,

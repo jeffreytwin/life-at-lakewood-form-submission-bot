@@ -131,3 +131,14 @@ describe("withStandIns", () => {
     expect(withStandIns([plan({})], []).plans).toHaveLength(1);
   });
 });
+
+describe("a stand-in's description is the home it was made from, whichever home has the most photos (Adams' 2200, 2026-09-28)", () => {
+  it("takes the source home's text over the richest home's, and holds it from run to run", () => {
+    const own = { ...other, description: "Pre-Construction. To be built." };
+    const source = { ...palmiste, description: "Don't miss this rare opportunity to own the current Adams Homes model home." };
+    expect(standInPlan(rule, [source, own])!.description).toBe(source.description);
+    expect(standInPlan(rule, [own, source])!.description).toBe(source.description);
+    // The source home has none: the richest home's.
+    expect(standInPlan(rule, [{ ...source, description: null }, own])!.description).toBe(own.description);
+  });
+});

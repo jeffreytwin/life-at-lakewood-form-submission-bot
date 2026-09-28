@@ -7,11 +7,13 @@ import { linkQuickMoveIns } from "@/lib/floorplans/quick-move-ins";
 import { standardizePlan } from "@/lib/floorplans/standardize";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { withScrapedPictures } from "@/lib/floorplans/pictures";
-import { queueChange, readPlanInFull } from "@/lib/floorplans/sync";
+import { queueChange, readStandInInFull } from "@/lib/floorplans/sync";
 import { neutralizeDescriptions } from "@/lib/floorplans/description";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+/** The plan's own page is read within this much of the minute; past it the home's description stands. */
+const STAND_IN_ROUTE_MS = 35_000;
 
 /**
  * POST /api/internal/floorplans/changes/:id/stand-in
@@ -115,9 +117,18 @@ export async function POST(
     if (!built) return NextResponse.json({ error: "No quick move-in of this plan is on offer" }, { status: 400 });
 
     const builderName = (change.fp_builders as unknown as { name: string } | null)?.name ?? "";
+    // The plans the builder lists show where it keeps a plan's own page (stand-in-pages.ts).
+    const { data: listedRows, error: listedError } = await supabase
+      .from("fp_floor_plans")
+      .select("record")
+      .match(scope)
+      .eq("quick_move_in", false)
+      .is("removed_at", null);
+    if (listedError) throw listedError;
+    const listed = (listedRows ?? []).map((r) => r.record as NormalizedPlan).filter((p) => p?.planKey);
     let plan = built;
     try {
-      plan = await readPlanInFull(builderName, built);
+      plan = await readStandInInFull(builderName, built, listed, homes, Date.now() + STAND_IN_ROUTE_MS);
     } catch (err) {
       logger.warn("Stand-in plan page could not be read", { planKey, error: err instanceof Error ? err.message : String(err) });
     }
