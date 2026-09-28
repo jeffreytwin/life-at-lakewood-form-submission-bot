@@ -31,6 +31,7 @@ import {
   type WixItemData,
   getDataCollection,
   type WixDataItem,
+  type ImportedMediaFile,
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
 import { checkFlagsAfterWrite } from "@/lib/floorplans/qmi-flags";
@@ -40,7 +41,7 @@ import { alertIfTracked, basePlanOf, planRow, type CampaignTaskType } from "@/li
 import { fieldChangeDetail, homeChangeDetail } from "@/lib/floorplans/campaign-text";
 import { findItemNamed, itemNamedAtStart, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
 import { wixImageUri } from "@/lib/listings/types";
-import { measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
+import { copyStoragePath, copyTypeOf, measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta, type NormalizedPlan } from "@/lib/floorplans/types";
 import { ownFieldOnto } from "@/lib/floorplans/diff";
 
@@ -150,6 +151,46 @@ async function storeRaster(siteId: string, contentHash: string, png: Uint8Array)
   return supabase.storage.from(RASTER_BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
+/** Stores a copy of a picture Wix would not take from the builder and returns where Wix can fetch it; null when it cannot be kept. */
+async function storeCopy(siteId: string, contentHash: string, data: Uint8Array): Promise<string | null> {
+  const type = await copyTypeOf(data);
+  if (!type) return null;
+  const path = copyStoragePath(siteId, contentHash, type.ext);
+  const { error } = await supabase.storage
+    .from(RASTER_BUCKET)
+    .upload(path, Buffer.from(data), { contentType: type.contentType, upsert: true });
+  if (error) {
+    logger.warn("Copy of a floor plan photo could not be stored", { path, error: error.message });
+    return null;
+  }
+  return supabase.storage.from(RASTER_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/**
+ * Asks Wix to import one URL. Null when Wix refused it or answered that
+ * its fetch failed; a throttle or a spell of 5xx is thrown, since that is
+ * Wix's trouble and not the picture's (Jeff, 2026-09-21), and a row must
+ * not go out short of it.
+ */
+async function tryImport(wixSiteId: string, url: string, name: string, sourceUrl: string): Promise<ImportedMediaFile | null> {
+  try {
+    const file = await importMediaFromUrl(wixSiteId, url, name);
+    if (mediaState(file) !== "broken") return file;
+    // Wix answered the import with FAILED: an id with nothing behind it,
+    // and caching it would make the broken thumbnail permanent.
+    logger.warn("Wix reported the floor plan photo import failed", { sourceUrl, importUrl: url, fileId: file.id });
+    return null;
+  } catch (error) {
+    if (error instanceof WixApiError && (error.rateLimited || error.status >= 500)) throw error;
+    logger.warn("Floor plan image import failed", {
+      sourceUrl,
+      importUrl: url,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 /** A Wix file id that names an SVG: Wix filed that import as vector art, which never renders in an IMAGE field or a gallery. */
 const isVectorFileId = (fileId: string): boolean => /\.svg$/i.test(fileId);
 
@@ -158,11 +199,12 @@ const isVectorFileId = (fileId: string): boolean => /\.svg$/i.test(fileId);
  * site's Media Manager on first sight. An SVG drawing is rendered to a PNG
  * first (The Isles, 2026-09-20: Wix files an imported SVG as vector art,
  * and every drawing showed as a broken slash); a vector import cached
- * before then is re-imported the same way. Null when the picture is left
- * out: it could not be fetched, measured or rendered, or Wix reported the
- * import failed.
+ * before then is re-imported the same way. A picture Wix will not take
+ * from the builder's link is imported from a stored copy of its bytes.
+ * Null when the picture is left out: it could not be fetched, measured or
+ * rendered, or Wix would not import it either way. Exported for tests.
  */
-async function importImage(
+export async function importImage(
   siteId: string,
   wixSiteId: string,
   sourceUrl: string,
@@ -222,42 +264,34 @@ async function importImage(
     height = raster.height;
   }
 
-  try {
-    const file = await importMediaFromUrl(wixSiteId, importUrl, name);
-    if (mediaState(file) === "broken") {
-      // Wix answered the import with FAILED: an id with nothing behind it,
-      // and caching it would make the broken thumbnail permanent.
-      logger.warn("Wix reported the floor plan photo import failed; left out", { sourceUrl, fileId: file.id });
-      return null;
+  let file = await tryImport(wixSiteId, importUrl, name, sourceUrl);
+  if (!file && !measured.svg) {
+    // Wix would not take the builder's link, though the picture loaded
+    // here (Cardel's Firebase links, 2026-09-28), so it is handed the same
+    // bytes from storage instead. A rendered drawing is already there.
+    const copyUrl = await storeCopy(siteId, measured.contentHash, measured.data);
+    if (copyUrl) {
+      file = await tryImport(wixSiteId, copyUrl, name, sourceUrl);
+      if (file) logger.info("Floor plan photo imported from a stored copy", { sourceUrl, fileId: file.id });
     }
-    const uri = wixImageUri(file.id, name, width, height);
-    if (!uri) return null;
-    await supabase.from("fp_media_map").upsert(
-      {
-        site_id: siteId,
-        source_url: sourceUrl,
-        wix_media_id: uri,
-        content_hash: measured.contentHash,
-        width,
-        height,
-        verified_at: null,
-        media_type: null,
-      },
-      { onConflict: "site_id,source_url" }
-    );
-    return { uri, fileId: file.id, sourceUrl, verified: false };
-  } catch (error) {
-    // A picture Wix refused for its own reasons — throttled after every
-    // retry, or a spell of 5xx — is not a bad picture, and a row must not
-    // go out short of it (Jeff, 2026-09-21). Everything else is the
-    // picture's own fault and only costs the picture.
-    if (error instanceof WixApiError && (error.rateLimited || error.status >= 500)) throw error;
-    logger.warn("Floor plan image import failed", {
-      sourceUrl,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
   }
+  if (!file) return null;
+  const uri = wixImageUri(file.id, name, width, height);
+  if (!uri) return null;
+  await supabase.from("fp_media_map").upsert(
+    {
+      site_id: siteId,
+      source_url: sourceUrl,
+      wix_media_id: uri,
+      content_hash: measured.contentHash,
+      width,
+      height,
+      verified_at: null,
+      media_type: null,
+    },
+    { onConflict: "site_id,source_url" }
+  );
+  return { uri, fileId: file.id, sourceUrl, verified: false };
 }
 
 /** Waits between looks at a fresh import: Wix usually has the bytes within seconds; the whole wait is about half a minute. */

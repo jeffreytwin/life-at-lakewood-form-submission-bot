@@ -109,6 +109,38 @@ export function urlsToRelease(inScope: Iterable<string>, usedElsewhere: Readonly
   return [...out];
 }
 
+/**
+ * The picture formats a copy is kept in, by what sharp reads the bytes as.
+ * Cardel's Firebase links (2026-09-28): the photos load for anyone, but
+ * Wix's import answers every one of them 400 with an HTML error page, so
+ * a picture Wix will not take from the builder is handed over from a copy
+ * in storage instead. Anything outside this list is not copied.
+ */
+const COPY_TYPES: Record<string, { ext: string; contentType: string }> = {
+  jpeg: { ext: "jpg", contentType: "image/jpeg" },
+  png: { ext: "png", contentType: "image/png" },
+  webp: { ext: "webp", contentType: "image/webp" },
+  gif: { ext: "gif", contentType: "image/gif" },
+};
+
+/** Where the copy of a picture Wix refused is kept, by its content hash, so the same bytes are stored once per site. */
+export const copyStoragePath = (siteId: string, contentHash: string, ext: string): string =>
+  `floorplans/${siteId}/copies/${contentHash}.${ext}`;
+
+/** Every place a copy of these bytes could be kept: the format is not on record, so a clean-up clears them all. */
+export const copyStoragePaths = (siteId: string, contentHash: string): string[] =>
+  Object.values(COPY_TYPES).map((t) => copyStoragePath(siteId, contentHash, t.ext));
+
+/** The extension and content type a copy of these bytes is stored under; null for a format that is not copied or bytes sharp cannot read. */
+export async function copyTypeOf(data: Uint8Array): Promise<{ ext: string; contentType: string } | null> {
+  try {
+    const { format } = await sharp(Buffer.from(data)).metadata();
+    return (format && COPY_TYPES[format]) || null;
+  } catch {
+    return null;
+  }
+}
+
 /** The width a drawing is rendered at: legible on a page, quick for Wix to fetch. */
 export const RASTER_WIDTH = 1600;
 
