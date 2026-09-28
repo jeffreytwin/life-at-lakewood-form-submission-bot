@@ -15,12 +15,21 @@
 // every row of every site, whoever made the row. A quick move-in that
 // names no floor plan, or a name two floor plans share, is reported
 // (fp_qmi_flag_log), not guessed at.
+//
+// The same check keeps each row's builder and neighborhood links (builder1,
+// villages) set: rows written before a link could be found went out without
+// it — Parrish's Del Webb Explore homes had no neighborhood, Richmond
+// American's no builder — and a community shown on another neighborhood's
+// page (wix-references.ts, VILLAGE_PAGES: Crosswind Point and Crosswind
+// Ranch on Crosswind's) points there (Jeff, 2026-09-28). A link set by hand
+// to anything else is left as it is.
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { getItem, queryAllItems, updateItem, WixApiError, type WixDataItem, type WixItemData } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
 import { normKey } from "@/lib/floorplans/types";
+import { referenceResolver, villagePageOf, type PlanReferences } from "@/lib/floorplans/wix-references";
 
 const MARKERS = ["quickMoveInAvailable", "newConstructionOrMoveIn", "constructionDot", "quickMoveInImage"] as const;
 
@@ -118,6 +127,47 @@ export function flagFixes(items: WixDataItem[]): { fixes: FlagFix[]; problems: F
   return { fixes, problems, plans: plans.length, homes: homes.length };
 }
 
+/** A reference field as Wix gives it: the referenced item's id, or the item itself. */
+const refOf = (v: unknown): string => {
+  if (typeof v === "string") return v.trim();
+  const id = v && typeof v === "object" ? (v as { _id?: unknown })._id : null;
+  return typeof id === "string" ? id : "";
+};
+
+export interface LinkFix {
+  itemId: string;
+  name: string;
+  village: string;
+  builder: string;
+  /** The Builders item to point at, where the row points at none. */
+  builder1?: string;
+  /** The neighborhood page to point at. */
+  villages?: string;
+}
+
+/**
+ * The rows whose builder or neighborhood link is missing, or whose
+ * neighborhood link is not the page its community is set out to show on
+ * (VILLAGE_PAGES). `expected` gives the links a row's builder and village
+ * names find; a name that finds nothing sets nothing. Pure; exported for
+ * tests.
+ */
+export function linkFixes(items: WixDataItem[], expected: (builder: string, village: string) => PlanReferences | undefined): LinkFix[] {
+  const fixes: LinkFix[] = [];
+  for (const item of items) {
+    const d = item.data;
+    const village = text(d.village);
+    const want = expected(text(d.builder), village);
+    if (!want) continue;
+    const fix: LinkFix = { itemId: item.id, name: text(d.floorPlanName), village, builder: text(d.builder) };
+    if (want.builderId && !refOf(d.builder1)) fix.builder1 = want.builderId;
+    const shown = refOf(d.villages);
+    if (want.villageId && shown !== want.villageId && (!shown || villagePageOf(village))) fix.villages = want.villageId;
+    if (fix.builder1 || fix.villages) fixes.push(fix);
+  }
+  return fixes;
+}
+
 interface SiteRow {
   id: string;
   name: string | null;
@@ -148,6 +198,21 @@ async function applyFix(site: SiteRow, fix: FlagFix): Promise<boolean> {
   return true;
 }
 
+/** Writes one row's links: the row read again just before, and set only where it still needs them. */
+async function applyLinkFix(site: SiteRow, fix: LinkFix): Promise<boolean> {
+  const fresh = await getItem(site.wix_site_id!, site.wix_collection_id!, fix.itemId);
+  if (!fresh) return false;
+  const [still] = linkFixes([fresh], () => ({ builderId: fix.builder1 ?? null, villageId: fix.villages ?? null }));
+  if (!still) return false;
+  const kept = Object.fromEntries(Object.entries(fresh.data ?? {}).filter(([k]) => !k.startsWith("_")));
+  await updateItem(site.wix_site_id!, site.wix_collection_id!, fix.itemId, {
+    ...kept,
+    ...(still.builder1 ? { builder1: still.builder1 } : {}),
+    ...(still.villages ? { villages: still.villages } : {}),
+  });
+  return true;
+}
+
 export interface FlagCheck {
   site: string;
   plans: number;
@@ -156,6 +221,12 @@ export interface FlagCheck {
   problems: FlagProblem[];
   /** Fixes written; fewer than found when Wix slowed us down or time ran out (the next check goes on). */
   fixed: number;
+  /** Rows whose builder or neighborhood link is to be set (linkFixes). */
+  links: LinkFix[];
+  /** Each builder and community with rows missing a link, and what the lookup found for them: a gap no fix fills is a name Wix has no item for. */
+  gaps?: { builder: string; village: string; rows: number; noBuilder1: number; noVillages: number; found: PlanReferences }[];
+  /** Links written. */
+  linked: number;
   error?: string;
 }
 
@@ -169,7 +240,7 @@ export async function checkSiteFlags(
 ): Promise<FlagCheck> {
   const label = site.name ?? site.id;
   if (!site.wix_site_id || !site.wix_collection_id) {
-    return { site: label, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, error: "no Wix collection" };
+    return { site: label, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, links: [], linked: 0, error: "no Wix collection" };
   }
   const scoped = Boolean(opts.builder && opts.village);
   const items = await queryAllItems(site.wix_site_id, site.wix_collection_id, {
@@ -177,8 +248,33 @@ export async function checkSiteFlags(
     ...(scoped ? { filter: { builder: { $eq: opts.builder }, village: { $eq: opts.village } } } : {}),
   });
   const found = flagFixes(items);
-  const check: FlagCheck = { site: label, ...found, fixed: 0 };
-  if (opts.dryRun) return check;
+  // Each builder and neighborhood looked up once for the whole check.
+  const resolve = referenceResolver({ wix_site_id: site.wix_site_id, wix_collection_id: site.wix_collection_id });
+  const expected = new Map<string, PlanReferences>();
+  for (const item of items) {
+    const key = `${text(item.data.builder)}|${text(item.data.village)}`;
+    if (!expected.has(key)) expected.set(key, await resolve(text(item.data.builder), text(item.data.village)));
+  }
+  const links = linkFixes(items, (builder, village) => expected.get(`${builder}|${village}`));
+  const check: FlagCheck = { site: label, ...found, fixed: 0, links, linked: 0 };
+  if (opts.dryRun) {
+    const gaps = new Map<string, NonNullable<FlagCheck["gaps"]>[number]>();
+    for (const item of items) {
+      const builder = text(item.data.builder);
+      const village = text(item.data.village);
+      const noBuilder1 = !refOf(item.data.builder1);
+      const noVillages = !refOf(item.data.villages);
+      if (!noBuilder1 && !noVillages) continue;
+      const key = `${builder}|${village}`;
+      const gap = gaps.get(key) ?? { builder, village, rows: 0, noBuilder1: 0, noVillages: 0, found: expected.get(key)! };
+      gap.rows += 1;
+      if (noBuilder1) gap.noBuilder1 += 1;
+      if (noVillages) gap.noVillages += 1;
+      gaps.set(key, gap);
+    }
+    check.gaps = [...gaps.values()];
+    return check;
+  }
 
   const deadline = opts.deadline ?? Date.now() + 120_000;
   for (const fix of found.fixes) {
@@ -209,6 +305,23 @@ export async function checkSiteFlags(
     }
   }
 
+  for (const fix of check.error ? [] : links) {
+    if (Date.now() > deadline) break;
+    try {
+      if (await applyLinkFix(site, fix)) check.linked += 1;
+    } catch (error) {
+      if (error instanceof WixApiError && error.rateLimited) {
+        check.error = "Wix is throttling; the rest wait for the next check";
+        break;
+      }
+      logger.warn("Row's builder or neighborhood link could not be set", {
+        site: label,
+        plan: fix.name,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   // A full check replaces the site's list of what it could not place.
   if (!scoped) {
     await supabase.from("fp_qmi_flag_log").delete().eq("site_id", site.id).in("action", ["no-plan", "same-name"]);
@@ -229,11 +342,12 @@ export async function checkSiteFlags(
     await supabase.from("fp_qmi_flag_log").insert({
       site_id: site.id,
       action: "checked",
-      detail: `${found.plans} floor plans, ${found.homes} quick move-ins: ${check.fixed} flag${check.fixed === 1 ? "" : "s"} fixed, ${found.problems.length} to look at`,
+      detail: `${found.plans} floor plans, ${found.homes} quick move-ins: ${check.fixed} flag${check.fixed === 1 ? "" : "s"} fixed, ${found.problems.length} to look at${check.linked ? `, ${check.linked} row${check.linked === 1 ? "'s" : "s'"} builder or neighborhood link set` : ""}`,
       reason: opts.reason,
     });
   }
   if (check.fixed) logger.info("Quick move-in flags fixed", { site: label, fixed: check.fixed, scoped, reason: opts.reason });
+  if (check.linked) logger.info("Rows' builder and neighborhood links set", { site: label, linked: check.linked, found: links.length, scoped, reason: opts.reason });
   return check;
 }
 
@@ -246,7 +360,7 @@ export async function checkAllFlags(opts: { dryRun?: boolean; reason: string; bu
     try {
       checks.push(await checkSiteFlags(site, { dryRun: opts.dryRun, reason: opts.reason, deadline }));
     } catch (error) {
-      checks.push({ site: site.name ?? site.id, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, error: error instanceof Error ? error.message : String(error) });
+      checks.push({ site: site.name ?? site.id, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, links: [], linked: 0, error: error instanceof Error ? error.message : String(error) });
     }
   }
   return checks;

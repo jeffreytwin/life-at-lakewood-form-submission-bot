@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { HOME_TYPES, isHomeType, standardGarages } from "@/lib/floorplans/standardize";
 import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
-import { picturesAdded } from "@/lib/floorplans/pictures";
+import { picturesAdded, primaryReplaced } from "@/lib/floorplans/pictures";
 
 /**
  * Whether a base plan of this name exists for the scope: live, or waiting
@@ -71,6 +71,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   // The pictures the change adds to the live plan, for the overlay to mark
   // (Jeff, 2026-09-28). A new plan's are all new, and none are marked.
   let addedPictures: string[] = [];
+  // A quick move-in's one picture, where the change puts another in its place.
+  let replacedPrimary: string | null = null;
   if (data.change_type === "update") {
     const { data: live } = await supabase
       .from("fp_floor_plans")
@@ -79,8 +81,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       .is("removed_at", null)
       .maybeSingle();
     addedPictures = picturesAdded(live?.record as Partial<NormalizedPlan> | null, data.proposed_record as Partial<NormalizedPlan> | null);
+    replacedPrimary = primaryReplaced(live?.record as Partial<NormalizedPlan> | null, data.proposed_record as Partial<NormalizedPlan> | null);
   }
-  return NextResponse.json({ id: data.id, status: data.status, proposed_record: data.proposed_record, addedPictures });
+  return NextResponse.json({ id: data.id, status: data.status, proposed_record: data.proposed_record, addedPictures, replacedPrimary });
 }
 
 export async function PATCH(

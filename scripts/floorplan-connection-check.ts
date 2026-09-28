@@ -1024,6 +1024,26 @@ async function main() {
       lines.push(`══ ${c.site}: ${c.plans} floor plans, ${c.homes} quick move-ins; would set ${c.fixes.filter((f) => f.has).length}, clear ${c.fixes.filter((f) => !f.has).length}; ${c.problems.length} to look at${c.error ? ` (${c.error})` : ""}`);
       for (const f of c.fixes) lines.push(`  ${f.has ? "set  " : "clear"} ${f.builder} · ${f.village} · ${f.name} (${f.homes} homes)`);
       for (const p of c.problems) lines.push(`  ${p.kind} ${p.builder} · ${p.village} · ${p.name}: ${p.detail}`);
+      // The links the check would set, by builder and community: how many rows, which link, and to what.
+      const byScope = new Map<string, { rows: number; builder1: Set<string>; villages: Set<string> }>();
+      for (const l of c.links) {
+        const key = `${l.builder} · ${l.village}`;
+        const g = byScope.get(key) ?? { rows: 0, builder1: new Set<string>(), villages: new Set<string>() };
+        g.rows += 1;
+        if (l.builder1) g.builder1.add(l.builder1);
+        if (l.villages) g.villages.add(l.villages);
+        byScope.set(key, g);
+      }
+      lines.push(`  links: ${c.links.length} rows would get a builder or neighborhood link`);
+      for (const [key, g] of byScope) {
+        lines.push(`  link  ${key}: ${g.rows} rows${g.builder1.size ? `; builder1 → ${[...g.builder1].join(", ")}` : ""}${g.villages.size ? `; villages → ${[...g.villages].join(", ")}` : ""}`);
+      }
+      // Rows missing a link, and whether the lookup found anything to fill it with.
+      for (const g of c.gaps ?? []) {
+        lines.push(
+          `  gap   ${g.builder || "(no builder)"} · ${g.village || "(no village)"}: ${g.rows} rows; no builder1 on ${g.noBuilder1} (lookup: ${g.found.builderId ?? "nothing"}); no villages on ${g.noVillages} (lookup: ${g.found.villageId ?? "nothing"})`
+        );
+      }
     }
     await keep("qmi flags (dry run)", lines.join("\n"));
     say("quick move-in flags looked at");

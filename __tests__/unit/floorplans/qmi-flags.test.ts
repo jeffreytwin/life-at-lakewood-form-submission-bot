@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { flagFixes, markersFor } from "@/lib/floorplans/qmi-flags";
+import { flagFixes, linkFixes, markersFor } from "@/lib/floorplans/qmi-flags";
 import type { WixDataItem } from "@/lib/wix/client";
 
 let n = 0;
@@ -56,5 +56,37 @@ describe("quick move-in flags (Jeff, 2026-09-25)", () => {
   it("adds no markers to a row that shows none and has nothing under it (it may be a home missing its floor plan)", () => {
     const bare = row({ floorPlanName: "2207 Anders Drive", builder: "Richmond American Homes", village: "Estates at Rivers Edge" });
     expect(flagFixes([bare]).fixes).toEqual([]);
+  });
+});
+
+describe("a row's builder and neighborhood links (Jeff, 2026-09-28)", () => {
+  const found = { builderId: "richmond", villageId: "crosswind" };
+  const parrish = (data: Record<string, unknown>) => row({ floorPlanName: "Fraser", builder: "Richmond American Homes", village: "Estates at Rivers Edge", ...data });
+
+  it("sets a link a row is missing", () => {
+    const blank = parrish({ builder1: "", villages: null });
+    expect(linkFixes([blank], () => ({ builderId: "richmond", villageId: "rivers-edge" }))).toEqual([
+      expect.objectContaining({ itemId: blank.id, builder1: "richmond", villages: "rivers-edge" }),
+    ]);
+  });
+
+  it("moves a Crosswind Point or Crosswind Ranch row to Crosswind's page", () => {
+    const point = row({ floorPlanName: "Aspen", builder: "Homes by WestBay", village: "Crosswind Point", builder1: "westbay", villages: "crosswind-point" });
+    const ranch = row({ floorPlanName: "Birch", builder: "Homes by WestBay", village: "Crosswind Ranch", builder1: "westbay", villages: { _id: "crosswind-ranch" } });
+    const fixes = linkFixes([point, ranch], () => ({ builderId: "westbay", villageId: "crosswind" }));
+    expect(fixes).toEqual([
+      expect.objectContaining({ itemId: point.id, villages: "crosswind" }),
+      expect.objectContaining({ itemId: ranch.id, villages: "crosswind" }),
+    ]);
+    expect(fixes.every((f) => f.builder1 === undefined)).toBe(true);
+  });
+
+  it("leaves a link set by hand, one already right, and a name that finds nothing", () => {
+    const byHand = parrish({ builder1: "richmond-2", villages: "rivers-edge-2" });
+    const right = row({ floorPlanName: "Aspen", builder: "Homes by WestBay", village: "Crosswind Point", builder1: "westbay", villages: "crosswind" });
+    const unknown = parrish({ builder1: "", villages: "" });
+    expect(linkFixes([byHand], () => found)).toEqual([]);
+    expect(linkFixes([right], () => ({ builderId: "westbay", villageId: "crosswind" }))).toEqual([]);
+    expect(linkFixes([unknown], () => ({ builderId: null, villageId: null }))).toEqual([]);
   });
 });

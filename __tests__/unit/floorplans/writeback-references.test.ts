@@ -7,6 +7,8 @@ vi.mock("@/lib/wix/client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/wix/client")>();
   return {
     ...actual,
+    // No schema to read: the default collections (Builders, HousesforSale-DynamicPages).
+    getDataCollection: vi.fn(async () => null),
     // Wix's read: drafts only when asked for, a title filter of $eq or $contains, paging.
     queryItems: vi.fn(async (_site: string, collectionId: string, options: { filter?: { title?: { $eq?: string; $contains?: string } }; limit?: number; offset?: number; includeDrafts?: boolean } = {}) => {
       let items = (collections[collectionId] ?? []).filter((it) => options.includeDrafts || it.data._publishStatus !== "DRAFT");
@@ -19,7 +21,7 @@ vi.mock("@/lib/wix/client", async (importOriginal) => {
   };
 });
 
-import { referenceIdOf } from "@/lib/floorplans/writeback";
+import { referenceIdOf, referencesFor, villagePageOf } from "@/lib/floorplans/wix-references";
 
 describe("referenceIdOf: the Builders and villages items a row points at", () => {
   beforeEach(() => {
@@ -47,5 +49,32 @@ describe("referenceIdOf: the Builders and villages items a row points at", () =>
     expect(await referenceIdOf("parrish", "Villages", "Del Webb Explore North River Ranch")).toBe("dwe");
     expect(await referenceIdOf("parrish", "Villages", "North River Ranch")).toBe("nrr");
     expect(await referenceIdOf("parrish", "Villages", "Riversong")).toBeNull();
+  });
+});
+
+describe("a community shown on another neighborhood's page (Jeff, 2026-09-28)", () => {
+  beforeEach(() => {
+    collections.Builders = [{ id: "westbay", data: { title: "Homes by WestBay" } }];
+    collections["HousesforSale-DynamicPages"] = [
+      { id: "crosswind", data: { title: "Crosswind" } },
+      { id: "crosswind-point", data: { title: "Crosswind Point" } },
+      { id: "crosswind-ranch", data: { title: "Crosswind Ranch" } },
+      { id: "dwe", data: { title: "Del Webb Explore" } },
+      { id: "nrr", data: { title: "North River Ranch" } },
+    ];
+  });
+
+  it("knows Crosswind Point and Crosswind Ranch are shown on Crosswind's, and Del Webb Explore North River Ranch on Del Webb Explore's", () => {
+    expect(villagePageOf("Crosswind Point")).toBe("Crosswind");
+    expect(villagePageOf("crosswind ranch")).toBe("Crosswind");
+    expect(villagePageOf("Del Webb Explore North River Ranch")).toBe("Del Webb Explore");
+    expect(villagePageOf("North River Ranch")).toBeNull();
+  });
+
+  it("points their rows at that page, though a page is named like them", async () => {
+    const site = { wix_site_id: "parrish-pages", wix_collection_id: "FloorPlansV2" };
+    expect(await referencesFor(site, "Homes by WestBay", "Crosswind Point")).toEqual({ builderId: "westbay", villageId: "crosswind" });
+    expect(await referencesFor(site, "Homes by WestBay", "Crosswind Ranch")).toEqual({ builderId: "westbay", villageId: "crosswind" });
+    expect((await referencesFor(site, "Pulte Homes", "North River Ranch")).villageId).toBe("nrr");
   });
 });

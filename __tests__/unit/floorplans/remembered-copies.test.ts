@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { pictureKey } from "@/lib/floorplans/extractors/plan-page";
-import { picturesAdded, withKnownSpellings } from "@/lib/floorplans/pictures";
+import { picturesAdded, primaryReplaced, withKnownSpellings } from "@/lib/floorplans/pictures";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Addresses from the queue (Homes by WestBay and D.R. Horton, Jeff 2026-09-28).
@@ -128,5 +128,23 @@ describe("picturesAdded: what a change adds to the live plan, for the overlay to
 
   it("marks nothing without a live plan", () => {
     expect(picturesAdded(null, plan({ galleryImages: [front] }))).toEqual([]);
+  });
+});
+
+describe("primaryReplaced: a quick move-in's one picture, changed (Neal's 2143 Sylvester Palm Lane, Jeff 2026-09-28)", () => {
+  const up = "https://images.nealcommunities.com/wp-content/uploads/2026/02";
+  const one = `${up}/06163215/2143-1_MLS.jpg?auto=format%2Ccompress&fit=crop&ar=16%3A9&w=1600`;
+  const two = `${up}/23101512/2143-2_MLS.jpg`;
+  const home = (galleryImages: string[]) => plan({ quickMoveIn: true, name: "2143 Sylvester Palm Lane", galleryImages });
+
+  it("gives the picture on the site where the change leads with another it already had", () => {
+    expect(picturesAdded(home([one, two]), home([two, one]))).toEqual([]);
+    expect(primaryReplaced(home([one, two]), home([two, one]))).toBe(one);
+  });
+
+  it("gives nothing where the picture stays, however it is spelled, or for a floor plan", () => {
+    expect(primaryReplaced(home([one, two]), home([`${up}/06163215/2143-1_MLS.jpg`, two]))).toBeNull();
+    expect(primaryReplaced(plan({ galleryImages: [one, two] }), plan({ galleryImages: [two, one] }))).toBeNull();
+    expect(primaryReplaced(null, home([two]))).toBeNull();
   });
 });

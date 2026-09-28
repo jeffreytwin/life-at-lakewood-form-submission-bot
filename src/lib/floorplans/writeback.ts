@@ -21,7 +21,6 @@ import {
   insertItem,
   updateItem,
   removeItem,
-  queryItems,
   importMediaFromUrl,
   getMediaFile,
   mediaState,
@@ -29,8 +28,6 @@ import {
   WixApiError,
   wixThrottleWaitMs,
   type WixItemData,
-  getDataCollection,
-  type WixDataItem,
   type ImportedMediaFile,
 } from "@/lib/wix/client";
 import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
@@ -39,7 +36,7 @@ import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { virtualTourButtonFor } from "@/lib/floorplans/site-assets";
 import { alertIfTracked, basePlanOf, planRow, type CampaignTaskType } from "@/lib/floorplans/campaign";
 import { fieldChangeDetail, homeChangeDetail } from "@/lib/floorplans/campaign-text";
-import { findItemNamed, itemNamedAtStart, referencedCollectionOf } from "@/lib/floorplans/collection-schema";
+import { referencesFor, type PlanReferences } from "@/lib/floorplans/wix-references";
 import { wixImageUri } from "@/lib/listings/types";
 import { copyStoragePath, copyTypeOf, measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta, type NormalizedPlan } from "@/lib/floorplans/types";
@@ -423,153 +420,6 @@ async function importRecordMedia(
     });
   }
   return { gallery: photos, blueprints: drawings, tourImage };
-}
-
-/**
- * Where the builder1 and villages reference fields point when a site's
- * schema cannot be read: the Builders collection, and the neighborhoods
- * collection Wellen Park and Parrish use.
- */
-const DEFAULT_REFERENCE_TARGETS: ReferenceTargets = { builder1: "Builders", villages: "HousesforSale-DynamicPages" };
-
-interface ReferenceTargets {
-  builder1: string;
-  villages: string;
-}
-
-/** Reference targets per site collection, kept for the life of the process (a serverless invocation). */
-const targetsCache = new Map<string, ReferenceTargets>();
-
-/**
- * The collections a site's builder1 and villages fields reference, read
- * from its Floor Plans V2 schema. They differ by site: Wellen Park and
- * Parrish keep their neighborhoods in HousesforSale-DynamicPages, Lakewood
- * in AmenitiesbyVillage, which is why every Isles row went out without its
- * neighborhood on 2026-09-20 while the lookup searched the former. The
- * defaults stand in when the schema cannot be read.
- */
-async function referenceTargetsOf(wixSiteId: string, wixCollectionId: string): Promise<ReferenceTargets> {
-  const cacheKey = `${wixSiteId}|${wixCollectionId}`;
-  const cached = targetsCache.get(cacheKey);
-  if (cached) return cached;
-  try {
-    const collection = await getDataCollection(wixSiteId, wixCollectionId);
-    if (!collection) return { ...DEFAULT_REFERENCE_TARGETS };
-    const targets: ReferenceTargets = {
-      builder1: referencedCollectionOf(collection.fields, "builder1", DEFAULT_REFERENCE_TARGETS.builder1),
-      villages: referencedCollectionOf(collection.fields, "villages", DEFAULT_REFERENCE_TARGETS.villages),
-    };
-    targetsCache.set(cacheKey, targets);
-    return targets;
-  } catch (error) {
-    logger.warn("Wix schema lookup for the reference fields failed", {
-      collectionId: wixCollectionId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return { ...DEFAULT_REFERENCE_TARGETS };
-  }
-}
-
-/** Wix item ids found by name, kept for the life of the process; only hits are kept. */
-const referenceCache = new Map<string, string>();
-
-/** The most items a name lookup reads when no title matches: the neighborhoods collections hold a few dozen. */
-const REFERENCE_SCAN_CAP = 500;
-
-/**
- * The _id of the item named `title` in one of a site's collections, for the
- * builder1 and villages references every Wellen Park and Parrish row carries
- * (the Builders item "Toll Brothers", the neighborhood "The Isles"). An exact
- * title first, then a contains-match whose normalized title is the same, or
- * the only match; then, since a collection may keep its name in another
- * field, the collection read and matched on any title or name field
- * (collection-schema.ts, findItemNamed), and failing that the item whose
- * title the name begins with (itemNamedAtStart: "Del Webb Explore North
- * River Ranch" is the neighborhood "Del Webb Explore"). Draft items count:
- * Parrish's "Richmond American Homes" is a draft in its Builders, and a
- * read that asks for published items alone never found it (Jeff,
- * 2026-09-23); a published item wins over a draft of the same name. Null
- * when there is no such item or the lookup fails: the row is then written
- * without the reference, and one set by hand survives the read-merge on
- * update. Exported for tests.
- */
-export async function referenceIdOf(wixSiteId: string, collectionId: string, title: string): Promise<string | null> {
-  const wanted = title.trim();
-  if (!wanted) return null;
-  const cacheKey = `${wixSiteId}|${collectionId}|${wanted.toLowerCase()}`;
-  const cached = referenceCache.get(cacheKey);
-  if (cached) return cached;
-  try {
-    let { items } = await queryItems(wixSiteId, collectionId, { filter: { title: { $eq: wanted } }, limit: 10, includeDrafts: true });
-    if (!items.length) {
-      const loose = await queryItems(wixSiteId, collectionId, { filter: { title: { $contains: wanted } }, limit: 10, includeDrafts: true });
-      const same = loose.items.filter((it) => normKey(String(it.data?.title ?? "")) === normKey(wanted));
-      items = same.length ? same : loose.items.length === 1 ? loose.items : [];
-    }
-    if (!items.length) {
-      const all = await queryItemsUpTo(wixSiteId, collectionId, REFERENCE_SCAN_CAP);
-      const found = findItemNamed(all, wanted) ?? itemNamedAtStart(all, wanted);
-      items = found ? [found] : [];
-    }
-    items = publishedFirst(items);
-    const id = items[0]?.id ?? (typeof items[0]?.data?._id === "string" ? items[0].data._id : null);
-    if (!id) {
-      logger.warn("No Wix item to reference by name", { collectionId, title: wanted });
-      return null;
-    }
-    referenceCache.set(cacheKey, id);
-    return id;
-  } catch (error) {
-    logger.warn("Wix reference lookup failed", {
-      collectionId,
-      title: wanted,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
-  }
-}
-
-/** Published items before drafts, each kept in its order. */
-const publishedFirst = (items: WixDataItem[]) =>
-  [...items].sort((a, b) => Number(a.data?._publishStatus === "DRAFT") - Number(b.data?._publishStatus === "DRAFT"));
-
-/** The first `cap` items of a collection, drafts included, a page at a time. */
-async function queryItemsUpTo(wixSiteId: string, collectionId: string, cap: number): Promise<WixDataItem[]> {
-  const all: WixDataItem[] = [];
-  while (all.length < cap) {
-    const { items, total } = await queryItems(wixSiteId, collectionId, {
-      limit: Math.min(100, cap - all.length),
-      offset: all.length,
-      includeDrafts: true,
-    });
-    all.push(...items);
-    if (!items.length || all.length >= total) break;
-  }
-  return all;
-}
-
-interface PlanReferences {
-  builderId: string | null;
-  villageId: string | null;
-}
-
-/** A site as the reference lookups need it: where its Floor Plans V2 lives. */
-interface ReferenceSite {
-  wix_site_id: string;
-  wix_collection_id: string;
-}
-
-/**
- * The builder1 and villages references for a row: the site's Builders item
- * and neighborhood item, by name, in the collections its own schema points at.
- */
-async function referencesFor(site: ReferenceSite, builderName: string, communityName: string): Promise<PlanReferences> {
-  const targets = await referenceTargetsOf(site.wix_site_id, site.wix_collection_id);
-  const [builderId, villageId] = await Promise.all([
-    referenceIdOf(site.wix_site_id, targets.builder1, builderName),
-    referenceIdOf(site.wix_site_id, targets.villages, communityName),
-  ]);
-  return { builderId, villageId };
 }
 
 /**

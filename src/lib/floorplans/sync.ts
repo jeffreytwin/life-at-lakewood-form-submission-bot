@@ -39,6 +39,7 @@ import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
 import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutBanners, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
+import { withoutSoldHomes } from "@/lib/floorplans/sold-homes";
 import { SERIES_BUILDERS, withSeriesLabels } from "@/lib/floorplans/series-labels";
 import { homesOfPlan, withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { fetchOrRender, planPageCandidates, withPlanPageDescription } from "@/lib/floorplans/stand-in-pages";
@@ -479,7 +480,9 @@ export async function preparePlans(
   } = {}
 ): Promise<NormalizedPlan[]> {
   const { site, community, builder } = scope;
-  let plans = scraped;
+  // A home the builder marks sold is not on offer: left out, it comes up
+  // for removal (sold-homes.ts).
+  let plans = withoutSoldHomes(scraped);
   // Every plan reads the way the site files it (one of five home types,
   // the larger end of a bed or bath range; standardize.ts), then each
   // quick move-in learns its base plan and each base plan learns whether
