@@ -38,7 +38,7 @@ import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
-import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
+import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutBanners, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
 import { SERIES_BUILDERS, withSeriesLabels } from "@/lib/floorplans/series-labels";
 import { homesOfPlan, withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { fetchOrRender, planPageCandidates, withPlanPageDescription } from "@/lib/floorplans/stand-in-pages";
@@ -500,9 +500,10 @@ export async function preparePlans(
   // The community's own pictures, filed in every plan's gallery, are taken
   // back out (community-pictures.ts).
   plans = withoutCommunityPictures(plans);
-  // Nor a badge (Newsweek's "Most Trustworthy"), nor, where a builder's
-  // pages show the community's other plans, their pictures (stray-pictures.ts).
-  plans = withoutBadges(plans);
+  // Nor a badge (Newsweek's "Most Trustworthy"), nor a page's banner, nor,
+  // where a builder's pages show the community's other plans, their
+  // pictures (stray-pictures.ts).
+  plans = withoutBanners(withoutBadges(plans));
   if (NAMED_PICTURE_BUILDERS.has(builder.name)) plans = withoutOtherPlansPictures(plans);
   // A plan the builder no longer lists but a person asked to keep, built
   // from its homes on offer (stand-ins.ts): each is read from the home's own
