@@ -651,12 +651,49 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
  */
 export function homeAddressed(plan: NormalizedPlan, address: string | null | undefined): Partial<NormalizedPlan> {
   const street = address?.trim().replace(/\s+/g, " ");
-  if (!plan.quickMoveIn || namesAnAddress(plan.name) || !street || !namesAnAddress(street)) return {};
+  if (!plan.quickMoveIn || !street || !namesAnAddress(street)) return {};
+  // A list's address is taken where the home's own page says the same
+  // house: an address the list gave that the page does not is the
+  // community's, not the home's (Homes by Towne's Shellstone lists its
+  // sales center, "792 Blue Shell Loop", beside lots whose own pages say
+  // "9516 Lunar Dove Drive"; Jeff, 2026-09-28).
+  if (namesAnAddress(plan.name) && streetNumber(plan.name) === streetNumber(street)) return {};
   return {
     name: street,
     planKey: normKey(street),
     relatedPlanName: plan.relatedPlanName || planInHomeLabel(plan.name) || null,
   };
+}
+
+/** The house number an address leads with. */
+const streetNumber = (name: string): string | null => name.trim().match(/^\d+/)?.[0] ?? null;
+
+/**
+ * A list's homes without an address several of them share: no one house
+ * has it, so it is the community's — its sales center or its model — and
+ * the list put it beside each lot (Homes by Towne's Shellstone read "792
+ * Blue Shell Loop, Lot 656", "… Lot 658" and "… Lot 669", whose own pages
+ * each give a street address of their own; Jeff, 2026-09-28). What the
+ * name says besides ("Lot 656") stays, for the home's own page to name it.
+ * Pure; exported for tests.
+ */
+export function withoutSharedAddress(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const parts = (name: string) => name.split(/\s*[,|\u2013\u2014]\s*|\s+-\s+/);
+  // Units of one building share its address, and each is still a home of its own.
+  const unit = (name: string) => /^(?:unit|apt|apartment|suite|ste|bldg|building|#)\b|^#/i.test(parts(name)[1] ?? "");
+  const streetOf = (p: NormalizedPlan) => (p.quickMoveIn && namesAnAddress(p.name) && !unit(p.name) ? normKey(parts(p.name)[0]) : null);
+  const count = new Map<string, number>();
+  for (const p of plans) {
+    const street = streetOf(p);
+    if (street) count.set(street, (count.get(street) ?? 0) + 1);
+  }
+  return plans.map((p) => {
+    const street = streetOf(p);
+    if (!street || (count.get(street) ?? 0) < 2) return p;
+    const rest = parts(p.name).slice(1).join(" - ").trim();
+    const name = rest || [p.relatedPlanName, "home for sale"].filter(Boolean).join(" ");
+    return { ...p, name, planKey: normKey(name) };
+  });
 }
 
 /**
@@ -918,7 +955,7 @@ async function listPage(
       ? `Extract every floor plan / home model from this new-home community page. Leave out the homes for sale — a home named by its street address or marked "Move-in Ready", "Quick Move-in" or with a move-in date — which are read from their own page. Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`
       : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
 
-  const ask = `${what} Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
+  const ask = `${what} A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 
   // Streamed, not because anything reads the stream, but because the SDK
   // refuses a plain request whose ceiling could take it past ten minutes —
@@ -1311,7 +1348,7 @@ async function extractPages(
     }
     listPages.add(page.url);
     readPages.push(page.url || pageUrl);
-    for (const plan of page.plans) take(plan);
+    for (const plan of withoutSharedAddress(page.plans)) take(plan);
     for (const u of page.series ?? []) series.add(u);
   }
   if (refused.length === planPages.length) throw new Error(refused.join("; "));
@@ -1334,7 +1371,7 @@ async function extractPages(
     if (!page) continue;
     listPages.add(pageUrl).add(page.url);
     readPages.push(page.url || pageUrl);
-    for (const plan of page.plans) take(plan);
+    for (const plan of withoutSharedAddress(page.plans)) take(plan);
   }
 
   // The builder's own page of homes for sale, where it keeps one away from
