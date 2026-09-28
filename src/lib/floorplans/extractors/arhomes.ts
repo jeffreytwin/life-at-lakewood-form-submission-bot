@@ -14,9 +14,11 @@
 //   GET /wp-json/wp/v2/plan?include=<ids>&per_page=50&hideBuilderPlan=false
 //
 // (without hideBuilderPlan=false the feed leaves out the builder's own
-// plans: half of Wild Blue's twelve). Nothing here asks Claude.
+// plans: half of Wild Blue's twelve). A plan's tour is read off its own
+// page where the record names none. Nothing here asks Claude.
 
 import { bathsOf } from "@/lib/floorplans/standardize";
+import { isTourUrl, tourLinkIn, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -136,7 +138,37 @@ export function normalizeArPlan(plan: ArPlan, prices: ReturnType<typeof tilePric
     galleryImages: photos,
     blueprintImages: drawing ? [drawing] : [],
     description: null,
+    // A tour the plan's record carries, in whatever field (its page's
+    // "Virtual Tour" is read where the record has none: planTour).
+    virtualTourUrl: tourUrlIn(JSON.stringify(plan)),
   };
+}
+
+/**
+ * The tour a plan's page offers: one embedded in it, or behind the link it
+ * labels "Virtual Tour" — Eventide's page has one and the record did not
+ * say (Jeff, 2026-09-28). A link that is a tour is taken as it is; one to
+ * a page of the builder's own is read for the tour it holds. Null when the
+ * page offers none. Exported for tests.
+ */
+export async function planTour(pageUrl: string, read: (url: string) => Promise<string>): Promise<string | null> {
+  const html = await read(pageUrl);
+  const embedded = tourUrlIn(html);
+  if (embedded) return embedded;
+  const link = tourLinkIn(html);
+  if (!link) return null;
+  if (isTourUrl(link)) return link;
+  try {
+    return tourUrlIn(await read(link));
+  } catch {
+    return null;
+  }
+}
+
+async function getText(address: string): Promise<string> {
+  const res = await fetch(address, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) });
+  if (!res.ok) throw new Error(`fetch ${address}: ${res.status}`);
+  return res.text();
 }
 
 async function getJson<T>(address: string): Promise<T> {
@@ -161,9 +193,25 @@ export async function extractArHomes(params: { url?: string }): Promise<Normaliz
   const plans = await getJson<ArPlan[]>(feed.href);
   const prices = tilePrices(community);
   const byId = new Map(plans.map((p) => [p.id, p]));
-  return ids
+  const normalized = ids
     .map((id) => byId.get(id))
     .filter((p): p is ArPlan => Boolean(p))
     .map((p) => normalizeArPlan(p, prices))
     .filter((p): p is NormalizedPlan => p !== null);
+  // Each plan's page for the tour its record does not name, a few at a
+  // time. A page that cannot be read costs the tour, never the plan, and
+  // a run that finds none does not take a working tour away (diff.ts).
+  const out: NormalizedPlan[] = [];
+  for (let i = 0; i < normalized.length; i += 4) {
+    out.push(
+      ...(await Promise.all(
+        normalized.slice(i, i + 4).map(async (plan) => {
+          if (plan.virtualTourUrl || !plan.sourceUrl) return plan;
+          const tour = await planTour(plan.sourceUrl, getText).catch(() => null);
+          return tour ? { ...plan, virtualTourUrl: tour } : plan;
+        })
+      ))
+    );
+  }
+  return out;
 }

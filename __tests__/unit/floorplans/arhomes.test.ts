@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { communityRecordIn, normalizeArPlan, planIdsOf, tilePrices, type ArPlan } from "@/lib/floorplans/extractors/arhomes";
+import { communityRecordIn, normalizeArPlan, planIdsOf, planTour, tilePrices, type ArPlan } from "@/lib/floorplans/extractors/arhomes";
 
 // The shapes AR Homes' WordPress answers with for Wild Blue at Waterside (2026-09-27).
 const community = {
@@ -84,5 +84,33 @@ describe("Arthur Rutenberg's plans from its WordPress (Wild Blue, Jeff 2026-09-2
   it("does not give the Talise the Talise II's price", () => {
     const plain = normalizeArPlan({ ...talise, id: 19584, slug: "talise", title: { rendered: "Talise" } }, tilePrices(community))!;
     expect(plain.price).toBeNull();
+  });
+});
+
+describe("a plan's virtual tour (Eventide, Jeff 2026-09-28)", () => {
+  const matterport = "https://my.matterport.com/show/?m=TKipoYvkC4W&play=1";
+
+  it("takes a tour the plan's record carries, in whatever field", () => {
+    const withTour = { ...talise, acf: { ...talise.acf, virtual_tour: matterport } } as ArPlan;
+    expect(normalizeArPlan(withTour, [])?.virtualTourUrl).toBe("https://my.matterport.com/show/?m=TKipoYvkC4W");
+    expect(normalizeArPlan(talise, [])?.virtualTourUrl).toBeNull();
+  });
+
+  it("reads the tour off the plan's page: embedded, linked, or behind a page of the builder's", async () => {
+    const pages: Record<string, string> = {
+      "https://www.arhomes.com/plan/lago/": `<iframe src="${matterport}"></iframe>`,
+      "https://www.arhomes.com/plan/eventide/": '<a class="btn" href="https://my.matterport.com/show/?m=EvEnTiDe1"><span>Virtual Tour</span></a>',
+      "https://www.arhomes.com/plan/talise/": '<a href="https://www.arhomes.com/tours/talise/">VIRTUAL TOUR</a>',
+      "https://www.arhomes.com/tours/talise/": '<iframe src="https://my.matterport.com/show/?m=TaLiSe22"></iframe>',
+      "https://www.arhomes.com/plan/atwater/": '<a href="#">Request information</a>',
+    };
+    const read = async (url: string) => {
+      if (!(url in pages)) throw new Error(`fetch ${url}: 404`);
+      return pages[url];
+    };
+    expect(await planTour("https://www.arhomes.com/plan/lago/", read)).toBe("https://my.matterport.com/show/?m=TKipoYvkC4W");
+    expect(await planTour("https://www.arhomes.com/plan/eventide/", read)).toBe("https://my.matterport.com/show/?m=EvEnTiDe1");
+    expect(await planTour("https://www.arhomes.com/plan/talise/", read)).toBe("https://my.matterport.com/show/?m=TaLiSe22");
+    expect(await planTour("https://www.arhomes.com/plan/atwater/", read)).toBeNull();
   });
 });
