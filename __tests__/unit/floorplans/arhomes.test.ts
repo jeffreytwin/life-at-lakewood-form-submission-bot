@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { communityRecordIn, normalizeArPlan, planIdsOf, planTour, tilePrices, type ArPlan } from "@/lib/floorplans/extractors/arhomes";
+import { communityRecordIn, listedPrices, normalizeArPlan, planIdsOf, planTour, type ArPlan } from "@/lib/floorplans/extractors/arhomes";
 
 // The shapes AR Homes' WordPress answers with for Wild Blue at Waterside (2026-09-27).
 const community = {
@@ -21,6 +21,26 @@ const community = {
     ],
   },
 };
+
+// Lakewood Ranch's home finder, AR only (build[]=34701): a card per plan, and one per home built.
+const card = (name: string, price: string, village: string, kinds = "Custom, Single-Family Home") => `
+  <div class="hotel ">
+    <div class="hotel-photo relative" style="background-image:url(https://lakewoodranch.com/wp-content/uploads/2025/01/${name.replace(/\W+/g, "-")}.jpg);">
+      <a class="full-link" href="https://lakewoodranch.com/homes/${name.toLowerCase().replace(/\W+/g, "-")}/"></a>
+      <div class="bedbathoverlay"><li class="bed">4 Bed //</li><li class="bath">4.5 Bath //</li><li class="garages">3 Car // </li><li class="sf">4,254 SF</li></div>
+    </div>
+    <p class="subhead mb-10"><em>${kinds}</em></p>
+    <h4 class="coral bold no-btm">${name}</h4>
+    <h4 class="dark-grey mb-10">${price}</h4>
+    <p class="no-btm"><strong>Village: </strong>${village}</p>
+    <p><strong>Builder: </strong>Arthur Rutenberg Homes</p>
+  </div>`;
+const finder = `<div class="flex-grid hotels home-finder">
+  ${card("The Talise II 1746", "Homes From $2,773,800", "Waterside &#8211; Wild Blue")}
+  ${card("Avila", "Homes From $2,255,300", "Waterside &#8211; Wild Blue")}
+  ${card("123 Crystal Waters Drive", "$3,178,655", "Waterside &#8211; Wild Blue", "Move-In Ready, Single-Family Home")}
+  ${card("Talise", "Homes From $1,900,000", "Star Farms")}
+</div><footer></footer>`;
 
 const talise: ArPlan = {
   id: 34050,
@@ -52,15 +72,17 @@ describe("Arthur Rutenberg's plans from its WordPress (Wild Blue, Jeff 2026-09-2
     expect(planIdsOf({ acf: { layout: [{ plans_list: [{ ID: 7 }, { id: 8 }] }] } })).toEqual([7, 8]);
   });
 
-  it("reads each featured tile's price and the plan it names", () => {
-    expect(tilePrices(community)).toEqual([
-      { name: "Avila", slug: "avila", price: 2255300 },
-      { name: "Talise II", slug: "talise-ii", price: 2773800 },
+  it("reads the prices Lakewood Ranch advertises for the village's plans, and no home already built", () => {
+    expect(listedPrices(finder, "Waterside - Wild Blue")).toEqual([
+      { name: "The Talise II 1746", price: 2773800 },
+      { name: "Avila", price: 2255300 },
     ]);
+    expect(listedPrices(finder, "Star Farms")).toEqual([{ name: "Talise", price: 1900000 }]);
+    expect(listedPrices(finder, "Waterside - Kingfisher Estates")).toEqual([]);
   });
 
-  it("makes a plan of a plan's record, priced by its tile, with its photos and drawing", () => {
-    const plan = normalizeArPlan(talise, tilePrices(community))!;
+  it("makes a plan of a plan's record, priced as Lakewood Ranch advertises it, with its photos and drawing", () => {
+    const plan = normalizeArPlan(talise, listedPrices(finder, "Waterside - Wild Blue"))!;
     expect(plan).toMatchObject({
       planKey: "talise-ii",
       name: "Talise II",
@@ -82,8 +104,14 @@ describe("Arthur Rutenberg's plans from its WordPress (Wild Blue, Jeff 2026-09-2
   });
 
   it("does not give the Talise the Talise II's price", () => {
-    const plain = normalizeArPlan({ ...talise, id: 19584, slug: "talise", title: { rendered: "Talise" } }, tilePrices(community))!;
+    const plain = normalizeArPlan({ ...talise, id: 19584, slug: "talise", title: { rendered: "Talise" } }, listedPrices(finder, "Waterside - Wild Blue"))!;
     expect(plain.price).toBeNull();
+  });
+
+  it("leaves a plan Lakewood Ranch does not advertise without a price (Eventide), whatever arhomes.com's records say", () => {
+    const eventide = normalizeArPlan({ ...talise, id: 1, slug: "eventide", title: { rendered: "Eventide" } }, listedPrices(finder, "Waterside - Wild Blue"))!;
+    expect(eventide.price).toBeNull();
+    expect(eventide.priceDisplay).toBeNull();
   });
 });
 
