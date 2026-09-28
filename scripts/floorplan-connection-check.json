@@ -1,10 +1,16 @@
 {
-  "raw": [],
+  "raw": [
+    { "url": "https://nealcommunities.com/new-homes/palm-grove/tidewinds-2-7/20413-sylvester-palm-lane-tidewinds-2-040/", "around": ["<h1", "20413", "2143 S"], "chars": 500, "count": 2 },
+    { "url": "https://nealcommunities.com/new-homes/windward/dream-2-7/8427-anthirium-loop-dream2-451/", "around": ["<h1", "8472", "8427 A"], "chars": 500, "count": 2 },
+    { "url": "https://nealsignaturehomes.com/waterbury-park", "around": ["Kingfisher", "Monterey"], "chars": 800, "count": 1 },
+    { "url": "https://lakewoodranch.com/home-finder/", "around": ["Neal Signature"], "chars": 600, "count": 3 }
+  ],
+  "qmiFlags": true,
   "concurrency": 2,
   "detailPlans": 1,
   "duplicates": [],
   "checks": [],
-  "anatomy": [],
+  "anatomy": ["https://nealsignaturehomes.com/waterbury-park"],
   "detailNames": [],
   "probe": [],
   "v2Audit": false
