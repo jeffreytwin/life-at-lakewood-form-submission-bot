@@ -1038,6 +1038,12 @@ async function main() {
       for (const [key, g] of byScope) {
         lines.push(`  link  ${key}: ${g.rows} rows${g.builder1.size ? `; builder1 → ${[...g.builder1].join(", ")}` : ""}${g.villages.size ? `; villages → ${[...g.villages].join(", ")}` : ""}`);
       }
+      // Rows missing a link, and whether the lookup found anything to fill it with.
+      for (const g of c.gaps ?? []) {
+        lines.push(
+          `  gap   ${g.builder || "(no builder)"} · ${g.village || "(no village)"}: ${g.rows} rows; no builder1 on ${g.noBuilder1} (lookup: ${g.found.builderId ?? "nothing"}); no villages on ${g.noVillages} (lookup: ${g.found.villageId ?? "nothing"})`
+        );
+      }
     }
     await keep("qmi flags (dry run)", lines.join("\n"));
     say("quick move-in flags looked at");

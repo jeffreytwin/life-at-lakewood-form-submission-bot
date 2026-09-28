@@ -223,6 +223,8 @@ export interface FlagCheck {
   fixed: number;
   /** Rows whose builder or neighborhood link is to be set (linkFixes). */
   links: LinkFix[];
+  /** Each builder and community with rows missing a link, and what the lookup found for them: a gap no fix fills is a name Wix has no item for. */
+  gaps?: { builder: string; village: string; rows: number; noBuilder1: number; noVillages: number; found: PlanReferences }[];
   /** Links written. */
   linked: number;
   error?: string;
@@ -255,7 +257,24 @@ export async function checkSiteFlags(
   }
   const links = linkFixes(items, (builder, village) => expected.get(`${builder}|${village}`));
   const check: FlagCheck = { site: label, ...found, fixed: 0, links, linked: 0 };
-  if (opts.dryRun) return check;
+  if (opts.dryRun) {
+    const gaps = new Map<string, NonNullable<FlagCheck["gaps"]>[number]>();
+    for (const item of items) {
+      const builder = text(item.data.builder);
+      const village = text(item.data.village);
+      const noBuilder1 = !refOf(item.data.builder1);
+      const noVillages = !refOf(item.data.villages);
+      if (!noBuilder1 && !noVillages) continue;
+      const key = `${builder}|${village}`;
+      const gap = gaps.get(key) ?? { builder, village, rows: 0, noBuilder1: 0, noVillages: 0, found: expected.get(key)! };
+      gap.rows += 1;
+      if (noBuilder1) gap.noBuilder1 += 1;
+      if (noVillages) gap.noVillages += 1;
+      gaps.set(key, gap);
+    }
+    check.gaps = [...gaps.values()];
+    return check;
+  }
 
   const deadline = opts.deadline ?? Date.now() + 120_000;
   for (const fix of found.fixes) {
