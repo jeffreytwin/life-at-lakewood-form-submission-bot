@@ -20,6 +20,7 @@ import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
 import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
 import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
+import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -658,10 +659,33 @@ export function homeAddressed(plan: NormalizedPlan, address: string | null | und
 }
 
 /**
+ * A plan's description once its own page is read: the list's, unless the
+ * list gave none or only a card's line of facts, and then the page's
+ * prose. Kolter's Cresswind cards print "Island Collection - 3,433 Total
+ * Sq. Ft. 3 Bedroom (up to 4 Bedroom), Den, …", which kept out the "About
+ * this floorplan" its plan pages give, and every Cresswind plan went out
+ * with our sentence (Jeff, 2026-09-28). The line is kept beside the prose
+ * (raw.featuresLine) for the baths it says in words. Pure; exported for
+ * tests.
+ */
+export function descriptionFromPage(
+  plan: NormalizedPlan,
+  fromPage: string | null | undefined
+): { description: string | null; raw: NormalizedPlan["raw"] } {
+  const listed = plan.description?.trim() || null;
+  const written = fromPage?.trim() || null;
+  if (!listed) return { description: written, raw: plan.raw };
+  if (!written || !looksLikeSpecList(listed) || looksLikeSpecList(written)) return { description: plan.description ?? null, raw: plan.raw };
+  const raw = plan.raw?.featuresLine ? plan.raw : { ...(plan.raw ?? {}), featuresLine: listed };
+  return { description: written, raw };
+}
+
+/**
  * The plan with what its own page adds: the garages, the description, the
  * tour and the pictures the list had no room for. The list's picture stays
  * in front, so the hero the community page chose still leads, and a field
- * the list already filled is not overwritten — only the blanks are.
+ * the list already filled is not overwritten — only the blanks are, and a
+ * description that is only the card's spec line.
  *
  * The pictures are read off the page's headings rather than left to Claude
  * (plan-page.ts): the first gallery's are added whether or not Claude
@@ -817,6 +841,7 @@ export async function readPlanPageWithClaude(
   // viewer, as ranges whose top the site shows (zonda.ts; Homes by Towne,
   // Jeff 2026-09-26). A home's own counts are its own.
   const zonda = plan.quickMoveIn ? null : await zondaCountsFor(html, plan.name);
+  const { description, raw } = descriptionFromPage(plan, page.description);
   return {
     ...plan,
     ...homeAddressed(plan, page.address),
@@ -830,7 +855,7 @@ export async function readPlanPageWithClaude(
     baths: zonda?.baths || bathsStated(content) || plan.baths || (page.baths ?? ""),
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
-    description: plan.description ?? page.description?.trim() ?? null,
+    description,
     // A tour on a host that serves tours wins outright, wherever it was
     // found: the list read may have picked up the builder's own page about
     // the tour, and that is not the tour (Jeff, 2026-09-22). Failing that,
@@ -854,7 +879,7 @@ export async function readPlanPageWithClaude(
     },
     // The code a base plan's homes may name it by (David Weekley's "F057"
     // is The Wagoner): what ties them when the home gives no name.
-    raw: !plan.quickMoveIn && page.planCode?.trim() && !plan.raw?.planId ? { ...(plan.raw ?? {}), planId: page.planCode.trim() } : plan.raw,
+    raw: !plan.quickMoveIn && page.planCode?.trim() && !raw?.planId ? { ...(raw ?? {}), planId: page.planCode.trim() } : raw,
   };
 }
 

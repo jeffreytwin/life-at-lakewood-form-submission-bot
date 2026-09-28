@@ -235,7 +235,13 @@ export function looksLikeSpecList(text: string | null | undefined): boolean {
 export function withDescriptions(plans: NormalizedPlan[], communityName: string): NormalizedPlan[] {
   return plans.map((plan) => {
     const own = plan.description?.trim() ?? "";
-    if (own && !looksLikeSpecList(own)) return plan;
+    if (own && !looksLikeSpecList(own)) {
+      // A plan whose page gave prose over the card's spec line still counts
+      // its baths from the line's words (readPlanPageWithClaude).
+      const line = typeof plan.raw?.featuresLine === "string" ? plan.raw.featuresLine : "";
+      const baths = line ? fullAndHalfBaths(line) : null;
+      return baths ? { ...plan, baths } : plan;
+    }
     const raw = own ? { ...(plan.raw ?? {}), featuresLine: own } : plan.raw;
     // The line says the baths in words ("3 Full and 1 Half Bath"), and the
     // words decide (standardize.ts, fullAndHalfBaths).
