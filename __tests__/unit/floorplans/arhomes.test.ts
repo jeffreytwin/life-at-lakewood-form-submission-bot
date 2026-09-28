@@ -74,10 +74,10 @@ describe("Arthur Rutenberg's plans from its WordPress (Wild Blue, Jeff 2026-09-2
 
   it("reads the prices Lakewood Ranch advertises for the village's plans, and no home already built", () => {
     expect(listedPrices(finder, "Waterside - Wild Blue")).toEqual([
-      { name: "The Talise II 1746", price: 2773800 },
-      { name: "Avila", price: 2255300 },
+      { name: "The Talise II 1746", price: 2773800, page: "https://lakewoodranch.com/homes/the-talise-ii-1746/" },
+      { name: "Avila", price: 2255300, page: "https://lakewoodranch.com/homes/avila/" },
     ]);
-    expect(listedPrices(finder, "Star Farms")).toEqual([{ name: "Talise", price: 1900000 }]);
+    expect(listedPrices(finder, "Star Farms")).toEqual([{ name: "Talise", price: 1900000, page: "https://lakewoodranch.com/homes/talise/" }]);
     expect(listedPrices(finder, "Waterside - Kingfisher Estates")).toEqual([]);
   });
 
@@ -140,5 +140,19 @@ describe("a plan's virtual tour (Eventide, Jeff 2026-09-28)", () => {
     expect(await planTour("https://www.arhomes.com/plan/eventide/", read)).toBe("https://my.matterport.com/show/?m=EvEnTiDe1");
     expect(await planTour("https://www.arhomes.com/plan/talise/", read)).toBe("https://my.matterport.com/show/?m=TaLiSe22");
     expect(await planTour("https://www.arhomes.com/plan/atwater/", read)).toBeNull();
+  });
+});
+
+describe("a tour from Lakewood Ranch's page for the plan (Jeff, 2026-09-28)", () => {
+  it("keeps the plan's page there, and reads it for a tour where AR's page has none", async () => {
+    const plan = normalizeArPlan(talise, listedPrices(finder, "Waterside - Wild Blue"))!;
+    expect(plan.raw?.listedPage).toBe("https://lakewoodranch.com/homes/the-talise-ii-1746/");
+    const pages: Record<string, string> = {
+      "https://www.arhomes.com/plan/talise-ii/": '<a href="#">Request information</a>',
+      "https://lakewoodranch.com/homes/the-talise-ii-1746/": '<iframe src="https://my.matterport.com/show/?m=LwRtAl1se"></iframe>',
+    };
+    const read = async (url: string) => pages[url] ?? "";
+    expect(await planTour(plan.sourceUrl!, read)).toBeNull();
+    expect(await planTour(String(plan.raw?.listedPage), read)).toBe("https://my.matterport.com/show/?m=LwRtAl1se");
   });
 });

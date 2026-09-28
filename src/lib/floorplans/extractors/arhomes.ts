@@ -58,10 +58,11 @@ interface ArCommunity {
 /** Where AR's plans are advertised with a price: Lakewood Ranch's home finder, AR only. extractor_params.priceList overrides. */
 export const AR_PRICE_LIST = "https://lakewoodranch.com/home-finder/?build%5B%5D=34701&home-search=Search+Homes&submitted=1";
 
-/** A plan's price as it is advertised, by the plan's name. */
+/** A plan as Lakewood Ranch lists it: its name, its price where it gives one, and its page there. */
 export interface ListedPrice {
   name: string;
-  price: number;
+  price: number | null;
+  page: string | null;
 }
 
 const decode = (s: string) =>
@@ -100,16 +101,17 @@ export function planIdsOf(community: ArCommunity): number[] {
 const planName = (name: string) => normKey(name.replace(/^\s*the\s+/i, "").replace(/\s+\d{3,5}$/, ""));
 
 /**
- * The prices Lakewood Ranch's home finder advertises for a village's
- * plans: its cards name each plan and say "Homes From $…" (parseHotelCards).
- * A home already built is left out; a plan is priced as a plan. Pure;
- * exported for tests.
+ * The plans Lakewood Ranch's home finder lists in a village: its cards
+ * name each plan, say "Homes From $…" (parseHotelCards) and link the
+ * plan's page there, which carries its tour where AR's does not (Jeff,
+ * 2026-09-28). A home already built is left out; a plan is priced as a
+ * plan. Pure; exported for tests.
  */
 export function listedPrices(html: string, village: string): ListedPrice[] {
   const wanted = normKey(village);
   return parseHotelCards(html, "https://lakewoodranch.com")
-    .filter((c) => normKey(c.village.replace(/[–—]/g, "-")) === wanted && !c.plan.quickMoveIn && c.plan.price)
-    .map((c) => ({ name: c.plan.name, price: c.plan.price as number }));
+    .filter((c) => normKey(c.village.replace(/[–—]/g, "-")) === wanted && !c.plan.quickMoveIn)
+    .map((c) => ({ name: c.plan.name, price: c.plan.price || null, page: c.plan.sourceUrl }));
 }
 
 const url = (img: WpImage | false | null | undefined) => (img && typeof img.url === "string" && img.url ? img.url : null);
@@ -120,6 +122,7 @@ export function normalizeArPlan(plan: ArPlan, prices: ListedPrice[]): Normalized
   if (!name) return null;
   const a = plan.acf ?? {};
   const tile = prices.find((t) => planName(t.name) === planName(name));
+  const price = tile?.price ?? null;
   const photos = [url(a.banner_image), ...(a.gallery || []).map(url), ...(a.interior_gallery || []).map(url)].filter(
     (u, i, all): u is string => Boolean(u) && all.indexOf(u) === i
   );
@@ -129,8 +132,8 @@ export function normalizeArPlan(plan: ArPlan, prices: ListedPrice[]): Normalized
   return {
     planKey: normKey(name),
     name,
-    price: tile?.price ?? null,
-    priceDisplay: tile ? "$" + tile.price.toLocaleString("en-US") : null,
+    price,
+    priceDisplay: price ? "$" + price.toLocaleString("en-US") : null,
     beds: beds ? String(beds) : "",
     baths: bathsOf(number(a.bathrooms), number(a.half_baths)) ?? "",
     sqft: number(a.square_feet),
@@ -145,6 +148,8 @@ export function normalizeArPlan(plan: ArPlan, prices: ListedPrice[]): Normalized
     // A tour the plan's record carries, in whatever field (its page's
     // "Virtual Tour" is read where the record has none: planTour).
     virtualTourUrl: tourUrlIn(JSON.stringify(plan)),
+    // Its page on Lakewood Ranch's site, read for a tour where AR's is silent.
+    ...(tile?.page ? { raw: { listedPage: tile.page } } : {}),
   };
 }
 
@@ -204,16 +209,21 @@ export async function extractArHomes(params: { url?: string; priceList?: string;
     .filter((p): p is ArPlan => Boolean(p))
     .map((p) => normalizeArPlan(p, prices))
     .filter((p): p is NormalizedPlan => p !== null);
-  // Each plan's page for the tour its record does not name, a few at a
-  // time. A page that cannot be read costs the tour, never the plan, and
+  // Each plan's page for the tour its record does not name, on AR's site
+  // and then on Lakewood Ranch's, a few at a time. A page that cannot be read costs the tour, never the plan, and
   // a run that finds none does not take a working tour away (diff.ts).
   const out: NormalizedPlan[] = [];
   for (let i = 0; i < normalized.length; i += 4) {
     out.push(
       ...(await Promise.all(
         normalized.slice(i, i + 4).map(async (plan) => {
-          if (plan.virtualTourUrl || !plan.sourceUrl) return plan;
-          const tour = await planTour(plan.sourceUrl, getText).catch(() => null);
+          if (plan.virtualTourUrl) return plan;
+          const listed = typeof plan.raw?.listedPage === "string" ? plan.raw.listedPage : null;
+          let tour: string | null = null;
+          for (const page of [plan.sourceUrl, listed]) {
+            if (!page || tour) continue;
+            tour = await planTour(page, getText).catch(() => null);
+          }
           return tour ? { ...plan, virtualTourUrl: tour } : plan;
         })
       ))
