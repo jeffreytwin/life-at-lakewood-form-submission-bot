@@ -28,7 +28,7 @@ import { supabase } from "@/lib/supabase/client";
 import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, resolveExtractor, RUN_READ_MS } from "@/lib/floorplans/sync";
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
-import { firstGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
+import { captionedCarousel, elevationPictures, firstGallery, lightboxGallery, namedGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
 import { pageIsBotCheck } from "@/lib/floorplans/extractors/rendered";
 import { pixelDistance, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import { normKey, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
@@ -60,7 +60,7 @@ interface Config {
   /** Pages to take apart for reading (anatomy/<slug>.txt): how a page is built, not what it says. "json <url>" or "POST <url>" reads a feed; "<url> click <selector>" opens a tab first; "clean <url>" clears cookies first, "relaunch <url>" starts a new browser. */
   anatomy?: string[];
   /** Pages whose markup, as a plain fetch receives it, is printed around the words given: what the readers here actually parse. */
-  raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number }[];
+  raw?: { url: string; around: string[]; chars?: number; after?: number; count?: number; whole?: boolean }[];
   /** Addresses fetched as a picture would be: the status, the type and the size that come back. */
   probe?: string[];
   /** Galleries Claude is asked to find the same photograph in (photo-duplicates.ts), as "Sort the photos" asks. */
@@ -569,6 +569,15 @@ async function rawAround(url: string, around: string[], chars = 1500, after = 0,
     out.push("", `== FIRST GALLERY (${gallery.first.length}; ${gallery.drop.size} dropped) ==`, ...gallery.first.slice(0, 40).map((i) => `${i.src} alt=${JSON.stringify(i.alt)}`));
     const carried = payloadGallery(html, res.url || url);
     out.push("", `== PAYLOAD GALLERY (${carried.length}) ==`, ...carried.slice(0, 40).map((i) => `${i.src}${i.outside ? " (outside)" : ""}`));
+    // The other readers a plan page's pictures come from, as readPlanPageWithClaude asks them.
+    const lightbox = lightboxGallery(html, res.url || url);
+    out.push("", `== LIGHTBOX (${lightbox.first.length}; ${lightbox.drawings.length} drawings) ==`, ...lightbox.first.slice(0, 40).map((i) => `${i.src} alt=${JSON.stringify(i.alt)}`));
+    const carousel = captionedCarousel(html, res.url || url);
+    out.push("", `== CAPTIONED CAROUSEL (${carousel.first.length}) ==`, ...carousel.first.slice(0, 40).map((i) => `${i.src} alt=${JSON.stringify(i.alt)}`));
+    const named = namedGallery(html, res.url || url);
+    out.push("", `== NAMED GALLERY (${named.length}) ==`, ...named.slice(0, 40).map((i) => `${i.src} alt=${JSON.stringify(i.alt)}`));
+    const outsides = elevationPictures(html, res.url || url);
+    out.push("", `== ELEVATIONS (${outsides.length}) ==`, ...outsides.slice(0, 40).map((i) => `${i.src} alt=${JSON.stringify(i.alt)}`));
     for (const words of around) {
       let from = after;
       for (let n = 0; n < count; n++) {
@@ -1027,8 +1036,10 @@ async function main() {
     await keep(`feed: ${feed.url}`, await feedAround(feed));
     say(`feed ${feed.url} kept`);
   }
-  for (const { url, around, chars, after, count } of config.raw ?? []) {
+  for (const { url, around, chars, after, count, whole } of config.raw ?? []) {
     await keep(`raw: ${url}`, await rawAround(url, around, chars, after, count));
+    // The whole page as a fetch receives it, to read again here.
+    if (whole) await keep(`markup: ${url}`, await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(45_000) }).then((r) => r.text(), (e) => `could not fetch: ${e}`));
     say(`markup of ${url} kept`);
   }
   if (config.probe?.length) {
