@@ -444,6 +444,10 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of the floor plan DRAWINGS on this page (not photos)" },
       planCode: { type: "string", description: "The builder's own code or number for this plan where the page shows one beside its name, e.g. 'F057' or 'B929'; omit if the page shows none" },
       address: { type: "string", description: "For a home for sale: its street address as the page titles it, e.g. '18366 Rockport Place'; omit for a floor plan's page or where the page gives none" },
+      sold: {
+        type: "boolean",
+        description: "For a home for sale: true where the page marks THIS home Sold, Under Contract or Sale Pending (a label on the home itself, e.g. a 'SOLD' ribbon on its photo); false or omitted otherwise",
+      },
     },
     required: [],
   },
@@ -473,6 +477,7 @@ interface ExtractedPlanPage {
   blueprintImages?: string[];
   planCode?: string;
   address?: string;
+  sold?: boolean;
 }
 
 /** A media store's own id, which says nothing about the picture: "6e8cfe1d-66ee-4b88-b752-30e7579fd4bf_lg.jpg". */
@@ -917,7 +922,13 @@ export async function readPlanPageWithClaude(
     },
     // The code a base plan's homes may name it by (David Weekley's "F057"
     // is The Wagoner): what ties them when the home gives no name.
-    raw: !plan.quickMoveIn && page.planCode?.trim() && !raw?.planId ? { ...(raw ?? {}), planId: page.planCode.trim() } : raw,
+    // And a home its own page marks sold is no longer for sale (sold-homes.ts).
+    raw:
+      plan.quickMoveIn && page.sold === true
+        ? { ...(raw ?? {}), sold: true }
+        : !plan.quickMoveIn && page.planCode?.trim() && !raw?.planId
+          ? { ...(raw ?? {}), planId: page.planCode.trim() }
+          : raw,
   };
 }
 
@@ -955,7 +966,7 @@ async function listPage(
       ? `Extract every floor plan / home model from this new-home community page. Leave out the homes for sale — a home named by its street address or marked "Move-in Ready", "Quick Move-in" or with a move-in date — which are read from their own page. Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`
       : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
 
-  const ask = `${what} A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
+  const ask = `${what} Leave out any home the page marks Sold, Under Contract or Sale Pending: it is no longer for sale. A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 
   // Streamed, not because anything reads the stream, but because the SDK
   // refuses a plain request whose ceiling could take it past ten minutes —
