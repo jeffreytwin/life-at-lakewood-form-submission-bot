@@ -272,6 +272,7 @@ export default function FloorPlansPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [lastPicked, setLastPicked] = useState<string | null>(null);
   const [rejectingSelected, setRejectingSelected] = useState(false);
+  const [sortingSelected, setSortingSelected] = useState(false);
   /** Seconds the run is waiting out a Wix throttle, so the buttons say so instead of looking stuck. */
   const [throttleWait, setThrottleWait] = useState(0);
   const [editing, setEditing] = useState<Group | null>(null);
@@ -797,6 +798,67 @@ export default function FloorPlansPage() {
   }
 
   /**
+   * Sorts the photos of the ticked plans, as the Sort button in the edit
+   * overlay sorts one: each photograph once, then the front of the house,
+   * the rooms, the other outside views (Jeff, 2026-09-28: faster than
+   * opening every plan). Written straight to the queue, not as a hand
+   * edit, so a later run may still bring the builder's new photos. The
+   * ticks stay, for an approval after a look.
+   */
+  async function sortSelected() {
+    const list = selectedGroups;
+    const slices = list.map((g) => pendingIds(g)).filter((ids) => ids.length);
+    setSortingSelected(true);
+    let sorted = 0;
+    let removed = 0;
+    let skipped = 0;
+    const failed: string[] = [];
+    let problem: string | null = null;
+    try {
+      while (slices.length) {
+        // Whole plans per request, so no plan's rows are split across two.
+        const ids: string[] = [];
+        while (slices.length && ids.length + slices[0].length <= MAX_IDS_PER_REQUEST) ids.push(...slices.shift()!);
+        if (!ids.length) ids.push(...slices.shift()!);
+        const res = await fetch("/api/internal/floorplans/changes/sort-photos", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ids }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !Array.isArray(data?.results)) {
+          problem = data?.error ?? `HTTP ${res.status}`;
+          break;
+        }
+        for (const r of data.results as { planKey: string; status: string; removed: number }[]) {
+          if (r.status === "sorted") {
+            sorted += 1;
+            removed += r.removed;
+          } else if (r.status === "skipped") skipped += 1;
+          else failed.push(r.planKey);
+        }
+        const remaining = (Array.isArray(data.remaining) ? data.remaining : []).filter((x: unknown): x is string => typeof x === "string");
+        if (remaining.length >= ids.length) {
+          problem = "the server made no progress";
+          break;
+        }
+        if (remaining.length) slices.unshift(remaining);
+        fetchChanges();
+      }
+    } catch (e) {
+      problem = e instanceof Error ? e.message : String(e);
+    } finally {
+      setSortingSelected(false);
+      fetchChanges();
+      const notes = [`Sorted the photos of ${sorted} plan${sorted === 1 ? "" : "s"}${removed ? `, taking out ${removed} duplicate photo${removed === 1 ? "" : "s"}` : ""}.`];
+      if (skipped) notes.push(`${skipped} had fewer than two photos and were left as they are.`);
+      if (failed.length) notes.push(`${failed.length} could not be sorted: ${failed.join(", ")}. Try again, or use Sort in the plan's edit window.`);
+      if (problem) notes.push(`Sorting stopped part way (${problem}); the plans not reached can be sorted again.`);
+      alert(notes.join("\n"));
+    }
+  }
+
+  /**
    * Rejects the ticked plans. A rejection sticks, so each can be brought
    * back one by one with Restore under the Rejected filter.
    */
@@ -864,14 +926,14 @@ export default function FloorPlansPage() {
               <button
                 className="btn btn-secondary"
                 onClick={() => approveGroups(pendingQuickMoveIns, "quick move-ins")}
-                disabled={bulkBusy || rejectingSelected}
+                disabled={bulkBusy || rejectingSelected || sortingSelected}
                 title="Every pending quick move-in the site and builder filters allow, whatever the view shows"
               >
                 {bulkBusy ? busyLabel : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
               </button>
             )}
             {pendingGroups.length > 0 && (
-              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy || rejectingSelected}>
+              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                 {bulkBusy ? busyLabel : `Approve All (${pendingGroups.length})`}
               </button>
             )}
@@ -1016,18 +1078,26 @@ export default function FloorPlansPage() {
             <div className="selection-bar">
               {selectedGroups.length === 0 ? (
                 <span className="text-muted text-sm">
-                  Tick plans to approve or reject several at once. Shift-click ticks every plan between two.
+                  Tick plans to approve, reject or sort the photos of several at once. Shift-click ticks every plan between two.
                 </span>
               ) : (
                 <>
                   <strong className="text-sm">{selectedGroups.length} selected</strong>
-                  <button className="btn btn-primary" onClick={approveSelected} disabled={bulkBusy || rejectingSelected}>
+                  <button className="btn btn-primary" onClick={approveSelected} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                     {bulkBusy ? busyLabel : `Approve selected (${selectedGroups.length})`}
                   </button>
-                  <button className="btn btn-secondary" onClick={rejectSelected} disabled={bulkBusy || rejectingSelected}>
+                  <button className="btn btn-secondary" onClick={rejectSelected} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                     {rejectingSelected ? "Rejecting…" : `Reject selected (${selectedGroups.length})`}
                   </button>
-                  <button className="btn btn-secondary" onClick={() => setSelected(new Set())} disabled={bulkBusy || rejectingSelected}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={sortSelected}
+                    disabled={bulkBusy || rejectingSelected || sortingSelected}
+                    title="Show each photo once and put the front of the house first, then the rooms, as Sort does in the edit window"
+                  >
+                    {sortingSelected ? "Sorting photos…" : `Sort photos (${selectedGroups.length})`}
+                  </button>
+                  <button className="btn btn-secondary" onClick={() => setSelected(new Set())} disabled={bulkBusy || rejectingSelected || sortingSelected}>
                     Clear
                   </button>
                   {selectedBlocked > 0 && (
@@ -1057,7 +1127,7 @@ export default function FloorPlansPage() {
                           if (el) el.indeterminate = selectedGroups.length > 0 && !allSelected;
                         }}
                         onChange={pickAll}
-                        disabled={bulkBusy || rejectingSelected}
+                        disabled={bulkBusy || rejectingSelected || sortingSelected}
                       />
                     )}
                   </th>
@@ -1136,7 +1206,7 @@ export default function FloorPlansPage() {
                             aria-label={`Select ${rec?.name ?? c.plan_key}`}
                             checked={selected.has(g.key)}
                             onChange={(e) => pick(index, (e.nativeEvent as MouseEvent).shiftKey === true)}
-                            disabled={bulkBusy || rejectingSelected}
+                            disabled={bulkBusy || rejectingSelected || sortingSelected}
                           />
                         )}
                       </td>

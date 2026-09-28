@@ -31,7 +31,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { labelPhotos, rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
-import { identicalPhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
+import { identicalPhotos, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 /** Pictures asked about at once here, where nobody is waiting on each answer (the Sort button asks three at a time). */
@@ -94,6 +94,25 @@ export function withCopiesTakenOut(record: NormalizedPlan, same: number[][]): { 
   return {
     record: { ...record, galleryImages: once.urls, galleryMeta, copiesChecked: true, ...(Object.keys(copiesOf).length ? { copiesOf } : {}) },
     removed: once.removed,
+  };
+}
+
+/**
+ * A waiting gallery sorted now, the way the Sort button sorts one — each
+ * photograph once, as Claude and the pixels find them (samePhotos), then
+ * in the order the sites show rooms in — and marked sorted and checked, as
+ * the background sort marks one. Not a hand edit: the next run may still
+ * propose the builder's new photos (Jeff, 2026-09-28: sorting the ticked
+ * plans from the queue at once).
+ */
+export async function sortGalleryNow(record: NormalizedPlan): Promise<{ record: NormalizedPlan; removed: string[]; placed: number }> {
+  const once = withCopiesTakenOut(record, (await samePhotos(record.galleryImages)).same);
+  const labels = await labelPhotos(once.record.galleryImages);
+  const next = withLookedAtRooms(once.record, labels);
+  return {
+    record: { ...once.record, galleryImages: next.galleryImages, galleryMeta: next.galleryMeta, photosSorted: true },
+    removed: once.removed,
+    placed: once.record.galleryImages.filter((url) => labels.get(url)).length,
   };
 }
 
