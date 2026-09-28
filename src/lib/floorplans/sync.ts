@@ -39,6 +39,7 @@ import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
 import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
+import { SERIES_BUILDERS, withSeriesLabels } from "@/lib/floorplans/series-labels";
 import { homesOfPlan, withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { fetchOrRender, planPageCandidates, withPlanPageDescription } from "@/lib/floorplans/stand-in-pages";
 import { rejectionStillApplies } from "@/lib/floorplans/approval";
@@ -618,7 +619,13 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const runId = `manual-${Date.now()}`;
   let plans: NormalizedPlan[];
   try {
-    plans = await extractor({ ...params, communityName: community.name, builderName: builder.name, runDeadline: startedAt + RUN_READ_MS });
+    plans = await extractor({
+      ...params,
+      communityName: community.name,
+      builderName: builder.name,
+      runDeadline: startedAt + RUN_READ_MS,
+      ...(SERIES_BUILDERS.has(builder.name) ? { keepSeriesApart: true } : {}),
+    });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     await setRunStatus(conn.id, `error: ${detail}`, null, true);
@@ -638,6 +645,18 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
     .eq("builder_id", builder.id)
     .is("removed_at", null);
   const canonicalByKey = new Map((canonical ?? []).map((c) => [c.plan_key, c]));
+  // A plan sold in two series is named for its series, every night alike,
+  // and so is the plan its homes are built from (series-labels.ts). A
+  // label the connection has used before, queued or filed, is kept.
+  if (SERIES_BUILDERS.has(builder.name) && typeof params.url === "string") {
+    const { data: queuedKeys } = await supabase
+      .from("fp_pending_changes")
+      .select("plan_key")
+      .eq("site_id", site.id)
+      .eq("community_id", community.id)
+      .eq("builder_id", builder.id);
+    plans = withSeriesLabels(plans, params.url, [...canonicalByKey.keys(), ...(queuedKeys ?? []).map((r) => r.plan_key as string)]);
+  }
   plans = await preparePlans(plans, { site, community, builder }, {
     deadline: startedAt + RUN_PREPARE_MS,
     known: new Map((canonical ?? []).map((c) => [c.plan_key, c.record as Partial<NormalizedPlan> | null])),
