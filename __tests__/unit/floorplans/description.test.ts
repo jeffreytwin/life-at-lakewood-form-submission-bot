@@ -98,6 +98,27 @@ describe("looksLikeSpecList", () => {
     expect(looksLikeSpecList("")).toBe(false);
     expect(looksLikeSpecList(null)).toBe(false);
   });
+
+  it("knows Kolter's card line with a dash between the area and the rooms (Cresswind, Jeff 2026-09-28)", () => {
+    for (const line of [
+      "Coastal Collection - 4,352 Total Sq. Ft. - 3 Bedroom, Den, 3 Full and 1 Half Bath, Dining Room, Club Room, Bonus Room, 2-Car Garage",
+      "Coastal Collection - 4,403 Total Sq. Ft. - 4 Bedroom, Den, 4 Full and 1 Half Bath, Great Room, Bonus Room, 2-Car Garage (up to 3-Car Garage)",
+      "Coastal Collection - 4,424 Total Sq. Ft. - 4 Bedroom, Den, 4 Bath, Great Room, Bonus Room, 3-Car Garage",
+      "Coastal Collection - 3,969 Total Sq. Ft. - 3 Bedroom (up to 4 Bedroom), Den, 3 Bath, Great Room, 2-Car Garage (up to 3-Car Garage)",
+      "Coastal Collection - 4,001 Total Sq. Ft. - 3 Bedroom (up to 4 Bedroom), Den, 3 Bath, Great Room, 3-Car Garage",
+      "Coastal Collection - 3,541 Total Sq. Ft. - 2 Bedroom (up to 3 bedroom), Den, 2 Full and 1 Half Bath, Dining Room, Club Room, 2-Car Garage",
+      "Coastal Collection - 3,425 Total Sq. Ft. - 3 Bedroom, Den, 3 Full and 1 Half Bath, Great Room, 2-Car Garage (up to 3 Car-Garage)",
+      "Island Collection - 3,433 Total Sq. Ft. 3 Bedroom (up to 4 Bedroom), Den, 3 Bath, Great Room, 2-Car Garage",
+    ]) {
+      expect(looksLikeSpecList(line)).toBe(true);
+    }
+    // The plan's own prose, which the line was proposed over.
+    expect(
+      looksLikeSpecList(
+        "Open gathering spaces and impressive square footage are two highly-rated features of this two-story 3 Bedroom floorplan. The large Island Kitchen in the rear of the home is sure to delight."
+      )
+    ).toBe(false);
+  });
 });
 
 describe("withDescriptions", () => {

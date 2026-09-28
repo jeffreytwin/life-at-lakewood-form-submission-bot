@@ -216,10 +216,18 @@ export function looksLikeSpecList(text: string | null | undefined): boolean {
   // between pieces: Kolter's "Island Collection - 3,433 Total Sq. Ft. 3
   // Bedroom (up to 4 Bedroom), Den, 3 Bath, …" was proposed over a plan's
   // description on every run (Jeff, 2026-09-28).
+  // And a dash may stand between the area and the rooms, as a comma does
+  // between rooms: "Coastal Collection - 4,352 Total Sq. Ft. - 3 Bedroom,
+  // Den, 3 Full and 1 Half Bath, …" came through as prose and was proposed
+  // over eight plans' descriptions in one run (Jeff, 2026-09-28).
   const listed = s
     .replace(/^[A-Z][\w'&. ]*?\bCollection\s*[-–—:]?\s*/, "")
-    .replace(/\b\d[\d,]*\+?\s*(?:(?:total|living|heated|under\s+air)\s+)*(?:area\s+)?(?:sq\.?\s*ft\.?|sqft|sf|square\s+feet)(?=\s|,|$)/gi, "");
-  const pieces = listed.split(/,(?!\d{3}\b)/).map((p) => p.trim()).filter(Boolean);
+    .replace(/\b\d[\d,]*\+?\s*(?:(?:total|living|heated|under\s+air)\s+)*(?:area\s+)?(?:sq\.?\s*ft\.?|sqft|sf|square\s+feet)(?=\s|,|$)/gi, "")
+    .replace(/^\s*[-–—:|]\s*/, "");
+  const pieces = listed
+    .split(/,(?!\d{3}\b)|\s[-–—|]\s/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (pieces.length < 3) return false;
   // A piece may lead with the plan's series: Kolter's "Island Collection 2
   // Bedroom (up to 3 Bedroom), Den, 2 Bath, …" (2026-09-26).
