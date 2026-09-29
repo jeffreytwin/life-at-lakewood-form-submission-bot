@@ -35,14 +35,14 @@ export const LISTINGS_ALERT_SOUND = SOUNDS.alert;
 
 /**
  * Floor Plans (Jeff, 2026-09-29): the queue emptied gets the victory, as a
- * lead accepted does. Approve, Reject and Remove play their animation with
- * no sound for now; a file named here plays once per click, however many
- * rows leave with it.
+ * lead accepted does. Approve has its own sound, and Reject and Remove
+ * share one (Jeff's picks: "approve - option 6", "reject - option 1").
+ * Each plays once per click, however many rows leave with it.
  */
 export const FLOOR_PLAN_SOUNDS: Record<"approve" | "reject" | "remove" | "cleared", string | null> = {
-  approve: null,
-  reject: null,
-  remove: null,
+  approve: "/sounds/floor-plan-approve.mp3",
+  reject: "/sounds/floor-plan-reject.mp3",
+  remove: "/sounds/floor-plan-reject.mp3",
   cleared: SOUNDS.victory,
 };
 
