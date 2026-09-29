@@ -18,15 +18,26 @@
 // (".../uploads/gallery/...-model-1-900.jpg"). Named for the model they
 // show, four came through as new photos of Palmera's Tideland and
 // Outrigger (Jeff, 2026-09-28: "they're really widescreen … I don't need
-// these"). No IO.
+// these").
+//
+// A page's icons: Ashton Woods draws its plan facts — stories, baths,
+// the lot, the garage — as orange pictures in the plan's first gallery,
+// each captioned "icon", and six of them came through among Teton's and
+// Siesta's photos (Jeff, 2026-09-29). No IO.
 
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 /** Builders whose plan pages show the community's other plans, each picture named for its own. */
 export const NAMED_PICTURE_BUILDERS = new Set(["Ashton Woods"]);
 
-/** A file name that is a badge or a logo, never a home. */
-const BADGE = /newsweek|trustworthy|\baward|badge|\blogo\b|_logo|-logo/i;
+/** A file name that is a badge, a logo or an icon, never a home. */
+const BADGE = /newsweek|trustworthy|\baward|badge|\blogo\b|_logo|-logo|\bicons?\b/i;
+
+/** A folder a site keeps its icons in: ".../images/icons/garage.svg". */
+const ICON_FOLDER = /\/icons?\//i;
+
+/** A caption that says the picture is an icon, a logo or a badge: Ashton Woods captions its fact icons "icon". */
+const BADGE_CAPTION = /\b(?:icons?|logos?|badges?)\b/i;
 
 /** The words of a picture's file name: "cms_Plant-Q-Scheme-128.jpg" is cms, plant, q, scheme, 128, jpg. */
 function fileWords(url: string): string[] {
@@ -46,9 +57,9 @@ const nameWords = (name: string) =>
 /** Whether every word of a name is in the file's words. */
 const names = (words: string[], file: string[]) => words.length > 0 && words.every((w) => file.includes(w));
 
-/** Whether a picture is a badge or a logo. Pure; exported for tests. */
-export function isBadge(url: string): boolean {
-  return BADGE.test(fileWords(url).join("-"));
+/** Whether a picture is a badge, a logo or an icon, by its file name or the caption the page gave it. Pure; exported for tests. */
+export function isBadge(url: string, caption?: string | null): boolean {
+  return BADGE.test(fileWords(url).join("-")) || ICON_FOLDER.test(url.replace(/[?#].*$/, "")) || BADGE_CAPTION.test(caption ?? "");
 }
 
 function withGallery(plan: NormalizedPlan, keep: (src: string, i: number) => boolean): NormalizedPlan {
@@ -60,9 +71,9 @@ function withGallery(plan: NormalizedPlan, keep: (src: string, i: number) => boo
   return { ...plan, galleryImages, galleryMeta };
 }
 
-/** The plans and homes without a badge among their photos. Pure; exported for tests. */
+/** The plans and homes without a badge or an icon among their photos. Pure; exported for tests. */
 export function withoutBadges(plans: NormalizedPlan[]): NormalizedPlan[] {
-  return plans.map((plan) => withGallery(plan, (src) => !isBadge(src)));
+  return plans.map((plan) => withGallery(plan, (src) => !isBadge(src, plan.galleryMeta?.[src]?.caption)));
 }
 
 /** A folder a site keeps its page banners in: ".../uploads/hero/...", ".../banners/...". */

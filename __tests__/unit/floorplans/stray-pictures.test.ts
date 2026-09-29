@@ -43,6 +43,22 @@ describe("a badge is no photo", () => {
     expect(got.galleryImages).toEqual([front, kitchen]);
     expect(got.galleryMeta).toEqual({});
   });
+
+  it("takes out a page's icons, by the caption the page gave them or their file name (Ashton Woods, 2026-09-29)", () => {
+    const stairs = "https://awh.widen.net/content/abc123/png/stories.png";
+    const garage = "https://www.ashtonwoods.com/images/icons/garage.svg";
+    const elevation = widen("zz9", "cms_Teton-Q-Scheme-130.jpg");
+    const icon = { kind: "photo" as const, room: "other" as const, caption: "icon" };
+    const [got] = withoutBadges([
+      plan("Teton (Traditional)", [front, stairs, garage, elevation], {
+        galleryMeta: { [stairs]: icon, [garage]: icon, [elevation]: { kind: "exterior", room: "exterior", caption: null } },
+      }),
+    ]);
+    expect(got.galleryImages).toEqual([front, elevation]);
+    expect(isBadge(garage)).toBe(true);
+    expect(isBadge(stairs, "icon")).toBe(true);
+    expect(isBadge(kitchen, "Kitchen with its iconic island")).toBe(false);
+  });
 });
 
 describe("another plan's pictures are not this plan's (Ashton Woods' Oakfield Trails)", () => {

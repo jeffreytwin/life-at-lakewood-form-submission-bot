@@ -62,31 +62,60 @@ export function seriesOf(url: string | null | undefined, communityUrl: string | 
   return folder ? titleCase(folder.slice(slug.length + 1)) : null;
 }
 
-/** A name without the series a page or an earlier night put on it: "Duval (Signature)" and "Signature Duval" are Duval. */
+/**
+ * A name without the series a page or an earlier night put on it, however
+ * written: "Duval (Signature)", "Signature Duval", and the community's name
+ * with it, "Duval (Oakfield Trails Traditional)" (2026-09-29), are Duval.
+ * A model home is the plan too: "Duval (Oakfield Trails Signature) - Model
+ * Home" is Duval.
+ */
 function withoutSeries(name: string, series: Set<string>): string {
-  const trimmed = name.trim();
+  const isSeries = (text: string) => {
+    const key = normKey(text);
+    return [...series].some((s) => key === s || key.endsWith(`-${s}`));
+  };
+  const trimmed = name
+    .trim()
+    .replace(/\s*(?:[-–—|:]\s*|\(\s*)model(?:\s+home)?\s*\)?\s*$/i, "")
+    .trim();
   const tail = trimmed.match(/^(.*\S)\s*\(([^()]*)\)$/);
-  if (tail && series.has(normKey(tail[2]))) return tail[1].trim();
-  for (const s of series) {
-    const words = s.split("-").length;
-    const parts = trimmed.split(/\s+/);
-    if (parts.length > words && normKey(parts.slice(0, words).join(" ")) === s) return parts.slice(words).join(" ");
+  if (tail && isSeries(tail[2])) return tail[1].trim();
+  const parts = trimmed.split(/\s+/);
+  for (let words = 1; words < parts.length; words++) {
+    if (isSeries(parts.slice(0, words).join(" "))) return parts.slice(words).join(" ");
   }
   return trimmed;
 }
 
 const labelled = (name: string, series: string) => `${name} (${series})`;
 
+/** A plan already on the site: its key, its name and its page. */
+export interface FiledPlan {
+  planKey: string;
+  name?: string | null;
+  sourceUrl?: string | null;
+  quickMoveIn?: boolean | null;
+}
+
 /**
  * The run's plans with each plan sold in more than one series named for
- * its series, and each home built from one naming it so. A plan is
- * labelled where the run finds it in two series, or where a plan of its
- * name in its series is already on file (`knownKeys`: the connection's
- * records and queued rows, any status), so a night that reads one series
- * does not offer the plan again unlabelled. Plans and homes not in a
- * series are left as they are. Pure; exported for tests.
+ * its series, and each home built from one naming it so. A plan already
+ * on the site (`filed`) keeps the key and name it is filed under, however
+ * it was labelled then: Oakfield Trails' plans were approved as "Duval
+ * (Oakfield Trails Traditional)" (2026-09-29), and naming them again would
+ * offer each as a new plan and the one on the site as gone. Otherwise a
+ * plan is labelled where the run finds it in two series, or where a plan
+ * of its name in its series was queued before (`knownKeys`: the
+ * connection's records and queued rows, any status), so a night that
+ * reads one series does not offer the plan again unlabelled. Plans and
+ * homes not in a series are left as they are. Pure; exported for tests.
  */
-export function withSeriesLabels(plans: NormalizedPlan[], communityUrl: string, knownKeys: Iterable<string> = []): NormalizedPlan[] {
+export function withSeriesLabels(
+  plans: NormalizedPlan[],
+  communityUrl: string,
+  knownKeys: Iterable<string> = [],
+  filed: FiledPlan[] = []
+): NormalizedPlan[] {
   const known = new Set(knownKeys);
   const seriesByPlan = new Map<NormalizedPlan, string>();
   for (const p of plans) {
@@ -94,7 +123,13 @@ export function withSeriesLabels(plans: NormalizedPlan[], communityUrl: string, 
     if (s) seriesByPlan.set(p, s);
   }
   if (!seriesByPlan.size) return plans;
-  const allSeries = new Set([...seriesByPlan.values()].map(normKey));
+  const filedSeries = filed
+    .filter((f) => !f.quickMoveIn && f.name)
+    .map((f) => ({ ...f, series: seriesOf(f.sourceUrl, communityUrl) }))
+    .filter((f): f is typeof f & { series: string } => f.series !== null);
+  const allSeries = new Set([...seriesByPlan.values(), ...filedSeries.map((f) => f.series)].map(normKey));
+  const at = (name: string, series: string) => `${normKey(withoutSeries(name, allSeries))}|${normKey(series)}`;
+  const onSite = new Map(filedSeries.map((f) => [at(f.name as string, f.series), { planKey: f.planKey, name: f.name as string }]));
 
   // Each base plan's own name, and the series each name is sold in.
   const bare = new Map<NormalizedPlan, string>();
@@ -110,15 +145,17 @@ export function withSeriesLabels(plans: NormalizedPlan[], communityUrl: string, 
   const labels = (name: string, series: string) =>
     (soldIn.get(normKey(name))?.size ?? 0) > 1 || known.has(normKey(labelled(name, series)));
 
-  // The labelled plans by their own name and series, for the homes built from them.
-  const labelledPlans = new Map<string, string>();
+  // Each plan's name in its series, for the homes built from it.
+  const named = new Map<string, string>(filedSeries.map((f) => [at(f.name as string, f.series), f.name as string]));
   const out = plans.map((p) => {
     const name = bare.get(p);
     const s = seriesByPlan.get(p);
     if (name === undefined || !s) return p;
-    const finalName = labels(name, s) ? labelled(name, s) : name;
-    if (finalName !== name) labelledPlans.set(`${normKey(name)}|${normKey(s)}`, finalName);
-    return finalName === p.name && normKey(finalName) === p.planKey ? p : { ...p, name: finalName, planKey: normKey(finalName) };
+    const filedAs = onSite.get(at(name, s));
+    const finalName = filedAs?.name ?? (labels(name, s) ? labelled(name, s) : name);
+    const planKey = filedAs?.planKey ?? normKey(finalName);
+    named.set(at(name, s), finalName);
+    return finalName === p.name && planKey === p.planKey ? p : { ...p, name: finalName, planKey };
   });
 
   return out.map((p) => {
@@ -127,9 +164,9 @@ export function withSeriesLabels(plans: NormalizedPlan[], communityUrl: string, 
     const related = (p.relatedPlanName ?? (typeof p.raw?.relatedPlan === "string" ? p.raw.relatedPlan : "")).trim();
     if (!related) return p;
     const name = withoutSeries(related, allSeries);
-    const plan = labelledPlans.get(`${normKey(name)}|${normKey(s)}`) ?? (known.has(normKey(labelled(name, s))) ? labelled(name, s) : null);
+    const plan = named.get(at(name, s)) ?? (known.has(normKey(labelled(name, s))) ? labelled(name, s) : null);
     if (!plan || plan === related) return p;
-    // The key the reader matched by name is the unlabelled plan's; the home is linked again by its label (quick-move-ins.ts).
+    // The key the reader matched by name is the plan's under another name; the home is linked again by this one (quick-move-ins.ts).
     return {
       ...p,
       relatedPlanName: plan,
