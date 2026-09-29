@@ -51,6 +51,8 @@ function getMessage(event: LeadEvent): string {
       return "One of the email campaign's floor plans changed, Colonel. Head to Floor Plans → Email campaign and bring the marketing up to date.";
     case "builder_error":
       return `We lost contact with ${event.builderName ?? "a builder connection"}, Colonel. Floor Plans → Builder Connections, when you can.`;
+    case "floorplans_cleared":
+      return "That's every floor plan squared away, Colonel. Mission complete.";
   }
 }
 

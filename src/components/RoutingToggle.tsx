@@ -128,7 +128,8 @@ export default function RoutingToggle() {
       .catch(() => {});
   }, []);
 
-  // Play celebration animation when a lead is accepted, marked done, or an email is sent
+  // Play celebration animation when a lead is accepted, marked done, an email
+  // is sent, or the last pending floor plan is dealt with (Jeff, 2026-09-29)
   const playCelebration = useRef<() => void>(() => {});
   useEffect(() => {
     playCelebration.current = () => {
@@ -155,7 +156,8 @@ export default function RoutingToggle() {
       if (
         event.type !== "accepted" &&
         event.type !== "done" &&
-        event.type !== "email_sent"
+        event.type !== "email_sent" &&
+        event.type !== "floorplans_cleared"
       ) {
         return;
       }

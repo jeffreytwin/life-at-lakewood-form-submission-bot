@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LISTINGS_ALERT_SOUND, NEW_LEAD_SOUND, SOUNDS, STATUS_SOUNDS } from "@/lib/notification-sounds";
+import { FLOOR_PLAN_SOUNDS, LISTINGS_ALERT_SOUND, NEW_LEAD_SOUND, SOUNDS, STATUS_SOUNDS } from "@/lib/notification-sounds";
 
 /**
  * Jeff, 2026-09-16: the alert is the "a person is needed" sound. A lead
@@ -23,5 +23,9 @@ describe("status sounds", () => {
 
   it("gives a listings problem the same alert a lead needing a person gets", () => {
     expect(LISTINGS_ALERT_SOUND).toBe(SOUNDS.alert);
+  });
+
+  it("celebrates an emptied floor plan queue the way an accepted lead is celebrated", () => {
+    expect(FLOOR_PLAN_SOUNDS.cleared).toBe(SOUNDS.victory);
   });
 });

@@ -55,6 +55,13 @@ describe.each(ALL_CHARACTER_IDS)("%s", (id) => {
     expect(msg).toMatch(/look|eyes on|check/i);
   });
 
+  it("celebrates the floor plan queue being cleared, and says that is what it is", () => {
+    // Jeff, 2026-09-29: the last pending floor plan dealt with sets off the
+    // fireworks, and the bubble is what says why.
+    const msg = character.getMessage({ type: "floorplans_cleared", leadName: "" });
+    expect(msg).toMatch(/floor plan/i);
+  });
+
   it("never casts the new agent as the one who went quiet", () => {
     const msg = character.getMessage(reroute);
     // If the line names the agent who dropped the lead at all, it must be

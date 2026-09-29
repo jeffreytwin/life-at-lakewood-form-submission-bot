@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { onFailedCount, clearFailed } from "@/lib/lead-events";
+import { onFailedCount, clearFailed, onLeadEvent } from "@/lib/lead-events";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: "\u2302" },
@@ -70,7 +70,14 @@ export default function Sidebar({
     }
     fetchFloorPlanCount();
     const interval = setInterval(fetchFloorPlanCount, 30_000);
-    return () => clearInterval(interval);
+    // The queue emptied: the badge goes with the fireworks, not up to half a minute later.
+    const unsub = onLeadEvent((event) => {
+      if (event.type === "floorplans_cleared") fetchFloorPlanCount();
+    });
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
   }, []);
 
   // Poll for open email campaign alerts: a tracked floor plan changed on a site
