@@ -27,6 +27,7 @@ import type { Browser, Page } from "puppeteer-core";
 import { supabase } from "@/lib/supabase/client";
 import { extractorFor, preparePlans, readsThroughBrowser, readsWithoutPage, resolveExtractor, RUN_READ_MS } from "@/lib/floorplans/sync";
 import { discoverCommunityUrl } from "@/lib/floorplans/discover-url";
+import { withRunContext } from "@/lib/floorplans/run-context";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import { captionedCarousel, elevationPictures, firstGallery, lightboxGallery, namedGallery, payloadGallery } from "@/lib/floorplans/extractors/plan-page";
 import { pageIsBotCheck } from "@/lib/floorplans/extractors/rendered";
@@ -873,7 +874,7 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
       if (!extractor) throw new Error(`no extractor for ${conn.builder.extraction_method}`);
       const scraped = await Promise.race([
         // The same reading time a run has (sync.ts).
-        extractor({ ...params, communityName: conn.community.name, builderName: conn.builder.name, runDeadline: started + RUN_READ_MS }),
+        withRunContext({ source: "check" }, () => extractor({ ...params, communityName: conn.community.name, builderName: conn.builder.name, runDeadline: started + RUN_READ_MS })),
         wait(CHECK_TIMEOUT_MS).then(() => {
           throw new Error(`still running after ${CHECK_TIMEOUT_MS / 1000}s`);
         }),

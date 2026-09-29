@@ -365,6 +365,36 @@ nothing. No cutover report has ever been generated.
   discover, is set from Jeff:
   `https://www.taylormorrison.com/fl/sarasota/englewood/esplanade-at-wellen-park`.
 
+**Update 2026-09-29 (what each run costs, and a page read once).**
+
+- **Every Claude call is written down** (`fp_ai_usage`, migration 077;
+  `ai-usage.ts`): what it was for (a list page, a plan's page, a
+  description reword, photo labels, the duplicate check), which model,
+  who asked (`run-context.ts`: the nightly tick, a Sync now, a Run, the
+  photo sort, the Sort button, a stand-in, the connection check), the
+  connection and run it belonged to, the tokens, and the cost at the
+  day's prices. Nothing recorded this before, and the "single-digit
+  dollars a month" below was a guess: from the page sizes the connection
+  check records, a night's sync was reading about 30 community pages and
+  about 685 plan and home pages through Sonnet 5, roughly $15 to $20 a
+  night, and every Run or Sync now the same again. Each connection's row
+  on Builder Connections shows its last run's tally ("31 pages read, 29
+  unchanged · Claude $0.06"), the sync banner and the digest SMS the
+  cycle's.
+- **A page is read once** (`fp_page_reads`, `page-reads.ts`): what Claude
+  last read off a page is kept by the page's address and a digest of the
+  text it distilled to (query strings and tracking codes on pictures and
+  links aside; a plan page's links aside altogether), and a page that
+  distills to the same text is not read again — the remembered facts
+  stand, and the read is written down as one that cost nothing. What the
+  page's own markup says (its galleries, drawings and tour) is still read
+  every night, so a new photo is still seen. The variant a read is kept
+  under is a digest of the prompt, the tool and the model, so a change to
+  any of them reads every page afresh on its own; a read older than 30
+  days is made again regardless. Reset forgets the connection's reads
+  with everything else. Lists are read the same way, for their plans and
+  for their homes as two variants of one address.
+
 **Known gaps, in the order they bite.**
 
 1. Closed 2026-09-20: every import is verified with Wix (READY, an IMAGE,
@@ -742,7 +772,9 @@ freelancer engagement is ended.
 
 ## Economics
 
-Freelancer cost eliminated: **$700–1,000/mo**. Running cost: GitHub Actions minutes
-(free tier likely sufficient) + single-digit dollars/month of Claude API + existing
-Vercel/Supabase plans. Data freshness improves from ~monthly to nightly, which is a
+Freelancer cost eliminated: **$700–1,000/mo**. Running cost: Vercel function
+time + Claude API + existing Vercel/Supabase plans. The Claude cost is
+recorded per call since 2026-09-29 (`fp_ai_usage`) and shown per run on
+Builder Connections; before pages were read once (`fp_page_reads`) a
+night's sync was on the order of $15–20. Data freshness improves from ~monthly to nightly, which is a
 product upgrade in itself (prices, quick move-in flags).

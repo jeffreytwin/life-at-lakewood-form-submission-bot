@@ -15,3 +15,11 @@ export function runGoing(startedAt: string | null | undefined, now = Date.now())
 
 /** Changes approved without a review carry this at the front of their run id; the sync tick writes them (nightly.ts). */
 export const AUTO_RUN = "auto:";
+
+/** A cost in cents as the Hub shows it: "$1.23", or "<$0.01" for a run that spent almost nothing. */
+export function showCost(cents: number | string | null | undefined): string {
+  const c = Number(cents);
+  if (!Number.isFinite(c) || c <= 0) return "$0.00";
+  if (c < 1) return "<$0.01";
+  return `$${(c / 100).toFixed(2)}`;
+}

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { groupChanges } from "@/lib/floorplans/group-changes";
 import { sortGalleryNow } from "@/lib/floorplans/sort-queue";
+import { withRunContext } from "@/lib/floorplans/run-context";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
         continue;
       }
       try {
-        const sorted = await sortGalleryNow(record);
+        const sorted = await withRunContext({ source: "sort-button" }, () => sortGalleryNow(record));
         const fields = {
           galleryImages: sorted.record.galleryImages,
           galleryMeta: sorted.record.galleryMeta,

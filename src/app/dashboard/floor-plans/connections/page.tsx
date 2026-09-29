@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { HOME_TYPES } from "@/lib/floorplans/standardize";
-import { runGoing } from "@/lib/floorplans/run-state";
+import { runGoing, showCost } from "@/lib/floorplans/run-state";
 import FloorPlanTabs from "../tabs";
 
 interface Connection {
@@ -13,6 +13,10 @@ interface Connection {
   last_run_at: string | null;
   last_run_status: string | null;
   last_plan_count: number | null;
+  /** What the last run spent on Claude: pages read, of which unchanged since the time before, and the cost in cents (ai-usage.ts). */
+  last_run_reads: number | null;
+  last_run_cached: number | null;
+  last_run_cost_cents: number | string | null;
   consecutive_failures: number;
   /**
    * url: the community's own page. listUrls: the pages its plans are
@@ -55,6 +59,9 @@ interface SyncSettings {
     ran?: number;
     failed?: number;
     manual?: boolean;
+    costCents?: number;
+    reads?: number;
+    cached?: number;
   } | null;
   /** While a sync is going: the connections it still owes a run. */
   fp_sync_owed?: number | null;
@@ -488,7 +495,11 @@ export default function BuildersSettingsPage() {
                 <span className="text-muted text-sm">
                   Last {sync.fp_nightly_state.manual ? "sync" : "cycle"} {sync.fp_nightly_state.cycleDate}: ran{" "}
                   {sync.fp_nightly_state.ran ?? 0}
-                  {sync.fp_nightly_state.failed ? `, ${sync.fp_nightly_state.failed} failed` : ""} ✓
+                  {sync.fp_nightly_state.failed ? `, ${sync.fp_nightly_state.failed} failed` : ""}
+                  {sync.fp_nightly_state.costCents != null
+                    ? ` · Claude ${showCost(sync.fp_nightly_state.costCents)}${sync.fp_nightly_state.reads ? ` (${sync.fp_nightly_state.cached ?? 0} of ${sync.fp_nightly_state.reads} pages unchanged)` : ""}`
+                    : ""}{" "}
+                  ✓
                 </span>
               )
             )}
@@ -785,6 +796,12 @@ export default function BuildersSettingsPage() {
                                 : c.consecutive_failures > 0
                                   ? `${c.consecutive_failures} consecutive failures`
                                   : c.last_run_status ?? "—"}
+                              {c.last_run_reads != null && !isRunning(c) && (
+                                <div style={{ fontSize: 11, marginTop: 2 }}>
+                                  {c.last_run_reads} page{c.last_run_reads === 1 ? "" : "s"} read
+                                  {c.last_run_cached ? `, ${c.last_run_cached} unchanged` : ""} · Claude {showCost(c.last_run_cost_cents)}
+                                </div>
+                              )}
                             </td>
                             <td></td>
                             <td className="text-muted text-sm">

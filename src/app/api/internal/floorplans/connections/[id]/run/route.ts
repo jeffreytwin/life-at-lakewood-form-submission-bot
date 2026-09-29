@@ -1,6 +1,7 @@
 import { after, NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/shared/logger";
 import { holdRun, runHeld } from "@/lib/floorplans/runs";
+import { withRunContext } from "@/lib/floorplans/run-context";
 
 export const dynamic = "force-dynamic";
 // Extractors that read one page per plan (Toll Brothers) take a minute or
@@ -30,7 +31,7 @@ export async function POST(
     if (!(await holdRun(id))) {
       return NextResponse.json({ status: "running", detail: "this connection is already running" }, { status: 409 });
     }
-    after(() => runHeld(id).then(() => undefined));
+    after(() => withRunContext({ source: "run" }, () => runHeld(id)).then(() => undefined));
     return NextResponse.json({ status: "started" }, { status: 202 });
   } catch (error) {
     logger.error("Connection run failed to start", {
