@@ -1,4 +1,7 @@
-import { speaksAsOwner } from "@/lib/floorplans/description";
+// Pure: read from the Floor Plans page in the browser, so nothing here may
+// reach the server (description.ts reads Supabase and Claude, and the usage
+// log under it needs Node; the production build of 6c3acbf failed on it).
+import { speaksAsOwner } from "@/lib/floorplans/owner-words";
 
 // What has to be true before a queued change goes to the site, beyond a
 // person saying yes. No IO here.
