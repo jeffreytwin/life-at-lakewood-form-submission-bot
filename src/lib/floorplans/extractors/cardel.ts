@@ -253,14 +253,26 @@ const cardelKey = (url: string) => fileOf(url).toLowerCase().replace(/_\d{2,5}x\
  * the Birchwood Paired), each once, at its largest. Pure; exported for
  * tests.
  */
+/**
+ * Whether a file is named for the plan: its name holds the plan's first
+ * word as a word of its own, wherever it stands. The paired villas'
+ * elevations name the community's villas first —
+ * "nrr-villa-timberland-a-craftsman-…" for the Timberland Paired Villa —
+ * where their posters and the single-family plans' pictures start with
+ * the plan ("timberland-b-coastal-nrr-villa-poster-…", "northwood-3.0-…"),
+ * so a picture was only taken when its name started with the plan's and
+ * every villa came through with its poster alone (Jeff, 2026-09-29).
+ */
+const namedFor = (file: string, word: string) => new RegExp(`(?:^|[-_.])${word}(?:[-_.]|$)`).test(file.toLowerCase());
+
 export function elevationPictures(html: string, planName: string): string[] {
-  const word = normKey(planName).split("-")[0];
+  const word = normKey(planName).split("-")[0].replace(/[^a-z0-9]/g, "");
   if (!word) return [];
   const text = html.replace(/\\u002F/gi, "/").replace(/\\\//g, "/");
   const found = [
     ...[...text.matchAll(/https?:\/\/(?:firebasestorage\.googleapis\.com\/v0\/b\/cardel-website\.appspot\.com\/o\/|storage\.googleapis\.com\/cardel-website\.appspot\.com\/)[^"'\s<>)\\]+/gi)].map((m) => m[0].replace(/&amp;/g, "&")),
     ...[...text.matchAll(/["'](public\/[^"'\s]+?\.(?:webp|jpe?g|png))["']/gi)].map((m) => STORAGE + m[1]),
-  ].filter((url) => /\.(?:webp|jpe?g|png)$/i.test(fileOf(url)) && fileOf(url).toLowerCase().startsWith(word));
+  ].filter((url) => /\.(?:webp|jpe?g|png)$/i.test(fileOf(url)) && namedFor(fileOf(url), word));
   return largestOfEach(found);
 }
 
