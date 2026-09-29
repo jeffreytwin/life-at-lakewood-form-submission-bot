@@ -4,7 +4,8 @@
 // coverage.ts). Shown as a banner on the Floor Plans page, since that is
 // the page a person opens; the details live in Settings → Builder
 // Connections. A dismissed one (Jeff, 2026-09-21) stays out of the banner
-// until a newer run of it fails. No IO here.
+// until a newer run of it fails. A run cut off by the time limit alone is
+// left out: the sync runs it again (mendsItself). No IO here.
 
 export interface ConnectionHealthInput {
   id: string;
@@ -33,6 +34,21 @@ export interface TroubledConnection {
   lastRunAt: string | null;
 }
 
+/** What a run cut off by the function's five minutes leaves as its status (runs.ts, sweepCutOffRuns). */
+export const CUT_OFF_STATUS = "cut off: the run was still going when its five minutes ran out";
+
+/**
+ * Whether the connection's only failure is a run cut off by the time
+ * limit. That mends itself: a cut-off run leaves the connection owed its
+ * run, and the sync gives it one on a later tick, where it usually
+ * finishes (Boca Royale, Jeff 2026-09-29: "the alert seems unnecessary if
+ * it self-heals"). A second cut-off in a row, or any other failure, is
+ * not.
+ */
+export function mendsItself(c: Pick<ConnectionHealthInput, "consecutive_failures" | "last_run_status">): boolean {
+  return c.consecutive_failures === 1 && (c.last_run_status ?? "").startsWith("cut off:");
+}
+
 /** Whether the connection's failure was dismissed after its last run. */
 export function attentionDismissed(c: Pick<ConnectionHealthInput, "attention_dismissed_at" | "last_run_at">): boolean {
   if (!c.attention_dismissed_at) return false;
@@ -46,7 +62,7 @@ export function troubledConnections(builders: BuilderHealthInput[]): TroubledCon
   for (const b of builders) {
     if (!b.active) continue;
     for (const c of b.fp_builder_communities ?? []) {
-      if (!c.active || !(c.consecutive_failures > 0) || attentionDismissed(c)) continue;
+      if (!c.active || !(c.consecutive_failures > 0) || mendsItself(c) || attentionDismissed(c)) continue;
       out.push({
         id: c.id,
         builder: b.name,

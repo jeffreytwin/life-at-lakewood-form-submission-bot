@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { runConnection, type RunResult } from "@/lib/floorplans/sync";
 import { RUN_HELD_MS, runGoing } from "@/lib/floorplans/run-state";
+import { CUT_OFF_STATUS } from "@/lib/floorplans/health";
 
 /** Take the connection for one run. False when another run has it. */
 export async function holdRun(connectionId: string): Promise<boolean> {
@@ -68,7 +69,7 @@ export async function sweepCutOffRuns(): Promise<number> {
       .from("fp_builder_communities")
       .update({
         run_started_at: null,
-        last_run_status: "cut off: the run was still going when its five minutes ran out",
+        last_run_status: CUT_OFF_STATUS,
         consecutive_failures: (c.consecutive_failures ?? 0) + 1,
       })
       .eq("id", c.id)

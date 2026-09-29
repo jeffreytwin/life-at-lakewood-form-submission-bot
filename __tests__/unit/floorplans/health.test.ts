@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { describeCoverage } from "@/lib/floorplans/coverage";
-import { attentionDismissed, troubledConnections } from "@/lib/floorplans/health";
+import { attentionDismissed, CUT_OFF_STATUS, mendsItself, troubledConnections } from "@/lib/floorplans/health";
 
 describe("attentionDismissed", () => {
   it("holds while the dismissal is newer than the last run, and lapses when a newer run fails", () => {
@@ -63,5 +63,31 @@ describe("troubledConnections", () => {
 
   it("is empty when every run succeeded", () => {
     expect(troubledConnections([{ name: "X", active: true, fp_builder_communities: [] }])).toEqual([]);
+  });
+});
+
+describe("a run cut off by the time limit (Boca Royale, 2026-09-29)", () => {
+  const neal = (failures: number, status: string) => [
+    {
+      name: "Neal Communities",
+      active: true,
+      fp_builder_communities: [
+        { id: "boca", active: true, last_run_at: "2026-09-29T16:00:00Z", last_run_status: status, consecutive_failures: failures, fp_communities: { name: "Boca Royale", fp_sites: { domain: "lifeatlakewood.com" } } },
+      ],
+    },
+  ];
+
+  it("once, mends itself: the sync runs it again, so nobody is alerted", () => {
+    expect(mendsItself({ consecutive_failures: 1, last_run_status: CUT_OFF_STATUS })).toBe(true);
+    expect(troubledConnections(neal(1, CUT_OFF_STATUS))).toEqual([]);
+  });
+
+  it("twice in a row, needs attention", () => {
+    expect(troubledConnections(neal(2, CUT_OFF_STATUS)).map((t) => t.id)).toEqual(["boca"]);
+  });
+
+  it("any other failure needs attention the first time", () => {
+    expect(mendsItself({ consecutive_failures: 1, last_run_status: "zero results (treated as failure)" })).toBe(false);
+    expect(troubledConnections(neal(1, "error: fetch https://nealcommunities.com: 500")).map((t) => t.id)).toEqual(["boca"]);
   });
 });
