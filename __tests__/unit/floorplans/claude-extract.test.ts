@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  keptFromPage,
   asList,
   distinctKey,
   isTourUrl,
@@ -19,6 +20,7 @@ import {
   drawingsNotShownAsPhotos,
 } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
+import { elevationPictures, firstGallery } from "@/lib/floorplans/extractors/plan-page";
 
 describe("tourUrlIn", () => {
   it("finds a Zillow 3D Home, which carries no tour-looking words at all", () => {
@@ -637,5 +639,33 @@ describe("drawingsNotShownAsPhotos", () => {
   it("keeps a drawing the gallery does not show", () => {
     const drawing = df("8450ec42-69b4-4cc4-b36f-30abf9fd6c03.jpg");
     expect(drawingsNotShownAsPhotos([drawing], gallery)).toEqual([drawing]);
+  });
+});
+
+describe("keptFromPage (Ashton Woods' Duval, 2026-09-29)", () => {
+  // A photo gallery, then an elevations gallery: the second is a later
+  // gallery, whose pictures are dropped, but its elevations are the house.
+  const w = (file: string) => `https://awh.widen.net/content/${file}`;
+  const html =
+    `<h2>Gallery</h2><h3>Photos</h3>` +
+    `<img src="${w("igba1tibxn/jpeg/TAM_OTR50_Duval_ELEV_Dusk_1.jpg")}" alt="Duval"><img src="${w("ujmba0cs37/jpeg/TAM_OTR50_Duval_KITCH_1.jpg")}" alt="Kitchen">` +
+    `<h3>Elevations</h3>` +
+    `<img src="${w("aaa/webp/cms_Duval-P-Scheme-110.jpg")}" alt="Elevation P"><img src="${w("bbb/webp/cms_Duval-Q-Scheme-111.jpg")}" alt="Elevation Q"><img src="${w("ccc/webp/cms_Duval-R-Scheme-112.jpg")}" alt="Elevation R">` +
+    `<h2>Virtual Tours</h2><img src="${w("ddd/jpeg/tour-still.jpg")}" alt="Tour">`;
+  const page = "https://www.ashtonwoods.com/tampa/oakfield-trails-traditional/duval";
+
+  it("keeps the elevations a later gallery holds", () => {
+    const { drop } = firstGallery(html, page);
+    const outsides = elevationPictures(html, page);
+    expect(outsides.map((o) => o.src)).toHaveLength(3);
+    for (const o of outsides) {
+      expect(drop.has(o.src)).toBe(true);
+      expect(keptFromPage(o.src, drop, outsides)).toBe(true);
+    }
+  });
+
+  it("still drops a tour's still", () => {
+    const { drop } = firstGallery(html, page);
+    expect(keptFromPage(w("ddd/jpeg/tour-still.jpg"), drop, elevationPictures(html, page))).toBe(false);
   });
 });
