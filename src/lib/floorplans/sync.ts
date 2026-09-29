@@ -675,7 +675,12 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
           .eq("site_id", site.id)
           .eq("community_id", community.id)
           .eq("builder_id", builder.id);
-        plans = withSeriesLabels(plans, params.url, [...canonicalByKey.keys(), ...(queuedKeys ?? []).map((r) => r.plan_key as string)]);
+        plans = withSeriesLabels(
+          plans,
+          params.url,
+          [...canonicalByKey.keys(), ...(queuedKeys ?? []).map((r) => r.plan_key as string)],
+          (canonical ?? []).map((c) => ({ ...((c.record ?? {}) as Partial<NormalizedPlan>), planKey: c.plan_key }))
+        );
       }
       plans = await preparePlans(plans, { site, community, builder }, {
         deadline: startedAt + RUN_PREPARE_MS,

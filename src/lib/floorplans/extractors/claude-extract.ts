@@ -747,6 +747,19 @@ function planPageAsk(home: boolean, name: string, url: string, content: string):
  * noticed them, and a picture that belongs only to a later gallery or to
  * the virtual tours is taken back out.
  */
+/**
+ * Whether a picture the page gave is kept: not one the page shows only in
+ * a later gallery or among its tours (firstGallery's `drop`), unless the
+ * page heads it as the house's outside. Ashton Woods' plan pages run a
+ * photo gallery, then an elevations gallery, and a later gallery's
+ * pictures were all dropped, the elevations with them: Duval (Traditional)
+ * came through with one exterior of four (Jeff, 2026-09-29). Pure;
+ * exported for tests.
+ */
+export function keptFromPage(src: string, drop: Set<string>, outsides: { src: string }[]): boolean {
+  return Boolean(src) && (!drop.has(src) || outsides.some((o) => o.src === src));
+}
+
 export async function readPlanPageWithClaude(
   plan: NormalizedPlan,
   read: PageReader = fetchPage,
@@ -835,7 +848,7 @@ export async function readPlanPageWithClaude(
       ...gallery.first.map((i) => i.src),
       ...carried.map((i) => i.src),
     ]
-      .filter((src) => src && !gallery.drop.has(src))
+      .filter((src) => keptFromPage(src, gallery.drop, outsides))
       .map((src) => fullSize(src, html))
   );
   const kept = new Set(photos.map(pictureKey));

@@ -69,6 +69,26 @@ describe("a plan sold in two series", () => {
     expect(out.map((p) => p.name)).toEqual(["Duval (Traditional)", "Duval (Signature)"]);
   });
 
+  it("comes out the same when the page's reading named the community and the model home too (2026-09-29)", () => {
+    const out = withSeriesLabels(
+      [
+        plan("Duval (Oakfield Trails Traditional)", traditional("duval")),
+        plan("Duval (Oakfield Trails Signature) - Model Home", signature("signature-duval")),
+        plan("Oakfield Trails Signature Amelia", signature("signature-amelia")),
+        plan("Plant (Oakfield Trails Traditional)", traditional("plant")),
+        plan("Plant (Oakfield Trails Signature)", signature("signature-plant")),
+      ],
+      community
+    );
+    expect(out.map((p) => [p.name, p.planKey])).toEqual([
+      ["Duval (Traditional)", "duval-traditional"],
+      ["Duval (Signature)", "duval-signature"],
+      ["Amelia", "amelia"],
+      ["Plant (Traditional)", "plant-traditional"],
+      ["Plant (Signature)", "plant-signature"],
+    ]);
+  });
+
   it("keeps its label on a night only one series is read, where the label is on file", () => {
     const out = withSeriesLabels([plan("Duval", traditional("duval")), plan("Amelia", signature("signature-amelia"))], community, [
       "duval-traditional",
@@ -109,5 +129,41 @@ describe("a home built from a plan sold in two series", () => {
   it("names the labelled plan on file on a night its plans went unread", () => {
     const out = withSeriesLabels([plans[3]], community, ["duval-signature"]);
     expect(out[0].relatedPlanName).toBe("Duval (Signature)");
+  });
+});
+
+describe("a plan already on the site (Oakfield Trails, approved 2026-09-29)", () => {
+  const filed = [
+    { planKey: "duval-oakfield-trails-traditional", name: "Duval (Oakfield Trails Traditional)", sourceUrl: traditional("duval") },
+    {
+      planKey: "duval-oakfield-trails-signature-model-home",
+      name: "Duval (Oakfield Trails Signature) - Model Home",
+      sourceUrl: signature("signature-duval"),
+    },
+  ];
+
+  it("keeps the key and name it is filed under, whatever the page is read as tonight", () => {
+    const out = withSeriesLabels([plan("Duval", traditional("duval")), plan("Duval (Signature)", signature("signature-duval"))], community, [], filed);
+    expect(out.map((p) => [p.name, p.planKey])).toEqual([
+      ["Duval (Oakfield Trails Traditional)", "duval-oakfield-trails-traditional"],
+      ["Duval (Oakfield Trails Signature) - Model Home", "duval-oakfield-trails-signature-model-home"],
+    ]);
+  });
+
+  it("names a home's plan as the site names it", () => {
+    const out = linkQuickMoveIns(
+      withSeriesLabels(
+        [
+          plan("Duval", traditional("duval")),
+          plan("Duval", signature("signature-duval"), { planKey: "duval-signature" }),
+          home("9927 Hidden Hammock Loop", signature("signature-duval/9927-hidden-hammock-loop"), "Duval (Signature)"),
+        ],
+        community,
+        ["duval-signature"],
+        filed
+      )
+    );
+    expect(out[2].relatedPlanName).toBe("Duval (Oakfield Trails Signature) - Model Home");
+    expect(out[2].relatedPlanKey).toBe("duval-oakfield-trails-signature-model-home");
   });
 });
