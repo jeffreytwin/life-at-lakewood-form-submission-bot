@@ -25,6 +25,7 @@ import { holdRun, runHeld, sweepCutOffRuns } from "@/lib/floorplans/runs";
 import { withRunContext } from "@/lib/floorplans/run-context";
 import { totalsSince } from "@/lib/floorplans/ai-usage";
 import { showCost } from "@/lib/floorplans/run-state";
+import { mendsItself } from "@/lib/floorplans/health";
 
 const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
 // A builder read through a browser takes minutes, not seconds, so the tick
@@ -285,8 +286,9 @@ async function tick(): Promise<Record<string, unknown>> {
       .eq("active", true)
       .gt("consecutive_failures", 0)
       .order("consecutive_failures", { ascending: false })
-      .limit(5);
-    const attention = (failing ?? []).map((c) => {
+      .limit(50);
+    // A run cut off once is run again, and is nothing to act on (health.ts, mendsItself).
+    const attention = (failing ?? []).filter((c) => !mendsItself(c)).slice(0, 5).map((c) => {
       const b = c.fp_builders as unknown as { name: string } | null;
       const k = c.fp_communities as unknown as { name: string } | null;
       return `${b?.name ?? "?"}/${k?.name ?? "?"} (${(c.last_run_status ?? "").slice(0, 60)}, ${c.consecutive_failures}×)`;

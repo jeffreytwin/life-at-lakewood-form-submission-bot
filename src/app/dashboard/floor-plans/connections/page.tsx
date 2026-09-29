@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { HOME_TYPES } from "@/lib/floorplans/standardize";
 import { runGoing, showCost } from "@/lib/floorplans/run-state";
+import { mendsItself } from "@/lib/floorplans/health";
 import FloorPlanTabs from "../tabs";
 
 interface Connection {
@@ -806,9 +807,11 @@ export default function BuildersSettingsPage() {
                             <td className="text-muted text-sm">
                               {isRunning(c)
                                 ? `running since ${new Date(c.run_started_at!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
-                                : c.consecutive_failures > 0
-                                  ? `${c.consecutive_failures} consecutive failures`
-                                  : c.last_run_status ?? "—"}
+                                : mendsItself(c)
+                                  ? "cut off by the time limit; the sync runs it again"
+                                  : c.consecutive_failures > 0
+                                    ? `${c.consecutive_failures} consecutive failures`
+                                    : c.last_run_status ?? "—"}
                               {c.last_run_reads != null && !isRunning(c) && (
                                 <div style={{ fontSize: 11, marginTop: 2 }}>
                                   {c.last_run_reads} page{c.last_run_reads === 1 ? "" : "s"} read
