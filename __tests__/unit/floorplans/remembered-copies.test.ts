@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fieldChanges, mergeForUpdate, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { pictureKey } from "@/lib/floorplans/extractors/plan-page";
-import { picturesAdded, primaryReplaced, withKnownSpellings } from "@/lib/floorplans/pictures";
+import { picturesAdded, picturesRemoved, primaryReplaced, withKnownSpellings } from "@/lib/floorplans/pictures";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Addresses from the queue (Homes by WestBay and D.R. Horton, Jeff 2026-09-28).
@@ -128,6 +128,29 @@ describe("picturesAdded: what a change adds to the live plan, for the overlay to
 
   it("marks nothing without a live plan", () => {
     expect(picturesAdded(null, plan({ galleryImages: [front] }))).toEqual([]);
+  });
+});
+
+describe("picturesRemoved: what a change takes from the live plan, for the overlay to mark in red (Jeff, 2026-09-29)", () => {
+  const front = "https://cdn.example.com/verona/front.jpg";
+  const kitchen = "https://cdn.example.com/verona/kitchen.jpg";
+  const drawing = "https://cdn.example.com/verona/plan.png";
+  const upstairs = "https://cdn.example.com/verona/plan-2.png";
+
+  it("lists the photos and drawings the change leaves out, apart", () => {
+    const live = plan({ galleryImages: [front, kitchen], blueprintImages: [drawing, upstairs] });
+    const proposed = plan({ galleryImages: [front], blueprintImages: [drawing] });
+    expect(picturesRemoved(live, proposed)).toEqual({ photos: [kitchen], drawings: [upstairs] });
+  });
+
+  it("does not count a picture spelled another way, or moved between the galleries, as removed", () => {
+    const live = plan({ galleryImages: [veronaCover, front], blueprintImages: [drawing] });
+    const proposed = plan({ galleryImages: [veronaHd, drawing], blueprintImages: [front] });
+    expect(picturesRemoved(live, proposed)).toEqual({ photos: [], drawings: [] });
+  });
+
+  it("marks nothing without a live plan", () => {
+    expect(picturesRemoved(null, plan({ galleryImages: [front] }))).toEqual({ photos: [], drawings: [] });
   });
 });
 

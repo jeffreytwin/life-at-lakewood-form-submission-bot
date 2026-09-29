@@ -163,6 +163,8 @@ function useCoarsePointer(): boolean {
 
 /** The mark of a picture a change adds to the live plan. */
 const NEW_PICTURE = "#16a34a";
+/** The mark of a live picture a change takes away. */
+const REMOVED_PICTURE = "#dc2626";
 
 /**
  * One gallery in the edit overlay. Photos move by drag and drop or by the
@@ -176,6 +178,7 @@ function GalleryEditor({
   isPhotos,
   onPreview,
   added,
+  removed,
 }: {
   label: string;
   list: string[];
@@ -185,10 +188,13 @@ function GalleryEditor({
   onPreview: (p: Preview | null) => void;
   /** Pictures the change adds to the live plan, marked so a reviewer sees what changed (Jeff, 2026-09-28). */
   added?: Set<string>;
+  /** The live plan's pictures the change takes away, shown after the list in red with a way to keep them (Jeff, 2026-09-29). */
+  removed?: string[];
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const coarse = useCoarsePointer();
-  if (list.length === 0) return null;
+  const gone = (removed ?? []).filter((url) => !list.includes(url));
+  if (list.length === 0 && gone.length === 0) return null;
   const newCount = added ? list.filter((url) => added.has(url)).length : 0;
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
@@ -204,6 +210,12 @@ function GalleryEditor({
           <span style={{ color: NEW_PICTURE, fontWeight: 600 }}>
             {" "}
             {newCount} new {isPhotos ? `photo${newCount === 1 ? "" : "s"}` : `drawing${newCount === 1 ? "" : "s"}`} outlined in green.
+          </span>
+        )}
+        {gone.length > 0 && (
+          <span style={{ color: REMOVED_PICTURE, fontWeight: 600 }}>
+            {" "}
+            {gone.length} {isPhotos ? `photo${gone.length === 1 ? "" : "s"}` : `drawing${gone.length === 1 ? "" : "s"}`} removed, outlined in red; Keep puts one back.
           </span>
         )}
       </p>
@@ -272,6 +284,43 @@ function GalleryEditor({
             </div>
           );
         })}
+        {gone.map((url) => (
+          <div
+            key={`removed-${url}`}
+            onMouseEnter={() => {
+              if (!coarse) onPreview({ src: url, caption: "Removed by this change" });
+            }}
+            onMouseLeave={() => onPreview(null)}
+            style={{ position: "relative", textAlign: "center" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt=""
+              style={{
+                width: 96, height: 64, objectFit: "cover", borderRadius: 6, border: "1px solid #ccc", display: "block",
+                opacity: 0.5, outline: `3px solid ${REMOVED_PICTURE}`, outlineOffset: 1,
+              }}
+            />
+            <span
+              className="text-sm"
+              title="On the live plan: this change takes it away"
+              style={{ position: "absolute", top: 2, right: 4, background: REMOVED_PICTURE, color: "#fff", borderRadius: 4, padding: "0 4px", fontWeight: 600 }}
+            >
+              removed
+            </span>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 2 }}>
+              <button
+                className="btn btn-secondary"
+                style={{ padding: "0 6px" }}
+                title="Keep this picture: put it back at the end"
+                onClick={() => setList([...list, url])}
+              >
+                Keep
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -304,6 +353,7 @@ export default function FloorPlansPage() {
   // builder's own picture sets (changes/route.ts), which the overlay reads.
   const [editWhole, setEditWhole] = useState<ProposedRecord | null>(null);
   const [editAdded, setEditAdded] = useState<Set<string>>(new Set());
+  const [editRemoved, setEditRemoved] = useState<{ photos: string[]; drawings: string[] }>({ photos: [], drawings: [] });
   // A quick move-in's picture on the site, where the change shows another in its place.
   const [editReplaced, setEditReplaced] = useState<string | null>(null);
   const openKey = useRef<string | null>(null);
@@ -629,6 +679,7 @@ export default function FloorPlansPage() {
     setSorted(null);
     setEditWhole(null);
     setEditAdded(new Set());
+    setEditRemoved({ photos: [], drawings: [] });
     setEditReplaced(null);
     setEditing(group);
     openKey.current = group.key;
@@ -641,6 +692,8 @@ export default function FloorPlansPage() {
           setEditWhole(whole);
           const added = Array.isArray(data?.addedPictures) ? (data.addedPictures as unknown[]).filter((u): u is string => typeof u === "string") : [];
           setEditAdded(new Set(added));
+          const urls = (v: unknown) => (Array.isArray(v) ? v.filter((u): u is string => typeof u === "string") : []);
+          setEditRemoved({ photos: urls(data?.removedPictures?.photos), drawings: urls(data?.removedPictures?.drawings) });
           setEditReplaced(typeof data?.replacedPrimary === "string" ? data.replacedPrimary : null);
         }
       })
@@ -1635,6 +1688,7 @@ export default function FloorPlansPage() {
                   isPhotos
                   onPreview={setPreview}
                   added={editAdded}
+                  removed={editRemoved.photos}
                 />
                 <GalleryEditor
                   label="Blueprints"
@@ -1643,6 +1697,7 @@ export default function FloorPlansPage() {
                   isPhotos={false}
                   onPreview={setPreview}
                   added={editAdded}
+                  removed={editRemoved.drawings}
                 />
                 {editGallery.length > 1 && (
                   <div className="form-group">
