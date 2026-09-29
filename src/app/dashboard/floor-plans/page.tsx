@@ -572,6 +572,37 @@ export default function FloorPlansPage() {
     }
   }
 
+  /**
+   * Takes a plan off the site from the queue, with the quick move-ins built
+   * from it: a community that sold out while the builder still lists the
+   * plan with no price (The Towns at Firethorn's Marigold, Jeff 2026-09-29).
+   */
+  async function removePlan(group: Group) {
+    const rec = group.lead.proposed_record;
+    const name = rec?.name ?? group.lead.plan_key;
+    const what = rec?.quickMoveIn
+      ? `Remove ${name} from the site now?`
+      : `Remove ${name} from the site now, with every quick move-in built from it?`;
+    if (!confirm(`${what}\n\nIt comes off Wix right away and its queued changes are withdrawn. The sync will not offer it back unless the builder prices it again; Restore under Rejected brings it back sooner.`)) return;
+    setBusy((b) => new Set(b).add(group.key));
+    try {
+      const res = await fetch(`/api/internal/floorplans/changes/${group.lead.id}/remove-plan`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      const removed = (data?.removed ?? []) as { name: string; quickMoveIn: boolean; status: string; error: string | null }[];
+      if (!res.ok || removed.some((r) => r.status !== "synced")) {
+        const lines = removed.map((r) => `${r.name}: ${r.status === "synced" ? "removed" : r.status}${r.error ? ` (${r.error})` : ""}`);
+        alert(`Remove ${name}: ${data?.error ?? "not everything came off"}${lines.length ? `\n\n${lines.join("\n")}` : ""}`);
+      }
+    } finally {
+      setBusy((b) => {
+        const next = new Set(b);
+        next.delete(group.key);
+        return next;
+      });
+      fetchChanges();
+    }
+  }
+
   function openEdit(group: Group) {
     const rec = group.lead.proposed_record ?? {};
     setEditForm({
@@ -1365,6 +1396,15 @@ export default function FloorPlansPage() {
                         {failedRow && (
                           <div className="text-muted text-sm">⚠ {failedRow.error_detail}</div>
                         )}
+                        {isPending && g.kind === "update" && fieldRows.some((r) => r.field_changed === "price" && !r.new_value) && (
+                          <div
+                            className="text-sm"
+                            style={{ color: "var(--warning, #b45309)" }}
+                            title="The builder still lists it, with no price. If it sold out, Remove takes it off the site with its quick move-ins."
+                          >
+                            ⚠ price gone: sold out?
+                          </div>
+                        )}
                         {rec?.quickMoveIn && rec.relatedPlanMatch === "unmatched" && !blocker && (
                           <div
                             className="text-sm"
@@ -1425,6 +1465,20 @@ export default function FloorPlansPage() {
                             >
                               Reject
                             </button>
+                            {g.kind === "update" && (
+                              <button
+                                className="btn btn-secondary"
+                                disabled={busy.has(g.key)}
+                                title={
+                                  rec?.quickMoveIn
+                                    ? "Take this home off the site now."
+                                    : "Take this plan off the site now, with the quick move-ins built from it."
+                                }
+                                onClick={() => removePlan(g)}
+                              >
+                                Remove
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
