@@ -1,12 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { groupChanges, type ChangeGroup } from "@/lib/floorplans/group-changes";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { groupChanges, groupKeyOf, type ChangeGroup } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
 import { HOME_TYPES, standardGarages } from "@/lib/floorplans/standardize";
 import { siteColors } from "@/app/dashboard/listings/format";
 import { FIRST_DIRECTION, priceOf, sortChanges, type ChangeSort, type ChangeSortKey } from "@/lib/floorplans/sort-changes";
+import {
+  addToTally,
+  cascadeDelay,
+  clearedIn,
+  countWritten,
+  easternDay,
+  exitDuration,
+  foldDuration,
+  progressOf,
+  readTally,
+  tallyLine,
+  withHeld,
+  type CountedExit,
+  type Exit,
+  type Tally,
+} from "@/lib/floorplans/leaving-rows";
+import { emitLeadEvent } from "@/lib/lead-events";
+import { FLOOR_PLAN_SOUNDS, playSound } from "@/lib/notification-sounds";
+import { prefersReducedMotion } from "@/lib/pixel-effects";
+import { playExit } from "./exit-effects";
 import FloorPlanTabs from "./tabs";
 
 interface GalleryMeta {
@@ -131,8 +151,29 @@ const SORT_COLUMNS: { key: ChangeSortKey; label: string; hint: string }[] = [
   { key: "detected", label: "Detected", hint: "by when it was found" },
 ];
 
+/** The table's columns: the tick, the picture, the sortable ones and the buttons. */
+const COLUMN_COUNT = SORT_COLUMNS.length + 3;
+
 /** Plans shown on one page of the queue (Jeff, 2026-09-26: the whole queue at once was slow). */
 const PAGE_SIZE = 50;
+
+/** Where this browser keeps the day's tally of plans cleared from the queue. */
+const TALLY_STORAGE_KEY = "floor-plans-cleared-today";
+/** A batch throws pixels from its first few rows only, not a page of fifty. */
+const MAX_BURSTS = 6;
+
+/** A plan on its way out of the list (leaving-rows.ts). */
+interface LeavingRow {
+  exit: Exit;
+  /** ms before it starts, for a batch going out as a wave. */
+  delay: number;
+  /** ms its own animation runs. */
+  ms: number;
+  /** ms it takes to fold away once played. */
+  fold: number;
+  /** Once it has played: the height it folds away from. */
+  foldFrom: number | null;
+}
 
 /** Where this browser remembers the column the queue was last sorted by. */
 const SORT_STORAGE_KEY = "floor-plans-changes-sort";
@@ -382,6 +423,27 @@ export default function FloorPlansPage() {
   const [editBlueprints, setEditBlueprints] = useState<string[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
 
+  // Plans on their way out of the list, each the way it went (Jeff, 2026-09-29).
+  const [leaving, setLeaving] = useState<Map<string, LeavingRow>>(() => new Map());
+  // For the reads of the queue: the plans playing their way out, and those
+  // whose action is still in flight, keep their rows until they have gone.
+  const leavingKeys = useRef(new Set<string>());
+  const inFlight = useRef(new Set<string>());
+  // The rows on screen now, by plan: only a row in view plays its exit.
+  const rowEls = useRef(new Map<string, HTMLTableRowElement>());
+  const exitTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  // The queue as last taken, and the status it was read for.
+  const changesRef = useRef<{ status: string; rows: PendingChange[] }>({ status: "", rows: [] });
+  // Reads of the queue are numbered, so the answer to an older one never
+  // overwrites a newer, nor brings back a plan an action has just cleared.
+  const fetchSeq = useRef(0);
+  const freshFrom = useRef(0);
+  // What this browser has cleared today, and whether the person here has
+  // cleared anything since the page opened: an emptied queue is only
+  // celebrated when they emptied it, not when a sync did.
+  const [tally, setTally] = useState<Tally | null>(null);
+  const armed = useRef(false);
+
   const [tasks, setTasks] = useState<FollowUpTask[]>([]);
 
   const fetchTasks = useCallback(() => {
@@ -425,19 +487,163 @@ export default function FloorPlansPage() {
     fetchHealth();
   }
 
+  /** A plan that has played its way out leaves the list for good; the next read agrees. */
+  const finish = useCallback((key: string) => {
+    leavingKeys.current.delete(key);
+    setLeaving((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
+    const rows = changesRef.current.rows.filter((r) => groupKeyOf(r) !== key);
+    if (rows.length === changesRef.current.rows.length) return;
+    changesRef.current = { ...changesRef.current, rows };
+    setChanges(rows);
+  }, []);
+
+  /**
+   * Sends plans out of the list, each row the way it went (Jeff,
+   * 2026-09-29): a batch goes as a wave, and once a row has played it
+   * folds away so the list closes up. Only rows on screen play; a plan on
+   * another page simply goes. A sound named for the exit plays once.
+   */
+  const startLeaving = useCallback(
+    (list: Group[], exit: Exit) => {
+      const onScreen = list.filter((g) => rowEls.current.has(g.key) && !leavingKeys.current.has(g.key));
+      if (!onScreen.length) return;
+      const sound = exit === "leave" ? null : FLOOR_PLAN_SOUNDS[exit];
+      if (sound) playSound(sound);
+      const reduced = prefersReducedMotion();
+      const ms = exitDuration(exit, reduced);
+      const fold = foldDuration(reduced);
+      const later = (wait: number, fn: () => void) => {
+        const timer = setTimeout(() => {
+          exitTimers.current.delete(timer);
+          fn();
+        }, wait);
+        exitTimers.current.add(timer);
+      };
+      for (const g of onScreen) leavingKeys.current.add(g.key);
+      setLeaving((prev) => {
+        const next = new Map(prev);
+        onScreen.forEach((g, i) => next.set(g.key, { exit, delay: cascadeDelay(i), ms, fold, foldFrom: null }));
+        return next;
+      });
+      onScreen.forEach((g, i) => {
+        const delay = cascadeDelay(i);
+        playExit(() => rowEls.current.get(g.key), {
+          exit,
+          delay,
+          duration: ms,
+          stampFor: ms + fold + 120,
+          particles: i < MAX_BURSTS,
+          lead: i === 0,
+        });
+        later(delay + ms, () => {
+          // Folded from the height it stands at now.
+          const height = rowEls.current.get(g.key)?.offsetHeight ?? 0;
+          setLeaving((prev) => {
+            const row = prev.get(g.key);
+            if (!row) return prev;
+            const next = new Map(prev);
+            next.set(g.key, { ...row, foldFrom: height });
+            return next;
+          });
+        });
+        later(delay + ms + fold, () => finish(g.key));
+      });
+    },
+    [finish]
+  );
+
+  /**
+   * Takes a read of the queue. A plan the read no longer lists keeps its
+   * rows while it plays its way out, or while the action on it is still in
+   * flight (its exit starts when the answer comes). One that simply went,
+   * written by an Approve All run, a failed write, or acted on in another
+   * tab, fades out from where it stood, if it was on screen.
+   */
+  const take = useCallback(
+    (fresh: PendingChange[], status: string) => {
+      const before = changesRef.current.status === status ? changesRef.current.rows : [];
+      const listed = new Set(fresh.map(groupKeyOf));
+      const kept = new Set<string>();
+      const gone = new Set<string>();
+      for (const r of before) {
+        const key = groupKeyOf(r);
+        if (listed.has(key)) continue;
+        if (leavingKeys.current.has(key) || inFlight.current.has(key)) kept.add(key);
+        else if (rowEls.current.has(key)) gone.add(key);
+      }
+      const held = before.filter((r) => kept.has(groupKeyOf(r)) || gone.has(groupKeyOf(r)));
+      const rows = withHeld(fresh, held);
+      changesRef.current = { status, rows };
+      setChanges(rows);
+      if (gone.size) startLeaving(groupChanges(held.filter((r) => gone.has(groupKeyOf(r)))), "leave");
+    },
+    [startLeaving]
+  );
+
   const fetchChanges = useCallback(() => {
-    fetch(`/api/internal/floorplans/changes?status=${statusFilter}`)
+    const seq = ++fetchSeq.current;
+    const status = statusFilter;
+    fetch(`/api/internal/floorplans/changes?status=${status}`)
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) setChanges(data);
+        if (seq < freshFrom.current) return;
+        freshFrom.current = seq;
+        if (Array.isArray(data)) take(data, status);
         else setError(data.error ?? "Failed to load");
         setLoading(false);
       })
       .catch((e) => {
+        if (seq < freshFrom.current) return;
         setError(e.message);
         setLoading(false);
       });
-  }, [statusFilter]);
+  }, [statusFilter, take]);
+
+  /** Reads already on their way predate the action just taken, and would bring its plan back: only newer ones count. */
+  function dropStaleReads() {
+    freshFrom.current = fetchSeq.current + 1;
+  }
+
+  // Timers of rows still playing stop with the page.
+  useEffect(() => {
+    const timers = exitTimers.current;
+    return () => {
+      timers.forEach(clearTimeout);
+      timers.clear();
+    };
+  }, []);
+
+  // The day's tally, as this browser kept it; then kept as it grows.
+  useEffect(() => {
+    let kept: string | null = null;
+    try {
+      kept = window.localStorage.getItem(TALLY_STORAGE_KEY);
+    } catch {
+      // storage refused: counted for this visit only
+    }
+    setTally(readTally(kept, easternDay(new Date())));
+  }, []);
+  useEffect(() => {
+    if (!tally) return;
+    try {
+      window.localStorage.setItem(TALLY_STORAGE_KEY, JSON.stringify(tally));
+    } catch {
+      // counted for this visit only
+    }
+  }, [tally]);
+
+  /** Counts plans cleared toward the day's tally, and arms the celebration for when the queue runs out. */
+  const count = useCallback((exit: CountedExit, n: number) => {
+    if (n <= 0) return;
+    armed.current = true;
+    const day = easternDay(new Date());
+    setTally((t) => addToTally(t, exit, n, day));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -502,19 +708,26 @@ export default function FloorPlansPage() {
       return next;
     });
   }, []);
-  const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0), [groups]);
+  // A plan on its way out is no longer waiting: not counted, ticked or sent again.
+  const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)), [groups, leaving]);
   // One page of the list. A filter or a sort starts again from the first
   // page; a page emptied by approvals falls back to the last one left.
   const pages = Math.max(1, Math.ceil(groups.length / PAGE_SIZE));
   const shownPage = Math.min(page, pages - 1);
   const offset = shownPage * PAGE_SIZE;
   const pageGroups = useMemo(() => groups.slice(offset, offset + PAGE_SIZE), [groups, offset]);
-  const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0), [pageGroups]);
+  const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)), [pageGroups, leaving]);
   useEffect(() => setPage(0), [statusFilter, siteFilter, builderFilter, kindFilter, sort]);
   const pendingQuickMoveIns = useMemo(
-    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g)),
-    [siteGroups]
+    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && !leaving.has(g.key)),
+    [siteGroups, leaving]
   );
+  // Plans still waiting in the whole queue, whatever the filters show.
+  const queueLeft = useMemo(
+    () => (statusFilter === "pending" ? groupChanges(changes).filter((g) => !leaving.has(g.key)).length : 0),
+    [changes, leaving, statusFilter]
+  );
+  const cleared = clearedIn(tally);
   // The ticked plans still pending in this view: a plan approved, rejected
   // or filtered out of view is never acted on by a tick left behind.
   const selectedGroups = useMemo(() => pendingGroups.filter((g) => selected.has(g.key)), [pendingGroups, selected]);
@@ -564,7 +777,10 @@ export default function FloorPlansPage() {
   }
 
   // Plans the server is writing right now; each leaves the list as its write finishes.
-  const approvingCount = useMemo(() => siteGroups.filter((g) => g.status === "approving").length, [siteGroups]);
+  const approvingCount = useMemo(
+    () => siteGroups.filter((g) => g.status === "approving" && !leaving.has(g.key)).length,
+    [siteGroups, leaving]
+  );
   // Wix refuses a client that asks too often, and a full run asks far
   // more than it allows, so the run waits it out rather than dropping
   // plans (Jeff, 2026-09-22). The button says which it is doing.
@@ -578,6 +794,17 @@ export default function FloorPlansPage() {
     const timer = setInterval(fetchChanges, 5000);
     return () => clearInterval(timer);
   }, [approvingInView, bulkBusy, fetchChanges]);
+
+  // The last pending plan dealt with by the person here: fireworks, the
+  // character celebrates and says so, and the victory plays (Jeff,
+  // 2026-09-29). Only once the last row has played its own way out.
+  useEffect(() => {
+    if (statusFilter !== "pending" || loading || error || !armed.current) return;
+    if (queueLeft > 0 || leaving.size > 0 || busy.size > 0 || bulkBusy || rejectingSelected) return;
+    armed.current = false;
+    if (FLOOR_PLAN_SOUNDS.cleared) playSound(FLOOR_PLAN_SOUNDS.cleared);
+    emitLeadEvent({ type: "floorplans_cleared", leadName: "" });
+  }, [statusFilter, loading, error, queueLeft, leaving, busy, bulkBusy, rejectingSelected]);
 
   /**
    * Approves or rejects every pending row of a plan, or puts a rejected
@@ -598,6 +825,7 @@ export default function FloorPlansPage() {
       return false;
     }
     setBusy((b) => new Set(b).add(group.key));
+    inFlight.current.add(group.key);
     try {
       const res = await fetch("/api/internal/floorplans/changes/bulk", {
         method: "POST",
@@ -611,8 +839,22 @@ export default function FloorPlansPage() {
         if (!quiet) alert(`${what} failed for ${group.lead.proposed_record?.name ?? group.lead.plan_key}: ${detail}`);
         return false;
       }
+      // The plan plays its way out once the server has it: an approval
+      // written to Wix, not one Wix deferred; a rejection that took.
+      const exit: CountedExit | null =
+        action === "approve" && countWritten(data?.results) > 0
+          ? "approve"
+          : action === "reject" && Number(data?.rejected) > 0
+            ? "reject"
+            : null;
+      if (exit) {
+        dropStaleReads();
+        startLeaving([group], exit);
+        count(exit, 1);
+      }
       return true;
     } finally {
+      inFlight.current.delete(group.key);
       setBusy((b) => {
         const next = new Set(b);
         next.delete(group.key);
@@ -635,15 +877,25 @@ export default function FloorPlansPage() {
       : `Remove ${name} from the site now, with every quick move-in built from it?`;
     if (!confirm(`${what}\n\nIt comes off Wix right away and its queued changes are withdrawn. The sync will not offer it back unless the builder prices it again; Restore under Rejected brings it back sooner.`)) return;
     setBusy((b) => new Set(b).add(group.key));
+    inFlight.current.add(group.key);
     try {
       const res = await fetch(`/api/internal/floorplans/changes/${group.lead.id}/remove-plan`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
-      const removed = (data?.removed ?? []) as { name: string; quickMoveIn: boolean; status: string; error: string | null }[];
+      const removed = (data?.removed ?? []) as { planKey: string; name: string; quickMoveIn: boolean; status: string; error: string | null }[];
       if (!res.ok || removed.some((r) => r.status !== "synced")) {
         const lines = removed.map((r) => `${r.name}: ${r.status === "synced" ? "removed" : r.status}${r.error ? ` (${r.error})` : ""}`);
         alert(`Remove ${name}: ${data?.error ?? "not everything came off"}${lines.length ? `\n\n${lines.join("\n")}` : ""}`);
+      } else {
+        // It goes up with the quick move-ins it took off the site, one after another.
+        const homes = new Set(removed.map((r) => groupKeyOf({ ...group.lead, plan_key: r.planKey })));
+        homes.delete(group.key);
+        const chained = groupChanges(changesRef.current.rows).filter((g) => homes.has(g.key));
+        dropStaleReads();
+        startLeaving([group, ...chained], "remove");
+        count("remove", 1 + chained.length);
       }
     } finally {
+      inFlight.current.delete(group.key);
       setBusy((b) => {
         const next = new Set(b);
         next.delete(group.key);
@@ -877,6 +1129,8 @@ export default function FloorPlansPage() {
           if (r.status === "failed") failed.add(names.get(r.planKey) ?? r.planKey);
           else if (r.status === "blocked") blocked.add(names.get(r.planKey) ?? r.planKey);
         }
+        // Each plan leaves the list as its write lands, read by read; the tally counts them as the answers come.
+        count("approve", countWritten(data.results));
         const remaining = (Array.isArray(data.remaining) ? data.remaining : []).filter((x: unknown): x is string => typeof x === "string");
         // Wix throttles this app at a few hundred calls a minute and a
         // full run imports far more, so the server stops and says how long
@@ -999,7 +1253,12 @@ export default function FloorPlansPage() {
           break;
         }
       }
-      if (!problem) setSelected(new Set());
+      if (!problem) {
+        setSelected(new Set());
+        dropStaleReads();
+        startLeaving(list, "reject");
+        count("reject", list.length);
+      }
     } catch (e) {
       problem = e instanceof Error ? e.message : String(e);
     } finally {
@@ -1185,13 +1444,22 @@ export default function FloorPlansPage() {
       ) : error ? (
         <div className="empty-state">{error}</div>
       ) : groups.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">✓</div>
-          No {statusFilter === "all" ? "" : statusFilter} floor plan changes.
-        </div>
+        statusFilter === "pending" && queueLeft === 0 && tally && cleared > 0 ? (
+          // The whole queue emptied, and some of it by this browser today (Jeff, 2026-09-29).
+          <div className="card mission-complete">
+            <div className="mission-complete-title">MISSION COMPLETE</div>
+            <p>Every pending floor plan has been dealt with.</p>
+            <p className="mission-complete-tally">Today: {tallyLine(tally)}</p>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">✓</div>
+            No {statusFilter === "all" ? "" : statusFilter} floor plan changes.
+          </div>
+        )
       ) : (
         <div className="card has-selection-bar">
-          {pendingGroups.length > 0 && (
+          {(pendingGroups.length > 0 || leaving.size > 0) && (
             <div className="selection-bar">
               {selectedGroups.length === 0 ? (
                 <span className="text-muted text-sm">
@@ -1223,6 +1491,27 @@ export default function FloorPlansPage() {
                     </span>
                   )}
                 </>
+              )}
+              {/* The day's clears against what still waits, filling toward an empty queue (Jeff, 2026-09-29). */}
+              {statusFilter === "pending" && tally && (
+                <span
+                  className="fp-progress"
+                  title="Plans approved, rejected or removed from this browser today, against every plan still waiting in the queue, whatever the filters show"
+                >
+                  <span>
+                    {cleared} cleared today · {queueLeft} to go
+                  </span>
+                  <span
+                    className="fp-progress-track"
+                    role="progressbar"
+                    aria-label="Today's progress through the queue"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(progressOf(cleared, queueLeft) * 100)}
+                  >
+                    <span className="fp-progress-fill" style={{ width: `${Math.round(progressOf(cleared, queueLeft) * 100)}%` }} />
+                  </span>
+                </span>
               )}
             </div>
           )}
@@ -1283,6 +1572,17 @@ export default function FloorPlansPage() {
               <tbody>
                 {pageGroups.map((g, onPage) => {
                   const index = offset + onPage;
+                  // On its way out: it plays, then folds its height away (leaving-rows.ts).
+                  const out = leaving.get(g.key);
+                  if (out?.foldFrom != null) {
+                    return (
+                      <tr key={g.key} className="fp-fold" aria-hidden="true">
+                        <td colSpan={COLUMN_COUNT}>
+                          <div style={{ height: out.foldFrom, "--fp-fold-ms": `${out.fold}ms` } as CSSProperties} />
+                        </td>
+                      </tr>
+                    );
+                  }
                   const c = g.lead;
                   const rec = c.proposed_record;
                   // The main image is the gallery's first photo; primaryImage is the first slice's field.
@@ -1295,24 +1595,37 @@ export default function FloorPlansPage() {
                   const blocker = isPending ? approvalBlocker(g.kind, rec) : null;
                   // Each row wears its site's colour, as the Listings section does (Jeff, 2026-09-21).
                   const colors = siteColors(c.fp_sites?.domain);
+                  // A row playing its way out still shows what it was, but takes no more clicks.
+                  const inert = Boolean(out);
                   return (
                     <tr
                       key={g.key}
+                      ref={(el) => {
+                        if (el) rowEls.current.set(g.key, el);
+                        else rowEls.current.delete(g.key);
+                      }}
+                      className={out ? `fp-leaving fp-leaving-${out.exit}` : undefined}
                       onClick={(e) => {
                         // The whole row opens the overlay (Jeff, 2026-09-19); the
                         // 3D tour and builder page links and every button keep their own job.
-                        if (!isPending) return;
+                        if (!isPending || inert) return;
                         if ((e.target as HTMLElement).closest("a, button, input, select, textarea")) return;
                         openEdit(g);
                       }}
-                      style={{ ...(isPending ? { cursor: "pointer" } : {}), ...(colors ? { background: colors.tint } : {}) }}
-                      title={isPending ? "Click to edit this plan before approving" : undefined}
+                      style={
+                        {
+                          ...(isPending && !inert ? { cursor: "pointer" } : {}),
+                          ...(colors ? { background: colors.tint } : {}),
+                          ...(out ? { "--fp-exit-ms": `${out.ms}ms`, "--fp-exit-delay": `${out.delay}ms` } : {}),
+                        } as CSSProperties
+                      }
+                      title={isPending && !inert ? "Click to edit this plan before approving" : undefined}
                     >
                       <td
                         style={{ width: 32, ...(colors ? { borderLeft: `3px solid ${colors.accent}` } : {}) }}
                         onClick={(e) => {
                           // A miss beside the box ticks it too, rather than opening the overlay.
-                          if (!isPending || (e.target as HTMLElement).closest("input")) return;
+                          if (!isPending || inert || (e.target as HTMLElement).closest("input")) return;
                           e.stopPropagation();
                           pick(index, e.shiftKey);
                         }}
@@ -1323,7 +1636,7 @@ export default function FloorPlansPage() {
                             aria-label={`Select ${rec?.name ?? c.plan_key}`}
                             checked={selected.has(g.key)}
                             onChange={(e) => pick(index, (e.nativeEvent as MouseEvent).shiftKey === true)}
-                            disabled={bulkBusy || rejectingSelected || sortingSelected}
+                            disabled={bulkBusy || rejectingSelected || sortingSelected || inert}
                           />
                         )}
                       </td>
@@ -1486,33 +1799,33 @@ export default function FloorPlansPage() {
                         {g.status === "rejected" && (
                           <button
                             className="btn btn-secondary"
-                            disabled={busy.has(g.key)}
+                            disabled={busy.has(g.key) || inert}
                             title="Put this back in the queue. Rejecting it stopped the sync from ever raising it again; this lifts that too."
                             onClick={() => act(g, "restore")}
                           >
-                            {busy.has(g.key) ? "…" : "Restore"}
+                            {busy.has(g.key) || inert ? "…" : "Restore"}
                           </button>
                         )}
                         {isPending && (
                           <div style={{ display: "flex", gap: 8 }}>
                             <button
                               className="btn btn-primary"
-                              disabled={busy.has(g.key) || Boolean(blocker)}
+                              disabled={busy.has(g.key) || inert || Boolean(blocker)}
                               title={blocker ?? undefined}
                               onClick={() => act(g, "approve")}
                             >
-                              {busy.has(g.key) ? "…" : "Approve"}
+                              {busy.has(g.key) || inert ? "…" : "Approve"}
                             </button>
                             <button
                               className="btn btn-secondary"
-                              disabled={busy.has(g.key)}
+                              disabled={busy.has(g.key) || inert}
                               onClick={() => openEdit(g)}
                             >
                               Edit
                             </button>
                             <button
                               className="btn btn-secondary"
-                              disabled={busy.has(g.key)}
+                              disabled={busy.has(g.key) || inert}
                               onClick={() => act(g, "reject")}
                             >
                               Reject
@@ -1520,7 +1833,7 @@ export default function FloorPlansPage() {
                             {g.kind === "update" && (
                               <button
                                 className="btn btn-secondary"
-                                disabled={busy.has(g.key)}
+                                disabled={busy.has(g.key) || inert}
                                 title={
                                   rec?.quickMoveIn
                                     ? "Take this home off the site now."

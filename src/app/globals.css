@@ -1168,3 +1168,200 @@ button.stat-card:hover {
   color: inherit;
   border-color: var(--text-muted);
 }
+
+/* ── Floor Plans: a plan leaving the queue (Jeff, 2026-09-29) ──
+   Approve, Reject and Remove each play their own way out once the server
+   has the change; a plan gone from the list some other way only fades.
+   The stamp, sparks and explosion lie over the page (pixel-effects.ts);
+   this is the row's own part. Once it has played, the row folds its height
+   away (fp-fold) so the list closes up rather than jumping. The rows move
+   left, never right, so the table never grows a scrollbar mid-animation. */
+table tbody tr.fp-leaving {
+  pointer-events: none;
+}
+
+table tbody tr.fp-leaving > td {
+  animation-duration: var(--fp-exit-ms, 600ms);
+  animation-delay: var(--fp-exit-delay, 0ms);
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+}
+
+table tbody tr.fp-leaving-approve > td { animation-name: fpRowApprove; }
+table tbody tr.fp-leaving-reject > td { animation-name: fpRowReject; }
+table tbody tr.fp-leaving-remove > td { animation-name: fpRowRemove; }
+table tbody tr.fp-leaving-leave > td { animation-name: fpRowLeave; }
+
+@keyframes fpRowApprove {
+  0% { background-color: rgba(52, 211, 153, 0); opacity: 1; }
+  18% { background-color: rgba(52, 211, 153, 0.28); }
+  55% { background-color: rgba(52, 211, 153, 0.18); opacity: 1; }
+  100% { background-color: rgba(52, 211, 153, 0.06); opacity: 0; }
+}
+
+/* A shake of the head, then the colour drains out of it. */
+@keyframes fpRowReject {
+  0% { background-color: rgba(248, 113, 113, 0); opacity: 1; transform: translateX(0); filter: grayscale(0); }
+  10% { background-color: rgba(248, 113, 113, 0.28); transform: translateX(-9px); }
+  20% { transform: translateX(0); }
+  30% { transform: translateX(-6px); }
+  40% { transform: translateX(0); }
+  50% { transform: translateX(-3px); }
+  60% { background-color: rgba(248, 113, 113, 0.16); opacity: 1; transform: translateX(0); filter: grayscale(0.6); }
+  100% { background-color: rgba(248, 113, 113, 0.04); opacity: 0; transform: translateX(0); filter: grayscale(1); }
+}
+
+/* Two blinks, like a charge armed, then the flash as it goes off (the
+   pixel blast lands at the halfway mark) and the row is crushed flat. */
+@keyframes fpRowRemove {
+  0% { background-color: rgba(248, 113, 113, 0); opacity: 1; transform: scaleY(1); }
+  10% { background-color: rgba(248, 113, 113, 0.4); }
+  20% { background-color: rgba(248, 113, 113, 0); }
+  30% { background-color: rgba(248, 113, 113, 0.4); }
+  40% { background-color: rgba(248, 113, 113, 0); }
+  50% { background-color: rgba(255, 241, 232, 0.6); opacity: 1; transform: scaleY(1); }
+  100% { background-color: rgba(255, 163, 0, 0.12); opacity: 0; transform: scaleY(0.2); }
+}
+
+@keyframes fpRowLeave {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+table tbody tr.fp-fold > td {
+  padding: 0;
+  border-bottom: none;
+}
+
+table tbody tr.fp-fold > td > div {
+  animation: fpFold var(--fp-fold-ms, 220ms) ease-in forwards;
+}
+
+@keyframes fpFold {
+  to { height: 0; }
+}
+
+/* Pixels thrown by an approval, a rejection or an explosion; one canvas for all. */
+.pixel-effects-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9997;
+  image-rendering: pixelated;
+}
+
+.pixel-stamp {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  padding: 4px 12px 3px;
+  border: 3px solid currentColor;
+  border-radius: 4px;
+  background: rgba(15, 17, 23, 0.78);
+  box-shadow: 0 0 0 2px rgba(15, 17, 23, 0.78), 0 0 18px -2px currentColor;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+/* An approved plan's picture on its way into the character. */
+.pixel-fly {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(52, 211, 153, 0.8);
+}
+
+/* How far through the queue the day has come, in the selection bar: the
+   day's clears against what still waits, filled like a life bar. */
+.fp-progress {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.fp-progress-track {
+  display: inline-block;
+  width: 110px;
+  height: 10px;
+  padding: 1px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-input);
+}
+
+.fp-progress-fill {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--success) 0 5px, transparent 5px 7px);
+  transition: width 0.4s ease-out;
+}
+
+/* The pending queue emptied: the page's own mission complete, with what the day cleared. */
+.mission-complete {
+  text-align: center;
+  padding: 44px 20px 48px;
+  border-color: rgba(52, 211, 153, 0.35);
+  animation: missionIn 0.6s ease-out both;
+}
+
+.mission-complete-title {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: var(--success);
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.6), 0 0 22px rgba(52, 211, 153, 0.3);
+  margin-bottom: 10px;
+}
+
+.mission-complete p {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.mission-complete .mission-complete-tally {
+  margin-top: 6px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+@keyframes missionIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 480px) {
+  .mission-complete-title {
+    font-size: 22px;
+    letter-spacing: 5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  table tbody tr.fp-leaving > td {
+    animation-name: fpRowLeave !important;
+  }
+
+  .mission-complete {
+    animation: none;
+  }
+
+  .fp-progress-fill {
+    transition: none;
+  }
+}

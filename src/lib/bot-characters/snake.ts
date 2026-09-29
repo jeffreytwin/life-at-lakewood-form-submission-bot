@@ -48,6 +48,8 @@ function getMessage(event: LeadEvent): string {
       return "Colonel! A floor plan in the email campaign just changed. Check Floor Plans → Email campaign and get the marketing in line.";
     case "builder_error":
       return `Colonel! ${event.builderName ?? "A builder connection"} just went dark. Check Floor Plans → Builder Connections.`;
+    case "floorplans_cleared":
+      return "Colonel! That was the last floor plan. The queue is clear — mission complete!";
   }
 }
 

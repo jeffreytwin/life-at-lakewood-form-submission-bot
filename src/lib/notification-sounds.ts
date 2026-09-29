@@ -33,6 +33,19 @@ export const NEW_LEAD_SOUND = SOUNDS.newForm;
 /** A new error in the listings engine: the Hub only records ones a person has to act on. */
 export const LISTINGS_ALERT_SOUND = SOUNDS.alert;
 
+/**
+ * Floor Plans (Jeff, 2026-09-29): the queue emptied gets the victory, as a
+ * lead accepted does. Approve, Reject and Remove play their animation with
+ * no sound for now; a file named here plays once per click, however many
+ * rows leave with it.
+ */
+export const FLOOR_PLAN_SOUNDS: Record<"approve" | "reject" | "remove" | "cleared", string | null> = {
+  approve: null,
+  reject: null,
+  remove: null,
+  cleared: SOUNDS.victory,
+};
+
 // Browsers refuse to play audio before the page has had a user gesture.
 // The first blocked sound is held and played once the person clicks or
 // types anywhere, so an alert that fires on a freshly opened tab is not
