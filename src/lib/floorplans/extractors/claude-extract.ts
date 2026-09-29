@@ -14,6 +14,8 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
+import { recordUsage } from "@/lib/floorplans/ai-usage";
+import { digestOf, rememberRead, rememberedRead, variantOf } from "@/lib/floorplans/page-reads";
 import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
@@ -724,6 +726,16 @@ export function descriptionFromPage(
 }
 
 /**
+ * What Claude is asked about one plan's or home's page. Asked with no
+ * name, no address and no content, it is the template a read is
+ * remembered by (page-reads.ts, variantOf): a change to these words reads
+ * every page afresh.
+ */
+function planPageAsk(home: boolean, name: string, url: string, content: string): string {
+  return `This is the page of one ${home ? `home for sale, "${name}"` : `floor plan, "${name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
+}
+
+/**
  * The plan with what its own page adds: the garages, the description, the
  * tour and the pictures the list had no room for. The list's picture stays
  * in front, so the hero the community page chose still leads, and a field
@@ -770,24 +782,50 @@ export async function readPlanPageWithClaude(
   const picturesKnown = gallery.first.length + carried.length >= 4;
   const outsides = elevationPictures(html, page_.url);
 
-  const response = await getClient().messages.create(
-    {
-      model: MODEL,
-      max_tokens: 4096,
-      tools: [picturesKnown ? PLAN_PAGE_TOOL_NO_PHOTOS : PLAN_PAGE_TOOL],
-      tool_choice: { type: "tool", name: "report_plan_page" },
-      messages: [
+  const tool = picturesKnown ? PLAN_PAGE_TOOL_NO_PHOTOS : PLAN_PAGE_TOOL;
+  const home = plan.quickMoveIn === true;
+  // A page that distills to the same text as the last time it was read is
+  // not read again: what Claude said of it then stands (page-reads.ts).
+  // What the page's own markup says — its galleries, its drawings, its
+  // tour — is read below every time, so a new photo is still seen.
+  const digest = digestOf("plan", content);
+  const variant = variantOf("plan", { model: MODEL, tool, ask: planPageAsk(home, "", "", "") });
+  const started = Date.now();
+  let page: ExtractedPlanPage;
+  const remembered = await rememberedRead<ExtractedPlanPage>(plan.sourceUrl, "plan", digest, variant);
+  if (remembered) {
+    page = remembered.facts;
+    await recordUsage({ purpose: "plan-page", model: remembered.model, cached: true, ms: Date.now() - started, url: plan.sourceUrl });
+  } else {
+    let response: Anthropic.Message;
+    try {
+      response = await getClient().messages.create(
         {
-          role: "user",
-          content: `This is the page of one ${plan.quickMoveIn ? `home for sale, "${plan.name}"` : `floor plan, "${plan.name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${plan.sourceUrl}\n\nPAGE CONTENT:\n${content}`,
+          model: MODEL,
+          max_tokens: 4096,
+          tools: [tool],
+          tool_choice: { type: "tool", name: "report_plan_page" },
+          messages: [{ role: "user", content: planPageAsk(home, plan.name, plan.sourceUrl, content) }],
         },
-      ],
-    },
-    // One page's read may not hold up the run: past this it is left unread.
-    { timeout: 45_000, maxRetries: 1 }
-  );
-  const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-  const page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
+        // One page's read may not hold up the run: past this it is left unread.
+        { timeout: 45_000, maxRetries: 1 }
+      );
+    } catch (error) {
+      await recordUsage({
+        purpose: "plan-page",
+        model: MODEL,
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+        ms: Date.now() - started,
+        url: plan.sourceUrl,
+      });
+      throw error;
+    }
+    await recordUsage({ purpose: "plan-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url: plan.sourceUrl });
+    const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+    page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
+    await rememberRead(plan.sourceUrl, "plan", digest, variant, page, MODEL);
+  }
   // One photograph once, at the largest size any spelling asks for.
   const { photos, enlarged } = onePerPicture(
     [
@@ -933,6 +971,15 @@ export async function readPlanPageWithClaude(
 }
 
 /**
+ * What Claude is asked about a listing page, around the page itself.
+ * Asked with no address and no content, it is the template a read is
+ * remembered by (page-reads.ts, variantOf).
+ */
+function listAsk(what: string, hint: string | undefined, url: string, content: string): string {
+  return `${what} Leave out any home the page marks Sold, Under Contract or Sale Pending: it is no longer for sale. A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${hint ? ` Hint: ${hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
+}
+
+/**
  * What one listing page holds, read the same way whichever page it is.
  * The address it answered from comes back with the plans: a list that
  * redirects is still a list, and must not be read again as a plan page.
@@ -966,22 +1013,30 @@ async function listPage(
       ? `Extract every floor plan / home model from this new-home community page. Leave out the homes for sale — a home named by its street address or marked "Move-in Ready", "Quick Move-in" or with a move-in date — which are read from their own page. Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`
       : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
 
-  const ask = `${what} Leave out any home the page marks Sold, Under Contract or Sale Pending: it is no longer for sale. A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${opts.hint ? ` Hint: ${opts.hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
+  const ask = listAsk(what, opts.hint, url, content);
 
   // Streamed, not because anything reads the stream, but because the SDK
   // refuses a plain request whose ceiling could take it past ten minutes —
   // which is what the room this read needs amounts to (Jeff, 2026-09-22:
   // Ryan and Pulte both came back "Streaming is required").
   const readList = async (maxTokens: number, tool: Anthropic.Tool = EXTRACT_TOOL) => {
-    const response = await getClient().messages
-      .stream({
-        model: MODEL,
-        max_tokens: maxTokens,
-        tools: [tool],
-        tool_choice: { type: "tool", name: tool.name },
-        messages: [{ role: "user", content: ask }],
-      })
-      .finalMessage();
+    const started = Date.now();
+    let response: Anthropic.Message;
+    try {
+      response = await getClient().messages
+        .stream({
+          model: MODEL,
+          max_tokens: maxTokens,
+          tools: [tool],
+          tool_choice: { type: "tool", name: tool.name },
+          messages: [{ role: "user", content: ask }],
+        })
+        .finalMessage();
+    } catch (error) {
+      await recordUsage({ purpose: "list-page", model: MODEL, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started, url });
+      throw error;
+    }
+    await recordUsage({ purpose: "list-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url });
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     return {
       answered: Boolean(toolUse),
@@ -990,29 +1045,44 @@ async function listPage(
     };
   };
 
-  // An answer that runs out of room comes back half-written, and a
-  // half-written list is not a list — which is how Ryan Homes and Pulte
-  // both failed (Jeff, 2026-09-22): one more go with room to spare. An
-  // answer that finished but wrote its list as text is asked again held
-  // to the schema (EXTRACT_TOOL_STRICT).
-  let answer = await readList(LIST_TOKENS);
-  if (answer.reported !== undefined && !asList(answer.reported)) {
-    const cutShort = answer.stop === "max_tokens";
-    logger.warn(cutShort ? "Plan list came back half-written; asking again with more room" : "Plan list came back as text; asking again held to the schema", {
-      url,
-      stop: answer.stop,
-      got: typeof answer.reported,
-    });
-    answer = await readList(LIST_TOKENS_AGAIN, cutShort ? EXTRACT_TOOL : EXTRACT_TOOL_STRICT);
-  }
-  if (!answer.answered) throw new Error("Claude returned no extraction tool call");
-  const reported = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
-  if (!reported) {
-    throw new Error(
-      answer.stop === "max_tokens"
-        ? "the page's plans did not fit in one answer, even with room to spare"
-        : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
-    );
+  // A list that distills to the same text as the last time it was read is
+  // not read again: the plans Claude listed then are listed now
+  // (page-reads.ts). The list is read for its plans or for its homes, and
+  // each is a variant of its own.
+  const digest = digestOf("list", content);
+  const variant = variantOf("list", { model: MODEL, tool: EXTRACT_TOOL, ask: listAsk(what, opts.hint, "", "") });
+  const remembered = await rememberedRead<ExtractedPlan[]>(url, "list", digest, variant);
+  let reported: ExtractedPlan[];
+  if (remembered) {
+    reported = remembered.facts;
+    await recordUsage({ purpose: "list-page", model: remembered.model, cached: true, url });
+  } else {
+    // An answer that runs out of room comes back half-written, and a
+    // half-written list is not a list — which is how Ryan Homes and Pulte
+    // both failed (Jeff, 2026-09-22): one more go with room to spare. An
+    // answer that finished but wrote its list as text is asked again held
+    // to the schema (EXTRACT_TOOL_STRICT).
+    let answer = await readList(LIST_TOKENS);
+    if (answer.reported !== undefined && !asList(answer.reported)) {
+      const cutShort = answer.stop === "max_tokens";
+      logger.warn(cutShort ? "Plan list came back half-written; asking again with more room" : "Plan list came back as text; asking again held to the schema", {
+        url,
+        stop: answer.stop,
+        got: typeof answer.reported,
+      });
+      answer = await readList(LIST_TOKENS_AGAIN, cutShort ? EXTRACT_TOOL : EXTRACT_TOOL_STRICT);
+    }
+    if (!answer.answered) throw new Error("Claude returned no extraction tool call");
+    const list = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
+    if (!list) {
+      throw new Error(
+        answer.stop === "max_tokens"
+          ? "the page's plans did not fit in one answer, even with room to spare"
+          : `plans came back as ${typeof answer.reported}, not a list — the page may not be readable without its scripts`
+      );
+    }
+    reported = list;
+    await rememberRead(url, "list", digest, variant, reported, MODEL);
   }
   const answered = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
   // A series is a page of plans, not a plan (Dream Finders' Seaire, Jeff

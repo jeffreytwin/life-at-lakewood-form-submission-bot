@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { removeItem, WixApiError } from "@/lib/wix/client";
 import { releaseConnectionMedia } from "@/lib/floorplans/media-cleanup";
+import { forgetReads } from "@/lib/floorplans/page-reads";
 import { failedAt as failed } from "@/lib/shared/describe-error";
 
 export interface ClearedConnection {
@@ -41,7 +42,7 @@ export async function clearConnection(id: string): Promise<ClearOutcome> {
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
-      "id, builder_id, community_id, fp_communities:community_id(site_id, fp_sites:site_id(wix_site_id, wix_collection_id))"
+      "id, builder_id, community_id, extractor_params, fp_communities:community_id(site_id, fp_sites:site_id(wix_site_id, wix_collection_id))"
     )
     .eq("id", id)
     .maybeSingle();
@@ -56,9 +57,20 @@ export async function clearConnection(id: string): Promise<ClearOutcome> {
 
   const { data: plans, error: plansError } = await supabase
     .from("fp_floor_plans")
-    .select("id, wix_record_id")
+    .select("id, wix_record_id, source_url")
     .match(scope);
   if (plansError) throw failed("reading the connection's plans", plansError);
+
+  // What Claude read off these plans' pages, and the connection's own
+  // pages, is forgotten too: the next Run reads them from the builder's
+  // site again, as a Reset promises (page-reads.ts).
+  const params = (conn.extractor_params ?? {}) as { url?: string; listUrls?: string[]; quickMoveInUrl?: string };
+  await forgetReads([
+    ...(plans ?? []).map((p) => p.source_url as string | null),
+    params.url,
+    ...(Array.isArray(params.listUrls) ? params.listUrls : []),
+    params.quickMoveInUrl,
+  ]);
 
   let wixRemoved = 0;
   const wixFailed: string[] = [];

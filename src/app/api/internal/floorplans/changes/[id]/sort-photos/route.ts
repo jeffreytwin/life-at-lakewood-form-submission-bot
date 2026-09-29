@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { labelPhotos, sortByRooms } from "@/lib/floorplans/photo-rooms";
 import { samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
+import { withRunContext } from "@/lib/floorplans/run-context";
 
 export const dynamic = "force-dynamic";
 // Every picture of the gallery is looked at; a gallery of thirty is a
@@ -49,7 +50,7 @@ export async function POST(
     gallery = gallery.filter((url, i) => url && gallery.indexOf(url) === i);
     if (gallery.length < 2) return NextResponse.json({ galleryImages: gallery, placed: 0, removed: [], duplicatesChecked: true });
 
-    const [labels, duplicates] = await Promise.all([labelPhotos(gallery), samePhotos(gallery)]);
+    const [labels, duplicates] = await withRunContext({ source: "sort-button" }, () => Promise.all([labelPhotos(gallery), samePhotos(gallery)]));
     const once = withoutDuplicates(gallery, duplicates.same);
     const ordered = sortByRooms(once.urls, labels);
     const placed = once.urls.filter((url) => labels.get(url)).length;

@@ -22,6 +22,9 @@ import { logger } from "@/lib/shared/logger";
 import { readsThroughBrowser } from "@/lib/floorplans/sync";
 import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { holdRun, runHeld, sweepCutOffRuns } from "@/lib/floorplans/runs";
+import { withRunContext } from "@/lib/floorplans/run-context";
+import { totalsSince } from "@/lib/floorplans/ai-usage";
+import { showCost } from "@/lib/floorplans/run-state";
 
 const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
 // A builder read through a browser takes minutes, not seconds, so the tick
@@ -38,6 +41,10 @@ export interface NightlyState {
   failed?: number;
   /** Started with "Sync now" rather than by the clock: it runs even with the nightly sync off. */
   manual?: boolean;
+  /** What the cycle spent on Claude, in cents, and the pages it read, of which the ones unchanged since last time (ai-usage.ts). */
+  costCents?: number;
+  reads?: number;
+  cached?: number;
 }
 
 /** A tick holds the lock no longer than a function lives. */
@@ -244,7 +251,7 @@ async function tick(): Promise<Record<string, unknown>> {
       busy += 1;
       continue;
     }
-    const result = await runHeld(conn.id);
+    const result = await withRunContext({ source: state.manual ? "sync-now" : "nightly" }, () => runHeld(conn.id));
     processed += 1;
     ran += 1;
     if (result.status === "failed" || result.status === "partial") failed += 1;
@@ -255,6 +262,13 @@ async function tick(): Promise<Record<string, unknown>> {
 
   if (remaining <= 0) {
     nextState.completedAt = new Date().toISOString();
+    // What the cycle spent, for the Builder Connections page and the digest.
+    const spent = await totalsSince(startedAt);
+    if (spent) {
+      nextState.costCents = spent.costCents;
+      nextState.reads = spent.reads;
+      nextState.cached = spent.cached;
+    }
     const { count: pendingCount } = await supabase
       .from("fp_pending_changes")
       .select("id", { count: "exact", head: true })
@@ -281,6 +295,7 @@ async function tick(): Promise<Record<string, unknown>> {
       `Floor plan sync: ${pendingCount ?? 0} changes awaiting review` +
       (starredTouched ? ` (${starredTouched} starred-plan follow-ups open)` : "") +
       `. Ran ${ran} connections${failed ? `, ${failed} failed` : ""}.` +
+      (spent ? ` Claude ${showCost(spent.costCents)}${spent.reads ? ` (${spent.cached} of ${spent.reads} pages unchanged)` : ""}.` : "") +
       (attention.length ? ` Needs attention: ${attention.join("; ")}.` : "");
     logger.info("Floor plan sync cycle complete", { ran, failed, pendingCount, manual: state.manual === true });
     if (settings.fp_digest_phone) await sendDigest(settings.fp_digest_phone, digest);

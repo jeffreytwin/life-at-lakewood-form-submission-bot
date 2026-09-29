@@ -47,6 +47,8 @@ import { rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
 import { inKnownOrder, withKnownSpellings, withScrapedPictures } from "@/lib/floorplans/pictures";
 import { AUTO_RUN } from "@/lib/floorplans/run-state";
+import { runContext, withRunContext } from "@/lib/floorplans/run-context";
+import { runTotals } from "@/lib/floorplans/ai-usage";
 import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
@@ -189,9 +191,11 @@ async function setRunStatus(
   connectionId: string,
   status: string,
   planCount: number | null,
-  failed: boolean
+  failed: boolean,
+  extra: Record<string, unknown> = {}
 ) {
   const updates: Record<string, unknown> = {
+    ...extra,
     last_run_at: new Date().toISOString(),
     last_run_status: status.slice(0, 300),
   };
@@ -207,6 +211,12 @@ async function setRunStatus(
     updates.consecutive_failures = 0;
   }
   await supabase.from("fp_builder_communities").update(updates).eq("id", connectionId);
+}
+
+/** What a run spent on Claude, as the connection's row keeps it (ai-usage.ts); nothing where the tally cannot be read. */
+async function spentOn(runId: string): Promise<Record<string, unknown>> {
+  const totals = await runTotals(runId);
+  return totals ? { last_run_reads: totals.reads, last_run_cached: totals.cached, last_run_cost_cents: totals.costCents } : {};
 }
 
 /** Whether an identical change was rejected and the rejection still holds: rejections stick. */
@@ -621,174 +631,182 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   }
 
   const runId = `manual-${Date.now()}`;
-  let plans: NormalizedPlan[];
-  try {
-    plans = await extractor({
-      ...params,
-      communityName: community.name,
-      builderName: builder.name,
-      runDeadline: startedAt + RUN_READ_MS,
-      ...(SERIES_BUILDERS.has(builder.name) ? { keepSeriesApart: true } : {}),
-    });
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    await setRunStatus(conn.id, `error: ${detail}`, null, true);
-    return { status: "failed", detail };
-  }
+  // Every Claude call under this run is written down against it (ai-usage.ts),
+  // under whoever asked for the run: the nightly tick, a Sync now, a Run.
+  const asked = runContext();
+  return withRunContext(
+    { source: asked?.source ?? "run", connectionId: conn.id, runId, builder: builder.name, community: community.name },
+    async () => {
+      let plans: NormalizedPlan[];
+      try {
+        plans = await extractor({
+          ...params,
+          communityName: community.name,
+          builderName: builder.name,
+          runDeadline: startedAt + RUN_READ_MS,
+          ...(SERIES_BUILDERS.has(builder.name) ? { keepSeriesApart: true } : {}),
+        });
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        await setRunStatus(conn.id, `error: ${detail}`, null, true, await spentOn(runId));
+        return { status: "failed", detail };
+      }
 
-  // Zero-result guard: treat as scrape failure, never as "everything removed".
-  if (plans.length === 0) {
-    await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
-    return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
-  }
-  const { data: canonical } = await supabase
-    .from("fp_floor_plans")
-    .select("id, plan_key, wix_record_id, record, last_seen_at, created_at")
-    .eq("site_id", site.id)
-    .eq("community_id", community.id)
-    .eq("builder_id", builder.id)
-    .is("removed_at", null);
-  const canonicalByKey = new Map((canonical ?? []).map((c) => [c.plan_key, c]));
-  // A plan sold in two series is named for its series, every night alike,
-  // and so is the plan its homes are built from (series-labels.ts). A
-  // label the connection has used before, queued or filed, is kept.
-  if (SERIES_BUILDERS.has(builder.name) && typeof params.url === "string") {
-    const { data: queuedKeys } = await supabase
-      .from("fp_pending_changes")
-      .select("plan_key")
-      .eq("site_id", site.id)
-      .eq("community_id", community.id)
-      .eq("builder_id", builder.id);
-    plans = withSeriesLabels(plans, params.url, [...canonicalByKey.keys(), ...(queuedKeys ?? []).map((r) => r.plan_key as string)]);
-  }
-  plans = await preparePlans(plans, { site, community, builder }, {
-    deadline: startedAt + RUN_PREPARE_MS,
-    known: new Map((canonical ?? []).map((c) => [c.plan_key, c.record as Partial<NormalizedPlan> | null])),
-  });
-  // A tour link dropped as one that does not work (Lennar's own, since
-  // 2026-09-25) gives way to the working tour with its number, where a
-  // record of the community already shows it (tours.ts).
-  plans = withKnownTours(plans, (canonical ?? []).map((c) => (c.record as NormalizedPlan | null)?.virtualTourUrl));
-  // A home read under another name than it was filed by is that home, not
-  // a new one (home-identity.ts).
-  plans = filedAsBefore(plans, canonical ?? []);
-  const scrapedKeys = new Set(plans.map((p) => p.planKey));
-  // Scores set in the Hub outlive the plans (a Reset removes those): a
-  // plan queued again comes back with the score it had.
-  const { data: rememberedRows } = await supabase
-    .from("fp_plan_scores")
-    .select("plan_key, score")
-    .match({ site_id: site.id, community_id: community.id, builder_id: builder.id });
-  const remembered = new Map((rememberedRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
-
-  let queued = 0;
-
-  for (const plan of plans) {
-    const existing = canonicalByKey.get(plan.planKey);
-    if (!existing) {
-      if (
-        await queueChange({
-          siteId: site.id, communityId: community.id, builderId: builder.id,
-          planKey: plan.planKey, changeType: "add", newValue: plan.priceDisplay,
-          proposedRecord: withScrapedPictures(withRememberedScore(plan, remembered), plan), runId,
-        })
-      ) queued += 1;
-      continue;
-    }
-
-    // Known plan: mark seen, then diff field-by-field (scalars and both
-    // galleries). The rules live in diff.ts: a field a person edited is
-    // never proposed for reversion, and the merged record an approval
-    // writes keeps every such field.
-    await supabase
-      .from("fp_floor_plans")
-      .update({ last_seen_at: new Date().toISOString() })
-      .eq("id", existing.id);
-    const current = (existing.record ?? {}) as CanonicalRecord;
-    // A field whose change was rejected keeps its value in the record any
-    // other approved change writes (mergeForUpdate).
-    const ids = { siteId: site.id, communityId: community.id, builderId: builder.id, planKey: plan.planKey, changeType: "update" as const };
-    const changes = fieldChanges(current, plan);
-    const rejected = new Set<keyof NormalizedPlan>();
-    for (const change of changes) {
-      if (await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue })) rejected.add(change.field);
-    }
-    const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, rejected), remembered), plan);
-    // Approved without a review, and written on their own: a quick move-in's
-    // description, and a price that moved by a fifth or less when it is all
-    // that changed (splitOnItsOwn).
-    const split = splitOnItsOwn(current, plan, changes.filter((c) => !rejected.has(c.field)), Boolean(existing.wix_record_id));
-    const onItsOwn = [...split.onItsOwn];
-    const reviewed = [...split.reviewed];
-    await withdrawOutdated(ids, comparedFields(current, plan), reviewed, current);
-    // Nor with anything of the plan's still waiting for a person from an
-    // earlier run: then the price waits with it.
-    const price = onItsOwn.find((c) => c.field === "priceDisplay");
-    if (price && (await othersWaiting(ids))) {
-      onItsOwn.splice(onItsOwn.indexOf(price), 1);
-      reviewed.push(price);
-    }
-    for (const change of onItsOwn) {
-      await approveOnItsOwn({
-        siteId: site.id, communityId: community.id, builderId: builder.id,
-        planKey: plan.planKey, fieldChanged: change.label,
-        oldValue: change.oldValue, newValue: change.newValue,
-        proposedRecord: change.field === "description" ? withDescriptionFrom(current, plan) : withPriceFrom(current, plan),
-        wixRecordId: existing.wix_record_id!, floorPlanId: existing.id, runId,
+      // Zero-result guard: treat as scrape failure, never as "everything removed".
+      if (plans.length === 0) {
+        await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
+        return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
+      }
+      const { data: canonical } = await supabase
+        .from("fp_floor_plans")
+        .select("id, plan_key, wix_record_id, record, last_seen_at, created_at")
+        .eq("site_id", site.id)
+        .eq("community_id", community.id)
+        .eq("builder_id", builder.id)
+        .is("removed_at", null);
+      const canonicalByKey = new Map((canonical ?? []).map((c) => [c.plan_key, c]));
+      // A plan sold in two series is named for its series, every night alike,
+      // and so is the plan its homes are built from (series-labels.ts). A
+      // label the connection has used before, queued or filed, is kept.
+      if (SERIES_BUILDERS.has(builder.name) && typeof params.url === "string") {
+        const { data: queuedKeys } = await supabase
+          .from("fp_pending_changes")
+          .select("plan_key")
+          .eq("site_id", site.id)
+          .eq("community_id", community.id)
+          .eq("builder_id", builder.id);
+        plans = withSeriesLabels(plans, params.url, [...canonicalByKey.keys(), ...(queuedKeys ?? []).map((r) => r.plan_key as string)]);
+      }
+      plans = await preparePlans(plans, { site, community, builder }, {
+        deadline: startedAt + RUN_PREPARE_MS,
+        known: new Map((canonical ?? []).map((c) => [c.plan_key, c.record as Partial<NormalizedPlan> | null])),
       });
-    }
-    for (const change of reviewed) {
-      if (
-        await queueChange({
-          siteId: site.id, communityId: community.id, builderId: builder.id,
-          planKey: plan.planKey, changeType: "update", fieldChanged: change.label,
-          oldValue: change.oldValue, newValue: change.newValue,
-          proposedRecord: merged, wixRecordId: existing.wix_record_id,
-          floorPlanId: existing.id, runId,
-        })
-      ) queued += 1;
-    }
-  }
+      // A tour link dropped as one that does not work (Lennar's own, since
+      // 2026-09-25) gives way to the working tour with its number, where a
+      // record of the community already shows it (tours.ts).
+      plans = withKnownTours(plans, (canonical ?? []).map((c) => (c.record as NormalizedPlan | null)?.virtualTourUrl));
+      // A home read under another name than it was filed by is that home, not
+      // a new one (home-identity.ts).
+      plans = filedAsBefore(plans, canonical ?? []);
+      const scrapedKeys = new Set(plans.map((p) => p.planKey));
+      // Scores set in the Hub outlive the plans (a Reset removes those): a
+      // plan queued again comes back with the score it had.
+      const { data: rememberedRows } = await supabase
+        .from("fp_plan_scores")
+        .select("plan_key, score")
+        .match({ site_id: site.id, community_id: community.id, builder_id: builder.id });
+      const remembered = new Map((rememberedRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
 
-  // An addition queued by an earlier run for a home the site already has,
-  // under the name that run read, is withdrawn (home-identity.ts).
-  await withdrawRefiledAdds({ siteId: site.id, communityId: community.id, builderId: builder.id }, canonical ?? []);
+      let queued = 0;
 
-  // Removal guard: plan must have been missing since before this run
-  // (last_seen_at > 24h old) and the scrape must cover >= 60% of the last
-  // known plan count.
-  const coverage = describeCoverage(plans.length, conn.last_plan_count);
-  if (coverage.ok) {
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-    for (const c of canonical ?? []) {
-      if (scrapedKeys.has(c.plan_key)) continue;
-      if (!c.last_seen_at || new Date(c.last_seen_at).getTime() > cutoff) continue;
-      if (
-        await queueChange({
-          siteId: site.id, communityId: community.id, builderId: builder.id,
-          planKey: c.plan_key, changeType: "remove",
-          oldValue: (c.record as NormalizedPlan | null)?.priceDisplay ?? null,
-          wixRecordId: c.wix_record_id, floorPlanId: c.id, runId,
-        })
-      ) queued += 1;
+      for (const plan of plans) {
+        const existing = canonicalByKey.get(plan.planKey);
+        if (!existing) {
+          if (
+            await queueChange({
+              siteId: site.id, communityId: community.id, builderId: builder.id,
+              planKey: plan.planKey, changeType: "add", newValue: plan.priceDisplay,
+              proposedRecord: withScrapedPictures(withRememberedScore(plan, remembered), plan), runId,
+            })
+          ) queued += 1;
+          continue;
+        }
+
+        // Known plan: mark seen, then diff field-by-field (scalars and both
+        // galleries). The rules live in diff.ts: a field a person edited is
+        // never proposed for reversion, and the merged record an approval
+        // writes keeps every such field.
+        await supabase
+          .from("fp_floor_plans")
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq("id", existing.id);
+        const current = (existing.record ?? {}) as CanonicalRecord;
+        // A field whose change was rejected keeps its value in the record any
+        // other approved change writes (mergeForUpdate).
+        const ids = { siteId: site.id, communityId: community.id, builderId: builder.id, planKey: plan.planKey, changeType: "update" as const };
+        const changes = fieldChanges(current, plan);
+        const rejected = new Set<keyof NormalizedPlan>();
+        for (const change of changes) {
+          if (await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue })) rejected.add(change.field);
+        }
+        const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, rejected), remembered), plan);
+        // Approved without a review, and written on their own: a quick move-in's
+        // description, and a price that moved by a fifth or less when it is all
+        // that changed (splitOnItsOwn).
+        const split = splitOnItsOwn(current, plan, changes.filter((c) => !rejected.has(c.field)), Boolean(existing.wix_record_id));
+        const onItsOwn = [...split.onItsOwn];
+        const reviewed = [...split.reviewed];
+        await withdrawOutdated(ids, comparedFields(current, plan), reviewed, current);
+        // Nor with anything of the plan's still waiting for a person from an
+        // earlier run: then the price waits with it.
+        const price = onItsOwn.find((c) => c.field === "priceDisplay");
+        if (price && (await othersWaiting(ids))) {
+          onItsOwn.splice(onItsOwn.indexOf(price), 1);
+          reviewed.push(price);
+        }
+        for (const change of onItsOwn) {
+          await approveOnItsOwn({
+            siteId: site.id, communityId: community.id, builderId: builder.id,
+            planKey: plan.planKey, fieldChanged: change.label,
+            oldValue: change.oldValue, newValue: change.newValue,
+            proposedRecord: change.field === "description" ? withDescriptionFrom(current, plan) : withPriceFrom(current, plan),
+            wixRecordId: existing.wix_record_id!, floorPlanId: existing.id, runId,
+          });
+        }
+        for (const change of reviewed) {
+          if (
+            await queueChange({
+              siteId: site.id, communityId: community.id, builderId: builder.id,
+              planKey: plan.planKey, changeType: "update", fieldChanged: change.label,
+              oldValue: change.oldValue, newValue: change.newValue,
+              proposedRecord: merged, wixRecordId: existing.wix_record_id,
+              floorPlanId: existing.id, runId,
+            })
+          ) queued += 1;
+        }
+      }
+
+      // An addition queued by an earlier run for a home the site already has,
+      // under the name that run read, is withdrawn (home-identity.ts).
+      await withdrawRefiledAdds({ siteId: site.id, communityId: community.id, builderId: builder.id }, canonical ?? []);
+
+      // Removal guard: plan must have been missing since before this run
+      // (last_seen_at > 24h old) and the scrape must cover >= 60% of the last
+      // known plan count.
+      const coverage = describeCoverage(plans.length, conn.last_plan_count);
+      if (coverage.ok) {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        for (const c of canonical ?? []) {
+          if (scrapedKeys.has(c.plan_key)) continue;
+          if (!c.last_seen_at || new Date(c.last_seen_at).getTime() > cutoff) continue;
+          if (
+            await queueChange({
+              siteId: site.id, communityId: community.id, builderId: builder.id,
+              planKey: c.plan_key, changeType: "remove",
+              oldValue: (c.record as NormalizedPlan | null)?.priceDisplay ?? null,
+              wixRecordId: c.wix_record_id, floorPlanId: c.id, runId,
+            })
+          ) queued += 1;
+        }
+      }
+
+      // A shortfall is the usual sign of a builder page that changed shape, so
+      // it is recorded as a failure and shows up wherever failures do (the
+      // Floor Plans banner, Builder Connections, the digest).
+      const detail = coverage.ok
+        ? `ok: ${plans.length} plans, ${queued} changes queued`
+        : `${coverage.detail}; ${queued} changes queued`;
+      await setRunStatus(conn.id, detail, plans.length, !coverage.ok, await spentOn(runId));
+      // First successful run marks the connection nightly-eligible.
+      await supabase
+        .from("fp_builder_communities")
+        .update({ onboarded_at: new Date().toISOString() })
+        .eq("id", conn.id)
+        .is("onboarded_at", null);
+      logger.info("Floor plan connection run complete", {
+        connectionId, builder: builder.name, community: community.name, plans: plans.length, queued,
+      });
+      return { status: coverage.ok ? "ok" : "partial", detail, plans: plans.length, queued };
     }
-  }
-
-  // A shortfall is the usual sign of a builder page that changed shape, so
-  // it is recorded as a failure and shows up wherever failures do (the
-  // Floor Plans banner, Builder Connections, the digest).
-  const detail = coverage.ok
-    ? `ok: ${plans.length} plans, ${queued} changes queued`
-    : `${coverage.detail}; ${queued} changes queued`;
-  await setRunStatus(conn.id, detail, plans.length, !coverage.ok);
-  // First successful run marks the connection nightly-eligible.
-  await supabase
-    .from("fp_builder_communities")
-    .update({ onboarded_at: new Date().toISOString() })
-    .eq("id", conn.id)
-    .is("onboarded_at", null);
-  logger.info("Floor plan connection run complete", {
-    connectionId, builder: builder.name, community: community.name, plans: plans.length, queued,
-  });
-  return { status: coverage.ok ? "ok" : "partial", detail, plans: plans.length, queued };
+  );
 }

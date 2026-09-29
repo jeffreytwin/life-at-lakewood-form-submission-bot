@@ -16,6 +16,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { recordUsage } from "@/lib/floorplans/ai-usage";
 import { ROOM_ORDER, type GalleryMeta, type NormalizedPlan, type Room } from "@/lib/floorplans/types";
 import { orderGallery, type GalleryInput, type OrderedGallery } from "@/lib/floorplans/gallery-order";
 import { askableBatches } from "@/lib/floorplans/media";
@@ -92,7 +93,10 @@ async function lookAt(urls: string[]): Promise<(PhotoLabel | null)[]> {
     content.push(imageBlock(url, pictures[i]));
   });
 
-  const response = await getClient().messages.create({
+  const started = Date.now();
+  let response: Anthropic.Message;
+  try {
+    response = await getClient().messages.create({
     model: MODEL,
     max_tokens: 16_000,
     // Naming a room from a photograph is not deep work; the pictures are.
@@ -101,6 +105,11 @@ async function lookAt(urls: string[]): Promise<(PhotoLabel | null)[]> {
     tool_choice: { type: "tool", name: LOOK_TOOL.name },
     messages: [{ role: "user", content }],
   });
+  } catch (error) {
+    await recordUsage({ purpose: "photo-rooms", model: MODEL, images: urls.length, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started });
+    throw error;
+  }
+  await recordUsage({ purpose: "photo-rooms", model: MODEL, usage: response.usage, images: urls.length, ms: Date.now() - started });
 
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const rooms = (toolUse?.input as { rooms?: unknown } | undefined)?.rooms;

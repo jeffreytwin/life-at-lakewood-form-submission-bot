@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/shared/logger";
 import { sortQueuedPhotos } from "@/lib/floorplans/sort-queue";
+import { withRunContext } from "@/lib/floorplans/run-context";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    return NextResponse.json(await sortQueuedPhotos());
+    return NextResponse.json(await withRunContext({ source: "photo-sort" }, sortQueuedPhotos));
   } catch (error) {
     logger.error("Sorting waiting galleries failed", {
       error: error instanceof Error ? error.message : String(error),

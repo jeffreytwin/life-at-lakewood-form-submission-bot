@@ -9,6 +9,7 @@ import { withRememberedScore } from "@/lib/floorplans/scores";
 import { withScrapedPictures } from "@/lib/floorplans/pictures";
 import { queueChange, readStandInInFull } from "@/lib/floorplans/sync";
 import { neutralizeDescriptions } from "@/lib/floorplans/description";
+import { withRunContext } from "@/lib/floorplans/run-context";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -128,11 +129,11 @@ export async function POST(
     const listed = (listedRows ?? []).map((r) => r.record as NormalizedPlan).filter((p) => p?.planKey);
     let plan = built;
     try {
-      plan = await readStandInInFull(builderName, built, listed, homes, Date.now() + STAND_IN_ROUTE_MS);
+      plan = await withRunContext({ source: "stand-in" }, () => readStandInInFull(builderName, built, listed, homes, Date.now() + STAND_IN_ROUTE_MS));
     } catch (err) {
       logger.warn("Stand-in plan page could not be read", { planKey, error: err instanceof Error ? err.message : String(err) });
     }
-    [plan] = await neutralizeDescriptions([plan], builderName);
+    [plan] = await withRunContext({ source: "stand-in" }, () => neutralizeDescriptions([plan], builderName));
     const { data: scoreRows } = await supabase.from("fp_plan_scores").select("plan_key, score").match(scope).eq("plan_key", planKey);
     const remembered = new Map((scoreRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
     const [linked] = linkQuickMoveIns([standardizePlan(plan), ...homes]);

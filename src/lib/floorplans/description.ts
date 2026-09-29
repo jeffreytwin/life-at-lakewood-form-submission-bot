@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { recordUsage } from "@/lib/floorplans/ai-usage";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 import { speaksAsOwner } from "@/lib/floorplans/owner-words";
 import { fullAndHalfBaths } from "@/lib/floorplans/standardize";
@@ -55,7 +56,10 @@ const REWRITE_TOOL: Anthropic.Tool = {
  * answers with nothing usable.
  */
 export async function rewriteAsThirdParty(text: string, builderName: string): Promise<string | null> {
-  const response = await getClient().messages.create(
+  const started = Date.now();
+  let response: Anthropic.Message;
+  try {
+    response = await getClient().messages.create(
     {
       model: MODEL,
       max_tokens: 2048,
@@ -74,6 +78,11 @@ export async function rewriteAsThirdParty(text: string, builderName: string): Pr
     },
     { timeout: REWORD_MS, maxRetries: 1 }
   );
+  } catch (error) {
+    await recordUsage({ purpose: "description", model: MODEL, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started });
+    throw error;
+  }
+  await recordUsage({ purpose: "description", model: MODEL, usage: response.usage, ms: Date.now() - started });
   if (response.stop_reason === "refusal") return null;
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const rewritten = (toolUse?.input as { description?: unknown } | undefined)?.description;

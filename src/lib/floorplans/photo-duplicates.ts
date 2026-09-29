@@ -27,6 +27,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { logger } from "@/lib/shared/logger";
+import { recordUsage } from "@/lib/floorplans/ai-usage";
 import { pictureKey, pictureSize } from "@/lib/floorplans/extractors/plan-page";
 import { fetchPictures, imageBlock, type FetchedPicture } from "@/lib/floorplans/claude-image";
 
@@ -90,7 +91,10 @@ async function sameIn(urls: string[], pictures: (FetchedPicture | null)[]): Prom
     content.push({ type: "text", text: `Picture ${i + 1}:` });
     content.push(imageBlock(url, pictures[i]));
   });
-  const response = await getClient().messages.create({
+  const started = Date.now();
+  let response: Anthropic.Message;
+  try {
+    response = await getClient().messages.create({
     model: MODEL,
     max_tokens: 16_000,
     // Telling one shot from a near one is closer work than naming a room.
@@ -99,6 +103,11 @@ async function sameIn(urls: string[], pictures: (FetchedPicture | null)[]): Prom
     tool_choice: { type: "tool", name: SAME_TOOL.name },
     messages: [{ role: "user", content }],
   });
+  } catch (error) {
+    await recordUsage({ purpose: "photo-duplicates", model: MODEL, images: urls.length, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started });
+    throw error;
+  }
+  await recordUsage({ purpose: "photo-duplicates", model: MODEL, usage: response.usage, images: urls.length, ms: Date.now() - started });
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   const input = (toolUse?.input ?? {}) as { same?: unknown; pictures?: { n?: unknown; shows?: unknown }[] };
   const shows = urls.map((_, i) => {
