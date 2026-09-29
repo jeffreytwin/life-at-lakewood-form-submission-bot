@@ -114,6 +114,27 @@ describe("a plan's elevations page (Birchwood Paired, Jeff 2026-09-28)", () => {
     expect(got.galleryImages[0]).toBe("https://storage.googleapis.com/cardel-website.appspot.com/public/elevations/birchwood-c-modern-farmhouse-nrr-villa-3_1536x1536.webp");
   });
 
+  it("takes a paired villa's elevations, whose names put the villas first (Timberland Paired Villa, 2026-09-29)", () => {
+    const fbe = (file: string) => `https://firebasestorage.googleapis.com/v0/b/cardel-website.appspot.com/o/public%2Felevations%2F${file}?alt=media&amp;token=t`;
+    const villa = `
+      <img src="${fb("timberland-b-coastal-nrr-villa-poster-1a045bbe_640x640.webp")}">
+      <img src="${fbe("nrr-villa-timberland-a-craftsman-44d838cd_640x640.webp")}" srcset="${fbe("nrr-villa-timberland-a-craftsman-44d838cd_1536x1536.webp")} 1536w">
+      <script>const data = {elevations:[{image:{paths:{"2xl":"public/elevations/nrr-villa-timberland-b-coastal-0e8104b6_1536x1536.webp"}}},
+        {image:{paths:{"2xl":"public/elevations/nrr-villa-timberland-c-modern-farmhouse-bc6cf421_1536x1536.webp"}}}],
+        related:[{poster:{paths:{sm:"public/elevations/nrr-villa-sylvan-a-southern-prairie-2370ee99_640x640.webp"}}}]}</script>`;
+    expect(elevationPictures(villa, "Timberland Paired Villa").map((u) => decodeURIComponent(u).replace(/^.*\//, "").replace(/\?.*$/, ""))).toEqual([
+      "timberland-b-coastal-nrr-villa-poster-1a045bbe_640x640.webp",
+      "nrr-villa-timberland-a-craftsman-44d838cd_1536x1536.webp",
+      "nrr-villa-timberland-b-coastal-0e8104b6_1536x1536.webp",
+      "nrr-villa-timberland-c-modern-farmhouse-bc6cf421_1536x1536.webp",
+    ]);
+  });
+
+  it("does not take a plan whose name only begins with this one's", () => {
+    const page = `<script>const d = {a:"public/elevations/nrr-villa-timberlandia-a-craftsman_640x640.webp"}</script>`;
+    expect(elevationPictures(page, "Timberland Paired Villa")).toEqual([]);
+  });
+
   it("leaves a plan as it was when its elevations page will not load", async () => {
     const plan = { ...cardelHomeType({ planKey: "x", name: "Windsor", price: null, priceDisplay: null, beds: "", baths: "", sqft: null, garages: null, homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: "https://www1.cardelhomes.com/florida/north-river-ranch/homes/windsor", galleryImages: ["a.webp"], blueprintImages: [] }) };
     expect(await withElevations(plan, async () => { throw new Error("fetch: 404"); })).toBe(plan);
