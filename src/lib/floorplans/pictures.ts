@@ -79,6 +79,24 @@ export function picturesAdded(live: Partial<NormalizedPlan> | null | undefined, 
 }
 
 /**
+ * The pictures of the live plan a waiting change leaves out, however
+ * either spells them (pictureKey): the photos and the drawings apart, so
+ * the edit overlay can show each gallery what it loses, outlined in red
+ * (Jeff, 2026-09-29). A picture the change moves from the photos to the
+ * drawings, or back, is kept, not lost. Pure.
+ */
+export function picturesRemoved(
+  live: Partial<NormalizedPlan> | null | undefined,
+  proposed: Partial<NormalizedPlan> | null | undefined
+): { photos: string[]; drawings: string[] } {
+  if (!live || !proposed) return { photos: [], drawings: [] };
+  const strings = (v: unknown) => (Array.isArray(v) ? v : []).filter((u): u is string => typeof u === "string" && u !== "");
+  const kept = new Set([...strings(proposed.galleryImages), ...strings(proposed.blueprintImages)].map(pictureKey));
+  const lost = (list: string[]) => list.filter((url, i) => !kept.has(pictureKey(url)) && list.findIndex((u) => pictureKey(u) === pictureKey(url)) === i);
+  return { photos: lost(strings(live.galleryImages)), drawings: lost(strings(live.blueprintImages)) };
+}
+
+/**
  * The picture a quick move-in's row shows now, where the change gives it
  * another. A quick move-in shows one picture, so a new one in front is the
  * whole of a photo change, though the home already had it further back:
