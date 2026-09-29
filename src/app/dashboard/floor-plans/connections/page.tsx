@@ -89,6 +89,19 @@ interface FlagLog {
   days: number;
 }
 
+/**
+ * A builder's communities A to Z by name, then by site, so one is found at
+ * a glance (Jeff, 2026-09-29). "The Towns at Firethorn" files under T,
+ * as it is written.
+ */
+function byCommunityName<T extends { fp_communities: { name: string; fp_sites: { domain: string } | null } | null }>(list: T[]): T[] {
+  const name = (c: T) => c.fp_communities?.name ?? "";
+  const site = (c: T) => c.fp_communities?.fp_sites?.domain ?? "";
+  return [...list].sort(
+    (a, b) => name(a).localeCompare(name(b), undefined, { sensitivity: "base", numeric: true }) || site(a).localeCompare(site(b))
+  );
+}
+
 export default function BuildersSettingsPage() {
   const [builders, setBuilders] = useState<Builder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -700,7 +713,7 @@ export default function BuildersSettingsPage() {
                         </td>
                       </tr>
                       {isOpen &&
-                        b.fp_builder_communities.map((c) => (
+                        byCommunityName(b.fp_builder_communities).map((c) => (
                           <tr key={c.id} style={{ opacity: b.active && c.active ? 1 : 0.55 }}>
                             <td style={{ width: 28 }}></td>
                             <td className="text-sm">
