@@ -24,6 +24,7 @@ import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
 import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
 import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
+import { ashtonPictures, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -771,29 +772,39 @@ export async function readPlanPageWithClaude(
   const content = distill(html, page_.url);
   if (content.length < 500) return plan;
 
+  // Ashton Woods' pages are read off their own markup: the tiles above the
+  // title and "View Photos", and nothing after them (ashton.ts). A plan's
+  // tiles are its outside, but for the interior "View Photos" also shows.
+  const ashton = isAshtonPage(page_.url || plan.sourceUrl) ? ashtonPictures(html, page_.url) : null;
+  const ashtonPhotos = ashton
+    ? plan.quickMoveIn
+      ? [...ashton.hero, ...ashton.photos]
+      : [...ashton.photos, ...(ashton.still ? [ashton.still] : [])]
+    : [];
+  const ashtonOutside = ashton && !plan.quickMoveIn ? ashton.hero.filter((h) => !ashton.photos.some((p) => pictureKey(p.src) === pictureKey(h.src))) : [];
   // Read off the page's gallery headings, or failing those its first
   // carousel of captioned slides (Pulte).
-  const headed = firstGallery(html, page_.url);
-  const lightbox = headed.first.length ? null : lightboxGallery(html, page_.url);
-  const carousel = headed.first.length || lightbox?.first.length ? null : captionedCarousel(html, page_.url, plan.quickMoveIn ? undefined : plan.name);
+  const headed = ashton ? { first: ashtonPhotos, drop: new Set<string>() } : firstGallery(html, page_.url);
+  const lightbox = ashton || headed.first.length ? null : lightboxGallery(html, page_.url);
+  const carousel = ashton || headed.first.length || lightbox?.first.length ? null : captionedCarousel(html, page_.url, plan.quickMoveIn ? undefined : plan.name);
   const marked = lightbox?.first.length
     ? { first: lightbox.first, drop: headed.drop }
     : carousel
       ? { first: carousel.first, drop: new Set([...headed.drop, ...carousel.drop]) }
       : headed;
   // Failing all those, a block the page names a gallery (Dream Finders).
-  const named = marked.first.length ? [] : namedGallery(html, page_.url);
+  const named = ashton || marked.first.length ? [] : namedGallery(html, page_.url);
   const gallery = named.length ? { first: named, drop: marked.drop } : marked;
   // A page whose galleries cannot be read off its headings may still be
   // carrying them: Perry draws a hero and four thumbnails and keeps
   // twenty-three photographs in its payload (Jeff, 2026-09-22). Only
   // where the headings gave nothing, so a plan never inherits the
   // community's other pictures.
-  const carried = gallery.first.length ? [] : payloadGallery(html, page_.url, [plan.name, plan.relatedPlanName]);
+  const carried = ashton || gallery.first.length ? [] : payloadGallery(html, page_.url, [plan.name, plan.relatedPlanName]);
   // A gallery read off the markup is the plan's pictures; Claude is not
   // asked to list them again.
-  const picturesKnown = gallery.first.length + carried.length >= 4;
-  const outsides = elevationPictures(html, page_.url);
+  const picturesKnown = Boolean(ashton) || gallery.first.length + carried.length >= 4;
+  const outsides = ashton ? ashtonOutside : elevationPictures(html, page_.url);
 
   const tool = picturesKnown ? PLAN_PAGE_TOOL_NO_PHOTOS : PLAN_PAGE_TOOL;
   const home = plan.quickMoveIn === true;
