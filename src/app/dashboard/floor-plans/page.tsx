@@ -1012,7 +1012,6 @@ export default function FloorPlansPage() {
           Status{" "}
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="form-input" style={{ width: "auto", display: "inline-block" }}>
             <option value="pending">Pending</option>
-            <option value="synced_draft">Synced (older drafts in Wix)</option>
             <option value="synced">Synced</option>
             <option value="rejected">Rejected</option>
             <option value="failed">Failed</option>
