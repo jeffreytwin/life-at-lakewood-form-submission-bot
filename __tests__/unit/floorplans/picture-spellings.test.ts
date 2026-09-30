@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fieldChanges, mergeForUpdate, samePictures, withDescriptionFrom } from "@/lib/floorplans/diff";
-import { fullSize, onePerPicture, pictureKey, pictureSize } from "@/lib/floorplans/extractors/plan-page";
+import { fullSize, onePerPicture, pictureKey, pictureSize, sharperCopy } from "@/lib/floorplans/extractors/plan-page";
 import { drawingsOrPhotos, viewerFills } from "@/lib/floorplans/extractors/claude-extract";
 import { withKnownSpellings } from "@/lib/floorplans/pictures";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
@@ -83,6 +83,40 @@ describe("one photo, however its address is spelled (Neal, Jeff 2026-09-25)", ()
     expect(known.galleryImages).toEqual([azureOld[0], visionScaled, azureOld[1]]);
     expect(known.galleryMeta).toEqual({ [azureOld[0]]: { room: "exterior" } });
     expect(withKnownSpellings(run, null)).toBe(run);
+  });
+});
+
+describe("a photo the record has only as a thumbnail (Kolter's Sarah, Jeff 2026-09-30)", () => {
+  const renderings = "https://cdn.kolterhomes.com/kh-includes/communities/parrish-florida-woodland-preserve/renderings";
+  const card = `${renderings}/tr:h-250,w-444,c-maintain_ratio/kolter-wp-sarah-033.jpg`;
+  const whole = `${renderings}/kolter%2dwp%2dsarah%2d033%2ejpg`;
+  const kitchen = `${renderings}/kolter%2dwp%2dsarah%2d012%2ejpg`;
+  const sarah = (galleryImages: string[]) => plan({ planKey: "sarah", name: "Sarah", galleryImages });
+
+  it("knows the whole file for a sharper copy of the card, and not the other way", () => {
+    expect(sharperCopy(whole, card)).toBe(true);
+    expect(sharperCopy(card, whole)).toBe(false);
+    expect(sharperCopy(`${renderings}/tr:h-720,w-1280,c-maintain_ratio/kolter%2dwp%2dsarah%2d033%2ejpg`, card)).toBe(true);
+  });
+
+  it("keeps the run's whole photo rather than the record's card", () => {
+    const known = withKnownSpellings(sarah([whole, kitchen]), sarah([card, kitchen]));
+    expect(known.galleryImages).toEqual([whole, kitchen]);
+  });
+
+  it("proposes the whole photo once, and not the card back again", () => {
+    expect(samePictures([card, kitchen], [whole, kitchen])).toBe(false);
+    expect(fieldChanges(sarah([card, kitchen]), sarah([whole, kitchen])).map((c) => c.label)).toContain("photos");
+    expect(mergeForUpdate(sarah([card, kitchen]), sarah([whole, kitchen])).galleryImages).toEqual([whole, kitchen]);
+    expect(samePictures([whole, kitchen], [card, kitchen])).toBe(true);
+    expect(withKnownSpellings(sarah([card, kitchen]), sarah([whole, kitchen])).galleryImages).toEqual([whole, kitchen]);
+  });
+
+  it("leaves a copy of 800 pixels or more be (Neal's ?w=1000, Towne's 900x600)", () => {
+    expect(sharperCopy(azureNew[0], azureOld[0])).toBe(false);
+    const towne = "https://d195jfz94fv5eb.cloudfront.net/uploads/gallery/florida/shellstone/renders/fl-shellstone-tiller-coastal-A";
+    expect(sharperCopy(`${towne}.jpg`, `${towne}-900x600.jpg`)).toBe(false);
+    expect(samePictures(azureOld, azureNew)).toBe(true);
   });
 });
 

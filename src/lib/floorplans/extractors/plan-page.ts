@@ -802,6 +802,24 @@ export function pictureSize(url: string): number {
   return askedSize(url) || Infinity;
 }
 
+/** Below this many pixels on its longer side a copy is a thumbnail, not the photo a site should show. */
+const SHARP = 800;
+
+/**
+ * Whether `candidate` is a sharper copy of the photo `known` holds only
+ * as a thumbnail: Kolter's list draws each plan's front through an
+ * ImageKit step ".../tr:h-250,w-444,c-maintain_ratio/kolter-wp-sarah-033.jpg"
+ * and its page gives the file whole, and the record kept the 444-pixel
+ * copy as the plan's main picture (Jeff, 2026-09-30). A copy of 800
+ * pixels or more is left be: Neal's "?w=1000" and its bare file are still
+ * one photo, and Highland's and Towne's 900-pixel copies are proposed
+ * nothing. Pure; exported for tests.
+ */
+export function sharperCopy(candidate: string, known: string): boolean {
+  const had = pictureSize(known);
+  return had < SHARP && pictureSize(candidate) > had;
+}
+
 /**
  * One photograph once, in the place its first spelling came: a list's
  * picture and a gallery's are often the same file in two formats. Where a
