@@ -415,6 +415,12 @@ nothing. No cutover report has ever been generated.
   pixel a side with no real picture behind it (a tracking pixel) gets no
   marker. A page carrying neither distills to exactly the same text as
   before, so its digest and its remembered read are untouched.
+- **A form's honeypot goes too.** The first run with the text kept showed
+  what the Instagram rule had hidden: every Neal and Medallion page carries
+  a Gravity Forms honeypot field whose label is drawn at random on every
+  load ("Facebook", "Instagram", "Phone", "Comments"), so no two loads of
+  any of their pages read the same. That block goes whole as well, by its
+  class (`gfield--type-honeypot`, `gform_validation_container`).
 - **What changed, written down** (`fp_page_reads.text` and `last_change`,
   migration 078): each remembered read keeps the text it was digested from,
   and a page read again because its text changed records where the two

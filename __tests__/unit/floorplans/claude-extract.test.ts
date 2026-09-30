@@ -701,6 +701,23 @@ describe("distill leaves out a builder's social feed (Neal, 2026-09-30)", () => 
   });
 });
 
+describe("distill leaves out a form's honeypot field (Neal and Medallion, 2026-09-30)", () => {
+  const base = "https://nealcommunities.com/new-homes/windward/";
+  const page = (label: string) =>
+    `<main><h1>Applause</h1><p>Priced from $573,990</p><form><div class="gform_fields"><div id="field_1_20" class="gfield gfield--type-honeypot gform_validation_container gfield_visibility_visible"><label class="gfield_label"><span>${label}</span></label><div class="ginput_container"><input name="input_20" type="text"></div><div class="gfield_description">This field is for validation purposes and should be left unchanged.</div></div><div class="gfield gfield--type-text"><label>First name *</label><input type="text"></div></div></form></main>`;
+
+  it("reads the same page the same whatever label the honeypot drew, and keeps the form's real fields", () => {
+    const text = distill(page("Facebook"), base);
+    expect(text).toBe(distill(page("Instagram"), base));
+    expect(text).toBe(distill(page("Comments"), base));
+    expect(text).toContain("Applause");
+    expect(text).toContain("$573,990");
+    expect(text).toContain("First name *");
+    expect(text).not.toContain("validation purposes");
+    expect(text).not.toContain("Facebook");
+  });
+});
+
 describe("distill leaves out tracking pixels (Kolter, 2026-09-30)", () => {
   const base = "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/";
 

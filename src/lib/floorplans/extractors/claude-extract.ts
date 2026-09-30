@@ -283,24 +283,36 @@ function isPixel(tag: string): boolean {
   return !(attrOf(tag, "data-src") || attrOf(tag, "data-lazy-src") || attrOf(tag, "data-lazy"));
 }
 
-/** A class or id token of the social feed widgets builders embed: Smash Balloon (Neal), Elfsight, Juicer, Curator, Taggbox, POWR. */
-const SOCIAL_FEED = /^(?:sb_instagram|sbi|sbi_images|instagram-feed|insta-feed|instafeed|juicer-feed|curator-feed|taggbox|tagembed|social-feed|elfsight-app(?:-[\w-]*)?|powr-instagram(?:-[\w-]*)?)$/i;
+/**
+ * A class or id token of a block that says nothing about the plan and
+ * reads differently from one load to the next:
+ * - the social feed widgets builders embed: Smash Balloon (Neal),
+ *   Elfsight, Juicer, Curator, Taggbox, POWR;
+ * - a form's honeypot field (Gravity Forms), whose label is picked at
+ *   random on every load — "Facebook", "Instagram", "Phone", "Comments" —
+ *   with the words "This field is for validation purposes and should be
+ *   left unchanged" beneath it. Every Neal and Medallion page carries one
+ *   (2026-09-30: what fp_page_reads.last_change showed once a read kept
+ *   its text).
+ */
+const NOISE_BLOCK = /^(?:sb_instagram|sbi|sbi_images|instagram-feed|insta-feed|instafeed|juicer-feed|curator-feed|taggbox|tagembed|social-feed|elfsight-app(?:-[\w-]*)?|powr-instagram(?:-[\w-]*)?|gfield--type-honeypot|gform_validation_container)$/i;
 const OPEN_TAG = /^<([a-zA-Z][^\s/>]*)/;
 
-function isSocialFeed(tag: string): boolean {
-  return `${attrOf(tag, "id") ?? ""} ${attrOf(tag, "class") ?? ""}`.split(/\s+/).some((token) => SOCIAL_FEED.test(token));
+function isNoiseBlock(tag: string): boolean {
+  return `${attrOf(tag, "id") ?? ""} ${attrOf(tag, "class") ?? ""}`.split(/\s+/).some((token) => NOISE_BLOCK.test(token));
 }
 
 /**
- * The page without its social feed widgets. Neal's pages each carry their
- * Instagram feed — the twenty latest posts, pictures and words — so a new
- * post changed the text of every Neal page, and none read the same as the
- * night before (2026-09-30: 42 of Windward's 45 pages read again, nothing
- * found changed). A feed is not the plan's facts even when a post names a
- * price, so the block goes whole, nested tags and all; a block that never
- * closes is left as it is. Exported for tests.
+ * The page without its social feed widgets and honeypot fields
+ * (NOISE_BLOCK). Neal's pages each carry their Instagram feed — the twenty
+ * latest posts, pictures and words — so a new post changed the text of
+ * every Neal page, and none read the same as the night before (2026-09-30:
+ * 42 of Windward's 45 pages read again, nothing found changed). A feed is
+ * not the plan's facts even when a post names a price, so the block goes
+ * whole, nested tags and all; a block that never closes is left as it is.
+ * Exported for tests.
  */
-export function dropSocialFeeds(html: string): string {
+export function dropNoiseBlocks(html: string): string {
   const tags = new RegExp(ANY_TAG.source, "g");
   let out = "";
   let from = 0;
@@ -308,7 +320,7 @@ export function dropSocialFeeds(html: string): string {
   while ((m = tags.exec(html))) {
     const tag = m[0];
     const open = tag.match(OPEN_TAG);
-    if (!open || tag.endsWith("/>") || !isSocialFeed(tag)) continue;
+    if (!open || tag.endsWith("/>") || !isNoiseBlock(tag)) continue;
     const name = open[1].toLowerCase();
     // On to the close of this block, counting the same tag nested inside it.
     const same = new RegExp(`<(/?)${name}(?=[\\s/>])${TAG_BODY}>`, "gi");
@@ -377,8 +389,9 @@ export function distill(html: string, pageUrl: string): string {
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
     .replace(/<svg[\s\S]*?<\/svg>/gi, " ");
   // A builder's Instagram feed says nothing about the plan and changes
-  // with every post (dropSocialFeeds).
-  const withImgs = dropSocialFeeds(withoutScripts)
+  // with every post; a form's honeypot label changes with every load
+  // (dropNoiseBlocks).
+  const withImgs = dropNoiseBlocks(withoutScripts)
     // The site's own menus and footer say nothing about a community, and on
     // a big builder's page they are much of what there is to read. Only
     // those that say nothing about homes, though: Kolter's plans came back
