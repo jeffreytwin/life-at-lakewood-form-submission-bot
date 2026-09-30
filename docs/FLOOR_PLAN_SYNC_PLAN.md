@@ -395,6 +395,33 @@ nothing. No cutover report has ever been generated.
   with everything else. Lists are read the same way, for their plans and
   for their homes as two variants of one address.
 
+**Update 2026-09-30 (the pages still read every night).**
+
+- **What the first two nights cost.** The first full Sync with the usage
+  log live (2026-09-29) read 773 pages through Claude for $22.48; the
+  second, that night, cost $9.91 with 443 of 707 pages served from memory.
+  Twenty-one connections cost nothing at all. Three builders' whole sites
+  never hit, and queued almost nothing when read again: **Neal** ($5.86
+  over seven communities) because every page carries the builder's
+  Instagram feed, twenty posts with pictures and words, and a new post
+  changes the text of every page; **Kolter** ($1.79) because every page
+  carries a tracking pixel whose address ends in a fresh random number on
+  every load; **Medallion** ($0.78), for a reason not yet seen — their site
+  will not answer a fetch from outside the browser.
+- **Two rules in `distill()`** (`claude-extract.ts`): a social feed widget
+  (Smash Balloon, Elfsight, Juicer, Curator, Taggbox, POWR, by their class
+  names) goes whole, nested tags and all, even where a post names a price
+  — a feed is never the plan's facts; and a picture drawn at zero or one
+  pixel a side with no real picture behind it (a tracking pixel) gets no
+  marker. A page carrying neither distills to exactly the same text as
+  before, so its digest and its remembered read are untouched.
+- **What changed, written down** (`fp_page_reads.text` and `last_change`,
+  migration 078): each remembered read keeps the text it was digested from,
+  and a page read again because its text changed records where the two
+  texts differ (`changeBetween`), with some words either side. A builder
+  whose pages keep missing says why in its own rows, so the next rule is
+  read off the table rather than guessed.
+
 **Known gaps, in the order they bite.**
 
 1. Closed 2026-09-20: every import is verified with Wix (READY, an IMAGE,

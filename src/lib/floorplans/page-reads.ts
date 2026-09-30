@@ -108,12 +108,67 @@ export async function rememberedRead<T>(url: string, kind: ReadKind, digest: str
   }
 }
 
-/** Keeps what Claude read off a page, for the next run to reuse while the page reads the same. */
-export async function rememberRead(url: string, kind: ReadKind, digest: string, variant: string, facts: unknown, model: string): Promise<void> {
+/** Where two readings of a page differ (changeBetween). */
+export interface TextChange {
+  /** Where the texts part, in characters from the start. */
+  at: number;
+  was: number;
+  now: number;
+  /** The changed stretch of the earlier text, with some words either side. */
+  before: string;
+  /** The same stretch of the later text. */
+  after: string;
+}
+
+/** Words kept either side of the changed stretch, and the most of it kept. */
+const CONTEXT = 80;
+const SNIPPET = 400;
+
+/**
+ * Where two readings of a page differ: the stretch that changed, from
+ * each, with some words either side; null when they read the same. Kept
+ * with the read (fp_page_reads.last_change, migration 078) so a page that
+ * is read again night after night says what keeps changing on it — a
+ * feed, a counter, a random number — without anyone fetching it by hand
+ * (2026-09-30: Medallion's pages, which will not answer a fetch from
+ * outside). Pure.
+ */
+export function changeBetween(before: string, after: string): TextChange | null {
+  if (before === after) return null;
+  const most = Math.min(before.length, after.length);
+  let at = 0;
+  while (at < most && before[at] === after[at]) at++;
+  let tail = 0;
+  while (tail < most - at && before[before.length - 1 - tail] === after[after.length - 1 - tail]) tail++;
+  const stretch = (text: string) => {
+    const piece = text.slice(Math.max(0, at - CONTEXT), Math.min(text.length, text.length - tail + CONTEXT));
+    return piece.length > SNIPPET ? `${piece.slice(0, SNIPPET / 2)} … ${piece.slice(-SNIPPET / 2)}` : piece;
+  };
+  return { at, was: before.length, now: after.length, before: stretch(before), after: stretch(after) };
+}
+
+/**
+ * Keeps what Claude read off a page, for the next run to reuse while the
+ * page reads the same. Given the page's content, keeps the text it was
+ * digested from too, and where an earlier text was kept, what changed
+ * between the two (changeBetween).
+ */
+export async function rememberRead(url: string, kind: ReadKind, digest: string, variant: string, facts: unknown, model: string, content?: string): Promise<void> {
   try {
-    const { error } = await supabase
-      .from("fp_page_reads")
-      .upsert({ url, kind, digest, variant, facts, model, read_at: new Date().toISOString(), hits: 0 }, { onConflict: "url,kind,variant" });
+    const read_at = new Date().toISOString();
+    const row: Record<string, unknown> = { url, kind, digest, variant, facts, model, read_at, hits: 0 };
+    if (typeof content === "string") {
+      const text = normalizedText(kind, content);
+      row.text = text;
+      const { data } = await supabase.from("fp_page_reads").select("text").eq("url", url).eq("kind", kind).eq("variant", variant).maybeSingle();
+      const previous = (data as { text?: unknown } | null)?.text;
+      const change = typeof previous === "string" ? changeBetween(previous, text) : null;
+      if (change) {
+        row.last_change = { when: read_at, ...change };
+        logger.info("Page read again: its text changed", { url, kind, ...change });
+      }
+    }
+    const { error } = await supabase.from("fp_page_reads").upsert(row, { onConflict: "url,kind,variant" });
     if (error) logger.warn("Page read could not be remembered", { url, error: error.message });
   } catch (error) {
     logger.warn("Page read could not be remembered", { url, error: error instanceof Error ? error.message : String(error) });

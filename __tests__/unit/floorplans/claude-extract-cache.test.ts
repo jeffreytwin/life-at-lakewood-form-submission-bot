@@ -43,7 +43,7 @@ vi.mock("@anthropic-ai/sdk", () => ({
 }));
 
 import { readPlanPageWithClaude } from "@/lib/floorplans/extractors/claude-extract";
-import { digestOf, variantOf } from "@/lib/floorplans/page-reads";
+import { digestOf, normalizedText, variantOf } from "@/lib/floorplans/page-reads";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -90,6 +90,9 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
     expect(kept.kind).toBe("plan");
     expect(kept.digest).toBe(digestOf("plan", distill(html, plan.sourceUrl!)));
     expect(kept.facts).toEqual({ garages: "3 car", description: "A fine home with a den and a lanai." });
+    // The text it was digested from is kept too, and there was nothing to compare it with.
+    expect(kept.text).toBe(normalizedText("plan", distill(html, plan.sourceUrl!)));
+    expect(kept).not.toHaveProperty("last_change");
   });
 
   it("does not ask about a page that reads the same as last time: the remembered facts stand, at no cost", async () => {
@@ -108,11 +111,26 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
     expect(db.state.usage[0]).toMatchObject({ purpose: "plan-page", cached: true, cost_cents: 0, input_tokens: 0 });
   });
 
-  it("asks again when the page's text has changed, or when it is read another way", async () => {
-    const stale = { digest: "not-this-page", variant: variantOf("plan", {}), facts: { garages: "2 car" }, model: "claude-sonnet-5", read_at: new Date().toISOString(), hits: 0 };
+  it("asks again when the page's text has changed, or when it is read another way, and writes down what changed", async () => {
+    const text = normalizedText("plan", distill(html, plan.sourceUrl!));
+    const stale = {
+      digest: "not-this-page",
+      variant: variantOf("plan", {}),
+      facts: { garages: "2 car" },
+      model: "claude-sonnet-5",
+      read_at: new Date().toISOString(),
+      hits: 0,
+      text: text.replace("$459,990", "$449,990"),
+    };
     db.state.read = stale;
     const out = await readPlanPageWithClaude(plan, read);
     expect(claude.create).toHaveBeenCalledTimes(1);
     expect(out.garages).toBe("3 car");
+    const kept = db.state.remembered[0];
+    expect(kept.text).toBe(text);
+    const change = kept.last_change as { before: string; after: string; at: number };
+    expect(change.before).toContain("$449,990");
+    expect(change.after).toContain("$459,990");
+    expect(change.at).toBeGreaterThan(0);
   });
 });

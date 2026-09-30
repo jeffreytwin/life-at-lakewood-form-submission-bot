@@ -669,3 +669,54 @@ describe("keptFromPage (Ashton Woods' Duval, 2026-09-29)", () => {
     expect(keptFromPage(w("ddd/jpeg/tour-still.jpg"), drop, elevationPictures(html, page))).toBe(false);
   });
 });
+
+describe("distill leaves out a builder's social feed (Neal, 2026-09-30)", () => {
+  const base = "https://nealcommunities.com/new-homes/windward/";
+
+  it("drops the whole Instagram widget, nested tags and a post naming a price included, and keeps the page's words", () => {
+    const feed = `<div id="sb_instagram" class="sbi sbi_col_10"><div class="sb_instagram_header"><p>The official Instagram for Neal Communities</p></div><div id="sbi_images"><div class="sbi_item"><div class="sbi_photo_wrap"><img src="/wp-content/uploads/sb-instagram-feed-images/post1full.jpg"><span class="sbi-screenreader">Ready now: the Dream 2 priced from $498,990</span></div></div></div></div>`;
+    const html = `<main><h1>Tidewater 2</h1><p>Priced at $429,990 · 2 beds · 1,530 sq ft</p><img src="/photos/tidewater-kitchen.jpg">${feed}<p>Expected completion October 2026</p></main>`;
+    const text = distill(html, base);
+    expect(text).toContain("Tidewater 2");
+    expect(text).toContain("$429,990");
+    expect(text).toContain("[IMG https://nealcommunities.com/photos/tidewater-kitchen.jpg]");
+    expect(text).toContain("Expected completion October 2026");
+    expect(text).not.toContain("Instagram");
+    expect(text).not.toContain("sb-instagram-feed-images");
+    expect(text).not.toContain("$498,990");
+  });
+
+  it("knows the other widgets by their names, and reads the same page without one exactly as before", () => {
+    const words = `<h1>Lori</h1><p>From $459,990</p>`;
+    const elfsight = `<div class="elfsight-app-1a2b3c4d-5e6f"><div><p>Follow us: new post about $1</p></div></div>`;
+    expect(distill(`<main>${words}${elfsight}</main>`, base)).toBe(distill(`<main>${words}</main>`, base));
+    expect(distill(`<main>${words}</main>`, base)).toBe("Lori From $459,990");
+  });
+
+  it("leaves a widget that never closes as it is, rather than losing the rest of the page", () => {
+    const html = `<main><div class="sbi"><p>feed</p><h1>Lori</h1><p>From $459,990</p></main>`;
+    const text = distill(html, base);
+    expect(text).toContain("Lori");
+    expect(text).toContain("$459,990");
+  });
+});
+
+describe("distill leaves out tracking pixels (Kolter, 2026-09-30)", () => {
+  const base = "https://www.kolterhomes.com/new-homes/parrish-florida-woodland-preserve/";
+
+  it("gives a zero- or one-pixel picture no marker, and keeps a real picture and a one-pixel placeholder with its picture in data-src", () => {
+    const html = [
+      `<img src="https://trkn.us/pixel/conv/ppt=24105;g=sitewide;ord=5f982470-cc46-a4ea-62c25b139ec5dc80" alt="" height="0" width="0" border="0">`,
+      `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1&ev=PageView&noscript=1" alt="facebook pixel"/>`,
+      `<img src="https://cdn.kolterhomes.com/morgan-kitchen.jpg" alt="Kitchen">`,
+      `<img src="/1x1.gif" width="1" height="1" data-src="https://cdn.kolterhomes.com/morgan-great-room.jpg">`,
+      `<p>Morgan · $579,990</p>`,
+    ].join("");
+    const text = distill(html, base);
+    expect(text).not.toContain("trkn.us");
+    expect(text).not.toContain("facebook.com");
+    expect(text).toContain("[IMG https://cdn.kolterhomes.com/morgan-kitchen.jpg]");
+    expect(text).toContain("[IMG https://cdn.kolterhomes.com/morgan-great-room.jpg]");
+    expect(text).toContain("Morgan · $579,990");
+  });
+});
