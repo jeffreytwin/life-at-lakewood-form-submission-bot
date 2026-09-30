@@ -138,6 +138,55 @@ export const URLLESS_BUILDERS = new Set([
 export const RUN_READ_MS = 210_000;
 export const RUN_PREPARE_MS = 250_000;
 
+/** The reading time a second try needs left in the run: a page drawn in a browser and read by Claude, with room to spare. */
+export const RETRY_NEEDS_MS = 60_000;
+/** How long a second try waits, so a page that was slow to draw has had time to. */
+const RETRY_PAUSE_MS = 5_000;
+
+/**
+ * Whether a run that read nothing, or failed reading, has the time to read
+ * once more before it counts as a failure. Pure; exported for tests.
+ */
+export function timeForAnotherRead(startedAt: number, now = Date.now()): boolean {
+  return startedAt + RUN_READ_MS - now >= RETRY_NEEDS_MS + RETRY_PAUSE_MS;
+}
+
+/**
+ * The builder's plans, read a second time where the first read found none
+ * or failed and the run has the time. Neal Signature's Waterbury Park was
+ * drawn once without its plan cards (a list read of 1.5 seconds that found
+ * nothing, where the same page gave four plans that afternoon), the run
+ * counted it a failure, and nothing tried again until the next night —
+ * the alert went up on one bad draw (Jeff, 2026-09-30: "shouldn't this try
+ * to self-heal"). A page that is broken fails twice and alerts as before.
+ * Exported for tests.
+ */
+export async function readTwice(
+  read: () => Promise<NormalizedPlan[]>,
+  startedAt: number,
+  where: { builder: string; community: string },
+  pause: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+): Promise<NormalizedPlan[]> {
+  let first: NormalizedPlan[] | null = null;
+  let failure: unknown = null;
+  try {
+    first = await read();
+    if (first.length > 0) return first;
+  } catch (error) {
+    failure = error;
+  }
+  if (!timeForAnotherRead(startedAt)) {
+    if (failure) throw failure;
+    return first ?? [];
+  }
+  logger.warn("A run read no plans; reading once more before it counts as a failure", {
+    ...where,
+    error: failure instanceof Error ? failure.message : failure ? String(failure) : null,
+  });
+  await pause(RETRY_PAUSE_MS);
+  return read();
+}
+
 /** Builders read through a browser though their method says otherwise: their own engine renders. */
 const BROWSER_BUILDERS = new Set(["Lee Wetherington"]);
 
@@ -637,15 +686,17 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   return withRunContext(
     { source: asked?.source ?? "run", connectionId: conn.id, runId, builder: builder.name, community: community.name },
     async () => {
-      let plans: NormalizedPlan[];
-      try {
-        plans = await extractor({
+      const read = () =>
+        extractor({
           ...params,
           communityName: community.name,
           builderName: builder.name,
           runDeadline: startedAt + RUN_READ_MS,
           ...(SERIES_BUILDERS.has(builder.name) ? { keepSeriesApart: true } : {}),
         });
+      let plans: NormalizedPlan[];
+      try {
+        plans = await readTwice(read, startedAt, { builder: builder.name, community: community.name });
       } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         await setRunStatus(conn.id, `error: ${detail}`, null, true, await spentOn(runId));
