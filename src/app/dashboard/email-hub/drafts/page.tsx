@@ -1038,17 +1038,21 @@ function EmailDraftsPageInner() {
           </div>
         </div>
       ) : filteredDrafts.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <div className="empty-icon">&#9993;</div>
-            <h3>No drafts found</h3>
-            <p>
-              {statusFilter === "drafted"
-                ? "No pending drafts. New drafts will appear here when emails are received."
-                : "No sent emails found."}
-            </p>
+        statusFilter === "drafted" ? (
+          // Styled like the floor plans' mission complete (Jeff, 2026-09-30).
+          <div className="card mission-complete">
+            <div className="mission-complete-title">READY FOR INCOMING DRAFTS</div>
+            <p>New drafts will appear here when emails are received.</p>
           </div>
-        </div>
+        ) : (
+          <div className="card">
+            <div className="empty-state">
+              <div className="empty-icon">&#9993;</div>
+              <h3>No drafts found</h3>
+              <p>No sent emails found.</p>
+            </div>
+          </div>
+        )
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {inboxGroups.map(([inboxKey, group]) => (
