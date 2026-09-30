@@ -44,6 +44,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ plans: keys.size });
     }
 
+    // Just these rows, whatever their status: the page asks how an Approve
+    // All write that left the pending list ended, before it plays the
+    // plan's way out as approved or quietly (Jeff, 2026-09-30).
+    const ids = (searchParams.get("ids") ?? "").split(",").filter(Boolean);
+    if (ids.length) {
+      if (ids.length > 200) return NextResponse.json({ error: "at most 200 ids" }, { status: 400 });
+      const { data, error } = await supabase.from("fp_pending_changes").select("id, status").in("id", ids);
+      if (error) throw error;
+      return NextResponse.json(data ?? []);
+    }
+
     const rows: unknown[] = [];
     for (let from = 0; from < limit; from += PAGE) {
       // A row being approved is still the queue's: shown locked until the write

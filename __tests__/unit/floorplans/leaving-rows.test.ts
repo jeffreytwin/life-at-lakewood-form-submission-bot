@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addToTally,
+  batchDelay,
   cascadeDelay,
   clearedIn,
   countWritten,
@@ -8,10 +9,12 @@ import {
   emptyTally,
   exitDuration,
   foldDuration,
+  isWritten,
   progressOf,
   readTally,
   tallyLine,
   withHeld,
+  writeSettled,
 } from "@/lib/floorplans/leaving-rows";
 
 /**
@@ -71,6 +74,49 @@ describe("countWritten", () => {
   it("counts nothing from a failed request", () => {
     expect(countWritten(undefined)).toBe(0);
     expect(countWritten([null, "synced", { status: 1 }])).toBe(0);
+  });
+});
+
+describe("an Approve All write, asked about", () => {
+  it("is written once synced, a draft included", () => {
+    expect(isWritten("synced")).toBe(true);
+    expect(isWritten("synced_draft")).toBe(true);
+    expect(isWritten("failed")).toBe(false);
+    expect(isWritten(undefined)).toBe(false);
+  });
+
+  it("is still under way while marked approved, which is before the write lands", () => {
+    expect(writeSettled("approved")).toBe(false);
+    expect(writeSettled("approving")).toBe(false);
+    expect(writeSettled(undefined)).toBe(false);
+    for (const done of ["synced", "failed", "pending", "rejected"]) expect(writeSettled(done)).toBe(true);
+  });
+});
+
+describe("a batch's rows, one after another (Jeff, 2026-09-30)", () => {
+  const starts = (exit: Parameters<typeof batchDelay>[0], count: number) =>
+    Array.from({ length: count }, (_, i) => batchDelay(exit, i, count));
+
+  it("plays a lone row at once", () => {
+    for (const exit of ["approve", "reject", "remove", "leave"] as const) expect(batchDelay(exit, 0, 1)).toBe(0);
+  });
+
+  it("stacks a rejected batch like a held-down menu key, over in a second and a half however big", () => {
+    const small = starts("reject", 5);
+    expect(small[1] - small[0]).toBeLessThanOrEqual(60);
+    const page = starts("reject", 50);
+    expect(page[49]).toBeLessThanOrEqual(1500);
+    expect(page[1]).toBeGreaterThan(0);
+  });
+
+  it("sends approvals one at a time, spread across the gap to the next read", () => {
+    const three = starts("approve", 3);
+    expect(three[1] - three[0]).toBeGreaterThanOrEqual(300);
+    expect(starts("approve", 20)[19]).toBeLessThanOrEqual(2700);
+  });
+
+  it("blows a removal's quick move-ins up one after another", () => {
+    expect(starts("remove", 3)).toEqual([0, 400, 800]);
   });
 });
 
