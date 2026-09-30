@@ -9,16 +9,18 @@ import { siteColors } from "@/app/dashboard/listings/format";
 import { FIRST_DIRECTION, priceOf, sortChanges, type ChangeSort, type ChangeSortKey } from "@/lib/floorplans/sort-changes";
 import {
   addToTally,
-  cascadeDelay,
+  batchDelay,
   clearedIn,
   countWritten,
   easternDay,
   exitDuration,
   foldDuration,
+  isWritten,
   progressOf,
   readTally,
   tallyLine,
   withHeld,
+  writeSettled,
   type CountedExit,
   type Exit,
   type Tally,
@@ -429,6 +431,12 @@ export default function FloorPlansPage() {
   // whose action is still in flight, keep their rows until they have gone.
   const leavingKeys = useRef(new Set<string>());
   const inFlight = useRef(new Set<string>());
+  // Plans an Approve All run is writing, and those gone from the list whose
+  // write the page is asking about, held on screen until the answer comes.
+  const bulkApproving = useRef(new Set<string>());
+  const checking = useRef(new Set<string>());
+  // The same, for the rows: asked about, a row takes no clicks and is not counted as waiting.
+  const [asking, setAsking] = useState<Set<string>>(() => new Set());
   // The rows on screen now, by plan: only a row in view plays its exit.
   const rowEls = useRef(new Map<string, HTMLTableRowElement>());
   const exitTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
@@ -504,16 +512,16 @@ export default function FloorPlansPage() {
 
   /**
    * Sends plans out of the list, each row the way it went (Jeff,
-   * 2026-09-29): a batch goes as a wave, and once a row has played it
-   * folds away so the list closes up. Only rows on screen play; a plan on
-   * another page simply goes. A sound named for the exit plays once.
+   * 2026-09-29): a batch goes row after row (batchDelay), each with its
+   * own sound as it starts (Jeff, 2026-09-30), and once a row has played
+   * it folds away so the list closes up. Only rows on screen play; a plan
+   * on another page simply goes.
    */
   const startLeaving = useCallback(
     (list: Group[], exit: Exit) => {
       const onScreen = list.filter((g) => rowEls.current.has(g.key) && !leavingKeys.current.has(g.key));
       if (!onScreen.length) return;
       const sound = exit === "leave" ? null : FLOOR_PLAN_SOUNDS[exit];
-      if (sound) playSound(sound);
       const reduced = prefersReducedMotion();
       const ms = exitDuration(exit, reduced);
       const fold = foldDuration(reduced);
@@ -527,11 +535,15 @@ export default function FloorPlansPage() {
       for (const g of onScreen) leavingKeys.current.add(g.key);
       setLeaving((prev) => {
         const next = new Map(prev);
-        onScreen.forEach((g, i) => next.set(g.key, { exit, delay: cascadeDelay(i), ms, fold, foldFrom: null }));
+        onScreen.forEach((g, i) => next.set(g.key, { exit, delay: batchDelay(exit, i, onScreen.length), ms, fold, foldFrom: null }));
         return next;
       });
       onScreen.forEach((g, i) => {
-        const delay = cascadeDelay(i);
+        const delay = batchDelay(exit, i, onScreen.length);
+        if (sound) {
+          if (delay) later(delay, () => playSound(sound));
+          else playSound(sound);
+        }
         playExit(() => rowEls.current.get(g.key), {
           exit,
           delay,
@@ -558,11 +570,56 @@ export default function FloorPlansPage() {
   );
 
   /**
+   * Asks how the writes of plans gone from the list ended, and plays each
+   * its way out accordingly: written, it is approved like any other, sound
+   * and all (Jeff, 2026-09-30); failed, it only fades, as the run's closing
+   * message names it. A plan still being written is asked about again;
+   * one put back in the queue stays. No answer at all, and it fades.
+   */
+  const confirmWritten = useCallback(
+    (list: Group[]) => {
+      for (const g of list) {
+        checking.current.add(g.key);
+        bulkApproving.current.delete(g.key);
+      }
+      setAsking(new Set(checking.current));
+      function ask(waiting: Group[], tries: number) {
+        const ids = waiting.map((g) => g.lead.id).join(",");
+        fetch(`/api/internal/floorplans/changes?status=all&ids=${encodeURIComponent(ids)}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+          .then((data) => {
+            const answered = Array.isArray(data);
+            const statusOf = new Map<string, string>(
+              (answered ? (data as { id: string; status: string }[]) : []).map((r) => [r.id, r.status])
+            );
+            const writing = waiting.filter((g) => answered && !writeSettled(statusOf.get(g.lead.id)) && tries < 10);
+            const settled = waiting.filter((g) => !writing.includes(g));
+            for (const g of settled) checking.current.delete(g.key);
+            setAsking(new Set(checking.current));
+            const status = (g: Group) => statusOf.get(g.lead.id);
+            startLeaving(settled.filter((g) => isWritten(status(g))), "approve");
+            // Back in the queue (Wix asked for a wait): the next read lists it again.
+            startLeaving(settled.filter((g) => !isWritten(status(g)) && status(g) !== "pending"), "leave");
+            if (!writing.length) return;
+            const timer = setTimeout(() => {
+              exitTimers.current.delete(timer);
+              ask(writing, tries + 1);
+            }, 1500);
+            exitTimers.current.add(timer);
+          });
+      }
+      ask(list, 0);
+    },
+    [startLeaving]
+  );
+
+  /**
    * Takes a read of the queue. A plan the read no longer lists keeps its
-   * rows while it plays its way out, or while the action on it is still in
-   * flight (its exit starts when the answer comes). One that simply went,
-   * written by an Approve All run, a failed write, or acted on in another
-   * tab, fades out from where it stood, if it was on screen.
+   * rows while it plays its way out, while the action on it is still in
+   * flight (its exit starts when the answer comes), or while the page asks
+   * how its Approve All write went. One that simply went, acted on in
+   * another tab, fades out from where it stood, if it was on screen.
    */
   const take = useCallback(
     (fresh: PendingChange[], status: string) => {
@@ -573,16 +630,21 @@ export default function FloorPlansPage() {
       for (const r of before) {
         const key = groupKeyOf(r);
         if (listed.has(key)) continue;
-        if (leavingKeys.current.has(key) || inFlight.current.has(key)) kept.add(key);
+        if (leavingKeys.current.has(key) || inFlight.current.has(key) || checking.current.has(key)) kept.add(key);
         else if (rowEls.current.has(key)) gone.add(key);
       }
       const held = before.filter((r) => kept.has(groupKeyOf(r)) || gone.has(groupKeyOf(r)));
       const rows = withHeld(fresh, held);
       changesRef.current = { status, rows };
       setChanges(rows);
-      if (gone.size) startLeaving(groupChanges(held.filter((r) => gone.has(groupKeyOf(r)))), "leave");
+      if (!gone.size) return;
+      // A plan an Approve All run was writing: asked about before it plays.
+      const went = groupChanges(held.filter((r) => gone.has(groupKeyOf(r))));
+      const written = went.filter((g) => bulkApproving.current.has(g.key) || g.rows.some((r) => r.status === "approving"));
+      if (written.length) confirmWritten(written);
+      startLeaving(went.filter((g) => !written.includes(g)), "leave");
     },
-    [startLeaving]
+    [startLeaving, confirmWritten]
   );
 
   const fetchChanges = useCallback(() => {
@@ -709,18 +771,18 @@ export default function FloorPlansPage() {
     });
   }, []);
   // A plan on its way out is no longer waiting: not counted, ticked or sent again.
-  const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)), [groups, leaving]);
+  const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key) && !asking.has(g.key)), [groups, leaving, asking]);
   // One page of the list. A filter or a sort starts again from the first
   // page; a page emptied by approvals falls back to the last one left.
   const pages = Math.max(1, Math.ceil(groups.length / PAGE_SIZE));
   const shownPage = Math.min(page, pages - 1);
   const offset = shownPage * PAGE_SIZE;
   const pageGroups = useMemo(() => groups.slice(offset, offset + PAGE_SIZE), [groups, offset]);
-  const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)), [pageGroups, leaving]);
+  const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key) && !asking.has(g.key)), [pageGroups, leaving, asking]);
   useEffect(() => setPage(0), [statusFilter, siteFilter, builderFilter, kindFilter, sort]);
   const pendingQuickMoveIns = useMemo(
-    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && !leaving.has(g.key)),
-    [siteGroups, leaving]
+    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && !leaving.has(g.key) && !asking.has(g.key)),
+    [siteGroups, leaving, asking]
   );
   // Plans still waiting in the whole queue, whatever the filters show.
   const queueLeft = useMemo(
@@ -1103,7 +1165,11 @@ export default function FloorPlansPage() {
       const name = g.lead.proposed_record?.name ?? g.lead.plan_key;
       names.set(g.lead.plan_key, name);
       if (approvalBlocker(g.kind, g.lead.proposed_record)) blocked.add(name);
-      else if (pendingIds(g).length) slices.push(pendingIds(g));
+      else if (pendingIds(g).length) {
+        slices.push(pendingIds(g));
+        // Each plays Approve's way out as its write lands (Jeff, 2026-09-30), once the page has asked how it went.
+        bulkApproving.current.add(g.key);
+      }
     }
     setBulkBusy(true);
     const poll = setInterval(fetchChanges, 3000);
@@ -1596,7 +1662,7 @@ export default function FloorPlansPage() {
                   // Each row wears its site's colour, as the Listings section does (Jeff, 2026-09-21).
                   const colors = siteColors(c.fp_sites?.domain);
                   // A row playing its way out still shows what it was, but takes no more clicks.
-                  const inert = Boolean(out);
+                  const inert = Boolean(out) || asking.has(g.key);
                   return (
                     <tr
                       key={g.key}
