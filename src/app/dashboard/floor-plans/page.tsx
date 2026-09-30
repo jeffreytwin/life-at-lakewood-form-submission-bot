@@ -1533,12 +1533,14 @@ export default function FloorPlansPage() {
       ) : error ? (
         <div className="empty-state">{error}</div>
       ) : groups.length === 0 ? (
-        statusFilter === "pending" && queueLeft === 0 && tally && cleared > 0 ? (
-          // The whole queue emptied, and some of it by this browser today (Jeff, 2026-09-29).
+        statusFilter === "pending" && queueLeft === 0 ? (
+          // The whole queue empty (Jeff, 2026-09-29), whoever emptied it and
+          // whenever (Jeff, 2026-09-30); with the day's tally when this
+          // browser cleared some of it.
           <div className="card mission-complete">
             <div className="mission-complete-title">MISSION COMPLETE</div>
             <p>Every pending floor plan has been dealt with.</p>
-            <p className="mission-complete-tally">Today: {tallyLine(tally)}</p>
+            {tally && cleared > 0 && <p className="mission-complete-tally">Today: {tallyLine(tally)}</p>}
           </div>
         ) : (
           <div className="empty-state">
