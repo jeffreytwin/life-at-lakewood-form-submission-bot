@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { digestOf, normalizedText, reusable, variantOf, REREAD_AFTER_DAYS } from "@/lib/floorplans/page-reads";
+import { changeBetween, digestOf, normalizedText, reusable, variantOf, REREAD_AFTER_DAYS } from "@/lib/floorplans/page-reads";
 
 const page = (price: string, extra = "") =>
   `The Lori [IMG https://b.com/lori/kitchen.jpg?v=12&w=1000] Priced ${price} 3 beds [LINK https://b.com/lori/?utm=night] ${extra}`;
@@ -53,5 +53,35 @@ describe("reusable", () => {
     expect(reusable(null, "d1", "v1", now)).toBe(false);
     const old = { ...row, read_at: new Date(now - (REREAD_AFTER_DAYS + 1) * 86_400_000).toISOString() };
     expect(reusable(old, "d1", "v1", now)).toBe(false);
+  });
+});
+
+describe("changeBetween: what changed on a page read again (2026-09-30)", () => {
+  const before = `The Lori [IMG https://b.com/lori/kitchen.jpg] Priced $459,990 3 beds 2 baths 2,400 sq ft ${"Words about the home. ".repeat(20)}`;
+
+  it("finds the stretch that changed, with some words either side, and where it starts", () => {
+    const after = before.replace("$459,990", "$469,990");
+    const change = changeBetween(before, after)!;
+    expect(change).not.toBeNull();
+    expect(change.at).toBe(before.indexOf("$459,990") + 2);
+    expect(change.before).toContain("$459,990");
+    expect(change.after).toContain("$469,990");
+    expect(change.before).toContain("Priced");
+    expect(change.before.length).toBeLessThan(200);
+    expect(change.was).toBe(before.length);
+    expect(change.now).toBe(after.length);
+  });
+
+  it("is null for the same text, and shows what a page gained when words were only added", () => {
+    expect(changeBetween(before, before)).toBeNull();
+    const change = changeBetween(before, `${before} Ready now`)!;
+    expect(change.after).toContain("Ready now");
+    expect(change.after.endsWith("Ready now")).toBe(true);
+  });
+
+  it("keeps a long changed stretch to a readable size", () => {
+    const change = changeBetween(before, `The Lori ${"new words ".repeat(200)}`)!;
+    expect(change.after.length).toBeLessThan(420);
+    expect(change.after).toContain(" … ");
   });
 });

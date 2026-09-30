@@ -269,6 +269,69 @@ function pictureOf(tag: string): string | null {
   return offered.find((u): u is string => Boolean(u) && !/^data:/i.test(u!)) ?? null;
 }
 
+/**
+ * A picture nobody is meant to see: a tracking pixel drawn at zero or one
+ * pixel a side. Kolter's pages carry one whose address ends in a fresh
+ * random number on every load, so no two reads of a Kolter page distilled
+ * to the same text, and not one of its pages was ever read from memory
+ * (page-reads.ts; 2026-09-30, 0 of 41). A one-pixel placeholder holding
+ * its real picture in data-src is a picture.
+ */
+function isPixel(tag: string): boolean {
+  const tiny = (name: string) => /^[01](?:px)?$/.test(attrOf(tag, name) ?? "");
+  if (!tiny("width") && !tiny("height")) return false;
+  return !(attrOf(tag, "data-src") || attrOf(tag, "data-lazy-src") || attrOf(tag, "data-lazy"));
+}
+
+/** A class or id token of the social feed widgets builders embed: Smash Balloon (Neal), Elfsight, Juicer, Curator, Taggbox, POWR. */
+const SOCIAL_FEED = /^(?:sb_instagram|sbi|sbi_images|instagram-feed|insta-feed|instafeed|juicer-feed|curator-feed|taggbox|tagembed|social-feed|elfsight-app(?:-[\w-]*)?|powr-instagram(?:-[\w-]*)?)$/i;
+const OPEN_TAG = /^<([a-zA-Z][^\s/>]*)/;
+
+function isSocialFeed(tag: string): boolean {
+  return `${attrOf(tag, "id") ?? ""} ${attrOf(tag, "class") ?? ""}`.split(/\s+/).some((token) => SOCIAL_FEED.test(token));
+}
+
+/**
+ * The page without its social feed widgets. Neal's pages each carry their
+ * Instagram feed — the twenty latest posts, pictures and words — so a new
+ * post changed the text of every Neal page, and none read the same as the
+ * night before (2026-09-30: 42 of Windward's 45 pages read again, nothing
+ * found changed). A feed is not the plan's facts even when a post names a
+ * price, so the block goes whole, nested tags and all; a block that never
+ * closes is left as it is. Exported for tests.
+ */
+export function dropSocialFeeds(html: string): string {
+  const tags = new RegExp(ANY_TAG.source, "g");
+  let out = "";
+  let from = 0;
+  let m: RegExpExecArray | null;
+  while ((m = tags.exec(html))) {
+    const tag = m[0];
+    const open = tag.match(OPEN_TAG);
+    if (!open || tag.endsWith("/>") || !isSocialFeed(tag)) continue;
+    const name = open[1].toLowerCase();
+    // On to the close of this block, counting the same tag nested inside it.
+    const same = new RegExp(`<(/?)${name}(?=[\\s/>])${TAG_BODY}>`, "gi");
+    same.lastIndex = tags.lastIndex;
+    let depth = 1;
+    let end = -1;
+    let n: RegExpExecArray | null;
+    while ((n = same.exec(html))) {
+      if (n[0].endsWith("/>")) continue;
+      depth += n[1] ? -1 : 1;
+      if (depth === 0) {
+        end = n.index + n[0].length;
+        break;
+      }
+    }
+    if (end < 0) continue;
+    out += html.slice(from, m.index) + " ";
+    from = end;
+    tags.lastIndex = end;
+  }
+  return out + html.slice(from);
+}
+
 /** A page as Claude is given it: its text, with its pictures and links as markers. Exported for the connection check. */
 export function distill(html: string, pageUrl: string): string {
   const baseUrl = documentBase(html, pageUrl);
@@ -307,12 +370,15 @@ export function distill(html: string, pageUrl: string): string {
     });
     return linksBeneath ? block : " ";
   };
-  const withImgs = html
+  const withoutScripts = html
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ");
+  // A builder's Instagram feed says nothing about the plan and changes
+  // with every post (dropSocialFeeds).
+  const withImgs = dropSocialFeeds(withoutScripts)
     // The site's own menus and footer say nothing about a community, and on
     // a big builder's page they are much of what there is to read. Only
     // those that say nothing about homes, though: Kolter's plans came back
@@ -320,6 +386,7 @@ export function distill(html: string, pageUrl: string): string {
     .replace(/<nav\b[\s\S]*?<\/nav>/gi, chromeOnly)
     .replace(/<footer\b[\s\S]*?<\/footer>/gi, chromeOnly)
     .replace(IMG_TAG, (tag) => {
+      if (isPixel(tag)) return " ";
       const src = pictureOf(tag);
       return src ? marker("IMG", src) : " ";
     })
@@ -848,7 +915,7 @@ export async function readPlanPageWithClaude(
     await recordUsage({ purpose: "plan-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url: plan.sourceUrl });
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
-    await rememberRead(plan.sourceUrl, "plan", digest, variant, page, MODEL);
+    await rememberRead(plan.sourceUrl, "plan", digest, variant, page, MODEL, content);
   }
   // One photograph once, at the largest size any spelling asks for.
   const { photos, enlarged } = onePerPicture(
@@ -1106,7 +1173,7 @@ async function listPage(
       );
     }
     reported = list;
-    await rememberRead(url, "list", digest, variant, reported, MODEL);
+    await rememberRead(url, "list", digest, variant, reported, MODEL, content);
   }
   const answered = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
   // A series is a page of plans, not a plan (Dream Finders' Seaire, Jeff
