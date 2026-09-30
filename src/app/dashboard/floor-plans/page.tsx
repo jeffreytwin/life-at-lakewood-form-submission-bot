@@ -1015,29 +1015,48 @@ export default function FloorPlansPage() {
   }
 
   /** Writes the form onto every pending row of the plan, so whichever row is approved carries the edits. */
-  async function persistEdits(group: Group) {
+  /**
+   * Writes the form onto every pending row of the plan, so whichever row is
+   * approved carries the edits. Says why when the route refuses, rather
+   * than closing as if saved: a plan being approved, or already approved,
+   * takes no more edits (Jeff, 2026-09-30).
+   */
+  async function persistEdits(group: Group): Promise<string | null> {
     const record = { ...editForm, galleryImages: editGallery, blueprintImages: editBlueprints };
-    await Promise.all(
-      pendingIds(group).map((id) =>
-        fetch(`/api/internal/floorplans/changes/${id}`, {
-          method: "PATCH",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ record }),
-        })
-      )
+    const refusals = await Promise.all(
+      pendingIds(group).map(async (id) => {
+        try {
+          const res = await fetch(`/api/internal/floorplans/changes/${id}`, {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ record }),
+          });
+          if (res.ok) return null;
+          const data = await res.json().catch(() => ({}));
+          return (data?.error as string | undefined) ?? `HTTP ${res.status}`;
+        } catch (e) {
+          return e instanceof Error ? e.message : String(e);
+        }
+      })
     );
+    return refusals.find((r) => r !== null) ?? null;
   }
 
-  /** Saves the edits and closes the overlay. */
+  /** Saves the edits and closes the overlay; a refused save keeps it open and says why. */
   async function saveEdit() {
     if (!editing) return;
     setSavingEdit(true);
+    let refused: string | null = null;
     try {
-      await persistEdits(editing);
+      refused = await persistEdits(editing);
     } finally {
       setSavingEdit(false);
-      setEditing(null);
-      setPreview(null);
+      if (refused) {
+        alert(`Your edits were not saved: ${refused}.\n\nThe plan may be being approved, or have been approved or rejected, since you opened it. Cancel to close.`);
+      } else {
+        setEditing(null);
+        setPreview(null);
+      }
       fetchChanges();
     }
   }
@@ -1125,7 +1144,11 @@ export default function FloorPlansPage() {
     if (!planName) return;
     setCreatingPlan(true);
     try {
-      await persistEdits(editing);
+      const refused = await persistEdits(editing);
+      if (refused) {
+        alert(`Could not save the edits before creating the floor plan: ${refused}.`);
+        return;
+      }
       const res = await fetch(`/api/internal/floorplans/changes/${editing.lead.id}/stand-in`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -1662,7 +1685,9 @@ export default function FloorPlansPage() {
                   // Each row wears its site's colour, as the Listings section does (Jeff, 2026-09-21).
                   const colors = siteColors(c.fp_sites?.domain);
                   // A row playing its way out still shows what it was, but takes no more clicks.
-                  const inert = Boolean(out) || asking.has(g.key);
+                  // Nor does one whose Approve, Reject or Remove is still on its way (Jeff,
+                  // 2026-09-30): the server has it locked, so it cannot be edited meanwhile.
+                  const inert = Boolean(out) || asking.has(g.key) || busy.has(g.key);
                   return (
                     <tr
                       key={g.key}
@@ -1711,6 +1736,7 @@ export default function FloorPlansPage() {
                           <button
                             type="button"
                             title={isPending ? "Edit this plan before approving" : `${photoCount} photos`}
+                            disabled={isPending && inert}
                             onClick={() => (isPending ? openEdit(g) : window.open(thumb, "_blank", "noopener"))}
                             onMouseEnter={() => {
                               if (!coarse) setPreview({ src: thumb, caption: rec?.galleryMeta?.[thumb]?.caption });
