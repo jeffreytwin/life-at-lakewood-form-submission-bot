@@ -120,6 +120,28 @@ describe("a photo the record has only as a thumbnail (Kolter's Sarah, Jeff 2026-
   });
 });
 
+describe("an imgix picture as it was uploaded (Highland's Summerlyn II, Jeff 2026-09-30)", () => {
+  const model = "https://highlandhomes.imgix.net/model/Summerlyn%2DII%2DA%2Dno%20side%20windows%20%2D%20900x540%2Ejpg";
+  const thumb = `${model}?fit=crop&w=225&h=135&auto=format&q=40`;
+  const kitchen = "https://highlandhomes.imgix.net/slideshow/CPL-%20Model%20-%20Summerlyn%20II%20-%20Kitchen%20%284%29_recrop1.jpg";
+  const kitchen900 = `${kitchen}?fit=crop&w=900&h=675&auto=format&q=50`;
+  const summerlyn = (galleryImages: string[]) => plan({ planKey: "summerlyn-ii", name: "Summerlyn II", galleryImages });
+
+  it("takes the query off, whatever size it asks for", () => {
+    expect(fullSize(thumb, "")).toBe(model);
+    expect(fullSize(kitchen900, "")).toBe(kitchen);
+    expect(fullSize(model, "")).toBe(model);
+    expect(fullSize("https://example.com/photo.jpg?w=225", "")).toBe("https://example.com/photo.jpg?w=225");
+  });
+
+  it("proposes the uploaded elevation over the record's 225-pixel copy, and leaves the 900-pixel photos be", () => {
+    const run = summerlyn([model, kitchen]);
+    const known = withKnownSpellings(run, summerlyn([thumb, kitchen900]));
+    expect(known.galleryImages).toEqual([model, kitchen900]);
+    expect(fieldChanges(summerlyn([thumb, kitchen900]), known).map((c) => c.label)).toContain("photos");
+  });
+});
+
 describe("a quick move-in's description written on its own (Jeff, 2026-09-25)", () => {
   it("takes the run's description and nothing else", () => {
     const current = plan({ quickMoveIn: true, description: "Old words.", raw: { descriptionOriginal: "Our old words.", lot: "7" } });

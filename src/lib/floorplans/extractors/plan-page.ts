@@ -857,6 +857,15 @@ export function onePerPicture(sources: string[]): { photos: string[]; enlarged: 
  * photo twice wherever a page shows both sizes.
  */
 export function fullSize(src: string, html: string): string {
+  // An imgix store draws a picture at whatever size and quality its query
+  // asks, and without the query gives it as it was uploaded: Highland's
+  // Summerlyn II page offers its elevation only at 350 pixels and less
+  // (".../model/Summerlyn-II-A-…900x540.jpg?fit=crop&w=225&h=135&q=40"),
+  // and the plan's main picture was that 225-pixel copy; the file itself is
+  // 900 by 540 (Jeff, 2026-09-30).
+  const imgix = src.match(/^(https?:\/\/[^/?#]+\.imgix\.net\/[^?#]+)[?#]/i);
+  if (imgix) return imgix[1];
+
   // The file's name, without the query Neal's image service is asked with
   // ("…-300x172.jpg?auto=format%2Ccompress", 2026-09-25).
   const name = src.replace(/[?#].*$/, "").split("/").pop() ?? "";
