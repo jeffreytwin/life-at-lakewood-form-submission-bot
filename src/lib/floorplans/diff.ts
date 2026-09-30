@@ -8,7 +8,7 @@ import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { speaksAsOwner } from "@/lib/floorplans/owner-words";
 import { asTour } from "@/lib/floorplans/standardize";
 import { looksLikeSpecList } from "@/lib/floorplans/description";
-import { onePerPicture, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { onePerPicture, pictureKey, sharperCopy } from "@/lib/floorplans/extractors/plan-page";
 
 /** Canonical records written by the first slice carry the main image here instead of in galleryImages. */
 export type CanonicalRecord = NormalizedPlan & { primaryImage?: string | null };
@@ -222,14 +222,18 @@ export function describeGallery(urls: string[], noun: string): string {
  * spelled: Neal's "…Elevation-FH1.jpg?auto=format%2Ccompress&fit=max&w=1000"
  * one night and "…Elevation-FH1.jpg" the next is one photo, and the queue
  * showed it as a new one (Jeff, 2026-09-25). A photo that truly changed is
- * still a change. Pure; exported for tests.
+ * still a change, and so is one `b` has sharp where `a` has only a
+ * thumbnail of it (sharperCopy: Kolter's Sarah, 2026-09-30). Pure;
+ * exported for tests.
  */
 export function samePictures(a: string[], b: string[]): boolean {
   // Each photo once: a gallery that carried one at two sizes is the same
   // gallery once it carries it at one.
-  const ka = onePerPicture(a).photos.map(pictureKey);
-  const kb = onePerPicture(b).photos.map(pictureKey);
-  return ka.length === kb.length && ka.every((k, i) => k === kb[i]);
+  const pa = onePerPicture(a).photos;
+  const pb = onePerPicture(b).photos;
+  const ka = pa.map(pictureKey);
+  const kb = pb.map(pictureKey);
+  return ka.length === kb.length && ka.every((k, i) => k === kb[i]) && !pb.some((u, i) => sharperCopy(u, pa[i]));
 }
 
 /** A picture CPS's plan viewer drew, or the Hub drew from it (planviewer.ts). */

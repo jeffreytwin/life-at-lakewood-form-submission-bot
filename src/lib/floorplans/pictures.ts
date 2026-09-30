@@ -4,7 +4,7 @@
 // pictures are spelled as the record spells them. No IO here.
 
 import type { NormalizedPlan } from "@/lib/floorplans/types";
-import { onePerPicture, pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { onePerPicture, pictureKey, sharperCopy } from "@/lib/floorplans/extractors/plan-page";
 
 /** The record with the builder's current pictures remembered beside whatever the record shows. */
 export function withScrapedPictures<T extends NormalizedPlan>(record: T, scraped: NormalizedPlan): T {
@@ -27,11 +27,16 @@ export function withScrapedPictures<T extends NormalizedPlan>(record: T, scraped
  */
 export function withKnownSpellings(plan: NormalizedPlan, current: Partial<NormalizedPlan> | null | undefined): NormalizedPlan {
   if (!current) return plan;
-  // Each photo under the largest copy the record has of it.
+  // Each photo under the largest copy the record has of it, unless the
+  // record has it only as a thumbnail and the run found it sharper: then
+  // the run's copy stays, and is proposed (Kolter's Sarah, Jeff 2026-09-30).
   const respeller = (known: unknown) => {
     const urls = (Array.isArray(known) ? known : []).filter((u): u is string => typeof u === "string");
     const byKey = new Map(onePerPicture(urls).photos.map((u) => [pictureKey(u), u] as const));
-    return (url: string) => byKey.get(pictureKey(url)) ?? url;
+    return (url: string) => {
+      const had = byKey.get(pictureKey(url));
+      return had && !sharperCopy(url, had) ? had : url;
+    };
   };
   // Each once: two addresses of one photo become one.
   const once = (urls: string[], respell: (url: string) => string) => [...new Set(urls.map(respell))];
