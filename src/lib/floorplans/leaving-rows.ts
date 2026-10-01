@@ -1,8 +1,10 @@
 // How a plan leaves the review queue on screen (Jeff, 2026-09-29: getting
 // the pending floor plans done should be fun). Approve, Reject and Remove
-// each play their own way out once the server has the change, an Approve
-// All run's plans too once the page has asked how each write went (Jeff,
-// 2026-09-30); a plan that leaves the list any other way, a failed write or
+// on a row each play their own way out the moment they are clicked, ahead
+// of the server's answer, so the queue feels quick; an answer that does not
+// bear it out brings the row back with an alert (Jeff, 2026-10-01). An
+// Approve All run's plans play once the page has asked how each write went
+// (Jeff, 2026-09-30); a plan that leaves the list any other way, a failed write or
 // one acted on in another tab, fades and folds away without claiming what
 // happened to it. The rows of a plan still playing are kept in the list until it has
 // gone, so a read of the queue landing mid-animation does not cut it short.
@@ -156,6 +158,17 @@ export function addToTally(t: Tally | null, exit: CountedExit, n: number, day: s
   const base = t && t.day === day ? t : emptyTally(day);
   const field = FIELD[exit];
   return { ...base, [field]: base[field] + Math.max(0, n) };
+}
+
+/**
+ * The tally with n plans taken back off: a plan counted on the click whose
+ * answer then did not bear it out. Never below nought; on a new day it
+ * starts over, as adding does.
+ */
+export function takeFromTally(t: Tally | null, exit: CountedExit, n: number, day: string): Tally {
+  const base = t && t.day === day ? t : emptyTally(day);
+  const field = FIELD[exit];
+  return { ...base, [field]: Math.max(0, base[field] - Math.max(0, n)) };
 }
 
 export function clearedIn(t: Tally | null): number {
