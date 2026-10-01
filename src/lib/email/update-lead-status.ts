@@ -15,7 +15,9 @@ export interface UpdateLeadStatusResult {
  * by the auto-handoff flow in sync-sent.
  *
  * Idempotent: returns alreadyApplied=true if the draft has already had a
- * status update recorded (caller decides whether that's an error).
+ * status update recorded (caller decides whether that's an error). The one
+ * exception is Disqualified, which can override any earlier status — a lead
+ * that went Nurture Active can still turn out to be unqualified.
  */
 export async function updateDraftLeadStatus(
   draftId: string,
@@ -31,7 +33,8 @@ export async function updateDraftLeadStatus(
     return { success: false, error: "Draft not found" };
   }
 
-  if (draft.lead_status_update) {
+  const canOverride = status === "disqualified" && draft.lead_status_update !== "disqualified";
+  if (draft.lead_status_update && !canOverride) {
     return {
       success: false,
       alreadyApplied: true,
