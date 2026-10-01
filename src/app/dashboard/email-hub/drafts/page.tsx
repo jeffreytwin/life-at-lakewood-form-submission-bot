@@ -1780,25 +1780,46 @@ function EmailDraftsPageInner() {
                           ?? (sfStatus === "disqualified" ? "disqualified" : null)
                           ?? (sfStatus === "bad_data" ? "bad_data" : null);
 
+                        const disqualifyButton = (
+                          <button
+                            className="btn btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateLeadStatus(draft.id, "disqualified");
+                            }}
+                            disabled={leadStatusUpdatingId === draft.id}
+                            style={{
+                              color: "#f87171",
+                              borderColor: "#f8717144",
+                            }}
+                          >
+                            {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
+                          </button>
+                        );
+
+                        // Disqualified can override any other status (Jeff, 2026-10-01).
                         if (effectiveStatus === "nurture_active") {
                           return (
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 6,
-                                padding: "6px 14px",
-                                borderRadius: 6,
-                                fontSize: 13,
-                                fontWeight: 600,
-                                background: "#34d39922",
-                                color: "#34d399",
-                                border: "1px solid #34d39944",
-                              }}
-                            >
-                              <span style={{ fontSize: 16 }}>&#10003;</span>
-                              {draft.lead_status_update === "nurture_active" ? "Updated to Nurture Active" : "Nurture Active"}
-                            </span>
+                            <>
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  padding: "6px 14px",
+                                  borderRadius: 6,
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  background: "#34d39922",
+                                  color: "#34d399",
+                                  border: "1px solid #34d39944",
+                                }}
+                              >
+                                <span style={{ fontSize: 16 }}>&#10003;</span>
+                                {draft.lead_status_update === "nurture_active" ? "Updated to Nurture Active" : "Nurture Active"}
+                              </span>
+                              {!isEditing && disqualifyButton}
+                            </>
                           );
                         }
 
@@ -1826,23 +1847,26 @@ function EmailDraftsPageInner() {
 
                         if (effectiveStatus === "bad_data") {
                           return (
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 6,
-                                padding: "6px 14px",
-                                borderRadius: 6,
-                                fontSize: 13,
-                                fontWeight: 600,
-                                background: "#f472b622",
-                                color: "#f472b6",
-                                border: "1px solid #f472b644",
-                              }}
-                            >
-                              <span style={{ fontSize: 16 }}>&#10003;</span>
-                              {draft.lead_status_update === "bad_data" ? "Updated to Bad Data" : "Bad Data"}
-                            </span>
+                            <>
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  padding: "6px 14px",
+                                  borderRadius: 6,
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  background: "#f472b622",
+                                  color: "#f472b6",
+                                  border: "1px solid #f472b644",
+                                }}
+                              >
+                                <span style={{ fontSize: 16 }}>&#10003;</span>
+                                {draft.lead_status_update === "bad_data" ? "Updated to Bad Data" : "Bad Data"}
+                              </span>
+                              {!isEditing && disqualifyButton}
+                            </>
                           );
                         }
 
@@ -1864,20 +1888,7 @@ function EmailDraftsPageInner() {
                             >
                               {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Nurture Active"}
                             </button>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateLeadStatus(draft.id, "disqualified");
-                              }}
-                              disabled={leadStatusUpdatingId === draft.id}
-                              style={{
-                                color: "#f87171",
-                                borderColor: "#f8717144",
-                              }}
-                            >
-                              {leadStatusUpdatingId === draft.id ? "Updating..." : "Update to Disqualified"}
-                            </button>
+                            {disqualifyButton}
                             <button
                               className="btn btn-secondary"
                               onClick={(e) => {
