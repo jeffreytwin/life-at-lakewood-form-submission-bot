@@ -355,8 +355,10 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
             </p>
           </div>
         ) : leadDist.distribution.length === 0 ? (
-          <div className="empty-state" style={{ padding: "32px 20px" }}>
-            <p>No form submissions this month yet</p>
+          // Styled like the drafts' ready-for-incoming state (Jeff, 2026-10-01).
+          <div className="mission-complete">
+            <div className="mission-complete-title">READY TO TRACK FORM SUBMISSIONS</div>
+            <p>This month&apos;s hand raise distribution will appear here as forms come in.</p>
           </div>
         ) : (
           <LeadDistributionChart data={leadDist.distribution} />
