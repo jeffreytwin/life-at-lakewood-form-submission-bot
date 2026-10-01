@@ -13,6 +13,7 @@ import {
   progressOf,
   readTally,
   tallyLine,
+  takeFromTally,
   withHeld,
   writeSettled,
 } from "@/lib/floorplans/leaving-rows";
@@ -147,6 +148,14 @@ describe("the day's tally", () => {
     t = addToTally(t, "remove", 2, "2026-09-29");
     expect(t).toEqual({ day: "2026-09-29", approved: 3, rejected: 1, removed: 2 });
     expect(clearedIn(t)).toBe(6);
+  });
+
+  it("takes back a plan counted on the click whose answer did not bear it out (Jeff, 2026-10-01)", () => {
+    const t = { day: "2026-09-29", approved: 3, rejected: 1, removed: 0 };
+    expect(takeFromTally(t, "approve", 1, "2026-09-29")).toEqual({ ...t, approved: 2 });
+    expect(takeFromTally(t, "remove", 1, "2026-09-29")).toEqual(t);
+    expect(takeFromTally(null, "reject", 1, "2026-09-29")).toEqual(emptyTally("2026-09-29"));
+    expect(takeFromTally(t, "approve", 1, "2026-09-30")).toEqual(emptyTally("2026-09-30"));
   });
 
   it("starts over on a new day", () => {

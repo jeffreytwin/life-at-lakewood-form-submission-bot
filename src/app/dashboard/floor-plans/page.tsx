@@ -19,6 +19,7 @@ import {
   progressOf,
   readTally,
   tallyLine,
+  takeFromTally,
   withHeld,
   writeSettled,
   type CountedExit,
@@ -440,6 +441,11 @@ export default function FloorPlansPage() {
   // The rows on screen now, by plan: only a row in view plays its exit.
   const rowEls = useRef(new Map<string, HTMLTableRowElement>());
   const exitTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  // The same timers by plan, so a row played out ahead of its answer can be called back.
+  const rowTimers = useRef(new Map<string, Set<ReturnType<typeof setTimeout>>>());
+  // Plans whose Approve, Reject or Remove played on the click, the answer
+  // still awaited (Jeff, 2026-10-01): a read meanwhile does not list them.
+  const ahead = useRef(new Set<string>());
   // The queue as last taken, and the status it was read for.
   const changesRef = useRef<{ status: string; rows: PendingChange[] }>({ status: "", rows: [] });
   // Reads of the queue are numbered, so the answer to an older one never
@@ -498,6 +504,7 @@ export default function FloorPlansPage() {
   /** A plan that has played its way out leaves the list for good; the next read agrees. */
   const finish = useCallback((key: string) => {
     leavingKeys.current.delete(key);
+    rowTimers.current.delete(key);
     setLeaving((prev) => {
       if (!prev.has(key)) return prev;
       const next = new Map(prev);
@@ -525,12 +532,16 @@ export default function FloorPlansPage() {
       const reduced = prefersReducedMotion();
       const ms = exitDuration(exit, reduced);
       const fold = foldDuration(reduced);
-      const later = (wait: number, fn: () => void) => {
+      const later = (key: string, wait: number, fn: () => void) => {
         const timer = setTimeout(() => {
           exitTimers.current.delete(timer);
+          rowTimers.current.get(key)?.delete(timer);
           fn();
         }, wait);
         exitTimers.current.add(timer);
+        const mine = rowTimers.current.get(key) ?? new Set();
+        mine.add(timer);
+        rowTimers.current.set(key, mine);
       };
       for (const g of onScreen) leavingKeys.current.add(g.key);
       setLeaving((prev) => {
@@ -541,7 +552,7 @@ export default function FloorPlansPage() {
       onScreen.forEach((g, i) => {
         const delay = batchDelay(exit, i, onScreen.length);
         if (sound) {
-          if (delay) later(delay, () => playSound(sound));
+          if (delay) later(g.key, delay, () => playSound(sound));
           else playSound(sound);
         }
         playExit(() => rowEls.current.get(g.key), {
@@ -552,7 +563,7 @@ export default function FloorPlansPage() {
           particles: i < MAX_BURSTS,
           lead: i === 0,
         });
-        later(delay + ms, () => {
+        later(g.key, delay + ms, () => {
           // Folded from the height it stands at now.
           const height = rowEls.current.get(g.key)?.offsetHeight ?? 0;
           setLeaving((prev) => {
@@ -563,11 +574,43 @@ export default function FloorPlansPage() {
             return next;
           });
         });
-        later(delay + ms + fold, () => finish(g.key));
+        later(g.key, delay + ms + fold, () => finish(g.key));
       });
     },
     [finish]
   );
+
+  /**
+   * Brings back a plan that played its way out on the click when the
+   * answer did not bear it out (Jeff, 2026-10-01): its exit is stopped
+   * wherever it had got to, its rows go back in their places if it had
+   * already folded away, and it comes off the day's tally. The read that
+   * follows has the last word on where it stands.
+   */
+  const callBack = useCallback((group: Group, exit: CountedExit, n: number, view: string) => {
+    ahead.current.delete(group.key);
+    rowTimers.current.get(group.key)?.forEach((timer) => {
+      clearTimeout(timer);
+      exitTimers.current.delete(timer);
+    });
+    rowTimers.current.delete(group.key);
+    leavingKeys.current.delete(group.key);
+    setLeaving((prev) => {
+      if (!prev.has(group.key)) return prev;
+      const next = new Map(prev);
+      next.delete(group.key);
+      return next;
+    });
+    // Only into the list it left: one switched to another filter since gets its own read.
+    if (changesRef.current.status === view) {
+      const rows = withHeld(changesRef.current.rows, group.rows);
+      if (rows !== changesRef.current.rows) {
+        changesRef.current = { ...changesRef.current, rows };
+        setChanges(rows);
+      }
+    }
+    setTally((t) => takeFromTally(t, exit, n, easternDay(new Date())));
+  }, []);
 
   /**
    * Asks how the writes of plans gone from the list ended, and plays each
@@ -622,7 +665,10 @@ export default function FloorPlansPage() {
    * another tab, fades out from where it stood, if it was on screen.
    */
   const take = useCallback(
-    (fresh: PendingChange[], status: string) => {
+    (read: PendingChange[], status: string) => {
+      // A plan played out on the click stays gone while its answer is
+      // awaited, though the server still lists it, being written.
+      const fresh = ahead.current.size ? read.filter((r) => !ahead.current.has(groupKeyOf(r))) : read;
       const before = changesRef.current.status === status ? changesRef.current.rows : [];
       const listed = new Set(fresh.map(groupKeyOf));
       const kept = new Set<string>();
@@ -872,13 +918,18 @@ export default function FloorPlansPage() {
    * Approves or rejects every pending row of a plan, or puts a rejected
    * plan back in the queue; reports a failed write instead of hiding it in
    * the Failed filter.
+   *
+   * Approve and Reject play the plan's way out on the click, not on the
+   * answer, so the queue feels quick (Jeff, 2026-10-01). The answer must
+   * bear it out: an approval written to Wix, not one Wix deferred; a
+   * rejection that took. One that does not brings the row back, and says
+   * why when something went wrong.
    */
-  async function act(group: Group, action: "approve" | "reject" | "restore", quiet = false): Promise<boolean> {
+  async function act(group: Group, action: "approve" | "reject" | "restore"): Promise<boolean> {
     const ids = action === "restore" ? idsAt(group, "rejected") : pendingIds(group);
     if (!ids.length) return true;
     const starred = group.lead.fp_floor_plans?.starred;
     if (
-      !quiet &&
       action === "approve" &&
       starred &&
       (group.kind === "remove" || group.kind === "update") &&
@@ -886,8 +937,17 @@ export default function FloorPlansPage() {
     ) {
       return false;
     }
+    const what = action === "approve" ? "Approve" : action === "reject" ? "Reject" : "Restore";
+    const name = group.lead.proposed_record?.name ?? group.lead.plan_key;
+    const exit: CountedExit | null = action === "restore" ? null : action;
+    const view = changesRef.current.status;
     setBusy((b) => new Set(b).add(group.key));
     inFlight.current.add(group.key);
+    if (exit) {
+      ahead.current.add(group.key);
+      startLeaving([group], exit);
+      count(exit, 1);
+    }
     try {
       const res = await fetch("/api/internal/floorplans/changes/bulk", {
         method: "POST",
@@ -896,33 +956,44 @@ export default function FloorPlansPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (exit) callBack(group, exit, 1, view);
         const detail = data?.results?.find((r: { error?: string | null }) => r.error)?.error ?? data?.error ?? `HTTP ${res.status}`;
-        const what = action === "approve" ? "Approve" : action === "reject" ? "Reject" : "Restore";
-        if (!quiet) alert(`${what} failed for ${group.lead.proposed_record?.name ?? group.lead.plan_key}: ${detail}`);
+        alert(`${what} failed for ${name}: ${detail}`);
         return false;
       }
-      // The plan plays its way out once the server has it: an approval
-      // written to Wix, not one Wix deferred; a rejection that took.
-      const exit: CountedExit | null =
-        action === "approve" && countWritten(data?.results) > 0
-          ? "approve"
-          : action === "reject" && Number(data?.rejected) > 0
-            ? "reject"
-            : null;
-      if (exit) {
-        dropStaleReads();
-        startLeaving([group], exit);
-        count(exit, 1);
+      const took =
+        action === "approve" ? countWritten(data?.results) > 0 : action === "reject" ? Number(data?.rejected) > 0 : true;
+      if (exit && !took) {
+        callBack(group, exit, 1, view);
+        // Wix asked for a wait and the plan went back to the queue. A
+        // reject that found nothing pending was acted on elsewhere; the
+        // read below shows where it went.
+        if (action === "approve") {
+          const wait = Number(data?.retryAfterMs);
+          const status = data?.results?.[0]?.status;
+          alert(
+            Array.isArray(data?.remaining) && data.remaining.length
+              ? `${name} was not approved: Wix is busy${wait > 0 ? ` for about ${Math.ceil(wait / 1000)}s` : ""}. It is back in the queue; approve it again in a moment.`
+              : `${name} was not approved${status ? ` (${status})` : ""}. It may have been acted on elsewhere; the list has been refreshed.`
+          );
+        }
+        return false;
       }
+      if (exit) dropStaleReads();
       return true;
+    } catch (e) {
+      if (exit) callBack(group, exit, 1, view);
+      alert(`${what} failed for ${name}: ${e instanceof Error ? e.message : String(e)}. The list has been refreshed to show where it stands.`);
+      return false;
     } finally {
+      ahead.current.delete(group.key);
       inFlight.current.delete(group.key);
       setBusy((b) => {
         const next = new Set(b);
         next.delete(group.key);
         return next;
       });
-      if (!quiet) fetchChanges();
+      fetchChanges();
     }
   }
 
@@ -930,6 +1001,9 @@ export default function FloorPlansPage() {
    * Takes a plan off the site from the queue, with the quick move-ins built
    * from it: a community that sold out while the builder still lists the
    * plan with no price (The Towns at Firethorn's Marigold, Jeff 2026-09-29).
+   * The plan goes up on the click (Jeff, 2026-10-01), the quick move-ins it
+   * took with it once the server names them; if the plan itself did not
+   * come off it comes back, and the alert says whatever stayed.
    */
   async function removePlan(group: Group) {
     const rec = group.lead.proposed_record;
@@ -938,25 +1012,33 @@ export default function FloorPlansPage() {
       ? `Remove ${name} from the site now?`
       : `Remove ${name} from the site now, with every quick move-in built from it?`;
     if (!confirm(`${what}\n\nIt comes off Wix right away and its queued changes are withdrawn. The sync will not offer it back unless the builder prices it again; Restore under Rejected brings it back sooner.`)) return;
+    const view = changesRef.current.status;
     setBusy((b) => new Set(b).add(group.key));
     inFlight.current.add(group.key);
+    ahead.current.add(group.key);
+    startLeaving([group], "remove");
+    count("remove", 1);
     try {
       const res = await fetch(`/api/internal/floorplans/changes/${group.lead.id}/remove-plan`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
       const removed = (data?.removed ?? []) as { planKey: string; name: string; quickMoveIn: boolean; status: string; error: string | null }[];
+      // The quick move-ins it took off the site follow it up, one after another.
+      const homes = new Set(removed.filter((r) => r.status === "synced").map((r) => groupKeyOf({ ...group.lead, plan_key: r.planKey })));
+      const planOff = homes.delete(group.key);
+      const chained = groupChanges(changesRef.current.rows).filter((g) => homes.has(g.key));
+      if (planOff || chained.length) dropStaleReads();
+      if (!planOff) callBack(group, "remove", 1, view);
+      startLeaving(chained, "remove");
+      count("remove", chained.length);
       if (!res.ok || removed.some((r) => r.status !== "synced")) {
         const lines = removed.map((r) => `${r.name}: ${r.status === "synced" ? "removed" : r.status}${r.error ? ` (${r.error})` : ""}`);
         alert(`Remove ${name}: ${data?.error ?? "not everything came off"}${lines.length ? `\n\n${lines.join("\n")}` : ""}`);
-      } else {
-        // It goes up with the quick move-ins it took off the site, one after another.
-        const homes = new Set(removed.map((r) => groupKeyOf({ ...group.lead, plan_key: r.planKey })));
-        homes.delete(group.key);
-        const chained = groupChanges(changesRef.current.rows).filter((g) => homes.has(g.key));
-        dropStaleReads();
-        startLeaving([group, ...chained], "remove");
-        count("remove", 1 + chained.length);
       }
+    } catch (e) {
+      callBack(group, "remove", 1, view);
+      alert(`Remove ${name} failed: ${e instanceof Error ? e.message : String(e)}. Check the site before trying again.`);
     } finally {
+      ahead.current.delete(group.key);
       inFlight.current.delete(group.key);
       setBusy((b) => {
         const next = new Set(b);

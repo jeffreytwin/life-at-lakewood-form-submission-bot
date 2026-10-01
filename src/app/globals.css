@@ -1170,8 +1170,8 @@ button.stat-card:hover {
 }
 
 /* ── Floor Plans: a plan leaving the queue (Jeff, 2026-09-29) ──
-   Approve, Reject and Remove each play their own way out once the server
-   has the change; a plan gone from the list some other way only fades.
+   Approve, Reject and Remove each play their own way out as they are
+   clicked, brought back if the server then refuses; a plan gone from the list some other way only fades.
    The stamp, sparks and explosion lie over the page (pixel-effects.ts);
    this is the row's own part. Once it has played, the row folds its height
    away (fp-fold) so the list closes up rather than jumping. The rows move
