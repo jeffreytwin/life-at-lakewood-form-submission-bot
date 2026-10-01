@@ -357,7 +357,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-key`}
         ) : leadDist.distribution.length === 0 ? (
           // Styled like the drafts' ready-for-incoming state (Jeff, 2026-10-01).
           <div className="mission-complete">
-            <div className="mission-complete-title">READY TO TRACK FORM SUBMISSIONS</div>
+            <div className="mission-complete-title">READY TO TRACK HAND RAISES</div>
             <p>This month&apos;s hand raise distribution will appear here as forms come in.</p>
           </div>
         ) : (
