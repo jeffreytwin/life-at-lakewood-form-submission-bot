@@ -11,6 +11,7 @@ import {
   standardGarages,
   standardHomeType,
   standardizePlan,
+  withPlanNamePrefix,
 } from "@/lib/floorplans/standardize";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -363,5 +364,34 @@ describe("readableName: no name in capitals (Jeff, 2026-09-24)", () => {
     expect(got.name).toBe("18355 Arbor Vista Dr");
     expect(got.relatedPlanName).toBe("Hampton II");
     expect(got.planKey).toBe("18355-arbor-vista-dr");
+  });
+});
+
+describe("withPlanNamePrefix", () => {
+  const p = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "x", name: "x", price: null, priceDisplay: null, beds: "", baths: "", sqft: null, garages: null,
+    homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+
+  it("names every Adams plan 'Plan …', and each home's base plan the same (Jeff, 2026-10-02)", () => {
+    const [stood, listed, home, other] = withPlanNamePrefix(
+      [
+        p({ planKey: "1970", name: "1970" }),
+        p({ planKey: "plan-1820", name: "Plan 1820" }),
+        p({ planKey: "7009-166th-place-e", name: "7009 166TH Place E", quickMoveIn: true, relatedPlanName: "1970" }),
+        p({ planKey: "7005-166th-place-e", name: "7005 166TH Place E", quickMoveIn: true, relatedPlanName: "Plan 1820" }),
+      ],
+      "Adams Homes"
+    );
+    expect(stood).toMatchObject({ planKey: "1970", name: "Plan 1970" });
+    expect(listed.name).toBe("Plan 1820");
+    // A home keeps its address; its base plan reads as the plan does.
+    expect(home).toMatchObject({ name: "7009 166TH Place E", relatedPlanName: "Plan 1970" });
+    expect(other.relatedPlanName).toBe("Plan 1820");
+  });
+
+  it("leaves other builders' plans as they are", () => {
+    const plans = [p({ name: "1970" })];
+    expect(withPlanNamePrefix(plans, "Lennar")).toBe(plans);
   });
 });

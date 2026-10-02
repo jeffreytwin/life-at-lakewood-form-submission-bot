@@ -194,6 +194,17 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
       } else if (byBare.get(bareKey(name))) {
         base = byBare.get(bareKey(name)) ?? undefined;
         matchedBy = "plan-name";
+      } else {
+        // A name the plan's own begins with, word for word, where it begins
+        // only one: Cardel's homes say "Sylvan Paired Home" of the plan it
+        // lists as the Sylvan Paired Villa, and three homes at North River
+        // Ranch named a plan the site does not have (Jeff, 2026-10-02).
+        const key = normKey(name);
+        const longer = key ? bases.filter((b) => normKey(b.name).startsWith(`${key}-`)) : [];
+        if (longer.length === 1) {
+          base = longer[0];
+          matchedBy = "plan-name";
+        }
       }
     }
     if (!base) {

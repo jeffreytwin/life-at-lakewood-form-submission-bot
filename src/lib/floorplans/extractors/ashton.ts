@@ -20,6 +20,29 @@
 
 import { documentBase, imageAddress, type PageImage } from "@/lib/floorplans/extractors/plan-page";
 
+/**
+ * The page's own tour, as its photo viewer (#lazy-chp-gallery-modal on
+ * a plan's page, #lazy-qmi-gallery-modal on a home's) names it in
+ * data-tour-url: a plan's model tour ("The Brickell Home Plan
+ * 360° Tour"), a home's own ("Take a 360° Tour of this Home"), and empty
+ * where it has none. Every page also lists the tours of the collection's
+ * other models on their cards, and the general reader took one of those:
+ * both Siestas, which have none, were given Plant's and Brickell's
+ * (Oakfield, Jeff 2026-10-02). Null where the page has no viewer, for the
+ * general reader to look. Exported for tests.
+ */
+export function ashtonTour(html: string): { tour: string | null } | null {
+  // A plan's page calls its viewer "chp", a home's "qmi"; each page also
+  // carries a blank copy for its scripts, whose tour reads "lazy_modal_url".
+  const said = [...html.matchAll(/<[a-z]+\b[^>]*\bid=["']lazy-(?:chp|qmi)-gallery-modal["'][^>]*>/gi)]
+    .map((m) => m[0].match(/\bdata-tour-url=["']([^"']*)["']/i)?.[1])
+    .filter((v): v is string => v !== undefined)
+    .map((v) => v.replace(/&amp;/gi, "&").trim());
+  const tour = said.find((v) => /^https?:\/\//i.test(v));
+  if (tour) return { tour };
+  return said.includes("") ? { tour: null } : null;
+}
+
 /** Whether a page is Ashton Woods': their pictures are read by this module, not the general reader. */
 export function isAshtonPage(url: string | null | undefined): boolean {
   try {

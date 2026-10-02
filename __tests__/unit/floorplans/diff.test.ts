@@ -235,6 +235,12 @@ describe("tours that are not a change (Jeff, 2026-09-25)", () => {
     expect(mergeForUpdate(plan({ virtualTourUrl: modsy }), plan({ virtualTourUrl: null, priceDisplay: "$1" })).virtualTourUrl).toBe(modsy);
   });
 
+  it("takes away a working tour where the page said it has none (Ashton Woods' Siesta, 2026-10-02)", () => {
+    const plant = "https://my.matterport.com/show/?m=N1ZYSGXAVVS";
+    expect(labels({ virtualTourUrl: plant }, { virtualTourUrl: null, tourStated: true })).toEqual(["virtual tour"]);
+    expect(mergeForUpdate(plan({ virtualTourUrl: plant }), plan({ virtualTourUrl: null, tourStated: true, priceDisplay: "$1" })).virtualTourUrl).toBeNull();
+  });
+
   it("does take away a link that is not a tour", () => {
     expect(labels({ virtualTourUrl: "https://ifp.thebdxinteractive.com/NealCommunities-Windward-Kiawah" }, { virtualTourUrl: null })).toEqual(["virtual tour"]);
     expect(labels({ virtualTourUrl: "https://hd.lennar.com/tours/3914/" }, { virtualTourUrl: null })).toEqual(["virtual tour"]);

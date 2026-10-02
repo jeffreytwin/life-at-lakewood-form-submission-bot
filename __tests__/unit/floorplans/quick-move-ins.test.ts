@@ -70,6 +70,40 @@ describe("nearlySameKey", () => {
 });
 
 describe("linkQuickMoveIns", () => {
+  it("ties a home to the one plan whose name begins with the name it gives (Cardel, Jeff 2026-10-02)", () => {
+    // North River Ranch: the homes say "Sylvan Paired Home", the plans are
+    // the "… Paired Villa"s, and Brighton is a plan beside Brighton Rf.
+    const home = (name: string, relatedPlanName: string) =>
+      plan({ planKey: name.toLowerCase().replace(/ /g, "-"), name, quickMoveIn: true, relatedPlanName });
+    const linked = linkQuickMoveIns([
+      plan({ planKey: "birchwood-paired-villa", name: "Birchwood Paired Villa" }),
+      plan({ planKey: "sylvan-paired-villa", name: "Sylvan Paired Villa" }),
+      plan({ planKey: "timberland-paired-villa", name: "Timberland Paired Villa" }),
+      plan({ planKey: "brighton", name: "Brighton" }),
+      plan({ planKey: "brighton-rf", name: "Brighton Rf" }),
+      home("17017 Wading River Ave", "Birchwood Paired"),
+      home("10725 Wading River Ave", "Sylvan Paired"),
+      home("10721 Wading River Ave", "Timberland Paired"),
+      home("11830 Richmond Trail", "Brighton"),
+    ]).filter((p) => p.quickMoveIn);
+    expect(linked.map((h) => [h.relatedPlanName, h.relatedPlanKey])).toEqual([
+      ["Birchwood Paired Villa", "birchwood-paired-villa"],
+      ["Sylvan Paired Villa", "sylvan-paired-villa"],
+      ["Timberland Paired Villa", "timberland-paired-villa"],
+      // The plan of the very name, not the longer one beside it.
+      ["Brighton", "brighton"],
+    ]);
+  });
+
+  it("leaves a home whose name begins two plans' names unmatched", () => {
+    const [, , home] = linkQuickMoveIns([
+      plan({ planKey: "maple-paired-villa", name: "Maple Paired Villa" }),
+      plan({ planKey: "maple-paired-home", name: "Maple Paired Home" }),
+      plan({ planKey: "1-elm-st", name: "1 Elm St", quickMoveIn: true, relatedPlanName: "Maple Paired" }),
+    ]);
+    expect(home.relatedPlanKey).toBeNull();
+  });
+
   it("ties a home off a builder's own inventory page to the plan it names", () => {
     // Stock lists its homes for sale away from its plans, each named by its
     // address with the plan printed above it (Jeff, 2026-09-22). The home's
