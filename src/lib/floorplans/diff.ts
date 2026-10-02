@@ -165,7 +165,9 @@ export function tourChanged(current: NormalizedPlan, plan: NormalizedPlan): bool
   const next = plan.virtualTourUrl?.trim() ?? "";
   const before = current.virtualTourUrl?.trim() ?? "";
   if (next === before) return false;
-  if (!next) return Boolean(before) && !asTour(before);
+  // A tour that did not come back may only not have been found, and a
+  // working one is kept, unless the page said it has none (tourStated).
+  if (!next) return Boolean(before) && (!asTour(before) || plan.tourStated === true);
   return true;
 }
 

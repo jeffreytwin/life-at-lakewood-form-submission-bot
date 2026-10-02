@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ashtonPictures, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
+import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 
 // Duval in Oakfield Trails Signature, as its page draws it (2026-09-29).
 const widen = (path: string, size = "w=1000&amp;h=760&amp;crop=yes&amp;quality=80") => `https://awh.widen.net/content/${path}?${size}`;
@@ -73,5 +73,42 @@ describe("an Ashton Woods page's pictures (Duval, Jeff 2026-09-29)", () => {
     expect(isAshtonPage("https://www.ashtonwoods.com/tampa/oakfield-trails-traditional/duval")).toBe(true);
     expect(isAshtonPage("https://www.kolterhomes.com/ashtonwoods.com")).toBe(false);
     expect(isAshtonPage(null)).toBe(false);
+  });
+});
+
+describe("ashtonTour", () => {
+  // Oakfield Trails' pages (2026-10-02): the photo viewer names the page's
+  // own tour; the cards below list the other models' tours.
+  const viewer = (tour: string) =>
+    `<div class="modal modal--linear-gallery modal-gallery fade js-community-photos-list" data-tour-url="${tour}" id="lazy-chp-gallery-modal" tabindex="-1">`;
+  const cards =
+    '<a class="property-card__action" href="https://my.matterport.com/show/?m=N1ZYSGXAVVS">Virtual Tour</a>' +
+    '<a class="property-card__action" href="https://my.matterport.com/show/?m=PGRgMuog2b1">Virtual Tour</a>';
+
+  it("takes the tour the page names as its own", () => {
+    expect(ashtonTour(viewer("https://my.matterport.com/show/?m=PGRgMuog2b1") + cards)).toEqual({ tour: "https://my.matterport.com/show/?m=PGRgMuog2b1" });
+    // A home's own tour, written with &amp;.
+    expect(ashtonTour(viewer("https://my.matterport.com/show/?m=VeHUNNA562F&amp;brand=0&amp;mls=1&amp;"))).toEqual({
+      tour: "https://my.matterport.com/show/?m=VeHUNNA562F&brand=0&mls=1&",
+    });
+  });
+
+  it("reads a home's viewer, and not the blank copy kept for the page's scripts", () => {
+    const home = (tour: string) => `<div class="modal modal-gallery" data-tour-url="${tour}" id="lazy-qmi-gallery-modal" tabindex="-1">`;
+    const blank = viewer("lazy_modal_url");
+    expect(ashtonTour(home("https://www.zillow.com/view-imx/8b6ddbe7?wl=true&amp;initialViewType=pano") + home("lazy_modal_url"))).toEqual({
+      tour: "https://www.zillow.com/view-imx/8b6ddbe7?wl=true&initialViewType=pano",
+    });
+    expect(ashtonTour(blank + viewer("https://my.matterport.com/show/?m=n5M65YLMtSC"))).toEqual({ tour: "https://my.matterport.com/show/?m=n5M65YLMtSC" });
+    // Only the blank copy: the page says nothing either way.
+    expect(ashtonTour(blank)).toBeNull();
+  });
+
+  it("says there is none where the page names none, whatever its cards list", () => {
+    expect(ashtonTour(viewer("") + viewer("lazy_modal_url") + cards)).toEqual({ tour: null });
+  });
+
+  it("leaves a page with no viewer to the general reader", () => {
+    expect(ashtonTour(cards)).toBeNull();
   });
 });

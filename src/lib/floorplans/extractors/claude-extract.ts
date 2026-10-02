@@ -24,7 +24,7 @@ import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
 import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
 import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
-import { ashtonPictures, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
+import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -878,6 +878,7 @@ export async function readPlanPageWithClaude(
   // title and "View Photos", and nothing after them (ashton.ts). A plan's
   // tiles are its outside, but for the interior "View Photos" also shows.
   const ashton = isAshtonPage(page_.url || plan.sourceUrl) ? ashtonPictures(html, page_.url) : null;
+  const ownTour = isAshtonPage(page_.url || plan.sourceUrl) ? ashtonTour(html) : null;
   const ashtonPhotos = ashton
     ? plan.quickMoveIn
       ? [...ashton.hero, ...ashton.photos]
@@ -1068,13 +1069,19 @@ export async function readPlanPageWithClaude(
     // the tour, and that is not the tour (Jeff, 2026-09-22). Failing that,
     // the link the page labels as its tour, then one hidden in its own
     // scripts, then one Claude read off the text.
-    virtualTourUrl: bestTour([
-      plan.virtualTourUrl,
-      tourLinkIn(html),
-      tourUrlIn(html),
-      page.virtualTourUrl?.trim(),
-      viewer.tour,
-    ]),
+    // Where the page's markup names its own tour, or names none, that
+    // decides (ashton.ts, ashtonTour).
+    virtualTourUrl: ownTour
+      ? ownTour.tour
+      : bestTour([
+          plan.virtualTourUrl,
+          tourLinkIn(html),
+          tourUrlIn(html),
+          page.virtualTourUrl?.trim(),
+          viewer.tour,
+        ]),
+    ...(ownTour ? { tourStated: true } : {}),
+    ...(ownTour && !ownTour.tour ? { virtualTourImage: null } : {}),
     galleryImages: photos,
     blueprintImages: blueprints,
     // What the list said of a picture stays with it at its larger size.

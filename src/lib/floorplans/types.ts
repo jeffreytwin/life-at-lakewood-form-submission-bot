@@ -121,6 +121,14 @@ export interface NormalizedPlan {
    * gone, so the diff leaves those fields alone (diff.ts).
    */
   pageUnread?: boolean;
+  /**
+   * The plan's own page says in its markup which tour is the plan's, and
+   * says so even where it has none: Ashton Woods' pages list the tours of
+   * the collection's other models, and Siesta, which has none, was given
+   * Plant's and Brickell's (ashton.ts, ashtonTour; Jeff, 2026-10-02). With
+   * this set, a tour gone from the run is gone, not unread (diff.ts).
+   */
+  tourStated?: boolean;
   raw?: Record<string, unknown>;
 }
 

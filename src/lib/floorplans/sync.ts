@@ -13,6 +13,7 @@
 //   builder's photo changes reach the site instead of freezing at the add.
 
 import { withoutCommunityPictures } from "@/lib/floorplans/community-pictures";
+import { withoutCommunityTour } from "@/lib/floorplans/community-tours";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
@@ -37,7 +38,7 @@ import { alreadyFiled, filedAsBefore, type FiledHome } from "@/lib/floorplans/ho
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
-import { builderDefaults, standardizePlan } from "@/lib/floorplans/standardize";
+import { builderDefaults, standardizePlan, withPlanNamePrefix } from "@/lib/floorplans/standardize";
 import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutBanners, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
 import { withoutSoldHomes } from "@/lib/floorplans/sold-homes";
 import { SERIES_BUILDERS, withSeriesLabels } from "@/lib/floorplans/series-labels";
@@ -590,6 +591,10 @@ export async function preparePlans(
     const standInKeys = new Set(filled.map((p) => p.planKey));
     plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
   }
+  // Every plan named the builder's way, its homes' base plans with it
+  // (standardize.ts, withPlanNamePrefix): Adams' "1970" is "Plan 1970".
+  // And a tour on every plan is the page's, not theirs (community-tours.ts).
+  plans = withoutCommunityTour(withPlanNamePrefix(plans, builder.name));
 
   // A photo the record already has keeps the address it has there, and so
   // what was learned about it (pictures.ts).

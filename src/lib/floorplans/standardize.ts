@@ -173,6 +173,34 @@ export interface BuilderDefaults {
   homeType?: HomeType | null;
 }
 
+/**
+ * The word a builder's plans are named with, where its pages leave it off
+ * some of them. Adams Homes lists "Plan 1820", but a plan kept from its
+ * homes is named as the homes print it, "1970" (Jeff, 2026-10-02): every
+ * Adams plan reads "Plan …", and so does the base plan each home names.
+ */
+const PLAN_NAME_PREFIX: Record<string, string> = { "Adams Homes": "Plan" };
+
+/**
+ * Every plan named the builder's way (PLAN_NAME_PREFIX): a plan named by
+ * its number alone takes the word in front, and a home's base plan the
+ * same. Plan keys are left as they are, so a plan keeps its row on the
+ * site and only its name changes. Pure; exported for tests.
+ */
+export function withPlanNamePrefix(plans: NormalizedPlan[], builderName: string): NormalizedPlan[] {
+  const prefix = PLAN_NAME_PREFIX[builderName];
+  if (!prefix) return plans;
+  const named = (name: string | null | undefined) => {
+    const bare = (name ?? "").trim();
+    return /^\d/.test(bare) ? `${prefix} ${bare}` : name;
+  };
+  return plans.map((p) =>
+    p.quickMoveIn
+      ? p.relatedPlanName ? { ...p, relatedPlanName: named(p.relatedPlanName) } : p
+      : { ...p, name: named(p.name) ?? p.name }
+  );
+}
+
 /** The builder's settings, as far as standardizing cares; anything unrecognized is ignored. */
 export function builderDefaults(config: Record<string, unknown> | null | undefined): BuilderDefaults {
   const homeType = config?.homeType;
