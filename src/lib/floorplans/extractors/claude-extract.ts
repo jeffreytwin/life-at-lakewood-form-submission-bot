@@ -85,7 +85,7 @@ export const EXTRACT_TOOL: Anthropic.Tool = {
           type: "object",
           properties: {
             name: { type: "string", description: "Plan/model name exactly as shown" },
-            price: { type: "number", description: "Base price in dollars; omit if not shown" },
+            price: { type: "number", description: "Base price in dollars; omit if not shown, or if the page gives only a range such as 'Low $500s' or 'High $400s' rather than a price" },
             beds: { type: "string", description: "Bedrooms, e.g. '3' or '3 - 4'" },
             baths: { type: "string", description: "Bathrooms, e.g. '2' or '2.5 - 3'" },
             sqft: { type: "number", description: "Square footage" },
@@ -427,6 +427,28 @@ const money = (n: number | undefined) =>
   typeof n === "number" && n > 0 ? "$" + n.toLocaleString("en-US") : null;
 
 /**
+ * A price read off a page, or none where the page gives only a bracket.
+ * Homes by Towne prices some plans as "High $400s" or "Low $500s", which
+ * the reading gave back as $400,000 and $500,000 — Galley, in the high
+ * $400s, went to the site at $400,000 (Shellstone, 2026-10-02). A round
+ * price whose bracket the page shows ("$400s", "$400Ks", "$1.2Ms"), and
+ * which the page never writes out, is the bracket. Exported for tests.
+ */
+export function statedPrice(price: number | null | undefined, text: string): number | null {
+  if (typeof price !== "number" || !(price > 0)) return null;
+  if (price % 10_000 !== 0) return price;
+  const written = new RegExp(`\\$\\s?${price.toLocaleString("en-US")}(?![\\d,])|\\$\\s?${price}(?!\\d)`);
+  if (written.test(text)) return price;
+  const hundreds = Math.floor(price / 100_000) * 100;
+  const millions = price >= 1_000_000 && price % 100_000 === 0 ? String(price / 1_000_000) : null;
+  const bracket = new RegExp(
+    `\\$\\s?${hundreds}(?:,000)?K?'?s\\b` + (millions ? `|\\$\\s?${millions.replace(".", "\\.")}\\s?M(?:'?s\\b|illions)` : ""),
+    "i"
+  );
+  return bracket.test(text) ? null : price;
+}
+
+/**
  * The tour hosts builders use. Stock keeps its Matterport links in the
  * page's React payload rather than in a link or an iframe, and every
  * script goes out with distillation, so the raw HTML is searched for one.
@@ -512,7 +534,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
   input_schema: {
     type: "object" as const,
     properties: {
-      price: { type: "number", description: "The plan's price in dollars as the page shows it, e.g. 'Priced $353,999' or 'From $410,900'; omit if the page shows none" },
+      price: { type: "number", description: "The plan's price in dollars as the page shows it, e.g. 'Priced $353,999' or 'From $410,900'; omit if the page shows none, or only a range such as 'Low $500s' or 'High $400s'" },
       garages: { type: "string", description: "Garage count as the page gives it, e.g. '3 car' or 'Two 2-Car Garage'" },
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
@@ -1021,7 +1043,7 @@ export async function readPlanPageWithClaude(
   photos.splice(0, photos.length, ...viewer.photos);
   // A list gives the plans it prices; the rest carry their price on their
   // own page, in a band under the title (Jeff, 2026-09-22, SimplyDwell).
-  const price = plan.price ?? (typeof page.price === "number" && page.price > 0 ? page.price : null);
+  const price = plan.price ?? statedPrice(page.price, content);
   // A floor plan whose page embeds Zonda's viewer has its counts from the
   // viewer, as ranges whose top the site shows (zonda.ts; Homes by Towne,
   // Jeff 2026-09-26). A home's own counts are its own.
@@ -1214,11 +1236,12 @@ async function listPage(
     // A home named by its street address is a home, whatever this reading
     // said (namesAnAddress).
     const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true || namesAnAddress(name);
+    const price = statedPrice(p.price, content);
     return {
       planKey: normKey(name),
       name,
-      price: p.price ?? null,
-      priceDisplay: money(p.price),
+      price,
+      priceDisplay: money(price ?? undefined),
       beds: p.beds ?? "",
       baths: p.baths ?? "",
       sqft: p.sqft ?? null,
