@@ -8,8 +8,8 @@
 
 import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
 
-/** A tour as the tour it opens: a Matterport by its model, anything else by its address. */
-function tourKey(url: string | null | undefined): string {
+/** A tour as the tour it opens: a Matterport by its model, anything else by its address. Exported for tour-review.ts. */
+export function tourKey(url: string | null | undefined): string {
   const u = (url ?? "").trim();
   if (!u) return "";
   const model = u.match(/matterport\.com\/(?:show\/?\?(?:[^#]*&)?m=|models\/|discover\/space\/)([A-Za-z0-9]+)/i)?.[1];

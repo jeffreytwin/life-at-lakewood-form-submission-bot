@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     const { data: rows, error: loadError } = await supabase
       .from("fp_pending_changes")
-      .select("id, site_id, community_id, builder_id, plan_key, change_type, status, created_at, updated_at, proposed_record")
+      .select("id, site_id, community_id, builder_id, plan_key, change_type, field_changed, status, created_at, updated_at, proposed_record")
       .in("id", ids)
       .eq("status", "pending");
     if (loadError) throw loadError;

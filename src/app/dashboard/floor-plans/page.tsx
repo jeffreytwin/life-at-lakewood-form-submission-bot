@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { groupChanges, groupKeyOf, type ChangeGroup } from "@/lib/floorplans/group-changes";
+import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
 import { HOME_TYPES, standardGarages } from "@/lib/floorplans/standardize";
@@ -71,6 +72,8 @@ interface ProposedRecord {
   userEditedFields?: string[];
   /** Every photo looked at and the gallery put in order in the background (sort-queue.ts). */
   photosSorted?: boolean;
+  /** Why the weekly tour review put this plan's tour to a person (tour-review.ts). */
+  tourReview?: { reason?: string } | null;
 }
 
 interface PendingChange {
@@ -1925,11 +1928,22 @@ export default function FloorPlansPage() {
                       <td>
                         {g.kind === "update" && fieldRows.length > 0 ? (
                           <div className="text-sm">
-                            {fieldRows.map((r) => (
-                              <div key={r.id}>
-                                {r.field_changed}: <s className="text-muted">{formatValue(r.field_changed, r.old_value)}</s> → <strong>{formatValue(r.field_changed, r.new_value)}</strong>
-                              </div>
-                            ))}
+                            {fieldRows.map((r) =>
+                              r.field_changed === TOUR_REVIEW_LABEL ? (
+                                // The weekly tour review (tour-review.ts): the tour to open, and why it was put here.
+                                <div key={r.id}>
+                                  {r.field_changed}:{" "}
+                                  <a href={r.old_value ?? undefined} target="_blank" rel="noreferrer">open the tour ↗</a> → <strong>no tour</strong>
+                                  {r.proposed_record?.tourReview?.reason && (
+                                    <div className="text-muted">Why: {r.proposed_record.tourReview.reason}. Approve takes it off the site; Reject keeps it.</div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div key={r.id}>
+                                  {r.field_changed}: <s className="text-muted">{formatValue(r.field_changed, r.old_value)}</s> → <strong>{formatValue(r.field_changed, r.new_value)}</strong>
+                                </div>
+                              )
+                            )}
                           </div>
                         ) : (
                           <span>{detailLine(rec)}</span>
