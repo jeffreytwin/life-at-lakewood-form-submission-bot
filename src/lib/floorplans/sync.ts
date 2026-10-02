@@ -34,6 +34,7 @@ import { extractArHomes } from "@/lib/floorplans/extractors/arhomes";
 import { extractCardel } from "@/lib/floorplans/extractors/cardel";
 import { comparedFields, fieldChanges, mergeForUpdate, splitOnItsOwn, withDescriptionFrom, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { withKnownTours } from "@/lib/floorplans/tours";
+import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { alreadyFiled, filedAsBefore, type FiledHome } from "@/lib/floorplans/home-identity";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { describeCoverage } from "@/lib/floorplans/coverage";
@@ -746,6 +747,8 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       // 2026-09-25) gives way to the working tour with its number, where a
       // record of the community already shows it (tours.ts).
       plans = withKnownTours(plans, (canonical ?? []).map((c) => (c.record as NormalizedPlan | null)?.virtualTourUrl));
+      // And a Matterport tour whose model is gone comes off (dead-tours.ts).
+      plans = withoutDeadTours(plans, await goneModels(plans));
       // A home read under another name than it was filed by is that home, not
       // a new one (home-identity.ts).
       plans = filedAsBefore(plans, canonical ?? []);
