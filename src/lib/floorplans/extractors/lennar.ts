@@ -41,6 +41,19 @@ function field(e: ApolloEntity, name: string): unknown {
 const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 /**
+ * A plan's starting price, or none where Lennar shows words in its place.
+ * A plan not yet priced carries `customPrice: "Coming Soon"`, which the site
+ * shows instead of the price, and a stand-in `startingPrice` that is not
+ * one: $999,999 on every plan at Prosperity Lakes and Seaire, $51,000 on
+ * Calusa Country Club's (2026-10-02). Exported for tests.
+ */
+export function planPrice(e: ApolloEntity): number | null {
+  if (typeof e.customPrice === "string" && e.customPrice.trim()) return null;
+  const n = e.startingPrice;
+  return typeof n === "number" && n > 0 && n !== 999_999 ? n : null;
+}
+
+/**
  * What a community says it builds — its `types` and its name ("The
  * Townhomes", "Veranda Condominiums", "Coach Homes") — as the site's home
  * type. Exported for tests.
@@ -121,11 +134,12 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
     const gallery = planGallery(e);
     const garages = e.garages != null ? String(e.garages) : null;
     const tour = typeof e.virtualTourUrl === "string" && e.virtualTourUrl ? e.virtualTourUrl : null;
+    const price = planPrice(e);
     out.push({
       planKey: normKey(name),
       name,
-      price: typeof e.startingPrice === "number" && e.startingPrice > 0 ? e.startingPrice : null,
-      priceDisplay: money(e.startingPrice),
+      price,
+      priceDisplay: money(price),
       beds: e.beds != null ? String(e.beds) : "",
       baths: e.halfBaths ? `${e.baths}.5` : e.baths != null ? String(e.baths) : "",
       sqft: typeof e.sqft === "number" ? e.sqft : null,
