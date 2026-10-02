@@ -48,7 +48,7 @@ const PLAN_IDENTITY = "site_id,community_id,builder_id,plan_key";
 /** Wix answers a write to an item deleted from the CMS with 404 WDE0073. */
 const isGoneFromWix = (error: unknown): boolean => error instanceof WixApiError && error.status === 404;
 
-interface ProposedRecord {
+export interface ProposedRecord {
   planKey: string;
   name: string;
   /** The row's page address on the site, given on the first write (planSlug). */
@@ -434,7 +434,7 @@ export function planSlug(planName: string, communityName: string, builderName: s
   return normKey(`${planName} ${communityName} ${builderName}`);
 }
 
-interface WixRowContext {
+export interface WixRowContext {
   communityName: string;
   builderName: string;
   /** The row's page address (planSlug), the one it already has first. */
@@ -484,7 +484,10 @@ function toWixData(rec: ProposedRecord, ctx: WixRowContext): WixItemData {
     garages: rec.garages ?? undefined,
     squareFeet: rec.sqft ? rec.sqft.toLocaleString("en-US") : undefined,
     virtualTourLink: rec.virtualTourUrl?.trim() || undefined,
-    ...(tourImage ? { virtualTourImageV2: tourImage } : {}),
+    // The button goes with the link, and goes when the link goes: left
+    // out, the row's old button was kept beside an empty link (Ashton
+    // Woods' Siestas, Jeff 2026-10-02).
+    virtualTourImageV2: tourImage ?? undefined,
     // The main image is gallery position #1, always; a plan with drawings
     // and no photos leads with its drawing rather than nothing.
     ...(gallery[0] ?? blueprints[0] ? { floorPlanImage: (gallery[0] ?? blueprints[0]).src } : {}),
@@ -529,6 +532,16 @@ function fieldsKeptFromWix(data: Record<string, unknown> | undefined): Record<st
   return Object.fromEntries(Object.entries(data ?? {}).filter(([key]) => !key.startsWith("_")));
 }
 
+/**
+ * What a write sends for a row: the fields the row has that the pipeline
+ * does not own, then the record's. A field the record leaves undefined is
+ * left out of what is sent, and so off the row, since a Wix update
+ * replaces the whole item. Pure; exported for tests.
+ */
+export function wixRowFor(current: Record<string, unknown> | undefined, rec: ProposedRecord, ctx: WixRowContext): WixItemData {
+  return { ...fieldsKeptFromWix(current), ...toWixData(rec, ctx) };
+}
+
 /** The site, community and builder a plan belongs to, as the write needs them. */
 interface PlanScope {
   site: { id: string; domain?: string | null; wix_site_id: string; wix_collection_id: string; insert_publish_mode: string | null };
@@ -562,19 +575,16 @@ async function writePlanToWix(
     (typeof rec.urlSlug === "string" && rec.urlSlug.trim()) ||
     (typeof current?.data?.urlSlug === "string" && current.data.urlSlug.trim()) ||
     planSlug(rec.name, community.name, builder.name);
-  const data: WixItemData = {
-    ...fieldsKeptFromWix(current?.data),
-    ...toWixData(rec, {
-      communityName: community.name,
-      builderName: builder.name,
-      gallery,
-      blueprints,
-      tourImage,
-      basePlanName: await basePlanNameOf(ids, rec),
-      refs: await referencesFor(site, builder.name, community.name),
-      urlSlug,
-    }),
-  };
+  const data = wixRowFor(current?.data, rec, {
+    communityName: community.name,
+    builderName: builder.name,
+    gallery,
+    blueprints,
+    tourImage,
+    basePlanName: await basePlanNameOf(ids, rec),
+    refs: await referencesFor(site, builder.name, community.name),
+    urlSlug,
+  });
   const asDraft = site.insert_publish_mode !== "published";
   if (current && wixRecordId) {
     const isDraft = String(current.data?._publishStatus ?? "").toUpperCase() === "DRAFT";
