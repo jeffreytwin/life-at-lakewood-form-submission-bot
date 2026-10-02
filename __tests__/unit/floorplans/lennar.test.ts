@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, planDrawings, planGallery, plansFromPage, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
+import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
@@ -105,6 +105,33 @@ describe("Lennar: what a community builds", () => {
     const home = plansFromPage(apollo, "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes").find((p) => p.quickMoveIn)!;
     expect(home.name).toBe("2805 Sweet Pepper Way");
     expect(home.galleryImages).toEqual([]);
+  });
+});
+
+describe("planPrice", () => {
+  it("takes the starting price of a plan Lennar prices", () => {
+    expect(planPrice(dover)).toBe(330400);
+    // The Princeton at Calusa Country Club: coming soon, and priced.
+    expect(planPrice({ startingPrice: 670999, status: "COMING_SOON", customPrice: null })).toBe(670999);
+  });
+
+  it("takes none for a plan Lennar shows as Coming Soon in place of a price (2026-10-02)", () => {
+    // Prosperity Lakes and Seaire: every plan at $999,999.
+    expect(planPrice({ startingPrice: 999999, status: "COMING_SOON", customPrice: "Coming Soon" })).toBeNull();
+    // Calusa Country Club: $51,000.
+    expect(planPrice({ startingPrice: 51000, status: "COMING_SOON", customPrice: "Coming Soon" })).toBeNull();
+    expect(planPrice({ startingPrice: 999999 })).toBeNull();
+    expect(planPrice({ startingPrice: 0 })).toBeNull();
+  });
+
+  it("leaves a Coming Soon plan with no price on the page it is read from", () => {
+    const apollo = {
+      "PlanType:p_1": { ...dover, name: "Steely", startingPrice: 999999, status: "COMING_SOON", customPrice: "Coming Soon" },
+    };
+    const [plan] = plansFromPage(apollo, "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes");
+    expect(plan.comingSoon).toBe(true);
+    expect(plan.price).toBeNull();
+    expect(plan.priceDisplay).toBeNull();
   });
 });
 
