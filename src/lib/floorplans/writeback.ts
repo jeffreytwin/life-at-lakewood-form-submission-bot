@@ -41,6 +41,8 @@ import { wixImageUri } from "@/lib/listings/types";
 import { copyStoragePath, copyTypeOf, measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta, type NormalizedPlan } from "@/lib/floorplans/types";
 import { ownFieldOnto } from "@/lib/floorplans/diff";
+import { isRefused, refusedTours } from "@/lib/floorplans/tour-review";
+import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
 
 /** A plan is builder + community + name (migration 065); the same trio keys the Wix row's syncKey. */
 const PLAN_IDENTITY = "site_id,community_id,builder_id,plan_key";
@@ -542,6 +544,16 @@ export function wixRowFor(current: Record<string, unknown> | undefined, rec: Pro
   return { ...fieldsKeptFromWix(current), ...toWixData(rec, ctx) };
 }
 
+/**
+ * A record without a tour a person took off its plan in the weekly review
+ * (tour-review.ts): a change queued before that, approved after, would
+ * otherwise put the tour back. Its button goes with it. Pure; exported
+ * for tests.
+ */
+export function withoutRefusedTour(rec: ProposedRecord, refused: Map<string, Set<string>>, planKey: string): ProposedRecord {
+  return isRefused(planKey, rec.virtualTourUrl, refused) ? { ...rec, virtualTourUrl: null, virtualTourImage: null } : rec;
+}
+
 /** The site, community and builder a plan belongs to, as the write needs them. */
 interface PlanScope {
   site: { id: string; domain?: string | null; wix_site_id: string; wix_collection_id: string; insert_publish_mode: string | null };
@@ -676,7 +688,7 @@ export async function applyPendingChange(changeId: string): Promise<{
     const recountFlags = () => checkFlagsAfterWrite(site, builder.name, community.name);
 
     if (change.change_type === "add") {
-      const rec = change.proposed_record as ProposedRecord;
+      const rec = withoutRefusedTour(change.proposed_record as ProposedRecord, await refusedTours(scope, change.plan_key), change.plan_key);
       // A plan another approved addition already wrote is written over, not
       // written again: two runs queued Toll's 17837 Palmiste Dr before the
       // first was approved, and the site got it twice (2026-09-21).
@@ -740,12 +752,17 @@ export async function applyPendingChange(changeId: string): Promise<{
     if (change.change_type === "update") {
       if (!change.wix_record_id) return fail("update change has no wix_record_id");
       // One approved without a review writes its own field onto the record
-      // as it stands now (ownFieldOnto), not the record as the run found it.
+      // as it stands now (ownFieldOnto), not the record as the run found it;
+      // so does a tour the weekly review put to a person, which may be
+      // approved days after it was queued (tour-review.ts).
       const auto = String(change.run_id ?? "").startsWith(AUTO_RUN);
-      const latest = auto && change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
-      const rec = (
-        auto ? ownFieldOnto((latest?.record as NormalizedPlan | null) ?? null, change.proposed_record as NormalizedPlan, change.field_changed) : change.proposed_record
-      ) as ProposedRecord;
+      const ownField = auto || change.field_changed === TOUR_REVIEW_LABEL;
+      const latest = ownField && change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
+      const rec = withoutRefusedTour(
+        (ownField ? ownFieldOnto((latest?.record as NormalizedPlan | null) ?? null, change.proposed_record as NormalizedPlan, change.field_changed) : change.proposed_record) as ProposedRecord,
+        await refusedTours(scope, change.plan_key),
+        change.plan_key
+      );
       const { wixRecordId, asDraft: recreatedAsDraft, urlSlug } = await writePlanToWix(
         { site, community, builder },
         change.plan_key,

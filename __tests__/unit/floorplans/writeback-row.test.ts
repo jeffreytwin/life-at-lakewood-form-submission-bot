@@ -34,3 +34,14 @@ describe("wixRowFor: the virtual tour link and its button go together (Jeff, 202
     expect(out).toMatchObject({ virtualTourLink: "https://my.matterport.com/show/?m=PGRgMuog2b1", virtualTourImageV2: button });
   });
 });
+
+describe("withoutRefusedTour: a change approved after the tour was taken off does not put it back", () => {
+  it("drops a refused tour and its button from the record a write sends", async () => {
+    const { withoutRefusedTour } = await import("@/lib/floorplans/writeback");
+    const refused = new Map([["siesta-oakfield-trails-signature", new Set(["matterport:N1ZYSGXAVVS"])]]);
+    const out = withoutRefusedTour(rec({ virtualTourUrl: "https://my.matterport.com/show/?m=N1ZYSGXAVVS", virtualTourImage: "x.jpg" }), refused, "siesta-oakfield-trails-signature");
+    expect(out).toMatchObject({ virtualTourUrl: null, virtualTourImage: null });
+    expect(withoutRefusedTour(rec({ virtualTourUrl: "https://my.matterport.com/show/?m=PGRgMuog2b1" }), refused, "siesta-oakfield-trails-signature").virtualTourUrl)
+      .toBe("https://my.matterport.com/show/?m=PGRgMuog2b1");
+  });
+});

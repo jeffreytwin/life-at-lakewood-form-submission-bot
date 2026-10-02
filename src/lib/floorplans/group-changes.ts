@@ -5,6 +5,8 @@
 // same name?"), so the Hub shows one row per plan with every field change
 // listed, and approves or rejects the plan's rows together.
 
+import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
+
 export interface GroupableChange {
   id: string;
   site_id: string;
@@ -15,6 +17,7 @@ export interface GroupableChange {
   status: string;
   created_at: string;
   updated_at?: string | null;
+  field_changed?: string | null;
 }
 
 export interface ChangeGroup<T extends GroupableChange> {
@@ -29,9 +32,13 @@ export interface ChangeGroup<T extends GroupableChange> {
   createdAt: string;
 }
 
-/** One plan in one community for one builder on one site. */
+/**
+ * One plan in one community for one builder on one site. A tour the weekly
+ * review puts to a person is a group of its own: approving it takes only
+ * the tour off (ownFieldOnto), whatever else of the plan is waiting.
+ */
 export const groupKeyOf = (c: GroupableChange): string =>
-  `${c.site_id}|${c.community_id}|${c.builder_id}|${c.plan_key}`;
+  `${c.site_id}|${c.community_id}|${c.builder_id}|${c.plan_key}${c.field_changed === TOUR_REVIEW_LABEL ? "|tour-review" : ""}`;
 
 export function groupChanges<T extends GroupableChange>(changes: T[]): ChangeGroup<T>[] {
   const byKey = new Map<string, T[]>();
