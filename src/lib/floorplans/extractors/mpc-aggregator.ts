@@ -82,6 +82,20 @@ const num = (s: string | undefined): number | null => {
 };
 
 /**
+ * The first price a card writes out in full ("$684,690", "FROM $429,990"),
+ * or none. Every digit run together, "From the Low $500s" was $500 and a
+ * range "$429,990 - $499,990" a twelve-digit price; a bracket is not a
+ * price (claude-extract.ts, statedPrice; 2026-10-02). Exported for tests.
+ */
+export function priceOf(s: string | undefined): number | null {
+  for (const m of (s ?? "").matchAll(/\$\s?(\d{1,3}(?:,\d{3})+|\d{5,})(?![\d,.]|\s?(?:'?s\b|K\b|M\b))/gi)) {
+    const n = Number(m[1].replace(/,/g, ""));
+    if (n >= 10_000) return n;
+  }
+  return null;
+}
+
+/**
  * The builder a card names: Wellen Park's home search writes it as
  * data-builder-name, a builder's own page there as data-builder
  * (wellenpark.com/builder/lee-wheterington-homes, 2026-09-25).
@@ -109,7 +123,7 @@ export function parseHotelCards(html: string, origin: string): { plan: Normalize
         .replace(/&#8217;/g, "'");
     const item = (cls: string) => stripTags(block.match(new RegExp(`<li class="${cls}\\b[^"]*">([\\s\\S]*?)</li>`, "i"))?.[1] ?? "");
     const priceText = stripTags(block.match(/<h4 class="[^"]*\bdark-grey\b[^"]*">([\s\S]*?)<\/h4>/i)?.[1] ?? "");
-    const price = num(priceText);
+    const price = priceOf(priceText);
     const kinds = stripTags(block.match(/<p class="subhead[^"]*">([\s\S]*?)<\/p>/i)?.[1] ?? "").split(/\s*,\s*/).filter(Boolean);
     const picture = block.match(/background-image:\s*url\(([^)]+)\)/i)?.[1]?.replace(/^['"]|['"]$/g, "") ?? null;
     const link = block.match(/<a class="full-link" href="([^"]+)"/i)?.[1] ?? null;
@@ -163,7 +177,7 @@ export function normalizeCard(card: Card): NormalizedPlan | null {
   if (!name) return null;
   // Price: h4 is exact ("$684,690") or ranged ("FROM $429,990"); the data
   // attribute is in thousands and lossy, so prefer h4.
-  const price = num(card.h4);
+  const price = priceOf(card.h4);
   const beds = num(attrs.beds);
   const baths = num(attrs.baths);
   const sqft = num(attrs.sqft);

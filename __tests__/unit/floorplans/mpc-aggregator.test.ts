@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { builderPlanPage, extractMpcAggregator, folderOf, listPageHtml, mpcHomeType, parseCards, normalizeCard, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { builderPlanPage, extractMpcAggregator, folderOf, listPageHtml, mpcHomeType, parseCards, normalizeCard, priceOf, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -199,5 +199,22 @@ describe("the list page asked for again when the first ask gets no answer (Neal'
     const { get, asked } = answers(new Response("", { status: 404 }), new Response("<html></html>"));
     await expect(listPageHtml(url, get, 0)).rejects.toThrow(`fetch ${url}: 404`);
     expect(asked()).toBe(1);
+  });
+});
+
+describe("priceOf", () => {
+  it("reads the first price a card writes out in full", () => {
+    expect(priceOf("$684,690")).toBe(684690);
+    expect(priceOf("FROM $429,990")).toBe(429990);
+    expect(priceOf("Homes From $4,200,000")).toBe(4200000);
+    expect(priceOf("$429,990 - $499,990")).toBe(429990);
+  });
+
+  it("takes no price from a bracket or from words (2026-10-02)", () => {
+    expect(priceOf("From the Low $500s")).toBeNull();
+    expect(priceOf("High $400s")).toBeNull();
+    expect(priceOf("From the $1Ms")).toBeNull();
+    expect(priceOf("Coming Soon")).toBeNull();
+    expect(priceOf(undefined)).toBeNull();
   });
 });

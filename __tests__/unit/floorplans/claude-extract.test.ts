@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   keptFromPage,
+  statedPrice,
   asList,
   distinctKey,
   isTourUrl,
@@ -735,5 +736,31 @@ describe("distill leaves out tracking pixels (Kolter, 2026-09-30)", () => {
     expect(text).toContain("[IMG https://cdn.kolterhomes.com/morgan-kitchen.jpg]");
     expect(text).toContain("[IMG https://cdn.kolterhomes.com/morgan-great-room.jpg]");
     expect(text).toContain("Morgan · $579,990");
+  });
+});
+
+describe("statedPrice", () => {
+  // Homes by Towne's Shellstone plan pages, as distilled (2026-10-02).
+  const galley = "Shellstone at Waterside Galley 1,692 SF Base Price: $ High $400s Overview";
+  const banyan = "Shellstone at Waterside Banyan 1,747 SF Base Price: $ Low $500s Overview";
+
+  it("takes no price where the page gives only a bracket", () => {
+    expect(statedPrice(400000, galley)).toBeNull();
+    expect(statedPrice(500000, banyan)).toBeNull();
+    expect(statedPrice(450000, "Priced from the mid $400Ks")).toBeNull();
+    expect(statedPrice(1200000, "From the $1.2Ms")).toBeNull();
+  });
+
+  it("keeps a price the page writes out, round or not", () => {
+    expect(statedPrice(574900, "Regatta Base Price: $574,900")).toBe(574900);
+    expect(statedPrice(4200000, "The Abaco Homes From $4,200,000")).toBe(4200000);
+    expect(statedPrice(400000, "Galley $400,000 — homes in the $400s")).toBe(400000);
+    // A round price with no bracket beside it is the page's.
+    expect(statedPrice(350000, "7729 Satterfield Ter")).toBe(350000);
+  });
+
+  it("takes none for no price", () => {
+    expect(statedPrice(undefined, galley)).toBeNull();
+    expect(statedPrice(0, galley)).toBeNull();
   });
 });
