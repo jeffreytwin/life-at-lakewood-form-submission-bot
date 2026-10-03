@@ -25,6 +25,7 @@ import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floo
 import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
+import { isMedallionPage, medallionTour } from "@/lib/floorplans/extractors/medallion";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -878,7 +879,12 @@ export async function readPlanPageWithClaude(
   // title and "View Photos", and nothing after them (ashton.ts). A plan's
   // tiles are its outside, but for the interior "View Photos" also shows.
   const ashton = isAshtonPage(page_.url || plan.sourceUrl) ? ashtonPictures(html, page_.url) : null;
-  const ownTour = isAshtonPage(page_.url || plan.sourceUrl) ? ashtonTour(html) : null;
+  // Medallion's are too: the Matterport, else the YouTube video (medallion.ts).
+  const ownTour = isAshtonPage(page_.url || plan.sourceUrl)
+    ? ashtonTour(html)
+    : isMedallionPage(page_.url || plan.sourceUrl)
+      ? medallionTour(html)
+      : null;
   const ashtonPhotos = ashton
     ? plan.quickMoveIn
       ? [...ashton.hero, ...ashton.photos]
@@ -1070,7 +1076,7 @@ export async function readPlanPageWithClaude(
     // the link the page labels as its tour, then one hidden in its own
     // scripts, then one Claude read off the text.
     // Where the page's markup names its own tour, or names none, that
-    // decides (ashton.ts, ashtonTour).
+    // decides (ashton.ts, ashtonTour; medallion.ts, medallionTour).
     virtualTourUrl: ownTour
       ? ownTour.tour
       : bestTour([
@@ -1841,8 +1847,10 @@ export async function readPlanPages(
     // Not one a builder only calls a tour: Perry's "3D Tour" is an
     // interactive drawing, and there is nothing behind it to follow
     // (standardize.ts, which drops it either way).
+    // Nor one the page's own markup named (ashton.ts, medallion.ts): Medallion's
+    // YouTube video is the tour itself, not a page about one.
     const tour = asTour(plan.virtualTourUrl);
-    if (!tour || isTourUrl(tour) || Date.now() + PAGE_READ_MS > deadline) return plan;
+    if (!tour || isTourUrl(tour) || plan.tourStated || Date.now() + PAGE_READ_MS > deadline) return plan;
     const deeper = await tourBehind(tour, opts.read);
     return deeper ? { ...plan, virtualTourUrl: deeper } : plan;
   });
