@@ -10,6 +10,7 @@
 // stand-in route call these.
 
 import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
+import { codeAndName } from "@/lib/floorplans/quick-move-ins";
 
 export interface StandInRule {
   /** The floor plan's key: what a real plan of the same name would carry. */
@@ -28,9 +29,13 @@ export function relatedNameOf(p: NormalizedPlan): string {
 
 /** The quick move-ins that belong to the rule's plan: named for it, or the one the rule was made from. */
 export function homesOfPlan(rule: StandInRule, plans: NormalizedPlan[]): NormalizedPlan[] {
-  return plans.filter(
-    (p) => p.quickMoveIn && (p.planKey === rule.sourcePlanKey || normKey(relatedNameOf(p)) === rule.planKey)
-  );
+  return plans.filter((p) => {
+    if (!p.quickMoveIn) return false;
+    if (p.planKey === rule.sourcePlanKey) return true;
+    // A home may give its plan's code with the name: "F008 - The Truman" (quick-move-ins.ts).
+    const named = relatedNameOf(p);
+    return normKey(named) === rule.planKey || normKey(codeAndName(named)?.name ?? "") === rule.planKey;
+  });
 }
 
 const priceOf = (p: NormalizedPlan): number | null =>

@@ -59,6 +59,13 @@ describe("homesOfPlan", () => {
     const base = plan({ planKey: "kingsdale-elite", name: "Kingsdale Elite" });
     expect(homesOfPlan(rule, [unnamed, other, stranger, base]).map((h) => h.name)).toEqual(["17645 Palmiste Dr", "17800 Palmiste Dr"]);
   });
+
+  it("finds a home that gives the plan's code with its name (David Weekley's \"F008 - The Truman\")", () => {
+    const truman: StandInRule = { planKey: "the-truman", planName: "The Truman", sourcePlanKey: "10732-oak-bend-drive" };
+    const coded = home({ planKey: "10776-oak-bend-drive", name: "10776 Oak Bend Drive", relatedPlanName: "F008 - The Truman" });
+    const bingley = home({ planKey: "10728-oak-bend-drive", name: "10728 Oak Bend Drive", relatedPlanName: "F019 - The Bingley II" });
+    expect(homesOfPlan(truman, [coded, bingley]).map((h) => h.name)).toEqual(["10776 Oak Bend Drive"]);
+  });
 });
 
 describe("standInPlan", () => {
