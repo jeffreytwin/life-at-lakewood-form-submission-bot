@@ -43,6 +43,7 @@ import { normKey, type GalleryMeta, type NormalizedPlan } from "@/lib/floorplans
 import { ownFieldOnto } from "@/lib/floorplans/diff";
 import { isRefused, refusedTours } from "@/lib/floorplans/tour-review";
 import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
+import { liftHomeGuards } from "@/lib/floorplans/removal-guards";
 
 /** A plan is builder + community + name (migration 065); the same trio keys the Wix row's syncKey. */
 const PLAN_IDENTITY = "site_id,community_id,builder_id,plan_key";
@@ -743,6 +744,9 @@ export async function applyPendingChange(changeId: string): Promise<{
           updated_at: new Date().toISOString(),
         })
         .eq("id", changeId);
+      // A plan back on the site after the Remove button took it off brings
+      // back the homes that went with it (removal-guards.ts).
+      if (!rec.quickMoveIn) await liftHomeGuards(scope, change.plan_key);
       if (rec.quickMoveIn && !written) {
         await alertCampaign(
           "other_change",
