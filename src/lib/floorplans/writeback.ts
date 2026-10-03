@@ -721,6 +721,11 @@ export async function applyPendingChange(changeId: string): Promise<{
             source_url: rec.sourceUrl,
             last_seen_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+            // A plan the builder lists again after it was taken off is on the
+            // site again: left marked removed, every run queued it as new, and
+            // approving that would have written it to the site twice
+            // (Lennar's Columbia at Prosperity Lakes, Jeff 2026-10-03).
+            removed_at: null,
           },
           { onConflict: PLAN_IDENTITY }
         )

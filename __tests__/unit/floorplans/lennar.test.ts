@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
+import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
@@ -185,5 +185,29 @@ describe("withPlanPictures", () => {
   it("leaves a home whose plan did not come back as it was", () => {
     const [got] = withPlanPictures([{ ...home, raw: { planId: "PlanType:elsewhere" } }]);
     expect(got.galleryImages).toEqual(["lot-front.jpg"]);
+  });
+});
+
+describe("preferredPlan: two plans of one name in a community (Jeff, 2026-10-03)", () => {
+  // Prosperity Lakes: the Estates' Columbia is MODEL ONLY, the Manors' sells from $358,490 with two homes.
+  const apollo = {
+    "PlanType:p_62037": { ...dover, name: "Columbia", id: "p_62037", url: "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes/the-estates/columbia",
+      startingPrice: 369990, customPrice: "MODEL ONLY", availableHomesitesCount: 0 },
+    "PlanType:p_61248": { ...dover, name: "Columbia", id: "p_61248", url: "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes/the-manors/columbia",
+      startingPrice: 358490, customPrice: null, availableHomesitesCount: 2 },
+  };
+  const [estates, manors] = plansFromPage(apollo, "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes");
+
+  it("keeps the plan that is for sale, whichever was read first", () => {
+    expect(estates.price).toBeNull();
+    expect(preferredPlan(estates, manors)).toBe(manors);
+    expect(preferredPlan(manors, estates)).toBe(manors);
+    expect(manors.priceDisplay).toBe("$358,490");
+  });
+
+  it("between two priced plans, keeps the one with more homes on offer, else the first", () => {
+    const more = { ...estates, price: 369990, raw: { ...estates.raw, homesOnOffer: 3 } };
+    expect(preferredPlan(manors, more)).toBe(more);
+    expect(preferredPlan(manors, { ...more, raw: { ...more.raw, homesOnOffer: 2 } })).toBe(manors);
   });
 });

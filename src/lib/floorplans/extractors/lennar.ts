@@ -153,7 +153,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       galleryImages: gallery.urls,
       galleryMeta: gallery.meta,
       blueprintImages: planDrawings(e),
-      raw: { lennarId: e.id, planId: key },
+      raw: { lennarId: e.id, planId: key, homesOnOffer: typeof e.availableHomesitesCount === "number" ? e.availableHomesitesCount : null },
     });
   }
 
@@ -272,7 +272,10 @@ async function withPlanPage(plan: NormalizedPlan): Promise<NormalizedPlan> {
   if (plan.quickMoveIn || !plan.sourceUrl) return plan;
   try {
     const { apollo, path } = await apolloOf(plan.sourceUrl);
-    const whole = plansFromPage(apollo, path).find((p) => !p.quickMoveIn && p.planKey === plan.planKey);
+    // The plan itself, by Lennar's id: a page may carry another plan of the
+    // same name from another collection (preferredPlan).
+    const onPage = plansFromPage(apollo, path).filter((p) => !p.quickMoveIn && p.planKey === plan.planKey);
+    const whole = onPage.find((p) => p.raw?.planId && p.raw.planId === plan.raw?.planId) ?? onPage[0];
     if (!whole) return plan;
     return {
       ...plan,
@@ -289,6 +292,24 @@ async function withPlanPage(plan: NormalizedPlan): Promise<NormalizedPlan> {
   }
 }
 
+/**
+ * Of two plans of one name in a community, the one that is for sale. A
+ * community's collections may each have a plan of the name: Prosperity
+ * Lakes' Estates show their Columbia as "MODEL ONLY", with no price, and
+ * its Manors sell theirs from $358,490 with two homes on it; the first
+ * read was kept, and the site showed the model at a home's price (Jeff,
+ * 2026-10-03). A priced plan wins over an unpriced one, then the one with
+ * more homes on offer; otherwise the first read stays. Pure; exported for
+ * tests.
+ */
+export function preferredPlan(kept: NormalizedPlan | undefined, next: NormalizedPlan): NormalizedPlan {
+  if (!kept || kept.quickMoveIn || next.quickMoveIn) return kept ?? next;
+  if (kept.price == null && next.price != null) return next;
+  if (kept.price != null && next.price == null) return kept;
+  const homes = (p: NormalizedPlan) => Number(p.raw?.homesOnOffer ?? 0);
+  return homes(next) > homes(kept) ? next : kept;
+}
+
 export async function extractLennar(params: {
   url?: string;
   urls?: string[];
@@ -297,7 +318,7 @@ export async function extractLennar(params: {
   if (!targets.length) throw new Error("lennar extractor requires extractor_params.url");
   const byKey = new Map<string, NormalizedPlan>();
   const keep = (plans: NormalizedPlan[]) => {
-    for (const plan of plans) if (!byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
+    for (const plan of plans) byKey.set(plan.planKey, preferredPlan(byKey.get(plan.planKey), plan));
   };
   for (const target of targets) {
     const { apollo, path, html } = await apolloOf(target);
