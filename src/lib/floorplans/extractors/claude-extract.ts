@@ -26,6 +26,7 @@ import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 import { isMedallionPage, medallionTour } from "@/lib/floorplans/extractors/medallion";
+import { relatedNameFromPage } from "@/lib/floorplans/quick-move-ins";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 const MODEL = "claude-sonnet-5";
@@ -1059,6 +1060,9 @@ export async function readPlanPageWithClaude(
   return {
     ...plan,
     ...homeAddressed(plan, page.address),
+    // A home that names its plan only by code is given the name its page
+    // heads it with (quick-move-ins.ts, relatedNameFromPage).
+    ...(plan.quickMoveIn ? { relatedPlanName: relatedNameFromPage(plan.relatedPlanName, content) ?? plan.relatedPlanName } : {}),
     price,
     priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
     beds: zonda?.beds || plan.beds || (page.beds ?? ""),

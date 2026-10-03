@@ -48,6 +48,28 @@ export function codeAndName(named: string): { code: string; name: string } | nul
 }
 
 /**
+ * The plan a home names only by its code, as the home's own page heads it:
+ * David Weekley's home pages read "Plan #F019 The Bingley II From
+ * $369,990" where the list gave the home's plan as "F019", and a plan the
+ * community no longer offers (North River Ranch's townhomes are built on
+ * the Truman, the Bingley II and the Magbee II, which only their homes
+ * show) had nothing to be named by but its code (Jeff, 2026-10-03). Given
+ * as "F019 - The Bingley II", the code and the name both, for
+ * codeAndName; the related name as it was where the page does not head
+ * the home so. Pure; exported for tests.
+ */
+export function relatedNameFromPage(related: string | null | undefined, pageText: string): string | null {
+  const named = (related ?? "").trim();
+  if (!new RegExp(String.raw`^(?:plan\s*#?\s*)?${PLAN_CODE}$`, "i").test(named)) return named || null;
+  const code = named.replace(/^plan\s*#?\s*/i, "");
+  const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const heading = pageText.match(
+    new RegExp(String.raw`\bPlan\s*#\s*${escaped}\s+((?:the\s+)?[A-Z][\w'’&.-]*(?:\s+(?:[A-Z][\w'’&.-]*|[IVX]{1,4}|\d{1,2}))*?)\s+(?:From\b|\$|Sq\b|Call\b|Price\b)`)
+  );
+  return heading && /[a-z]{3}/i.test(heading[1]) ? `${code} - ${heading[1]}` : named;
+}
+
+/**
  * A quick move-in's own name without the lot it stands on: SimplyDwell
  * names them for the plan and the homesite, "Hawthorne Homesite 42",
  * "Buttonwood Homesite 145" (Jeff, 2026-09-22). An address is left whole —
@@ -247,7 +269,9 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
     return {
       ...p,
       relatedPlanKey: base?.planKey ?? null,
-      relatedPlanName: base?.name ?? (relatedNameOf(p) || null),
+      // A home whose plan is not among the community's keeps the plan's
+      // name, not its code ("F008 - The Truman" is The Truman).
+      relatedPlanName: base?.name ?? (split?.name || relatedNameOf(p) || null),
       relatedPlanMatch: matchedBy,
     };
   });

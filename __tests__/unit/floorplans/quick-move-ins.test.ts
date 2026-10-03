@@ -3,6 +3,7 @@ import {
   linkQuickMoveIns,
   bareKey,
   codeAndName,
+  relatedNameFromPage,
   nearlySameKey,
   planNameOf,
   withQuickMoveInPictures,
@@ -439,6 +440,39 @@ describe("linkQuickMoveIns and plan codes", () => {
     const coded = { ...colston, raw: { planId: "F060" } };
     const home = plan({ planKey: "2 main st", name: "2 Main St", quickMoveIn: true, sqft: 3026, relatedPlanName: "F060 (The Colston II)" });
     expect(linkQuickMoveIns([wagoner, coded, home])[2]).toMatchObject({ relatedPlanKey: "the colston", relatedPlanMatch: "plan-id" });
+  });
+});
+
+// North River Ranch's townhomes (David Weekley, Jeff 2026-10-03): the homes
+// are built on plans the community no longer offers, and the list named
+// each plan by its code alone.
+describe("relatedNameFromPage", () => {
+  const heading = (code: string, name: string, price: string) =>
+    `[IMG https://www.davidweekleyhomes.com/media/ElevationRendering/eb63.jpg?h=800] 1 of 2 Plan #${code} ${name} From ${price} Sq Ft 2145 Schedule a Tour`;
+
+  it("names a plan given only by its code as the home's own page heads it", () => {
+    expect(relatedNameFromPage("F019", heading("F019", "The Bingley II", "$369,990"))).toBe("F019 - The Bingley II");
+    expect(relatedNameFromPage("F008", heading("F008", "The Truman", "$339,990"))).toBe("F008 - The Truman");
+    expect(relatedNameFromPage("Plan F017", heading("F017", "The Magbee II", "$339,990"))).toBe("F017 - The Magbee II");
+  });
+
+  it("is not fooled by another plan's card on the page", () => {
+    const page = `${heading("F019", "The Bingley II", "$369,990")} More plans in this community Compare Plan F067 Visit My Plans The Peppermill Call For Information`;
+    expect(relatedNameFromPage("F019", page)).toBe("F019 - The Bingley II");
+    expect(relatedNameFromPage("F067", page)).toBe("F067");
+  });
+
+  it("leaves a name that is already a name, and a code its page does not head", () => {
+    expect(relatedNameFromPage("The Sanborn", heading("F035", "The Sanborn", "$509,940"))).toBe("The Sanborn");
+    expect(relatedNameFromPage("F034 (The Benton)", "")).toBe("F034 (The Benton)");
+    expect(relatedNameFromPage("F057", "Plan F057 Visit My Plans")).toBe("F057");
+    expect(relatedNameFromPage(null, heading("F019", "The Bingley II", "$369,990"))).toBeNull();
+  });
+
+  it("gives a home whose plan the community no longer offers the plan's name, not its code", () => {
+    const zorley = plan({ planKey: "the-zorley", name: "The Zorley", sqft: 1879, raw: { planId: "F263" } });
+    const home = plan({ planKey: "10728-oak-bend-drive", name: "10728 Oak Bend Drive", quickMoveIn: true, sqft: 2145, relatedPlanName: "F019 - The Bingley II" });
+    expect(linkQuickMoveIns([zorley, home])[1]).toMatchObject({ relatedPlanKey: null, relatedPlanName: "The Bingley II", relatedPlanMatch: "unmatched" });
   });
 });
 

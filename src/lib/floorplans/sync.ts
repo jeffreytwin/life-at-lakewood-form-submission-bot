@@ -38,7 +38,7 @@ import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { refusedTours, withoutRefusedTours } from "@/lib/floorplans/tour-review";
 import { alreadyFiled, filedAsBefore, type FiledHome } from "@/lib/floorplans/home-identity";
 import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
-import { describeCoverage } from "@/lib/floorplans/coverage";
+import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan, withPlanNamePrefix } from "@/lib/floorplans/standardize";
 import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutBanners, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
@@ -638,7 +638,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
-      "id, active, extractor_params, last_plan_count, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
+      "id, active, extractor_params, last_plan_count, onboarded_at, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
     )
     .eq("id", connectionId)
     .single();
@@ -841,7 +841,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       // Removal guard: plan must have been missing since before this run
       // (last_seen_at > 24h old) and the scrape must cover >= 60% of the last
       // known plan count.
-      const coverage = describeCoverage(plans.length, conn.last_plan_count);
+      const coverage = describeCoverage(plans.length, countToMeet(conn.last_plan_count, conn.onboarded_at));
       if (coverage.ok) {
         const cutoff = Date.now() - 24 * 60 * 60 * 1000;
         for (const c of canonical ?? []) {
