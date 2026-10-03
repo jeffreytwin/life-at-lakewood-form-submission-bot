@@ -16,6 +16,7 @@ import { logger } from "@/lib/shared/logger";
 import { applyPendingChange } from "@/lib/floorplans/writeback";
 import { runIsGoing } from "@/lib/floorplans/runs";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
+import { REMOVE_RUN_PREFIX } from "@/lib/floorplans/removal-guards";
 
 export interface RemovedPlan {
   planKey: string;
@@ -99,7 +100,7 @@ export async function removePlanWithHomes(changeId: string): Promise<RemovePlanO
     .in("status", ["pending", "failed"]);
   if (withdrawError) throw withdrawError;
 
-  const runId = `hub-remove-${Date.now()}`;
+  const runId = `${REMOVE_RUN_PREFIX}${Date.now()}`;
   const now = () => new Date().toISOString();
   const removed: RemovedPlan[] = [];
   for (const target of targets) {
