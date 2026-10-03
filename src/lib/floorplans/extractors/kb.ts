@@ -11,6 +11,14 @@
 // Its homes for sale are written the same way, in a list of records that
 // carry an address. Each plan's and home's own page is then read for its
 // gallery, drawings, tour and description (claude-extract.ts).
+//
+// KB also sells homes the page does not list: its "Homesites" map
+// (kb-vu.com/siteplan/<id>, Dovela's centravu) marks a lot with a home KB
+// has already planned. "Pre-planned" (status coming-soon) is a home with
+// its plan, elevation and price chosen; "Move-in ready" (inventory) is one
+// under way. The map's data is a public file in its Firebase storage, and
+// its homes are quick move-ins like any other: 6606 Tortoise Trail, Plan
+// 2566, $441,567 (Creekside at Rutland Ranch; Jeff, 2026-10-02).
 
 import { fetchPage, readPlanPages } from "@/lib/floorplans/extractors/claude-extract";
 import { standardHomeType } from "@/lib/floorplans/standardize";
@@ -133,13 +141,95 @@ export function homeFromRecord(r: KbRecord, origin: string): NormalizedPlan | nu
   };
 }
 
+/** The map's statuses that are homes for sale, as KB's map labels them. */
+const SITEPLAN_HOMES: Record<string, string> = { "coming-soon": "Pre-planned", inventory: "Move-in ready" };
+
+/** The id of the Homesites map a community page links to, or null. Exported for tests. */
+export function siteplanIdOf(html: string): string | null {
+  return html.match(/kb-vu\.com\/siteplan\/([A-Za-z0-9_-]{8,})/)?.[1] ?? null;
+}
+
+/** Where the Homesites map keeps its data. */
+const siteplanPayloadUrl = (id: string) =>
+  `https://firebasestorage.googleapis.com/v0/b/kbhome-vu.appspot.com/o/siteplan%2F${encodeURIComponent(id)}%2Fpayload.json?alt=media`;
+
+interface SiteplanPayload {
+  site?: { segments?: KbRecord[] };
+  floorplans?: KbRecord[];
+}
+
+/**
+ * The homes for sale on a Homesites map: a lot marked Pre-planned or
+ * Move-in ready, with an address, its one plan and a price of a home (a
+ * lot alone carries only its premium, $0 to $5,000). Its pictures are its
+ * own front; the map files KB's stock interiors ("a-stock-library…")
+ * beside it, which are no home's. Exported for tests.
+ */
+export function siteplanHomes(payload: SiteplanPayload, origin: string, communityUrl: string): NormalizedPlan[] {
+  const plans = new Map((payload.floorplans ?? []).map((f) => [clean(f.uid), f] as const));
+  const out: NormalizedPlan[] = [];
+  for (const lot of payload.site?.segments ?? []) {
+    const label = SITEPLAN_HOMES[clean(lot.status)];
+    const street = clean(lot.shortAddress) || clean(lot.address).split(",")[0].trim();
+    const price = num(lot.homePrice);
+    const planIds = Array.isArray(lot.floorplans) ? (lot.floorplans as unknown[]).map(clean) : [];
+    const plan = planIds.length === 1 ? plans.get(planIds[0]) : undefined;
+    if (!label || !/^\d+\s+\S/.test(street) || !price || price < 50_000 || !plan) continue;
+    const planName = clean(plan.name);
+    const specs = (plan.specs ?? {}) as Record<string, unknown>;
+    const pictures = (Array.isArray(lot.heroImages) ? (lot.heroImages as { image?: string; caption?: string }[]) : [])
+      .filter((h) => h?.image && !/stock-library/i.test(h.image))
+      .map((h) => ({ src: new URL(h.image!, origin).href, caption: clean(h.caption) || null }));
+    out.push({
+      planKey: normKey(street),
+      name: street,
+      price,
+      priceDisplay: money(price),
+      beds: clean(specs.bed),
+      baths: clean(specs.bath),
+      sqft: num(specs.sqft),
+      garages: clean(specs.garage) ? `${clean(specs.garage)} car` : null,
+      homeType: null,
+      quickMoveIn: true,
+      comingSoon: false,
+      sourceUrl: communityUrl,
+      relatedPlanName: planName || null,
+      galleryImages: pictures.map((p) => p.src),
+      galleryMeta: Object.fromEntries(pictures.map((p, i) => [p.src, { kind: i === 0 ? ("primary" as const) : ("exterior" as const), caption: p.caption }])),
+      blueprintImages: [],
+      raw: {
+        relatedPlan: planName || null,
+        planId: clean(plan._vendorId_1).split("++").pop() || null,
+        kbStatus: label,
+        homesite: clean(lot.lotName) || null,
+        elevation: clean(lot.elevation) || null,
+        homePage: clean(lot.mirUrl) ? new URL(clean(lot.mirUrl), origin).href : null,
+      },
+    });
+  }
+  return out;
+}
+
+/** The homes for sale on the community's Homesites map; none where the page links no map. */
+async function homesOnSiteplan(html: string, origin: string, communityUrl: string): Promise<NormalizedPlan[]> {
+  const id = siteplanIdOf(html);
+  if (!id) return [];
+  const res = await fetch(siteplanPayloadUrl(id), { signal: AbortSignal.timeout(30_000) });
+  // Not read is not gone: a run that could not read the map stops, rather
+  // than take every home on it off the site.
+  if (!res.ok) throw new Error(`KB's Homesites map ${id} could not be read: ${res.status}`);
+  return siteplanHomes((await res.json()) as SiteplanPayload, origin, communityUrl);
+}
+
 export async function extractKb(params: { url?: string; listUrls?: string[]; runDeadline?: number }): Promise<NormalizedPlan[]> {
   const pages = (params.listUrls?.length ? params.listUrls : [params.url]).map((u) => u?.trim()).filter((u): u is string => Boolean(u));
   if (!pages.length) throw new Error("the KB Home extractor needs the community's page (extractor_params.url)");
   const byKey = new Map<string, NormalizedPlan>();
+  const mapped = new Map<string, NormalizedPlan>();
   for (const url of pages) {
     const page = await fetchPage(url);
     const origin = new URL(page.url || url).origin;
+    for (const home of await homesOnSiteplan(page.html, origin, page.url || url)) if (!mapped.has(home.planKey)) mapped.set(home.planKey, home);
     const lists = Object.values(scriptLists(page.html));
     const plans = lists.filter((l) => l.some((r) => "floorPlanID" in r && ("title" in r || "pricedFrom" in r)));
     if (!plans.length) throw new Error(`${url} carries no FloorPlanList — KB's page has changed`);
@@ -148,5 +238,9 @@ export async function extractKb(params: { url?: string; listUrls?: string[]; run
       if (p && !byKey.has(p.planKey)) byKey.set(p.planKey, p);
     }
   }
-  return readPlanPages([...byKey.values()], { read: fetchPage, atOnce: 6, runDeadline: params.runDeadline, listPages: new Set(pages) });
+  const read = await readPlanPages([...byKey.values()], { read: fetchPage, atOnce: 6, runDeadline: params.runDeadline, listPages: new Set(pages) });
+  // The map's homes have no page of their own to read yet (KB's link to one
+  // answers 404); one the page itself lists is read from there instead.
+  const listed = new Set(read.map((p) => p.planKey));
+  return [...read, ...[...mapped.values()].filter((h) => !listed.has(h.planKey))];
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { homeFromRecord, planFromRecord, scriptLists } from "@/lib/floorplans/extractors/kb";
+import { homeFromRecord, planFromRecord, scriptLists, siteplanHomes, siteplanIdOf } from "@/lib/floorplans/extractors/kb";
 
 const ORIGIN = "https://www.kbhome.com";
 
@@ -81,5 +81,56 @@ describe("homeFromRecord", () => {
   it("is not fooled by another list's addresses", () => {
     expect(homeFromRecord({ address: "123 Main St", name: "Sales office" }, ORIGIN)).toBeNull();
     expect(homeFromRecord({ address: "Parrish, FL", price: "1", floorPlanName: "x" }, ORIGIN)).toBeNull();
+  });
+});
+
+describe("KB's Homesites map (Jeff, 2026-10-02)", () => {
+  // Creekside at Rutland Ranch's map, as its data file has it.
+  const COMMUNITY = "https://www.kbhome.com/new-homes-sarasota-bradenton/creekside-at-rutland-ranch";
+  const lot = (over: Record<string, unknown>) => ({
+    lotName: "Homesite 53", status: "coming-soon", address: "6606 Tortoise Trail, Parrish, 34219", shortAddress: "6606 Tortoise Trail",
+    homePrice: 441567, floorplans: ["ZNPEPujWU1PNAPxWmW0Q"], elevation: "Elevation H",
+    mirUrl: "/new-homes-sarasota-bradenton/creekside-at-rutland-ranch/mir?homesite=1127711",
+    heroImages: [
+      { image: "/globalassets/images/community-images/florida/sarasota-bradenton/creekside-at-rutland-ranch/thumbnail/2566_h_sch7_shutters.jpg", caption: "Exterior H" },
+      { image: "/globalassets/images/community-images/a-stock-library-for-floor-plan-int/bedroom.jpg", caption: "Bedroom" },
+    ],
+    ...over,
+  });
+  const payload = {
+    floorplans: [
+      { uid: "ZNPEPujWU1PNAPxWmW0Q", name: "Plan 2566", _vendorId_1: "3012++070++240.2566", specs: { bed: "4-5", bath: "2.5-3", garage: "2", sqft: "2,566" } },
+      { uid: "HORvaeL2c1YOMsBXlI45", name: "Plan 1989", specs: { bed: "4", bath: "2", garage: "2", sqft: "1,989" } },
+    ],
+    site: {
+      segments: [
+        lot({}),
+        lot({ lotName: "Homesite 71", shortAddress: "6531 Tortoise Trail", address: "6531 Tortoise Trail, Parrish, 34219", homePrice: 412302, floorplans: ["HORvaeL2c1YOMsBXlI45"], status: "inventory" }),
+        // A lot for sale with a plan drawn on it: its price is the premium.
+        lot({ lotName: "Homesite 75", shortAddress: "6617 Tortoise Trail", status: "available", homePrice: 5000, floorplans: ["HORvaeL2c1YOMsBXlI45"] }),
+        lot({ lotName: "Homesite 12", shortAddress: "6700 Fernbrooke Drive", status: "sold" }),
+        lot({ lotName: "Homesite 66", shortAddress: null, address: null, status: "sales-model", floorplans: [] }),
+      ],
+    },
+  };
+
+  it("finds the map a community page links to", () => {
+    expect(siteplanIdOf('<a href="https://kb-vu.com/siteplan/EaVDErh70Nz7Qlw2aenZ" target="_blank">')).toBe("EaVDErh70Nz7Qlw2aenZ");
+    expect(siteplanIdOf("<p>no map</p>")).toBeNull();
+  });
+
+  it("reads its Pre-planned and Move-in ready homes as quick move-ins of their plans", () => {
+    const homes = siteplanHomes(payload, ORIGIN, COMMUNITY);
+    expect(homes.map((h) => [h.name, h.priceDisplay, h.relatedPlanName, h.raw?.kbStatus])).toEqual([
+      ["6606 Tortoise Trail", "$441,567", "Plan 2566", "Pre-planned"],
+      ["6531 Tortoise Trail", "$412,302", "Plan 1989", "Move-in ready"],
+    ]);
+    expect(homes[0]).toMatchObject({ quickMoveIn: true, beds: "4-5", baths: "2.5-3", sqft: 2566, garages: "2 car", sourceUrl: COMMUNITY });
+    expect(homes[0].raw).toMatchObject({ homesite: "Homesite 53", elevation: "Elevation H", planId: "240.2566" });
+  });
+
+  it("takes the home's own front and not KB's stock interiors", () => {
+    const [home] = siteplanHomes(payload, ORIGIN, COMMUNITY);
+    expect(home.galleryImages).toEqual([`${ORIGIN}/globalassets/images/community-images/florida/sarasota-bradenton/creekside-at-rutland-ranch/thumbnail/2566_h_sch7_shutters.jpg`]);
   });
 });
