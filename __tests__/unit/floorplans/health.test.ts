@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { describeCoverage } from "@/lib/floorplans/coverage";
+import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { attentionDismissed, CUT_OFF_STATUS, mendsItself, troubledConnections } from "@/lib/floorplans/health";
 
 describe("attentionDismissed", () => {
@@ -91,3 +91,19 @@ describe("a run cut off by the time limit (Boca Royale, 2026-09-29)", () => {
     expect(troubledConnections(neal(1, "error: fetch https://nealcommunities.com: 500")).map((t) => t.id)).toEqual(["boca"]);
   });
 });
+
+// Emerald Landing at Waterside (David Weekley, Jeff 2026-10-03): set up
+// with the old site's 21, its first run found the 8 homes for sale.
+describe("countToMeet", () => {
+  it("is nothing before the connection's first good run, so the count it was set up with fails nothing", () => {
+    expect(countToMeet(21, null)).toBeNull();
+    expect(describeCoverage(8, countToMeet(21, null)).ok).toBe(true);
+  });
+
+  it("is the last run's count once there has been one", () => {
+    expect(countToMeet(21, "2026-10-03T21:00:23.309Z")).toBe(21);
+    expect(describeCoverage(8, countToMeet(21, "2026-10-03T21:00:23.309Z")).ok).toBe(false);
+    expect(countToMeet(null, "2026-10-03T21:00:23.309Z")).toBeNull();
+  });
+});
+
