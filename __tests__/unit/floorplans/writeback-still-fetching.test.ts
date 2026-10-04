@@ -2,12 +2,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Wix's answer about each imported file, by file id.
 let wixSays: Record<string, { operationStatus: string; media?: unknown }> = {};
+// Media-map rows deleted, by source URL.
+const forgotten: string[] = [];
 
 vi.mock("@/lib/supabase/client", () => {
+  let deleting = false;
   const chain = {
     update: () => chain,
-    delete: () => chain,
-    eq: () => chain,
+    delete: () => {
+      deleting = true;
+      return chain;
+    },
+    eq: (column: string, value: string) => {
+      if (deleting && column === "source_url") {
+        forgotten.push(value);
+        deleting = false;
+      }
+      return chain;
+    },
     then: (resolve: (v: unknown) => unknown) => resolve({ error: null }),
   };
   return { supabase: { from: () => chain } };
@@ -39,6 +51,7 @@ describe("verifyImports: a picture Wix is still fetching", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
     wixSays = {};
+    forgotten.length = 0;
   });
   afterEach(() => vi.useRealTimers());
 
@@ -53,6 +66,8 @@ describe("verifyImports: a picture Wix is still fetching", () => {
     const { bad, fetching } = await verify([image("fresh", 30_000), image("done", 30_000)]);
     expect([...bad]).toEqual(["fresh"]);
     expect([...fetching]).toEqual(["fresh"]);
+    // Kept, so the next try asks Wix about the same file.
+    expect(forgotten).toEqual([]);
   });
 
   it("counts as never coming once Wix has had it longer than STILL_FETCHING_MS", async () => {
@@ -60,6 +75,12 @@ describe("verifyImports: a picture Wix is still fetching", () => {
     const { bad, fetching } = await verify([image("stale", STILL_FETCHING_MS + 1000)]);
     expect([...bad]).toEqual(["stale"]);
     expect(fetching.size).toBe(0);
+  });
+
+  it("forgets an import Wix has sat on past STILL_FETCHING_MS, so the next write imports it afresh (Mayfield III)", async () => {
+    wixSays = { stuck: { operationStatus: "PENDING" } };
+    await verify([image("stuck", 12 * 86_400_000)]);
+    expect(forgotten).toEqual(["https://res.cloudinary.com/perryhomes/stuck"]);
   });
 
   it("does not wait on a picture Wix says it failed to fetch", async () => {

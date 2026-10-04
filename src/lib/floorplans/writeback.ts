@@ -334,7 +334,8 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
  * again; a failed or non-image one is forgotten, so the next approval
  * imports it afresh. Nothing broken reaches a row (Jeff, 2026-09-20).
  * Of those still not there, the ones Wix was asked for less than
- * STILL_FETCHING_MS ago come back as `fetching` too: Wix may yet have them.
+ * STILL_FETCHING_MS ago come back as `fetching` too: Wix may yet have them;
+ * an older one is forgotten like a failed one.
  * Exported for tests.
  */
 export async function verifyImports(
@@ -396,6 +397,11 @@ export async function verifyImports(
       fileId: image.fileId,
       stillFetching: young,
     });
+    // An import Wix has sat on past STILL_FETCHING_MS never lands: forgotten,
+    // so the next write imports the picture afresh instead of asking about
+    // the same dead file for ever (Mayfield III, imported 2026-09-22 and
+    // still not there on 2026-10-04).
+    if (!young) await supabase.from("fp_media_map").delete().eq("site_id", siteId).eq("source_url", image.sourceUrl);
   }
   return { bad, fetching };
 }
