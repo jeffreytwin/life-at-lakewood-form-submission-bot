@@ -197,7 +197,8 @@ async function applyAutoApproved(): Promise<number> {
       return null;
     });
     if (result?.throttled) break;
-    if (result && result.status !== "failed") applied += 1;
+    // One whose pictures Wix is still fetching stays approved for the next tick.
+    if (result && result.status !== "failed" && !result.fetching) applied += 1;
   }
   return applied;
 }

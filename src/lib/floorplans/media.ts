@@ -18,6 +18,7 @@
 
 import { createHash } from "node:crypto";
 import sharp from "sharp";
+import { logger } from "@/lib/shared/logger";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
@@ -191,6 +192,53 @@ export async function measureImageBytes(bytes: Uint8Array): Promise<ImageSize | 
 
 export interface MeasureDeps {
   fetchImpl?: typeof fetch;
+  /** Waits between tries of a refused fetch; tests pass one that does not wait. */
+  sleep?: (ms: number) => Promise<void>;
+}
+
+/**
+ * Waits before each further try of a fetch the builder's host refused.
+ * lakewoodranch.com sits behind Cloudflare, which turned the server away
+ * for whole bursts of an approval (2026-10-04: every John Cannon photo of
+ * Wild Blue, 13 of The Victoria's 14) while the same links loaded
+ * everywhere else; a refusal like that passes in a moment.
+ */
+export const REFUSED_FETCH_WAITS_MS = [1500, 4000];
+
+/** A Retry-After longer than this is not waited out; the photo is left out this time. */
+const MOST_RETRY_AFTER_MS = 10_000;
+
+/**
+ * Hosts that refused a photo through every wait, and until when: their
+ * other photos get one try each meanwhile, so a host turning the server
+ * away costs one round of waits, not one per photo of a 30-photo gallery.
+ */
+const refusingHosts = new Map<string, number>();
+const REFUSING_HOST_MS = 60_000;
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+};
+
+/** Forgets every host marked as refusing; for tests. */
+export function forgetRefusingHosts(): void {
+  refusingHosts.clear();
+}
+
+/** Answers that say "not now" rather than "not here": a block, a throttle, or the host failing. */
+const isRefusal = (status: number): boolean => status === 403 || status === 408 || status === 429 || status >= 500;
+
+/** Retry-After in ms (seconds or an HTTP date); null when absent or unreadable. */
+function retryAfterMs(res: Response): number | null {
+  const header = res.headers.get("retry-after");
+  if (!header) return null;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  const at = Date.parse(header);
+  return Number.isFinite(at) ? Math.max(0, at - Date.now()) : null;
 }
 
 /**
@@ -212,25 +260,52 @@ export async function measureImageUrl(url: string, deps: MeasureDeps = {}): Prom
   };
 }
 
-/** Fetches one builder image's bytes; null when the URL does not answer with an image of a sane size. */
+/**
+ * Fetches one builder image's bytes; null when the URL does not answer with
+ * an image of a sane size. A refusal (403, 429, 5xx, a dropped connection)
+ * is tried again after a short wait, and one that never clears is logged
+ * with what the host answered, so a left-out photo says why.
+ */
 export async function fetchImage(url: string, deps: MeasureDeps = {}): Promise<FetchedImage | null> {
   const fetchImpl = deps.fetchImpl ?? fetch;
-  try {
-    const res = await fetchImpl(url, {
-      headers: { "user-agent": UA, accept: "image/*,*/*;q=0.5" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
-    if (!res.ok) return null;
-    const type = (res.headers.get("content-type") ?? "").toLowerCase();
-    if (type && !type.startsWith("image/") && !type.startsWith("application/octet-stream")) return null;
-    const declared = Number(res.headers.get("content-length"));
-    if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) return null;
-    const data = new Uint8Array(await res.arrayBuffer());
-    if (!data.byteLength || data.byteLength > MAX_IMAGE_BYTES) return null;
-    return { data, contentType: type || null };
-  } catch {
-    return null;
+  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  const host = hostOf(url);
+  const waits = (refusingHosts.get(host) ?? 0) > Date.now() ? [] : REFUSED_FETCH_WAITS_MS;
+  let refusal = "";
+  for (let attempt = 0; ; attempt += 1) {
+    let wait: number | null = null;
+    try {
+      const res = await fetchImpl(url, {
+        headers: { "user-agent": UA, accept: "image/*,*/*;q=0.5" },
+        redirect: "follow",
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      if (res.ok) {
+        const type = (res.headers.get("content-type") ?? "").toLowerCase();
+        if (type && !type.startsWith("image/") && !type.startsWith("application/octet-stream")) return null;
+        const declared = Number(res.headers.get("content-length"));
+        if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) return null;
+        const data = new Uint8Array(await res.arrayBuffer());
+        if (!data.byteLength || data.byteLength > MAX_IMAGE_BYTES) return null;
+        refusingHosts.delete(host);
+        return { data, contentType: type || null };
+      }
+      if (!isRefusal(res.status)) return null;
+      refusal = `HTTP ${res.status}${res.headers.get("server") ? ` from ${res.headers.get("server")}` : ""}`;
+      wait = retryAfterMs(res);
+      // The body is not wanted; let the connection go.
+      await res.body?.cancel().catch(() => undefined);
+    } catch (error) {
+      // A photo that took the whole timeout would take it again.
+      if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) return null;
+      refusal = error instanceof Error ? error.message : String(error);
+    }
+    if (attempt >= waits.length || (wait !== null && wait > MOST_RETRY_AFTER_MS)) {
+      refusingHosts.set(host, Date.now() + REFUSING_HOST_MS);
+      logger.warn("Builder photo fetch refused; left out", { url, refusal, tries: attempt + 1 });
+      return null;
+    }
+    await sleep(wait ?? waits[attempt]);
   }
 }
 

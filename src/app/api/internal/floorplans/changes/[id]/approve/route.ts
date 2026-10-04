@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { applyPendingChange } from "@/lib/floorplans/writeback";
+import { applyPendingChange, STILL_FETCHING_RETRY_MS } from "@/lib/floorplans/writeback";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { wixThrottleWaitMs } from "@/lib/wix/client";
 
@@ -46,16 +46,17 @@ export async function POST(
     }
 
     const result = await applyPendingChange(id);
-    if (result.throttled) {
-      // Wix is refusing everyone; the plan is fine and goes back to the
-      // queue to be approved again once the cooldown is over.
+    if (result.throttled || result.fetching) {
+      // Wix is refusing everyone, or still fetching the plan's pictures;
+      // the plan is fine and goes back to the queue to be approved again
+      // once the wait is over.
       await supabase
         .from("fp_pending_changes")
         .update({ status: "pending", updated_at: new Date().toISOString() })
         .eq("id", id)
         .eq("status", "approved");
       return NextResponse.json(
-        { ...result, retryAfterMs: Math.max(wixThrottleWaitMs(), 1000) },
+        { ...result, retryAfterMs: result.fetching ? STILL_FETCHING_RETRY_MS : Math.max(wixThrottleWaitMs(), 1000) },
         { status: 503 }
       );
     }

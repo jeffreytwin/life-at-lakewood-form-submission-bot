@@ -1,6 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
-import { MAX_IMAGE_BYTES, measureImageBytes, measureImageUrl, wixFileIdOf } from "@/lib/floorplans/media";
+import {
+  forgetRefusingHosts,
+  MAX_IMAGE_BYTES,
+  measureImageBytes,
+  measureImageUrl,
+  REFUSED_FETCH_WAITS_MS,
+  wixFileIdOf,
+} from "@/lib/floorplans/media";
 
 /**
  * A wix:image URI renders only with the picture's origin dimensions; the
@@ -38,6 +45,8 @@ describe("measureImageBytes", () => {
 
 describe("measureImageUrl", () => {
   const answer = (body: BodyInit | null, init: ResponseInit) => (async () => new Response(body, init)) as unknown as typeof fetch;
+  const noWait: (ms: number) => Promise<void> = async () => undefined;
+  beforeEach(() => forgetRefusingHosts());
 
   it("fetches, measures and hashes a photo", async () => {
     const bytes = await png(4, 5);
@@ -64,7 +73,49 @@ describe("measureImageUrl", () => {
     const fetchImpl = (async () => {
       throw new Error("ECONNRESET");
     }) as unknown as typeof fetch;
-    expect(await measureImageUrl("https://cdn.example.com/a.png", { fetchImpl })).toBeNull();
+    expect(await measureImageUrl("https://cdn.example.com/a.png", { fetchImpl, sleep: noWait })).toBeNull();
+  });
+
+  it("tries a refused fetch again after a wait, as Cloudflare turned the server away from lakewoodranch.com for a moment", async () => {
+    const bytes = await png(4, 5);
+    const replies = [new Response(null, { status: 403 }), new Response(null, { status: 429 }), new Response(bytes, { status: 200, headers: { "content-type": "image/png" } })];
+    const fetchImpl = vi.fn(async () => replies.shift()!) as unknown as typeof fetch;
+    const sleep = vi.fn(noWait);
+    expect(await measureImageUrl("https://lakewoodranch.com/a.jpg", { fetchImpl, sleep })).toMatchObject({ width: 4, height: 5 });
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(sleep.mock.calls.map(([ms]) => ms)).toEqual(REFUSED_FETCH_WAITS_MS);
+  });
+
+  it("waits what Retry-After asks, and gives up on a wait too long to sit out", async () => {
+    const bytes = await png(4, 5);
+    let replies = [new Response(null, { status: 503, headers: { "retry-after": "2" } }), new Response(bytes, { status: 200, headers: { "content-type": "image/png" } })];
+    const sleep = vi.fn(noWait);
+    const fetchImpl = vi.fn(async () => replies.shift()!) as unknown as typeof fetch;
+    expect(await measureImageUrl("https://a.example.com/a.png", { fetchImpl, sleep })).not.toBeNull();
+    expect(sleep).toHaveBeenCalledWith(2000);
+
+    replies = [new Response(null, { status: 429, headers: { "retry-after": "3600" } })];
+    const once = vi.fn(async () => replies.shift()!) as unknown as typeof fetch;
+    expect(await measureImageUrl("https://b.example.com/a.png", { fetchImpl: once, sleep })).toBeNull();
+    expect(once).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not try a 404 again: the photo is gone, not refused", async () => {
+    const fetchImpl = vi.fn(answer(null, { status: 404 }));
+    expect(await measureImageUrl("https://cdn.example.com/a.png", { fetchImpl, sleep: noWait })).toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives a host that refused through every wait one try per photo for a while", async () => {
+    const sleep = vi.fn(noWait);
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 403 })) as unknown as typeof fetch;
+    expect(await measureImageUrl("https://lakewoodranch.com/1.jpg", { fetchImpl, sleep })).toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(REFUSED_FETCH_WAITS_MS.length + 1);
+    expect(await measureImageUrl("https://lakewoodranch.com/2.jpg", { fetchImpl, sleep })).toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(REFUSED_FETCH_WAITS_MS.length + 2);
+    // Another host is not held to it.
+    expect(await measureImageUrl("https://res.cloudinary.com/3.jpg", { fetchImpl, sleep })).toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(2 * REFUSED_FETCH_WAITS_MS.length + 3);
   });
 });
 
