@@ -975,7 +975,9 @@ export default function FloorPlansPage() {
           const wait = Number(data?.retryAfterMs);
           const status = data?.results?.[0]?.status;
           alert(
-            Array.isArray(data?.remaining) && data.remaining.length
+            status === "waiting"
+              ? `${name} was not approved yet: Wix is still fetching its pictures. It is back in the queue; approve it again in a minute or two.`
+              : Array.isArray(data?.remaining) && data.remaining.length
               ? `${name} was not approved: Wix is busy${wait > 0 ? ` for about ${Math.ceil(wait / 1000)}s` : ""}. It is back in the queue; approve it again in a moment.`
               : `${name} was not approved${status ? ` (${status})` : ""}. It may have been acted on elsewhere; the list has been refreshed.`
           );

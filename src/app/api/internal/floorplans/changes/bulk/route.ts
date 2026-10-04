@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { applyPendingChange } from "@/lib/floorplans/writeback";
+import { applyPendingChange, STILL_FETCHING_RETRY_MS } from "@/lib/floorplans/writeback";
 import { groupChanges } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { releaseStaleApproving } from "@/lib/floorplans/approving";
@@ -112,6 +112,9 @@ export async function POST(request: NextRequest) {
     // Set once Wix starts refusing: the rest of the run goes back to the
     // queue and the page is told how long to leave it.
     let throttledFor = 0;
+    // Set when Wix is still fetching a plan's pictures: that plan goes back
+    // to the queue, the others carry on, and the page sends it again later.
+    let fetchingFor = 0;
     for (const group of approvable) {
       const groupIds = group.rows.map((r) => r.id);
       if (throttledFor || Date.now() - started > BUDGET_MS) {
@@ -130,6 +133,12 @@ export async function POST(request: NextRequest) {
         // goes back with the ones not started yet (Jeff, 2026-09-22).
         throttledFor = Math.max(wixThrottleWaitMs(), 1000);
         remaining.push(...groupIds);
+        continue;
+      }
+      if (outcome.fetching) {
+        fetchingFor = STILL_FETCHING_RETRY_MS;
+        remaining.push(...groupIds);
+        results.push({ planKey: group.lead.plan_key, rows: group.rows.length, status: "waiting", error: outcome.error ?? null });
         continue;
       }
       const rest = group.rows.filter((r) => r.id !== group.lead.id);
@@ -163,8 +172,9 @@ export async function POST(request: NextRequest) {
       }
     }
     const failed = results.some((r) => r.status === "failed");
+    const retryAfterMs = Math.max(throttledFor, fetchingFor);
     return NextResponse.json(
-      { results, remaining, ...(throttledFor ? { retryAfterMs: throttledFor } : {}) },
+      { results, remaining, ...(retryAfterMs ? { retryAfterMs } : {}) },
       { status: failed ? 502 : 200 }
     );
   } catch (error) {

@@ -89,12 +89,37 @@ const MAX_GALLERY_IMAGES = 40;
 type GalleryItem = { type: "image"; src: string; title: string; alt?: string };
 
 /** A picture imported for a record, with what is needed to check on it before the row is written. */
-interface ImportedImage {
+export interface ImportedImage {
   uri: string;
   fileId: string;
   sourceUrl: string;
   /** Wix has been seen holding the picture (fp_media_map.verified_at); a fresh import starts false. */
   verified: boolean;
+  /** When Wix was asked to import it (fp_media_map.uploaded_at), epoch ms. */
+  importedAt: number;
+}
+
+/**
+ * How long Wix may take to fetch a picture before it counts as one it will
+ * never have. Its fetch usually lands within the half-minute the write-back
+ * waits, but not always: Perry's Cloudinary photos, drawn with their text
+ * on first request, took minutes (2026-10-04, 9515 Sandy Shores and 7914
+ * Bon Air Way went to Failed and Wix had both a few minutes later).
+ */
+export const STILL_FETCHING_MS = 10 * 60_000;
+/** How long a plan whose pictures Wix is still fetching is left before it is tried again. */
+export const STILL_FETCHING_RETRY_MS = 60_000;
+
+/**
+ * A plan whose pictures Wix is still fetching: nothing is wrong with it, so
+ * it goes back to the queue and is written once Wix has them, whole,
+ * instead of failing or going up without them.
+ */
+export class PhotosStillFetching extends Error {
+  constructor(planKey: string, count: number) {
+    super(`Wix is still fetching ${count} of ${planKey}'s pictures; it is tried again in a minute`);
+    this.name = "PhotosStillFetching";
+  }
 }
 
 type PendingGalleryItem = GalleryItem & { image: ImportedImage };
@@ -212,17 +237,18 @@ export async function importImage(
 ): Promise<ImportedImage | null> {
   const { data: existing } = await supabase
     .from("fp_media_map")
-    .select("wix_media_id, width, height, verified_at, media_type")
+    .select("wix_media_id, width, height, verified_at, media_type, uploaded_at")
     .eq("site_id", siteId)
     .eq("source_url", sourceUrl)
     .maybeSingle();
   const cachedFileId = wixFileIdOf(existing?.wix_media_id);
   const cachedIsVector = cachedFileId ? isVectorFileId(cachedFileId) || existing?.media_type === "VECTOR" : false;
   const verified = Boolean(existing?.verified_at);
+  const importedAt = existing?.uploaded_at ? Date.parse(existing.uploaded_at) : Date.now();
 
   if (cachedFileId && !cachedIsVector && existing?.width && existing?.height) {
     const uri = wixImageUri(cachedFileId, displayName, existing.width, existing.height);
-    return uri ? { uri, fileId: cachedFileId, sourceUrl, verified } : null;
+    return uri ? { uri, fileId: cachedFileId, sourceUrl, verified, importedAt } : null;
   }
 
   // Not measured yet: a new picture, one imported before its size was
@@ -243,7 +269,7 @@ export async function importImage(
       .eq("site_id", siteId)
       .eq("source_url", sourceUrl);
     const uri = wixImageUri(cachedFileId, displayName, measured.width, measured.height);
-    return uri ? { uri, fileId: cachedFileId, sourceUrl, verified } : null;
+    return uri ? { uri, fileId: cachedFileId, sourceUrl, verified, importedAt } : null;
   }
 
   // A fresh import: the picture as served, or the drawing rendered to PNG.
@@ -278,11 +304,13 @@ export async function importImage(
   if (!file) return null;
   const uri = wixImageUri(file.id, name, width, height);
   if (!uri) return null;
+  const importedNow = new Date();
   await supabase.from("fp_media_map").upsert(
     {
       site_id: siteId,
       source_url: sourceUrl,
       wix_media_id: uri,
+      uploaded_at: importedNow.toISOString(),
       content_hash: measured.contentHash,
       width,
       height,
@@ -291,7 +319,7 @@ export async function importImage(
     },
     { onConflict: "site_id,source_url" }
   );
-  return { uri, fileId: file.id, sourceUrl, verified: false };
+  return { uri, fileId: file.id, sourceUrl, verified: false, importedAt: importedNow.getTime() };
 }
 
 /** Waits between looks at a fresh import: Wix usually has the bytes within seconds; the whole wait is about half a minute. */
@@ -305,9 +333,17 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
  * picture Wix is seen holding is marked verified and never asked about
  * again; a failed or non-image one is forgotten, so the next approval
  * imports it afresh. Nothing broken reaches a row (Jeff, 2026-09-20).
+ * Of those still not there, the ones Wix was asked for less than
+ * STILL_FETCHING_MS ago come back as `fetching` too: Wix may yet have them.
+ * Exported for tests.
  */
-async function verifyImports(siteId: string, wixSiteId: string, images: ImportedImage[]): Promise<Set<string>> {
+export async function verifyImports(
+  siteId: string,
+  wixSiteId: string,
+  images: ImportedImage[]
+): Promise<{ bad: Set<string>; fetching: Set<string> }> {
   const bad = new Set<string>();
+  const fetching = new Set<string>();
   let pending = images.filter((image) => !image.verified);
   for (let round = 0; pending.length; round += 1) {
     if (round > 0) {
@@ -353,9 +389,15 @@ async function verifyImports(siteId: string, wixSiteId: string, images: Imported
   }
   for (const image of pending) {
     bad.add(image.fileId);
-    logger.warn("Wix had not fetched the picture in time; left out this time", { sourceUrl: image.sourceUrl, fileId: image.fileId });
+    const young = Date.now() - image.importedAt < STILL_FETCHING_MS;
+    if (young) fetching.add(image.fileId);
+    logger.warn("Wix had not fetched the picture in time; left out this time", {
+      sourceUrl: image.sourceUrl,
+      fileId: image.fileId,
+      stillFetching: young,
+    });
   }
-  return bad;
+  return { bad, fetching };
 }
 
 function galleryUrls(rec: ProposedRecord): string[] {
@@ -402,7 +444,7 @@ async function importRecordMedia(
     : null;
 
   // Nothing goes on the row until Wix is seen holding it.
-  const bad = await verifyImports(siteId, wixSiteId, [
+  const { bad, fetching } = await verifyImports(siteId, wixSiteId, [
     ...gallery.items.map((item) => item.image),
     ...blueprints.items.map((item) => item.image),
     ...(tour ? [tour] : []),
@@ -411,6 +453,9 @@ async function importRecordMedia(
   const drawings = blueprints.items.filter((item) => !bad.has(item.image.fileId)).map(toGalleryItem);
   const tourImage = tour && !bad.has(tour.fileId) ? tour.uri : null;
 
+  // Wix has some of the pictures still on their way: the plan waits for
+  // them rather than going up without them, or failing for want of them.
+  if (fetching.size) throw new PhotosStillFetching(rec.planKey, fetching.size);
   if (photoUrls.length && !photos.length) {
     throw new Error(`none of the ${photoUrls.length} photos could be imported and verified (first: ${photoUrls[0]})`);
   }
@@ -634,6 +679,8 @@ export async function applyPendingChange(changeId: string): Promise<{
   error?: string;
   /** Wix was refusing calls: nothing is wrong with the plan, it needs another go later. */
   throttled?: boolean;
+  /** Wix is still fetching the plan's pictures: it needs another go in STILL_FETCHING_RETRY_MS. */
+  fetching?: boolean;
 }> {
   const { data: change, error: loadError } = await supabase
     .from("fp_pending_changes")
@@ -852,6 +899,11 @@ export async function applyPendingChange(changeId: string): Promise<{
         waitMs: wixThrottleWaitMs(),
       });
       return { status: "deferred", error: error.message, throttled: true };
+    }
+    // Left approved, like a throttled write: the caller puts it back in the queue.
+    if (error instanceof PhotosStillFetching) {
+      logger.warn("Floor plan write-back deferred: Wix is still fetching its pictures", { changeId, detail: error.message });
+      return { status: "deferred", error: error.message, fetching: true };
     }
     return fail(error instanceof Error ? error.message : String(error));
   }
