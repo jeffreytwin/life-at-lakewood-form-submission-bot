@@ -219,6 +219,21 @@ export function homeFromRecord(r: PulteHome, origin: string, address?: (path: st
 }
 
 /**
+ * A plan the builder no longer offers, priced from the cheapest of its
+ * homes for sale; as it came where none of them gives a price. Pure;
+ * exported for tests.
+ */
+export function fromItsHomes(plan: NormalizedPlan, homes: NormalizedPlan[]): NormalizedPlan {
+  const prices = homes
+    .filter((h) => h.raw?.planId != null && String(h.raw.planId) === String(plan.raw?.planId))
+    .map((h) => h.price)
+    .filter((n): n is number => typeof n === "number" && n > 0);
+  if (!prices.length) return plan;
+  const price = Math.min(...prices);
+  return { ...plan, price, priceDisplay: money(price), comingSoon: false };
+}
+
+/**
  * The floor plan drawings a plan's page shows where the feed has none: its
  * floor plan section draws each floor as a figure in a "floor-container"
  * (Daylen at Riversong, 2026-09-23: "First Floor", pultegroup.cdn.picturepark.com/v/0w56AjBu/).
@@ -307,8 +322,15 @@ export async function extractPulteGroup(params: { url?: string; runDeadline?: nu
     .filter((p): p is NormalizedPlan => Boolean(p))
     .map((h) => (h.blueprintImages.length ? h : { ...h, blueprintImages: drawingsOf.get(String(h.raw?.planId)) ?? [] }));
   if (!plans.length && !homes.length) throw new Error(`no plans or homes in ${origin}'s feeds for community ${id}`);
+  // A plan the builder no longer offers is on the site only for its homes,
+  // so it is priced as they are: from the cheapest of them. Its record kept
+  // the price it last sold from — the Coral's still said $445,990, its
+  // homes $569,870 and up (North River Ranch, Jeff 2026-10-05) — as a
+  // stand-in plan is priced (stand-ins.ts, standInPlan).
+  const offered = new Set(planRecords.filter((r) => !r.isSoldOut && r.isPlanActive !== false).map((r) => String(r.id)));
+  const priced = plans.map((p) => (offered.has(String(p.raw?.planId)) ? p : fromItsHomes(p, homes)));
   // One plan once: a plan listed in two series keeps its first record.
   const byKey = new Map<string, NormalizedPlan>();
-  for (const p of [...plans, ...homes]) if (!byKey.has(p.planKey)) byKey.set(p.planKey, p);
+  for (const p of [...priced, ...homes]) if (!byKey.has(p.planKey)) byKey.set(p.planKey, p);
   return [...byKey.values()];
 }
