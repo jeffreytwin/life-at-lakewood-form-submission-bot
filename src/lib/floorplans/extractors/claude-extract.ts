@@ -21,7 +21,7 @@ import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gall
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
 import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
-import { asTour, bathsStated, namesAnAddress, planInHomeLabel } from "@/lib/floorplans/standardize";
+import { asTour, bathsStated, namesAnAddress, planInHomeLabel, weekleyCounts } from "@/lib/floorplans/standardize";
 import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
@@ -1057,6 +1057,10 @@ export async function readPlanPageWithClaude(
   // Jeff 2026-09-26). A home's own counts are its own.
   const zonda = plan.quickMoveIn ? null : await zondaCountsFor(html, plan.name);
   const { description, raw } = descriptionFromPage(plan, page.description);
+  // David Weekley's page gives its counts in a strip the list's cards lay
+  // out the other way round, and a count read off a card paired the wrong
+  // numbers (standardize.ts, weekleyCounts; Jeff, 2026-10-05).
+  const strip = weekleyCounts(content);
   return {
     ...plan,
     ...homeAddressed(plan, page.address),
@@ -1065,12 +1069,12 @@ export async function readPlanPageWithClaude(
     ...(plan.quickMoveIn ? { relatedPlanName: relatedNameFromPage(plan.relatedPlanName, content) ?? plan.relatedPlanName } : {}),
     price,
     priceDisplay: plan.priceDisplay ?? money(price ?? undefined),
-    beds: zonda?.beds || plan.beds || (page.beds ?? ""),
+    beds: zonda?.beds || strip?.beds || plan.beds || (page.beds ?? ""),
     // Where Perry's page gives full and half baths as two counts ("4 Baths
     // 3 Cars 1 Half Baths"), those counts decide, not a reading that dropped
     // the half baths or added them up (standardize.ts, bathsStated; Jeff,
-    // 2026-09-24).
-    baths: zonda?.baths || bathsStated(content) || plan.baths || (page.baths ?? ""),
+    // 2026-09-24). David Weekley's strip decides its own the same way.
+    baths: zonda?.baths || bathsStated(content) || strip?.baths || plan.baths || (page.baths ?? ""),
     sqft: plan.sqft ?? page.sqft ?? null,
     garages: plan.garages ?? page.garages ?? null,
     description,

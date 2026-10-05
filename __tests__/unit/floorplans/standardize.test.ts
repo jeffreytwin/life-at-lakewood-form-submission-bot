@@ -11,6 +11,7 @@ import {
   standardGarages,
   standardHomeType,
   standardizePlan,
+  weekleyCounts,
   withPlanNamePrefix,
 } from "@/lib/floorplans/standardize";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
@@ -287,6 +288,29 @@ describe("bathsStated: the two counts a page gives", () => {
   it("says nothing for a page that states no half baths", () => {
     expect(bathsStated("3 Beds 2.5 Baths 2 Cars")).toBeNull();
     expect(bathsStated("A half bath off the foyer")).toBeNull();
+  });
+});
+
+describe("weekleyCounts: David Weekley's own strip, number before label", () => {
+  it("reads the home's own strip, not the cards after it (Magbee II, 10780 Oak Bend Drive, 2026-10-05)", () => {
+    const page =
+      "REQUEST A BROCHURE BROCHURE 2 Stories 3 Bedrooms 2 Full Baths 1 Half Baths 2 Car Garage 10780 Oak Bend Drive, Parrish, FL 34219 Ready 1/28/2027 " +
+      "The Peppermill Call For Information | Sq. Ft: 1791 Stories 2 Bedrooms 3 Full Baths 2 Half Bath 1 Car Garage 2 Share";
+    expect(weekleyCounts(page)).toEqual({ beds: "3", baths: "2.5" });
+  });
+
+  it("gives the full baths alone where the strip has no half baths", () => {
+    expect(weekleyCounts("1 Story 4 Bedrooms 3 Full Baths 3 Car Garage")).toEqual({ beds: "4", baths: "3" });
+  });
+
+  it("says nothing for a community page's cards, which put each number after its label", () => {
+    expect(weekleyCounts("$339,990 | Sq. Ft: 1864 Stories 2 Bedrooms 3 Full Baths 2 Half Bath 1 Car Garage 2 Share")).toBeNull();
+    expect(weekleyCounts("$374,990 | Sq. Ft: 2145 Stories 2 Bedrooms 4 Full Baths 3 Car Garage 2 Share")).toBeNull();
+  });
+
+  it("says nothing for other builders' layouts", () => {
+    expect(weekleyCounts("5,239 Sq. Ft. 5 Beds 2 Stories 5 Baths 3 Cars 3 Half Baths")).toBeNull(); // Perry
+    expect(weekleyCounts("Flex Room, 3 Full and 1 Half Bath, Great Room, 2-Car Garage")).toBeNull(); // Kolter
   });
 });
 

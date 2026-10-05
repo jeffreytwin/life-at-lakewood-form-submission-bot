@@ -66,6 +66,24 @@ export function bathsStated(text: string): string | null {
 }
 
 /**
+ * The bedrooms and bathrooms on David Weekley's own home or plan page, from
+ * its strip of facts with each number before its label: "2 Stories 3
+ * Bedrooms 2 Full Baths 1 Half Baths 2 Car Garage" is 3 beds and "2.5".
+ * The cards on its community pages put each number after its label
+ * instead — "Sq. Ft: 1864 Stories 2 Bedrooms 3 Full Baths 2 Half Bath 1
+ * Car Garage 2" — and read the other way they gave the Magbee II at 10780
+ * Oak Bend Drive 3 full and 2 half baths, "3.5", where it has 2 and 1
+ * (North River Ranch, Jeff 2026-10-05). A card's stories follow its square
+ * feet, so "1864 Stories" is no strip. The page's first strip is its own;
+ * the cards for other homes come after it. Null without one. Pure.
+ */
+export function weekleyCounts(text: string): { beds: string; baths: string } | null {
+  const strip = /\b(\d)\s*Stor(?:y|ies)\s+(\d+)\s*Bedrooms?\s+(\d+)\s*Full\s*Baths?(?:\s+(\d+)\s*Half\s*Baths?)?\s+\d+\s*Car\b/i.exec(text);
+  if (!strip) return null;
+  return { beds: strip[2], baths: bathsOf(Number(strip[3]), strip[4] != null ? Number(strip[4]) : null)! };
+}
+
+/**
  * The larger end of a range: "3-4" is "4", "2.5 - 3.5" is "3.5", "3 to 4"
  * is "4". A single number, "3+", or text without two numbers is kept as it
  * came; blank stays blank.
