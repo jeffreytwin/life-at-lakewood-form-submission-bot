@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { communityIdOf, extractPulteGroup, homeFromRecord, pageDrawings, planFromRecord, pulteDrawings, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
+import { communityIdOf, extractPulteGroup, fromItsHomes, homeFromRecord, pageDrawings, planFromRecord, pulteDrawings, pulteGallery, type PulteHome, type PultePlan } from "@/lib/floorplans/extractors/pulte";
 
 const ORIGIN = "https://www.pulte.com";
 const RIVERSONG = "https://www.pulte.com/homes/florida/tampa/parrish/riversong-211407";
@@ -223,10 +223,10 @@ describe("extractPulteGroup", () => {
   // Longmeadow at North River Ranch (2026-09-23): three homes for sale on
   // the Coral, a plan the plans feed no longer lists.
   const coral: PultePlan = { ...daylen, id: 697938, planName: "Coral", squareFeet: 3100, pageURL: "/homes/florida/sarasota/parrish/longmeadow-211403/coral-697938" };
-  const home = (street: string, plan: PultePlan): PulteHome => ({
+  const home = (street: string, plan: PultePlan, finalPrice = 569870): PulteHome => ({
     inventoryHomeID: street.length,
     address: { street1: street },
-    finalPrice: 569870,
+    finalPrice,
     planId: plan.id,
     planName: plan.planName,
     plan,
@@ -247,6 +247,28 @@ describe("extractPulteGroup", () => {
     expect(got.filter((p) => !p.quickMoveIn).map((p) => p.name)).toEqual(["Daylen", "Coral"]);
     expect(got.find((p) => p.name === "Coral")).toMatchObject({ sqft: 3100, raw: { planId: "697938" } });
     expect(got.filter((p) => p.quickMoveIn).map((p) => p.raw?.planId)).toEqual(["697938", "697938"]);
+  });
+
+  it("prices a plan the builder no longer offers from its cheapest home (Coral, 2026-10-05)", async () => {
+    const stale = { ...coral, price: 445990, isPlanActive: false };
+    serve([daylen], [home("11236 Meadow River Way", stale, 584250), home("11248 Meadow River Way", stale, 569870), home("11240 Meadow River Way", stale, 575370)]);
+    const got = await extractPulteGroup({ url: "https://www.pulte.com/homes/florida/sarasota/parrish/longmeadow-211403" });
+    expect(got.find((p) => p.name === "Coral")).toMatchObject({ price: 569870, priceDisplay: "$569,870" });
+    // A plan still on offer keeps its own price, homes or no homes.
+    expect(got.find((p) => p.name === "Daylen")).toMatchObject({ price: 342990 });
+  });
+
+  it("prices a sold-out plan the feed still lists from its cheapest home", async () => {
+    const soldOut = { ...daylen, isSoldOut: true };
+    serve([soldOut], [home("1 Main St", soldOut, 401000), home("2 Main St", soldOut, 399000)]);
+    const got = await extractPulteGroup({ url: RIVERSONG });
+    expect(got.find((p) => p.name === "Daylen")).toMatchObject({ price: 399000, priceDisplay: "$399,000" });
+  });
+
+  it("keeps a plan's own price where none of its homes gives one", () => {
+    const plan = planFromRecord({ ...daylen, isPlanActive: false }, ORIGIN, RIVERSONG, undefined, true)!;
+    const unpriced = homeFromRecord({ address: { street1: "1 Main St" }, planId: daylen.id, callForPricingFlag: true, finalPrice: 400000 }, ORIGIN)!;
+    expect(fromItsHomes(plan, [unpriced])).toMatchObject({ price: 342990 });
   });
 
   it("reads a plan's drawings off its page where the feed has none", async () => {
