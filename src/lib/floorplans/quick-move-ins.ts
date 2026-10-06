@@ -339,6 +339,34 @@ export function withQuickMoveInPictures(plans: NormalizedPlan[]): NormalizedPlan
 }
 
 /**
+ * A quick move-in the builder shows no picture of takes its base plan's,
+ * and the plan's drawings and tour where it has none — the other way from
+ * withQuickMoveInPictures, and what Lennar's homes were already given
+ * (lennar.ts, withPlanPictures). Starlight lists its homes as rows of a
+ * table on the plan's page, an address and a price and nothing more, and
+ * all four at Oakfield Lakes went to the queue without a picture while the
+ * page above them showed the plan's seventeen (Jeff, 2026-10-06). A home
+ * with a picture of its own keeps its gallery as it is. Runs after
+ * linkQuickMoveIns and after the plans' galleries are cleaned, so a home
+ * is given what its plan will carry; pure.
+ */
+export function withPlanPicturesOnHomes(plans: NormalizedPlan[]): NormalizedPlan[] {
+  const byKey = new Map(plans.filter((p) => !p.quickMoveIn).map((p) => [p.planKey, p] as const));
+  return plans.map((home) => {
+    if (!home.quickMoveIn || home.galleryImages.length || !home.relatedPlanKey) return home;
+    const plan = byKey.get(home.relatedPlanKey);
+    if (!plan?.galleryImages.length) return home;
+    return {
+      ...home,
+      galleryImages: plan.galleryImages,
+      galleryMeta: plan.galleryMeta,
+      blueprintImages: home.blueprintImages.length ? home.blueprintImages : plan.blueprintImages,
+      virtualTourUrl: home.virtualTourUrl ?? plan.virtualTourUrl ?? null,
+    };
+  });
+}
+
+/**
  * The price bracket tag the site filters on: "$400s" for $419,990, "1M+"
  * from a million up, "Custom Pricing" when the builder gives no price
  * (Wellen Park's wording), nothing under $100k.

@@ -323,23 +323,64 @@ export function dropNoiseBlocks(html: string): string {
     const tag = m[0];
     const open = tag.match(OPEN_TAG);
     if (!open || tag.endsWith("/>") || !isNoiseBlock(tag)) continue;
-    const name = open[1].toLowerCase();
-    // On to the close of this block, counting the same tag nested inside it.
-    const same = new RegExp(`<(/?)${name}(?=[\\s/>])${TAG_BODY}>`, "gi");
-    same.lastIndex = tags.lastIndex;
-    let depth = 1;
-    let end = -1;
-    let n: RegExpExecArray | null;
-    while ((n = same.exec(html))) {
-      if (n[0].endsWith("/>")) continue;
-      depth += n[1] ? -1 : 1;
-      if (depth === 0) {
-        end = n.index + n[0].length;
-        break;
-      }
-    }
+    const end = blockEnd(html, open[1], tags.lastIndex);
     if (end < 0) continue;
     out += html.slice(from, m.index) + " ";
+    from = end;
+    tags.lastIndex = end;
+  }
+  return out + html.slice(from);
+}
+
+/**
+ * Where the block a tag opens ends: just past its closing tag, counting
+ * the same tag nested inside it, from `from` (just past the opening tag).
+ * -1 for a block that never closes.
+ */
+function blockEnd(html: string, tagName: string, from: number): number {
+  const same = new RegExp(`<(/?)${tagName.toLowerCase()}(?=[\\s/>])${TAG_BODY}>`, "gi");
+  same.lastIndex = from;
+  let depth = 1;
+  let n: RegExpExecArray | null;
+  while ((n = same.exec(html))) {
+    if (n[0].endsWith("/>")) continue;
+    depth += n[1] ? -1 : 1;
+    if (depth === 0) return n.index + n[0].length;
+  }
+  return -1;
+}
+
+/** A price-toggle's figure and its "/month*" after it: what a block with a total price shows. */
+const TOGGLE_VALUE = new RegExp(`(<[a-zA-Z][^\\s/>]*\\s${TAG_BODY}class\\s*=\\s*"[^"]*price-value[^"]*"${TAG_BODY}>)[^<]*`, "gi");
+const TOGGLE_SUFFIX = new RegExp(`(<[a-zA-Z][^\\s/>]*\\s${TAG_BODY}class\\s*=\\s*"[^"]*price-suffix[^"]*"${TAG_BODY}>)[^<]*`, "gi");
+
+/**
+ * The page with each price shown as the whole price where it shows a
+ * monthly payment by default. Starlight writes "Starting at $2401/month*"
+ * on every plan and keeps the price itself in the block's
+ * data-total-price, which its "Total Price" switch puts in place of the
+ * payment; the text Claude was given said only $2,401 a month, and seven
+ * of Oakfield Lakes' eleven plans went to the queue without a price
+ * (Jeff, 2026-10-06). Within such a block the figure is the total and
+ * the "/month*" goes; a block with no figure to put it in is given the
+ * total after its opening tag. Exported for tests.
+ */
+export function withTotalPrices(html: string): string {
+  const tags = new RegExp(ANY_TAG.source, "g");
+  let out = "";
+  let from = 0;
+  let m: RegExpExecArray | null;
+  while ((m = tags.exec(html))) {
+    const tag = m[0];
+    const open = tag.match(OPEN_TAG);
+    const total = Number((attrOf(tag, "data-total-price") ?? "").replace(/[$,\s]/g, ""));
+    if (!open || tag.endsWith("/>") || !(total > 0)) continue;
+    const end = blockEnd(html, open[1], tags.lastIndex);
+    if (end < 0) continue;
+    const shown = total.toLocaleString("en-US");
+    const inner = html.slice(tags.lastIndex, end);
+    const valued = inner.replace(TOGGLE_VALUE, (_, opening: string) => opening + shown).replace(TOGGLE_SUFFIX, (_, opening: string) => opening);
+    out += html.slice(from, tags.lastIndex) + (valued !== inner ? valued : ` $${shown} ` + inner);
     from = end;
     tags.lastIndex = end;
   }
@@ -393,7 +434,8 @@ export function distill(html: string, pageUrl: string): string {
   // A builder's Instagram feed says nothing about the plan and changes
   // with every post; a form's honeypot label changes with every load
   // (dropNoiseBlocks).
-  const withImgs = dropNoiseBlocks(withoutScripts)
+  // A price shown as a monthly payment is shown whole (withTotalPrices).
+  const withImgs = dropNoiseBlocks(withTotalPrices(withoutScripts))
     // The site's own menus and footer say nothing about a community, and on
     // a big builder's page they are much of what there is to read. Only
     // those that say nothing about homes, though: Kolter's plans came back
