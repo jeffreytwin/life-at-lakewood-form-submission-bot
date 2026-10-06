@@ -16,8 +16,10 @@
 // page (the plan page holds a shorter copy) files every picture by
 // category: "Virtual Tour" (the Matterport link), "Interior", "Exteriors",
 // "Floor Plan" (the drawings) and "Design Collections" (finish packages,
-// left out on Jeff's word). Each base plan's gallery page is read on every
-// run; a quick move-in keeps its listing photo.
+// left out on Jeff's word). Home pages have since added "Community" — the
+// amenity center, the pool, the bar — which is the place's, not the
+// home's, and is left out too. Each base plan's gallery page is read on
+// every run; a quick move-in keeps its listing photo.
 
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 import { standardHomeType, type HomeType } from "@/lib/floorplans/standardize";
@@ -271,6 +273,15 @@ interface TmGalleryCategory {
 const DESIGN_COLLECTIONS = /design collections?/i;
 
 /**
+ * The community's own pictures, which Taylor's home pages began filing
+ * beside the home's in October 2026 ("Community": Esplanade at Azario's
+ * amenity center, resort pool and Bahama Bar). Never a home's: Claude took
+ * the amenity center's facade for the front of the house, and every
+ * quick move-in at Azario led with the clubhouse (Jeff, 2026-10-06).
+ */
+const COMMUNITY = /^(?:community|amenit(?:y|ies)|lifestyle)\b/i;
+
+/**
  * A photo of the house from the street, which Taylor names for what it is
  * ("…-alta-model-2-ps-front-exterior.jpg"). The schematic elevations it
  * files beside them ("…alta_a_modern-mediterranean_sch_mm-1.jpg") are
@@ -363,7 +374,7 @@ export interface TaylorGallery {
  * page's data holds no gallery: interiors and exteriors as photos (the
  * exteriors marked so they trail), the "Floor Plan" drawings as blueprints,
  * the "Virtual Tour" entry's link as the tour, and nothing from "Design
- * Collections". Exported for tests.
+ * Collections" or "Community". Exported for tests.
  */
 export function galleryFromScData(scData: Record<string, unknown>, origin: string): TaylorGallery | null {
   for (const entry of Object.values(scData)) {
@@ -384,6 +395,7 @@ export function galleryFromScData(scData: Record<string, unknown>, origin: strin
         if (!im || typeof im !== "object") continue;
         const section = title || (im.header ?? "").trim();
         if (DESIGN_COLLECTIONS.test(section) || DESIGN_COLLECTIONS.test(im.header ?? "")) continue;
+        if (COMMUNITY.test(section) || COMMUNITY.test((im.header ?? "").trim())) continue;
         if (im.isTour || /virtual tour/i.test(section)) {
           tour = tour ?? tourUrl(im.vidSrc);
           continue;

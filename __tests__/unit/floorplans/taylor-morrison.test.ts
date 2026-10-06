@@ -202,6 +202,15 @@ describe("galleryFromScData on a quick move-in's own page (Taylor Morrison)", ()
           ],
         },
         { title: "Floor Plan", images: [{ image: { src: "/api/public/content/Ibis-FirstFloor" } }] },
+        // 2026-10-06, 14710 Orrieto Place at Esplanade at Azario: the
+        // community's pictures, which Claude took the clubhouse of for the front.
+        {
+          title: "Community",
+          images: [
+            { header: "Community", image: { src: "/-/media/esplanade-selects/amenities/esplanade-at-azario---amenity-center-159-pool.jpg" } },
+            { header: "Community", image: { src: "/api/public/content/Esplanade-at-Azario-Amenity-Center-1575-1200x675" } },
+          ],
+        },
       ],
     },
   };
@@ -219,6 +228,11 @@ describe("galleryFromScData on a quick move-in's own page (Taylor Morrison)", ()
     expect(gallery.photos.some((p) => /symphony/.test(p.src))).toBe(false);
     expect(gallery.blueprints).toHaveLength(1);
     expect(gallery.blueprints[0]).toContain("Ibis-FirstFloor");
+  });
+
+  it("leaves the community's pictures out of the home's gallery", () => {
+    const gallery = galleryFromScData(homePage, ORIGIN)!;
+    expect(gallery.photos.some((p) => /amenity-center|Amenity-Center/.test(p.src))).toBe(false);
   });
 });
 
