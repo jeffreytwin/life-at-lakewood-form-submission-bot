@@ -279,6 +279,27 @@ export function linkQuickMoveIns(plans: NormalizedPlan[]): NormalizedPlan[] {
   return linked.map((p) => (p.quickMoveIn ? p : { ...p, hasQuickMoveIns: (children.get(p.planKey) ?? 0) > 0 }));
 }
 
+/**
+ * The plans and homes with each home's tie to its plan as the builder's
+ * pages gave it, undoing an earlier linkQuickMoveIns, so that a second
+ * pass ties it afresh. A run links its homes, then adds the stand-in plans
+ * a person asked to keep, and links again; the second pass took the first
+ * pass's answer as the builder's own. Neal's 18014 Meandering Palms
+ * Crossing names its plan "Vision", the stand-in kept for it; the first
+ * pass, before the stand-in was there, tied it to the one plan whose name
+ * begins with that, "Vision 3", and renamed its plan to match, so the
+ * second kept Vision 3 and proposed it (Jeff, 2026-10-06). A home `asRead`
+ * does not have is left as it is. Pure.
+ */
+export function withLinksAsRead(plans: NormalizedPlan[], asRead: NormalizedPlan[]): NormalizedPlan[] {
+  const before = new Map(asRead.filter((p) => p.quickMoveIn).map((p) => [p.planKey, p] as const));
+  return plans.map((p) => {
+    const read = p.quickMoveIn ? before.get(p.planKey) : undefined;
+    if (!read) return p;
+    return { ...p, relatedPlanKey: read.relatedPlanKey, relatedPlanName: read.relatedPlanName, relatedPlanMatch: read.relatedPlanMatch };
+  });
+}
+
 const hasPrice = (p: NormalizedPlan): boolean =>
   typeof p.price === "number" && Number.isFinite(p.price) && p.price > 0 && text(p.priceDisplay) !== "";
 
