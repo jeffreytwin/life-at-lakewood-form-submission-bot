@@ -11,6 +11,18 @@
 // The Discover authorization value and customer key below are the public
 // client-side credentials embedded in meritagehomes.com's own JS bundle,
 // captured in pipeline/slice/discovery/round6/.
+//
+// The floor plans are not in Discover: it holds homes only, so every plan
+// at Oakfield had to be made from its homes in the Hub, though the
+// community's page shows all fourteen under "See our thoughtfully designed
+// floorplans" (Jeff, 2026-10-06). The site, which turned non-browser
+// clients away in round 6, now answers a plain fetch, and each series
+// page carries its plans in its Next.js data (communityPlans): name,
+// beds, baths, size, photos, the drawing and the 3D tour. A plan has no
+// price or garage there; it takes its homes' (quick-move-ins.ts prices a
+// plan from its cheapest home; garages here). A page that cannot be read
+// fails the run rather than leave its plans out, so they are never taken
+// for gone.
 
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
@@ -33,6 +45,17 @@ const KNOWN_COMMUNITIES: Record<string, MeritageCommunity[]> = {
     { id: "a078a0000115gcGAAQ", url: "https://www.meritagehomes.com/state/fl/tampa/salt-meadows-premier-series" },
   ],
 };
+
+interface PagePlan {
+  name?: string;
+  bedrooms?: string | number;
+  bathrooms?: string | number;
+  sqFootage?: string | number;
+  images?: { src?: string; alt?: string }[];
+  floorplanDiagram?: { src?: string; alt?: string } | null;
+  virtualTourUrl?: string | null;
+  hasVirtualTourLink?: boolean;
+}
 
 interface DiscoverHome {
   id?: string;
@@ -145,6 +168,87 @@ export function normalizeMeritageHome(h: DiscoverHome, pageUrl?: string): Normal
   };
 }
 
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+const isUrl = (u: unknown): u is string => typeof u === "string" && /^https?:\/\//i.test(u.trim());
+
+/** The floor plans a series page carries in its Next.js data. Exported for tests. */
+export function communityPlans(html: string): PagePlan[] {
+  const json = html.match(/<script id="__NEXT_DATA__" type="application\/json"[^>]*>([\s\S]*?)<\/script>/)?.[1];
+  if (!json) return [];
+  let data: { props?: { pageProps?: { componentProps?: Record<string, unknown> } } };
+  try {
+    data = JSON.parse(json);
+  } catch {
+    return [];
+  }
+  const out: PagePlan[] = [];
+  for (const component of Object.values(data.props?.pageProps?.componentProps ?? {})) {
+    const plans = (component as { data?: { floorplans?: unknown } } | null)?.data?.floorplans;
+    if (Array.isArray(plans)) out.push(...plans.filter((p): p is PagePlan => Boolean(p) && typeof p === "object"));
+  }
+  return out;
+}
+
+/** "2", "2.5" or 2 as the sites write baths; "" when not given. */
+const countOf = (v: unknown): string => {
+  const n = typeof v === "number" ? v : parseFloat(String(v ?? ""));
+  return Number.isFinite(n) && n > 0 ? String(n) : "";
+};
+
+/**
+ * A plan from its series page: its photos once each, in the page's order,
+ * its drawing, its tour. No price or garages: its homes give those
+ * (withPlanFactsFromHomes). Exported for tests.
+ */
+export function normalizeMeritagePlan(p: PagePlan, pageUrl?: string): NormalizedPlan | null {
+  const name = (p.name ?? "").trim();
+  if (!name) return null;
+  const sqft = parseInt(String(p.sqFootage ?? "").replace(/[^0-9]/g, ""), 10);
+  const photos = (p.images ?? [])
+    .map((im) => im?.src?.trim())
+    .filter((u, i, all): u is string => isUrl(u) && all.indexOf(u) === i);
+  const drawing = p.floorplanDiagram?.src?.trim();
+  const tour = p.virtualTourUrl?.trim();
+  return {
+    planKey: normKey(name),
+    name,
+    price: null,
+    priceDisplay: null,
+    beds: countOf(p.bedrooms),
+    baths: countOf(p.bathrooms),
+    sqft: Number.isFinite(sqft) && sqft > 0 ? sqft : null,
+    garages: null,
+    homeType: null,
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl: pageUrl ?? null,
+    galleryImages: photos,
+    blueprintImages: isUrl(drawing) ? [drawing] : [],
+    virtualTourUrl: isUrl(tour) ? tour : null,
+    raw: {},
+  };
+}
+
+/** The plan's garages, from the most any of its homes has, where the page gives none. Pure; exported for tests. */
+export function withPlanFactsFromHomes(plans: NormalizedPlan[]): NormalizedPlan[] {
+  return plans.map((plan) => {
+    if (plan.quickMoveIn || plan.garages) return plan;
+    const garages = plans
+      .filter((h) => h.quickMoveIn && normKey(String(h.raw?.relatedPlan ?? "")) === plan.planKey)
+      .map((h) => parseInt(h.garages ?? "", 10))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    return garages.length ? { ...plan, garages: `${Math.max(...garages)} car` } : plan;
+  });
+}
+
+async function readSeriesPage(url: string): Promise<PagePlan[]> {
+  const res = await fetch(url, { headers: { "user-agent": UA, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(30_000) });
+  if (!res.ok) throw new Error(`Meritage page ${url}: ${res.status} (its floor plans could not be read)`);
+  return communityPlans(await res.text());
+}
+
 function resolveCommunities(params: {
   communities?: MeritageCommunity[];
   url?: string;
@@ -171,6 +275,14 @@ export async function extractMeritage(params: {
     );
   }
   const byKey = new Map<string, NormalizedPlan>();
+  // The plans first, from each series page, so a plan keeps its own row
+  // ahead of any home of the same name.
+  for (const url of new Set(communities.map((c) => c.url ?? params.url).filter(isUrl))) {
+    for (const page of await readSeriesPage(url)) {
+      const plan = normalizeMeritagePlan(page, url);
+      if (plan && !byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
+    }
+  }
   for (const community of communities) {
     const homes = await discoverHomes(community.id);
     for (const home of homes) {
@@ -178,5 +290,5 @@ export async function extractMeritage(params: {
       if (plan && !byKey.has(plan.planKey)) byKey.set(plan.planKey, plan);
     }
   }
-  return [...byKey.values()];
+  return withPlanFactsFromHomes([...byKey.values()]);
 }
