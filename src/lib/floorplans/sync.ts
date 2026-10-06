@@ -22,6 +22,7 @@ import { extractWithClaude, extractWithRender } from "@/lib/floorplans/extractor
 import { extractLennar } from "@/lib/floorplans/extractors/lennar";
 import { extractMeritage } from "@/lib/floorplans/extractors/meritage";
 import { extractTaylorMorrison, readTaylorPlanPage } from "@/lib/floorplans/extractors/taylor-morrison";
+import { extractMiHomes, isMiHomesPage } from "@/lib/floorplans/extractors/mi-homes";
 import { extractMattamy } from "@/lib/floorplans/extractors/mattamy";
 import { extractDrb } from "@/lib/floorplans/extractors/drb";
 import { extractDrHorton } from "@/lib/floorplans/extractors/drhorton";
@@ -102,7 +103,9 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   // + Palmera) and M/I (Palmera). Communities that live in Lakewood Ranch
   // (M/I Sweetwater/Nautique, Neal Signature) need extractor_params.source =
   // "lakewoodranch" once that site's client-rendered list is reachable.
-  "M/I Homes": extractMpcAggregator,
+  // M/I's Parrish communities (Seaire, Creeks Edge at Twin Rivers) are on
+  // no such list and are read off M/I's own plan feed (mi-homes.ts).
+  "M/I Homes": (params) => (isMiHomesPage(params.url) ? extractMiHomes(params) : extractMpcAggregator(params)),
   "ICI Homes": extractMpcAggregator,
   "Neal Signature Homes": extractMpcAggregator,
 };
