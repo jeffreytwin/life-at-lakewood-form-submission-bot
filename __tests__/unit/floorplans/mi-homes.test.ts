@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { cardsIn, communityGuidIn, fromCard, isMiHomesPage } from "@/lib/floorplans/extractors/mi-homes";
+import { cardsIn, communityGuidIn, fromCard, isMiHomesPage, withCardLead } from "@/lib/floorplans/extractors/mi-homes";
 import { extractorFor, resolveExtractor } from "@/lib/floorplans/sync";
 
 // M/I's plan feed for Seaire as it answered (2026-10-06), pruned to the
@@ -108,5 +108,54 @@ describe("M/I's engine", () => {
     // A connection that names an engine of its own still gets it.
     expect(extractorFor("M/I Homes", "json_api", { url: SEAIRE, engine: "render_claude" })).not.toBe(mi);
     expect(extractorFor("M/I Homes", "json_api", { url: SEAIRE })).toBe(mi);
+  });
+});
+
+// 8929 Deep Horizon Loop at Seaire as the queue had it (2026-10-06): its
+// page led with M/I's four Lifestyle pictures, the house last; its card
+// shows the Harbor XL elevation.
+describe("withCardLead", () => {
+  const dam = (id: number) => `https://dam.mihomes.com/media/${id}/50421.jpeg`;
+  const home = {
+    planKey: "8929-deep-horizon-loop",
+    name: "8929 Deep Horizon Loop",
+    quickMoveIn: true,
+    galleryImages: [dam(5032614), dam(5032613), dam(5032611), dam(5032612), dam(4768464)],
+    galleryMeta: {
+      [dam(5032614)]: { kind: "primary", room: "primary", caption: "Lifestyle" },
+      [dam(5032613)]: { kind: "photo", room: null, caption: "Lifestyle" },
+      [dam(5032611)]: { kind: "photo", room: null, caption: "Lifestyle" },
+      [dam(5032612)]: { kind: "photo", room: null, caption: "Lifestyle" },
+      [dam(4768464)]: { kind: "exterior", room: "exterior", caption: "HarborXL Elevation A" },
+    },
+    blueprintImages: [],
+  } as unknown as Parameters<typeof withCardLead>[0];
+
+  it("leaves out M/I's Lifestyle pictures and leads with the house the card shows", () => {
+    const out = withCardLead(home, `${dam(4768464)}?w=1200`);
+    expect(out.galleryImages).toEqual([dam(4768464)]);
+    expect(out.galleryMeta?.[dam(4768464)]).toMatchObject({ kind: "primary", caption: "HarborXL Elevation A" });
+  });
+
+  it("puts the card's picture first when the page does not carry it, and the page's own lead steps aside", () => {
+    const finished = {
+      ...home,
+      galleryImages: [dam(1), dam(2), dam(3)],
+      galleryMeta: {
+        [dam(1)]: { kind: "primary", room: "primary", caption: "Interior" },
+        [dam(2)]: { kind: "photo", room: "kitchen", caption: "Kitchen" },
+        [dam(3)]: { kind: "photo", room: null, caption: "Lifestyle" },
+      },
+    } as typeof home;
+    const out = withCardLead(finished, dam(5225694));
+    expect(out.galleryImages[0]).toBe(dam(5225694));
+    expect(out.galleryImages).not.toContain(dam(3));
+    expect(out.galleryImages).toHaveLength(3);
+    expect(out.galleryMeta?.[dam(1)]?.kind).not.toBe("primary");
+  });
+
+  it("leaves a plan without a card picture or Lifestyle pictures as its page had it", () => {
+    const plain = { ...home, galleryImages: [dam(1)], galleryMeta: { [dam(1)]: { kind: "primary", room: "primary", caption: "Coral Elevation A" } } } as typeof home;
+    expect(withCardLead(plain, null)).toBe(plain);
   });
 });
