@@ -26,6 +26,7 @@ import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 import { isMedallionPage, medallionTour } from "@/lib/floorplans/extractors/medallion";
+import { isWilliamRyanPage, williamRyanPictures } from "@/lib/floorplans/extractors/william-ryan";
 import { relatedNameFromPage } from "@/lib/floorplans/quick-move-ins";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
@@ -910,7 +911,14 @@ export async function readPlanPageWithClaude(
   // twenty-three photographs in its payload (Jeff, 2026-09-22). Only
   // where the headings gave nothing, so a plan never inherits the
   // community's other pictures.
-  const carried = ashton || gallery.first.length ? [] : payloadGallery(html, page_.url, [plan.name, plan.relatedPlanName]);
+  // William Ryan's draw none of theirs: every one is in the payload, filed
+  // under the plan's or home's own number (william-ryan.ts).
+  const williamRyan = isWilliamRyanPage(page_.url || plan.sourceUrl) ? williamRyanPictures(html, page_.url || plan.sourceUrl) : [];
+  const carried = williamRyan.length
+    ? williamRyan
+    : ashton || gallery.first.length
+      ? []
+      : payloadGallery(html, page_.url, [plan.name, plan.relatedPlanName]);
   // A gallery read off the markup is the plan's pictures; Claude is not
   // asked to list them again.
   const picturesKnown = Boolean(ashton) || gallery.first.length + carried.length >= 4;
