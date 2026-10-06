@@ -41,6 +41,7 @@ import { wixImageUri } from "@/lib/listings/types";
 import { copyStoragePath, copyTypeOf, measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta, type NormalizedPlan } from "@/lib/floorplans/types";
 import { ownFieldOnto } from "@/lib/floorplans/diff";
+import { MAX_GALLERY_IMAGES } from "@/lib/floorplans/pictures-on-wix";
 import { isRefused, refusedTours } from "@/lib/floorplans/tour-review";
 import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
 import { liftHomeGuards } from "@/lib/floorplans/removal-guards";
@@ -81,9 +82,6 @@ export interface ProposedRecord {
   score?: number | null;
 }
 
-// A safety bound, not a policy: the freelancers' galleries run to 58 photos
-// and Jeff has not yet said whether to cap them (2026-09-19).
-const MAX_GALLERY_IMAGES = 40;
 
 /** One MEDIA_GALLERY entry, in the shape the legacy collections carry; the caption rides as title and alt. */
 type GalleryItem = { type: "image"; src: string; title: string; alt?: string };
