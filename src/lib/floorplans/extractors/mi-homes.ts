@@ -17,8 +17,15 @@
 // page — and the garage, the plan a home is built on and its ready date
 // beside them. Each plan's and home's own page is then read for its
 // gallery, drawings and description (claude-extract.ts).
+//
+// The card's picture is the house — a home's front exterior, or its plan's
+// elevation while it is being built — and it leads (withCardLead). A home's
+// page shows M/I's "Lifestyle" pictures ahead of it, the same four people
+// on a sofa beside every home at Seaire, and the queue led sixteen homes
+// with them (Jeff, 2026-10-06); they are M/I's, not the home's, and are left out.
 
 import { fetchPage, readPlanPages } from "@/lib/floorplans/extractors/claude-extract";
+import { orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { bathsOf, standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
@@ -220,6 +227,45 @@ async function feedCards(origin: string, guid: string, type: "plans" | "homes", 
   return cards;
 }
 
+/** M/I's own marketing pictures, captioned for what they sell rather than what they show. */
+const STOCK_CAPTION = /^\s*lifestyle\s*$/i;
+
+/** The same picture whatever size or version the address asks for. */
+const samePicture = (a: string, b: string) => {
+  try {
+    return new URL(a).pathname === new URL(b).pathname;
+  } catch {
+    return a === b;
+  }
+};
+
+/**
+ * The plan's gallery without M/I's Lifestyle pictures, led by the picture
+ * its card shows: promoted where the page has it, put first where it does
+ * not. A plan whose card had no picture keeps its page's order. Pure;
+ * exported for tests.
+ */
+export function withCardLead(plan: NormalizedPlan, cardPicture: string | null | undefined): NormalizedPlan {
+  const meta = plan.galleryMeta ?? {};
+  const kept = plan.galleryImages.filter((src) => !STOCK_CAPTION.test(meta[src]?.caption ?? ""));
+  const lead = cardPicture ? kept.find((src) => samePicture(src, cardPicture)) ?? cardPicture : null;
+  if (!lead && kept.length === plan.galleryImages.length) return plan;
+  const items: GalleryInput[] = [
+    ...(lead ? [{ src: lead, kind: "primary" as const, caption: meta[lead]?.caption ?? null }] : []),
+    ...kept
+      .filter((src) => src !== lead)
+      .map((src) => ({
+        src,
+        caption: meta[src]?.caption ?? null,
+        // The page's own lead steps aside for the card's.
+        kind: meta[src]?.kind === "primary" && lead ? ("exterior" as const) : meta[src]?.kind,
+        ...(meta[src] && meta[src].room !== "primary" ? { room: meta[src].room ?? null } : {}),
+      })),
+  ];
+  const ordered = orderGallery(items);
+  return { ...plan, galleryImages: ordered.urls, galleryMeta: ordered.meta };
+}
+
 export async function extractMiHomes(params: { url?: string; runDeadline?: number }): Promise<NormalizedPlan[]> {
   const url = params.url?.trim();
   if (!url) throw new Error("the M/I Homes extractor needs the community's page (extractor_params.url)");
@@ -243,5 +289,7 @@ export async function extractMiHomes(params: { url?: string; runDeadline?: numbe
     if (home && !byKey.has(home.planKey)) byKey.set(home.planKey, home);
   }
   if (!byKey.size) throw new Error(`no plans or homes in M/I's feed for ${url} (community ${guid})`);
-  return readPlanPages([...byKey.values()], { read: fetchPage, atOnce: 6, runDeadline: params.runDeadline, listPages: new Set([url]) });
+  const cardPictures = new Map([...byKey.values()].map((p) => [p.planKey, p.galleryImages[0] ?? null] as const));
+  const read = await readPlanPages([...byKey.values()], { read: fetchPage, atOnce: 6, runDeadline: params.runDeadline, listPages: new Set([url]) });
+  return read.map((p) => withCardLead(p, cardPictures.get(p.planKey)));
 }
