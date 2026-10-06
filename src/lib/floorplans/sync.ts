@@ -54,6 +54,7 @@ import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { runContext, withRunContext } from "@/lib/floorplans/run-context";
 import { runTotals } from "@/lib/floorplans/ai-usage";
 import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
+import { listedPictures, picturesOnWix, unwrittenPictureChanges } from "@/lib/floorplans/pictures-on-wix";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -807,6 +808,15 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         const split = splitOnItsOwn(current, plan, changes.filter((c) => !rejected.has(c.field)), Boolean(existing.wix_record_id));
         const onItsOwn = [...split.onItsOwn];
         const reviewed = [...split.reviewed];
+        // Pictures the plan lists that never reached its row (pictures-on-wix.ts):
+        // proposed so that approving writes the plan whole. Before the outdated
+        // ones are withdrawn, so one still waiting is kept, not queued afresh.
+        if (existing.wix_record_id) {
+          const proposedLabels = new Set([...onItsOwn, ...reviewed].map((c) => c.label));
+          for (const change of unwrittenPictureChanges(merged, await picturesOnWix(site.id, listedPictures(merged)), proposedLabels)) {
+            if (!(await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue }))) reviewed.push(change);
+          }
+        }
         await withdrawOutdated(ids, comparedFields(current, plan), reviewed, current);
         // Nor with anything of the plan's still waiting for a person from an
         // earlier run: then the price waits with it.

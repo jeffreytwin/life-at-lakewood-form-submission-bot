@@ -41,6 +41,7 @@ import { wixImageUri } from "@/lib/listings/types";
 import { copyStoragePath, copyTypeOf, measureImageUrl, rasterizeSvg, rasterStoragePath, RASTER_BUCKET, wixFileIdOf } from "@/lib/floorplans/media";
 import { normKey, type GalleryMeta, type NormalizedPlan } from "@/lib/floorplans/types";
 import { ownFieldOnto } from "@/lib/floorplans/diff";
+import { MAX_GALLERY_IMAGES } from "@/lib/floorplans/pictures-on-wix";
 import { isRefused, refusedTours } from "@/lib/floorplans/tour-review";
 import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
 import { liftHomeGuards } from "@/lib/floorplans/removal-guards";
@@ -81,9 +82,6 @@ export interface ProposedRecord {
   score?: number | null;
 }
 
-// A safety bound, not a policy: the freelancers' galleries run to 58 photos
-// and Jeff has not yet said whether to cap them (2026-09-19).
-const MAX_GALLERY_IMAGES = 40;
 
 /** One MEDIA_GALLERY entry, in the shape the legacy collections carry; the caption rides as title and alt. */
 type GalleryItem = { type: "image"; src: string; title: string; alt?: string };
@@ -120,6 +118,67 @@ export class PhotosStillFetching extends Error {
     super(`Wix is still fetching ${count} of ${planKey}'s pictures; it is tried again in a minute`);
     this.name = "PhotosStillFetching";
   }
+}
+
+/** A picture a record lists that did not make it onto Wix this time. */
+export interface MissingPicture {
+  kind: "photo" | "drawing" | "tour still";
+  /** Its place in the record's list, from 1. */
+  position: number;
+  sourceUrl: string;
+}
+
+/**
+ * A row is written with every picture its record lists, or not at all
+ * (Jeff, 2026-10-06): a write that went ahead with what Wix could take put
+ * SimplyDwell's Olivia up with eleven of its twelve photos and Neal's
+ * Bright Star with none of its drawings, and since the record still listed
+ * them no later run noticed. The change goes to Failed naming each picture;
+ * the next run queues it again, and a picture the builder has taken down
+ * can be removed in Edit.
+ */
+export class PicturesMissing extends Error {
+  constructor(
+    planKey: string,
+    readonly missing: MissingPicture[],
+    total: number
+  ) {
+    super(missingPicturesMessage(planKey, missing, total));
+    this.name = "PicturesMissing";
+  }
+}
+
+/** "2 of 13 pictures could not be put on Wix, so nothing was written: photo 8 (…), drawing 1 (…). …" Pure; exported for tests. */
+export function missingPicturesMessage(planKey: string, missing: MissingPicture[], total: number): string {
+  const shown = missing.slice(0, 5).map((m) => {
+    const url = m.sourceUrl.length > 120 ? `${m.sourceUrl.slice(0, 120)}…` : m.sourceUrl;
+    return `${m.kind} ${m.position} (${url})`;
+  });
+  const more = missing.length > shown.length ? ` and ${missing.length - shown.length} more` : "";
+  return (
+    `${missing.length} of ${total} pictures could not be put on Wix, so nothing was written for ${planKey}: ` +
+    `${shown.join(", ")}${more}. The next run queues it again; a picture the builder has taken down can be removed in Edit.`
+  );
+}
+
+/**
+ * The pictures a record lists that the import did not bring back whole:
+ * left out (unfetchable, unmeasurable, refused) or not verified on Wix.
+ * Pure; exported for tests.
+ */
+export function picturesMissing(
+  listed: { kind: MissingPicture["kind"]; urls: string[] }[],
+  imported: { kind: MissingPicture["kind"]; sourceUrl: string; fileId: string }[],
+  bad: Set<string>
+): MissingPicture[] {
+  const missing: MissingPicture[] = [];
+  for (const { kind, urls } of listed) {
+    const landed = new Set(imported.filter((i) => i.kind === kind && !bad.has(i.fileId)).map((i) => i.sourceUrl));
+    urls.forEach((sourceUrl, i) => {
+      if (!landed.has(sourceUrl)) missing.push({ kind, position: i + 1, sourceUrl });
+    });
+  }
+  return missing;
 }
 
 type PendingGalleryItem = GalleryItem & { image: ImportedImage };
@@ -422,10 +481,10 @@ const toGalleryItem = (item: PendingGalleryItem): GalleryItem => ({
 
 /**
  * Both galleries and the tour still for a record, every picture verified
- * with Wix before it is handed back. Throws when the record lists photos
- * and not one could be imported and verified, so an approval never inserts
- * a photo-less plan or wipes a live gallery over a transient failure; a
- * partial gallery is written and the rest logged.
+ * with Wix before it is handed back. All or nothing: a picture the record
+ * lists that is not on Wix throws PicturesMissing and the row is not
+ * written, so a row never goes up with part of its gallery (Jeff,
+ * 2026-10-06). Pictures Wix is still fetching are waited for instead.
  */
 async function importRecordMedia(
   siteId: string,
@@ -436,18 +495,18 @@ async function importRecordMedia(
   // A quick move-in's row shows one picture and no drawings or tour
   // (Wellen Park and Parrish keep those on the base plan), so only that
   // picture is imported for it.
-  const photoUrls = rec.quickMoveIn ? galleryUrls(rec).slice(0, 1) : galleryUrls(rec);
+  const photoUrls = (rec.quickMoveIn ? galleryUrls(rec).slice(0, 1) : galleryUrls(rec)).slice(0, MAX_GALLERY_IMAGES);
+  const drawingUrls = rec.quickMoveIn ? [] : (rec.blueprintImages ?? []).slice(0, MAX_GALLERY_IMAGES);
   const gallery = await importGallery(siteId, wixSiteId, photoUrls, rec.planKey, "photo", rec.galleryMeta ?? {});
   const blueprints = rec.quickMoveIn
     ? { items: [] as PendingGalleryItem[], skipped: [] as string[] }
-    : await importGallery(siteId, wixSiteId, rec.blueprintImages ?? [], rec.planKey, "plan");
+    : await importGallery(siteId, wixSiteId, drawingUrls, rec.planKey, "plan");
   // A drawing has no caption of its own; the site shows this one.
   blueprints.items = blueprints.items.map((item) => ({ ...item, title: "Floor plan", alt: "Floor plan" }));
   // The builder's still behind the virtual tour link, for a site without a
   // button of its own (site-assets.ts); optional, so its failure only costs the still.
-  const tour = tourStill && rec.virtualTourImage && !rec.quickMoveIn
-    ? await importImage(siteId, wixSiteId, rec.virtualTourImage, displayNameFor(rec.planKey, "tour", 1, rec.virtualTourImage))
-    : null;
+  const tourUrl = tourStill && rec.virtualTourImage && !rec.quickMoveIn ? rec.virtualTourImage : null;
+  const tour = tourUrl ? await importImage(siteId, wixSiteId, tourUrl, displayNameFor(rec.planKey, "tour", 1, tourUrl)) : null;
 
   // Nothing goes on the row until Wix is seen holding it.
   const { bad, fetching } = await verifyImports(siteId, wixSiteId, [
@@ -462,16 +521,25 @@ async function importRecordMedia(
   // Wix has some of the pictures still on their way: the plan waits for
   // them rather than going up without them, or failing for want of them.
   if (fetching.size) throw new PhotosStillFetching(rec.planKey, fetching.size);
-  if (photoUrls.length && !photos.length) {
-    throw new Error(`none of the ${photoUrls.length} photos could be imported and verified (first: ${photoUrls[0]})`);
-  }
-  if (gallery.skipped.length || blueprints.skipped.length || bad.size) {
-    logger.warn("Floor plan write-back left images out", {
-      planKey: rec.planKey,
-      photosSkipped: gallery.skipped.length,
-      blueprintsSkipped: blueprints.skipped.length,
-      unverified: bad.size,
-    });
+  // Every picture the record lists, or nothing.
+  const listed = [
+    { kind: "photo" as const, urls: photoUrls },
+    { kind: "drawing" as const, urls: drawingUrls },
+    { kind: "tour still" as const, urls: tourUrl ? [tourUrl] : [] },
+  ];
+  const missing = picturesMissing(
+    listed,
+    [
+      ...gallery.items.map((item) => ({ kind: "photo" as const, sourceUrl: item.image.sourceUrl, fileId: item.image.fileId })),
+      ...blueprints.items.map((item) => ({ kind: "drawing" as const, sourceUrl: item.image.sourceUrl, fileId: item.image.fileId })),
+      ...(tour ? [{ kind: "tour still" as const, sourceUrl: tour.sourceUrl, fileId: tour.fileId }] : []),
+    ],
+    bad
+  );
+  if (missing.length) {
+    const total = listed.reduce((n, l) => n + l.urls.length, 0);
+    logger.warn("Floor plan write-back held: pictures missing on Wix", { planKey: rec.planKey, missing: missing.length, total });
+    throw new PicturesMissing(rec.planKey, missing, total);
   }
   return { gallery: photos, blueprints: drawings, tourImage };
 }
@@ -649,6 +717,11 @@ async function writePlanToWix(
     refs: await referencesFor(site, builder.name, community.name),
     urlSlug,
   });
+  // A row always leads with a picture: a record that lists none is not
+  // put up bare, and an update that lists none keeps the row's own.
+  if (!data.floorPlanImage) {
+    throw new Error(`${planKey} has no pictures to put on Wix, so nothing was written; add one in Edit or wait for the builder's`);
+  }
   const asDraft = site.insert_publish_mode !== "published";
   if (current && wixRecordId) {
     const isDraft = String(current.data?._publishStatus ?? "").toUpperCase() === "DRAFT";
