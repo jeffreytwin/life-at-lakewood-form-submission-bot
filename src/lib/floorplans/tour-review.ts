@@ -36,7 +36,7 @@ const REFUSED = ["approved", "synced", "synced_draft"];
 
 /** Hosts that serve walkthrough tours; a link anywhere else is a web page. */
 const TOUR_HOST =
-  /(?:^|\.)(?:matterport\.com|zillow\.com|modsy\.com|lennar\.com|vr-360-tour\.com|cloudpano\.com|wh360tours\.com|insidemaps\.com|youtube\.com|youtu\.be|vimeo\.com|ml3ds-icon\.com|novasyscad\.com|kuula\.co|eyespy360\.com|truplace\.com|youriguide\.com|iguide\.com|homejab\.com|tourbuilder\.com|envisionyourhome\.com)$/i;
+  /(?:^|\.)(?:matterport\.com|zillow\.com|modsy\.com|lennar\.com|vr-360-tour\.com|cloudpano\.com|wh360tours\.com|insidemaps\.com|youtube\.com|youtu\.be|vimeo\.com|ml3ds-icon\.com|novasyscad\.com|kuula\.co|eyespy360\.com|truplace\.com|youriguide\.com|iguide\.com|homejab\.com|tourbuilder\.com|envisionyourhome\.com|elevatedplans\.com|cupix\.com)$/i;
 
 // ---------------------------------------------------------------- refusals
 
