@@ -31,6 +31,7 @@ import { extractMpcAggregator } from "@/lib/floorplans/extractors/mpc-aggregator
 import { extractWestBay } from "@/lib/floorplans/extractors/westbay";
 import { extractKb } from "@/lib/floorplans/extractors/kb";
 import { extractHighland } from "@/lib/floorplans/extractors/highland";
+import { extractStanleyMartin } from "@/lib/floorplans/extractors/stanley-martin";
 import { extractArHomes } from "@/lib/floorplans/extractors/arhomes";
 import { extractCardel } from "@/lib/floorplans/extractors/cardel";
 import { comparedFields, fieldChanges, mergeForUpdate, splitOnItsOwn, withDescriptionFrom, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
@@ -98,6 +99,9 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   "Cardel Homes": extractCardel,
   // Highland's pages post to a feed for their plans and homes (highland.ts).
   "Highland Homes": extractHighland,
+  // Stanley Martin's pages are drawn from its own feeds, its floor plans
+  // only behind a tab a browser would have to click (stanley-martin.ts).
+  "Stanley Martin": extractStanleyMartin,
   // Builders that block their own sites — sourced from the master-planned-
   // community aggregators instead (a different origin, so the blocks don't
   // apply). Wellen Park (default) is server-rendered and covers ICI (Oakbend
