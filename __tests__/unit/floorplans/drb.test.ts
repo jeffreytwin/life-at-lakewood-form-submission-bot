@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { communityPath, normalizeDrbItem, normalizeDrbPlan, plansPageOf } from "@/lib/floorplans/extractors/drb";
+import { communityPath, normalizeDrbItem, normalizeDrbPlan, plansPageOf, planTour } from "@/lib/floorplans/extractors/drb";
 
 // Real inventory item for Biscayne Landing at Seaire (communityId 281),
 // captured in round-8 discovery and slimmed to the mapped fields.
@@ -108,5 +108,34 @@ describe("DRB's plans (Biscayne Landing at Seaire, Jeff 2026-09-26)", () => {
     expect(plansPageOf("https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/overview")).toBe(
       "https://www.drbhomes.com/drbhomes/find-your-home/communities/florida/tampa/biscayne-landing-at-seaire/home-plans"
     );
+  });
+});
+
+// The tours DRB filed for its Biscayne Landing plans (2026-10-06).
+describe("planTour (DRB)", () => {
+  const zillow = "https://www.zillow.com/view-imx/52c0e22b-f69d-4e14-bbc9-2d808162128d?wl=true&setAttribution=mls&initialViewType=pano";
+
+  it("takes the plan's virtual tour, the Zillow 3D Home its Virtual Tour tab plays", () => {
+    expect(planTour([{ url: zillow, assetType: "virtual_tour" }, { url: zillow, assetType: "zillow_virtual_tour" }])).toBe(zillow);
+    expect(planTour([{ url: zillow, assetType: "zillow_virtual_tour" }])).toBe(zillow);
+  });
+
+  it("leads with the 3D Home over a video, and takes the video where it is all there is", () => {
+    const video = "https://www.youtube.com/watch?v=U4znfNAEIPk";
+    expect(planTour([{ url: video, assetType: "video_tour" }, { url: zillow, assetType: "virtual_tour" }])).toBe(zillow);
+    expect(planTour([{ url: video, assetType: "video_tour" }])).toBe(video);
+  });
+
+  it("passes over a web page about one home, a deleted asset, and a plan with none", () => {
+    expect(planTour([{ url: "https://tampa-home-photos.aryeo.com/sites/xamxqnk/unbranded", assetType: "virtual_tour" }])).toBeNull();
+    expect(planTour([{ url: zillow, assetType: "virtual_tour", deletedAt: "2026-09-01T00:00:00Z" }])).toBeNull();
+    expect(planTour([])).toBeNull();
+    expect(planTour(undefined)).toBeNull();
+  });
+
+  it("is carried on the plan", () => {
+    const p = normalizeDrbPlan({ name: "Osprey", status: "active", assets: [{ url: zillow, assetType: "virtual_tour" }] })!;
+    expect(p.virtualTourUrl).toBe(zillow);
+    expect(normalizeDrbPlan({ name: "Canary", status: "active", assets: [] })!.virtualTourUrl).toBeNull();
   });
 });

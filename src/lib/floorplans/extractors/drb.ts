@@ -9,6 +9,9 @@
 // loads (api/v1/public/community/<id>/plans), the community's number found
 // from the state, region and name in its address: the homes alone left
 // Biscayne Landing at Seaire with no floor plans at all (Jeff, 2026-09-26).
+//
+// A plan's tour is among its assets, the same list its Virtual Tour tab
+// plays (planTour; Jeff, 2026-10-06).
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { bathsOf } from "@/lib/floorplans/standardize";
@@ -126,6 +129,12 @@ interface DrbPlanImage {
   status?: string;
 }
 
+interface DrbAsset {
+  url?: string | null;
+  assetType?: string | null;
+  deletedAt?: string | null;
+}
+
 interface DrbPlan {
   id?: number;
   name?: string;
@@ -150,6 +159,7 @@ interface DrbPlan {
   elevationImages?: DrbPlanImage[];
   interiorImages?: DrbPlanImage[];
   floorplanImages?: DrbPlanImage[];
+  assets?: DrbAsset[] | null;
 }
 
 /** A plan's pictures of one kind, active and in DRB's own order. */
@@ -173,6 +183,26 @@ function plainText(html: string | null | undefined): string | null {
     .replace(/^[.\s]+|[.\s]+$/g, "")
     .trim();
   return text ? `${text}.` : null;
+}
+
+/** The tour hosts DRB files its plans' tours on: Zillow's 3D Home, Matterport, YouTube. */
+const TOUR_HOST = /^https?:\/\/(?:[a-z0-9-]+\.)*(?:zillow\.com\/view-imx\/|matterport\.com\/|youtube\.com\/|youtu\.be\/)/i;
+
+/**
+ * The plan's tour, as its Virtual Tour tab plays it: DRB's "virtual_tour"
+ * (Osprey's Zillow 3D Home at Biscayne Landing), else the copy it files for
+ * Zillow, else a "video_tour" — Sabal carries a YouTube exterior video
+ * beside its 3D Home, which leads. A link to a web page about one home
+ * (Bismark's "virtual tour" is a photographer's site for 8347 Golden
+ * Beach Dr) is no tour of the plan. Pure; exported for tests.
+ */
+export function planTour(assets: DrbAsset[] | null | undefined): string | null {
+  const live = (assets ?? []).filter((a) => !a.deletedAt && TOUR_HOST.test((a.url ?? "").trim()));
+  for (const type of ["virtual_tour", "zillow_virtual_tour", "video_tour"]) {
+    const found = live.find((a) => a.assetType === type);
+    if (found) return found.url!.trim();
+  }
+  return null;
 }
 
 /**
@@ -207,6 +237,7 @@ export function normalizeDrbPlan(plan: DrbPlan, pageUrl?: string): NormalizedPla
     galleryImages: ordered.urls,
     galleryMeta: ordered.meta,
     blueprintImages: inOrder(plan.floorplanImages),
+    virtualTourUrl: planTour(plan.assets),
     raw: { drbPlanId: plan.id ?? null },
   };
 }
