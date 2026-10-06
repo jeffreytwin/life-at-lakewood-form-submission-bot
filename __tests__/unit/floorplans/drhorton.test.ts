@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, homesOnPage, planLinks, planNameFrom, readDrhPage } from "@/lib/floorplans/extractors/drhorton";
+import { communityHomeType, homesOnPage, planLinks, planNameFrom, readDrhPage, homePageUrl } from "@/lib/floorplans/extractors/drhorton";
 
 // Shaped like Oakfield Lakes as fetched on 2026-09-23, pruned.
 const COMMUNITY = "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes";
@@ -136,5 +136,28 @@ describe("what D.R. Horton's pages say besides their pictures", () => {
       "https://www.drhorton.com/-/media/x/3emb/14.jpg",
       "https://www.drhorton.com/-/media/x/4eab/aria-c-siding-stone-gen3-elev_ind.jpg",
     ]);
+  });
+});
+
+describe("homePageUrl (Oakfield Trails, 2026-10-06)", () => {
+  const TRAILS = "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-trails";
+
+  it("takes the page the community gives a home beneath it", () => {
+    expect(homePageUrl({ Url: "/florida/manatee-sarasota/parrish/oakfield-trails/qmis/10641-fern-hollow-run", Address: "10641 Fern Hollow Run" }, TRAILS)).toBe(
+      `${TRAILS}/qmis/10641-fern-hollow-run`
+    );
+  });
+
+  it("does not take a page elsewhere on the site for the home's", () => {
+    // The community page gave the Holden at 10641 Fern Hollow Run the Cali's page in South Carolina.
+    expect(homePageUrl({ Url: "/south-carolina/columbia/gilbert/seases-pond/floor-plans/1774", Address: "10641 Fern Hollow Run" }, TRAILS)).toBe(
+      `${TRAILS}/qmis/10641-fern-hollow-run`
+    );
+    expect(homePageUrl({ Url: "/florida/manatee-sarasota/parrish/oakfield-trails-50s/qmis/1-main-st", Address: "1 Main St" }, TRAILS)).toBe(`${TRAILS}/qmis/1-main-st`);
+  });
+
+  it("gives a home with no page the one D.R. Horton gives every home there", () => {
+    expect(homePageUrl({ Address: "10649 Fern Hollow Run" }, `${TRAILS}/`)).toBe(`${TRAILS}/qmis/10649-fern-hollow-run`);
+    expect(homePageUrl({ Address: "" }, TRAILS)).toBeNull();
   });
 });

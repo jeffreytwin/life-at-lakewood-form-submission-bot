@@ -6,7 +6,7 @@
 // connection is scoped by its community page URL prefix. Structure
 // captured in pipeline/slice/discovery/round7/mattamy-search.*.
 
-import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
+import { classifyRoom, fileNameWords, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { standardHomeType } from "@/lib/floorplans/standardize";
 import { type GalleryMeta, type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
@@ -269,14 +269,25 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return out;
 }
 
+/** Whether a picture shows a room inside a house, by what Mattamy files it as or else its file's name; the outside, or nothing said, is not. */
+function roomInside(src: string, meta: Record<string, GalleryMeta>): boolean {
+  const filed = meta[src]?.room;
+  const room = filed && filed !== "primary" ? filed : classifyRoom(fileNameWords(src));
+  return room != null && room !== "primary" && room !== "exterior" && room !== "outdoor";
+}
+
 /**
  * A home's pictures led by the house itself. A home's page leads with the
  * model's pictures — 11898 Mandala Ct's with a staged great room and the
  * Anclote model's front porch, a house at another address — and files the
  * rendering of the home itself, "Craftsman Elevation", among them (Jeff,
  * 2026-09-25). A page that shows one elevation is showing this home's;
- * one that shows several, or none, leaves the card's picture to lead. The
- * page's lead goes back among the photos for the sorter to place. Pure;
+ * one that shows several, or none, leaves the card's picture to lead. A
+ * card that shows a room inside does not: 11744 Boundless Ter's card
+ * became its kitchen, and the page's own picture of the outside, the one
+ * its header strip shows, leads instead, or failing that the page's first
+ * picture of the outside (Jeff, 2026-10-06). The page's
+ * lead goes back among the photos for the sorter to place. Pure;
  * exported for tests.
  */
 export function ledByHome(
@@ -285,7 +296,12 @@ export function ledByHome(
   meta: Record<string, GalleryMeta>
 ): { photos: string[]; meta: Record<string, GalleryMeta> } {
   const styles = photos.filter((u) => meta[u]?.kind === "exterior");
-  const lead = styles.length === 1 ? styles[0] : card;
+  // The page's header picture (TitleDetailsBlock), which readPlanLayout puts first.
+  const header = photos.find((u) => meta[u]?.kind === "primary");
+  // Where neither shows the outside (Brightmore's Lapis and Maya homes lead
+  // with their model's kitchen on both), the page's first picture of it.
+  const outside = photos.find((u) => meta[u]?.room === "exterior");
+  const lead = styles.length === 1 ? styles[0] : ([card, header].find((u): u is string => Boolean(u) && !roomInside(u!, meta)) ?? outside ?? card);
   if (!lead || !photos.length) return { photos, meta };
   const demoted = Object.fromEntries(
     Object.entries(meta).map(([src, m]) => [src, src !== lead && m.kind === "primary" ? { ...m, kind: "photo" as const, room: null } : m])

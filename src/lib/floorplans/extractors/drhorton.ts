@@ -112,6 +112,35 @@ export function homesOnPage(html: string): DrhHome[] {
     });
 }
 
+/**
+ * A home's own page: the address the community page gives it, where that
+ * is beneath the community, else the one D.R. Horton gives every home
+ * there (".../oakfield-trails/qmis/10641-fern-hollow-run"). The community
+ * page once gave 10641 Fern Hollow Run, a Holden at Oakfield Trails, the
+ * Cali's page at Sease's Pond in South Carolina, and the run took that
+ * page's thirty-six pictures and its "Welcome to the Cali at Sease's Pond!"
+ * for the home's (Jeff, 2026-10-06). Exported for tests.
+ */
+export function homePageUrl(home: Pick<DrhHome, "Url" | "Address">, communityUrl: string): string | null {
+  let community: URL;
+  try {
+    community = new URL(communityUrl);
+  } catch {
+    return null;
+  }
+  const under = community.pathname.replace(/\/+$/, "").toLowerCase();
+  if (home.Url) {
+    try {
+      const url = new URL(home.Url, ORIGIN);
+      if (url.pathname.toLowerCase().startsWith(`${under}/`)) return url.href;
+    } catch {
+      // not an address; the community's own is used
+    }
+  }
+  const street = normKey(home.Address ?? "");
+  return street ? `${community.origin}${community.pathname.replace(/\/+$/, "")}/qmis/${street}` : null;
+}
+
 /** The floor plan pages a community page links, beneath its own address. Exported for tests. */
 export function planLinks(html: string, pageUrl: string): string[] {
   const community = new URL(pageUrl).pathname.replace(/\/+$/, "");
@@ -315,13 +344,14 @@ export async function extractDrHorton(params: {
   const deadline = params.runDeadline ?? Infinity;
 
   const planUrls = new Set<string>();
-  const homes = new Map<string, DrhHome>();
+  // Each home with the community page that listed it, which its own page is beneath.
+  const homes = new Map<string, { home: DrhHome; listedOn: string }>();
   const communityWords = [params.communityName ?? ""];
   let communityType: string | null = null;
   for (const page of pages) {
     const { html, url } = await fetchHtml(page);
     for (const link of planLinks(html, url)) planUrls.add(link);
-    for (const home of homesOnPage(html)) homes.set(normKey(home.Address ?? ""), home);
+    for (const home of homesOnPage(html)) homes.set(normKey(home.Address ?? ""), { home, listedOn: url });
     const heading = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1];
     if (heading) communityWords.push(words(heading).replace(/^homes for sale at\s+/i, ""));
     communityType ??= communityHomeType(html);
@@ -364,9 +394,9 @@ export async function extractDrHorton(params: {
     }
   });
 
-  const homePlans = await mapLimit([...homes.values()], 8, async (home): Promise<NormalizedPlan> => {
+  const homePlans = await mapLimit([...homes.values()], 8, async ({ home, listedOn }): Promise<NormalizedPlan> => {
     const address = (home.Address ?? "").trim();
-    const sourceUrl = home.Url ? new URL(home.Url, ORIGIN).href : null;
+    const sourceUrl = homePageUrl(home, listedOn);
     const base: NormalizedPlan = {
       planKey: normKey(address),
       name: address,

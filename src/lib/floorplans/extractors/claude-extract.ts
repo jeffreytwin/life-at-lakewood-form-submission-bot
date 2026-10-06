@@ -879,8 +879,15 @@ export function descriptionFromPage(
  * remembered by (page-reads.ts, variantOf): a change to these words reads
  * every page afresh.
  */
+/**
+ * The question asked of a plan's or a home's own page. Its beds, baths,
+ * size and garages are the ones the page lists as its facts, not those its
+ * prose mentions: Dream Finders' Ellington page lists "2 Car Garages" and
+ * describes "a generous 3-car garage", and one read took the description's
+ * and proposed 3 car for a plan built with 2 (Jeff, 2026-10-06).
+ */
 function planPageAsk(home: boolean, name: string, url: string, content: string): string {
-  return `This is the page of one ${home ? `home for sale, "${name}"` : `floor plan, "${name}"`}. Report only what the page itself says about it — never invent a fact. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
+  return `This is the page of one ${home ? `home for sale, "${name}"` : `floor plan, "${name}"`}. Report only what the page itself says about it — never invent a fact. Take its beds, baths, square footage and garages from the figures the page lists as its facts (a strip or table of specs), not from numbers its description mentions; where the two disagree, the listed figures are right. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 }
 
 /**

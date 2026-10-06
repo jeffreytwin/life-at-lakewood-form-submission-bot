@@ -242,3 +242,45 @@ describe("a Mattamy home's pictures lead with the house itself (11898 Mandala Ct
     expect(ledByHome(undefined, [porch, kitchen], meta).photos).toEqual([porch, kitchen]);
   });
 });
+
+describe("a Mattamy home whose card shows a room inside (11744 Boundless Ter, Jeff, 2026-10-06)", () => {
+  const cdn = (name: string) => `https://prodmh.b-cdn.net//dfsmedia/a2/${name}`;
+  // The page's header strip: the Maya from outside.
+  const header = cdn("111244-50420/tpa-brightmore-maya-tr-1");
+  const kitchen = cdn("160420-50420/swf-brightmore-maya-11744boundlesster-kitchen");
+  const rear = cdn("160427-50420/swf-brightmore-maya-11744boundlesster-rearexterior");
+  const meta = {
+    [header]: { kind: "primary" as const, room: "primary" as const, caption: null },
+    [kitchen]: { kind: "photo" as const, room: "kitchen" as const, caption: "L-Shaped Kitchen" },
+    [rear]: { kind: "photo" as const, room: "outdoor" as const, caption: "Lake Water Features" },
+  };
+
+  it("leads with the page's header picture of the outside, not the card's kitchen", () => {
+    const led = ledByHome(kitchen, [header, kitchen, rear], meta);
+    expect(led.photos[0]).toBe(header);
+    expect(led.meta[header]).toMatchObject({ kind: "primary", room: "primary" });
+    expect(led.meta[kitchen]).toMatchObject({ kind: "photo", room: "kitchen" });
+  });
+
+  it("tells a room from the card's file name where Mattamy files it under none", () => {
+    const card = cdn("160420-50420/swf-brightmore-maya-11744boundlesster-kitchen2");
+    expect(ledByHome(card, [header, kitchen, rear], meta).photos[0]).toBe(header);
+  });
+
+  it("leads with the page's first front elevation where the card and the header both show the kitchen (11399 Boundless Ter)", () => {
+    const lapisKitchen = cdn("68822-50420/tpa-brightmore-lapis-kitchen-hr");
+    const front = cdn("68821-50420/tpa-brightmore-lapis-exterior");
+    const ts = cdn("68823-50420/tpa-brightmore-lapis-ts");
+    const lapis = {
+      [lapisKitchen]: { kind: "primary" as const, room: "primary" as const, caption: null },
+      [kitchen]: { kind: "photo" as const, room: "kitchen" as const, caption: "Kitchen" },
+      [front]: { kind: "photo" as const, room: "exterior" as const, caption: "Elevation Front with garage, door and window" },
+      [ts]: { kind: "photo" as const, room: "exterior" as const, caption: "Elevation Front with garage, window and exterior stone" },
+    };
+    expect(ledByHome(lapisKitchen, [lapisKitchen, kitchen, front, ts], lapis).photos[0]).toBe(front);
+  });
+
+  it("still leads with a card of the outside over the header, which may show the model elsewhere", () => {
+    expect(ledByHome(rear, [header, kitchen, rear], meta).photos[0]).toBe(rear);
+  });
+});
