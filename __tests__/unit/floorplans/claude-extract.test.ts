@@ -11,6 +11,7 @@ import {
   withoutBlanks,
   pictureAddresses,
   distill,
+  withTotalPrices,
   sortDrawings,
   planName,
   mergeRepeatedPlan,
@@ -762,5 +763,41 @@ describe("statedPrice", () => {
   it("takes none for no price", () => {
     expect(statedPrice(undefined, galley)).toBeNull();
     expect(statedPrice(0, galley)).toBeNull();
+  });
+});
+
+describe("withTotalPrices (Starlight's Oakfield Lakes, 2026-10-06)", () => {
+  // The plan page as Starlight serves it: the payment shown, the price kept in data-total-price.
+  const toolbar =
+    '<div class="toolbar__subheading" data-price="2401" data-monthly-price="2401" data-total-price="381240">Own your new home from ' +
+    '<b>$<span class="js-price-toggle__price-value">2401</span><span class="js-price-toggle__price-suffix">/month*</span></b></div>';
+  const aside =
+    '<div class="price__main" data-price="2401" data-monthly-price="2401" data-total-price="381240"><h2>' +
+    '<span class="price__prefix">Starting at</span><span class="price__sign">$</span>' +
+    '<span class="price__amount js-price-toggle__price-value">2401</span><span class="price__suffix js-price-toggle__price-suffix">/month*</span>' +
+    "</h2></div>";
+
+  it("shows the whole price in place of the monthly payment", () => {
+    const text = distill(`<main>${toolbar}${aside}<p>Four bedrooms.</p></main>`, "https://www.starlighthomes.com/tampa/oakfield-lakes/europa");
+    expect(text).toMatch(/Own your new home from \$\s?381,240/);
+    expect(text).toMatch(/Starting at \$\s?381,240/);
+    expect(text).not.toMatch(/2401|month/);
+    expect(statedPrice(381240, text)).toBe(381240);
+  });
+
+  it("gives the total to a block with no figure to put it in", () => {
+    expect(distill('<div data-total-price="381240"><span>Starting at</span></div>', "https://x.test/")).toContain("$381,240");
+  });
+
+  it("leaves a page without a total price as it is", () => {
+    const html = '<div class="price"><span class="js-price-toggle__price-value">$403,990</span></div><p>x</p>';
+    expect(withTotalPrices(html)).toBe(html);
+    const unpriced = '<div data-total-price="0"><span class="js-price-toggle__price-value">Call</span></div>';
+    expect(withTotalPrices(unpriced)).toBe(unpriced);
+  });
+
+  it("leaves what follows the block as it is", () => {
+    const got = withTotalPrices(`${toolbar}<div data-price="9"><span class="js-price-toggle__price-value">9</span></div>`);
+    expect(got).toContain('<div data-price="9"><span class="js-price-toggle__price-value">9</span></div>');
   });
 });

@@ -6,6 +6,7 @@ import {
   relatedNameFromPage,
   nearlySameKey,
   planNameOf,
+  withPlanPicturesOnHomes,
   withQuickMoveInPictures,
   withQuickMoveInPrices,
   priceTagOf,
@@ -392,6 +393,53 @@ describe("withQuickMoveInPictures", () => {
   it("leaves a plan the builder shows pictures of as it is", () => {
     const [got] = withQuickMoveInPictures([plan({ galleryImages: ["own.jpg"] }), home("B", 31)]);
     expect(got.galleryImages).toEqual(["own.jpg"]);
+  });
+});
+
+describe("withPlanPicturesOnHomes", () => {
+  const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "solstice", name: "Solstice", price: 403990, priceDisplay: "$403,990", beds: "4", baths: "2.5", sqft: 2402, garages: "2 car",
+    homeType: "Single-Family Home", quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  // Oakfield Lakes (Starlight, 2026-10-06): a home is a row of the plan page's table, an address and a price.
+  const solstice = plan({
+    galleryImages: ["elev.jpg", "kitchen.jpg"],
+    galleryMeta: { "elev.jpg": { caption: null, room: "primary", kind: "primary" } },
+    blueprintImages: ["fp.jpg"],
+    virtualTourUrl: "https://my.matterport.com/show/?m=abc",
+  });
+  const home = (over: Partial<NormalizedPlan> = {}) =>
+    plan({ planKey: "10865-curving-creek-loop", name: "10865 Curving Creek Loop", quickMoveIn: true, relatedPlanKey: "solstice", ...over });
+
+  it("gives a home with no picture its plan's pictures, drawings and tour", () => {
+    const got = withPlanPicturesOnHomes([solstice, home()])[1];
+    expect(got.galleryImages).toEqual(["elev.jpg", "kitchen.jpg"]);
+    expect(got.galleryMeta).toEqual(solstice.galleryMeta);
+    expect(got.blueprintImages).toEqual(["fp.jpg"]);
+    expect(got.virtualTourUrl).toBe("https://my.matterport.com/show/?m=abc");
+  });
+
+  it("leaves a home with a picture of its own as it is", () => {
+    const own = home({ galleryImages: ["house.jpg"] });
+    expect(withPlanPicturesOnHomes([solstice, own])[1]).toBe(own);
+  });
+
+  it("keeps a home's own drawings and tour", () => {
+    const got = withPlanPicturesOnHomes([solstice, home({ blueprintImages: ["lot-fp.jpg"], virtualTourUrl: "https://kuula.co/share/x" })])[1];
+    expect(got.galleryImages).toEqual(["elev.jpg", "kitchen.jpg"]);
+    expect(got.blueprintImages).toEqual(["lot-fp.jpg"]);
+    expect(got.virtualTourUrl).toBe("https://kuula.co/share/x");
+  });
+
+  it("leaves a home whose plan is not in the run, or has no picture, as it is", () => {
+    const stray = home({ relatedPlanKey: "vega" });
+    expect(withPlanPicturesOnHomes([solstice, stray])[1]).toBe(stray);
+    const bare = home();
+    expect(withPlanPicturesOnHomes([plan({}), bare])[1]).toBe(bare);
+  });
+
+  it("leaves the plans themselves as they are", () => {
+    expect(withPlanPicturesOnHomes([solstice, home()])[0]).toBe(solstice);
   });
 });
 

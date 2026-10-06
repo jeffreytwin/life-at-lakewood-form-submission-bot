@@ -38,7 +38,7 @@ import { withKnownTours } from "@/lib/floorplans/tours";
 import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { refusedTours, withoutRefusedTours } from "@/lib/floorplans/tour-review";
 import { alreadyFiled, filedAsBefore, type FiledHome } from "@/lib/floorplans/home-identity";
-import { linkQuickMoveIns, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
+import { linkQuickMoveIns, withPlanPicturesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan, withPlanNamePrefix } from "@/lib/floorplans/standardize";
@@ -601,6 +601,9 @@ export async function preparePlans(
   // (standardize.ts, withPlanNamePrefix): Adams' "1970" is "Plan 1970".
   // And a tour on every plan is the page's, not theirs (community-tours.ts).
   plans = withoutCommunityTour(withPlanNamePrefix(plans, builder.name));
+  // A home the builder shows no picture of carries its plan's, once the
+  // plan's gallery is cleaned (quick-move-ins.ts, withPlanPicturesOnHomes).
+  plans = withPlanPicturesOnHomes(plans);
 
   // A photo the record already has keeps the address it has there, and so
   // what was learned about it (pictures.ts).
