@@ -39,7 +39,7 @@ import { withKnownTours } from "@/lib/floorplans/tours";
 import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { refusedTours, withoutRefusedTours } from "@/lib/floorplans/tour-review";
 import { alreadyFiled, filedAsBefore, type FiledHome } from "@/lib/floorplans/home-identity";
-import { linkQuickMoveIns, withPlanPicturesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
+import { linkQuickMoveIns, withLinksAsRead, withPlanPicturesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan, withPlanNamePrefix } from "@/lib/floorplans/standardize";
@@ -569,7 +569,9 @@ export async function preparePlans(
     .eq("id", builder.id)
     .maybeSingle();
   const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
-  plans = link(plans.map((plan) => standardizePlan(plan, defaults)));
+  // As read, before linking: a second link once the stand-ins are in starts from these (withLinksAsRead).
+  const asRead = plans.map((plan) => standardizePlan(plan, defaults));
+  plans = link(asRead);
   // The community's own pictures, filed in every plan's gallery, are taken
   // back out (community-pictures.ts).
   plans = withoutCommunityPictures(plans);
@@ -599,7 +601,7 @@ export async function preparePlans(
       })
     );
     const standInKeys = new Set(filled.map((p) => p.planKey));
-    plans = link([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled]);
+    plans = link(withLinksAsRead([...standIns.plans.filter((p) => !standInKeys.has(p.planKey)), ...filled], asRead));
   }
   // Every plan named the builder's way, its homes' base plans with it
   // (standardize.ts, withPlanNamePrefix): Adams' "1970" is "Plan 1970".

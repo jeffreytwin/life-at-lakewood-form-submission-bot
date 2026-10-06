@@ -7,6 +7,7 @@ import {
   nearlySameKey,
   planNameOf,
   withPlanPicturesOnHomes,
+  withLinksAsRead,
   withQuickMoveInPictures,
   withQuickMoveInPrices,
   priceTagOf,
@@ -538,3 +539,35 @@ describe("codeAndName", () => {
   });
 });
 
+
+describe("withLinksAsRead (Neal's Palm Grove, 2026-10-06)", () => {
+  const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "x", name: "x", price: null, priceDisplay: null, beds: "4", baths: "3.5", sqft: null, garages: null,
+    homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  // Neal lists Vision 3; the home names its plan "Vision", kept in the Hub as a stand-in.
+  const vision3 = plan({ planKey: "vision-3", name: "Vision 3", sqft: 2962 });
+  const home = plan({ planKey: "18014-meandering-palms-crossing", name: "18014 Meandering Palms Crossing", quickMoveIn: true, sqft: 2956, relatedPlanName: "Vision" });
+  const standIn = plan({ planKey: "vision", name: "Vision", sqft: 2956, standInFor: ["18014 Meandering Palms Crossing"] });
+
+  it("ties the home to the stand-in named as its page names its plan, once the stand-in is in", () => {
+    const asRead = [vision3, home];
+    const first = linkQuickMoveIns(asRead);
+    // Without the stand-in, the one plan whose name begins with "Vision" is taken.
+    expect(first[1]).toMatchObject({ relatedPlanKey: "vision-3", relatedPlanName: "Vision 3" });
+    // The second pass, from the first's answer, would keep it as the builder's own.
+    expect(linkQuickMoveIns([...first, standIn])[1]).toMatchObject({ relatedPlanKey: "vision-3", relatedPlanMatch: "extractor" });
+    const again = linkQuickMoveIns(withLinksAsRead([...first, standIn], asRead));
+    expect(again[1]).toMatchObject({ relatedPlanKey: "vision", relatedPlanName: "Vision", relatedPlanMatch: "plan-name" });
+    expect(again.find((p) => p.planKey === "vision")?.hasQuickMoveIns).toBe(true);
+    expect(again.find((p) => p.planKey === "vision-3")?.hasQuickMoveIns).toBe(false);
+  });
+
+  it("keeps a tie the builder's own pages gave, and leaves plans and unknown homes as they are", () => {
+    const given = { ...home, relatedPlanKey: "vision-3", relatedPlanMatch: "extractor" as const };
+    const got = withLinksAsRead([{ ...given, relatedPlanName: "Vision 3" }, vision3, plan({ planKey: "new-home", quickMoveIn: true, relatedPlanKey: "z" })], [given, vision3]);
+    expect(got[0]).toMatchObject({ relatedPlanKey: "vision-3", relatedPlanName: "Vision", relatedPlanMatch: "extractor" });
+    expect(got[1]).toBe(vision3);
+    expect(got[2].relatedPlanKey).toBe("z");
+  });
+});
