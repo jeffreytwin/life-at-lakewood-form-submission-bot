@@ -571,3 +571,27 @@ describe("withLinksAsRead (Neal's Palm Grove, 2026-10-06)", () => {
     expect(got[2].relatedPlanKey).toBe("z");
   });
 });
+
+describe("codeAndName with only a space after the code (David Weekley's Palmera, 2026-10-07)", () => {
+  const plan = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "x", name: "x", price: null, priceDisplay: null, beds: "4", baths: "3", sqft: null, garages: null,
+    homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+
+  it("splits a lettered code from the name", () => {
+    expect(codeAndName("F158 Brendlyn")).toEqual({ code: "F158", name: "Brendlyn" });
+    expect(codeAndName("F159 The Crab Creek")).toEqual({ code: "F159", name: "The Crab Creek" });
+  });
+
+  it("does not take a number alone, or a code with no name, for a code and a name", () => {
+    expect(codeAndName("1970 Plan")).toBeNull();
+    expect(codeAndName("18050 Foxtail Loop")).toBeNull();
+    expect(codeAndName("F158")).toBeNull();
+  });
+
+  it("ties the home to the plan with that code, under the plan's own name", () => {
+    const brendlyn = plan({ planKey: "the-brendlyn", name: "The Brendlyn", raw: { planId: "F158" } });
+    const home = plan({ planKey: "18050-foxtail-loop", name: "18050 Foxtail Loop", quickMoveIn: true, relatedPlanName: "F158 Brendlyn" });
+    expect(linkQuickMoveIns([brendlyn, home])[1]).toMatchObject({ relatedPlanKey: "the-brendlyn", relatedPlanName: "The Brendlyn", relatedPlanMatch: "plan-id" });
+  });
+});

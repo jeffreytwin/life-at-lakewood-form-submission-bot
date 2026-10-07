@@ -75,12 +75,20 @@ export function bathsStated(text: string): string | null {
  * Oak Bend Drive 3 full and 2 half baths, "3.5", where it has 2 and 1
  * (North River Ranch, Jeff 2026-10-05). A card's stories follow its square
  * feet, so "1864 Stories" is no strip. The page's first strip is its own;
- * the cards for other homes come after it. Null without one. Pure.
+ * the cards for other homes come after it. A count given as a range is its
+ * larger end: The Crab Creek's strip reads "4 Bedrooms 3 - 4 Full Baths 1
+ * Half Baths", 4.5, where the strip went unread and a reading gave 4 one
+ * night and 4.5 the next (Palmera, Jeff 2026-10-07). Null without one. Pure.
  */
 export function weekleyCounts(text: string): { beds: string; baths: string } | null {
-  const strip = /\b(\d)\s*Stor(?:y|ies)\s+(\d+)\s*Bedrooms?\s+(\d+)\s*Full\s*Baths?(?:\s+(\d+)\s*Half\s*Baths?)?\s+\d+\s*Car\b/i.exec(text);
+  const count = String.raw`(\d+)(?:\s*(?:-|–|to)\s*(\d+))?`;
+  const strip = new RegExp(
+    String.raw`\b(\d)\s*Stor(?:y|ies)\s+${count}\s*Bedrooms?\s+${count}\s*Full\s*Baths?(?:\s+(\d+)\s*Half\s*Baths?)?\s+\d+\s*Car\b`,
+    "i"
+  ).exec(text);
   if (!strip) return null;
-  return { beds: strip[2], baths: bathsOf(Number(strip[3]), strip[4] != null ? Number(strip[4]) : null)! };
+  const top = (low: string, high: string | undefined) => Math.max(Number(low), high != null ? Number(high) : 0);
+  return { beds: String(top(strip[2], strip[3])), baths: bathsOf(top(strip[4], strip[5]), strip[6] != null ? Number(strip[6]) : null)! };
 }
 
 /**
