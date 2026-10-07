@@ -44,6 +44,12 @@ export function codeAndName(named: string): { code: string; name: string } | nul
   if (lead && /[a-z]{3}/i.test(lead[2])) return { code: lead[1], name: lead[2] };
   const tail = named.match(new RegExp(String.raw`^(.+?)\s*(?:[-–—:]\s*|\(\s*)(?:plan\s+)?(${PLAN_CODE})\s*\)?$`, "i"));
   if (tail && /[a-z]{3}/i.test(tail[1])) return { code: tail[2], name: tail[1] };
+  // A lettered code and the name with only a space between: David Weekley's
+  // "F158 Brendlyn", read off a home page that heads it "Plan #F158 The
+  // Brendlyn" (Jeff, 2026-10-07). Only a code with a letter: "1970 Plan"
+  // or a street number is no code.
+  const spaced = named.match(/^(?:plan\s+)?([A-Za-z]{1,3}\d{2,5}[A-Za-z]?)\s+(.+)$/i);
+  if (spaced && /[a-z]{3}/i.test(spaced[2])) return { code: spaced[1], name: spaced[2] };
   return null;
 }
 

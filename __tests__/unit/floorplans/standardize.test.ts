@@ -419,3 +419,17 @@ describe("withPlanNamePrefix", () => {
     expect(withPlanNamePrefix(plans, "Lennar")).toBe(plans);
   });
 });
+
+describe("weekleyCounts with a range in the strip (David Weekley's Palmera, 2026-10-07)", () => {
+  it("takes the larger end of a range of full baths, with the half bath", () => {
+    expect(weekleyCounts("BROCHURE 1 Stories 4 Bedrooms 3 - 4 Full Baths 1 Half Baths 3 Car Garage Overview")).toEqual({ beds: "4", baths: "4.5" });
+  });
+
+  it("takes the larger end of a range of bedrooms", () => {
+    expect(weekleyCounts("2 Stories 3 - 4 Bedrooms 3 Full Baths 3 Car Garage")).toEqual({ beds: "4", baths: "3" });
+  });
+
+  it("reads a strip with no range as before", () => {
+    expect(weekleyCounts("2 Stories 3 Bedrooms 2 Full Baths 1 Half Baths 2 Car Garage")).toEqual({ beds: "3", baths: "2.5" });
+  });
+});
