@@ -25,7 +25,7 @@
 // on a sofa beside every home at Seaire, and the queue led sixteen homes
 // with them (Jeff, 2026-10-06); they are M/I's, not the home's, and are left out.
 
-import { fetchPage, readPlanPages } from "@/lib/floorplans/extractors/claude-extract";
+import { fetchPage, type PageReader, readPlanPages } from "@/lib/floorplans/extractors/claude-extract";
 import { orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 import { bathsOf, standardHomeType } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
@@ -106,6 +106,41 @@ const ends = (r: SchemaRange | null | undefined): [number | null, number | null]
 const span = (lo: number | null, hi: number | null): string =>
   lo == null ? "" : hi != null && hi > lo ? `${lo}-${hi}` : String(lo);
 
+/** The bathrooms a schema.org entry gives as full and half counts: "3.5", or "2.5-3.5" for a range. */
+function bathsFrom(full: SchemaRange | null | undefined, partial: SchemaRange | null | undefined): string {
+  const [fullLo, fullHi] = ends(full);
+  const [halfLo, halfHi] = ends(partial);
+  const lo = bathsOf(fullLo, halfLo);
+  const hi = bathsOf(fullHi, halfHi);
+  return lo == null ? "" : hi && hi !== lo ? `${lo}-${hi}` : lo;
+}
+
+/**
+ * The bathrooms a plan's or home's own page gives itself, from the
+ * schema.org entry whose url is the page; the page's other entries are its
+ * homes for sale. A plan's card in M/I's feed counts the half baths as full
+ * ones: Palmera's Bismark, 3 full and 1 half on its page, came as 4 full and
+ * none, and Foxtail's 2 and 1 as 3 (Jeff, 2026-10-07). Null where no entry is
+ * the page's. Pure; exported for tests.
+ */
+export function pageBaths(html: string, pageUrl: string): string | null {
+  const own = pageUrl.replace(/\/+$/, "").toLowerCase();
+  for (const m of html.matchAll(/<script\s+type=["']application\/ld\+json["']\s*>([\s\S]*?)<\/script>/gi)) {
+    let data: unknown;
+    try {
+      data = JSON.parse(m[1]);
+    } catch {
+      continue;
+    }
+    for (const entry of (Array.isArray(data) ? data : [data]) as (MiCardData | null)[]) {
+      if (!entry || clean(entry.url).replace(/\/+$/, "").toLowerCase() !== own) continue;
+      const baths = bathsFrom(entry.numberOfFullBathrooms, entry.numberOfPartialBathrooms);
+      if (baths) return baths;
+    }
+  }
+  return null;
+}
+
 /** The cards of one answer of the feed, with what each says. Exported for tests. */
 export function cardsIn(html: string): MiCard[] {
   const out: MiCard[] = [];
@@ -163,10 +198,6 @@ export function fromCard(card: MiCard, origin: string, plansByPage: Map<string, 
   const sourceUrl = pageOf(card, origin);
   const price = num(d.offers?.price);
   const [bedLo, bedHi] = ends(d.numberOfBedrooms);
-  const [fullLo, fullHi] = ends(d.numberOfFullBathrooms);
-  const [halfLo, halfHi] = ends(d.numberOfPartialBathrooms);
-  const bathLo = bathsOf(fullLo, halfLo);
-  const bathHi = bathsOf(fullHi, halfHi);
   const [sqft] = ends(d.floorSize);
   const garage = (card.meta.Garage ?? "").replace(/\s+/g, "");
   const images = (Array.isArray(d.image) ? d.image : d.image ? [d.image] : []).map(clean).filter((u) => /^https?:\/\//i.test(u));
@@ -186,7 +217,7 @@ export function fromCard(card: MiCard, origin: string, plansByPage: Map<string, 
     price: price && price > 0 ? price : null,
     priceDisplay: price && price > 0 ? "$" + Math.round(price).toLocaleString("en-US") : null,
     beds: span(bedLo, bedHi),
-    baths: bathLo == null ? "" : bathHi && bathHi !== bathLo ? `${bathLo}-${bathHi}` : bathLo,
+    baths: bathsFrom(d.numberOfFullBathrooms, d.numberOfPartialBathrooms),
     sqft: sqft && sqft > 0 ? sqft : null,
     garages: garage && /\d/.test(garage) ? `${garage} car` : null,
     homeType: homeTypeOf(d.additionalType),
@@ -291,6 +322,19 @@ export async function extractMiHomes(params: { url?: string; runDeadline?: numbe
   }
   if (!byKey.size) throw new Error(`no plans or homes in M/I's feed for ${url} (community ${guid})`);
   const cardPictures = new Map([...byKey.values()].map((p) => [p.planKey, p.galleryImages[0] ?? null] as const));
-  const read = await readPlanPages([...byKey.values()], { read: fetchPage, atOnce: 6, runDeadline: params.runDeadline, listPages: new Set([url]) });
-  return read.map((p) => withCardLead(p, cardPictures.get(p.planKey)));
+  // Each page as it was read, for the bathrooms it gives itself (pageBaths).
+  const pageOfPlan = new Map([...byKey.values()].map((p) => [p.planKey, p.sourceUrl] as const));
+  const pages = new Map<string, string>();
+  const readKept: PageReader = async (pageUrl, opts) => {
+    const got = await fetchPage(pageUrl, opts);
+    pages.set(pageUrl, got.html);
+    return got;
+  };
+  const read = await readPlanPages([...byKey.values()], { read: readKept, atOnce: 6, runDeadline: params.runDeadline, listPages: new Set([url]) });
+  return read.map((p) => {
+    const pageUrl = pageOfPlan.get(p.planKey);
+    const html = pageUrl ? pages.get(pageUrl) : undefined;
+    const baths = html && pageUrl ? pageBaths(html, pageUrl) : null;
+    return withCardLead(baths ? { ...p, baths } : p, cardPictures.get(p.planKey));
+  });
 }

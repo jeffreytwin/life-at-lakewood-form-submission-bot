@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { cardsIn, communityGuidIn, fromCard, isMiHomesPage, withCardLead } from "@/lib/floorplans/extractors/mi-homes";
+import { cardsIn, communityGuidIn, fromCard, isMiHomesPage, pageBaths, withCardLead } from "@/lib/floorplans/extractors/mi-homes";
 import { extractorFor, resolveExtractor } from "@/lib/floorplans/sync";
 
 // M/I's plan feed for Seaire as it answered (2026-10-06), pruned to the
@@ -25,6 +25,43 @@ describe("communityGuidIn", () => {
       communityGuidIn(`items = $this.data('itemcount'),\n id = '%7B4D4287D0-A457-460F-9C0C-7EEFC7A89695%7D';`)
     ).toBe("4d4287d0-a457-460f-9c0c-7eefc7a89695");
     expect(communityGuidIn("<html><body>no feed here</body></html>")).toBeNull();
+  });
+});
+
+describe("pageBaths", () => {
+  // Bismark's page at Palmera (2026-10-07): the plan's own entry, then its
+  // homes for sale. Its card in the feed said 4 full baths and no half.
+  const BISMARK = `${ORIGIN}/new-homes/florida/southwest-florida/venice/palmera-at-wellen-park/bismark-plan`;
+  const ld = (entry: object) => `<script type="application/ld+json">${JSON.stringify(entry)}</script>`;
+  const page = [
+    ld({ "@type": "Organization", name: "M/I Homes", url: ORIGIN }),
+    ld({ "@type": "Product", name: "17918 Broadleaf Loop", url: `${BISMARK}/17918-broadleaf-loop`, numberOfFullBathrooms: { value: 2 }, numberOfPartialBathrooms: { value: 0 } }),
+    ld({
+      "@type": "ProductModel",
+      name: "Bismark",
+      url: BISMARK,
+      numberOfFullBathrooms: { "@type": "QuantitativeValue", minValue: 3, maxValue: 3 },
+      numberOfPartialBathrooms: { "@type": "QuantitativeValue", minValue: 1, maxValue: 1 },
+    }),
+  ].join("\n");
+
+  it("reads the full and half baths of the page's own entry", () => {
+    expect(pageBaths(page, BISMARK)).toBe("3.5");
+    expect(pageBaths(page, `${BISMARK}/`)).toBe("3.5");
+  });
+
+  it("reads a home's own entry, not its plan's", () => {
+    expect(pageBaths(page, `${BISMARK}/17918-broadleaf-loop`)).toBe("2");
+  });
+
+  it("gives a range as its two ends", () => {
+    const range = ld({ url: BISMARK, numberOfFullBathrooms: { minValue: 2, maxValue: 3 }, numberOfPartialBathrooms: { minValue: 1, maxValue: 1 } });
+    expect(pageBaths(range, BISMARK)).toBe("2.5-3.5");
+  });
+
+  it("says nothing where no entry is the page's", () => {
+    expect(pageBaths(page, `${BISMARK}-ii`)).toBeNull();
+    expect(pageBaths("<script type=\"application/ld+json\">{not json</script>", BISMARK)).toBeNull();
   });
 });
 
@@ -102,7 +139,7 @@ describe("fromCard", () => {
 });
 
 describe("M/I's engine", () => {
-  it("reads a community on M/I's own pages from its feed, and Palmera from Wellen Park's listings", () => {
+  it("reads a community on M/I's own pages from its feed", () => {
     const mi = resolveExtractor("M/I Homes", "json_api");
     expect(mi).not.toBeNull();
     // A connection that names an engine of its own still gets it.
