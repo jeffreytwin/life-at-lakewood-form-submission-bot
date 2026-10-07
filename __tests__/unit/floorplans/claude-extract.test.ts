@@ -834,6 +834,13 @@ describe("statedSqft (David Weekley's North River Ranch and Neal Signature's Wat
     expect(statedSqft(0, list, "The Bradson")).toBeNull();
   });
 
+  it("does not take a sentence about the community for the plan's range (Medallion's The Willows)", () => {
+    const willows =
+      "The Willows offers five plans: Harbour, Nevis, Grenada 2, Bermuda and St. Thomas. Configurations range from 1,524 to 2,327 square feet " +
+      "Harbour Single Family Home Starting from $486,100 3 Beds 2 Baths 1,524 Sq. Ft. 2 Car Garage";
+    expect(statedSqft(1524, willows, "Harbour")).toBe(1524);
+  });
+
   it("does not take the next card's range for the name's", () => {
     const cards = "The Allex From: $389,990 | Sq. Ft: 2140 Stories 1 Bedrooms 3 Full Baths 2 Car Garage 2 Share Compare Plan F030 The Bryce From: $399,990 | Sq. Ft: 2140 - 2210";
     expect(statedSqft(2140, cards, "The Allex")).toBe(2140);
