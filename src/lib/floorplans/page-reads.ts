@@ -8,11 +8,18 @@
 // markup — its galleries, its drawings, its tour — is still read every
 // night, so a new photo is still seen.
 //
-// What is remembered is keyed on the page's address and on a variant: a
-// digest of the prompt, the tool and the model that read it, so a change
-// to any of them reads every page afresh on its own, with no version to
-// bump. A list read for its homes and the same page read for its plans
-// are two variants of one address, kept apart.
+// What is remembered is keyed on the page's address and on a variant: the
+// model that read it, the way it was asked (a list for its plans or its
+// homes, a plan's page with or without its photos) and a version — the
+// read version and the builder's own (readVersion). It used to be a
+// digest of the prompt itself, so every word changed in it, even one
+// meant for a single builder, read every builder's pages again: some
+// $20–25 a sync, five times on 2026-10-06 (Jeff, 2026-10-07: a Sync that
+// finds no changes should not cost $20). A fix for one builder now raises
+// that builder's version and reads only its pages again; one that every
+// page needs read again raises READ_VERSION. A test pins the prompt
+// (claude-extract-prompts.test.ts), so a change to it cannot go out
+// without someone choosing between the two.
 // A read older than a month is made again whatever the digest says, as a
 // safety valve. A table that cannot be read costs the memory, never the
 // run, the way fp_photo_rooms does (photo-rooms.ts).
@@ -54,7 +61,28 @@ export function digestOf(kind: ReadKind, content: string): string {
   return sha(normalizedText(kind, content));
 }
 
-/** The digest of how a page is read: the model, the tool and the prompt around the page. Pure. */
+/**
+ * The version of every builder's reads. Raised, every page is read again
+ * on the next run, at some $20–25 a sync: only for a change to how pages
+ * are read that every builder's pages need.
+ */
+export const READ_VERSION = 1;
+
+/**
+ * The version of one builder's reads, by its name on fp_builders. Raised,
+ * that builder's pages, and only theirs, are read again on the next run:
+ * for a change to the prompt made for that builder ("David Weekley Homes":
+ * 2 after a fix to how its sizes are read). A builder not named here is
+ * at 0.
+ */
+export const BUILDER_READ_VERSIONS: Record<string, number> = {};
+
+/** The version a builder's reads are kept under: the read version and the builder's own. Pure. */
+export function readVersion(builder: string | null | undefined): string {
+  return `${READ_VERSION}.${(builder && BUILDER_READ_VERSIONS[builder]) || 0}`;
+}
+
+/** The digest of how a page is read: the model, the way it is asked and the version (readVersion). Pure. */
 export function variantOf(kind: ReadKind, parts: Record<string, unknown>): string {
   return sha(`${kind}\n${JSON.stringify(parts)}`);
 }
