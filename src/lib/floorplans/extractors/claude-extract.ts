@@ -91,7 +91,7 @@ export const EXTRACT_TOOL: Anthropic.Tool = {
             price: { type: "number", description: "Base price in dollars; omit if not shown, or if the page gives only a range such as 'Low $500s' or 'High $400s' rather than a price" },
             beds: { type: "string", description: "Bedrooms, e.g. '3' or '3 - 4'" },
             baths: { type: "string", description: "Bathrooms, e.g. '2' or '2.5 - 3'" },
-            sqft: { type: "number", description: "Square footage; where the page gives a range such as '2719 - 2740', the larger figure" },
+            sqft: { type: "number", description: "Living (heated) square footage, never a total or under-roof figure given beside it; where the living area itself is a range such as '2719 - 2740', the larger figure" },
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
@@ -524,6 +524,28 @@ export function statedSqft(sqft: number | null | undefined, text: string, name: 
   return sqft;
 }
 
+/**
+ * The living area where a reading gave the total beside it. Kolter's
+ * plan pages read "Living Area Sq. Ft. 2,586 3,405 Total Sq. Ft.", and a
+ * read gave the Rachel 3,405; all seven Woodland Preserve plans were
+ * proposed at their totals (Jeff, 2026-10-07: the living area, the smaller,
+ * is the plan's size). A figure the page labels a total, with a living
+ * area labeled beside it, is that living area. Exported for tests.
+ */
+export function livingSqft(sqft: number | null | undefined, text: string): number | null {
+  if (typeof sqft !== "number" || !(sqft > 0)) return null;
+  const said = text.replace(/\[(?:IMG|LINK) [^\]]*\]/g, " ").replace(/\s+/g, " ");
+  const total = new RegExp(`(?<![\\d,])(?:${sqft}|${sqft.toLocaleString("en-US")})\\s*Total\\s+Sq\\.?\\s*F(?:ee)?t`, "gi");
+  const living = /Living\s+(?:Area\s+)?Sq\.?\s*F(?:ee)?t\.?\s*:?\s*(\d{1,2},?\d{3})(?![\d,])|(?<![\d,])(\d{1,2},?\d{3})\s*(?:Living\s+Area\s+Sq\.?\s*F(?:ee)?t|Sq\.?\s*F(?:ee)?t\.?\s*Living)/i;
+  for (const m of said.matchAll(total)) {
+    const near = said.slice(Math.max(0, m.index! - 80), m.index! + m[0].length + 80);
+    const l = near.match(living);
+    const figure = Number((l?.[1] ?? l?.[2] ?? "").replace(/,/g, ""));
+    if (figure > 0 && figure < sqft) return figure;
+  }
+  return sqft;
+}
+
 /** How far after a plan's name its size is looked for: a card's price and size, not the next card's. */
 const SIZE_REACH = 120;
 
@@ -617,7 +639,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       garages: { type: "string", description: "Garage count as the page gives it, e.g. '3 car' or 'Two 2-Car Garage'" },
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
-      sqft: { type: "number", description: "Living square footage, if the page gives it; where it gives a range such as '2719 - 2740', the larger figure" },
+      sqft: { type: "number", description: "Living (heated) square footage, if the page gives it, never a total or under-roof figure given beside it; where the living area itself is a range such as '2719 - 2740', the larger figure" },
       description: { type: "string", description: "The builder's own prose about the plan — sentences. Omit it if the page only prints a spec line of rooms and counts" },
       virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour, if one is linked" },
       photoImages: {
@@ -1166,7 +1188,7 @@ export async function readPlanPageWithClaude(
     // the half baths or added them up (standardize.ts, bathsStated; Jeff,
     // 2026-09-24). David Weekley's strip decides its own the same way.
     baths: zonda?.baths || bathsStated(content) || strip?.baths || plan.baths || (page.baths ?? ""),
-    sqft: plan.sqft ?? statedSqft(page.sqft, content, plan.name),
+    sqft: plan.sqft ?? statedSqft(livingSqft(page.sqft, content), content, plan.name),
     garages: plan.garages ?? page.garages ?? null,
     description,
     // A tour on a host that serves tours wins outright, wherever it was
@@ -1357,7 +1379,7 @@ async function listPage(
       beds: p.beds ?? "",
       baths: p.baths ?? "",
       // The larger end of a size the page gives as a range (statedSqft).
-      sqft: statedSqft(p.sqft, content, name),
+      sqft: statedSqft(livingSqft(p.sqft, content), content, name),
       garages: p.garages ?? null,
       homeType: p.homeType ?? null,
       quickMoveIn,
