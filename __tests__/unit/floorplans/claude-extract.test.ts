@@ -803,30 +803,38 @@ describe("withTotalPrices (Starlight's Oakfield Lakes, 2026-10-06)", () => {
   });
 });
 
-describe("statedSqft (David Weekley's North River Ranch, 2026-10-07)", () => {
+describe("statedSqft (David Weekley's North River Ranch and Neal Signature's Waterbury Park, 2026-10-07)", () => {
   const list =
     "North River Ranch – Garden Series From the $419s Sq Ft 1953-2740 Amenity Highlights " +
     "The Bradson From: $469,990 | Sq. Ft: 2719 - 2740 Stories 2 Bedrooms 4 " +
-    "The Benton From: $419,990 | Sq. Ft: 1953 - 1963 Stories 1 Bedrooms 3";
+    "The Benton From: $419,990 | Sq. Ft: 1953 - 1963 Stories 1 Bedrooms 3 " +
+    "The Benton 11808 Full Moon Loop, Parrish, FL 34219 $491,550 | Sq. Ft: 1953 Story 1";
 
-  it("gives the larger end of the range a figure opens", () => {
-    expect(statedSqft(2719, list)).toBe(2740);
-    expect(statedSqft(2719, "Sq Ft 2,719 – 2,740")).toBe(2740);
-    expect(statedSqft(2719, "2719 to 2740 sq ft")).toBe(2740);
+  it("gives the larger end of the range the plan's name heads", () => {
+    expect(statedSqft(2719, list, "The Bradson")).toBe(2740);
+    expect(statedSqft(1953, list, "The Benton")).toBe(1963);
+    expect(statedSqft(2719, "The Bradson From $469,990 Sq Ft 2,719 – 2,740", "The Bradson")).toBe(2740);
   });
 
-  it("takes the plan's own range over the community's where both open with the figure", () => {
-    expect(statedSqft(1953, list)).toBe(1963);
+  it("leaves a size under a community's span of all its plans (Waterbury Park's Palm Bay 2)", () => {
+    const waterbury =
+      "Lakewood Ranch, FL Waterbury Park 3,138 – 4,189 Sq. Ft. Neal Signature Homes invites you " +
+      "Palm Bay 2 3 Bed 3 Bath 3 Car 3,138 Sq. Ft. Starting From $1,399,990 " +
+      "Monterey 2 4 Bed 5+ Bath 3 Car 4,189 Sq. Ft. Starting From $1,632,990";
+    expect(statedSqft(3138, waterbury, "Palm Bay 2")).toBe(3138);
+    expect(statedSqft(3138, waterbury, "Waterbury Park")).toBe(4189);
   });
 
-  it("leaves a figure that is the top of its range, or in none, as it is", () => {
-    expect(statedSqft(2740, list)).toBe(2740);
-    expect(statedSqft(2310, "2,310 Sq. Ft.")).toBe(2310);
-    expect(statedSqft(null, list)).toBeNull();
-    expect(statedSqft(0, list)).toBeNull();
+  it("leaves a figure that is the top of its range, or in none, or with no name to go by, as it is", () => {
+    expect(statedSqft(2740, list, "The Bradson")).toBe(2740);
+    expect(statedSqft(2310, "The Allex 2,310 Sq. Ft.", "The Allex")).toBe(2310);
+    expect(statedSqft(2719, list, null)).toBe(2719);
+    expect(statedSqft(null, list, "The Bradson")).toBeNull();
+    expect(statedSqft(0, list, "The Bradson")).toBeNull();
   });
 
-  it("does not read a price range as a size", () => {
-    expect(statedSqft(419, "$419,990 - $469,990")).toBe(419);
+  it("does not take the next card's range for the name's", () => {
+    const cards = "The Allex From: $389,990 | Sq. Ft: 2140 Stories 1 Bedrooms 3 Full Baths 2 Car Garage 2 Share Compare Plan F030 The Bryce From: $399,990 | Sq. Ft: 2140 - 2210";
+    expect(statedSqft(2140, cards, "The Allex")).toBe(2140);
   });
 });
