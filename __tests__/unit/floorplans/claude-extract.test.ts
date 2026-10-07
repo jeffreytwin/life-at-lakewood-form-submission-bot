@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   keptFromPage,
   statedPrice,
+  statedSqft,
   asList,
   distinctKey,
   isTourUrl,
@@ -799,5 +800,33 @@ describe("withTotalPrices (Starlight's Oakfield Lakes, 2026-10-06)", () => {
   it("leaves what follows the block as it is", () => {
     const got = withTotalPrices(`${toolbar}<div data-price="9"><span class="js-price-toggle__price-value">9</span></div>`);
     expect(got).toContain('<div data-price="9"><span class="js-price-toggle__price-value">9</span></div>');
+  });
+});
+
+describe("statedSqft (David Weekley's North River Ranch, 2026-10-07)", () => {
+  const list =
+    "North River Ranch – Garden Series From the $419s Sq Ft 1953-2740 Amenity Highlights " +
+    "The Bradson From: $469,990 | Sq. Ft: 2719 - 2740 Stories 2 Bedrooms 4 " +
+    "The Benton From: $419,990 | Sq. Ft: 1953 - 1963 Stories 1 Bedrooms 3";
+
+  it("gives the larger end of the range a figure opens", () => {
+    expect(statedSqft(2719, list)).toBe(2740);
+    expect(statedSqft(2719, "Sq Ft 2,719 – 2,740")).toBe(2740);
+    expect(statedSqft(2719, "2719 to 2740 sq ft")).toBe(2740);
+  });
+
+  it("takes the plan's own range over the community's where both open with the figure", () => {
+    expect(statedSqft(1953, list)).toBe(1963);
+  });
+
+  it("leaves a figure that is the top of its range, or in none, as it is", () => {
+    expect(statedSqft(2740, list)).toBe(2740);
+    expect(statedSqft(2310, "2,310 Sq. Ft.")).toBe(2310);
+    expect(statedSqft(null, list)).toBeNull();
+    expect(statedSqft(0, list)).toBeNull();
+  });
+
+  it("does not read a price range as a size", () => {
+    expect(statedSqft(419, "$419,990 - $469,990")).toBe(419);
   });
 });
