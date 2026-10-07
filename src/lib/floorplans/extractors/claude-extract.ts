@@ -498,21 +498,34 @@ export function statedPrice(price: number | null | undefined, text: string): num
  * range. David Weekley's plans read "Sq Ft 2719 - 2740", and a read gave
  * one end one night and the other the next, so The Bradson went from
  * 2,719 to 2,740 and back (Jeff, 2026-10-07: the top of the range is the
- * plan's size, as with beds and baths). A range the reading's figure
- * opens is the one it came from; where two do, the narrower is the
- * plan's own, the other a community's ("Sq Ft 1953-2740" heads the list
- * that gives The Benton "1953 - 1963"). Exported for tests.
+ * plan's size, as with beds and baths). Only a range the plan's own name
+ * heads is its size ("The Bradson From: $469,990 | Sq. Ft: 2719 - 2740"):
+ * a community heads its plans with the span of all of them, and Neal
+ * Signature's Waterbury Park page reads "3,138 – 4,189 Sq. Ft." over Palm
+ * Bay 2, 3,138 Sq. Ft., which was proposed at 4,189 (Jeff, 2026-10-07).
+ * Of two ranges after the name that open with the figure, the nearer.
+ * Exported for tests.
  */
-export function statedSqft(sqft: number | null | undefined, text: string): number | null {
+export function statedSqft(sqft: number | null | undefined, text: string, name: string | null | undefined): number | null {
   if (typeof sqft !== "number" || !(sqft > 0)) return null;
+  const nameWords = (name ?? "").trim().split(/\s+/).filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!nameWords.length) return sqft;
+  const heading = new RegExp(`(?<![\\w])${nameWords.join("\\s+")}(?![\\w])`, "gi");
+  const range = /(\d{1,2},?\d{3})\s*(?:-|–|—|to)\s*(\d{1,2},?\d{3})(?![\d,])/;
   const figure = (s: string) => Number(s.replace(/,/g, ""));
-  let top: number | null = null;
-  for (const m of text.matchAll(/(\d{1,2},?\d{3})\s*(?:-|–|—|to)\s*(\d{1,2},?\d{3})(?![\d,])/g)) {
-    const [low, high] = [figure(m[1]), figure(m[2])];
-    if (low === sqft && high > low && (top === null || high < top)) top = high;
+  // The words alone: a picture's or a link's address between a name and its size is no distance.
+  const said = text.replace(/\[(?:IMG|LINK) [^\]]*\]/g, " ").replace(/\s+/g, " ");
+  for (const named of said.matchAll(heading)) {
+    // What the name heads: as far as its card or title goes.
+    const after = said.slice(named.index! + named[0].length, named.index! + named[0].length + SIZE_REACH);
+    const m = after.match(range);
+    if (m && figure(m[1]) === sqft && figure(m[2]) > sqft) return figure(m[2]);
   }
-  return top ?? sqft;
+  return sqft;
 }
+
+/** How far after a plan's name its size is looked for: a card's price and size, not the next card's. */
+const SIZE_REACH = 120;
 
 /**
  * The tour hosts builders use. Stock keeps its Matterport links in the
@@ -1153,7 +1166,7 @@ export async function readPlanPageWithClaude(
     // the half baths or added them up (standardize.ts, bathsStated; Jeff,
     // 2026-09-24). David Weekley's strip decides its own the same way.
     baths: zonda?.baths || bathsStated(content) || strip?.baths || plan.baths || (page.baths ?? ""),
-    sqft: plan.sqft ?? statedSqft(page.sqft, content),
+    sqft: plan.sqft ?? statedSqft(page.sqft, content, plan.name),
     garages: plan.garages ?? page.garages ?? null,
     description,
     // A tour on a host that serves tours wins outright, wherever it was
@@ -1344,7 +1357,7 @@ async function listPage(
       beds: p.beds ?? "",
       baths: p.baths ?? "",
       // The larger end of a size the page gives as a range (statedSqft).
-      sqft: statedSqft(p.sqft, content),
+      sqft: statedSqft(p.sqft, content, name),
       garages: p.garages ?? null,
       homeType: p.homeType ?? null,
       quickMoveIn,
