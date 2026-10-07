@@ -15,7 +15,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { logger } from "@/lib/shared/logger";
 import { recordUsage } from "@/lib/floorplans/ai-usage";
-import { digestOf, rememberRead, rememberedRead, variantOf } from "@/lib/floorplans/page-reads";
+import { createHash } from "node:crypto";
+import { digestOf, readVersion, rememberRead, rememberedRead, variantOf } from "@/lib/floorplans/page-reads";
+import { runContext } from "@/lib/floorplans/run-context";
 import { captionedCarousel, documentBase, drawingsMarked, drawingsNamed, elevationPictures, firstGallery, picturesNamedFor, fullSize, imageAddress, lightboxGallery, namedGallery, onePerPicture, payloadGallery, pictureKey } from "@/lib/floorplans/extractors/plan-page";
 import { classifyRoom, fileNameWords, orderGallery } from "@/lib/floorplans/gallery-order";
 import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
@@ -937,10 +939,10 @@ export function descriptionFromPage(
 }
 
 /**
- * What Claude is asked about one plan's or home's page. Asked with no
- * name, no address and no content, it is the template a read is
- * remembered by (page-reads.ts, variantOf): a change to these words reads
- * every page afresh.
+ * What Claude is asked about one plan's or home's page. A change to these
+ * words reads no page again by itself: raise the version of the builder
+ * it was made for, or READ_VERSION where every page needs reading again
+ * (page-reads.ts; readingPrompts below).
  */
 /**
  * The question asked of a plan's or a home's own page. Its beds, baths,
@@ -951,6 +953,23 @@ export function descriptionFromPage(
  */
 function planPageAsk(home: boolean, name: string, url: string, content: string): string {
   return `This is the page of one ${home ? `home for sale, "${name}"` : `floor plan, "${name}"`}. Report only what the page itself says about it — never invent a fact. Take its beds, baths, square footage and garages from the figures the page lists as its facts (a strip or table of specs), not from numbers its description mentions; where the two disagree, the listed figures are right. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
+}
+
+/**
+ * A digest of everything Claude is told when it reads a page: the asks
+ * around a plan's page and a list, and the tools it answers with. A test
+ * pins it (claude-extract-prompts.test.ts): a change to the words fails
+ * it until whoever made the change has chosen which pages need reading
+ * again (page-reads.ts, readVersion). Pure.
+ */
+export function readingPrompts(): string {
+  const said = {
+    model: MODEL,
+    plan: [planPageAsk(false, "", "", ""), planPageAsk(true, "", "", "")],
+    list: Object.values(LIST_ASKS).map((what) => listAsk(what, undefined, "", "")),
+    tools: [PLAN_PAGE_TOOL, PLAN_PAGE_TOOL_NO_PHOTOS, EXTRACT_TOOL, EXTRACT_TOOL_STRICT],
+  };
+  return createHash("sha256").update(JSON.stringify(said)).digest("hex");
 }
 
 /**
@@ -1043,7 +1062,7 @@ export async function readPlanPageWithClaude(
   // What the page's own markup says — its galleries, its drawings, its
   // tour — is read below every time, so a new photo is still seen.
   const digest = digestOf("plan", content);
-  const variant = variantOf("plan", { model: MODEL, tool, ask: planPageAsk(home, "", "", "") });
+  const variant = variantOf("plan", { model: MODEL, version: readVersion(runContext()?.builder), home, photos: !picturesKnown });
   const started = Date.now();
   let page: ExtractedPlanPage;
   const remembered = await rememberedRead<ExtractedPlanPage>(plan.sourceUrl, "plan", digest, variant);
@@ -1238,9 +1257,25 @@ export async function readPlanPageWithClaude(
 }
 
 /**
+ * What a listing page is asked for: its quick move-ins alone, its floor
+ * plans alone (the connection reads its homes from a page of their own,
+ * extractPages), or both.
+ */
+type ListMode = "homes" | "plans" | "both";
+
+const LIST_ASKS: Record<ListMode, string> = {
+  // A page of nothing but quick move-ins is told so: every entry is a house
+  // standing on a lot, named by its address, and the plan it is built from
+  // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
+  homes: `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`,
+  plans: `Extract every floor plan / home model from this new-home community page. Leave out the homes for sale — a home named by its street address or marked "Move-in Ready", "Quick Move-in" or with a move-in date — which are read from their own page. Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`,
+  both: `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`,
+};
+
+/**
  * What Claude is asked about a listing page, around the page itself.
- * Asked with no address and no content, it is the template a read is
- * remembered by (page-reads.ts, variantOf).
+ * A change to these words, as to planPageAsk's, reads no page again by
+ * itself (readingPrompts).
  */
 function listAsk(what: string, hint: string | undefined, url: string, content: string): string {
   return `${what} Leave out any home the page marks Sold, Under Contract or Sale Pending: it is no longer for sale. A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${hint ? ` Hint: ${hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
@@ -1271,14 +1306,8 @@ async function listPage(
     throw new Error("page produced almost no text (JS-rendered? use render_claude)");
   }
 
-  // A page of nothing but quick move-ins is told so: every entry is a house
-  // standing on a lot, named by its address, and the plan it is built from
-  // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
-  const what = opts.quickMoveIns
-    ? `Extract every quick move-in (inventory) home from this page. Every entry is a quick move-in, so set quickMoveIn=true on all of them. Name each one by its street address, and put the floor plan it is built from in relatedPlanName — an inventory listing usually prints the plan's name above the address.`
-    : opts.plansOnly
-      ? `Extract every floor plan / home model from this new-home community page. Leave out the homes for sale — a home named by its street address or marked "Move-in Ready", "Quick Move-in" or with a move-in date — which are read from their own page. Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`
-      : `Extract every floor plan / home model from this new-home community page. A home the page marks with a move-in date — "December Move-in", "Ready Nov 2026", "Move-in Ready" — is a quick move-in however the page words it: set quickMoveIn=true, name it by its street address where the page gives one and by its plan and the date where it does not, and put the plan or design it is built from in relatedPlanName ("DESIGN 3741F E-31" means the plan is 3741F). Where a page shows a price beside a crossed-out one, the crossed-out price is the old one — report the price being asked now.`;
+  const mode: ListMode = opts.quickMoveIns ? "homes" : opts.plansOnly ? "plans" : "both";
+  const what = LIST_ASKS[mode];
 
   const ask = listAsk(what, opts.hint, url, content);
 
@@ -1317,7 +1346,7 @@ async function listPage(
   // (page-reads.ts). The list is read for its plans or for its homes, and
   // each is a variant of its own.
   const digest = digestOf("list", content);
-  const variant = variantOf("list", { model: MODEL, tool: EXTRACT_TOOL, ask: listAsk(what, opts.hint, "", "") });
+  const variant = variantOf("list", { model: MODEL, version: readVersion(runContext()?.builder), mode, hint: opts.hint || null });
   const remembered = await rememberedRead<ExtractedPlan[]>(url, "list", digest, variant);
   let reported: ExtractedPlan[];
   if (remembered) {

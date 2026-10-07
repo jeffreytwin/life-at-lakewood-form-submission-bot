@@ -874,7 +874,7 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
       if (!extractor) throw new Error(`no extractor for ${conn.builder.extraction_method}`);
       const scraped = await Promise.race([
         // The same reading time a run has (sync.ts).
-        withRunContext({ source: "check" }, () => extractor({ ...params, communityName: conn.community.name, builderName: conn.builder.name, runDeadline: started + RUN_READ_MS })),
+        withRunContext({ source: "check", builder: conn.builder.name }, () => extractor({ ...params, communityName: conn.community.name, builderName: conn.builder.name, runDeadline: started + RUN_READ_MS })),
         wait(CHECK_TIMEOUT_MS).then(() => {
           throw new Error(`still running after ${CHECK_TIMEOUT_MS / 1000}s`);
         }),

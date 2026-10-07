@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { changeBetween, digestOf, normalizedText, reusable, variantOf, REREAD_AFTER_DAYS } from "@/lib/floorplans/page-reads";
+import { changeBetween, digestOf, normalizedText, readVersion, reusable, variantOf, BUILDER_READ_VERSIONS, READ_VERSION, REREAD_AFTER_DAYS } from "@/lib/floorplans/page-reads";
 
 const page = (price: string, extra = "") =>
   `The Lori [IMG https://b.com/lori/kitchen.jpg?v=12&w=1000] Priced ${price} 3 beds [LINK https://b.com/lori/?utm=night] ${extra}`;
@@ -29,13 +29,35 @@ describe("digestOf", () => {
 });
 
 describe("variantOf", () => {
-  it("changes with the prompt, the tool or the model, and not with the plan's name", () => {
-    const base = { model: "claude-sonnet-5", tool: { name: "report_plan_page" }, ask: "Report what the page says." };
+  it("changes with the model, the way the page is asked and the version, and not with the plan's name", () => {
+    const base = { model: "claude-sonnet-5", version: "1.0", home: false, photos: true };
     expect(variantOf("plan", base)).toBe(variantOf("plan", { ...base }));
-    expect(variantOf("plan", base)).not.toBe(variantOf("plan", { ...base, ask: "Report what the page says, briefly." }));
     expect(variantOf("plan", base)).not.toBe(variantOf("plan", { ...base, model: "claude-haiku-4-5" }));
-    expect(variantOf("plan", base)).not.toBe(variantOf("plan", { ...base, tool: { name: "report_plan_page", strict: true } }));
+    expect(variantOf("plan", base)).not.toBe(variantOf("plan", { ...base, version: "1.1" }));
+    expect(variantOf("plan", base)).not.toBe(variantOf("plan", { ...base, home: true }));
+    expect(variantOf("plan", base)).not.toBe(variantOf("plan", { ...base, photos: false }));
     expect(variantOf("plan", base)).not.toBe(variantOf("list", base));
+  });
+});
+
+describe("readVersion (2026-10-07: a fix for one builder reads only that builder's pages again)", () => {
+  it("is the read version and the builder's own, 0 for a builder not named", () => {
+    expect(readVersion("Nobody Homes")).toBe(`${READ_VERSION}.0`);
+    expect(readVersion(null)).toBe(`${READ_VERSION}.0`);
+    expect(readVersion(undefined)).toBe(`${READ_VERSION}.0`);
+  });
+
+  it("moves for the builder whose version is raised, and for no other", () => {
+    const before = { weekley: readVersion("David Weekley Homes"), pulte: readVersion("Pulte Homes") };
+    const was = BUILDER_READ_VERSIONS["David Weekley Homes"];
+    BUILDER_READ_VERSIONS["David Weekley Homes"] = (was ?? 0) + 1;
+    try {
+      expect(readVersion("David Weekley Homes")).not.toBe(before.weekley);
+      expect(readVersion("Pulte Homes")).toBe(before.pulte);
+    } finally {
+      if (was === undefined) delete BUILDER_READ_VERSIONS["David Weekley Homes"];
+      else BUILDER_READ_VERSIONS["David Weekley Homes"] = was;
+    }
   });
 });
 

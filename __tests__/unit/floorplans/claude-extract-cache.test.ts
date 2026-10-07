@@ -43,7 +43,8 @@ vi.mock("@anthropic-ai/sdk", () => ({
 }));
 
 import { readPlanPageWithClaude } from "@/lib/floorplans/extractors/claude-extract";
-import { digestOf, normalizedText, variantOf } from "@/lib/floorplans/page-reads";
+import { digestOf, normalizedText, variantOf, BUILDER_READ_VERSIONS } from "@/lib/floorplans/page-reads";
+import { withRunContext } from "@/lib/floorplans/run-context";
 import { distill } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -132,5 +133,29 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
     expect(change.before).toContain("$449,990");
     expect(change.after).toContain("$459,990");
     expect(change.at).toBeGreaterThan(0);
+  });
+
+  it("reads a builder's pages again when its version is raised, and no other builder's (2026-10-07)", async () => {
+    const asBuilder = (builder: string) => withRunContext({ source: "run", builder }, () => readPlanPageWithClaude(plan, read));
+    await asBuilder("David Weekley Homes");
+    const kept = db.state.remembered[0];
+    const remembered = () => ({ digest: kept.digest, variant: kept.variant, facts: kept.facts, model: "claude-sonnet-5", read_at: new Date().toISOString(), hits: 0 });
+    claude.create.mockClear();
+
+    // The same builder, nothing raised: the read stands.
+    db.state.read = remembered();
+    await asBuilder("David Weekley Homes");
+    expect(claude.create).not.toHaveBeenCalled();
+
+    // Its version raised: the page is read again, under a variant of its own.
+    BUILDER_READ_VERSIONS["David Weekley Homes"] = 1;
+    try {
+      db.state.read = remembered();
+      await asBuilder("David Weekley Homes");
+      expect(claude.create).toHaveBeenCalledTimes(1);
+      expect(db.state.remembered[1].variant).not.toBe(kept.variant);
+    } finally {
+      delete BUILDER_READ_VERSIONS["David Weekley Homes"];
+    }
   });
 });

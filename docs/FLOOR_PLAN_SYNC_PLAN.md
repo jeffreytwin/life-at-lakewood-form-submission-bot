@@ -395,6 +395,36 @@ nothing. No cutover report has ever been generated.
   with everything else. Lists are read the same way, for their plans and
   for their homes as two variants of one address.
 
+**Update 2026-10-07 (a fix for one builder reads only its pages again).**
+
+- **Why a Sync that found nothing cost $20.** The variant a read was kept
+  under was a digest of the prompt itself, so every word changed in it,
+  even one meant for a single builder, read every builder's ~840 pages
+  again: some $20–25 a sync, whether or not a page had changed. On
+  2026-10-06 the prompt went out five times, and each Sync after a
+  deploy re-read nearly everything (654, 1,049 and 604 pages read at
+  6pm, 9–10pm and 11pm, about $87 for the day); a nightly with no deploy
+  before it cost $1–1.50.
+- **Kept by version now** (`page-reads.ts`): a read is kept under the
+  model, the way the page is asked (a list for its plans, its homes or
+  both, with the connection's hint; a plan's or a home's page with or
+  without its photos) and `readVersion(builder)`, which is
+  `READ_VERSION` and the builder's own entry in `BUILDER_READ_VERSIONS`.
+  A prompt change made for one builder raises that builder's entry, and
+  only its pages are read again; one every page needs raises
+  `READ_VERSION`; one only pages read from now on need raises neither.
+  The run context carries the builder (the stand-in route and the
+  connection check now set it too).
+- **A change to the prompt is a choice.** `readingPrompts()` digests
+  everything Claude is told when it reads a page, and
+  `claude-extract-prompts.test.ts` pins it: a change to the words fails
+  the test until the version to raise has been chosen and the digest
+  pinned again.
+- **No re-read for the switch.** The 843 reads under the prompt live on
+  2026-10-07 (792 plan pages, 51 lists) were copied under their new
+  variants, so the first sync on this code reads what it would have read
+  anyway.
+
 **Update 2026-09-30 (the pages still read every night).**
 
 - **What the first two nights cost.** The first full Sync with the usage
