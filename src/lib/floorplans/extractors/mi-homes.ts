@@ -1,7 +1,8 @@
 // M/I Homes extractor, for a community read off M/I's own pages: Seaire and
 // Creeks Edge at Twin Rivers in Parrish, which no master-planned
-// community's listings carry (Palmera comes from Wellen Park's,
-// mpc-aggregator.ts). A community's page arrives with its overview and no
+// community's listings carry, and Palmera, read from M/I itself rather than
+// Wellen Park's listings since those served a stale copy of its homes one
+// night (Jeff, 2026-10-07). A community's page arrives with its overview and no
 // plans, so a fetch gave Claude nothing to read (Jeff, 2026-10-06). Its
 // scripts draw the plans, the homes for sale and the model from a feed,
 // asked by the community's id, which the page keeps on its list
