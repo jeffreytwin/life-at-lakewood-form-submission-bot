@@ -91,7 +91,7 @@ export const EXTRACT_TOOL: Anthropic.Tool = {
             price: { type: "number", description: "Base price in dollars; omit if not shown, or if the page gives only a range such as 'Low $500s' or 'High $400s' rather than a price" },
             beds: { type: "string", description: "Bedrooms, e.g. '3' or '3 - 4'" },
             baths: { type: "string", description: "Bathrooms, e.g. '2' or '2.5 - 3'" },
-            sqft: { type: "number", description: "Square footage" },
+            sqft: { type: "number", description: "Square footage; where the page gives a range such as '2719 - 2740', the larger figure" },
             garages: { type: "string", description: "Garage count, e.g. '2 car'" },
             homeType: { type: "string", description: "e.g. 'Single Family Home', 'Townhome'" },
             quickMoveIn: { type: "boolean", description: "True if this is a quick move-in / inventory home (often has a street address)" },
@@ -494,6 +494,27 @@ export function statedPrice(price: number | null | undefined, text: string): num
 }
 
 /**
+ * A size read off a page, as the larger end where the page gives it as a
+ * range. David Weekley's plans read "Sq Ft 2719 - 2740", and a read gave
+ * one end one night and the other the next, so The Bradson went from
+ * 2,719 to 2,740 and back (Jeff, 2026-10-07: the top of the range is the
+ * plan's size, as with beds and baths). A range the reading's figure
+ * opens is the one it came from; where two do, the narrower is the
+ * plan's own, the other a community's ("Sq Ft 1953-2740" heads the list
+ * that gives The Benton "1953 - 1963"). Exported for tests.
+ */
+export function statedSqft(sqft: number | null | undefined, text: string): number | null {
+  if (typeof sqft !== "number" || !(sqft > 0)) return null;
+  const figure = (s: string) => Number(s.replace(/,/g, ""));
+  let top: number | null = null;
+  for (const m of text.matchAll(/(\d{1,2},?\d{3})\s*(?:-|–|—|to)\s*(\d{1,2},?\d{3})(?![\d,])/g)) {
+    const [low, high] = [figure(m[1]), figure(m[2])];
+    if (low === sqft && high > low && (top === null || high < top)) top = high;
+  }
+  return top ?? sqft;
+}
+
+/**
  * The tour hosts builders use. Stock keeps its Matterport links in the
  * page's React payload rather than in a link or an iframe, and every
  * script goes out with distillation, so the raw HTML is searched for one.
@@ -583,7 +604,7 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
       garages: { type: "string", description: "Garage count as the page gives it, e.g. '3 car' or 'Two 2-Car Garage'" },
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
-      sqft: { type: "number", description: "Living square footage, if the page gives it" },
+      sqft: { type: "number", description: "Living square footage, if the page gives it; where it gives a range such as '2719 - 2740', the larger figure" },
       description: { type: "string", description: "The builder's own prose about the plan — sentences. Omit it if the page only prints a spec line of rooms and counts" },
       virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour, if one is linked" },
       photoImages: {
@@ -1132,7 +1153,7 @@ export async function readPlanPageWithClaude(
     // the half baths or added them up (standardize.ts, bathsStated; Jeff,
     // 2026-09-24). David Weekley's strip decides its own the same way.
     baths: zonda?.baths || bathsStated(content) || strip?.baths || plan.baths || (page.baths ?? ""),
-    sqft: plan.sqft ?? page.sqft ?? null,
+    sqft: plan.sqft ?? statedSqft(page.sqft, content),
     garages: plan.garages ?? page.garages ?? null,
     description,
     // A tour on a host that serves tours wins outright, wherever it was
@@ -1322,7 +1343,8 @@ async function listPage(
       priceDisplay: money(price ?? undefined),
       beds: p.beds ?? "",
       baths: p.baths ?? "",
-      sqft: p.sqft ?? null,
+      // The larger end of a size the page gives as a range (statedSqft).
+      sqft: statedSqft(p.sqft, content),
       garages: p.garages ?? null,
       homeType: p.homeType ?? null,
       quickMoveIn,
