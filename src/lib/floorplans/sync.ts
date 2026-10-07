@@ -105,11 +105,13 @@ const BUILDER_EXTRACTORS: Record<string, Extractor> = {
   // Builders that block their own sites — sourced from the master-planned-
   // community aggregators instead (a different origin, so the blocks don't
   // apply). Wellen Park (default) is server-rendered and covers ICI (Oakbend
-  // + Palmera) and M/I (Palmera). Communities that live in Lakewood Ranch
-  // (M/I Sweetwater/Nautique, Neal Signature) need extractor_params.source =
+  // + Palmera). Communities that live in Lakewood Ranch (M/I
+  // Sweetwater/Nautique, Neal Signature) need extractor_params.source =
   // "lakewoodranch" once that site's client-rendered list is reachable.
-  // M/I's Parrish communities (Seaire, Creeks Edge at Twin Rivers) are on
-  // no such list and are read off M/I's own plan feed (mi-homes.ts).
+  // An M/I connection whose url is M/I's own page is read off M/I's plan
+  // feed (mi-homes.ts): Seaire and Creeks Edge at Twin Rivers, on no such
+  // list, and Palmera, whose Wellen Park listing served a stale copy of
+  // M/I's homes, prices and pictures one night (Jeff, 2026-10-07).
   "M/I Homes": (params) => (isMiHomesPage(params.url) ? extractMiHomes(params) : extractMpcAggregator(params)),
   "ICI Homes": extractMpcAggregator,
   "Neal Signature Homes": extractMpcAggregator,
