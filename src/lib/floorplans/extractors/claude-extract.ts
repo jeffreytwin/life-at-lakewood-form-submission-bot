@@ -503,8 +503,8 @@ export function statedPrice(price: number | null | undefined, text: string): num
  * a community heads its plans with the span of all of them, and Neal
  * Signature's Waterbury Park page reads "3,138 – 4,189 Sq. Ft." over Palm
  * Bay 2, 3,138 Sq. Ft., which was proposed at 4,189 (Jeff, 2026-10-07).
- * Of two ranges after the name that open with the figure, the nearer.
- * Exported for tests.
+ * What lies between the name and the range is a card's or a title's, not
+ * a sentence about the community. Exported for tests.
  */
 export function statedSqft(sqft: number | null | undefined, text: string, name: string | null | undefined): number | null {
   if (typeof sqft !== "number" || !(sqft > 0)) return null;
@@ -519,7 +519,14 @@ export function statedSqft(sqft: number | null | undefined, text: string, name: 
     // What the name heads: as far as its card or title goes.
     const after = said.slice(named.index! + named[0].length, named.index! + named[0].length + SIZE_REACH);
     const m = after.match(range);
-    if (m && figure(m[1]) === sqft && figure(m[2]) > sqft) return figure(m[2]);
+    if (!m || figure(m[1]) !== sqft || !(figure(m[2]) > sqft)) continue;
+    // A card or a title between the two, not prose: The Willows' page says
+    // "Harbour, Nevis, Grenada 2, Bermuda and St. Thomas. Configurations
+    // range from 1,524 to 2,327 square feet" of the whole community, and
+    // Harbour, 1,524, was proposed at 2,327 (Jeff, 2026-10-07).
+    const between = after.slice(0, m.index).replace(/\bSq\.\s*/gi, "Sq ");
+    if (/[.;!?]\s|,\s|\s(?:and|range|ranging|between)\b/i.test(between)) continue;
+    return figure(m[2]);
   }
   return sqft;
 }
