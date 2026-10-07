@@ -3,6 +3,7 @@ import {
   keptFromPage,
   statedPrice,
   statedSqft,
+  livingSqft,
   asList,
   distinctKey,
   isTourUrl,
@@ -836,5 +837,25 @@ describe("statedSqft (David Weekley's North River Ranch and Neal Signature's Wat
   it("does not take the next card's range for the name's", () => {
     const cards = "The Allex From: $389,990 | Sq. Ft: 2140 Stories 1 Bedrooms 3 Full Baths 2 Car Garage 2 Share Compare Plan F030 The Bryce From: $399,990 | Sq. Ft: 2140 - 2210";
     expect(statedSqft(2140, cards, "The Allex")).toBe(2140);
+  });
+});
+
+describe("livingSqft (Kolter's Woodland Preserve, 2026-10-07)", () => {
+  const rachel =
+    "Rachel 3 Bedroom (up to 5 Bedroom), Flex Room, 3 Full and 1 Half Bath, Great Room, 2-Car Garage 2,586 Living Area Sq. Ft. " +
+    "Garage 2 Living Area Sq. Ft. 2,586 3,405 Total Sq. Ft. Structural Options 37 " +
+    "14443 Coastal Woodland Lane Rachel | Harrison Collection Homesite 111 3,405 Total Sq. Ft. 2,586 Living Area Sq. Ft. Move-In: Immediate";
+
+  it("gives the living area where a reading took the total beside it", () => {
+    expect(livingSqft(3405, rachel)).toBe(2586);
+    expect(livingSqft(3405, "Living Area Sq. Ft. 2,586 3,405 Total Sq. Ft.")).toBe(2586);
+    expect(livingSqft(3405, "3,405 Total Sq. Ft. 2,586 Living Area Sq. Ft.")).toBe(2586);
+  });
+
+  it("leaves a living area, and a total with no living area beside it, as they are", () => {
+    expect(livingSqft(2586, rachel)).toBe(2586);
+    expect(livingSqft(3405, "3,405 Total Sq. Ft. Move-In: Immediate")).toBe(3405);
+    expect(livingSqft(1638, "1,638 Sq Ft")).toBe(1638);
+    expect(livingSqft(null, rachel)).toBeNull();
   });
 });
