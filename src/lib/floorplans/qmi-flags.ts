@@ -25,8 +25,8 @@
 // to anything else is left as it is.
 //
 // And it keeps each row's million-dollar price tag to the bracket its price
-// is in: "$1M", "$2M" and up, where every plan from a million up once said
-// "1M+" (Jeff, 2026-10-08; quick-move-ins.ts, priceTagOf). A write-back tags
+// is in: "1M", "2M" and up, where every plan from a million up once said
+// "1M+", and for a short while "$1M" (Jeff, 2026-10-08; quick-move-ins.ts, priceTagOf). A write-back tags
 // a plan from its price; the check retags the rows already on the sites,
 // the freelancers' as well, from the price each row shows.
 
@@ -174,7 +174,7 @@ export function linkFixes(items: WixDataItem[], expected: (builder: string, vill
   return fixes;
 }
 
-/** A million-dollar price tag: the old "1M+" / "2M+" or a bracket ("$1M"). */
+/** A million-dollar price tag: the old "1M+" / "2M+" / "$1M" or a bracket ("1M"). */
 const MILLION_TAG = /^\$?\d+M\+?$/i;
 
 /**

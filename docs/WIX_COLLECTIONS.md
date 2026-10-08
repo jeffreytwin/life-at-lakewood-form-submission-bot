@@ -182,12 +182,15 @@ collections cached in `fp_legacy_items` (Wellen Park 329 rows, Parrish 829).
   move-in rows under them but no flag. The pipeline derives the flag from
   the run, so it cannot lag.
 - **Price tags** (`floorPlanPriceTags`, ARRAY_STRING) are one bracket per
-  plan: "$200s" through "$900s", then one per million ("$1M" for
-  $1,000,000–$1,999,999, "$2M", "$3M" and up), and "Custom Pricing" on
+  plan: "$200s" through "$900s", then one per million ("1M" for
+  $1,000,000–$1,999,999, "2M", "3M" and up), and "Custom Pricing" on
   Wellen Park for a plan without a price. The pipeline derives them
-  (`priceTagOf`). Until 2026-10-08 everything from a million up was "1M+";
+  (`priceTagOf`). The million tags carry no "$" because the site's price
+  dropdown lists the tags alphabetically: "1M" sorts after "$900s" and
+  before "Custom Pricing", where "$1M" sorted before "$200s". Until
+  2026-10-08 everything from a million up was "1M+" (and briefly "$1M");
   the quick move-in flag check (`qmi-flags.ts`, `priceTagFixes`) retags any
-  row still carrying "1M+" (or "2M+") from the price the row shows.
+  row still carrying "1M+", "2M+" or "$1M" from the price the row shows.
 - Lakewood's legacy collection has no quick move-in rows at all: 126 plans
   carry the flag and badge with nothing filed under them, and its banner
   text reads "READY FOR MOVE-IN". The Wellen Park / Parrish shape is what
