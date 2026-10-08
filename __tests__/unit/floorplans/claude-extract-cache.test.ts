@@ -81,6 +81,12 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
   it("asks Claude about a page nobody has read, writes the call down, and remembers what it said", async () => {
     const out = await readPlanPageWithClaude(plan, read);
     expect(claude.create).toHaveBeenCalledTimes(1);
+    // Haiku 5.5, let think before it answers: a forced tool call would skip the thinking (2026-10-08).
+    expect((claude.create.mock.calls[0] as unknown[])[0]).toMatchObject({
+      model: "claude-haiku-5-5",
+      tool_choice: { type: "auto" },
+      output_config: { effort: "medium" },
+    });
     expect(out.garages).toBe("3 car");
     expect(out.description).toBe("A fine home with a den and a lanai.");
     expect(db.state.usage).toHaveLength(1);
@@ -152,7 +158,7 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
     expect(db.state.remembered[0].variant).not.toBe(db.state.read.variant);
   });
 
-  it("keeps nothing from a read Claude declined: the page is left unread this run (2026-10-08)", async () => {
+  it("keeps nothing from a read Claude declined or answered without the tool: the page is left unread this run (2026-10-08)", async () => {
     claude.create.mockResolvedValueOnce({ content: [], usage: { input_tokens: 5_000, output_tokens: 0 }, stop_reason: "refusal" } as never);
     await expect(readPlanPageWithClaude(plan, read)).rejects.toThrow(/refusal/);
     expect(db.state.remembered).toHaveLength(0);

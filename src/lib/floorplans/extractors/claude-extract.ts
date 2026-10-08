@@ -33,18 +33,35 @@ import { relatedNameFromPage } from "@/lib/floorplans/quick-move-ins";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
 /**
- * The model that reads the pages. Haiku 5.5, not Sonnet 5: reading a page
- * for its facts is the plainest work the run gives Claude, and it was
- * nine-tenths of what a sync spent — some $20 a day, at $2/$10 a million
- * tokens where Haiku 5.5 asks $0.10/$0.50 (Jeff, 2026-10-08). The model is
- * part of what a saved read is kept under (variantOf), so the first run
- * after a change of model reads every page again, once.
- * Exported for the comparison (scripts/floorplan-model-compare.ts).
+ * The model that reads a plan's own page: Haiku 5.5, not Sonnet 5. Those
+ * reads were some 80% of what a sync spent (Jeff, 2026-10-08: about $16
+ * a day at $2/$10 a million tokens, where Haiku 5.5 asks $0.10/$0.50).
+ * Set beside what Sonnet had read off 40 of the same pages, Haiku thinking
+ * at medium effort gave the same price and size on every one, and the same
+ * beds and garages on all but one or two (scripts/floorplan-model-compare.ts);
+ * and what a plan's page gives only fills what its list left blank.
+ * The model is part of what a saved read is kept under (variantOf), so the
+ * first run after a change of model reads every plan's page again, once.
  */
-export const READ_MODEL = "claude-haiku-5-5";
-const MODEL = READ_MODEL;
-/** Room for the answer about one plan's page; Sonnet 5's longest ran to 4,096 and was cut there. */
-const PLAN_TOKENS = 8_192;
+export const PLAN_READ_MODEL = "claude-haiku-5-5";
+/**
+ * The model that reads a list. Still Sonnet 5: a list says which plans and
+ * homes there are and what they are called, and Haiku named some of them
+ * otherwise ("Sea Mist 8" for Sonnet's "Sea Mist", an address without its
+ * town), which the review queue would have shown as one plan gone and
+ * another come. Lists are a fifth of the spend.
+ */
+export const LIST_READ_MODEL = "claude-sonnet-5";
+/**
+ * How a plan's page is asked. Not with the tool forced: on Haiku 5.5 a
+ * forced tool call skips thinking, and asked so it read David Weekley's
+ * label-then-figure specs wrongly and gave an M/I home 2 bedrooms for 4.
+ * Let it think first, at medium effort, and ask for the tool in words.
+ */
+export const PLAN_READ_EFFORT = "medium";
+export const PLAN_READ_SYSTEM = "Answer by calling the report_plan_page tool once.";
+/** Room for the answer about one plan's page, the thinking before it included. */
+const PLAN_TOKENS = 16_000;
 /**
  * How long a rendering run may spend in the browser. Under the function's
  * own ceiling with room for the reads and the diff that follow, so a slow
@@ -58,8 +75,8 @@ const RENDER_RUN_MS = 190_000;
  * answers in half. The second figure is the retry, for the rare page that
  * needs more still.
  */
-const LIST_TOKENS = 24_576;
-const LIST_TOKENS_AGAIN = 49_152;
+const LIST_TOKENS = 16_384;
+const LIST_TOKENS_AGAIN = 32_768;
 /**
  * How much of a page is read. Pulte's community pages are 7MB and distill
  * to 370,000 characters — the plans start a third of the way in and run
@@ -976,7 +993,7 @@ export function planPageAsk(home: boolean, name: string, url: string, content: s
  */
 export function readingPrompts(): string {
   const said = {
-    model: MODEL,
+    model: { plan: PLAN_READ_MODEL, list: LIST_READ_MODEL, effort: PLAN_READ_EFFORT, system: PLAN_READ_SYSTEM },
     plan: [planPageAsk(false, "", "", ""), planPageAsk(true, "", "", "")],
     list: Object.values(LIST_ASKS).map((what) => listAsk(what, undefined, "", "")),
     tools: [PLAN_PAGE_TOOL, PLAN_PAGE_TOOL_NO_PHOTOS, EXTRACT_TOOL, EXTRACT_TOOL_STRICT],
@@ -1074,7 +1091,7 @@ export async function readPlanPageWithClaude(
   // What the page's own markup says — its galleries, its drawings, its
   // tour — is read below every time, so a new photo is still seen.
   const digest = digestOf("plan", content);
-  const variant = variantOf("plan", { model: MODEL, version: readVersion(runContext()?.builder), home, photos: !picturesKnown });
+  const variant = variantOf("plan", { model: PLAN_READ_MODEL, version: readVersion(runContext()?.builder), home, photos: !picturesKnown });
   const started = Date.now();
   let page: ExtractedPlanPage;
   const remembered = await rememberedRead<ExtractedPlanPage>(plan.sourceUrl, "plan", digest, variant);
@@ -1086,10 +1103,12 @@ export async function readPlanPageWithClaude(
     try {
       response = await getClient().messages.create(
         {
-          model: MODEL,
+          model: PLAN_READ_MODEL,
           max_tokens: PLAN_TOKENS,
           tools: [tool],
-          tool_choice: { type: "tool", name: "report_plan_page" },
+          tool_choice: { type: "auto" },
+          output_config: { effort: PLAN_READ_EFFORT },
+          system: PLAN_READ_SYSTEM,
           messages: [{ role: "user", content: planPageAsk(home, plan.name, plan.sourceUrl, content) }],
         },
         // One page's read may not hold up the run: past this it is left unread.
@@ -1098,7 +1117,7 @@ export async function readPlanPageWithClaude(
     } catch (error) {
       await recordUsage({
         purpose: "plan-page",
-        model: MODEL,
+        model: PLAN_READ_MODEL,
         ok: false,
         error: error instanceof Error ? error.message : String(error),
         ms: Date.now() - started,
@@ -1106,7 +1125,7 @@ export async function readPlanPageWithClaude(
       });
       throw error;
     }
-    await recordUsage({ purpose: "plan-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url: plan.sourceUrl });
+    await recordUsage({ purpose: "plan-page", model: PLAN_READ_MODEL, usage: response.usage, ms: Date.now() - started, url: plan.sourceUrl });
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     // A read Claude declined (stop_reason "refusal": Haiku 5.5's safety
     // classifiers, which can misfire on ordinary pages) or that came back
@@ -1115,7 +1134,7 @@ export async function readPlanPageWithClaude(
     // left unread this run and what an earlier run found stays (readPlanPages).
     if (!toolUse) throw new Error(`Claude gave no answer about the page (${response.stop_reason ?? "no stop reason"})`);
     page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
-    await rememberRead(plan.sourceUrl, "plan", digest, variant, page, MODEL, content);
+    await rememberRead(plan.sourceUrl, "plan", digest, variant, page, PLAN_READ_MODEL, content);
   }
   // One photograph once, at the largest size any spelling asks for.
   const { photos, enlarged } = onePerPicture(
@@ -1339,7 +1358,7 @@ async function listPage(
     try {
       response = await getClient().messages
         .stream({
-          model: MODEL,
+          model: LIST_READ_MODEL,
           max_tokens: maxTokens,
           tools: [tool],
           tool_choice: { type: "tool", name: tool.name },
@@ -1347,10 +1366,10 @@ async function listPage(
         })
         .finalMessage();
     } catch (error) {
-      await recordUsage({ purpose: "list-page", model: MODEL, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started, url });
+      await recordUsage({ purpose: "list-page", model: LIST_READ_MODEL, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started, url });
       throw error;
     }
-    await recordUsage({ purpose: "list-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url });
+    await recordUsage({ purpose: "list-page", model: LIST_READ_MODEL, usage: response.usage, ms: Date.now() - started, url });
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     return {
       answered: Boolean(toolUse),
@@ -1364,7 +1383,7 @@ async function listPage(
   // (page-reads.ts). The list is read for its plans or for its homes, and
   // each is a variant of its own.
   const digest = digestOf("list", content);
-  const variant = variantOf("list", { model: MODEL, version: readVersion(runContext()?.builder), mode, hint: opts.hint || null });
+  const variant = variantOf("list", { model: LIST_READ_MODEL, version: readVersion(runContext()?.builder), mode, hint: opts.hint || null });
   const remembered = await rememberedRead<ExtractedPlan[]>(url, "list", digest, variant);
   let reported: ExtractedPlan[];
   if (remembered) {
@@ -1396,7 +1415,7 @@ async function listPage(
       );
     }
     reported = list;
-    await rememberRead(url, "list", digest, variant, reported, MODEL, content);
+    await rememberRead(url, "list", digest, variant, reported, LIST_READ_MODEL, content);
   }
   const answered = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
   // A series is a page of plans, not a plan (Dream Finders' Seaire, Jeff

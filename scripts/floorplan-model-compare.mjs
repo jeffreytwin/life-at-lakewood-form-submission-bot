@@ -5,18 +5,16 @@
 // Read-only; always exits 0 so a build never fails on it.
 //
 // The Claude and Supabase keys are in Vercel's build and not where the
-// code is written, so this runs there, on the working branch only; the
-// results are read from the build log (FP-COMPARE lines).
+// code is written, so this runs there, when the build sets FP_COMPARE=1
+// (it spends some cents on Claude each time); the results are read from
+// the build log (FP-COMPARE lines).
 
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const COMPARE_BRANCH = 'claude/upbeat-ptolemy-2m8y40';
-
-const branch = process.env.VERCEL_GIT_COMMIT_REF;
-if (branch !== COMPARE_BRANCH && process.env.FP_COMPARE !== '1') {
-  console.log(`FP-COMPARE: branch ${branch ?? '(none)'} is not ${COMPARE_BRANCH}; skipping.`);
+if (process.env.FP_COMPARE !== '1') {
+  console.log('FP-COMPARE: FP_COMPARE is not set; skipping.');
   process.exit(0);
 }
 

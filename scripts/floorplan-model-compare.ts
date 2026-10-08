@@ -1,27 +1,38 @@
-// Model comparison: pages Sonnet 5 read, read again by the model that
-// reads them now (READ_MODEL, claude-extract.ts), and the two answers set
-// side by side, field by field. It is how the move from Sonnet 5 to
-// Haiku 5.5 was judged before it went out (Jeff, 2026-10-08: the page
-// reads were nine-tenths of a sync's spend).
+// Model comparison: pages Sonnet 5 read, read again by another model, and
+// the two answers set side by side, field by field. It is how the move of
+// the plan-page reads from Sonnet 5 to Haiku 5.5 was judged (Jeff,
+// 2026-10-08), and it is here for the next such question.
+//
+// What it found, on 40 plan pages and 10 list pages:
+//  - Haiku asked as the run asked Sonnet, with the tool forced (which on
+//    Haiku 5.5 skips thinking): numbers mostly right, but it misread David
+//    Weekley's label-then-figure specs, gave an M/I home 2 bedrooms for 4,
+//    and left homes off lists (Weekley 3 of 8, Dream Finders 6 of 18).
+//  - Haiku thinking at medium effort: plan pages the same as Sonnet on
+//    price and size, beds and garages on all but one or two; lists every
+//    entry there, but some named otherwise ("Sea Mist 8", an address
+//    without its town). So plan pages moved to it and lists stayed.
+//  - About $0.11 for the 50 reads, where Sonnet asked $1.73.
 //
 // What Sonnet said is already kept, with the text of the page it read
 // (fp_page_reads, migration 077), so no builder's site is fetched and
-// Sonnet is not paid again: only the new model is asked, the same question
-// the run asks, about the same text. The kept text is the page as it is
-// compared from night to night (normalizedText): its whitespace closed up
-// and, on a plan's page, its links left out, which the facts read off it
-// do not use.
+// Sonnet is not paid again: only the other model is asked, the same
+// question the run asks, about the same text. The kept text is the page as
+// it is compared from night to night (normalizedText): its whitespace
+// closed up and, on a plan's page, its links left out — so what it says
+// of tours says nothing.
 //
 // Which way each page was asked — a home's page or a plan's, with or
 // without its photos; a list for its plans, its homes or both — is not
 // kept, only a digest of it (variantOf), so each kept read is matched
 // against the ways it could have been asked; one that matches none (a
 // list with a connection's hint, a read from before the variants) is
-// passed over.
+// passed over. Only reads Sonnet 5 made can be compared, so once the plan
+// pages are all read again by Haiku, plan pages drop out of the sample.
 //
 // Run from the Vercel build (floorplan-model-compare.mjs), where the keys
-// are, on the working branch only. It writes nothing: no read is kept, no
-// usage is recorded. Results are FP-COMPARE lines in the build log.
+// are, when FP_COMPARE=1. It writes nothing: no read is kept, no usage is
+// recorded. Results are FP-COMPARE lines in the build log.
 
 import Anthropic from "@anthropic-ai/sdk";
 import { createHash } from "node:crypto";
@@ -31,7 +42,7 @@ import {
   LIST_ASKS,
   PLAN_PAGE_TOOL,
   PLAN_PAGE_TOOL_NO_PHOTOS,
-  READ_MODEL,
+  PLAN_READ_MODEL,
   asList,
   listAsk,
   planPageAsk,
@@ -44,6 +55,8 @@ import { readVersion, variantOf } from "@/lib/floorplans/page-reads";
 import { costCents, type TokenUsage } from "@/lib/floorplans/ai-usage";
 
 const BASELINE = "claude-sonnet-5";
+/** The model set against it: the one that reads plan pages now, unless another is named. */
+const READ_MODEL = process.env.FP_COMPARE_MODEL ?? PLAN_READ_MODEL;
 const PLANS = Number(process.env.FP_COMPARE_PLANS ?? 40);
 const LISTS = Number(process.env.FP_COMPARE_LISTS ?? 10);
 const PARALLEL = 4;
