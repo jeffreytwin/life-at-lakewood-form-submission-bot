@@ -23,11 +23,17 @@
 // page (wix-references.ts, VILLAGE_PAGES: Crosswind Point and Crosswind
 // Ranch on Crosswind's) points there (Jeff, 2026-09-28). A link set by hand
 // to anything else is left as it is.
+//
+// And it keeps each row's million-dollar price tag to the bracket its price
+// is in: "$1M", "$2M" and up, where every plan from a million up once said
+// "1M+" (Jeff, 2026-10-08; quick-move-ins.ts, priceTagOf). A write-back tags
+// a plan from its price; the check retags the rows already on the sites,
+// the freelancers' as well, from the price each row shows.
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { getItem, queryAllItems, updateItem, WixApiError, type WixDataItem, type WixItemData } from "@/lib/wix/client";
-import { basePlanMarkers } from "@/lib/floorplans/quick-move-ins";
+import { basePlanMarkers, priceTagOf } from "@/lib/floorplans/quick-move-ins";
 import { normKey } from "@/lib/floorplans/types";
 import { referenceResolver, villagePageOf, type PlanReferences } from "@/lib/floorplans/wix-references";
 
@@ -168,6 +174,52 @@ export function linkFixes(items: WixDataItem[], expected: (builder: string, vill
   return fixes;
 }
 
+/** A million-dollar price tag: the old "1M+" / "2M+" or a bracket ("$1M"). */
+const MILLION_TAG = /^\$?\d+M\+?$/i;
+
+/**
+ * The price a row shows, as a number: "$1,149,990", "From $1,149,990",
+ * "$1.2M", the first of "$1,149,990 - $1,300,000". Null when it shows none.
+ * Pure; exported for tests.
+ */
+export function shownPrice(shown: unknown): number | null {
+  const m = text(shown).match(/\$\s*(\d[\d,]*(?:\.\d+)?)\s*([km])?\b/i);
+  if (!m) return null;
+  const n = Number(m[1].replace(/,/g, "")) * ({ k: 1_000, m: 1_000_000 }[m[2]?.toLowerCase() as "k" | "m"] ?? 1);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export interface TagFix {
+  itemId: string;
+  name: string;
+  village: string;
+  builder: string;
+  /** The row's tags as they are, and as they are to be. */
+  from: string[];
+  to: string[];
+}
+
+/**
+ * The rows with a million-dollar price tag that is not the bracket the
+ * row's price is in. A row whose price says less than a million, or no
+ * price, is left as it is: what its tag should be cannot be told from it.
+ * Pure; exported for tests.
+ */
+export function priceTagFixes(items: WixDataItem[]): TagFix[] {
+  const fixes: TagFix[] = [];
+  for (const item of items) {
+    const tags = Array.isArray(item.data.floorPlanPriceTags) ? item.data.floorPlanPriceTags.map(text).filter(Boolean) : [];
+    if (!tags.some((t) => MILLION_TAG.test(t))) continue;
+    const price = shownPrice(item.data.floorPlanPrice);
+    if (price == null || price < 1_000_000) continue;
+    const want = priceTagOf(price)!;
+    const to = [...new Set(tags.map((t) => (MILLION_TAG.test(t) ? want : t)))];
+    if (to.join("|") === tags.join("|")) continue;
+    fixes.push({ itemId: item.id, name: text(item.data.floorPlanName), village: text(item.data.village), builder: text(item.data.builder), from: tags, to });
+  }
+  return fixes;
+}
+
 interface SiteRow {
   id: string;
   name: string | null;
@@ -213,6 +265,17 @@ async function applyLinkFix(site: SiteRow, fix: LinkFix): Promise<boolean> {
   return true;
 }
 
+/** Writes one row's price tag: the row read again just before, and retagged only if it still needs it. */
+async function applyTagFix(site: SiteRow, fix: TagFix): Promise<boolean> {
+  const fresh = await getItem(site.wix_site_id!, site.wix_collection_id!, fix.itemId);
+  if (!fresh) return false;
+  const [still] = priceTagFixes([fresh]);
+  if (!still) return false;
+  const kept = Object.fromEntries(Object.entries(fresh.data ?? {}).filter(([k]) => !k.startsWith("_")));
+  await updateItem(site.wix_site_id!, site.wix_collection_id!, fix.itemId, { ...kept, floorPlanPriceTags: still.to });
+  return true;
+}
+
 export interface FlagCheck {
   site: string;
   plans: number;
@@ -227,6 +290,10 @@ export interface FlagCheck {
   gaps?: { builder: string; village: string; rows: number; noBuilder1: number; noVillages: number; found: PlanReferences }[];
   /** Links written. */
   linked: number;
+  /** Rows whose million-dollar price tag is to be set to its bracket (priceTagFixes). */
+  tags: TagFix[];
+  /** Price tags written. */
+  retagged: number;
   error?: string;
 }
 
@@ -240,7 +307,7 @@ export async function checkSiteFlags(
 ): Promise<FlagCheck> {
   const label = site.name ?? site.id;
   if (!site.wix_site_id || !site.wix_collection_id) {
-    return { site: label, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, links: [], linked: 0, error: "no Wix collection" };
+    return { site: label, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, links: [], linked: 0, tags: [], retagged: 0, error: "no Wix collection" };
   }
   const scoped = Boolean(opts.builder && opts.village);
   const items = await queryAllItems(site.wix_site_id, site.wix_collection_id, {
@@ -256,7 +323,7 @@ export async function checkSiteFlags(
     if (!expected.has(key)) expected.set(key, await resolve(text(item.data.builder), text(item.data.village)));
   }
   const links = linkFixes(items, (builder, village) => expected.get(`${builder}|${village}`));
-  const check: FlagCheck = { site: label, ...found, fixed: 0, links, linked: 0 };
+  const check: FlagCheck = { site: label, ...found, fixed: 0, links, linked: 0, tags: priceTagFixes(items), retagged: 0 };
   if (opts.dryRun) {
     const gaps = new Map<string, NonNullable<FlagCheck["gaps"]>[number]>();
     for (const item of items) {
@@ -322,6 +389,23 @@ export async function checkSiteFlags(
     }
   }
 
+  for (const fix of check.error ? [] : check.tags) {
+    if (Date.now() > deadline) break;
+    try {
+      if (await applyTagFix(site, fix)) check.retagged += 1;
+    } catch (error) {
+      if (error instanceof WixApiError && error.rateLimited) {
+        check.error = "Wix is throttling; the rest wait for the next check";
+        break;
+      }
+      logger.warn("Row's price tag could not be set", {
+        site: label,
+        plan: fix.name,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   // A full check replaces the site's list of what it could not place.
   if (!scoped) {
     await supabase.from("fp_qmi_flag_log").delete().eq("site_id", site.id).in("action", ["no-plan", "same-name"]);
@@ -342,11 +426,12 @@ export async function checkSiteFlags(
     await supabase.from("fp_qmi_flag_log").insert({
       site_id: site.id,
       action: "checked",
-      detail: `${found.plans} floor plans, ${found.homes} quick move-ins: ${check.fixed} flag${check.fixed === 1 ? "" : "s"} fixed, ${found.problems.length} to look at${check.linked ? `, ${check.linked} row${check.linked === 1 ? "'s" : "s'"} builder or neighborhood link set` : ""}`,
+      detail: `${found.plans} floor plans, ${found.homes} quick move-ins: ${check.fixed} flag${check.fixed === 1 ? "" : "s"} fixed, ${found.problems.length} to look at${check.linked ? `, ${check.linked} row${check.linked === 1 ? "'s" : "s'"} builder or neighborhood link set` : ""}${check.retagged ? `, ${check.retagged} price tag${check.retagged === 1 ? "" : "s"} set to its million bracket` : ""}`,
       reason: opts.reason,
     });
   }
   if (check.fixed) logger.info("Quick move-in flags fixed", { site: label, fixed: check.fixed, scoped, reason: opts.reason });
+  if (check.retagged) logger.info("Rows' million-dollar price tags set", { site: label, retagged: check.retagged, found: check.tags.length, scoped, reason: opts.reason });
   if (check.linked) logger.info("Rows' builder and neighborhood links set", { site: label, linked: check.linked, found: links.length, scoped, reason: opts.reason });
   return check;
 }
@@ -360,7 +445,7 @@ export async function checkAllFlags(opts: { dryRun?: boolean; reason: string; bu
     try {
       checks.push(await checkSiteFlags(site, { dryRun: opts.dryRun, reason: opts.reason, deadline }));
     } catch (error) {
-      checks.push({ site: site.name ?? site.id, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, links: [], linked: 0, error: error instanceof Error ? error.message : String(error) });
+      checks.push({ site: site.name ?? site.id, plans: 0, homes: 0, fixes: [], problems: [], fixed: 0, links: [], linked: 0, tags: [], retagged: 0, error: error instanceof Error ? error.message : String(error) });
     }
   }
   return checks;
