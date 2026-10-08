@@ -12,8 +12,11 @@ import { readingPrompts } from "@/lib/floorplans/extractors/claude-extract";
 //  - a change every builder's pages need: raise READ_VERSION, and every
 //    page is read again on the next run, some $20–25 a sync;
 //  - a change no saved read needs (it only helps pages read from now on):
-//    raise neither.
-const PINNED = "f15fe9a5024f09c2c80a7ca4f8576e8aee9209fbc48183623a24f54386230ea7";
+//    raise neither;
+//  - a change of model (READ_MODEL): raise neither, the model is part of
+//    the variant a read is kept under, so every page is read again once
+//    anyway (2026-10-08: Sonnet 5 to Haiku 5.5).
+const PINNED = "3342b0ee0c50882d22ece1eef00cff7a374b6b5d7090750d7e061c52a6f9fef4";
 
 describe("what Claude is told when it reads a page (2026-10-07)", () => {
   it("is pinned, so a change to it is a choice of which pages to read again", () => {

@@ -32,7 +32,19 @@ import { isWilliamRyanPage, williamRyanPictures } from "@/lib/floorplans/extract
 import { relatedNameFromPage } from "@/lib/floorplans/quick-move-ins";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
-const MODEL = "claude-sonnet-5";
+/**
+ * The model that reads the pages. Haiku 5.5, not Sonnet 5: reading a page
+ * for its facts is the plainest work the run gives Claude, and it was
+ * nine-tenths of what a sync spent — some $20 a day, at $2/$10 a million
+ * tokens where Haiku 5.5 asks $0.10/$0.50 (Jeff, 2026-10-08). The model is
+ * part of what a saved read is kept under (variantOf), so the first run
+ * after a change of model reads every page again, once.
+ * Exported for the comparison (scripts/floorplan-model-compare.ts).
+ */
+export const READ_MODEL = "claude-haiku-5-5";
+const MODEL = READ_MODEL;
+/** Room for the answer about one plan's page; Sonnet 5's longest ran to 4,096 and was cut there. */
+const PLAN_TOKENS = 8_192;
 /**
  * How long a rendering run may spend in the browser. Under the function's
  * own ceiling with room for the reads and the diff that follow, so a slow
@@ -46,8 +58,8 @@ const RENDER_RUN_MS = 190_000;
  * answers in half. The second figure is the retry, for the rare page that
  * needs more still.
  */
-const LIST_TOKENS = 16_384;
-const LIST_TOKENS_AGAIN = 32_768;
+const LIST_TOKENS = 24_576;
+const LIST_TOKENS_AGAIN = 49_152;
 /**
  * How much of a page is read. Pulte's community pages are 7MB and distill
  * to 370,000 characters — the plans start a third of the way in and run
@@ -149,7 +161,7 @@ export const EXTRACT_TOOL_STRICT: Anthropic.Tool = (() => {
   };
 })();
 
-interface ExtractedPlan {
+export interface ExtractedPlan {
   name: string;
   price?: number;
   beds?: string;
@@ -638,7 +650,7 @@ function decodeEntities(text: string): string {
     .replace(/&(?:apos|#0*39);/gi, "'");
 }
 
-const PLAN_PAGE_TOOL: Anthropic.Tool = {
+export const PLAN_PAGE_TOOL: Anthropic.Tool = {
   name: "report_plan_page",
   description: "Report what this one floor plan's own page says about it.",
   input_schema: {
@@ -674,13 +686,13 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
  * what Claude writes back for a plan page, and a run of fifty-odd pages
  * spent most of its time on them (Perry, 2026-09-23).
  */
-const PLAN_PAGE_TOOL_NO_PHOTOS: Anthropic.Tool = (() => {
+export const PLAN_PAGE_TOOL_NO_PHOTOS: Anthropic.Tool = (() => {
   const schema = PLAN_PAGE_TOOL.input_schema as { properties: Record<string, unknown> };
   const properties = Object.fromEntries(Object.entries(schema.properties).filter(([key]) => key !== "photoImages"));
   return { ...PLAN_PAGE_TOOL, input_schema: { ...PLAN_PAGE_TOOL.input_schema, properties } };
 })();
 
-interface ExtractedPlanPage {
+export interface ExtractedPlanPage {
   price?: number;
   garages?: string;
   beds?: string;
@@ -951,7 +963,7 @@ export function descriptionFromPage(
  * describes "a generous 3-car garage", and one read took the description's
  * and proposed 3 car for a plan built with 2 (Jeff, 2026-10-06).
  */
-function planPageAsk(home: boolean, name: string, url: string, content: string): string {
+export function planPageAsk(home: boolean, name: string, url: string, content: string): string {
   return `This is the page of one ${home ? `home for sale, "${name}"` : `floor plan, "${name}"`}. Report only what the page itself says about it — never invent a fact. Take its beds, baths, square footage and garages from the figures the page lists as its facts (a strip or table of specs), not from numbers its description mentions; where the two disagree, the listed figures are right. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 }
 
@@ -1075,7 +1087,7 @@ export async function readPlanPageWithClaude(
       response = await getClient().messages.create(
         {
           model: MODEL,
-          max_tokens: 4096,
+          max_tokens: PLAN_TOKENS,
           tools: [tool],
           tool_choice: { type: "tool", name: "report_plan_page" },
           messages: [{ role: "user", content: planPageAsk(home, plan.name, plan.sourceUrl, content) }],
@@ -1096,6 +1108,12 @@ export async function readPlanPageWithClaude(
     }
     await recordUsage({ purpose: "plan-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url: plan.sourceUrl });
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+    // A read Claude declined (stop_reason "refusal": Haiku 5.5's safety
+    // classifiers, which can misfire on ordinary pages) or that came back
+    // without its answer is no read: kept, it would stand for the page as
+    // a page that says nothing until the page changes. Thrown, the page is
+    // left unread this run and what an earlier run found stays (readPlanPages).
+    if (!toolUse) throw new Error(`Claude gave no answer about the page (${response.stop_reason ?? "no stop reason"})`);
     page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
     await rememberRead(plan.sourceUrl, "plan", digest, variant, page, MODEL, content);
   }
@@ -1261,9 +1279,9 @@ export async function readPlanPageWithClaude(
  * plans alone (the connection reads its homes from a page of their own,
  * extractPages), or both.
  */
-type ListMode = "homes" | "plans" | "both";
+export type ListMode = "homes" | "plans" | "both";
 
-const LIST_ASKS: Record<ListMode, string> = {
+export const LIST_ASKS: Record<ListMode, string> = {
   // A page of nothing but quick move-ins is told so: every entry is a house
   // standing on a lot, named by its address, and the plan it is built from
   // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
@@ -1277,7 +1295,7 @@ const LIST_ASKS: Record<ListMode, string> = {
  * A change to these words, as to planPageAsk's, reads no page again by
  * itself (readingPrompts).
  */
-function listAsk(what: string, hint: string | undefined, url: string, content: string): string {
+export function listAsk(what: string, hint: string | undefined, url: string, content: string): string {
   return `${what} Leave out any home the page marks Sold, Under Contract or Sale Pending: it is no longer for sale. A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${hint ? ` Hint: ${hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 }
 
@@ -1368,7 +1386,7 @@ async function listPage(
       });
       answer = await readList(LIST_TOKENS_AGAIN, cutShort ? EXTRACT_TOOL : EXTRACT_TOOL_STRICT);
     }
-    if (!answer.answered) throw new Error("Claude returned no extraction tool call");
+    if (!answer.answered) throw new Error(`Claude returned no extraction tool call (${answer.stop ?? "no stop reason"})`);
     const list = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
     if (!list) {
       throw new Error(
