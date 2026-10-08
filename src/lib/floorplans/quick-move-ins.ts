@@ -394,13 +394,15 @@ export function withPlanPicturesOnHomes(plans: NormalizedPlan[]): NormalizedPlan
 }
 
 /**
- * The price bracket tag the site filters on: "$400s" for $419,990, "1M+"
- * from a million up, "Custom Pricing" when the builder gives no price
- * (Wellen Park's wording), nothing under $100k.
+ * The price bracket tag the site filters on: "$400s" for $419,990, "$1M"
+ * for $1,149,000 and "$2M" for $2,450,000 (one "1M+" held too many of
+ * Wellen Park's and Lakewood Ranch's plans to help; Jeff, 2026-10-08),
+ * "Custom Pricing" when the builder gives no price (Wellen Park's
+ * wording), nothing under $100k.
  */
 export function priceTagOf(price: number | null | undefined): string | null {
   if (price == null || !Number.isFinite(price) || price <= 0) return "Custom Pricing";
-  if (price >= 1_000_000) return "1M+";
+  if (price >= 1_000_000) return `$${Math.floor(price / 1_000_000)}M`;
   if (price < 100_000) return null;
   return `$${Math.floor(price / 100_000)}00s`;
 }

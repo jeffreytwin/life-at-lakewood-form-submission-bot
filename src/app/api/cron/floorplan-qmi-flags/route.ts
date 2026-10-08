@@ -9,7 +9,8 @@ export const maxDuration = 300;
  * GET /api/cron/floorplan-qmi-flags
  *
  * Four times a day: every floor plan row of every site, its "quick
- * move-ins available" flag set to what is filed under it (qmi-flags.ts).
+ * move-ins available" flag set to what is filed under it, and its
+ * million-dollar price tag to the bracket its price is in (qmi-flags.ts).
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   try {
     const checks = await checkAllFlags({ reason: "scheduled check" });
     return NextResponse.json(
-      checks.map((c) => ({ site: c.site, plans: c.plans, homes: c.homes, found: c.fixes.length, fixed: c.fixed, problems: c.problems.length, error: c.error }))
+      checks.map((c) => ({ site: c.site, plans: c.plans, homes: c.homes, found: c.fixes.length, fixed: c.fixed, problems: c.problems.length, retagged: c.retagged, error: c.error }))
     );
   } catch (error) {
     logger.error("Quick move-in flag check failed", {

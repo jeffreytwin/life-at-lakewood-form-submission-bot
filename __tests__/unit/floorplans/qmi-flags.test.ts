@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { flagFixes, linkFixes, markersFor } from "@/lib/floorplans/qmi-flags";
+import { flagFixes, linkFixes, markersFor, priceTagFixes, shownPrice } from "@/lib/floorplans/qmi-flags";
 import type { WixDataItem } from "@/lib/wix/client";
 
 let n = 0;
@@ -88,5 +88,46 @@ describe("a row's builder and neighborhood links (Jeff, 2026-09-28)", () => {
     expect(linkFixes([byHand], () => found)).toEqual([]);
     expect(linkFixes([right], () => ({ builderId: "westbay", villageId: "crosswind" }))).toEqual([]);
     expect(linkFixes([unknown], () => ({ builderId: null, villageId: null }))).toEqual([]);
+  });
+});
+
+describe("a row's million-dollar price tag (Jeff, 2026-10-08)", () => {
+  const priced = (price: unknown, tags: unknown) => row({ floorPlanName: "Cassia", builder: "Toll Brothers", village: "Wysteria", floorPlanPrice: price, floorPlanPriceTags: tags });
+
+  it("reads the price a row shows", () => {
+    expect(shownPrice("$1,149,990")).toBe(1_149_990);
+    expect(shownPrice("From $2,450,000")).toBe(2_450_000);
+    expect(shownPrice("$1.2M")).toBe(1_200_000);
+    expect(shownPrice("$1,149,990 - $1,300,000")).toBe(1_149_990);
+    expect(shownPrice("Custom Pricing")).toBeNull();
+    expect(shownPrice(null)).toBeNull();
+  });
+
+  it("sets a 1M+ tag to the bracket the row's price is in", () => {
+    const one = priced("$1,149,990", ["1M+"]);
+    const two = priced("$2,450,000", ["1M+"]);
+    const oldTwo = priced("$3,100,000", ["2M+"]);
+    expect(priceTagFixes([one, two, oldTwo])).toEqual([
+      expect.objectContaining({ itemId: one.id, from: ["1M+"], to: ["$1M"] }),
+      expect.objectContaining({ itemId: two.id, from: ["1M+"], to: ["$2M"] }),
+      expect.objectContaining({ itemId: oldTwo.id, from: ["2M+"], to: ["$3M"] }),
+    ]);
+  });
+
+  it("leaves a row whose tag is already its bracket, whose tag is under a million, or whose price cannot be read", () => {
+    expect(
+      priceTagFixes([
+        priced("$1,149,990", ["$1M"]),
+        priced("$849,990", ["$800s"]),
+        priced("Call for pricing", ["1M+"]),
+        priced("$949,990", ["1M+"]),
+        priced("$1,500,000", undefined),
+      ])
+    ).toEqual([]);
+  });
+
+  it("keeps a row's other tags", () => {
+    const both = priced("$2,100,000", ["Custom Pricing", "1M+"]);
+    expect(priceTagFixes([both])).toEqual([expect.objectContaining({ to: ["Custom Pricing", "$2M"] })]);
   });
 });
