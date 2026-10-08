@@ -274,10 +274,10 @@ describe("priceTagOf", () => {
     expect(priceTagOf(419_990)).toBe("$400s");
     expect(priceTagOf(274_000)).toBe("$200s");
     expect(priceTagOf(999_999)).toBe("$900s");
-    expect(priceTagOf(1_149_000)).toBe("$1M");
-    expect(priceTagOf(1_999_999)).toBe("$1M");
-    expect(priceTagOf(2_450_000)).toBe("$2M");
-    expect(priceTagOf(3_000_000)).toBe("$3M");
+    expect(priceTagOf(1_149_000)).toBe("1M");
+    expect(priceTagOf(1_999_999)).toBe("1M");
+    expect(priceTagOf(2_450_000)).toBe("2M");
+    expect(priceTagOf(3_000_000)).toBe("3M");
     expect(priceTagOf(null)).toBe("Custom Pricing");
     expect(priceTagOf(50_000)).toBeNull();
   });
@@ -300,7 +300,7 @@ describe("basePlanMarkers", () => {
       newConstructionOrMoveIn: "NEW CONSTRUCTION",
       constructionDot: STATUS_DOT_NEW_CONSTRUCTION,
       quickMoveInImage: null,
-      floorPlanPriceTags: ["$1M"],
+      floorPlanPriceTags: ["1M"],
     });
   });
 

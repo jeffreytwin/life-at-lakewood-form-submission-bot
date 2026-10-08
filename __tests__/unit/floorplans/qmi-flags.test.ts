@@ -108,16 +108,21 @@ describe("a row's million-dollar price tag (Jeff, 2026-10-08)", () => {
     const two = priced("$2,450,000", ["1M+"]);
     const oldTwo = priced("$3,100,000", ["2M+"]);
     expect(priceTagFixes([one, two, oldTwo])).toEqual([
-      expect.objectContaining({ itemId: one.id, from: ["1M+"], to: ["$1M"] }),
-      expect.objectContaining({ itemId: two.id, from: ["1M+"], to: ["$2M"] }),
-      expect.objectContaining({ itemId: oldTwo.id, from: ["2M+"], to: ["$3M"] }),
+      expect.objectContaining({ itemId: one.id, from: ["1M+"], to: ["1M"] }),
+      expect.objectContaining({ itemId: two.id, from: ["1M+"], to: ["2M"] }),
+      expect.objectContaining({ itemId: oldTwo.id, from: ["2M+"], to: ["3M"] }),
     ]);
+  });
+
+  it("drops the $ from a $1M tag, which sorted before $200s in the site's dropdown", () => {
+    const dollar = priced("$1,149,990", ["$1M"]);
+    expect(priceTagFixes([dollar])).toEqual([expect.objectContaining({ itemId: dollar.id, from: ["$1M"], to: ["1M"] })]);
   });
 
   it("leaves a row whose tag is already its bracket, whose tag is under a million, or whose price cannot be read", () => {
     expect(
       priceTagFixes([
-        priced("$1,149,990", ["$1M"]),
+        priced("$1,149,990", ["1M"]),
         priced("$849,990", ["$800s"]),
         priced("Call for pricing", ["1M+"]),
         priced("$949,990", ["1M+"]),
@@ -128,6 +133,6 @@ describe("a row's million-dollar price tag (Jeff, 2026-10-08)", () => {
 
   it("keeps a row's other tags", () => {
     const both = priced("$2,100,000", ["Custom Pricing", "1M+"]);
-    expect(priceTagFixes([both])).toEqual([expect.objectContaining({ to: ["Custom Pricing", "$2M"] })]);
+    expect(priceTagFixes([both])).toEqual([expect.objectContaining({ to: ["Custom Pricing", "2M"] })]);
   });
 });
