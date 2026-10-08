@@ -21,6 +21,14 @@ describe("costCents (prices of 2026-09-29)", () => {
     expect(costCents("claude-opus-5", { cache_creation_input_tokens: 1_000_000 })).toBe(625);
   });
 
+  it("prices a Haiku 5.5 page read at $0.10 in and $0.50 out a million, and a prompt past 100,000 tokens at $0.50 and $2.50", () => {
+    // 10,000 in and 1,000 out: 0.1 cent + 0.05 cent.
+    expect(costCents("claude-haiku-5-5", { input_tokens: 10_000, output_tokens: 1_000 })).toBe(0.15);
+    // 100,000 is still the short prompt's price; cache reads count toward the length.
+    expect(costCents("claude-haiku-5-5", { input_tokens: 100_000 })).toBe(1);
+    expect(costCents("claude-haiku-5-5", { input_tokens: 60_000, cache_read_input_tokens: 60_000, output_tokens: 2_000 })).toBe(3.8);
+  });
+
   it("knows a model by its id less a date, and prices an unknown one at nothing", () => {
     expect(pricesOf("claude-haiku-4-5-20251001")).toEqual(pricesOf("claude-haiku-4-5"));
     expect(costCents("claude-haiku-4-5-20251001", { input_tokens: 1_000_000 })).toBe(100);

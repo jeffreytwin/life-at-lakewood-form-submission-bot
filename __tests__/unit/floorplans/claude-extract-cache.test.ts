@@ -81,10 +81,16 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
   it("asks Claude about a page nobody has read, writes the call down, and remembers what it said", async () => {
     const out = await readPlanPageWithClaude(plan, read);
     expect(claude.create).toHaveBeenCalledTimes(1);
+    // Haiku 5.5, let think before it answers: a forced tool call would skip the thinking (2026-10-08).
+    expect((claude.create.mock.calls[0] as unknown[])[0]).toMatchObject({
+      model: "claude-haiku-5-5",
+      tool_choice: { type: "auto" },
+      output_config: { effort: "medium" },
+    });
     expect(out.garages).toBe("3 car");
     expect(out.description).toBe("A fine home with a den and a lanai.");
     expect(db.state.usage).toHaveLength(1);
-    expect(db.state.usage[0]).toMatchObject({ purpose: "plan-page", model: "claude-sonnet-5", cached: false, input_tokens: 5_000, output_tokens: 200, cost_cents: 1.2 });
+    expect(db.state.usage[0]).toMatchObject({ purpose: "plan-page", model: "claude-haiku-5-5", cached: false, input_tokens: 5_000, output_tokens: 200, cost_cents: 0.06 });
     expect(db.state.remembered).toHaveLength(1);
     const kept = db.state.remembered[0];
     expect(kept.url).toBe(plan.sourceUrl);
@@ -100,7 +106,7 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
     // What the first read would have remembered, as the table holds it.
     const first = await readPlanPageWithClaude(plan, read);
     const kept = db.state.remembered[0];
-    db.state.read = { digest: kept.digest, variant: kept.variant, facts: kept.facts, model: "claude-sonnet-5", read_at: new Date().toISOString(), hits: 0 };
+    db.state.read = { digest: kept.digest, variant: kept.variant, facts: kept.facts, model: "claude-haiku-5-5", read_at: new Date().toISOString(), hits: 0 };
     claude.create.mockClear();
     db.state.usage = [];
 
@@ -135,11 +141,36 @@ describe("readPlanPageWithClaude with a page read once (2026-09-29)", () => {
     expect(change.at).toBeGreaterThan(0);
   });
 
+  it("reads a page again, once, that the last model read: the model is part of what a read is kept under (2026-10-08)", async () => {
+    const text = normalizedText("plan", distill(html, plan.sourceUrl!));
+    db.state.read = {
+      digest: digestOf("plan", distill(html, plan.sourceUrl!)),
+      variant: variantOf("plan", { model: "claude-sonnet-5", version: "1.0", home: false, photos: true }),
+      facts: { garages: "3 car" },
+      model: "claude-sonnet-5",
+      read_at: new Date().toISOString(),
+      hits: 0,
+      text,
+    };
+    await readPlanPageWithClaude(plan, read);
+    expect(claude.create).toHaveBeenCalledTimes(1);
+    expect(db.state.remembered[0]).toMatchObject({ model: "claude-haiku-5-5" });
+    expect(db.state.remembered[0].variant).not.toBe(db.state.read.variant);
+  });
+
+  it("keeps nothing from a read Claude declined or answered without the tool: the page is left unread this run (2026-10-08)", async () => {
+    claude.create.mockResolvedValueOnce({ content: [], usage: { input_tokens: 5_000, output_tokens: 0 }, stop_reason: "refusal" } as never);
+    await expect(readPlanPageWithClaude(plan, read)).rejects.toThrow(/refusal/);
+    expect(db.state.remembered).toHaveLength(0);
+    // The call still cost what it cost, and is written down.
+    expect(db.state.usage).toHaveLength(1);
+  });
+
   it("reads a builder's pages again when its version is raised, and no other builder's (2026-10-07)", async () => {
     const asBuilder = (builder: string) => withRunContext({ source: "run", builder }, () => readPlanPageWithClaude(plan, read));
     await asBuilder("David Weekley Homes");
     const kept = db.state.remembered[0];
-    const remembered = () => ({ digest: kept.digest, variant: kept.variant, facts: kept.facts, model: "claude-sonnet-5", read_at: new Date().toISOString(), hits: 0 });
+    const remembered = () => ({ digest: kept.digest, variant: kept.variant, facts: kept.facts, model: "claude-haiku-5-5", read_at: new Date().toISOString(), hits: 0 });
     claude.create.mockClear();
 
     // The same builder, nothing raised: the read stands.

@@ -18,20 +18,31 @@ import { runContext } from "@/lib/floorplans/run-context";
 
 export type UsagePurpose = "list-page" | "plan-page" | "description" | "photo-rooms" | "photo-duplicates";
 
-/** Dollars per million tokens, from platform.claude.com/docs/en/about-claude/pricing on 2026-09-29. */
+/** Dollars per million tokens, from platform.claude.com/docs/en/about-claude/pricing on 2026-09-29 (Haiku 5.5 and Sonnet 5.5's cache reads on 2026-10-08). */
 export interface ModelPrices {
   input: number;
   cacheRead: number;
   cacheWrite: number;
   output: number;
+  /** A model priced by the length of the prompt: past this many prompt tokens, a request pays `long`'s prices. */
+  longOver?: number;
+  long?: ModelPrices;
 }
 
 export const PRICES: Record<string, ModelPrices> = {
   "claude-sonnet-5": { input: 2, cacheRead: 0.2, cacheWrite: 2.5, output: 10 },
-  "claude-sonnet-5-5": { input: 2, cacheRead: 0.2, cacheWrite: 2.5, output: 10 },
+  "claude-sonnet-5-5": { input: 2, cacheRead: 0.1, cacheWrite: 2.5, output: 10 },
   "claude-opus-5": { input: 5, cacheRead: 0.5, cacheWrite: 6.25, output: 25 },
   "claude-opus-5-5": { input: 4, cacheRead: 0.2, cacheWrite: 5, output: 20 },
   "claude-haiku-4-5": { input: 1, cacheRead: 0.1, cacheWrite: 1.25, output: 5 },
+  "claude-haiku-5-5": {
+    input: 0.1,
+    cacheRead: 0.01,
+    cacheWrite: 0.125,
+    output: 0.5,
+    longOver: 100_000,
+    long: { input: 0.5, cacheRead: 0.05, cacheWrite: 0.625, output: 2.5 },
+  },
 };
 
 /** The usage a response carries, as the SDK names it. */
@@ -51,8 +62,11 @@ const n = (v: number | null | undefined): number => (typeof v === "number" && Nu
 
 /** What a call cost, in cents, at the model's prices; 0 for a model the table does not know. Pure. */
 export function costCents(model: string, usage: TokenUsage | null | undefined): number {
-  const prices = pricesOf(model);
-  if (!prices || !usage) return 0;
+  const card = pricesOf(model);
+  if (!card || !usage) return 0;
+  // The prompt is everything sent, read from the cache or not.
+  const prompt = n(usage.input_tokens) + n(usage.cache_read_input_tokens) + n(usage.cache_creation_input_tokens);
+  const prices = card.long && card.longOver !== undefined && prompt > card.longOver ? card.long : card;
   const dollars =
     (n(usage.input_tokens) * prices.input +
       n(usage.cache_read_input_tokens) * prices.cacheRead +

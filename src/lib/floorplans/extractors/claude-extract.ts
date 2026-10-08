@@ -32,7 +32,36 @@ import { isWilliamRyanPage, williamRyanPictures } from "@/lib/floorplans/extract
 import { relatedNameFromPage } from "@/lib/floorplans/quick-move-ins";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
 
-const MODEL = "claude-sonnet-5";
+/**
+ * The model that reads a plan's own page: Haiku 5.5, not Sonnet 5. Those
+ * reads were some 80% of what a sync spent (Jeff, 2026-10-08: about $16
+ * a day at $2/$10 a million tokens, where Haiku 5.5 asks $0.10/$0.50).
+ * Set beside what Sonnet had read off 40 of the same pages, Haiku thinking
+ * at medium effort gave the same price and size on every one, and the same
+ * beds and garages on all but one or two (scripts/floorplan-model-compare.ts);
+ * and what a plan's page gives only fills what its list left blank.
+ * The model is part of what a saved read is kept under (variantOf), so the
+ * first run after a change of model reads every plan's page again, once.
+ */
+export const PLAN_READ_MODEL = "claude-haiku-5-5";
+/**
+ * The model that reads a list. Still Sonnet 5: a list says which plans and
+ * homes there are and what they are called, and Haiku named some of them
+ * otherwise ("Sea Mist 8" for Sonnet's "Sea Mist", an address without its
+ * town), which the review queue would have shown as one plan gone and
+ * another come. Lists are a fifth of the spend.
+ */
+export const LIST_READ_MODEL = "claude-sonnet-5";
+/**
+ * How a plan's page is asked. Not with the tool forced: on Haiku 5.5 a
+ * forced tool call skips thinking, and asked so it read David Weekley's
+ * label-then-figure specs wrongly and gave an M/I home 2 bedrooms for 4.
+ * Let it think first, at medium effort, and ask for the tool in words.
+ */
+export const PLAN_READ_EFFORT = "medium";
+export const PLAN_READ_SYSTEM = "Answer by calling the report_plan_page tool once.";
+/** Room for the answer about one plan's page, the thinking before it included. */
+const PLAN_TOKENS = 16_000;
 /**
  * How long a rendering run may spend in the browser. Under the function's
  * own ceiling with room for the reads and the diff that follow, so a slow
@@ -149,7 +178,7 @@ export const EXTRACT_TOOL_STRICT: Anthropic.Tool = (() => {
   };
 })();
 
-interface ExtractedPlan {
+export interface ExtractedPlan {
   name: string;
   price?: number;
   beds?: string;
@@ -638,7 +667,7 @@ function decodeEntities(text: string): string {
     .replace(/&(?:apos|#0*39);/gi, "'");
 }
 
-const PLAN_PAGE_TOOL: Anthropic.Tool = {
+export const PLAN_PAGE_TOOL: Anthropic.Tool = {
   name: "report_plan_page",
   description: "Report what this one floor plan's own page says about it.",
   input_schema: {
@@ -674,13 +703,13 @@ const PLAN_PAGE_TOOL: Anthropic.Tool = {
  * what Claude writes back for a plan page, and a run of fifty-odd pages
  * spent most of its time on them (Perry, 2026-09-23).
  */
-const PLAN_PAGE_TOOL_NO_PHOTOS: Anthropic.Tool = (() => {
+export const PLAN_PAGE_TOOL_NO_PHOTOS: Anthropic.Tool = (() => {
   const schema = PLAN_PAGE_TOOL.input_schema as { properties: Record<string, unknown> };
   const properties = Object.fromEntries(Object.entries(schema.properties).filter(([key]) => key !== "photoImages"));
   return { ...PLAN_PAGE_TOOL, input_schema: { ...PLAN_PAGE_TOOL.input_schema, properties } };
 })();
 
-interface ExtractedPlanPage {
+export interface ExtractedPlanPage {
   price?: number;
   garages?: string;
   beds?: string;
@@ -951,7 +980,7 @@ export function descriptionFromPage(
  * describes "a generous 3-car garage", and one read took the description's
  * and proposed 3 car for a plan built with 2 (Jeff, 2026-10-06).
  */
-function planPageAsk(home: boolean, name: string, url: string, content: string): string {
+export function planPageAsk(home: boolean, name: string, url: string, content: string): string {
   return `This is the page of one ${home ? `home for sale, "${name}"` : `floor plan, "${name}"`}. Report only what the page itself says about it — never invent a fact. Take its beds, baths, square footage and garages from the figures the page lists as its facts (a strip or table of specs), not from numbers its description mentions; where the two disagree, the listed figures are right. Image URLs appear as [IMG url] markers and links as [LINK url] markers. Where the page shows several galleries, take the pictures of the first one only.\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 }
 
@@ -964,7 +993,7 @@ function planPageAsk(home: boolean, name: string, url: string, content: string):
  */
 export function readingPrompts(): string {
   const said = {
-    model: MODEL,
+    model: { plan: PLAN_READ_MODEL, list: LIST_READ_MODEL, effort: PLAN_READ_EFFORT, system: PLAN_READ_SYSTEM },
     plan: [planPageAsk(false, "", "", ""), planPageAsk(true, "", "", "")],
     list: Object.values(LIST_ASKS).map((what) => listAsk(what, undefined, "", "")),
     tools: [PLAN_PAGE_TOOL, PLAN_PAGE_TOOL_NO_PHOTOS, EXTRACT_TOOL, EXTRACT_TOOL_STRICT],
@@ -1062,7 +1091,7 @@ export async function readPlanPageWithClaude(
   // What the page's own markup says — its galleries, its drawings, its
   // tour — is read below every time, so a new photo is still seen.
   const digest = digestOf("plan", content);
-  const variant = variantOf("plan", { model: MODEL, version: readVersion(runContext()?.builder), home, photos: !picturesKnown });
+  const variant = variantOf("plan", { model: PLAN_READ_MODEL, version: readVersion(runContext()?.builder), home, photos: !picturesKnown });
   const started = Date.now();
   let page: ExtractedPlanPage;
   const remembered = await rememberedRead<ExtractedPlanPage>(plan.sourceUrl, "plan", digest, variant);
@@ -1074,10 +1103,12 @@ export async function readPlanPageWithClaude(
     try {
       response = await getClient().messages.create(
         {
-          model: MODEL,
-          max_tokens: 4096,
+          model: PLAN_READ_MODEL,
+          max_tokens: PLAN_TOKENS,
           tools: [tool],
-          tool_choice: { type: "tool", name: "report_plan_page" },
+          tool_choice: { type: "auto" },
+          output_config: { effort: PLAN_READ_EFFORT },
+          system: PLAN_READ_SYSTEM,
           messages: [{ role: "user", content: planPageAsk(home, plan.name, plan.sourceUrl, content) }],
         },
         // One page's read may not hold up the run: past this it is left unread.
@@ -1086,7 +1117,7 @@ export async function readPlanPageWithClaude(
     } catch (error) {
       await recordUsage({
         purpose: "plan-page",
-        model: MODEL,
+        model: PLAN_READ_MODEL,
         ok: false,
         error: error instanceof Error ? error.message : String(error),
         ms: Date.now() - started,
@@ -1094,10 +1125,16 @@ export async function readPlanPageWithClaude(
       });
       throw error;
     }
-    await recordUsage({ purpose: "plan-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url: plan.sourceUrl });
+    await recordUsage({ purpose: "plan-page", model: PLAN_READ_MODEL, usage: response.usage, ms: Date.now() - started, url: plan.sourceUrl });
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+    // A read Claude declined (stop_reason "refusal": Haiku 5.5's safety
+    // classifiers, which can misfire on ordinary pages) or that came back
+    // without its answer is no read: kept, it would stand for the page as
+    // a page that says nothing until the page changes. Thrown, the page is
+    // left unread this run and what an earlier run found stays (readPlanPages).
+    if (!toolUse) throw new Error(`Claude gave no answer about the page (${response.stop_reason ?? "no stop reason"})`);
     page = withoutBlanks((toolUse?.input ?? {}) as ExtractedPlanPage);
-    await rememberRead(plan.sourceUrl, "plan", digest, variant, page, MODEL, content);
+    await rememberRead(plan.sourceUrl, "plan", digest, variant, page, PLAN_READ_MODEL, content);
   }
   // One photograph once, at the largest size any spelling asks for.
   const { photos, enlarged } = onePerPicture(
@@ -1261,9 +1298,9 @@ export async function readPlanPageWithClaude(
  * plans alone (the connection reads its homes from a page of their own,
  * extractPages), or both.
  */
-type ListMode = "homes" | "plans" | "both";
+export type ListMode = "homes" | "plans" | "both";
 
-const LIST_ASKS: Record<ListMode, string> = {
+export const LIST_ASKS: Record<ListMode, string> = {
   // A page of nothing but quick move-ins is told so: every entry is a house
   // standing on a lot, named by its address, and the plan it is built from
   // is what ties it to one (Jeff, 2026-09-22, Stock's inventory page).
@@ -1277,7 +1314,7 @@ const LIST_ASKS: Record<ListMode, string> = {
  * A change to these words, as to planPageAsk's, reads no page again by
  * itself (readingPrompts).
  */
-function listAsk(what: string, hint: string | undefined, url: string, content: string): string {
+export function listAsk(what: string, hint: string | undefined, url: string, content: string): string {
   return `${what} Leave out any home the page marks Sold, Under Contract or Sale Pending: it is no longer for sale. A home's street address is the one its own card or listing gives: never give a home an address the page gives for the community, its sales center or its model home, and where a home's card gives no address of its own, name it by its lot, or its plan and move-in date, instead. Only report data actually present on the page — never invent prices or specs. Image URLs appear as [IMG url] markers; page links as [LINK url] markers; associate them with the nearest plan. Distinguish photos/renderings from floor plan drawings (blueprints).${hint ? ` Hint: ${hint}` : ""}\n\nPage URL: ${url}\n\nPAGE CONTENT:\n${content}`;
 }
 
@@ -1321,7 +1358,7 @@ async function listPage(
     try {
       response = await getClient().messages
         .stream({
-          model: MODEL,
+          model: LIST_READ_MODEL,
           max_tokens: maxTokens,
           tools: [tool],
           tool_choice: { type: "tool", name: tool.name },
@@ -1329,10 +1366,10 @@ async function listPage(
         })
         .finalMessage();
     } catch (error) {
-      await recordUsage({ purpose: "list-page", model: MODEL, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started, url });
+      await recordUsage({ purpose: "list-page", model: LIST_READ_MODEL, ok: false, error: error instanceof Error ? error.message : String(error), ms: Date.now() - started, url });
       throw error;
     }
-    await recordUsage({ purpose: "list-page", model: MODEL, usage: response.usage, ms: Date.now() - started, url });
+    await recordUsage({ purpose: "list-page", model: LIST_READ_MODEL, usage: response.usage, ms: Date.now() - started, url });
     const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     return {
       answered: Boolean(toolUse),
@@ -1346,7 +1383,7 @@ async function listPage(
   // (page-reads.ts). The list is read for its plans or for its homes, and
   // each is a variant of its own.
   const digest = digestOf("list", content);
-  const variant = variantOf("list", { model: MODEL, version: readVersion(runContext()?.builder), mode, hint: opts.hint || null });
+  const variant = variantOf("list", { model: LIST_READ_MODEL, version: readVersion(runContext()?.builder), mode, hint: opts.hint || null });
   const remembered = await rememberedRead<ExtractedPlan[]>(url, "list", digest, variant);
   let reported: ExtractedPlan[];
   if (remembered) {
@@ -1368,7 +1405,7 @@ async function listPage(
       });
       answer = await readList(LIST_TOKENS_AGAIN, cutShort ? EXTRACT_TOOL : EXTRACT_TOOL_STRICT);
     }
-    if (!answer.answered) throw new Error("Claude returned no extraction tool call");
+    if (!answer.answered) throw new Error(`Claude returned no extraction tool call (${answer.stop ?? "no stop reason"})`);
     const list = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
     if (!list) {
       throw new Error(
@@ -1378,7 +1415,7 @@ async function listPage(
       );
     }
     reported = list;
-    await rememberRead(url, "list", digest, variant, reported, MODEL, content);
+    await rememberRead(url, "list", digest, variant, reported, LIST_READ_MODEL, content);
   }
   const answered = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
   // A series is a page of plans, not a plan (Dream Finders' Seaire, Jeff
