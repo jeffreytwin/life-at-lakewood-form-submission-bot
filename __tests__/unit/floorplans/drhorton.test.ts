@@ -137,6 +137,21 @@ describe("what D.R. Horton's pages say besides their pictures", () => {
       "https://www.drhorton.com/-/media/x/4eab/aria-c-siding-stone-gen3-elev_ind.jpg",
     ]);
   });
+
+  it("leaves out the sale's badge and leads with a home's front titled for its floor plan (Rye Crossing, Oakfield Lakes, 2026-10-09)", () => {
+    const page = readDrhPage(`<div class="PropertyGallery-container">
+      <img class="rte-badge" src="/-/media/files/rte/resources/rte_event-banner.svg?rev=c3f6" data-lazy="/-/media/files/rte/resources/rte_event-banner.svg?rev=c3f6">
+      <img data-lazy="/-/media/x/0057-17926-wheat-stack-ct/rye_crossing_17926_wheat_stack_ct.jpg?w=494" alt="Alford floor plan exterior of a single-story single family home with a two car garage.">
+      <img data-lazy="/-/media/x/0034-10632-hidden-banks-glen/oakfield_lakes_10632_hidden_banks_glen.jpg?w=494" alt="Robie floorplan two story single family home with two car garage">
+      <img data-lazy="/-/media/x/0057-17926-wheat-stack-ct/01_entryway.jpg?w=494" alt="Entryway">
+    </div><div class="mobile-carousel"></div>`);
+    expect(page.drawings).toEqual([]);
+    expect(page.gallery).toEqual([
+      { src: "https://www.drhorton.com/-/media/x/0057-17926-wheat-stack-ct/rye_crossing_17926_wheat_stack_ct.jpg", caption: "Exterior" },
+      { src: "https://www.drhorton.com/-/media/x/0034-10632-hidden-banks-glen/oakfield_lakes_10632_hidden_banks_glen.jpg", caption: "Exterior" },
+      { src: "https://www.drhorton.com/-/media/x/0057-17926-wheat-stack-ct/01_entryway.jpg", caption: "Entryway" },
+    ]);
+  });
 });
 
 describe("homePageUrl (Oakfield Trails, 2026-10-06)", () => {
