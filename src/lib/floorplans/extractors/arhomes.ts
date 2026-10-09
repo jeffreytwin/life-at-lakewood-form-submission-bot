@@ -20,8 +20,21 @@
 // community record's "featured" tiles included the lot and a pool package,
 // and the page that showed them is gone (Jeff, 2026-09-28: "It means I
 // don't have anything publicly advertised").
+//
+// The quick move-ins are the builder's "Available Homes" (Jeff,
+// 2026-10-09: "an area where we can see quick move-in homes in Wild
+// Blue"). The builder's page of them, /builder/<builder>/available-homes/,
+// lists every home it has on offer in its script data (window.arhData),
+// each titled with the plan and the community: "Custom Lago at Wild Blue",
+// "Lago Model at Wild Blue". A home is the community's where the place
+// its title names is in the community record's title ("Wild Blue at
+// Waterside in Lakewood Ranch"). Each home's own record has its address,
+// counts, photographs and drawing:
+//
+//   GET /wp-json/wp/v2/available-home?include=<ids>&per_page=50
 
 import { bathsOf } from "@/lib/floorplans/standardize";
+import { streetOf } from "@/lib/floorplans/extractors/cardel";
 import { isTourUrl, tourLinkIn, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
 import { parseHotelCards } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
@@ -52,7 +65,34 @@ export interface ArPlan {
 }
 
 interface ArCommunity {
+  title?: { rendered?: string };
   acf?: { layout?: { plans_list?: unknown }[] };
+}
+
+/** A home as the builder's Available Homes page lists it (window.arhData). */
+export interface ArListedHome {
+  id?: number;
+  title?: string;
+  link?: string;
+}
+
+/** A home's own record (wp-json/wp/v2/available-home). */
+export interface ArHome {
+  id?: number;
+  link?: string;
+  title?: { rendered?: string };
+  acf?: {
+    sale_price?: string | number | null;
+    address_text?: string | null;
+    bedrooms?: string | number | null;
+    baths?: string | number | null;
+    half_baths?: string | number | null;
+    sq_ft?: string | number | null;
+    garages?: string | number | null;
+    banner_image?: WpImage | false | null;
+    photo_gallery?: WpImage[] | false | null;
+    plan_pdf_image?: WpImage | false | null;
+  };
 }
 
 /** Where AR's plans are advertised with a price: Lakewood Ranch's home finder, AR only. extractor_params.priceList overrides. */
@@ -153,6 +193,107 @@ export function normalizeArPlan(plan: ArPlan, prices: ListedPrice[]): Normalized
   };
 }
 
+/** The builder's Available Homes page, from its community's page: ".../builder/nelson-homes-inc/communities/…" → ".../builder/nelson-homes-inc/available-homes/". Pure; exported for tests. */
+export function availableHomesPage(communityUrl: string): string | null {
+  const m = communityUrl.match(/^(https?:\/\/[^/]+\/builder\/[^/]+\/)communities\//i);
+  return m ? `${m[1]}available-homes/` : null;
+}
+
+/** The homes an Available Homes page lists in its script data. Pure; exported for tests. */
+export function homesListedIn(html: string): ArListedHome[] {
+  const out: ArListedHome[] = [];
+  for (const m of html.matchAll(/window\.arhData\s*\[\s*'[^']*'\s*\]\s*=\s*(\{.*?\});\s*$/gm)) {
+    try {
+      const data = JSON.parse(m[1]) as { results?: unknown };
+      for (const r of Array.isArray(data.results) ? data.results : []) {
+        const home = r as ArListedHome;
+        if (typeof home?.id === "number" && !out.some((h) => h.id === home.id)) out.push(home);
+      }
+    } catch {
+      // Another block of script data, not the list.
+    }
+  }
+  return out;
+}
+
+/**
+ * Whether a home is in the community: the place its title names after
+ * "at" ("Custom Lago at Wild Blue") is in the community's own title
+ * ("Wild Blue at Waterside in Lakewood Ranch"). Pure; exported for tests.
+ */
+export function homeIsIn(homeTitle: string, communityTitle: string): boolean {
+  const place = normKey(decode(homeTitle).match(/\sat\s+(.+)$/i)?.[1] ?? "");
+  return Boolean(place) && `-${normKey(decode(communityTitle))}-`.includes(`-${place}-`);
+}
+
+/** The plan a home is built from, as its title names it: "Custom Lago at Wild Blue" and "Lago Model at Wild Blue" are the Lago. */
+const homePlanName = (title: string) =>
+  decode(title)
+    .replace(/\s+at\s+.+$/i, "")
+    .replace(/^\s*custom\s+/i, "")
+    .replace(/\s+model(?:\s+home)?\s*$/i, "")
+    .trim();
+
+/**
+ * One home's record as a quick move-in, named by its street address. A
+ * home with no price is left out: the page keeps a home it has sold, at
+ * $0 (Creekside Model at Holliday Farms). Pure; exported for tests.
+ */
+export function normalizeArHome(home: ArHome): NormalizedPlan | null {
+  const a = home.acf ?? {};
+  const address = (a.address_text ?? "").trim();
+  const price = number(a.sale_price);
+  if (!address || !price) return null;
+  const name = streetOf(address);
+  const photos = [url(a.banner_image), ...(a.photo_gallery || []).map(url)].filter(
+    (u, i, all): u is string => Boolean(u) && all.indexOf(u) === i
+  );
+  const drawing = url(a.plan_pdf_image);
+  const garages = number(a.garages);
+  const beds = number(a.bedrooms);
+  return {
+    planKey: normKey(name),
+    name,
+    price,
+    priceDisplay: "$" + price.toLocaleString("en-US"),
+    beds: beds ? String(beds) : "",
+    baths: bathsOf(number(a.baths), number(a.half_baths)) ?? "",
+    sqft: number(a.sq_ft),
+    garages: garages ? `${garages} car` : null,
+    homeType: "Single Family Home",
+    quickMoveIn: true,
+    comingSoon: false,
+    relatedPlanName: homePlanName(home.title?.rendered ?? "") || null,
+    sourceUrl: home.link ?? null,
+    galleryImages: photos,
+    blueprintImages: drawing ? [drawing] : [],
+    description: null,
+  };
+}
+
+/**
+ * The community's homes on offer, from the builder's Available Homes page.
+ * A builder with no such page has none; a page or feed that cannot be read
+ * otherwise stops the run, as the prices do: read as no homes, every home
+ * would be proposed away.
+ */
+async function communityHomes(communityUrl: string, communityTitle: string): Promise<NormalizedPlan[]> {
+  const page = availableHomesPage(communityUrl);
+  if (!page) return [];
+  const res = await fetch(page, { headers: { "user-agent": UA, accept: "text/html" }, signal: AbortSignal.timeout(30_000) });
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`fetch ${page}: ${res.status}`);
+  const ids = homesListedIn(await res.text())
+    .filter((h) => homeIsIn(h.title ?? "", communityTitle))
+    .map((h) => h.id as number);
+  if (!ids.length) return [];
+  const feed = new URL("/wp-json/wp/v2/available-home", communityUrl);
+  feed.searchParams.set("include", ids.join(","));
+  feed.searchParams.set("per_page", "50");
+  const homes = await getJson<ArHome[]>(feed.href);
+  return homes.map(normalizeArHome).filter((h): h is NormalizedPlan => h !== null);
+}
+
 /**
  * The tour a plan's page offers: one embedded in it, or behind the link it
  * labels "Virtual Tour" — Eventide's page has one and the record did not
@@ -229,5 +370,6 @@ export async function extractArHomes(params: { url?: string; priceList?: string;
       ))
     );
   }
+  out.push(...(await communityHomes(params.url, community.title?.rendered ?? "")));
   return out;
 }

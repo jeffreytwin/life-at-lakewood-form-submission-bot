@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { communityRecordIn, listedPrices, normalizeArPlan, planIdsOf, planTour, type ArPlan } from "@/lib/floorplans/extractors/arhomes";
+import {
+  availableHomesPage,
+  communityRecordIn,
+  homeIsIn,
+  homesListedIn,
+  listedPrices,
+  normalizeArHome,
+  normalizeArPlan,
+  planIdsOf,
+  planTour,
+  type ArHome,
+  type ArPlan,
+} from "@/lib/floorplans/extractors/arhomes";
 
 // The shapes AR Homes' WordPress answers with for Wild Blue at Waterside (2026-09-27).
 const community = {
@@ -154,5 +166,77 @@ describe("a tour from Lakewood Ranch's page for the plan (Jeff, 2026-09-28)", ()
     const read = async (url: string) => pages[url] ?? "";
     expect(await planTour(plan.sourceUrl!, read)).toBeNull();
     expect(await planTour(String(plan.raw?.listedPage), read)).toBe("https://my.matterport.com/show/?m=LwRtAl1se");
+  });
+});
+
+describe("Arthur Rutenberg's quick move-ins from its Available Homes (Wild Blue, Jeff 2026-10-09)", () => {
+  // Nelson Homes' Available Homes page and two of the records it lists (2026-10-09).
+  const listing = `<script id="arhomes-corp-main-js-after">
+window.arhData = window.arhData || {};
+            window.arhData ['id6ac937a07b6a4'] = {"useApi":false,"pageSlug":"builder\\/nelson-homes-inc\\/available-homes","results":[{"id":46312,"link":"https:\\/\\/www.arhomes.com\\/builder\\/nelson-homes-inc\\/available-homes\\/custom-lago-at-wild-blue-2\\/","title":"Custom Lago at Wild Blue","sale_price":3479875},{"id":41782,"link":"https:\\/\\/www.arhomes.com\\/builder\\/nelson-homes-inc\\/available-homes\\/lago-model-at-wild-blue\\/","title":"Lago Model at Wild Blue","sale_price":3178655},{"id":50001,"title":"Avila at Lakewood National","sale_price":2100000}]};
+</script>`;
+  const lago: ArHome = {
+    id: 46312,
+    link: "https://www.arhomes.com/builder/nelson-homes-inc/available-homes/custom-lago-at-wild-blue-2/",
+    title: { rendered: "Custom Lago at Wild Blue" },
+    acf: {
+      sale_price: 3479875,
+      address_text: " 8613 Sandpoint Street, Sarasota, Florida",
+      bedrooms: 3,
+      baths: 3,
+      half_baths: "1",
+      sq_ft: 3632,
+      garages: 3,
+      banner_image: { url: "https://www.arhomes.com/wp-content/uploads/2026/05/Lago-1951B_Elevation-B-Front.webp" },
+      photo_gallery: [
+        { url: "https://www.arhomes.com/wp-content/uploads/2025/02/Lago1951_GreatRoom01.webp" },
+        { url: "https://www.arhomes.com/wp-content/uploads/2026/05/Lago-1951B_Elevation-B-Front.webp" },
+      ],
+      plan_pdf_image: { url: "https://www.arhomes.com/wp-content/uploads/2026/05/BC91_CustomLagoShowcase_WebFP-scaled.webp" },
+    },
+  };
+
+  it("finds the builder's Available Homes page from the community's page", () => {
+    expect(availableHomesPage("https://www.arhomes.com/builder/nelson-homes-inc/communities/wild-blue-in-waterside/")).toBe(
+      "https://www.arhomes.com/builder/nelson-homes-inc/available-homes/"
+    );
+    expect(availableHomesPage("https://www.arhomes.com/communities/wild-blue/")).toBeNull();
+  });
+
+  it("lists the homes the page carries, and keeps the community's own", () => {
+    const homes = homesListedIn(listing);
+    expect(homes.map((h) => h.id)).toEqual([46312, 41782, 50001]);
+    const title = "Wild Blue at Waterside in Lakewood Ranch";
+    expect(homes.filter((h) => homeIsIn(h.title ?? "", title)).map((h) => h.id)).toEqual([46312, 41782]);
+    expect(homeIsIn("Lago Model", title)).toBe(false);
+  });
+
+  it("makes a quick move-in of a home's record, named by its street and tied to its plan", () => {
+    const home = normalizeArHome(lago)!;
+    expect(home).toMatchObject({
+      planKey: "8613-sandpoint-street",
+      name: "8613 Sandpoint Street",
+      price: 3479875,
+      priceDisplay: "$3,479,875",
+      beds: "3",
+      baths: "3.5",
+      sqft: 3632,
+      garages: "3 car",
+      quickMoveIn: true,
+      relatedPlanName: "Lago",
+      sourceUrl: "https://www.arhomes.com/builder/nelson-homes-inc/available-homes/custom-lago-at-wild-blue-2/",
+      blueprintImages: ["https://www.arhomes.com/wp-content/uploads/2026/05/BC91_CustomLagoShowcase_WebFP-scaled.webp"],
+    });
+    expect(home.galleryImages).toEqual([
+      "https://www.arhomes.com/wp-content/uploads/2026/05/Lago-1951B_Elevation-B-Front.webp",
+      "https://www.arhomes.com/wp-content/uploads/2025/02/Lago1951_GreatRoom01.webp",
+    ]);
+    const model = normalizeArHome({ ...lago, title: { rendered: "Lago Model at Wild Blue" }, acf: { ...lago.acf, address_text: "263 Crystal Waters Drive, Sarasota, FL " } })!;
+    expect(model.name).toBe("263 Crystal Waters Drive");
+    expect(model.relatedPlanName).toBe("Lago");
+  });
+
+  it("leaves out a home the page keeps at $0, sold", () => {
+    expect(normalizeArHome({ ...lago, acf: { ...lago.acf, sale_price: 0 } })).toBeNull();
   });
 });
