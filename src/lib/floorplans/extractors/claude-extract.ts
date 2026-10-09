@@ -73,10 +73,12 @@ const RENDER_RUN_MS = 190_000;
  * plans, each with a dozen pictures whose URLs run long, needs more than
  * the 8k this used to have — that ceiling is what cut Ryan's and Pulte's
  * answers in half. The second figure is the retry, for the rare page that
- * needs more still.
+ * needs more still. Ashton Woods' Oakfield Trails, both its series and
+ * their homes on one page, outgrew 16k (2026-10-09). Room is not paid for
+ * until it is written, and the read is streamed, so it is generous.
  */
-const LIST_TOKENS = 16_384;
-const LIST_TOKENS_AGAIN = 32_768;
+const LIST_TOKENS = 32_768;
+const LIST_TOKENS_AGAIN = 65_536;
 /**
  * How much of a page is read. Pulte's community pages are 7MB and distill
  * to 370,000 characters — the plans start a third of the way in and run
@@ -1294,6 +1296,18 @@ export async function readPlanPageWithClaude(
 }
 
 /**
+ * Whether a list's answer needs another go: one cut off by its room,
+ * whatever came of it — the cut can fall before the list starts, where
+ * it reads as no plans at all, or partway through, where it reads as
+ * fewer (Ashton Woods' Oakfield came back as none and was kept as none,
+ * 2026-10-09) — or one written as text rather than a list. Pure.
+ */
+export function askAgain(answer: { reported: unknown; stop: string | null | undefined }): boolean {
+  if (answer.stop === "max_tokens") return true;
+  return answer.reported !== undefined && !asList(answer.reported);
+}
+
+/**
  * What a listing page is asked for: its quick move-ins alone, its floor
  * plans alone (the connection reads its homes from a page of their own,
  * extractPages), or both.
@@ -1384,9 +1398,12 @@ async function listPage(
   // each is a variant of its own.
   const digest = digestOf("list", content);
   const variant = variantOf("list", { model: LIST_READ_MODEL, version: readVersion(runContext()?.builder), mode, hint: opts.hint || null });
+  // A list remembered as empty is read again: a page that lists no plans
+  // fails the run anyway, and an empty answer kept would fail every run
+  // after it until the page changed (Ashton Woods' Oakfield, 2026-10-09).
   const remembered = await rememberedRead<ExtractedPlan[]>(url, "list", digest, variant);
   let reported: ExtractedPlan[];
-  if (remembered) {
+  if (remembered && asList(remembered.facts)?.length) {
     reported = remembered.facts;
     await recordUsage({ purpose: "list-page", model: remembered.model, cached: true, url });
   } else {
@@ -1396,7 +1413,7 @@ async function listPage(
     // answer that finished but wrote its list as text is asked again held
     // to the schema (EXTRACT_TOOL_STRICT).
     let answer = await readList(LIST_TOKENS);
-    if (answer.reported !== undefined && !asList(answer.reported)) {
+    if (askAgain(answer)) {
       const cutShort = answer.stop === "max_tokens";
       logger.warn(cutShort ? "Plan list came back half-written; asking again with more room" : "Plan list came back as text; asking again held to the schema", {
         url,
@@ -1406,7 +1423,8 @@ async function listPage(
       answer = await readList(LIST_TOKENS_AGAIN, cutShort ? EXTRACT_TOOL : EXTRACT_TOOL_STRICT);
     }
     if (!answer.answered) throw new Error(`Claude returned no extraction tool call (${answer.stop ?? "no stop reason"})`);
-    const list = answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
+    // Cut off again, what came back is part of a list, or none of it.
+    const list = answer.stop === "max_tokens" ? null : answer.reported === undefined ? [] : asList<ExtractedPlan>(answer.reported);
     if (!list) {
       throw new Error(
         answer.stop === "max_tokens"
@@ -1415,7 +1433,7 @@ async function listPage(
       );
     }
     reported = list;
-    await rememberRead(url, "list", digest, variant, reported, LIST_READ_MODEL, content);
+    if (list.length) await rememberRead(url, "list", digest, variant, reported, LIST_READ_MODEL, content);
   }
   const answered = reported.filter((p) => p?.name?.trim()).map(withoutBlanks);
   // A series is a page of plans, not a plan (Dream Finders' Seaire, Jeff
