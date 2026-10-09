@@ -1,5 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
+import {
+  communityHomeType,
+  isFutureRelease,
+  planDrawings,
+  planGallery,
+  planPrice,
+  plansFromPage,
+  preferredPlan,
+  seriesLinks,
+  withPlanPictures,
+} from "@/lib/floorplans/extractors/lennar";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
@@ -209,5 +219,40 @@ describe("preferredPlan: two plans of one name in a community (Jeff, 2026-10-03)
     const more = { ...estates, price: 369990, raw: { ...estates.raw, homesOnOffer: 3 } };
     expect(preferredPlan(manors, more)).toBe(more);
     expect(preferredPlan(manors, { ...more, raw: { ...more.raw, homesOnOffer: 2 } })).toBe(manors);
+  });
+});
+
+describe("Future release: a plan Lennar shows with no home to sell (Jeff, 2026-10-09)", () => {
+  // The Stanford's page at Calusa Country Club reads "Future release"; The
+  // Richmond's "3 Homes available in this community"; Napoli Grande's
+  // "This plan is coming soon" (2026-10-09).
+  const site = (status: string) => ({ __typename: "HomesiteType", name: "The Richmond", status });
+
+  it("reads the plan's page as Lennar does: no home on offer, neither coming soon nor sold out", () => {
+    expect(isFutureRelease({ name: "The Stanford", status: "ACTIVE", availableHomesitesCount: 0, homesites: [] })).toBe(true);
+    expect(isFutureRelease({ name: "The Richmond", status: "ACTIVE", homesites: [site("UNDER_CONSTRUCTION"), site("MOVE_IN_READY")] })).toBe(false);
+    expect(isFutureRelease({ name: "Napoli Grande", status: "COMING_SOON", homesites: [] })).toBe(false);
+    expect(isFutureRelease({ name: "Gone", status: "SOLD_OUT", homesites: [] })).toBe(false);
+    // A home Lennar has no status for is not one on offer.
+    expect(isFutureRelease({ name: "The Stanford", status: "ACTIVE", homesites: [site("UNDEFINED")] })).toBe(true);
+  });
+
+  it("goes by the community page's count where the plan's homes are not listed", () => {
+    expect(isFutureRelease({ name: "Angelina", status: "ACTIVE", availableHomesitesCount: 0 })).toBe(true);
+    expect(isFutureRelease({ name: "Victoria", status: "ACTIVE", availableHomesitesCount: 2 })).toBe(false);
+    expect(isFutureRelease({ name: "Unknown", status: "ACTIVE" })).toBe(false);
+  });
+
+  it("marks the plan it reads", () => {
+    const base = "/new-homes/florida/sarasota-manatee/lakewood-ranch/calusa-country-club";
+    const apollo = {
+      "PlanType:p_71322": { __typename: "PlanType", name: "The Stanford", url: `${base}/manor-golf-collection/the-stanford`, status: "ACTIVE", availableHomesitesCount: 0, startingPrice: 698999 },
+      "PlanType:p_71351": { __typename: "PlanType", name: "The Richmond", url: `${base}/manor-golf-collection/the-richmond`, status: "ACTIVE", availableHomesitesCount: 3, startingPrice: 751999 },
+    };
+    const plans = plansFromPage(apollo, base);
+    expect(plans.map((p) => [p.name, p.raw?.futureRelease])).toEqual([
+      ["The Stanford", true],
+      ["The Richmond", false],
+    ]);
   });
 });
