@@ -188,8 +188,12 @@ export function readDrhPage(html: string): {
   const seen = new Set<string>();
   for (const m of block.matchAll(/<img\b[^>]*>/gi)) {
     const tag = m[0];
+    // The sale's badge sits over the first picture and is no picture of the
+    // home: the Red Tag event's "rte_event-banner.svg" led 17926 Wheat Stack
+    // Ct's and 10632 Hidden Banks Glen's galleries (Jeff, 2026-10-09).
+    if (/\sclass="[^"]*\bbadge\b/i.test(tag)) continue;
     const src = tag.match(/\sdata-lazy="([^"]+)"/i)?.[1] ?? tag.match(/\ssrc="([^"]+)"/i)?.[1];
-    if (!src || src.startsWith("data:")) continue;
+    if (!src || src.startsWith("data:") || /\.svg(?:[?#]|$)/i.test(src)) continue;
     let url: string;
     try {
       url = original(src);
@@ -205,8 +209,14 @@ export function readDrhPage(html: string): {
     // names a room: Star Farms titles every picture of its Hawthorne,
     // Camden, Jordyn II and Torino "Floor Plan", kitchens and bedrooms
     // included, and names each file for what it shows.
+    // Or whose title goes on to describe the house: a home's own front is
+    // "Alford floor plan exterior of a single-story single family home with
+    // a two car garage" and "Robie floorplan two story single family home
+    // with two car garage", named for its street address (2026-10-09).
     const fileWords = fileNameWords(url);
-    const namedView = /elevation|exterior|rendering|front|rear/i.test(fileWords);
+    const namedView =
+      /elevation|exterior|rendering|front|rear/i.test(fileWords) ||
+      /\b(exterior|elevation|homes?|house|garage|story|stories)\b/i.test(caption);
     const namedRoom = !namedView && classifyRoom(fileWords) !== null && !/\b(fp|floor ?plans?|floorplans?)\b/i.test(fileWords);
     const titledPlan = /\bfloor ?plan\b/i.test(caption);
     if (titledPlan && !namedView && !namedRoom) titled.push(url);
