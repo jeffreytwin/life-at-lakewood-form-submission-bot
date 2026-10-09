@@ -421,6 +421,34 @@ async function withdrawRefiledAdds(ids: { siteId: string; communityId: string; b
   else logger.info("Withdrew additions of homes already on the site", { keys: stale.map((a) => a.plan_key) });
 }
 
+/**
+ * The pending removals, of those given, for plans the run still read: the
+ * builder lists the plan again, so its removal no longer holds. Pure;
+ * exported for tests.
+ */
+export function outdatedRemovals<T extends { plan_key: string }>(removals: T[], scrapedKeys: Set<string>): T[] {
+  return removals.filter((r) => scrapedKeys.has(r.plan_key));
+}
+
+/**
+ * Pending removals of plans the run read, taken off the queue: a plan the
+ * builder lists again is not one to remove. Lennar's "Future release"
+ * plans were left out of runs for an afternoon and their removals queued,
+ * then kept after all (Jeff, 2026-10-09); the queue held them until a
+ * person rejected each, and a rejection sticks (stillRejected).
+ */
+async function withdrawOutdatedRemovals(ids: { siteId: string; communityId: string; builderId: string }, scrapedKeys: Set<string>): Promise<void> {
+  const { data: removals } = await supabase
+    .from("fp_pending_changes")
+    .select("id, plan_key")
+    .match({ site_id: ids.siteId, community_id: ids.communityId, builder_id: ids.builderId, change_type: "remove", status: "pending" });
+  const stale = outdatedRemovals(removals ?? [], scrapedKeys);
+  if (!stale.length) return;
+  const { error } = await supabase.from("fp_pending_changes").delete().in("id", stale.map((r) => r.id));
+  if (error) logger.warn("Removals of plans the builder still lists could not be withdrawn", { error: error.message });
+  else logger.info("Withdrew removals of plans the builder still lists", { keys: stale.map((r) => r.plan_key) });
+}
+
 export async function queueChange(args: {
   siteId: string;
   communityId: string;
@@ -861,6 +889,8 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       // An addition queued by an earlier run for a home the site already has,
       // under the name that run read, is withdrawn (home-identity.ts).
       await withdrawRefiledAdds({ siteId: site.id, communityId: community.id, builderId: builder.id }, canonical ?? []);
+      // A removal queued for a plan this run read again is withdrawn.
+      await withdrawOutdatedRemovals({ siteId: site.id, communityId: community.id, builderId: builder.id }, scrapedKeys);
 
       // Removal guard: plan must have been missing since before this run
       // (last_seen_at > 24h old) and the scrape must cover >= 60% of the last

@@ -116,25 +116,6 @@ export function planDrawings(e: ApolloEntity): string[] {
   return out;
 }
 
-/**
- * Whether Lennar shows a plan as "Future release": a plan on sale with no
- * home on offer on it, neither coming soon nor sold out. Lennar's plan page
- * gives that label from these fields alone (its PlanStatus): homes on
- * offer read "N Homes available in this community", COMING_SOON "This plan
- * is coming soon", and SOLD_OUT "Sold out". Such a plan is not one to show
- * (Jeff, 2026-10-09: The Stanford, The Summerville and Angelina at Calusa
- * Country Club). The plan's own page lists its homes (homesites); the
- * community page counts them (availableHomesitesCount). Exported for tests.
- */
-export function isFutureRelease(e: ApolloEntity): boolean {
-  const status = String(e.status ?? "").toUpperCase();
-  if (status === "COMING_SOON" || status === "SOLD_OUT") return false;
-  if (Array.isArray(e.homesites)) {
-    return !e.homesites.some((h) => String((h as { status?: unknown } | null)?.status ?? "").toUpperCase() !== "UNDEFINED");
-  }
-  return e.availableHomesitesCount === 0;
-}
-
 export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[] {
   const out: NormalizedPlan[] = [];
   const planNames = new Map<string, string>();
@@ -172,12 +153,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       galleryImages: gallery.urls,
       galleryMeta: gallery.meta,
       blueprintImages: planDrawings(e),
-      raw: {
-        lennarId: e.id,
-        planId: key,
-        homesOnOffer: typeof e.availableHomesitesCount === "number" ? e.availableHomesitesCount : null,
-        futureRelease: isFutureRelease(e),
-      },
+      raw: { lennarId: e.id, planId: key, homesOnOffer: typeof e.availableHomesitesCount === "number" ? e.availableHomesitesCount : null },
     });
   }
 
@@ -310,8 +286,6 @@ async function withPlanPage(plan: NormalizedPlan): Promise<NormalizedPlan> {
       garages: plan.garages ?? whole.garages,
       virtualTourUrl: plan.virtualTourUrl ?? whole.virtualTourUrl ?? null,
       homeType: plan.homeType ?? whole.homeType,
-      // The plan's own page lists its homes, and says "Future release" by them.
-      raw: { ...plan.raw, futureRelease: whole.raw?.futureRelease === true },
     };
   } catch {
     return { ...plan, pageUnread: true };
@@ -343,13 +317,8 @@ export async function extractLennar(params: {
   const targets = params.urls?.length ? params.urls : params.url ? [params.url] : [];
   if (!targets.length) throw new Error("lennar extractor requires extractor_params.url");
   const byKey = new Map<string, NormalizedPlan>();
-  // A plan Lennar shows as "Future release" is left out, before another
-  // plan of its name is weighed against it (preferredPlan).
   const keep = (plans: NormalizedPlan[]) => {
-    for (const plan of plans) {
-      if (isFutureReleasePlan(plan)) continue;
-      byKey.set(plan.planKey, preferredPlan(byKey.get(plan.planKey), plan));
-    }
+    for (const plan of plans) byKey.set(plan.planKey, preferredPlan(byKey.get(plan.planKey), plan));
   };
   for (const target of targets) {
     const { apollo, path, html } = await apolloOf(target);
@@ -366,12 +335,8 @@ export async function extractLennar(params: {
       }
     }
   }
-  const read = await mapLimit([...byKey.values()], 6, withPlanPage);
-  return withPlanPictures(read.filter((p) => !isFutureReleasePlan(p)));
+  return withPlanPictures(await mapLimit([...byKey.values()], 6, withPlanPage));
 }
-
-/** A base plan read as "Future release" (isFutureRelease). */
-const isFutureReleasePlan = (plan: NormalizedPlan) => !plan.quickMoveIn && plan.raw?.futureRelease === true;
 
 /**
  * Each home with its plan's pictures after its own. A homesite's page shows
