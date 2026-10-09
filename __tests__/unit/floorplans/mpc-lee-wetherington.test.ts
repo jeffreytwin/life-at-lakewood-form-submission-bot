@@ -54,6 +54,19 @@ describe("Lee Wetherington from Lakewood Ranch's home finder (Jeff, 2026-09-25)"
     const [home] = parseHotelCards(hotel("800 Blue Shell Loop", "$1,599,000", "Waterside &#8211; Shellstone", "https://lakewoodranch.com/wp-content/uploads/x.jpg", "800-blue-shell-loop"), "https://lakewoodranch.com");
     expect(home.plan.quickMoveIn).toBe(true);
   });
+
+  it("reads a model sold with a leaseback as a home of its plan (Sand Dollar, Shellstone, Jeff 2026-10-09)", () => {
+    const cards = parseHotelCards(
+      hotel("Sand Dollar", "Homes From $1,858,000", "Waterside &#8211; Shellstone", "https://lakewoodranch.com/wp-content/uploads/a.jpg", "sand-dollar") +
+        hotel("Sand Dollar Model Leaseback", "Homes From $3,499,900", "Waterside &#8211; Shellstone", "https://lakewoodranch.com/wp-content/uploads/b.jpg", "sand-dollar-model-leaseback"),
+      "https://lakewoodranch.com"
+    );
+    expect(cards.map((c) => [c.plan.name, c.plan.quickMoveIn])).toEqual([
+      ["Sand Dollar", false],
+      ["Sand Dollar Model Leaseback", true],
+    ]);
+    expect(cards[1].plan).toMatchObject({ planKey: "sand-dollar-model-leaseback", price: 3499900, relatedPlanName: "Sand Dollar", raw: { relatedPlan: "Sand Dollar" } });
+  });
 });
 
 describe("Lee Wetherington from Wellen Park's builder page (Jeff, 2026-09-25)", () => {

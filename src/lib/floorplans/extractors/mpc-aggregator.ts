@@ -132,7 +132,11 @@ export function parseHotelCards(html: string, origin: string): { plan: Normalize
     const garage = num(item("garages"));
     const sqft = num(item("sf"));
     // A home already built is named for its address, and says it can be moved into.
-    const quickMoveIn = /^\d+\s+\S/.test(name) || kinds.some((k) => /move[\s-]*in/i.test(k));
+    // A model sold with a leaseback is a home of its plan too, named for the
+    // plan: "Sand Dollar Model Leaseback" at Shellstone, $3,499,900 where
+    // the Sand Dollar is from $1,858,000 (Jeff, 2026-10-09).
+    const leasebackOf = name.match(LEASEBACK)?.[1]?.trim() || null;
+    const quickMoveIn = /^\d+\s+\S/.test(name) || kinds.some((k) => /move[\s-]*in/i.test(k)) || leasebackOf !== null;
     out.push({
       village: said("Village"),
       builder: said("Builder"),
@@ -151,12 +155,16 @@ export function parseHotelCards(html: string, origin: string): { plan: Normalize
         sourceUrl: link ? new URL(link, origin).href : null,
         galleryImages: picture ? [new URL(picture, origin).href] : [],
         blueprintImages: [],
-        raw: { relatedPlan: quickMoveIn ? null : name, village: said("Village") || null },
+        ...(leasebackOf ? { relatedPlanName: leasebackOf } : {}),
+        raw: { relatedPlan: quickMoveIn ? leasebackOf : name, village: said("Village") || null },
       },
     });
   }
   return out;
 }
+
+/** A card named for a model sold with a leaseback, and the plan it is a model of: "Sand Dollar Model Leaseback" is the Sand Dollar's. */
+const LEASEBACK = /^(.+?)\s+(?:model\s+)?lease[\s-]*back\b/i;
 
 /**
  * The site's home type for what the aggregator calls a home. Wellen Park
