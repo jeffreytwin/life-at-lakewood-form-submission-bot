@@ -297,12 +297,21 @@ nothing. No cutover report has ever been generated.
   2026-09-21): Approve and Approve All send the rows in one request (whole
   plans per request, up to the bulk route's 200 rows). The route locks
   them as `approving` first, so the list shows "Approving…" with no Edit,
-  Reject or overlay under a write, and writes the plans one after another
-  for up to three minutes whether or not the page stays open. The page
-  re-reads the queue every few seconds while any row is being written, so
-  each plan leaves the list as its write finishes; what did not fit in the
-  budget comes back as `remaining` and the page sends it again. A row a
-  dead request left locked goes back to pending after ten minutes.
+  Reject or overlay under a write.
+- **The server finishes the run itself** (Jeff, 2026-10-10): approving,
+  one plan or a batch, only hands the plans to the approval worker
+  (`approvals.ts`) and answers at once, so the page plays every plan out
+  on the click and the queue's "Mission complete" plays as soon as the
+  person is done, whatever is still being written. The worker writes one
+  plan after another, the first asked for first, starting right after the
+  click and carried on by a cron every minute; one worker at a time
+  (`fp_approve_lock_until`). When Wix asks for a wait it keeps the lock
+  until the wait is over; a plan whose pictures Wix is still fetching
+  waits a minute (`approve_after`); a plan a cut-off worker had claimed is
+  taken up again after ten minutes. The page follows the plans it handed
+  over: a failed one comes off the day's tally and is named, and waits
+  under Failed. Closing the page stops nothing. Reject selected plays out
+  on the click too; a request that fails brings back what it did not reach.
 - **The score is picked, not typed** (Jeff, 2026-09-21): the overlay shows
   the numbers 1 to 11 as buttons (1 to 10 as the freelancers used it, 11
   for a plan that must come first); the PATCH route accepts nothing else.

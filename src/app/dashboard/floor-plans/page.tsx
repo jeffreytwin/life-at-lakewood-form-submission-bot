@@ -12,7 +12,6 @@ import {
   addToTally,
   batchDelay,
   clearedIn,
-  countWritten,
   easternDay,
   exitDuration,
   foldDuration,
@@ -135,6 +134,25 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
 const idsAt = (g: Group, status: string) => g.rows.filter((r) => r.status === status).map((r) => r.id);
 const pendingIds = (g: Group) => idsAt(g, "pending");
 const isQuickMoveIn = (g: Group) => g.lead.proposed_record?.quickMoveIn === true;
+
+/** Plans in requests to the bulk route: whole plans each, up to its cap, so no plan's rows are split across two. */
+function inRequests(list: Group[]): Group[][] {
+  const requests: Group[][] = [];
+  let current: Group[] = [];
+  let rows = 0;
+  for (const g of list) {
+    const n = pendingIds(g).length;
+    if (current.length && rows + n > MAX_IDS_PER_REQUEST) {
+      requests.push(current);
+      current = [];
+      rows = 0;
+    }
+    current.push(g);
+    rows += n;
+  }
+  if (current.length) requests.push(current);
+  return requests;
+}
 
 /** What each sortable column orders a plan by (sort-changes.ts). */
 const sortFacts = (g: Group) => ({
@@ -386,15 +404,11 @@ export default function FloorPlansPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Set<string>>(new Set());
-  const [bulkBusy, setBulkBusy] = useState(false);
   // Plans ticked in the list, by group key, and the row the last tick was
   // on, so a shift-click ticks everything between (Jeff, 2026-09-24).
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [lastPicked, setLastPicked] = useState<string | null>(null);
-  const [rejectingSelected, setRejectingSelected] = useState(false);
   const [sortingSelected, setSortingSelected] = useState(false);
-  /** Seconds the run is waiting out a Wix throttle, so the buttons say so instead of looking stuck. */
-  const [throttleWait, setThrottleWait] = useState(0);
   const [editing, setEditing] = useState<Group | null>(null);
   // The plan in the overlay, whole: the list leaves out its captions and the
   // builder's own picture sets (changes/route.ts), which the overlay reads.
@@ -435,9 +449,8 @@ export default function FloorPlansPage() {
   // whose action is still in flight, keep their rows until they have gone.
   const leavingKeys = useRef(new Set<string>());
   const inFlight = useRef(new Set<string>());
-  // Plans an Approve All run is writing, and those gone from the list whose
-  // write the page is asking about, held on screen until the answer comes.
-  const bulkApproving = useRef(new Set<string>());
+  // Plans gone from the list whose write, approved elsewhere, the page is
+  // asking about, held on screen until the answer comes.
   const checking = useRef(new Set<string>());
   // The same, for the rows: asked about, a row takes no clicks and is not counted as waiting.
   const [asking, setAsking] = useState<Set<string>>(() => new Set());
@@ -449,6 +462,12 @@ export default function FloorPlansPage() {
   // Plans whose Approve, Reject or Remove played on the click, the answer
   // still awaited (Jeff, 2026-10-01): a read meanwhile does not list them.
   const ahead = useRef(new Set<string>());
+  // Plans approved here and handed to the server's approval worker
+  // (approvals.ts), followed until their writes land (Jeff, 2026-10-10):
+  // a failed one comes off the day's tally and is named.
+  const handedOver = useRef(new Map<string, { group: Group; view: string }>());
+  const [writingHere, setWritingHere] = useState(0);
+  const following = useRef(false);
   // The queue as last taken, and the status it was read for.
   const changesRef = useRef<{ status: string; rows: PendingChange[] }>({ status: "", rows: [] });
   // Reads of the queue are numbered, so the answer to an older one never
@@ -624,10 +643,7 @@ export default function FloorPlansPage() {
    */
   const confirmWritten = useCallback(
     (list: Group[]) => {
-      for (const g of list) {
-        checking.current.add(g.key);
-        bulkApproving.current.delete(g.key);
-      }
+      for (const g of list) checking.current.add(g.key);
       setAsking(new Set(checking.current));
       function ask(waiting: Group[], tries: number) {
         const ids = waiting.map((g) => g.lead.id).join(",");
@@ -664,7 +680,7 @@ export default function FloorPlansPage() {
    * Takes a read of the queue. A plan the read no longer lists keeps its
    * rows while it plays its way out, while the action on it is still in
    * flight (its exit starts when the answer comes), or while the page asks
-   * how its Approve All write went. One that simply went, acted on in
+   * how a write approved elsewhere went. One that simply went, acted on in
    * another tab, fades out from where it stood, if it was on screen.
    */
   const take = useCallback(
@@ -687,9 +703,9 @@ export default function FloorPlansPage() {
       changesRef.current = { status, rows };
       setChanges(rows);
       if (!gone.size) return;
-      // A plan an Approve All run was writing: asked about before it plays.
+      // A plan being written, approved elsewhere: asked about before it plays.
       const went = groupChanges(held.filter((r) => gone.has(groupKeyOf(r))));
-      const written = went.filter((g) => bulkApproving.current.has(g.key) || g.rows.some((r) => r.status === "approving"));
+      const written = went.filter((g) => g.rows.some((r) => r.status === "approving"));
       if (written.length) confirmWritten(written);
       startLeaving(went.filter((g) => !written.includes(g)), "leave");
     },
@@ -755,6 +771,88 @@ export default function FloorPlansPage() {
     const day = easternDay(new Date());
     setTally((t) => addToTally(t, exit, n, day));
   }, []);
+
+  /**
+   * Plays plans out of the list on the click (Jeff, 2026-10-01), a batch
+   * as well as one (Jeff, 2026-10-10: "if the user is done, then it
+   * should be celebrated"), and counts them. Until the answer comes, a
+   * read does not list them; one on another page of the list, or outside
+   * the filters, simply goes.
+   */
+  const playOut = useCallback(
+    (list: Group[], exit: CountedExit) => {
+      if (!list.length) return;
+      for (const g of list) ahead.current.add(g.key);
+      startLeaving(list, exit);
+      for (const g of list) if (!rowEls.current.has(g.key)) finish(g.key);
+      count(exit, list.length);
+    },
+    [startLeaving, finish, count]
+  );
+
+  /** Follows these approved plans until their writes land; they stay out of the list meanwhile. */
+  const handOver = useCallback((list: Group[], view: string) => {
+    for (const g of list) handedOver.current.set(g.key, { group: g, view });
+    setWritingHere(handedOver.current.size);
+  }, []);
+
+  /**
+   * Asks how the writes of the plans handed over from here stand. Written,
+   * a plan is done. Failed, it comes off the day's tally and is named; it
+   * waits under the Failed filter. Back in the queue, it comes back to the
+   * list. Still waiting for the worker, or being written, it is asked
+   * about again.
+   */
+  const followHandedOver = useCallback(async () => {
+    if (following.current || !handedOver.current.size) return;
+    following.current = true;
+    try {
+      const list = [...handedOver.current.values()];
+      const statusOf = new Map<string, string>();
+      const answered = new Set<string>();
+      for (let i = 0; i < list.length; i += MAX_IDS_PER_REQUEST) {
+        const ids = list.slice(i, i + MAX_IDS_PER_REQUEST).map((h) => h.group.lead.id);
+        const data = await fetch(`/api/internal/floorplans/changes?status=all&ids=${encodeURIComponent(ids.join(","))}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null);
+        if (!Array.isArray(data)) continue;
+        for (const id of ids) answered.add(id);
+        for (const r of data as { id: string; status: string }[]) statusOf.set(r.id, r.status);
+      }
+      const failed: string[] = [];
+      let settled = false;
+      for (const { group, view } of list) {
+        if (!answered.has(group.lead.id)) continue;
+        const status = statusOf.get(group.lead.id);
+        if (status === "approving" || status === "approved") continue;
+        handedOver.current.delete(group.key);
+        settled = true;
+        if (status === "failed") {
+          ahead.current.delete(group.key);
+          failed.push(group.lead.proposed_record?.name ?? group.lead.plan_key);
+          setTally((t) => takeFromTally(t, "approve", 1, easternDay(new Date())));
+        } else if (status === "pending") callBack(group, "approve", 1, view);
+        else ahead.current.delete(group.key);
+      }
+      if (!settled) return;
+      // Reads already on their way may still list a plan as being written (dropStaleReads).
+      freshFrom.current = fetchSeq.current + 1;
+      setWritingHere(handedOver.current.size);
+      if (failed.length) {
+        alert(
+          `${failed.length} approved plan${failed.length === 1 ? "" : "s"} could not be written to Wix: ${failed.join(", ")}. See the Failed filter for details.`
+        );
+      }
+    } finally {
+      following.current = false;
+    }
+  }, [callBack]);
+
+  useEffect(() => {
+    if (!writingHere) return;
+    const timer = setInterval(followHandedOver, 3000);
+    return () => clearInterval(timer);
+  }, [writingHere, followHandedOver]);
 
   useEffect(() => {
     setLoading(true);
@@ -833,9 +931,13 @@ export default function FloorPlansPage() {
     () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && !leaving.has(g.key) && !asking.has(g.key)),
     [siteGroups, leaving, asking]
   );
-  // Plans still waiting in the whole queue, whatever the filters show.
+  // Plans still waiting for a person in the whole queue, whatever the
+  // filters show: one approved and being written is theirs no longer.
   const queueLeft = useMemo(
-    () => (statusFilter === "pending" ? groupChanges(changes).filter((g) => !leaving.has(g.key)).length : 0),
+    () =>
+      statusFilter === "pending"
+        ? groupChanges(changes).filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)).length
+        : 0,
     [changes, leaving, statusFilter]
   );
   const cleared = clearedIn(tally);
@@ -887,46 +989,46 @@ export default function FloorPlansPage() {
     setLastPicked(null);
   }
 
-  // Plans the server is writing right now; each leaves the list as its write finishes.
+  // Plans the server is writing: those approved here, gone from the list,
+  // and those approved elsewhere, shown locked until their writes finish.
   const approvingCount = useMemo(
-    () => siteGroups.filter((g) => g.status === "approving" && !leaving.has(g.key)).length,
-    [siteGroups, leaving]
+    () => writingHere + siteGroups.filter((g) => g.status === "approving" && !leaving.has(g.key)).length,
+    [writingHere, siteGroups, leaving]
   );
-  // Wix refuses a client that asks too often, and a full run asks far
-  // more than it allows, so the run waits it out rather than dropping
-  // plans (Jeff, 2026-09-22). The button says which it is doing.
-  const busyLabel = throttleWait ? `Wix is busy; waiting ${throttleWait}s…` : "Approving…";
   const approvingInView = useMemo(() => changes.some((c) => c.status === "approving"), [changes]);
   // The writes run on the server (Jeff, 2026-09-21), so the queue is
-  // re-read while any row is being written: after Approve All here, and
-  // again when the page is opened while a write started elsewhere still runs.
+  // re-read while a plan approved elsewhere is being written, and each
+  // leaves the list as its write finishes.
   useEffect(() => {
-    if (!approvingInView || bulkBusy) return;
+    if (!approvingInView) return;
     const timer = setInterval(fetchChanges, 5000);
     return () => clearInterval(timer);
-  }, [approvingInView, bulkBusy, fetchChanges]);
+  }, [approvingInView, fetchChanges]);
 
   // The last pending plan dealt with by the person here: fireworks, the
   // character celebrates and says so, and the victory plays (Jeff,
-  // 2026-09-29). Only once the last row has played its own way out.
+  // 2026-09-29). Once the last row has played its own way out, whether or
+  // not the server has finished with it (Jeff, 2026-10-10: "The system may
+  // not be done, but if the user is done, then it should be celebrated").
   useEffect(() => {
     if (statusFilter !== "pending" || loading || error || !armed.current) return;
-    if (queueLeft > 0 || leaving.size > 0 || busy.size > 0 || bulkBusy || rejectingSelected) return;
+    if (queueLeft > 0 || leaving.size > 0) return;
     armed.current = false;
     if (FLOOR_PLAN_SOUNDS.cleared) playSound(FLOOR_PLAN_SOUNDS.cleared);
     emitLeadEvent({ type: "floorplans_cleared", leadName: "" });
-  }, [statusFilter, loading, error, queueLeft, leaving, busy, bulkBusy, rejectingSelected]);
+  }, [statusFilter, loading, error, queueLeft, leaving]);
 
   /**
    * Approves or rejects every pending row of a plan, or puts a rejected
-   * plan back in the queue; reports a failed write instead of hiding it in
-   * the Failed filter.
+   * plan back in the queue.
    *
    * Approve and Reject play the plan's way out on the click, not on the
    * answer, so the queue feels quick (Jeff, 2026-10-01). The answer must
-   * bear it out: an approval written to Wix, not one Wix deferred; a
-   * rejection that took. One that does not brings the row back, and says
-   * why when something went wrong.
+   * bear it out: an approval handed to the server's approval worker, which
+   * writes it to Wix whether or not this page stays open (approvals.ts),
+   * and is followed from here until it lands; a rejection that took. One
+   * that does not brings the row back, and says why when something went
+   * wrong.
    */
   async function act(group: Group, action: "approve" | "reject" | "restore"): Promise<boolean> {
     const ids = action === "restore" ? idsAt(group, "rejected") : pendingIds(group);
@@ -944,13 +1046,10 @@ export default function FloorPlansPage() {
     const name = group.lead.proposed_record?.name ?? group.lead.plan_key;
     const exit: CountedExit | null = action === "restore" ? null : action;
     const view = changesRef.current.status;
+    let writing = false;
     setBusy((b) => new Set(b).add(group.key));
     inFlight.current.add(group.key);
-    if (exit) {
-      ahead.current.add(group.key);
-      startLeaving([group], exit);
-      count(exit, 1);
-    }
+    if (exit) playOut([group], exit);
     try {
       const res = await fetch("/api/internal/floorplans/changes/bulk", {
         method: "POST",
@@ -965,24 +1064,19 @@ export default function FloorPlansPage() {
         return false;
       }
       const took =
-        action === "approve" ? countWritten(data?.results) > 0 : action === "reject" ? Number(data?.rejected) > 0 : true;
+        action === "approve"
+          ? Array.isArray(data?.queued) && data.queued.length > 0
+          : action === "reject"
+            ? Number(data?.rejected) > 0
+            : true;
       if (exit && !took) {
+        // Acted on elsewhere: the read below shows where it went.
         callBack(group, exit, 1, view);
-        // Wix asked for a wait and the plan went back to the queue. A
-        // reject that found nothing pending was acted on elsewhere; the
-        // read below shows where it went.
-        if (action === "approve") {
-          const wait = Number(data?.retryAfterMs);
-          const status = data?.results?.[0]?.status;
-          alert(
-            status === "waiting"
-              ? `${name} was not approved yet: Wix is still fetching its pictures. It is back in the queue; approve it again in a minute or two.`
-              : Array.isArray(data?.remaining) && data.remaining.length
-              ? `${name} was not approved: Wix is busy${wait > 0 ? ` for about ${Math.ceil(wait / 1000)}s` : ""}. It is back in the queue; approve it again in a moment.`
-              : `${name} was not approved${status ? ` (${status})` : ""}. It may have been acted on elsewhere; the list has been refreshed.`
-          );
-        }
         return false;
+      }
+      if (action === "approve") {
+        handOver([group], view);
+        writing = true;
       }
       if (exit) dropStaleReads();
       return true;
@@ -991,7 +1085,8 @@ export default function FloorPlansPage() {
       alert(`${what} failed for ${name}: ${e instanceof Error ? e.message : String(e)}. The list has been refreshed to show where it stands.`);
       return false;
     } finally {
-      ahead.current.delete(group.key);
+      // A plan being written stays out of the list until its write lands.
+      if (!writing) ahead.current.delete(group.key);
       inFlight.current.delete(group.key);
       setBusy((b) => {
         const next = new Set(b);
@@ -1258,91 +1353,72 @@ export default function FloorPlansPage() {
   }
 
   /**
-   * Approves a set of plans: every visible plan, or every quick move-in.
-   * One request carries them all (whole plans per request, up to the bulk
-   * route's cap); the server locks their rows as "approving" and writes the
-   * plans one after another whether or not this page stays open (Jeff,
-   * 2026-09-21), and the list is re-read as it runs so each plan leaves as
-   * it is written. What did not fit in the server's time budget comes back
-   * as `remaining` and is sent again from here.
+   * Approves a set of plans: every visible plan, every quick move-in, or
+   * the ticked ones. They play their way out on the click, as one plan's
+   * Approve does (Jeff, 2026-10-10: "it should happen instantly"), and are
+   * handed to the server's approval worker, which writes them to Wix one
+   * after another whether or not this page stays open, waiting out Wix
+   * when it asks (approvals.ts). The requests only hand them over, so they
+   * are quick; the page follows the writes from there. A plan that still
+   * needs something stays in the list.
    */
   async function approveGroups(list: Group[], what: string): Promise<boolean> {
     if (!confirm(`Approve ${list.length} ${what}? Approved plans are written to Wix as published items.`)) return false;
-    const names = new Map<string, string>();
-    const blocked = new Set<string>();
-    const slices: string[][] = [];
-    for (const g of list) {
-      const name = g.lead.proposed_record?.name ?? g.lead.plan_key;
-      names.set(g.lead.plan_key, name);
-      if (approvalBlocker(g.kind, g.lead.proposed_record)) blocked.add(name);
-      else if (pendingIds(g).length) {
-        slices.push(pendingIds(g));
-        // Each plays Approve's way out as its write lands (Jeff, 2026-09-30), once the page has asked how it went.
-        bulkApproving.current.add(g.key);
-      }
-    }
-    setBulkBusy(true);
-    const poll = setInterval(fetchChanges, 3000);
-    const failed = new Set<string>();
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const g of list) next.delete(g.key);
+      return next;
+    });
+    const view = changesRef.current.status;
+    const nameOf = (g: Group) => g.lead.proposed_record?.name ?? g.lead.plan_key;
+    const blocked = new Set(list.filter((g) => approvalBlocker(g.kind, g.lead.proposed_record)).map(nameOf));
+    const going = list.filter((g) => !approvalBlocker(g.kind, g.lead.proposed_record) && pendingIds(g).length);
+    playOut(going, "approve");
+    const requests = inRequests(going);
+    const back: Group[] = [];
     let requestError: string | null = null;
+    let sent = 0;
     try {
-      while (slices.length) {
-        // Whole plans per request, so no plan's rows are split across two.
-        const ids: string[] = [];
-        while (slices.length && ids.length + slices[0].length <= MAX_IDS_PER_REQUEST) ids.push(...slices.shift()!);
-        if (!ids.length) ids.push(...slices.shift()!);
+      for (; sent < requests.length; sent++) {
+        const plans = requests[sent];
         const res = await fetch("/api/internal/floorplans/changes/bulk", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: "approve", ids }),
+          body: JSON.stringify({ action: "approve", ids: plans.flatMap(pendingIds) }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!Array.isArray(data?.results)) {
+        if (!res.ok && res.status !== 409) {
           requestError = data?.error ?? `HTTP ${res.status}`;
           break;
         }
-        for (const r of data.results as { planKey: string; status: string; error: string | null }[]) {
-          if (r.status === "failed") failed.add(names.get(r.planKey) ?? r.planKey);
-          else if (r.status === "blocked") blocked.add(names.get(r.planKey) ?? r.planKey);
+        const queued = new Set<string>(Array.isArray(data?.queued) ? data.queued : []);
+        // The server found something missing the page did not see, or the plan was acted on elsewhere.
+        for (const r of Array.isArray(data?.results) ? (data.results as { planKey: string; status: string }[]) : []) {
+          const g = r.status === "blocked" ? plans.find((p) => p.lead.plan_key === r.planKey) : null;
+          if (g) blocked.add(nameOf(g));
         }
-        // Each plan leaves the list as its write lands, read by read; the tally counts them as the answers come.
-        count("approve", countWritten(data.results));
-        const remaining = (Array.isArray(data.remaining) ? data.remaining : []).filter((x: unknown): x is string => typeof x === "string");
-        // Wix throttles this app at a few hundred calls a minute and a
-        // full run imports far more, so the server stops and says how long
-        // to leave it rather than dropping plans (Jeff, 2026-09-22). That
-        // is progress, not a stall.
-        const retryAfterMs = typeof data.retryAfterMs === "number" ? Math.min(data.retryAfterMs, 120_000) : 0;
-        if (!retryAfterMs && remaining.length >= ids.length) {
-          requestError = "the server made no progress";
-          break;
-        }
-        if (remaining.length) slices.unshift(remaining);
-        if (retryAfterMs) {
-          setThrottleWait(Math.ceil(retryAfterMs / 1000));
-          await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
-          setThrottleWait(0);
-        }
+        const taken = plans.filter((g) => pendingIds(g).some((id) => queued.has(id)));
+        handOver(taken, view);
+        back.push(...plans.filter((g) => !taken.includes(g)));
       }
     } catch (e) {
       requestError = e instanceof Error ? e.message : String(e);
     } finally {
-      clearInterval(poll);
-      setThrottleWait(0);
-      setBulkBusy(false);
+      back.push(...requests.slice(sent).flat());
+      for (const g of back) callBack(g, "approve", 1, view);
+      dropStaleReads();
       fetchChanges();
       const notes: string[] = [];
       if (blocked.size) notes.push(`${blocked.size} plan(s) still need something (a score, price, bedrooms, bathrooms, square feet, garages, home type, or a floor plan for a quick move-in) and were left pending: ${[...blocked].join(", ")}.`);
-      if (failed.size) notes.push(`${failed.size} plan(s) could not be written to Wix: ${[...failed].join(", ")}. See the Failed filter for details.`);
-      if (requestError) notes.push(`The approval request failed (${requestError}). Plans the server had started are still being written and leave the list as they finish; whatever is still pending can be approved again.`);
+      if (requestError) notes.push(`The approval request failed (${requestError}). The plans it did not reach are back in the list and can be approved again.`);
       if (notes.length) alert(notes.join("\n"));
     }
     return true;
   }
 
-  /** Approves the ticked plans, as Approve All does, and clears the ticks once they are sent. */
+  /** Approves the ticked plans, as Approve All does. */
   async function approveSelected() {
-    if (await approveGroups(selectedGroups, `selected plan${selectedGroups.length === 1 ? "" : "s"}`)) setSelected(new Set());
+    await approveGroups(selectedGroups, `selected plan${selectedGroups.length === 1 ? "" : "s"}`);
   }
 
   /**
@@ -1407,21 +1483,26 @@ export default function FloorPlansPage() {
   }
 
   /**
-   * Rejects the ticked plans. A rejection sticks, so each can be brought
-   * back one by one with Restore under the Rejected filter.
+   * Rejects the ticked plans, playing them out on the click as one plan's
+   * Reject does (Jeff, 2026-10-10). A rejection sticks, so each can be
+   * brought back one by one with Restore under the Rejected filter. Those
+   * a request that failed did not reach come back to the list.
    */
   async function rejectSelected() {
     const list = selectedGroups;
     if (!confirm(`Reject ${list.length} selected plan${list.length === 1 ? "" : "s"}? A rejected change is not raised again; Restore under the Rejected filter brings one back.`)) return;
-    const ids = list.flatMap((g) => pendingIds(g));
-    setRejectingSelected(true);
+    const view = changesRef.current.status;
+    setSelected(new Set());
+    playOut(list, "reject");
+    const requests = inRequests(list);
     let problem: string | null = null;
+    let sent = 0;
     try {
-      for (let i = 0; i < ids.length; i += MAX_IDS_PER_REQUEST) {
+      for (; sent < requests.length; sent++) {
         const res = await fetch("/api/internal/floorplans/changes/bulk", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: "reject", ids: ids.slice(i, i + MAX_IDS_PER_REQUEST) }),
+          body: JSON.stringify({ action: "reject", ids: requests[sent].flatMap(pendingIds) }),
         });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
@@ -1429,18 +1510,15 @@ export default function FloorPlansPage() {
           break;
         }
       }
-      if (!problem) {
-        setSelected(new Set());
-        dropStaleReads();
-        startLeaving(list, "reject");
-        count("reject", list.length);
-      }
     } catch (e) {
       problem = e instanceof Error ? e.message : String(e);
     } finally {
-      setRejectingSelected(false);
+      const back = requests.slice(sent).flat();
+      for (const g of list) if (!back.includes(g)) ahead.current.delete(g.key);
+      for (const g of back) callBack(g, "reject", 1, view);
+      dropStaleReads();
       fetchChanges();
-      if (problem) alert(`Rejecting the selected plans stopped part way (${problem}). Whatever is still pending can be rejected again.`);
+      if (problem) alert(`Rejecting the selected plans stopped part way (${problem}). Those not rejected are back in the list and can be rejected again.`);
     }
   }
 
@@ -1470,7 +1548,7 @@ export default function FloorPlansPage() {
               <span
                 className="text-sm"
                 style={{ color: "var(--warning, #b45309)" }}
-                title="The writes run on the server; leaving this page does not stop them. Each plan leaves the list as its write finishes."
+                title="The writes run on the server; leaving this page does not stop them. A plan that cannot be written shows under the Failed filter."
               >
                 Writing {approvingCount} plan{approvingCount === 1 ? "" : "s"} to Wix…
               </span>
@@ -1479,15 +1557,15 @@ export default function FloorPlansPage() {
               <button
                 className="btn btn-secondary"
                 onClick={() => approveGroups(pendingQuickMoveIns, "quick move-ins")}
-                disabled={bulkBusy || rejectingSelected || sortingSelected}
+                disabled={sortingSelected}
                 title="Every pending quick move-in the site and builder filters allow, whatever the view shows"
               >
-                {bulkBusy ? busyLabel : `Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
+                {`Approve all Quick Move-Ins (${pendingQuickMoveIns.length})`}
               </button>
             )}
             {pendingGroups.length > 0 && (
-              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={bulkBusy || rejectingSelected || sortingSelected}>
-                {bulkBusy ? busyLabel : `Approve All (${pendingGroups.length})`}
+              <button className="btn btn-primary" onClick={() => approveGroups(pendingGroups, "visible plans")} disabled={sortingSelected}>
+                {`Approve All (${pendingGroups.length})`}
               </button>
             )}
           </div>
@@ -1646,21 +1724,21 @@ export default function FloorPlansPage() {
               ) : (
                 <>
                   <strong className="text-sm">{selectedGroups.length} selected</strong>
-                  <button className="btn btn-primary" onClick={approveSelected} disabled={bulkBusy || rejectingSelected || sortingSelected}>
-                    {bulkBusy ? busyLabel : `Approve selected (${selectedGroups.length})`}
+                  <button className="btn btn-primary" onClick={approveSelected} disabled={sortingSelected}>
+                    {`Approve selected (${selectedGroups.length})`}
                   </button>
-                  <button className="btn btn-secondary" onClick={rejectSelected} disabled={bulkBusy || rejectingSelected || sortingSelected}>
-                    {rejectingSelected ? "Rejecting…" : `Reject selected (${selectedGroups.length})`}
+                  <button className="btn btn-secondary" onClick={rejectSelected} disabled={sortingSelected}>
+                    {`Reject selected (${selectedGroups.length})`}
                   </button>
                   <button
                     className="btn btn-secondary"
                     onClick={sortSelected}
-                    disabled={bulkBusy || rejectingSelected || sortingSelected}
+                    disabled={sortingSelected}
                     title="Show each photo once and put the front of the house first, then the rooms, as Sort does in the edit window"
                   >
                     {sortingSelected ? "Sorting photos…" : `Sort photos (${selectedGroups.length})`}
                   </button>
-                  <button className="btn btn-secondary" onClick={() => setSelected(new Set())} disabled={bulkBusy || rejectingSelected || sortingSelected}>
+                  <button className="btn btn-secondary" onClick={() => setSelected(new Set())} disabled={sortingSelected}>
                     Clear
                   </button>
                   {selectedBlocked > 0 && (
@@ -1711,7 +1789,7 @@ export default function FloorPlansPage() {
                           if (el) el.indeterminate = selectedGroups.length > 0 && !allSelected;
                         }}
                         onChange={pickAll}
-                        disabled={bulkBusy || rejectingSelected || sortingSelected}
+                        disabled={sortingSelected}
                       />
                     )}
                   </th>
@@ -1816,7 +1894,7 @@ export default function FloorPlansPage() {
                             aria-label={`Select ${rec?.name ?? c.plan_key}`}
                             checked={selected.has(g.key)}
                             onChange={(e) => pick(index, (e.nativeEvent as MouseEvent).shiftKey === true)}
-                            disabled={bulkBusy || rejectingSelected || sortingSelected || inert}
+                            disabled={sortingSelected || inert}
                           />
                         )}
                       </td>
