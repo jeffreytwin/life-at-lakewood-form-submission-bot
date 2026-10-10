@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { approvalBlocker, missingFields, rejectionStillApplies } from "@/lib/floorplans/approval";
+import { approvalBlocker, heldUntilPriced, missingFields, rejectionStillApplies } from "@/lib/floorplans/approval";
 import { mergeForUpdate, fieldChanges } from "@/lib/floorplans/diff";
 import { STANDARD_FLOOR_PLAN_FIELDS } from "@/lib/floorplans/standard-schema";
 import { describeFieldType } from "@/lib/floorplans/collection-schema";
@@ -119,5 +119,20 @@ describe("rejectionStillApplies", () => {
     // The score is a person's number, never the builder's: it does not count.
     expect(rejectionStillApplies(plan({}), plan({ score: 8 }))).toBe(true);
     expect(rejectionStillApplies(plan({ quickMoveIn: true }), plan({ quickMoveIn: true }))).toBe(true);
+  });
+});
+
+describe("heldUntilPriced", () => {
+  it("holds back a new plan or home the builder gives no price", () => {
+    expect(heldUntilPriced(plan({ priceDisplay: null, price: null }))).toBe(true);
+    expect(heldUntilPriced(plan({ priceDisplay: "  ", price: null }))).toBe(true);
+    expect(heldUntilPriced(plan({ quickMoveIn: true, priceDisplay: null, price: null }))).toBe(true);
+    expect(heldUntilPriced(null)).toBe(true);
+  });
+
+  it("lets in a priced one, whatever else it lacks", () => {
+    expect(heldUntilPriced(plan({}))).toBe(false);
+    expect(heldUntilPriced(plan({ quickMoveIn: true }))).toBe(false);
+    expect(heldUntilPriced(plan({ beds: "", sqft: null }))).toBe(false);
   });
 });
