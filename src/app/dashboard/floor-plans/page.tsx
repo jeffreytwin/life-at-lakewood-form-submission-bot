@@ -15,18 +15,17 @@ import {
   easternDay,
   exitDuration,
   foldDuration,
-  isWritten,
   progressOf,
   readTally,
   tallyLine,
   takeFromTally,
   withHeld,
-  writeSettled,
   type CountedExit,
   type Exit,
   type Tally,
 } from "@/lib/floorplans/leaving-rows";
 import { emitLeadEvent } from "@/lib/lead-events";
+import { announceWrites } from "@/lib/floorplans/writes-event";
 import { FLOOR_PLAN_SOUNDS, playSound } from "@/lib/notification-sounds";
 import { prefersReducedMotion } from "@/lib/pixel-effects";
 import { playExit } from "./exit-effects";
@@ -449,11 +448,6 @@ export default function FloorPlansPage() {
   // whose action is still in flight, keep their rows until they have gone.
   const leavingKeys = useRef(new Set<string>());
   const inFlight = useRef(new Set<string>());
-  // Plans gone from the list whose write, approved elsewhere, the page is
-  // asking about, held on screen until the answer comes.
-  const checking = useRef(new Set<string>());
-  // The same, for the rows: asked about, a row takes no clicks and is not counted as waiting.
-  const [asking, setAsking] = useState<Set<string>>(() => new Set());
   // The rows on screen now, by plan: only a row in view plays its exit.
   const rowEls = useRef(new Map<string, HTMLTableRowElement>());
   const exitTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
@@ -635,58 +629,17 @@ export default function FloorPlansPage() {
   }, []);
 
   /**
-   * Asks how the writes of plans gone from the list ended, and plays each
-   * its way out accordingly: written, it is approved like any other, sound
-   * and all (Jeff, 2026-09-30); failed, it only fades, as the run's closing
-   * message names it. A plan still being written is asked about again;
-   * one put back in the queue stays. No answer at all, and it fades.
-   */
-  const confirmWritten = useCallback(
-    (list: Group[]) => {
-      for (const g of list) checking.current.add(g.key);
-      setAsking(new Set(checking.current));
-      function ask(waiting: Group[], tries: number) {
-        const ids = waiting.map((g) => g.lead.id).join(",");
-        fetch(`/api/internal/floorplans/changes?status=all&ids=${encodeURIComponent(ids)}`)
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null)
-          .then((data) => {
-            const answered = Array.isArray(data);
-            const statusOf = new Map<string, string>(
-              (answered ? (data as { id: string; status: string }[]) : []).map((r) => [r.id, r.status])
-            );
-            const writing = waiting.filter((g) => answered && !writeSettled(statusOf.get(g.lead.id)) && tries < 10);
-            const settled = waiting.filter((g) => !writing.includes(g));
-            for (const g of settled) checking.current.delete(g.key);
-            setAsking(new Set(checking.current));
-            const status = (g: Group) => statusOf.get(g.lead.id);
-            startLeaving(settled.filter((g) => isWritten(status(g))), "approve");
-            // Back in the queue (Wix asked for a wait): the next read lists it again.
-            startLeaving(settled.filter((g) => !isWritten(status(g)) && status(g) !== "pending"), "leave");
-            if (!writing.length) return;
-            const timer = setTimeout(() => {
-              exitTimers.current.delete(timer);
-              ask(writing, tries + 1);
-            }, 1500);
-            exitTimers.current.add(timer);
-          });
-      }
-      ask(list, 0);
-    },
-    [startLeaving]
-  );
-
-  /**
    * Takes a read of the queue. A plan the read no longer lists keeps its
-   * rows while it plays its way out, while the action on it is still in
-   * flight (its exit starts when the answer comes), or while the page asks
-   * how a write approved elsewhere went. One that simply went, acted on in
-   * another tab, fades out from where it stood, if it was on screen.
+   * rows while it plays its way out, or while the action on it is still in
+   * flight (its exit starts when the answer comes). One that simply went,
+   * acted on in another tab, fades out from where it stood, if it was on
+   * screen. A plan approved and being written is not listed (changes
+   * route); the note under the page's title counts it (ApprovalWritesNote).
    */
   const take = useCallback(
     (read: PendingChange[], status: string) => {
       // A plan played out on the click stays gone while its answer is
-      // awaited, though the server still lists it, being written.
+      // awaited, though the server may still list it.
       const fresh = ahead.current.size ? read.filter((r) => !ahead.current.has(groupKeyOf(r))) : read;
       const before = changesRef.current.status === status ? changesRef.current.rows : [];
       const listed = new Set(fresh.map(groupKeyOf));
@@ -695,7 +648,7 @@ export default function FloorPlansPage() {
       for (const r of before) {
         const key = groupKeyOf(r);
         if (listed.has(key)) continue;
-        if (leavingKeys.current.has(key) || inFlight.current.has(key) || checking.current.has(key)) kept.add(key);
+        if (leavingKeys.current.has(key) || inFlight.current.has(key)) kept.add(key);
         else if (rowEls.current.has(key)) gone.add(key);
       }
       const held = before.filter((r) => kept.has(groupKeyOf(r)) || gone.has(groupKeyOf(r)));
@@ -703,13 +656,9 @@ export default function FloorPlansPage() {
       changesRef.current = { status, rows };
       setChanges(rows);
       if (!gone.size) return;
-      // A plan being written, approved elsewhere: asked about before it plays.
-      const went = groupChanges(held.filter((r) => gone.has(groupKeyOf(r))));
-      const written = went.filter((g) => g.rows.some((r) => r.status === "approving"));
-      if (written.length) confirmWritten(written);
-      startLeaving(went.filter((g) => !written.includes(g)), "leave");
+      startLeaving(groupChanges(held.filter((r) => gone.has(groupKeyOf(r)))), "leave");
     },
-    [startLeaving, confirmWritten]
+    [startLeaving]
   );
 
   const fetchChanges = useCallback(() => {
@@ -792,8 +741,10 @@ export default function FloorPlansPage() {
 
   /** Follows these approved plans until their writes land; they stay out of the list meanwhile. */
   const handOver = useCallback((list: Group[], view: string) => {
+    if (!list.length) return;
     for (const g of list) handedOver.current.set(g.key, { group: g, view });
     setWritingHere(handedOver.current.size);
+    announceWrites();
   }, []);
 
   /**
@@ -918,18 +869,18 @@ export default function FloorPlansPage() {
     });
   }, []);
   // A plan on its way out is no longer waiting: not counted, ticked or sent again.
-  const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key) && !asking.has(g.key)), [groups, leaving, asking]);
+  const pendingGroups = useMemo(() => groups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)), [groups, leaving]);
   // One page of the list. A filter or a sort starts again from the first
   // page; a page emptied by approvals falls back to the last one left.
   const pages = Math.max(1, Math.ceil(groups.length / PAGE_SIZE));
   const shownPage = Math.min(page, pages - 1);
   const offset = shownPage * PAGE_SIZE;
   const pageGroups = useMemo(() => groups.slice(offset, offset + PAGE_SIZE), [groups, offset]);
-  const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key) && !asking.has(g.key)), [pageGroups, leaving, asking]);
+  const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)), [pageGroups, leaving]);
   useEffect(() => setPage(0), [statusFilter, siteFilter, builderFilter, kindFilter, sort]);
   const pendingQuickMoveIns = useMemo(
-    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && !leaving.has(g.key) && !asking.has(g.key)),
-    [siteGroups, leaving, asking]
+    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && !leaving.has(g.key)),
+    [siteGroups, leaving]
   );
   // Plans still waiting for a person in the whole queue, whatever the
   // filters show: one approved and being written is theirs no longer.
@@ -988,22 +939,6 @@ export default function FloorPlansPage() {
     });
     setLastPicked(null);
   }
-
-  // Plans the server is writing: those approved here, gone from the list,
-  // and those approved elsewhere, shown locked until their writes finish.
-  const approvingCount = useMemo(
-    () => writingHere + siteGroups.filter((g) => g.status === "approving" && !leaving.has(g.key)).length,
-    [writingHere, siteGroups, leaving]
-  );
-  const approvingInView = useMemo(() => changes.some((c) => c.status === "approving"), [changes]);
-  // The writes run on the server (Jeff, 2026-09-21), so the queue is
-  // re-read while a plan approved elsewhere is being written, and each
-  // leaves the list as its write finishes.
-  useEffect(() => {
-    if (!approvingInView) return;
-    const timer = setInterval(fetchChanges, 5000);
-    return () => clearInterval(timer);
-  }, [approvingInView, fetchChanges]);
 
   // The last pending plan dealt with by the person here: fireworks, the
   // character celebrates and says so, and the victory plays (Jeff,
@@ -1542,17 +1477,8 @@ export default function FloorPlansPage() {
             Floor Plans V2 collection as published items.
           </p>
         </div>
-        {statusFilter === "pending" && (approvingCount > 0 || pendingGroups.length > 0 || pendingQuickMoveIns.length > 0) && (
+        {statusFilter === "pending" && (pendingGroups.length > 0 || pendingQuickMoveIns.length > 0) && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            {approvingCount > 0 && (
-              <span
-                className="text-sm"
-                style={{ color: "var(--warning, #b45309)" }}
-                title="The writes run on the server; leaving this page does not stop them. A plan that cannot be written shows under the Failed filter."
-              >
-                Writing {approvingCount} plan{approvingCount === 1 ? "" : "s"} to Wix…
-              </span>
-            )}
             {pendingQuickMoveIns.length > 0 && (
               <button
                 className="btn btn-secondary"
@@ -1854,7 +1780,7 @@ export default function FloorPlansPage() {
                   // A row playing its way out still shows what it was, but takes no more clicks.
                   // Nor does one whose Approve, Reject or Remove is still on its way (Jeff,
                   // 2026-09-30): the server has it locked, so it cannot be edited meanwhile.
-                  const inert = Boolean(out) || asking.has(g.key) || busy.has(g.key);
+                  const inert = Boolean(out) || busy.has(g.key);
                   return (
                     <tr
                       key={g.key}

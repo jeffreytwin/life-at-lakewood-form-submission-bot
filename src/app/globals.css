@@ -188,6 +188,17 @@ a.sidebar-footer-active:hover {
   font-size: 13px;
 }
 
+/* Approved floor plans still being written to Wix, under every page's
+   title until there are none (ApprovalWritesNote). Tucked up under the
+   title block, which keeps its own space below. */
+.approval-writes-slot {
+  margin: -20px 0 20px;
+}
+
+.approval-writes-note {
+  color: var(--warning, #b45309);
+}
+
 /* Cards */
 .card {
   background: var(--bg-card);

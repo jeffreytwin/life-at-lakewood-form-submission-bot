@@ -312,6 +312,12 @@ nothing. No cutover report has ever been generated.
   over: a failed one comes off the day's tally and is named, and waits
   under Failed. Closing the page stops nothing. Reject selected plays out
   on the click too; a request that fails brings back what it did not reach.
+- **What is being written is said under every page's title, not listed**
+  (Jeff, 2026-10-10): "Writing N approved plans to Wix…" shows under the
+  title of whichever Hub page is open until the worker has written them
+  all (`ApprovalWritesNote`, `?count=writing`), and the pending list leaves
+  out plans approved and still being written, so the queue shows only what
+  is still the person's to do.
 - **The score is picked, not typed** (Jeff, 2026-09-21): the overlay shows
   the numbers 1 to 11 as buttons (1 to 10 as the freelancers used it, 11
   for a plan that must come first); the PATCH route accepts nothing else.
