@@ -28,6 +28,7 @@ import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 import { isMedallionPage, medallionTour } from "@/lib/floorplans/extractors/medallion";
+import { isRichmondPage, richmondTour } from "@/lib/floorplans/extractors/richmond";
 import { isWilliamRyanPage, williamRyanPictures } from "@/lib/floorplans/extractors/william-ryan";
 import { relatedNameFromPage } from "@/lib/floorplans/quick-move-ins";
 import { type GalleryMeta, type NormalizedPlan, type Room, normKey } from "@/lib/floorplans/types";
@@ -1043,12 +1044,15 @@ export async function readPlanPageWithClaude(
   // title and "View Photos", and nothing after them (ashton.ts). A plan's
   // tiles are its outside, but for the interior "View Photos" also shows.
   const ashton = isAshtonPage(page_.url || plan.sourceUrl) ? ashtonPictures(html, page_.url) : null;
-  // Medallion's are too: the Matterport, else the YouTube video (medallion.ts).
+  // Medallion's are too: the Matterport, else the YouTube video (medallion.ts);
+  // and Richmond's, whose tours are the videos behind "Video" (richmond.ts).
   const ownTour = isAshtonPage(page_.url || plan.sourceUrl)
     ? ashtonTour(html)
     : isMedallionPage(page_.url || plan.sourceUrl)
       ? medallionTour(html)
-      : null;
+      : isRichmondPage(page_.url || plan.sourceUrl)
+        ? richmondTour(html, tourUrlIn(html))
+        : null;
   const ashtonPhotos = ashton
     ? plan.quickMoveIn
       ? [...ashton.hero, ...ashton.photos]
