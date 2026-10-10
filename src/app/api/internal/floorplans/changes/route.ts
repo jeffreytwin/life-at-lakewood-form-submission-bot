@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { releaseStaleApproving } from "@/lib/floorplans/approving";
 import { forTheList } from "@/lib/floorplans/queue-list";
 
 export const dynamic = "force-dynamic";
@@ -25,16 +24,16 @@ export async function GET(request: NextRequest) {
     // lists keep a limit.
     const asked = parseInt(searchParams.get("limit") ?? "", 10);
     const limit = status === "pending" ? MOST : Math.min(Number.isFinite(asked) && asked > 0 ? asked : 200, MOST);
-    if (status === "pending") await releaseStaleApproving();
 
-    // Just the number of plans waiting, for the menu's badge.
+    // Just the number of plans waiting for a person, for the menu's badge:
+    // one approved and still being written is theirs no longer (Jeff, 2026-10-10).
     if (searchParams.get("count") === "plans") {
       const keys = new Set<string>();
       for (let from = 0; from < MOST; from += PAGE) {
         const { data, error } = await supabase
           .from("fp_pending_changes")
           .select("site_id, community_id, builder_id, plan_key")
-          .in("status", ["pending", "approving"])
+          .eq("status", "pending")
           .order("id")
           .range(from, from + PAGE - 1);
         if (error) throw error;
@@ -57,8 +56,8 @@ export async function GET(request: NextRequest) {
 
     const rows: unknown[] = [];
     for (let from = 0; from < limit; from += PAGE) {
-      // A row being approved is still the queue's: shown locked until the write
-      // lands, or released above when the request writing it died (approving.ts).
+      // A row being approved is still the queue's: shown locked until the
+      // approval worker has written it (approvals.ts).
       let query = supabase
         .from("fp_pending_changes")
         .select(COLUMNS)

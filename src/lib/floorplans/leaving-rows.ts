@@ -90,10 +90,10 @@ export function isWritten(status: unknown): boolean {
 }
 
 /**
- * A change's status once an Approve All write is over, one way or the
+ * A change's status once a server-side write is over, one way or the
  * other: written, failed, or back in the queue. "approved" is not: the
- * route marks a row approved just before writing it, so the row has
- * already left the pending list while its write is still under way.
+ * approval worker marks a row approved just before writing it, so the row
+ * has already left the pending list while its write is still under way.
  */
 export function writeSettled(status: unknown): boolean {
   return status !== undefined && status !== "approved" && status !== "approving";

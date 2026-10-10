@@ -17,6 +17,10 @@
       "schedule": "* * * * *"
     },
     {
+      "path": "/api/cron/floorplan-approvals",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/listings-tick",
       "schedule": "*/15 * * * *"
     },
