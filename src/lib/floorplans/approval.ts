@@ -57,6 +57,16 @@ export function approvalBlocker(changeType: string, record: unknown): string | n
 }
 
 /**
+ * Whether a new plan or home stays out of the queue until the builder
+ * prices it (Jeff, 2026-10-10): of the 75 queued without a price, none was
+ * ever approved, and each cost a person a rejection. The run offers it as
+ * new the night a price appears.
+ */
+export function heldUntilPriced(record: unknown): boolean {
+  return !present(((record ?? {}) as Record<string, unknown>).priceDisplay);
+}
+
+/**
  * Whether a rejection of a new plan still holds against the same plan
  * queued again: it does unless the builder has since filled in something
  * the rejected version lacked (a plan rejected for having no price comes

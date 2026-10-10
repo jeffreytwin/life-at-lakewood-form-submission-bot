@@ -7,6 +7,7 @@
 // - Removals require the plan to have been missing across runs (last_seen_at
 //   older than 24h) AND a scrape covering >= 60% of the last known count.
 // - Rejections stick: a change identical to a rejected row is not re-queued.
+// - A new plan or home with no price is not queued until it has one.
 // - User-edited fields (manual overrides) are never proposed for reversion,
 //   and the record an approved update writes keeps them (diff.ts).
 // - Galleries are diffed too (photos and blueprints, in order), so a
@@ -48,7 +49,7 @@ import { withoutSoldHomes } from "@/lib/floorplans/sold-homes";
 import { SERIES_BUILDERS, withSeriesLabels } from "@/lib/floorplans/series-labels";
 import { homesOfPlan, withStandIns, type StandInRule } from "@/lib/floorplans/stand-ins";
 import { fetchOrRender, planPageCandidates, withPlanPageDescription } from "@/lib/floorplans/stand-in-pages";
-import { rejectionStillApplies } from "@/lib/floorplans/approval";
+import { heldUntilPriced, rejectionStillApplies } from "@/lib/floorplans/approval";
 import { neutralizeDescriptions, withDescriptions } from "@/lib/floorplans/description";
 import { inKnownOrder, withKnownSpellings, withScrapedPictures } from "@/lib/floorplans/pictures";
 import { AUTO_RUN } from "@/lib/floorplans/run-state";
@@ -405,6 +406,22 @@ async function approveOnItsOwn(args: {
     ? await supabase.from("fp_pending_changes").update(row).eq("id", waiting.id)
     : await supabase.from("fp_pending_changes").insert(row);
   if (error) logger.warn("Change approved without review could not be recorded", { planKey: args.planKey, error: error.message });
+}
+
+/**
+ * A pending addition of a plan the builder still gives no price, taken off
+ * the queue: new plans wait for a price before a person sees them
+ * (heldUntilPriced). One a person has priced in the edit overlay stays.
+ */
+async function withdrawUnpricedAdd(ids: { siteId: string; communityId: string; builderId: string; planKey: string }): Promise<void> {
+  const { data: adds } = await supabase
+    .from("fp_pending_changes")
+    .select("id, proposed_record")
+    .match({ site_id: ids.siteId, community_id: ids.communityId, builder_id: ids.builderId, plan_key: ids.planKey, change_type: "add", status: "pending" });
+  const stale = (adds ?? []).filter((a) => heldUntilPriced(a.proposed_record));
+  if (!stale.length) return;
+  const { error } = await supabase.from("fp_pending_changes").delete().in("id", stale.map((a) => a.id));
+  if (error) logger.warn("Addition of a plan with no price could not be withdrawn", { planKey: ids.planKey, error: error.message });
 }
 
 /** Queue one change unless an identical one was rejected or already pending. */
@@ -809,10 +826,18 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       const remembered = new Map((rememberedRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
 
       let queued = 0;
+      let held = 0;
 
       for (const plan of plans) {
         const existing = canonicalByKey.get(plan.planKey);
         if (!existing) {
+          // A new plan or home with no price waits out of the queue until
+          // the builder prices it (approval.ts, heldUntilPriced).
+          if (heldUntilPriced(plan)) {
+            held += 1;
+            await withdrawUnpricedAdd({ siteId: site.id, communityId: community.id, builderId: builder.id, planKey: plan.planKey });
+            continue;
+          }
           if (
             await queueChange({
               siteId: site.id, communityId: community.id, builderId: builder.id,
@@ -915,9 +940,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       // A shortfall is the usual sign of a builder page that changed shape, so
       // it is recorded as a failure and shows up wherever failures do (the
       // Floor Plans banner, Builder Connections, the digest).
+      const heldNote = held ? `, ${held} new held until priced` : "";
       const detail = coverage.ok
-        ? `ok: ${plans.length} plans, ${queued} changes queued`
-        : `${coverage.detail}; ${queued} changes queued`;
+        ? `ok: ${plans.length} plans, ${queued} changes queued${heldNote}`
+        : `${coverage.detail}; ${queued} changes queued${heldNote}`;
       await setRunStatus(conn.id, detail, plans.length, !coverage.ok, await spentOn(runId));
       // First successful run marks the connection nightly-eligible.
       await supabase
@@ -926,7 +952,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         .eq("id", conn.id)
         .is("onboarded_at", null);
       logger.info("Floor plan connection run complete", {
-        connectionId, builder: builder.name, community: community.name, plans: plans.length, queued,
+        connectionId, builder: builder.name, community: community.name, plans: plans.length, queued, held,
       });
       return { status: coverage.ok ? "ok" : "partial", detail, plans: plans.length, queued };
     }
