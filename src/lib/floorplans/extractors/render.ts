@@ -1,6 +1,7 @@
 import type { Browser, Page } from "puppeteer-core";
 import { logger } from "@/lib/shared/logger";
 import { pageIsBotCheck, pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
+import { isRichmondPage } from "@/lib/floorplans/extractors/richmond";
 
 /**
  * A real browser, for the builders whose pages are empty without one.
@@ -358,6 +359,72 @@ async function openGalleries(page: Page): Promise<number> {
   );
 }
 
+/** What a builder calls the tab that plays its video. */
+const VIDEO_TABS = ["video", "videos"];
+/** How long pressing the video tabs may take, per page. */
+const VIDEO_MS = 10_000;
+
+/**
+ * Press the page's video tabs and keep what each plays: Richmond American
+ * draws a plan's YouTube walk-through only once "Video (1)" is pressed,
+ * and it is that plan's tour (richmond.ts; Jeff, 2026-10-10). What a tab
+ * showed is added to its block as an iframe with `data-src`, which the
+ * reader understands and the browser does not load, so pressing another
+ * tab after it loses nothing.
+ */
+async function keepVideos(page: Page): Promise<number> {
+  return page.evaluate(
+    async (want: string[], budget: number) => {
+      const until = Date.now() + budget;
+      const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
+      const bare = (text: string | null) =>
+        (text ?? "")
+          .replace(/\s*\(\d+\)\s*$/, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+      const wanted = new Set(want);
+      const VIDEO = /youtube(?:-nocookie)?\.com|youtu\.be|vimeo\.com/i;
+      const boxOf = (el: Element): Element => {
+        let box = el.parentElement;
+        for (let n = 0; n < 8 && box; n++) {
+          if (box.querySelector("h1, h2, h3, h4")) return box;
+          box = box.parentElement;
+        }
+        return el.parentElement ?? el;
+      };
+      const videos = (box: ParentNode) =>
+        [...box.querySelectorAll("iframe")]
+          .map((f) => ({ src: f.getAttribute("src") || f.getAttribute("data-src") || "", title: f.getAttribute("title") || "" }))
+          .filter((v) => VIDEO.test(v.src));
+      const tabs = [...document.querySelectorAll('button, [role="tab"]')].filter((el) => wanted.has(bare(el.textContent)));
+      let kept = 0;
+      for (const tab of tabs) {
+        if (Date.now() > until) break;
+        const box = boxOf(tab);
+        (tab as HTMLElement).click();
+        const waitUntil = Math.min(until, Date.now() + 6_000);
+        while (Date.now() < waitUntil && !videos(box).length) await sleep(300);
+        const found = videos(box);
+        if (!found.length) continue;
+        const keep = document.createElement("div");
+        keep.setAttribute("data-gathered", "video");
+        for (const video of found) {
+          const frame = document.createElement("iframe");
+          frame.setAttribute("data-src", video.src);
+          if (video.title) frame.setAttribute("title", video.title);
+          keep.appendChild(frame);
+          kept++;
+        }
+        box.appendChild(keep);
+      }
+      return kept;
+    },
+    VIDEO_TABS,
+    VIDEO_MS
+  );
+}
+
 /** What a browser may be asked to do with a page beyond reading it. */
 export interface RenderOptions {
   /** Press the page's own control for one of these before reading it. */
@@ -569,8 +636,19 @@ async function renderOnce(
       return 0;
     });
 
+    // Richmond's videos are its tours (richmond.ts), drawn only when asked for.
+    const videos = isRichmondPage(url)
+      ? await keepVideos(page).catch((error) => {
+          logger.warn("Floor plan page videos would not open", {
+            url,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          return 0;
+        })
+      : 0;
+
     const html = await settledContent(page);
-    logger.info("Floor plan page rendered", { url, quiet, ready, waited, pressed, gathered, bytes: html.length });
+    logger.info("Floor plan page rendered", { url, quiet, ready, waited, pressed, gathered, videos, bytes: html.length });
     return { url: page.url(), html, pressed };
   } finally {
     await page.close().catch(() => {});
