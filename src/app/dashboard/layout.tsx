@@ -9,6 +9,7 @@ import EmailDraftSoundMonitor from "@/components/EmailDraftSoundMonitor";
 import ListingsAlertMonitor from "@/components/ListingsAlertMonitor";
 import CampaignAlertMonitor from "@/components/CampaignAlertMonitor";
 import BuilderAlertMonitor from "@/components/BuilderAlertMonitor";
+import ApprovalWritesNote from "@/components/ApprovalWritesNote";
 
 export default function DashboardLayout({
   children,
@@ -43,6 +44,7 @@ export default function DashboardLayout({
       <ListingsAlertMonitor />
       <CampaignAlertMonitor />
       <BuilderAlertMonitor />
+      <ApprovalWritesNote />
     </div>
   );
 }

@@ -13,6 +13,25 @@ const MOST = 5000;
 const COLUMNS =
   "*, fp_sites:site_id(domain, name), fp_communities:community_id(name), fp_builders:builder_id(name), fp_floor_plans:floor_plan_id(id, starred)";
 
+type RowQuery = ReturnType<ReturnType<typeof supabase.from>["select"]>;
+
+/** How many plans the rows this filter leaves stand for: a plan is one row per changed field. */
+async function countPlans(filter: (q: RowQuery) => RowQuery): Promise<number> {
+  const keys = new Set<string>();
+  for (let from = 0; from < MOST; from += PAGE) {
+    const { data, error } = await filter(
+      supabase.from("fp_pending_changes").select("site_id, community_id, builder_id, plan_key")
+    )
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    const rows = (data ?? []) as unknown as { site_id: string; community_id: string; builder_id: string; plan_key: string }[];
+    for (const c of rows) keys.add(`${c.site_id}|${c.community_id}|${c.builder_id}|${c.plan_key}`);
+    if (rows.length < PAGE) break;
+  }
+  return keys.size;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -28,19 +47,17 @@ export async function GET(request: NextRequest) {
     // Just the number of plans waiting for a person, for the menu's badge:
     // one approved and still being written is theirs no longer (Jeff, 2026-10-10).
     if (searchParams.get("count") === "plans") {
-      const keys = new Set<string>();
-      for (let from = 0; from < MOST; from += PAGE) {
-        const { data, error } = await supabase
-          .from("fp_pending_changes")
-          .select("site_id, community_id, builder_id, plan_key")
-          .eq("status", "pending")
-          .order("id")
-          .range(from, from + PAGE - 1);
-        if (error) throw error;
-        for (const c of data ?? []) keys.add(`${c.site_id}|${c.community_id}|${c.builder_id}|${c.plan_key}`);
-        if ((data ?? []).length < PAGE) break;
-      }
-      return NextResponse.json({ plans: keys.size });
+      return NextResponse.json({ plans: await countPlans((q) => q.eq("status", "pending")) });
+    }
+
+    // Just the number of plans a person approved that the approval worker
+    // is still writing (approvals.ts): handed over, or claimed and being
+    // written. Shown under every page's title until it is none (Jeff,
+    // 2026-10-10). What the sync approves on its own is not counted.
+    if (searchParams.get("count") === "writing") {
+      return NextResponse.json({
+        plans: await countPlans((q) => q.or("status.eq.approving,and(status.eq.approved,approval_requested_at.not.is.null)")),
+      });
     }
 
     // Just these rows, whatever their status: the page asks how an Approve
@@ -56,16 +73,16 @@ export async function GET(request: NextRequest) {
 
     const rows: unknown[] = [];
     for (let from = 0; from < limit; from += PAGE) {
-      // A row being approved is still the queue's: shown locked until the
-      // approval worker has written it (approvals.ts).
+      // A plan approved and still being written is the person's no longer,
+      // so the pending list leaves it out (Jeff, 2026-10-10: it "makes it
+      // feel unfinished"); the note under the page's title counts it.
       let query = supabase
         .from("fp_pending_changes")
         .select(COLUMNS)
         .order("created_at", { ascending: false })
         .order("id")
         .range(from, Math.min(from + PAGE, limit) - 1);
-      if (status === "pending") query = query.in("status", ["pending", "approving"]);
-      else if (status !== "all") query = query.eq("status", status);
+      if (status !== "all") query = query.eq("status", status);
       const { data, error } = await query;
       if (error) throw error;
       rows.push(...(data ?? []).map(forTheList));
