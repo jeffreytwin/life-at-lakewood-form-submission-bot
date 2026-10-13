@@ -101,6 +101,27 @@ export function filedAsBefore(plans: NormalizedPlan[], filed: FiledHome[]): Norm
 }
 
 /**
+ * The record each of a run's plans is known by, in the run's order: the one
+ * its key names, or for a home read under another name than it is filed
+ * by, the row filedAsBefore finds for it. The run renames such a home only
+ * once its plans are prepared (sync.ts), and until then nothing the record
+ * knew about its photos — their addresses, the copies taken out, their
+ * order — reached it: 2131 Sylvester Palm Lane is filed with ", Lakewood
+ * Ranch, FL 34212" and read without it, and its lead photo was proposed
+ * and approved nine times in a week (Jeff, 2026-10-13). Pure; exported for
+ * tests.
+ */
+export function knownRecordsOf<T>(
+  plans: NormalizedPlan[],
+  known: ReadonlyMap<string, T> | null | undefined,
+  filed: FiledHome[] | null | undefined
+): (T | undefined)[] {
+  if (!known) return plans.map(() => undefined);
+  const matched = filed?.length ? filedAsBefore(plans, filed) : plans;
+  return plans.map((plan, i) => known.get(plan.planKey) ?? known.get(matched[i].planKey));
+}
+
+/**
  * Whether a home offered as new is one the site already has: a pending
  * addition left from a run that read it under another name. Pure;
  * exported for tests.

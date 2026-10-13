@@ -44,7 +44,14 @@ const MARKER = /\[(IMG|LINK) ([^\]\s]+)\]/g;
  * dropped (a cache-buster or a tracking code is not the page changing),
  * and on a plan's own page the links go entirely — the facts read off it
  * do not use them, and a builder's menus carry hundreds. A list's links
- * stay: they are its plans' own pages. Whitespace is one space. Pure.
+ * stay: they are its plans' own pages. Whitespace is one space.
+ *
+ * Nor is a sales office's "open now" or "closed now" the page changing:
+ * M/I prints it beside every plan, so a page read by day was read again by
+ * night, and Claude gave its description in other words each time; nor
+ * an events banner ("Upcoming Events … See more events »"), which comes
+ * and goes with the weekend (Jeff, 2026-10-13). A page without either
+ * reads exactly as it did. Pure.
  */
 export function normalizedText(kind: ReadKind, content: string): string {
   return content
@@ -53,6 +60,10 @@ export function normalizedText(kind: ReadKind, content: string): string {
       return `[${what} ${url.replace(/[?#].*$/, "")}]`;
     })
     .replace(/\s+/g, " ")
+    .replace(/\bclosed( now)\b/g, "open$1")
+    .replace(/\bClosed( now)\b/gi, "Open$1")
+    .replace(/\bUpcoming Events\b.{0,3000}?\bSee more events\s*»/g, " ")
+    .replace(/ {2,}/g, " ")
     .trim();
 }
 

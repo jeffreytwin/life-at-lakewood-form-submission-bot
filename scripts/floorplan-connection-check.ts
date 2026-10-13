@@ -882,7 +882,11 @@ async function check(conn: Connection, target: Target): Promise<Outcome & { repo
       ms = Date.now() - started;
       records = await recordsOf(conn);
       plans = scraped.length
-        ? await preparePlans(scraped, { site: conn.site, community: conn.community, builder: conn.builder }, { rewordDescriptions: false, known: records })
+        ? await preparePlans(scraped, { site: conn.site, community: conn.community, builder: conn.builder }, {
+            rewordDescriptions: false,
+            known: records,
+            filed: [...records].map(([plan_key, record]) => ({ plan_key, record })),
+          })
         : [];
       if (!plans.length) problems.push("zero plans");
     } catch (error) {

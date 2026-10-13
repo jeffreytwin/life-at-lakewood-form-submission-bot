@@ -28,6 +28,34 @@ describe("digestOf", () => {
   });
 });
 
+describe("what comes and goes on an M/I page without the plan changing (Jeff, 2026-10-13)", () => {
+  // As kept from M/I's Jackson plan at Creeks Edge, read by day and again by night.
+  const weekend = (name: string, date: string) =>
+    `Show Upcoming Events [IMG https://dam.mihomes.com/media/5216647/50421.jpeg] ${name} ${date}, 10:00 AM - 6:00 PM Time is running out to move by the end of the year! RSVP for this event » See more events »`;
+  const jackson = (hours: string, events = weekend("Final Whistle Weekend", "Oct 10, 2026"), price = "$489,990") =>
+    `Interactive Map ${hours} Creeks Edge At Twin Rivers Show Hours 3776 142nd Terrace East Parrish, FL 34219 Mon: 12:00PM - 6:00PM ${events} The Jackson accommodates a variety of lifestyles. Priced from ${price}`;
+
+  it("reads the sales office open now and closed now as the same page", () => {
+    expect(digestOf("plan", jackson("open now"))).toBe(digestOf("plan", jackson("closed now")));
+    expect(digestOf("plan", jackson("Open Now"))).toBe(digestOf("plan", jackson("Closed Now")));
+  });
+
+  it("reads past this weekend's events, and next weekend's", () => {
+    expect(digestOf("plan", jackson("open now"))).toBe(digestOf("plan", jackson("open now", weekend("Open House Weekend", "Oct 17, 2026"))));
+    expect(digestOf("list", jackson("open now"))).toBe(digestOf("list", jackson("closed now", weekend("Open House Weekend", "Oct 17, 2026"))));
+  });
+
+  it("still reads a new price on the same page as a change", () => {
+    expect(digestOf("plan", jackson("open now"))).not.toBe(digestOf("plan", jackson("closed now", undefined, "$479,990")));
+  });
+
+  it("leaves every other page, and other closings, exactly as they read", () => {
+    expect(normalizedText("plan", "The sales center is closed on Sundays. Closed-in lanai.")).toBe("The sales center is closed on Sundays. Closed-in lanai.");
+    expect(normalizedText("plan", "Upcoming Events: none this month. The Lori, priced $459,990.")).toBe("Upcoming Events: none this month. The Lori, priced $459,990.");
+    expect(normalizedText("plan", page("$459,990"))).toBe("The Lori [IMG https://b.com/lori/kitchen.jpg] Priced $459,990 3 beds");
+  });
+});
+
 describe("variantOf", () => {
   it("changes with the model, the way the page is asked and the version, and not with the plan's name", () => {
     const base = { model: "claude-sonnet-5", version: "1.0", home: false, photos: true };

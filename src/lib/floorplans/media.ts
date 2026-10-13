@@ -310,6 +310,36 @@ export async function fetchImage(url: string, deps: MeasureDeps = {}): Promise<F
 }
 
 /**
+ * The sha256 of a picture's bytes, fetched once the way fetchImage fetches
+ * them (the same headers, so a host that answers by what is accepted
+ * answers the same), for telling one file from another (same-files.ts).
+ * Compared with fp_media_map.content_hash, which is the same digest of
+ * the bytes an import fetched. Null when the address does not answer with
+ * an image this time: no waits and no retries, since a run only asks
+ * whether it can skip a change, and an answer it cannot get skips nothing.
+ */
+export async function fileFingerprint(url: string, deps: { fetchImpl?: typeof fetch; timeoutMs?: number } = {}): Promise<string | null> {
+  try {
+    const res = await (deps.fetchImpl ?? fetch)(url, {
+      headers: { "user-agent": UA, accept: "image/*,*/*;q=0.5" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(deps.timeoutMs ?? 8_000),
+    });
+    const type = (res.headers.get("content-type") ?? "").toLowerCase();
+    const declared = Number(res.headers.get("content-length"));
+    if (!res.ok || (type && !type.startsWith("image/") && !type.startsWith("application/octet-stream")) || (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES)) {
+      await res.body?.cancel().catch(() => undefined);
+      return null;
+    }
+    const data = new Uint8Array(await res.arrayBuffer());
+    if (!data.byteLength || data.byteLength > MAX_IMAGE_BYTES) return null;
+    return createHash("sha256").update(data).digest("hex");
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The Wix file id a media-map row points at. Rows written before 2026-09-18
  * hold the whole dimension-less URI (wix:image://v1/<fileId>/<name>); a bare
  * id is accepted too. Null for anything else, so a corrupt row is re-imported
