@@ -35,11 +35,11 @@ import { extractHighland } from "@/lib/floorplans/extractors/highland";
 import { extractStanleyMartin } from "@/lib/floorplans/extractors/stanley-martin";
 import { extractArHomes } from "@/lib/floorplans/extractors/arhomes";
 import { extractCardel } from "@/lib/floorplans/extractors/cardel";
-import { comparedFields, fieldChanges, mergeForUpdate, splitOnItsOwn, withDescriptionFrom, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
+import { comparedFields, fieldChanges, mergeForUpdate, splitOnItsOwn, withDescriptionFrom, withPlainDescription, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { withKnownTours } from "@/lib/floorplans/tours";
 import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { refusedTours, withoutRefusedTours } from "@/lib/floorplans/tour-review";
-import { alreadyFiled, filedAsBefore, type FiledHome } from "@/lib/floorplans/home-identity";
+import { alreadyFiled, filedAsBefore, knownRecordsOf, type FiledHome } from "@/lib/floorplans/home-identity";
 import { linkQuickMoveIns, withLinksAsRead, withPlanPicturesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
@@ -57,6 +57,8 @@ import { runContext, withRunContext } from "@/lib/floorplans/run-context";
 import { runTotals } from "@/lib/floorplans/ai-usage";
 import { rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 import { listedPictures, picturesOnWix, unwrittenPictureChanges } from "@/lib/floorplans/pictures-on-wix";
+import { CONFIRMED_LABELS, confirmChanges, keepSightings, loadSightings, waitingValues, type Confirmation, type Sighting } from "@/lib/floorplans/confirm-reads";
+import { runFileBudget, withSameFilesAsRecord } from "@/lib/floorplans/same-files";
 
 type Extractor = (params: Record<string, unknown>) => Promise<NormalizedPlan[]>;
 
@@ -594,6 +596,8 @@ export async function preparePlans(
     deadline?: number;
     /** The records the connection already has, by plan key: their pictures' addresses are kept (withKnownSpellings). */
     known?: Map<string, Partial<NormalizedPlan> | null>;
+    /** The rows those records come from, so a home read under another name finds its own (knownRecordsOf). */
+    filed?: FiledHome[];
   } = {}
 ): Promise<NormalizedPlan[]> {
   const { site, community, builder } = scope;
@@ -658,31 +662,52 @@ export async function preparePlans(
   // plan's gallery is cleaned (quick-move-ins.ts, withPlanPicturesOnHomes).
   plans = withPlanPicturesOnHomes(plans);
 
+  // The record each plan is known by: the one its key names, or, for a home
+  // read under another name than it is filed by, the home it is
+  // (home-identity.ts, knownRecordsOf).
+  const knownAs = knownRecordsOf(plans, opts.known, opts.filed);
+
   // A photo the record already has keeps the address it has there, and so
   // what was learned about it (pictures.ts).
-  if (opts.known) plans = plans.map((p) => withKnownSpellings(p, opts.known!.get(p.planKey)));
+  if (opts.known) plans = plans.map((p, i) => withKnownSpellings(p, knownAs[i]));
+
+  // Photos the record already has keep the record's order, in every
+  // gallery, rather than the page's order that night (pictures.ts,
+  // inKnownOrder); a photo it does not have comes in where the page put
+  // it, and the page's lead stays in front. This used to hold only a
+  // gallery the rooms put in order, and a small one — five photos or fewer
+  // are never looked at (sort-queue.ts) — followed the page: David
+  // Weekley's Waterway and ICI's Egret VIII were proposed as their own
+  // photos in another order (2026-10-11, 10-13).
+  if (opts.known) plans = plans.map((p, i) => inKnownOrder(p, knownAs[i]));
 
   // Photos someone has already looked at are put in the site's order by
   // what they show (photo-rooms.ts); the builder's file names say nothing
   // for most of them. Only remembered answers are used here, so the order
   // is the same every run and no reordering is proposed night after night;
-  // the looking itself happens in the background (sort-queue.ts). A table
+  // the looking itself happens in the background (sort-queue.ts). Within a
+  // room the photos keep the order they came in, the record's. A table
   // that cannot be read costs the order, never the run.
   try {
     const looked = await rememberedRooms(plans.flatMap((p) => p.galleryImages));
-    // Within a room, the photos keep the record's order rather than the
-    // page's order that night (pictures.ts, inKnownOrder). A gallery that
-    // is not sorted by rooms keeps the page's order, as before.
     if (looked.size) {
-      plans = plans.map((p) => {
+      plans = plans.map((p, i) => {
         const sorted = withLookedAtRooms(p, looked);
-        if (sorted === p || !opts.known) return sorted;
-        return withLookedAtRooms(inKnownOrder(p, opts.known.get(p.planKey)), looked);
+        // The page's lead kept in front, where the rooms put another first,
+        // leads nothing: among its own room the record's order holds too,
+        // or a bedroom the page showed first would move within the
+        // bedrooms (D.R. Horton's Jordyn II, 2026-09-28).
+        if (!opts.known || sorted.galleryImages[0] === p.galleryImages[0]) return sorted;
+        return withLookedAtRooms(inKnownOrder(p, knownAs[i], { pageLead: false }), looked);
       });
     }
   } catch (err) {
     logger.warn("Remembered photo rooms could not be applied", { error: err instanceof Error ? err.message : String(err) });
   }
+
+  // A description's entities as the characters they stand for: the site
+  // shows "today&rsquo;s" as typed (diff.ts, withPlainDescription).
+  plans = plans.map(withPlainDescription);
 
   // A base plan whose builder writes no description gets one from its own
   // fields (Jeff, 2026-09-21: Stock Luxury Homes writes none at all), and
@@ -811,6 +836,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       plans = await preparePlans(plans, { site, community, builder }, {
         deadline: startedAt + RUN_PREPARE_MS,
         known: new Map((canonical ?? []).map((c) => [c.plan_key, c.record as Partial<NormalizedPlan> | null])),
+        filed: canonical ?? [],
       });
       // A tour link dropped as one that does not work (Lennar's own, since
       // 2026-09-25) gives way to the working tour with its number, where a
@@ -832,11 +858,19 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         .select("plan_key, score")
         .match({ site_id: site.id, community_id: community.id, builder_id: builder.id });
       const remembered = new Map((rememberedRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
+      // What earlier runs read and no run has read again yet (confirm-reads.ts);
+      // null when that cannot be read, and then nothing is held.
+      const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
+      const sightings = await loadSightings(scope);
+      // The fetches a run may make to tell one file from another (same-files.ts).
+      const fileBudget = runFileBudget(startedAt);
 
       let queued = 0;
       let held = 0;
+      let unconfirmed = 0;
 
-      for (const plan of plans) {
+      for (const read of plans) {
+        let plan = read;
         const existing = canonicalByKey.get(plan.planKey);
         if (!existing) {
           // A new plan or home with no price waits out of the queue until
@@ -865,6 +899,9 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
           .update({ last_seen_at: new Date().toISOString() })
           .eq("id", existing.id);
         const current = (existing.record ?? {}) as CanonicalRecord;
+        // A picture at a new address that is byte for byte the file the
+        // record has is the record's picture (same-files.ts).
+        plan = await withSameFilesAsRecord(current, plan, site.id, fileBudget);
         // A field whose change was rejected keeps its value in the record any
         // other approved change writes (mergeForUpdate).
         const ids = { siteId: site.id, communityId: community.id, builderId: builder.id, planKey: plan.planKey, changeType: "update" as const };
@@ -873,23 +910,44 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         for (const change of changes) {
           if (await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue })) rejected.add(change.field);
         }
-        const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, rejected), remembered), plan);
+        // A description, photos or drawings read differently from the record
+        // wait for a second run to read them the same way (confirm-reads.ts):
+        // held, they are neither queued nor written with another change.
+        const open = changes.filter((c) => !rejected.has(c.field));
+        const compared = comparedFields(current, plan);
+        const planIds = { ...scope, plan_key: plan.planKey };
+        const seen = sightings?.get(plan.planKey) ?? new Map<string, Sighting>();
+        const waiting = open.some((c) => CONFIRMED_LABELS.has(c.label)) ? await waitingValues(planIds) : new Map<string, string | null>();
+        const unheld: Confirmation = { confirmed: open, held: [], remember: [], interrupted: [], forget: [] };
+        let gate: Confirmation = sightings ? confirmChanges(open, compared, seen, waiting, runId) : unheld;
+        if (gate.remember.length || gate.interrupted.length || gate.forget.length) {
+          // What would be held but cannot be remembered is queued now.
+          if (!(await keepSightings(planIds, gate, runId))) gate = unheld;
+        }
+        unconfirmed += gate.held.length;
+        const heldLabels = new Set(gate.held.map((c) => c.label));
+        const kept = new Set<keyof NormalizedPlan>([...rejected, ...gate.held.map((c) => c.field)]);
+        const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, kept), remembered), plan);
         // Approved without a review, and written on their own: a quick move-in's
         // description, and a price that moved by a fifth or less when it is all
-        // that changed (splitOnItsOwn).
-        const split = splitOnItsOwn(current, plan, changes.filter((c) => !rejected.has(c.field)), Boolean(existing.wix_record_id));
-        const onItsOwn = [...split.onItsOwn];
-        const reviewed = [...split.reviewed];
+        // that changed (splitOnItsOwn). Whether it is all is decided on what
+        // the run read, held or not: a price that moved with photos held for a
+        // second reading goes to a person, as it did.
+        const split = splitOnItsOwn(current, plan, open, Boolean(existing.wix_record_id));
+        const onItsOwn = split.onItsOwn.filter((c) => !heldLabels.has(c.label));
+        const reviewed = split.reviewed.filter((c) => !heldLabels.has(c.label));
         // Pictures the plan lists that never reached its row (pictures-on-wix.ts):
         // proposed so that approving writes the plan whole. Before the outdated
         // ones are withdrawn, so one still waiting is kept, not queued afresh.
         if (existing.wix_record_id) {
-          const proposedLabels = new Set([...onItsOwn, ...reviewed].map((c) => c.label));
+          const proposedLabels = new Set([...onItsOwn, ...reviewed, ...gate.held].map((c) => c.label));
           for (const change of unwrittenPictureChanges(merged, await picturesOnWix(site.id, listedPictures(merged)), proposedLabels)) {
             if (!(await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue }))) reviewed.push(change);
           }
         }
-        await withdrawOutdated(ids, comparedFields(current, plan), reviewed, current);
+        // A change held for a second reading still differs from the record:
+        // what is waiting for it in the queue stays.
+        await withdrawOutdated(ids, compared, [...reviewed, ...gate.held], current);
         // Nor with anything of the plan's still waiting for a person from an
         // earlier run: then the price waits with it.
         const price = onItsOwn.find((c) => c.field === "priceDisplay");
@@ -948,7 +1006,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       // A shortfall is the usual sign of a builder page that changed shape, so
       // it is recorded as a failure and shows up wherever failures do (the
       // Floor Plans banner, Builder Connections, the digest).
-      const heldNote = held ? `, ${held} new held until priced` : "";
+      const heldNote = `${held ? `, ${held} new held until priced` : ""}${unconfirmed ? `, ${unconfirmed} waiting for a second reading` : ""}`;
       const detail = coverage.ok
         ? `ok: ${plans.length} plans, ${queued} changes queued${heldNote}`
         : `${coverage.detail}; ${queued} changes queued${heldNote}`;

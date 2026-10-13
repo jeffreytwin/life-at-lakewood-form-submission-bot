@@ -132,7 +132,7 @@ export const EXTRACT_TOOL: Anthropic.Tool = {
             seriesOfPlans: { type: "boolean", description: "True when this entry is not one plan but a group of plans with a page of its own — a series, collection or lot width (\"Seaire 40'\", \"The Townhomes\"), usually showing its own counts of plans and homes (\"3 Plans\", \"9 Homes\") and ranges of sizes and prices. Report it once, with its page link in sourceUrl; its plans are read from that page" },
             relatedPlanName: { type: "string", description: "For a quick move-in: the name of the floor plan it is built from, where the page gives one — an inventory listing usually prints it above the address. Where the page gives a plan both a code and a name (\"Plan B929 The Waterway\"), the name (\"The Waterway\")" },
             sourceUrl: { type: "string", description: "Absolute URL of the plan's detail page if linked" },
-            description: { type: "string", description: "The builder's own description of the plan, as written; omit if the page gives none" },
+            description: { type: "string", description: "The builder's own description of the plan, copied exactly as the page writes it, word for word, nothing reworded or shortened; omit if the page gives none" },
             virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour / 3D walkthrough for this plan; omit if none" },
             photoImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of photo/rendering images for this plan, in display order" },
             blueprintImages: { type: "array", items: { type: "string" }, description: "Absolute URLs of floor plan DRAWINGS/blueprints for this plan (not photos)" },
@@ -681,7 +681,11 @@ export const PLAN_PAGE_TOOL: Anthropic.Tool = {
       beds: { type: "string", description: "Bedrooms, if the page gives them" },
       baths: { type: "string", description: "Bathrooms, if the page gives them" },
       sqft: { type: "number", description: "Living (heated) square footage, if the page gives it, never a total or under-roof figure given beside it; where the living area itself is a range such as '2719 - 2740', the larger figure" },
-      description: { type: "string", description: "The builder's own prose about the plan — sentences. Omit it if the page only prints a spec line of rooms and counts" },
+      description: {
+        type: "string",
+        description:
+          "The builder's own prose about the plan — sentences — copied exactly as the page writes it: word for word, every sentence in the page's order, nothing reworded, shortened, summarized or left out. Omit it if the page only prints a spec line of rooms and counts",
+      },
       virtualTourUrl: { type: "string", description: "Absolute URL of a virtual tour, if one is linked" },
       photoImages: {
         type: "array",

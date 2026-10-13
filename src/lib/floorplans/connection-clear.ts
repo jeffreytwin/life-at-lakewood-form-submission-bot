@@ -16,6 +16,7 @@ import { logger } from "@/lib/shared/logger";
 import { removeItem, WixApiError } from "@/lib/wix/client";
 import { releaseConnectionMedia } from "@/lib/floorplans/media-cleanup";
 import { forgetReads } from "@/lib/floorplans/page-reads";
+import { forgetSightings } from "@/lib/floorplans/confirm-reads";
 import { failedAt as failed } from "@/lib/shared/describe-error";
 
 export interface ClearedConnection {
@@ -124,6 +125,9 @@ export async function clearConnection(id: string): Promise<ClearOutcome> {
   if (scoresError) throw failed("clearing its scores", scoresError);
   const { error: standInsError } = await supabase.from("fp_stand_in_plans").delete().match(scope);
   if (standInsError) throw failed("clearing its stand-in rules", standInsError);
+  // What its runs were holding for a second reading; one that cannot be
+  // forgotten holds up nothing (confirm-reads.ts).
+  await forgetSightings(scope);
 
   // Every queued change, not just the first page of them: what is left
   // behind would hold up the plans it names.

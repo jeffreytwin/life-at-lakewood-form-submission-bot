@@ -125,16 +125,26 @@ export function primaryReplaced(live: Partial<NormalizedPlan> | null | undefined
  * 14, 10, 11, 12 one night and 10, 11, 12, 14 another, and each change of
  * mind was proposed as the photos changed, the same photos in the same
  * rooms (Jeff, 2026-09-28). Given the record's order, the rooms decide and
- * nothing else moves. Pure.
+ * nothing else moves. Only the page's lead keeps its place in front, a
+ * photo the record has or not: it is the one picture a home's row shows,
+ * and the one a plan opens with, and a builder that puts another in front
+ * has changed what the site should show (2143 Sylvester Palm Lane,
+ * 2026-09-28; primaryReplaced). Where the rooms put it further back, it
+ * leads nothing, and is ordered as the rest are (pageLead false;
+ * preparePlans, sync.ts). Pure.
  */
-export function inKnownOrder(plan: NormalizedPlan, current: Partial<NormalizedPlan> | null | undefined): NormalizedPlan {
+export function inKnownOrder(
+  plan: NormalizedPlan,
+  current: Partial<NormalizedPlan> | null | undefined,
+  { pageLead = true }: { pageLead?: boolean } = {}
+): NormalizedPlan {
   const known = (Array.isArray(current?.galleryImages) ? current.galleryImages : []).filter((u): u is string => typeof u === "string");
   if (!known.length || plan.galleryImages.length < 2) return plan;
   const at = new Map(known.map((url, i) => [url, i] as const));
   let before = -1;
   let step = 0;
   const keyed = plan.galleryImages.map((url, i) => {
-    const place = at.get(url);
+    const place = pageLead && i === 0 && at.has(url) ? -1 : at.get(url);
     if (place !== undefined) {
       before = place;
       step = 0;

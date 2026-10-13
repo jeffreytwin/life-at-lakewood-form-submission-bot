@@ -51,6 +51,102 @@ const NUMERIC_FIELDS = new Set<keyof NormalizedPlan>(["sqft"]);
 /** Fields too long to show or match whole; their queue values are a lead-in plus a digest, like galleries. */
 const LONG_TEXT_FIELDS = new Set<keyof NormalizedPlan>(["description"]);
 
+/** What the entities a page can leave in its text stand for: Starlight's "&rsquo;" and "&mdash;" came through as written one night and as the characters the next (2026-10-08). */
+const ENTITIES: Record<string, string> = {
+  amp: "&",
+  quot: '"',
+  apos: "'",
+  lt: "<",
+  gt: ">",
+  nbsp: " ",
+  ensp: " ",
+  emsp: " ",
+  thinsp: " ",
+  shy: "",
+  rsquo: "’",
+  lsquo: "‘",
+  rdquo: "”",
+  ldquo: "“",
+  laquo: "«",
+  raquo: "»",
+  mdash: "—",
+  ndash: "–",
+  hellip: "…",
+  middot: "·",
+  bull: "•",
+  times: "×",
+  reg: "®",
+  trade: "™",
+  copy: "©",
+  deg: "°",
+  sup2: "²",
+  frac12: "½",
+  frac14: "¼",
+  frac34: "¾",
+  cent: "¢",
+  eacute: "é",
+  ntilde: "ñ",
+};
+
+/**
+ * An entity left in a text: "&rsquo;", "&#8217;", "&#x2019;", and "and#8217;",
+ * as a reading of Neal Signature's Kingfisher 2 wrote "owners&#8217;" with
+ * its ampersand spelled out (2026-10-13).
+ */
+const ENTITY = /(&|and)(#x[0-9a-f]+|#\d+);|&([a-z][a-z0-9]*);/gi;
+
+/**
+ * The character a numeric entity stands for, where it stands for one a
+ * text would hold: no control characters, and spelled out ("and#8217;")
+ * only a quote, an ampersand or a typographic character, so "Brand#1;"
+ * stays as it is.
+ */
+function entityCharacter(prefix: string, number: string): string | null {
+  const code = /^#x/i.test(number) ? parseInt(number.slice(2), 16) : parseInt(number.slice(1), 10);
+  if (!Number.isInteger(code) || code > 0x10ffff) return null;
+  if (code < 32 && code !== 9 && code !== 10 && code !== 13) return null;
+  if (code >= 127 && code < 160) return null;
+  if (prefix !== "&" && code < 160 && code !== 34 && code !== 38 && code !== 39) return null;
+  return String.fromCodePoint(code);
+}
+
+/**
+ * A text with its entities as the characters they stand for, those written
+ * twice over ("&amp;rsquo;") too. Pure; exported for tests.
+ */
+export function withEntities(text: string): string {
+  let out = text;
+  for (let pass = 0; pass < 3; pass++) {
+    const next = out.replace(ENTITY, (whole, prefix: string | undefined, number: string | undefined, name: string | undefined) =>
+      name ? ENTITIES[name.toLowerCase()] ?? whole : entityCharacter(prefix!, number!) ?? whole
+    );
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
+/** Whether a text still shows an entity a page left in it (withEntities): the site would show it as typed. Pure. */
+export const showsEntities = (text: string | null | undefined): boolean => withEntities(String(text ?? "")) !== String(text ?? "");
+
+/**
+ * The plan with entities its description was read with written as the
+ * characters they stand for. The site's description is plain text, and
+ * shows "today&rsquo;s" as typed: DRB's Eider and eleven more read so
+ * (2026-10-13), and a page copied word for word (claude-extract.ts) can
+ * carry them too. Pure.
+ */
+export function withPlainDescription(plan: NormalizedPlan): NormalizedPlan {
+  const original = plan.raw?.descriptionOriginal;
+  const coded = showsEntities(plan.description) || (typeof original === "string" && showsEntities(original));
+  if (!coded) return plan;
+  return {
+    ...plan,
+    description: typeof plan.description === "string" ? withEntities(plan.description) : plan.description,
+    ...(typeof original === "string" ? { raw: { ...plan.raw, descriptionOriginal: withEntities(original) } } : {}),
+  };
+}
+
 /**
  * A text as its words: the same description read again with a curly
  * apostrophe for a straight one, or "The Cypress" for "the Cypress", is
@@ -58,7 +154,7 @@ const LONG_TEXT_FIELDS = new Set<keyof NormalizedPlan>(["description"]);
  * 2026-09-23).
  */
 const wordsOf = (value: unknown): string =>
-  String(value ?? "")
+  withEntities(String(value ?? ""))
     .replace(/[\u2018\u2019\u201B\u0060\u00B4]/g, "'")
     .replace(/[\u201C\u201D\u201F]/g, '"')
     .replace(/[\u2013\u2014]/g, "-")
@@ -95,15 +191,147 @@ export function readsAsProse(text: string | null | undefined): boolean {
  * "Come by and visit Boca Royale… Call today to schedule a private tour."
  * at the end, and a full stop comes and goes (Jeff, 2026-09-25). Either
  * way is the same description: one reading holding the other whole, most
- * of it, is not a change. Exported for tests.
+ * of it, is not a change. `a` is the record's description, `b` the run's.
+ * Exported for tests.
  */
 export function sameDescription(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (sameWords(a, b)) return true;
+  // Nor are a contact line or a line of fine print, wherever they stand
+  // (aboutThePlan), nor the same clauses in another order: what is left
+  // of each still has to say the same thing, word for word, all of it.
+  const x = aboutThePlan(a);
+  const y = aboutThePlan(b);
+  if (!x || !y) return false;
+  return bareWords(x) === bareWords(y) || sameClauses(x, y);
+}
+
+/** The same words, or one reading holding the other whole, most of it (sameDescription): `a` the record's, `b` the run's. */
+function sameWords(a: string | null | undefined, b: string | null | undefined): boolean {
   const x = bareWords(a);
   const y = bareWords(b);
   if (x === y) return true;
   const [shorter, longer] = x.length <= y.length ? [x, y] : [y, x];
   const few = wordCount(shorter);
-  return few >= 12 && few >= 0.5 * wordCount(longer) && ` ${longer} `.includes(` ${shorter} `);
+  if (few < 12 || few < 0.5 * wordCount(longer)) return false;
+  if (` ${longer} `.includes(` ${shorter} `)) return true;
+  // The run's reading cut off in a word ("and a club ro", Neal Signature's
+  // Seaside 2, 2026-10-13) holds the record's as far as it goes. Only the
+  // run's, so a record that was cut off is put right; and only in a word
+  // of letters with no full stop after it, so "Feb 1" is not "Feb 15" nor
+  // "Ready in 3." "Ready in 35 days."
+  return shorter === y && x !== y && /(?:^|\s)\p{L}+$/u.test(String(b ?? "").trim()) && ` ${longer} `.includes(` ${shorter}`);
+}
+
+/**
+ * The same clauses, each word for word, in whatever order: KB's highlights
+ * as a list one night and the same highlights in another order the next.
+ * A clause that changed by a word, or a number, still makes the texts
+ * differ ("3 bedrooms, 2 baths" is not "2 bedrooms, 3 baths"). Only for a
+ * text with one list at most: under two headings ("Included: …
+ * Optional: …", "First floor - … Second floor - …") a room that moved
+ * from one to the other is a change, so those are compared as they stand.
+ */
+function sameClauses(a: string, b: string): boolean {
+  if (headings(a) > 1 || headings(b) > 1) return false;
+  // A comma in "3,000" and a point in "2.5" are no breaks.
+  const clauses = (text: string) =>
+    withEntities(text)
+      .split(/[;:!?\n•·]+|,(?!\d{3}\b)|\.(?!\d)|\s[-–—|]\s/)
+      .map((clause) => bareWords(clause))
+      .filter(Boolean)
+      .sort();
+  const x = clauses(a);
+  const y = clauses(b);
+  return x.length > 1 && x.length === y.length && x.every((clause, i) => clause === y[i]);
+}
+
+/** The lists a text heads with a colon or a spaced dash; the colon in "10:00" heads none. */
+const headings = (text: string): number => (withEntities(text).match(/(?<!\d):|:(?!\d)|\s[-–—]\s/g) ?? []).length;
+
+/**
+ * A sentence that asks the reader to get in touch, come by or book a
+ * tour, rather than saying anything about the plan. Builders end, and
+ * sometimes break, a description with one, and a page gives it on one
+ * read and not the next: M/I's Interlude came with "Learn more about this
+ * impressive plan by contacting us today to schedule your tour!" in its
+ * third sentence one night and without it the next, and since its "us"
+ * has the whole description reworded (description.ts), the two read
+ * differently all the way through and each was proposed over the other,
+ * six days running (Jeff, 2026-10-13).
+ */
+const ASKS: RegExp[] = [
+  /\b(?:contact(?:ing)?|call(?:ing)?(?! (?:it )?home\b)|e-?mail(?:ing)?|text(?:ing)?|reach(?:ing)? out|chat with|speak(?:ing)? (?:to|with)|talk(?:ing)? (?:to|with))\b[^.!?]*\b(?:us|today|now|team|sales|agents?|consultants?|counselors?|specialists?|advisors?|representatives?|guides?|experts?|office|information|info|details|learn|schedule|book|appointments?|tours?)\b/i,
+  /\b(?:schedule|book|request|arrange|set up|reserve)\b[^.!?]*\b(?:tours?|appointments?|visits?|showings?|consultations?|walk-?throughs?)\b/i,
+  /\b(?:come|stop|swing|drop) (?:on )?by\b|\bstop in\b|\bcome (?:and )?(?:see|visit|tour)\b|\bcome out (?:and|to)\b/i,
+  /\bvisit\b[^.!?]*\b(?:today|us|our (?:model|sales|welcome|information|design)|the (?:model|sales|welcome|information|design) (?:home|center|office|studio)|model homes?|sales (?:center|office))\b/i,
+  /\b(?:learn|find out|hear) (?:more|how|about)\b/i,
+  /\bask (?:about|us|our)\b/i,
+  /\b(?:rsvp|sign up|register (?:now|today|for))\b/i,
+  /\b(?:don'?t miss|won'?t last)\b/i,
+];
+
+/**
+ * A line of fine print: what a price does not include, that the pictures
+ * are only illustrations, that anything may change. Neal's White Star
+ * swapped "Come by and explore Boca Royale…" for "*Base price does not
+ * include homesite premium or design options" (2026-10-08): neither says
+ * anything about the plan.
+ */
+const FINE_PRINT: RegExp[] = [
+  // "*Base price…", not a list's "* 4 bedrooms".
+  /^\s*(?:\*(?=\S)|disclaimer\b|note:)/i,
+  /\b(?:prices?|pricing)\b[^.!?]*\b(?:subject to change|(?:does|do|may) not include|excludes?|excluding|exclusive of|without notice)\b/i,
+  /\bsubject to change\b|\bwithout notice\b/i,
+  /\b(?:photos?|photographs?|pictures|images?|renderings?|illustrations?|imagery)\b[^.!?]*\b(?:illustrative|representative|for illustration|artist'?s?|may (?:show|include|depict|differ|vary)|for display)\b/i,
+  /\b(?:square footages?|dimensions|measurements)\b[^.!?]*\b(?:approximate|may vary)\b/i,
+  /\bhomesites?\b[^.!?]*\b(?:premiums?|additional cost)\b|\bnot (?:reflected|included) in the (?:base )?price\b/i,
+  /\bnot all (?:features|options|plans|elevations)\b|\bequal housing\b/i,
+];
+
+/** Whether a sentence asks the reader to get in touch or is fine print (ASKS, FINE_PRINT). Pure; exported for tests. */
+export function asksOrFinePrint(sentence: string): boolean {
+  return ASKS.some((ask) => ask.test(sentence)) || FINE_PRINT.some((line) => line.test(sentence));
+}
+
+/** A phone number or a date, which a contact line or fine print may carry without saying anything about the plan. */
+const NOT_THE_PLAN: RegExp[] = [
+  /\(?\b\d{3}\)?[-.\s]?\d{3}[-.\s]\d{4}\b/g,
+  /\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/g,
+  /\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,?\s+\d{4})?\b/gi,
+  /(?:©|\(c\)|\bcopyright)\s*\d{4}\b/gi,
+];
+
+/** A room, or a part of a home, as a description names it. */
+const ROOMS =
+  /\b(?:bed(?:room)?s?|bath(?:room)?s?|rooms?|garages?|kitchens?|lanais?|pools?|spas?|porch(?:es)?|patios?|dens?|(?<!(?:sales|welcome|information|leasing) )offices?|study|studies|lofts?|flex|bonus|suites?|closets?|pantr(?:y|ies)|laundry|dining|living (?:areas?|spaces?)|foyers?|islands?|courtyards?|decks?|balcon(?:y|ies)|fireplaces?|showers?|tubs?|stor(?:y|ies)|(?:first|second|third|ground|main|upper|lower) (?:floors?|levels?)|staircases?|stairs|elevators?|yards?|backyards?|screened|cabanas?|casitas?|retreats?|lots?|views|wet bars?|countertops?|cabinet(?:s|ry)?|appliances?|flooring|ceilings?|windows?)\b/i;
+
+/**
+ * Whether a sentence says something only the plan's own sentences say: a
+ * number (a phone number or a date aside) or a room. Such a sentence is
+ * never dropped as an ask or fine print, whatever else it says: "the
+ * perfect place to call home, with 4 bedrooms and a home office", "Don't
+ * miss the oversized lanai" and "Learn how the flex room converts to a 5th
+ * bedroom" describe the plan, and a change in them is a change. Pure;
+ * exported for tests.
+ */
+export function carriesPlanFacts(sentence: string): boolean {
+  const rest = NOT_THE_PLAN.reduce((text, pattern) => text.replace(pattern, " "), sentence);
+  return /\d/.test(rest) || ROOMS.test(sentence);
+}
+
+/**
+ * What a description says about the plan: its sentences without the asks
+ * and the fine print (asksOrFinePrint) that name no number and no room
+ * (carriesPlanFacts), its entities as characters. Every other sentence is
+ * kept as it is, so a change anywhere in what the plan is still reads as a
+ * change. "" for a text that is all asks. Pure; exported for tests.
+ */
+export function aboutThePlan(text: string | null | undefined): string {
+  return withEntities(String(text ?? ""))
+    .split(/\s*[\r\n]+\s*|(?<=[.!?]["')\]]?)\s+(?=["'(\[*]?[A-Z0-9])/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence && !(asksOrFinePrint(sentence) && !carriesPlanFacts(sentence)))
+    .join(" ");
 }
 
 /** What the builder wrote: the text before it was reworded in the third person (description.ts), where it was. */
@@ -149,6 +377,12 @@ export function descriptionChanged(current: NormalizedPlan, plan: NormalizedPlan
   if (looksLikeSpecList(next)) return false;
   if (!before) return true;
   if (readsAsProse(before) && !readsAsProse(next)) return false;
+  // The same words without the entities the site shows as typed
+  // ("today&rsquo;s") put them right: a change, once (withPlainDescription).
+  // Reworded, the builder's words are the same ones.
+  if (showsEntities(before) && !showsEntities(next) && (sameDescription(before, next) || sameDescription(builderText(current), builderText(plan)))) {
+    return !speaksAsOwner(next);
+  }
   const was = [before, builderText(current)];
   const now = [next, builderText(plan)];
   if (was.some((a) => now.some((b) => sameDescription(a, b)))) return false;
@@ -304,7 +538,12 @@ export function mergeForUpdate(
   // Nor a description or a tour the run read differently, or not at all,
   // when that is not a change (descriptionChanged, tourChanged): the record
   // keeps its own, and the site is not rewritten with a variant of it.
-  if (!overrides.has("description") && !(weWrote(current) && weWrote(plan)) && !descriptionChanged(current, plan)) {
+  // A description kept as it stands (a person's edit, a rejection, or one
+  // waiting for a second reading, confirm-reads.ts) keeps the builder's
+  // words it was read from with it: written with the run's, the next run
+  // would compare the builder's words with themselves and never propose
+  // the description it was holding.
+  if (overrides.has("description") || (!(weWrote(current) && weWrote(plan)) && !descriptionChanged(current, plan))) {
     merged.description = current.description ?? null;
     const original = current.raw?.descriptionOriginal;
     const raw = { ...((merged.raw as Record<string, unknown> | undefined) ?? {}) };
@@ -504,7 +743,8 @@ export function fieldChanges(current: CanonicalRecord, plan: NormalizedPlan): Fi
     if (String(oldVal ?? "") === String(newVal ?? "")) continue;
     if (field === "description" && !descriptionChanged(current, plan)) continue;
     if (field === "virtualTourUrl" && !tourChanged(current, plan)) continue;
-    if (LONG_TEXT_FIELDS.has(field) && wordsOf(oldVal) === wordsOf(newVal)) continue;
+    // The same words are no change, unless they put right entities the site shows as typed (descriptionChanged).
+    if (LONG_TEXT_FIELDS.has(field) && wordsOf(oldVal) === wordsOf(newVal) && !(showsEntities(String(oldVal ?? "")) && !showsEntities(String(newVal ?? "")))) continue;
     const show = LONG_TEXT_FIELDS.has(field)
       ? describeText
       : NUMERIC_FIELDS.has(field)

@@ -32,6 +32,7 @@ import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { labelPhotos, rememberedRooms, withLookedAtRooms } from "@/lib/floorplans/photo-rooms";
 import { identicalPhotos, samePhotos, withoutDuplicates } from "@/lib/floorplans/photo-duplicates";
+import { galleryOf, samePictures, type CanonicalRecord } from "@/lib/floorplans/diff";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 /** Pictures asked about at once here, where nobody is waiting on each answer (the Sort button asks three at a time). */
@@ -50,6 +51,72 @@ interface QueuedRow {
   id: string;
   updated_at: string | null;
   proposed_record: NormalizedPlan | null;
+  change_type: string;
+  field_changed: string | null;
+  site_id: string;
+  community_id: string;
+  builder_id: string;
+  plan_key: string;
+}
+
+/**
+ * Whether a waiting photos change would write the photos the live plan
+ * shows already: the same pictures in the same order (diff.ts,
+ * samePictures), and for a home its lead, the one picture its row shows.
+ * Pure; exported for tests.
+ */
+export function writesWhatIsLive(live: Partial<NormalizedPlan> | null | undefined, proposed: NormalizedPlan): boolean {
+  if (!live) return false;
+  const before = galleryOf(live as CanonicalRecord, "galleryImages");
+  const after = galleryOf(proposed as CanonicalRecord, "galleryImages");
+  if (!before.length || !after.length) return false;
+  const home = proposed.quickMoveIn === true;
+  return samePictures(home ? before.slice(0, 1) : before, home ? after.slice(0, 1) : after);
+}
+
+/**
+ * Whether checking a waiting photos change for copies, and sorting it, left
+ * it writing what the live plan shows: a change that was one until this
+ * tick and is nothing now. Neal's 17810 Sylvester Drive came up as
+ * "1 photo → 1 photo" four times between Oct 6 and Oct 12: the builder had
+ * put up its rendering again under a new name, the copy check took the new
+ * one out and put the original back in front, and every approval wrote the
+ * photo that was already there (Jeff, 2026-10-13: "nothing in the UI
+ * suggests that the photo is any different"). A change that wrote what is
+ * live before the tick touched it — a gallery written whole again because
+ * Wix never had a picture of it (pictures-on-wix.ts) — is left be. Pure;
+ * exported for tests.
+ */
+export function cleanedToNothing(live: Partial<NormalizedPlan> | null | undefined, queued: NormalizedPlan, cleaned: NormalizedPlan): boolean {
+  return !writesWhatIsLive(live, queued) && writesWhatIsLive(live, cleaned);
+}
+
+/** The live plan a waiting change is for. */
+async function livePlanOf(row: QueuedRow): Promise<{ id: string; record: NormalizedPlan } | null> {
+  const { data, error } = await supabase
+    .from("fp_floor_plans")
+    .select("id, record")
+    .match({ site_id: row.site_id, community_id: row.community_id, builder_id: row.builder_id, plan_key: row.plan_key })
+    .is("removed_at", null)
+    .maybeSingle();
+  if (error || !data?.record) return null;
+  return data as { id: string; record: NormalizedPlan };
+}
+
+/**
+ * The copies a withdrawn change's check took out, remembered with the live
+ * plan, so the next run spells them as the photo they copy and proposes
+ * nothing for them (pictures.ts, withKnownSpellings). Added in place
+ * (fp_remember_copies, migration 080): nothing else in the record is
+ * written, so a change to it made meanwhile stands. Not remembered, the
+ * next run proposes the change again and this check withdraws it again.
+ */
+async function rememberCopies(live: { id: string; record: NormalizedPlan }, copies: Record<string, string> | undefined): Promise<void> {
+  const known = live.record.copiesOf ?? {};
+  const added = Object.entries(copies ?? {}).filter(([copy, original]) => known[copy] !== original);
+  if (!added.length) return;
+  const { error } = await supabase.rpc("fp_remember_copies", { plan_id: live.id, copies: Object.fromEntries(added) });
+  if (error) logger.warn("Copies taken out could not be remembered with the plan", { id: live.id, error: error.message });
 }
 
 /**
@@ -122,11 +189,11 @@ export function handsOff(record: NormalizedPlan | null): record is NormalizedPla
   return !(record.userEditedFields ?? []).includes("galleryImages");
 }
 
-export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number; sorted: number; checked: number; removed: number }> {
+export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number; sorted: number; checked: number; removed: number; withdrawn: number }> {
   const started = Date.now();
   const { data, error } = await supabase
     .from("fp_pending_changes")
-    .select("id, updated_at, proposed_record")
+    .select("id, updated_at, proposed_record, change_type, field_changed, site_id, community_id, builder_id, plan_key")
     .eq("status", "pending")
     .in("change_type", ["add", "update"])
     .not("proposed_record", "is", null)
@@ -134,7 +201,7 @@ export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number
     .limit(300);
   if (error) throw new Error(`queued changes: ${error.message}`);
   const rows = ((data ?? []) as QueuedRow[]).filter((r) => wantsSorting(r.proposed_record) || wantsCopiesChecked(r.proposed_record));
-  if (!rows.length) return { rows: 0, looked: 0, sorted: 0, checked: 0, removed: 0 };
+  if (!rows.length) return { rows: 0, looked: 0, sorted: 0, checked: 0, removed: 0, withdrawn: 0 };
 
   // The pictures nobody has looked at, oldest change first, so the
   // galleries finish one after another; looked at a wave at a time while
@@ -159,8 +226,10 @@ export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number
   let sorted = 0;
   let checked = 0;
   let removed = 0;
+  let withdrawn = 0;
   for (const row of rows) {
-    let record = row.proposed_record!;
+    const queued = row.proposed_record!;
+    let record = queued;
     let copies: string[] | null = null;
     let reordered = false;
     if (wantsCopiesChecked(record) && Date.now() - started < CHECK_COPIES_UNTIL_MS) {
@@ -182,6 +251,27 @@ export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number
       reordered = true;
     }
     if (!copies && !reordered) continue;
+    // A photos change the check and the sort left writing what the plan
+    // shows already is no change: it leaves the queue rather than wait for
+    // an approval that writes nothing, and the copies it found stay with
+    // the plan (cleanedToNothing). Only if the row has not changed since it
+    // was read, so a person working on it wins.
+    if (row.change_type === "update" && row.field_changed === "photos") {
+      const live = await livePlanOf(row);
+      if (live && cleanedToNothing(live.record, queued, record)) {
+        let withdraw = supabase.from("fp_pending_changes").delete().eq("id", row.id).eq("status", "pending");
+        withdraw = row.updated_at ? withdraw.eq("updated_at", row.updated_at) : withdraw.is("updated_at", null);
+        const { data: gone, error: withdrawError } = await withdraw.select("id");
+        if (withdrawError) {
+          logger.warn("A photos change that writes nothing could not be withdrawn", { id: row.id, error: withdrawError.message });
+        } else if (gone?.length) {
+          await rememberCopies(live, record.copiesOf);
+          withdrawn += 1;
+          logger.info("Withdrew a photos change that would write the photos the plan shows already", { id: row.id, planKey: row.plan_key });
+          continue;
+        }
+      }
+    }
     let update = supabase
       .from("fp_pending_changes")
       .update({ proposed_record: record, updated_at: new Date().toISOString() })
@@ -198,6 +288,6 @@ export async function sortQueuedPhotos(): Promise<{ rows: number; looked: number
       removed += copies.length;
     }
   }
-  logger.info("Waiting galleries sorted by what their photos show", { rows: rows.length, fresh: fresh.length, looked, sorted, checked, removed });
-  return { rows: rows.length, looked, sorted, checked, removed };
+  logger.info("Waiting galleries sorted by what their photos show", { rows: rows.length, fresh: fresh.length, looked, sorted, checked, removed, withdrawn });
+  return { rows: rows.length, looked, sorted, checked, removed, withdrawn };
 }
