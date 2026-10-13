@@ -775,13 +775,21 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
         return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
       }
-      const { data: canonical } = await supabase
+      const { data: canonical, error: canonicalError } = await supabase
         .from("fp_floor_plans")
         .select("id, plan_key, wix_record_id, record, last_seen_at, created_at")
         .eq("site_id", site.id)
         .eq("community_id", community.id)
         .eq("builder_id", builder.id)
         .is("removed_at", null);
+      // Known-plans guard: if the plans already on file cannot be read, stop.
+      // Diffing against an empty list would queue every plan as a new add,
+      // duplicating plans that are already in Wix (Monarch Acres, 2026-10-13).
+      if (canonicalError || !canonical) {
+        const detail = `could not read known plans: ${canonicalError?.message ?? "no data returned"}`;
+        await setRunStatus(conn.id, `error: ${detail}`, null, true, await spentOn(runId));
+        return { status: "failed", detail };
+      }
       const canonicalByKey = new Map((canonical ?? []).map((c) => [c.plan_key, c]));
       // A plan sold in two series is named for its series, every night alike,
       // and so is the plan its homes are built from (series-labels.ts). A
