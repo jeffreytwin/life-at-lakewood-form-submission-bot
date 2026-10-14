@@ -27,6 +27,7 @@
 import { createHash } from "node:crypto";
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
+import { readsAfresh } from "@/lib/floorplans/run-context";
 
 export type ReadKind = "plan" | "list";
 
@@ -118,7 +119,10 @@ export interface RememberedRead<T> {
 }
 
 /** What was read off this page before, where it still answers for the page (reusable); null otherwise. */
-export async function rememberedRead<T>(url: string, kind: ReadKind, digest: string, variant: string): Promise<RememberedRead<T> | null> {
+export async function rememberedRead<T>(url: string, kind: ReadKind, digest: string, variant: string, planKey?: string | null): Promise<RememberedRead<T> | null> {
+  // A second reading reads the page again whatever was remembered: the
+  // point is a fresh reading to set beside the first (run-context.ts).
+  if (readsAfresh(url, kind, planKey)) return null;
   try {
     const { data, error } = await supabase
       .from("fp_page_reads")

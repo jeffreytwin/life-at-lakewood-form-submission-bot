@@ -16,6 +16,13 @@ export interface RunContext {
   runId?: string | null;
   builder?: string | null;
   community?: string | null;
+  /**
+   * A run made to read again what an earlier run of the same night held
+   * for a second reading (confirm-reads.ts): the pages of the plans held
+   * are read afresh rather than from what was remembered of them
+   * (page-reads.ts), and only those plans are compared (sync.ts).
+   */
+  secondReading?: { freshPages: ReadonlySet<string>; freshPlans: ReadonlySet<string> };
 }
 
 const storage = new AsyncLocalStorage<RunContext>();
@@ -28,4 +35,18 @@ export function withRunContext<T>(ctx: RunContext, fn: () => Promise<T>): Promis
 /** The context of the work going on, or undefined outside any. */
 export function runContext(): RunContext | undefined {
   return storage.getStore();
+}
+
+/**
+ * Whether a page is to be read afresh this run, what was remembered of it
+ * set aside: on a second reading, every list page, and the page of each
+ * plan held, known by the address its record keeps or by the plan's key
+ * (a record can keep an older address than the page is read at). A list
+ * is read afresh since a plan's photos and price come off it, and a
+ * builder has few.
+ */
+export function readsAfresh(url: string, kind: "plan" | "list", planKey?: string | null): boolean {
+  const again = runContext()?.secondReading;
+  if (!again) return false;
+  return kind === "list" || again.freshPages.has(url) || (typeof planKey === "string" && again.freshPlans.has(planKey));
 }

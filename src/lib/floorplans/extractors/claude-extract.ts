@@ -1104,7 +1104,7 @@ export async function readPlanPageWithClaude(
   const variant = variantOf("plan", { model: PLAN_READ_MODEL, version: readVersion(runContext()?.builder), home, photos: !picturesKnown });
   const started = Date.now();
   let page: ExtractedPlanPage;
-  const remembered = await rememberedRead<ExtractedPlanPage>(plan.sourceUrl, "plan", digest, variant);
+  const remembered = await rememberedRead<ExtractedPlanPage>(plan.sourceUrl, "plan", digest, variant, plan.planKey);
   if (remembered) {
     page = remembered.facts;
     await recordUsage({ purpose: "plan-page", model: remembered.model, cached: true, ms: Date.now() - started, url: plan.sourceUrl });
