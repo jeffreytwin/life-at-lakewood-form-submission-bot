@@ -21,7 +21,9 @@ import { readingPrompts } from "@/lib/floorplans/extractors/claude-extract";
 // shortened. Neither version raised: a page read from now on is read the
 // new way, and one that reads the same keeps its read until it changes,
 // so the queue does not get every description at once.
-const PINNED = "93880496a176bb2be10ae3185e95bafd13172d9aa958ba53ae9a3c5a054515ec";
+// 2026-10-14: without the heading above the prose. Neither version raised:
+// a read kept with one has it taken off (diff.ts, withoutHeadline).
+const PINNED = "44cd85685e5daf6494f9c0282fd18400a272005e9b7e4f4ec4544acda5e9cca0";
 
 describe("what Claude is told when it reads a page (2026-10-07)", () => {
   it("is pinned, so a change to it is a choice of which pages to read again", () => {

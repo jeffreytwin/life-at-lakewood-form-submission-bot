@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aboutThePlan, asksOrFinePrint, carriesPlanFacts, descriptionChanged, fieldChanges, mergeForUpdate, sameDescription, withEntities, withPlainDescription } from "@/lib/floorplans/diff";
+import { aboutThePlan, asksOrFinePrint, carriesPlanFacts, descriptionChanged, fieldChanges, mergeForUpdate, sameDescription, withEntities, withoutHeadline, withPlainDescription } from "@/lib/floorplans/diff";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Descriptions from the queue that were approved night after night with
@@ -198,6 +198,30 @@ describe("the same words written another way", () => {
       [`${base} Upstairs is a loft`, `${base} Upstairs is a lofted ceiling`],
     ]) {
       expect(sameDescription(record, run), run).toBe(false);
+    }
+  });
+
+  it("takes off a listing's headline run into the first sentence (M/I's homes copied word for word, 2026-10-14)", () => {
+    const macarthur = "Welcome to 17524 Macarthur Loop, Venice — a beautiful new construction single-story home built by M/I Homes.";
+    expect(withoutHeadline(`New 3-Bedroom Home for Sale in Venice, Florida ${macarthur}`)).toBe(macarthur);
+    const parish = "Welcome to 3,838 square feet of new construction living, with 5 bedrooms and a 3-car garage.";
+    expect(withoutHeadline(`Spacious 5-Bedroom Home in Parish, FL ${parish}`)).toBe(parish);
+    const home = plan({ quickMoveIn: true, description: `New 4-Bedroom Home for Sale in Parrish, Florida &mdash; ${parish}`, raw: { descriptionOriginal: `New 4-Bedroom Home for Sale in Parrish, Florida ${parish}` } });
+    expect(withPlainDescription(home).description).toBe(parish);
+    expect(withPlainDescription(home).raw?.descriptionOriginal).toBe(parish);
+    // A home the site shows with its headline gets it taken off, once (M/I's 17900 Broadleaf Loop).
+    const shown = plan({ quickMoveIn: true, description: `New 4-Bedroom Home for Sale in Venice, Florida. ${parish}` });
+    const read = withPlainDescription(plan({ quickMoveIn: true, description: `New 4-Bedroom Home for Sale in Venice, Florida. ${parish}` }));
+    expect(read.description).toBe(parish);
+    expect(labels(shown, read)).toEqual(["description"]);
+    expect(labels(read, read)).toEqual([]);
+    // Prose that only begins like one stays as it is.
+    for (const kept of [
+      "The Interlude Plan is a 4 & 5-bedroom, 3& 4.5-bathroom, single-story home with over 3,000 square feet.",
+      "3-bedroom home in Venice, FL with a screened lanai and a 2-car garage, close to everything.",
+      "New 3-Bedroom Home for Sale in Venice, Florida Welcome!",
+    ]) {
+      expect(withoutHeadline(kept)).toBe(kept);
     }
   });
 

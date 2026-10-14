@@ -674,11 +674,12 @@ export async function preparePlans(
   // Photos the record already has keep the record's order, in every
   // gallery, rather than the page's order that night (pictures.ts,
   // inKnownOrder); a photo it does not have comes in where the page put
-  // it, and the page's lead stays in front. This used to hold only a
-  // gallery the rooms put in order, and a small one — five photos or fewer
-  // are never looked at (sort-queue.ts) — followed the page: David
-  // Weekley's Waterway and ICI's Egret VIII were proposed as their own
-  // photos in another order (2026-10-11, 10-13).
+  // it. In a gallery nobody has looked at the page's lead stays in front;
+  // in one the rooms put in order, the rooms decide what leads (below).
+  // This used to hold only a gallery the rooms put in order, and a small
+  // one — five photos or fewer are never looked at (sort-queue.ts) —
+  // followed the page: David Weekley's Waterway and ICI's Egret VIII were
+  // proposed as their own photos in another order (2026-10-11, 10-13).
   if (opts.known) plans = plans.map((p, i) => inKnownOrder(p, knownAs[i]));
 
   // Photos someone has already looked at are put in the site's order by
@@ -693,11 +694,15 @@ export async function preparePlans(
     if (looked.size) {
       plans = plans.map((p, i) => {
         const sorted = withLookedAtRooms(p, looked);
-        // The page's lead kept in front, where the rooms put another first,
-        // leads nothing: among its own room the record's order holds too,
-        // or a bedroom the page showed first would move within the
-        // bedrooms (D.R. Horton's Jordyn II, 2026-09-28).
-        if (!opts.known || sorted.galleryImages[0] === p.galleryImages[0]) return sorted;
+        if (sorted === p || !opts.known) return sorted;
+        // A gallery the rooms put in order: the front the record leads with
+        // keeps the lead, and the page's lead is ordered as the rest are.
+        // Kept in front, the page's lead put another picture of the front
+        // first, one the site has always shown further back: eight homes
+        // came up as "1 photo → 1 photo" with nothing changed on their
+        // pages (M/I's 3685 142nd Terrace East, Neal's 13916 Painted Loop,
+        // 2026-10-14), and a bedroom the page showed first moved within
+        // the bedrooms (D.R. Horton's Jordyn II, 2026-09-28).
         return withLookedAtRooms(inKnownOrder(p, knownAs[i], { pageLead: false }), looked);
       });
     }

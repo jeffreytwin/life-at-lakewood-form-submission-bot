@@ -130,21 +130,35 @@ export function withEntities(text: string): string {
 export const showsEntities = (text: string | null | undefined): boolean => withEntities(String(text ?? "")) !== String(text ?? "");
 
 /**
- * The plan with entities its description was read with written as the
- * characters they stand for. The site's description is plain text, and
- * shows "today&rsquo;s" as typed: DRB's Eider and eleven more read so
- * (2026-10-13), and a page copied word for word (claude-extract.ts) can
- * carry them too. Pure.
+ * A listing's headline above its prose, as a page copied word for word
+ * runs it into the first sentence: M/I's "New 3-Bedroom Home for Sale in
+ * Venice, Florida Welcome to 17524 Macarthur Loop…", "Spacious 5-Bedroom
+ * Home in Parish, FL Welcome to…" (2026-10-14).
+ */
+const HEADLINE =
+  /^\s*(?:(?:New|Brand[- ]New|Spacious|Beautiful|Stunning|Charming|Gorgeous|Elegant|Modern)\s+)?\d+[- ]Bed(?:room)?\s+(?:(?:Single[- ]Family|Single[- ]Story|Two[- ]Story|Luxury)\s+)?(?:Home|House|Townhome|Townhouse|Villa|Condo|Residence)s?\s+(?:for\s+Sale\s+)?in\s+[A-Z][A-Za-z.' -]*?,\s*(?:Florida|FL)\b[\s:.|–—-]*(?=[A-Z])/;
+
+/** A description without a listing's headline above it (HEADLINE); one that would be little more than the headline stays as it is. Pure; exported for tests. */
+export function withoutHeadline(text: string): string {
+  const cut = text.replace(HEADLINE, "");
+  return cut !== text && cut.trim().length >= 40 ? cut : text;
+}
+
+/**
+ * The plan with its description as the site should show it, plain prose:
+ * the entities it was read with as the characters they stand for, and no
+ * listing headline run into its first sentence (withoutHeadline). The
+ * site's description is plain text, and shows "today&rsquo;s" as typed:
+ * DRB's Eider and eleven more read so (2026-10-13), and a page copied word
+ * for word (claude-extract.ts) can carry them too. Pure.
  */
 export function withPlainDescription(plan: NormalizedPlan): NormalizedPlan {
+  const plain = (text: string) => withoutHeadline(withEntities(text));
   const original = plan.raw?.descriptionOriginal;
-  const coded = showsEntities(plan.description) || (typeof original === "string" && showsEntities(original));
-  if (!coded) return plan;
-  return {
-    ...plan,
-    description: typeof plan.description === "string" ? withEntities(plan.description) : plan.description,
-    ...(typeof original === "string" ? { raw: { ...plan.raw, descriptionOriginal: withEntities(original) } } : {}),
-  };
+  const description = typeof plan.description === "string" ? plain(plan.description) : plan.description;
+  const raw = typeof original === "string" ? plain(original) : original;
+  if (description === plan.description && raw === original) return plan;
+  return { ...plan, description, ...(typeof original === "string" ? { raw: { ...plan.raw, descriptionOriginal: raw } } : {}) };
 }
 
 /**
@@ -378,9 +392,11 @@ export function descriptionChanged(current: NormalizedPlan, plan: NormalizedPlan
   if (!before) return true;
   if (readsAsProse(before) && !readsAsProse(next)) return false;
   // The same words without the entities the site shows as typed
-  // ("today&rsquo;s") put them right: a change, once (withPlainDescription).
-  // Reworded, the builder's words are the same ones.
-  if (showsEntities(before) && !showsEntities(next) && (sameDescription(before, next) || sameDescription(builderText(current), builderText(plan)))) {
+  // ("today&rsquo;s"), or without a listing's headline run into them, put
+  // them right: a change, once (withPlainDescription). Reworded, the
+  // builder's words are the same ones.
+  const plain = (text: string) => withoutHeadline(withEntities(text)) === text;
+  if (!plain(before) && plain(next) && (sameDescription(before, next) || sameDescription(builderText(current), builderText(plan)))) {
     return !speaksAsOwner(next);
   }
   const was = [before, builderText(current)];
