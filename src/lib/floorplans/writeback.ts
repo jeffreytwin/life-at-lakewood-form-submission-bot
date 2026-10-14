@@ -44,6 +44,7 @@ import { ownFieldOnto } from "@/lib/floorplans/diff";
 import { MAX_GALLERY_IMAGES } from "@/lib/floorplans/pictures-on-wix";
 import { isRefused, refusedTours } from "@/lib/floorplans/tour-review";
 import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
+import { ADJUSTMENT_LABEL } from "@/lib/floorplans/adjustment";
 import { liftHomeGuards } from "@/lib/floorplans/removal-guards";
 
 /** A plan is builder + community + name (migration 065); the same trio keys the Wix row's syncKey. */
@@ -891,7 +892,8 @@ export async function applyPendingChange(changeId: string): Promise<{
       // so does a tour the weekly review put to a person, which may be
       // approved days after it was queued (tour-review.ts).
       const auto = String(change.run_id ?? "").startsWith(AUTO_RUN);
-      const ownField = auto || change.field_changed === TOUR_REVIEW_LABEL;
+      // A person's adjustment (adjustment.ts) likewise takes only what they set.
+      const ownField = auto || change.field_changed === TOUR_REVIEW_LABEL || change.field_changed === ADJUSTMENT_LABEL;
       const latest = ownField && change.floor_plan_id ? await planRow(change.floor_plan_id) : null;
       const rec = withoutRefusedTour(
         (ownField ? ownFieldOnto((latest?.record as NormalizedPlan | null) ?? null, change.proposed_record as NormalizedPlan, change.field_changed) : change.proposed_record) as ProposedRecord,
