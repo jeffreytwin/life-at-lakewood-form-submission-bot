@@ -723,12 +723,34 @@ export async function preparePlans(
   return plans;
 }
 
+/**
+ * What a second reading of a connection is of: the plans an earlier run
+ * held for one (confirm-reads.ts), and their pages, to be read afresh.
+ * Null where nothing is held, or the table cannot be read.
+ */
+async function secondReadingOf(scope: { site_id: string; community_id: string; builder_id: string }): Promise<{ sightings: Map<string, Map<string, Sighting>>; pages: Set<string> } | null> {
+  const sightings = await loadSightings(scope);
+  if (!sightings?.size) return null;
+  const { data } = await supabase
+    .from("fp_floor_plans")
+    .select("plan_key, record")
+    .match(scope)
+    .is("removed_at", null)
+    .in("plan_key", [...sightings.keys()]);
+  const pages = new Set<string>();
+  for (const row of data ?? []) {
+    const record = row.record as { sourceUrl?: unknown; raw?: { planPageUrl?: unknown } } | null;
+    for (const url of [record?.sourceUrl, record?.raw?.planPageUrl]) if (typeof url === "string" && url) pages.add(url);
+  }
+  return { sightings, pages };
+}
+
 export async function runConnection(connectionId: string): Promise<RunResult> {
   const startedAt = Date.now();
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
-      "id, active, extractor_params, last_plan_count, onboarded_at, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
+      "id, active, extractor_params, last_plan_count, last_run_status, onboarded_at, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
     )
     .eq("id", connectionId)
     .single();
@@ -780,8 +802,20 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   // Every Claude call under this run is written down against it (ai-usage.ts),
   // under whoever asked for the run: the nightly tick, a Sync now, a Run.
   const asked = runContext();
+  const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
+  // A second reading the same night (confirm-reads.ts): only the plans an
+  // earlier run held are compared, their pages read afresh.
+  const again = asked?.secondReading ? await secondReadingOf(scope) : null;
+  if (asked?.secondReading && !again) return { status: "skipped", detail: "nothing waiting for a second reading" };
   return withRunContext(
-    { source: asked?.source ?? "run", connectionId: conn.id, runId, builder: builder.name, community: community.name },
+    {
+      source: asked?.source ?? "run",
+      connectionId: conn.id,
+      runId,
+      builder: builder.name,
+      community: community.name,
+      ...(again ? { secondReading: { freshPages: again.pages, freshPlans: new Set(again.sightings.keys()) } } : {}),
+    },
     async () => {
       const read = () =>
         extractor({
@@ -796,12 +830,22 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         plans = await readTwice(read, startedAt, { builder: builder.name, community: community.name });
       } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
+        // A second reading that fails leaves the first run's status, and what
+        // it held waits for the next night's run.
+        if (again) {
+          logger.warn("Second reading failed; what was held waits for the next run", { builder: builder.name, community: community.name, error: detail });
+          return { status: "failed", detail };
+        }
         await setRunStatus(conn.id, `error: ${detail}`, null, true, await spentOn(runId));
         return { status: "failed", detail };
       }
 
       // Zero-result guard: treat as scrape failure, never as "everything removed".
       if (plans.length === 0) {
+        if (again) {
+          logger.warn("Second reading read no plans; what was held waits for the next run", { builder: builder.name, community: community.name });
+          return { status: "failed", detail: "extractor returned zero plans on a second reading" };
+        }
         await setRunStatus(conn.id, "zero results (treated as failure)", null, true);
         return { status: "failed", detail: "extractor returned zero plans; skipping diff" };
       }
@@ -817,6 +861,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       // duplicating plans that are already in Wix (Monarch Acres, 2026-10-13).
       if (canonicalError || !canonical) {
         const detail = `could not read known plans: ${canonicalError?.message ?? "no data returned"}`;
+        if (again) {
+          logger.warn("Second reading could not read known plans; what was held waits for the next run", { builder: builder.name, community: community.name, error: detail });
+          return { status: "failed", detail };
+        }
         await setRunStatus(conn.id, `error: ${detail}`, null, true, await spentOn(runId));
         return { status: "failed", detail };
       }
@@ -865,19 +913,22 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       const remembered = new Map((rememberedRows ?? []).map((r) => [r.plan_key, Number(r.score)] as const));
       // What earlier runs read and no run has read again yet (confirm-reads.ts);
       // null when that cannot be read, and then nothing is held.
-      const scope = { site_id: site.id, community_id: community.id, builder_id: builder.id };
-      const sightings = await loadSightings(scope);
+      const sightings = again ? again.sightings : await loadSightings(scope);
       // The fetches a run may make to tell one file from another (same-files.ts).
       const fileBudget = runFileBudget(startedAt);
 
       let queued = 0;
       let held = 0;
       let unconfirmed = 0;
+      let confirmed = 0;
 
       for (const read of plans) {
         let plan = read;
+        // A second reading is of the plans held, and nothing else.
+        if (again && !again.sightings.get(plan.planKey)?.size) continue;
         const existing = canonicalByKey.get(plan.planKey);
         if (!existing) {
+          if (again) continue;
           // A new plan or home with no price waits out of the queue until
           // the builder prices it (approval.ts, heldUntilPriced).
           if (heldUntilPriced(plan)) {
@@ -918,18 +969,21 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         // A description, photos or drawings read differently from the record
         // wait for a second run to read them the same way (confirm-reads.ts):
         // held, they are neither queued nor written with another change.
-        const open = changes.filter((c) => !rejected.has(c.field));
-        const compared = comparedFields(current, plan);
+        // On a second reading, only the fields held are compared: the rest
+        // the first run already queued or approved.
+        const open = changes.filter((c) => !rejected.has(c.field) && (!again || CONFIRMED_LABELS.has(c.label)));
+        const compared = comparedFields(current, plan).filter((label) => !again || CONFIRMED_LABELS.has(label));
         const planIds = { ...scope, plan_key: plan.planKey };
         const seen = sightings?.get(plan.planKey) ?? new Map<string, Sighting>();
         const waiting = open.some((c) => CONFIRMED_LABELS.has(c.label)) ? await waitingValues(planIds) : new Map<string, string | null>();
         const unheld: Confirmation = { confirmed: open, held: [], remember: [], interrupted: [], forget: [] };
-        let gate: Confirmation = sightings ? confirmChanges(open, compared, seen, waiting, runId) : unheld;
+        let gate: Confirmation = sightings ? confirmChanges(open, compared, seen, waiting, runId, Date.now(), { secondReading: Boolean(again) }) : unheld;
         if (gate.remember.length || gate.interrupted.length || gate.forget.length) {
           // What would be held but cannot be remembered is queued now.
           if (!(await keepSightings(planIds, gate, runId))) gate = unheld;
         }
         unconfirmed += gate.held.length;
+        if (again) confirmed += gate.confirmed.length;
         const heldLabels = new Set(gate.held.map((c) => c.label));
         const kept = new Set<keyof NormalizedPlan>([...rejected, ...gate.held.map((c) => c.field)]);
         const merged = withScrapedPictures(withRememberedScore(mergeForUpdate(current, plan, kept), remembered), plan);
@@ -944,7 +998,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         // Pictures the plan lists that never reached its row (pictures-on-wix.ts):
         // proposed so that approving writes the plan whole. Before the outdated
         // ones are withdrawn, so one still waiting is kept, not queued afresh.
-        if (existing.wix_record_id) {
+        if (existing.wix_record_id && !again) {
           const proposedLabels = new Set([...onItsOwn, ...reviewed, ...gate.held].map((c) => c.label));
           for (const change of unwrittenPictureChanges(merged, await picturesOnWix(site.id, listedPictures(merged)), proposedLabels)) {
             if (!(await stillRejected({ ...ids, fieldChanged: change.label, newValue: change.newValue }))) reviewed.push(change);
@@ -980,6 +1034,16 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
             })
           ) queued += 1;
         }
+      }
+
+      // A second reading ends here: the first run's status stands, with what
+      // the second reading made of what it held.
+      if (again) {
+        const was = (conn.last_run_status ?? "").replace(/, \d+ waiting for a second reading/, "");
+        const detail = `${was}, ${confirmed} confirmed on a second reading${unconfirmed ? `, ${unconfirmed} still waiting` : ""}`;
+        await supabase.from("fp_builder_communities").update({ last_run_status: detail.slice(0, 300) }).eq("id", conn.id);
+        logger.info("Second reading done", { builder: builder.name, community: community.name, confirmed, queued, stillWaiting: unconfirmed });
+        return { status: "ok", detail };
       }
 
       // An addition queued by an earlier run for a home the site already has,

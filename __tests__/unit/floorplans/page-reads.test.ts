@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { readsAfresh, withRunContext } from "@/lib/floorplans/run-context";
 import { changeBetween, digestOf, normalizedText, readVersion, reusable, variantOf, BUILDER_READ_VERSIONS, READ_VERSION, REREAD_AFTER_DAYS } from "@/lib/floorplans/page-reads";
 
 const page = (price: string, extra = "") =>
@@ -133,5 +134,20 @@ describe("changeBetween: what changed on a page read again (2026-09-30)", () => 
     const change = changeBetween(before, `The Lori ${"new words ".repeat(200)}`)!;
     expect(change.after.length).toBeLessThan(420);
     expect(change.after).toContain(" … ");
+  });
+});
+
+describe("a second reading reads the held plans' pages afresh (run-context.ts, readsAfresh)", () => {
+  it("sets aside what was remembered of a held plan's page and of every list, and nothing else", async () => {
+    expect(readsAfresh("https://b.com/lori/", "plan")).toBe(false);
+    expect(readsAfresh("https://b.com/", "list")).toBe(false);
+    await withRunContext({ source: "nightly", secondReading: { freshPages: new Set(["https://b.com/lori/"]), freshPlans: new Set(["the-lori"]) } }, async () => {
+      expect(readsAfresh("https://b.com/lori/", "plan")).toBe(true);
+      expect(readsAfresh("https://b.com/", "list")).toBe(true);
+      expect(readsAfresh("https://b.com/zander/", "plan")).toBe(false);
+      // A record keeps an older address than the page is read at: the plan's key still says.
+      expect(readsAfresh("https://b.com/plans/the-lori/", "plan", "the-lori")).toBe(true);
+      expect(readsAfresh("https://b.com/zander/", "plan", "the-zander")).toBe(false);
+    });
   });
 });

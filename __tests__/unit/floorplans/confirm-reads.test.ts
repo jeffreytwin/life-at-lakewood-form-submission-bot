@@ -76,6 +76,33 @@ describe("a change read twice before anyone is asked about it", () => {
   });
 });
 
+describe("a second reading the same night (Jeff, 2026-10-14: why wait an entire day)", () => {
+  const seen = new Map<string, Sighting>([
+    ["photos", { newValue: "1 photo · e3422460", runId: "run-1", runs: 1, firstSeenAt: new Date(start).toISOString(), seenAt: new Date(start).toISOString() }],
+    ["description", { newValue: "New words… · 22222222", runId: "run-1", runs: 1, firstSeenAt: new Date(start).toISOString(), seenAt: new Date(start).toISOString() }],
+  ]);
+
+  it("confirms what reads the same way again, and leaves the rest as the first reading left it", () => {
+    const gate = confirmChanges([photos("1 photo · e3422460"), description("Other words… · 33333333")], compared, seen, none, "run-1b", start + 3_600_000, { secondReading: true });
+    expect(gate.confirmed).toEqual([photos("1 photo · e3422460")]);
+    expect(gate.forget).toEqual(["photos"]);
+    expect(gate.held).toEqual([description("Other words… · 33333333")]);
+    // Not remembered, not counted as a run: the description keeps its first sighting.
+    expect(gate.remember).toEqual([]);
+    expect(gate.interrupted).toEqual([]);
+  });
+
+  it("does not forget a held field it read the record's way: that is a reading, not the record changing", () => {
+    const gate = confirmChanges([], compared, seen, none, "run-1b", start + 3_600_000, { secondReading: true });
+    expect(gate.forget).toEqual([]);
+    expect(gate.interrupted).toEqual([]);
+  });
+
+  it("still queues a price at once", () => {
+    expect(confirmChanges([price], compared, seen, none, "run-1b", start, { secondReading: true }).confirmed).toEqual([price]);
+  });
+});
+
 describe("a reading that comes and goes (David Weekley's Truman, 2 photos and 1, Oct 6-13)", () => {
   // One elevation read, then both (the record: no change), and so on.
   const truman = [[photos("1 photo · e3422460")], [], [photos("1 photo · 8a1919b3")], [], [photos("1 photo · 8a1919b3")], [], [photos("1 photo · e3422460")]];

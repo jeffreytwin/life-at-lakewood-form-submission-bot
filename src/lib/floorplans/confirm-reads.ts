@@ -12,11 +12,15 @@
 // over real changes").
 //
 // So a description, photos or drawings a run reads differently from the
-// record are held until the next run that reads the field reads them the
-// same way (fp_unconfirmed_changes, migration 080). A builder's real change
-// reads the same night after night: it reaches the queue one run later. A
-// change already waiting in the queue with the same new value needs no
-// second reading.
+// record are held until another run reads them the same way
+// (fp_unconfirmed_changes, migration 080). The second reading comes the
+// same night: once every connection has had its run, each one that held
+// something is run again with the held plans' pages read afresh
+// (nightly.ts; run-context.ts, readsAfresh), and what reads the same way
+// twice goes to the queue that morning (Jeff, 2026-10-14: "why wait an
+// entire day"). What reads differently waits for the next night's run,
+// which is a second reading too. A change already waiting in the queue
+// with the same new value needs no second reading.
 //
 // Nothing is held for good. A field read differently from the record on
 // MOST_RUNS_HELD runs within SIGHTING_DAYS of the first, in a row or not,
@@ -87,7 +91,8 @@ export function confirmChanges(
   seen: ReadonlyMap<string, Sighting>,
   waiting: ReadonlyMap<string, string | null>,
   runId: string,
-  now: number = Date.now()
+  now: number = Date.now(),
+  { secondReading = false }: { secondReading?: boolean } = {}
 ): Confirmation {
   const out: Confirmation = { confirmed: [], held: [], remember: [], interrupted: [], forget: [] };
   const within = (at: string) => now - Date.parse(at) < SIGHTING_DAYS * DAY_MS;
@@ -103,6 +108,18 @@ export function confirmChanges(
     const earlier = last && last.runId !== runId ? last : undefined;
     // The last run that read the field read it this way.
     const again = earlier?.newValue === change.newValue;
+    // A second reading the same night confirms what reads the same way,
+    // and leaves what does not as the first reading left it: it is one
+    // reading, not a run of its own in the count.
+    if (secondReading) {
+      if (waiting.get(change.label) === change.newValue || again) {
+        out.confirmed.push(change);
+        if (seen.has(change.label)) out.forget.push(change.label);
+      } else {
+        out.held.push(change);
+      }
+      continue;
+    }
     const counting = last && within(last.firstSeenAt) ? last : undefined;
     const runs = !counting ? 1 : earlier ? counting.runs + 1 : counting.runs;
     if (waiting.get(change.label) === change.newValue || again || runs >= MOST_RUNS_HELD) {
@@ -114,7 +131,7 @@ export function confirmChanges(
     out.remember.push({ label: change.label, newValue: change.newValue, runs, firstSeenAt: runs > 1 && counting ? counting.firstSeenAt : new Date(now).toISOString() });
   }
   for (const label of compared) {
-    if (changed.has(label)) continue;
+    if (secondReading || changed.has(label)) continue;
     const sighting = seen.get(label);
     if (!sighting) continue;
     if (!within(sighting.seenAt)) out.forget.push(label);
