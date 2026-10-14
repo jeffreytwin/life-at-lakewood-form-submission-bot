@@ -394,6 +394,30 @@ export function withPlanPicturesOnHomes(plans: NormalizedPlan[]): NormalizedPlan
 }
 
 /**
+ * A home the builder gives no home type is the type of the floor plan it
+ * is built from (Jeff, 2026-10-14): a home on the Foxtail plan is a
+ * townhome because Foxtail is. The plan as this run read it, else as the
+ * site has it (`known`, by plan key), else the community's or builder's
+ * setting (`fallback`); with none of them the home waits in the queue for
+ * a person to choose. A home whose own page names a type keeps it. Runs
+ * after linkQuickMoveIns; pure.
+ */
+export function withPlanTypesOnHomes(
+  plans: NormalizedPlan[],
+  known?: Map<string, Partial<NormalizedPlan> | null>,
+  fallback?: string | null
+): NormalizedPlan[] {
+  const byKey = new Map(plans.filter((p) => !p.quickMoveIn).map((p) => [p.planKey, p] as const));
+  return plans.map((home) => {
+    if (!home.quickMoveIn || home.homeType) return home;
+    const key = home.relatedPlanKey ?? null;
+    const planType = key ? (byKey.get(key)?.homeType ?? known?.get(key)?.homeType ?? null) : null;
+    const homeType = planType ?? fallback ?? null;
+    return homeType ? { ...home, homeType } : home;
+  });
+}
+
+/**
  * The price bracket tag the site filters on: "$400s" for $419,990, "1M"
  * for $1,149,000 and "2M" for $2,450,000 (one "1M+" held too many of
  * Wellen Park's and Lakewood Ranch's plans to help; Jeff, 2026-10-08),

@@ -59,12 +59,13 @@ describe("Cardel's homes for sale from its quick move-ins page (North River Ranc
     expect(cardelCommunityOf("https://example.com/")).toBeNull();
   });
 
-  it("gives a plan its home type from its name: the paired plans are villas", () => {
+  it("gives a plan its home type from its name: the paired plans are villas, and no other name says one", () => {
     const plan = normalizeCardelHome({ address: "1 Test Ave", status: "available" }, "florida", "north-river-ranch")!;
     const asPlan = (name: string) => ({ ...plan, quickMoveIn: false, name, homeType: null });
     expect(cardelHomeType(asPlan("Birchwood Paired")).homeType).toBe("Attached Villa");
-    expect(cardelHomeType(asPlan("Brighton")).homeType).toBe("Single Family Home");
-    expect(cardelHomeType(asPlan("Northwood Rf")).homeType).toBe("Single Family Home");
+    // Any other name says nothing: the connection's setting or a person decides (2026-10-14).
+    expect(cardelHomeType(asPlan("Brighton")).homeType).toBeNull();
+    expect(cardelHomeType(asPlan("Northwood Rf")).homeType).toBeNull();
     expect(cardelHomeType({ ...asPlan("Brighton"), homeType: "Townhome" }).homeType).toBe("Townhome");
     expect(cardelHomeType(plan).homeType).toBeNull();
   });

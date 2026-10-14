@@ -40,7 +40,7 @@ import { withKnownTours } from "@/lib/floorplans/tours";
 import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { refusedTours, withoutRefusedTours } from "@/lib/floorplans/tour-review";
 import { alreadyFiled, filedAsBefore, knownRecordsOf, type FiledHome } from "@/lib/floorplans/home-identity";
-import { linkQuickMoveIns, withLinksAsRead, withPlanPicturesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
+import { linkQuickMoveIns, withLinksAsRead, withPlanPicturesOnHomes, withPlanTypesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan, withPlanNamePrefix } from "@/lib/floorplans/standardize";
@@ -611,15 +611,15 @@ export async function preparePlans(
   // A base plan the builder gave no price takes its cheapest quick
   // move-in's until the builder prices it (Jeff, 2026-09-20).
   const link = (list: NormalizedPlan[]) => withQuickMoveInPictures(withQuickMoveInPrices(linkQuickMoveIns(list)));
-  // What is true of every plan this builder offers, whatever its pages say
-  // (Settings → Builders; Jeff, 2026-09-22: Stock builds single-family homes
-  // and its pages name no type at all).
-  const { data: settings } = await supabase
-    .from("fp_builders")
-    .select("engine_config")
-    .eq("id", builder.id)
-    .maybeSingle();
-  const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null);
+  // The home type of a plan whose builder's pages do not say: the
+  // community's setting, then the builder's (Builder Connections; Jeff,
+  // 2026-09-22: Stock builds single-family homes and its pages name no type
+  // at all; 2026-10-14: set per community, and never guessed).
+  const [{ data: settings }, { data: connection }] = await Promise.all([
+    supabase.from("fp_builders").select("engine_config").eq("id", builder.id).maybeSingle(),
+    supabase.from("fp_builder_communities").select("home_type").match({ builder_id: builder.id, community_id: community.id }).maybeSingle(),
+  ]);
+  const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null, connection?.home_type);
   // As read, before linking: a second link once the stand-ins are in starts from these (withLinksAsRead).
   const asRead = plans.map((plan) => standardizePlan(plan, defaults));
   plans = link(asRead);
@@ -660,7 +660,8 @@ export async function preparePlans(
   plans = withoutCommunityTour(withPlanNamePrefix(plans, builder.name));
   // A home the builder shows no picture of carries its plan's, once the
   // plan's gallery is cleaned (quick-move-ins.ts, withPlanPicturesOnHomes).
-  plans = withPlanPicturesOnHomes(plans);
+  // And a home it gives no home type is its plan's (withPlanTypesOnHomes).
+  plans = withPlanTypesOnHomes(withPlanPicturesOnHomes(plans), opts.known, defaults.homeType);
 
   // The record each plan is known by: the one its key names, or, for a home
   // read under another name than it is filed by, the home it is

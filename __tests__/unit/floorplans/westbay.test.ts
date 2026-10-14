@@ -37,7 +37,8 @@ describe("planFromRecord", () => {
       baths: "4",
       sqft: 3418,
       garages: "3 car",
-      homeType: "Single Family Home",
+      // A series that names no kind of home leaves it to the connection's setting (2026-10-14).
+      homeType: null,
       quickMoveIn: false,
       sourceUrl: "https://www.homesbywestbay.com/floorplans/abruzzo-i",
       galleryImages: ["https://d3ep4ovemm7dcp.cloudfront.net/mixed-media/a02aeb27/large/Abruzzo-I-Coastal-D.jpg"],

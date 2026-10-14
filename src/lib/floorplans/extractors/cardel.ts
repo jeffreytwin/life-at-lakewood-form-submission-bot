@@ -213,15 +213,15 @@ export function cardelCommunityOf(url: string): { region: string; community: str
 }
 
 /**
- * A Cardel plan's home type, where its page gave none: its name says it —
- * the "Paired" plans are Cardel's paired villas, and the rest of what it
- * builds in Florida are single-family homes (the site's own rows,
- * 2026-09-27: Birchwood, Sylvan and Timberland "Attached Villa", every
- * other plan "Single Family Home"). Pure; exported for tests.
+ * A Cardel plan's home type, where its page gave none: a "Paired" plan's
+ * name says it is one of Cardel's paired villas (the site's own rows,
+ * 2026-09-27: Birchwood, Sylvan and Timberland "Attached Villa"). Any other
+ * name says nothing, and the connection's setting says (sync.ts; Jeff,
+ * 2026-10-14: never guessed). Pure; exported for tests.
  */
 export function cardelHomeType(plan: NormalizedPlan): NormalizedPlan {
   if (plan.quickMoveIn || plan.homeType) return plan;
-  return { ...plan, homeType: standardHomeType(plan.name) === "Attached Villa" ? "Attached Villa" : "Single Family Home" };
+  return standardHomeType(plan.name) === "Attached Villa" ? { ...plan, homeType: "Attached Villa" } : plan;
 }
 
 /** A Cardel picture's file name, decoded: ".../o/public%2Fposters%2Fbirchwood-c-…_640x640.webp?alt=media" is "birchwood-c-…_640x640.webp". */

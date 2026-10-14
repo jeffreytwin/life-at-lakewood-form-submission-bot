@@ -4,6 +4,7 @@ import { logger } from "@/lib/shared/logger";
 import { clearConnection } from "@/lib/floorplans/connection-clear";
 import { runIsGoing } from "@/lib/floorplans/runs";
 import { describeError } from "@/lib/shared/describe-error";
+import { HOME_TYPES, isHomeType } from "@/lib/floorplans/standardize";
 
 export const dynamic = "force-dynamic";
 // A removal takes the connection's items out of Wix one by one.
@@ -22,7 +23,7 @@ const asList = (raw: unknown): string[] =>
 
 /**
  * PATCH /api/internal/floorplans/connections/:id
- * Body: { active?, url?, listUrls?, quickMoveInUrl?, dismissAttention? }
+ * Body: { active?, url?, listUrls?, quickMoveInUrl?, homeType?, dismissAttention? }
  *
  * Pause/resume a single builder×community connection (same inert-pause
  * semantics as the builder-level flag), set the pages it is read from, or
@@ -85,9 +86,16 @@ export async function PATCH(
     }
 
     if (body.dismissAttention === true) updates.attention_dismissed_at = new Date().toISOString();
+    // The home type of this community's plans where the builder's pages do not say (migration 081).
+    if ("homeType" in body) {
+      if (body.homeType !== null && !isHomeType(body.homeType)) {
+        return NextResponse.json({ error: `homeType must be null or one of: ${HOME_TYPES.join(", ")}` }, { status: 400 });
+      }
+      updates.home_type = body.homeType;
+    }
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "active (boolean), url / quickMoveInUrl (string), listUrls (list) or dismissAttention (true) required" },
+        { error: "active (boolean), url / quickMoveInUrl (string), listUrls (list), homeType (string|null) or dismissAttention (true) required" },
         { status: 400 }
       );
     }
@@ -95,7 +103,7 @@ export async function PATCH(
       .from("fp_builder_communities")
       .update(updates)
       .eq("id", id)
-      .select("id, active, extractor_params, attention_dismissed_at")
+      .select("id, active, extractor_params, attention_dismissed_at, home_type")
       .maybeSingle();
     if (error) throw error;
     if (!data) return NextResponse.json({ error: "Connection not found" }, { status: 404 });

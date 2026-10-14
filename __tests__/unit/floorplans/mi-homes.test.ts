@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { cardsIn, communityGuidIn, fromCard, isMiHomesPage, pageBaths, withCardLead } from "@/lib/floorplans/extractors/mi-homes";
+import { cardsIn, communityGuidIn, fromCard, isMiHomesPage, pageBaths, pageHomeType, withCardLead } from "@/lib/floorplans/extractors/mi-homes";
 import { extractorFor, resolveExtractor } from "@/lib/floorplans/sync";
 
 // M/I's plan feed for Seaire as it answered (2026-10-06), pruned to the
@@ -102,7 +102,8 @@ describe("fromCard", () => {
       baths: "3-4",
       sqft: 2306,
       garages: "3 car",
-      homeType: "Single Family Home",
+      // Every card says "SingleFamilyResidence", townhomes too: the page's own "Home Type" decides (pageHomeType).
+      homeType: null,
       quickMoveIn: false,
       comingSoon: false,
       sourceUrl: `${SEAIRE}/coral-plan`,
@@ -194,5 +195,25 @@ describe("withCardLead", () => {
   it("leaves a plan without a card picture or Lifestyle pictures as its page had it", () => {
     const plain = { ...home, galleryImages: [dam(1)], galleryMeta: { [dam(1)]: { kind: "primary", room: "primary", caption: "Coral Elevation A" } } } as typeof home;
     expect(withCardLead(plain, null)).toBe(plain);
+  });
+});
+
+describe("pageHomeType (Palmera's townhomes, Jeff 2026-10-14)", () => {
+  const facts = (type: string) =>
+    `<ul class="facts"><li><span>Owner's Suite</span><span>Second Floor</span></li><li><span>County</span><span>Sarasota</span></li>` +
+    `<li><span>Home Type</span><span>${type}</span></li><li><span>School District</span><span>Twin Rivers</span></li></ul>`;
+
+  it("reads the type the page gives among its facts, and only that", () => {
+    expect(pageHomeType(facts("Townhome"))).toBe("Townhome");
+    expect(pageHomeType(facts("Single Family Home"))).toBe("Single Family Home");
+    // The next fact's "Twin Rivers" is no twin villa.
+    expect(pageHomeType(`<p>Home Type Single Family Home School District Twin Rivers</p>`)).toBe("Single Family Home");
+  });
+
+  it("leaves out the site's menus and filters, and gives none for a page that says two things or nothing", () => {
+    const nav = `<nav><label>Home Type</label><select><option>Single Family</option><option>Townhome</option></select></nav>`;
+    expect(pageHomeType(nav + facts("Townhome"))).toBe("Townhome");
+    expect(pageHomeType(facts("Townhome") + facts("Single Family Home"))).toBeNull();
+    expect(pageHomeType("<p>A lovely home.</p>")).toBeNull();
   });
 });

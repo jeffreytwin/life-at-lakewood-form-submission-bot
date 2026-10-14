@@ -59,9 +59,13 @@ describe("approvalBlocker", () => {
     expect(approvalBlocker("add", plan({ quickMoveIn: true, relatedPlanMatch: "plan-id", relatedPlanKey: "lori" }))).toBeNull();
   });
 
-  it("asks only a price of a quick move-in, and nothing of a removal", () => {
+  it("asks only a price and a home type of a quick move-in, and nothing of a removal", () => {
     expect(approvalBlocker("add", plan({ quickMoveIn: true }))).toBeNull();
-    expect(approvalBlocker("add", plan({ quickMoveIn: true, beds: "", homeType: null }))).toBeNull();
+    expect(approvalBlocker("add", plan({ quickMoveIn: true, beds: "" }))).toBeNull();
+    // A home its plan gives no type waits for a person (2026-10-14).
+    expect(approvalBlocker("add", plan({ quickMoveIn: true, homeType: null }))).toBe(
+      "needs a home type before approval (set it in the edit overlay)"
+    );
     expect(approvalBlocker("add", plan({ quickMoveIn: true, priceDisplay: null }))).toBe(
       "needs a price before approval (set it in the edit overlay)"
     );

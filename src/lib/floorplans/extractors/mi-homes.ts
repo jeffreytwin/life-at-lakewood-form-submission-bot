@@ -166,11 +166,50 @@ export function cardsIn(html: string): MiCard[] {
   return out;
 }
 
-/** "SingleFamilyResidence" as words the standard types know. */
-function homeTypeOf(additionalType: string | undefined): string {
+/**
+ * A card's schema.org type as words the standard types know, where it says
+ * more than M/I says of every card: Palmera's townhomes are
+ * "SingleFamilyResidence" like its houses (Jeff, 2026-10-14), so that says
+ * nothing and the page's own "Home Type" decides (pageHomeType).
+ */
+function homeTypeOf(additionalType: string | undefined): string | null {
   const words = (additionalType ?? "").split("/").pop()!.replace(/([a-z])([A-Z])/g, "$1 $2");
-  if (/single family/i.test(words)) return "Single Family Home";
-  return standardHomeType(words) ?? "Single Family Home";
+  if (/single family/i.test(words)) return null;
+  return standardHomeType(words);
+}
+
+/**
+ * The home type a plan's or home's page gives among its facts: "Owner's
+ * Suite First Floor Home Type Townhome Foundation Type Slab" (Palmera's
+ * Bismark) or "Home Type Single Family Home" (its Holiday). The site's
+ * menus and search filters are left out, and a page that gives two
+ * different types gives none: a type is never guessed. Pure; exported for
+ * tests.
+ */
+export function pageHomeType(html: string): string | null {
+  const text = html
+    .replace(/<(script|style|nav|header|footer|form|select)\b[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ");
+  const said = new Set(
+    [...text.matchAll(/\bHome Type\s*:?\s+(.{1,40})/gi)].map((m) => leadingHomeType(m[1])).filter((t): t is NonNullable<typeof t> => Boolean(t))
+  );
+  return said.size === 1 ? [...said][0] : null;
+}
+
+/**
+ * The type the first words of a fact's value name, and no more of it:
+ * "Single Family Home School District …" is a single-family home whatever
+ * the next fact says ("Twin Rivers" is a community, not a twin villa).
+ */
+function leadingHomeType(value: string): ReturnType<typeof standardHomeType> {
+  const words = value.trim().split(/\s+/);
+  for (let n = 1; n <= Math.min(3, words.length); n++) {
+    const type = standardHomeType(words.slice(0, n).join(" "));
+    if (type) return type;
+  }
+  return null;
 }
 
 /** The page a card links, absolute. */
@@ -335,6 +374,7 @@ export async function extractMiHomes(params: { url?: string; runDeadline?: numbe
     const pageUrl = pageOfPlan.get(p.planKey);
     const html = pageUrl ? pages.get(pageUrl) : undefined;
     const baths = html && pageUrl ? pageBaths(html, pageUrl) : null;
-    return withCardLead(baths ? { ...p, baths } : p, cardPictures.get(p.planKey));
+    const homeType = (html ? pageHomeType(html) : null) ?? p.homeType ?? null;
+    return withCardLead({ ...p, ...(baths ? { baths } : {}), homeType }, cardPictures.get(p.planKey));
   });
 }

@@ -178,7 +178,8 @@ export function normalizeArPlan(plan: ArPlan, prices: ListedPrice[]): Normalized
     baths: bathsOf(number(a.bathrooms), number(a.half_baths)) ?? "",
     sqft: number(a.square_feet),
     garages: garages ? `${garages} car` : null,
-    homeType: "Single Family Home",
+    // Richmond American's feed names no kind of home: the connection's or builder's setting says (sync.ts).
+    homeType: null,
     quickMoveIn: false,
     comingSoon: false,
     sourceUrl: plan.link ?? null,
@@ -260,7 +261,8 @@ export function normalizeArHome(home: ArHome): NormalizedPlan | null {
     baths: bathsOf(number(a.baths), number(a.half_baths)) ?? "",
     sqft: number(a.sq_ft),
     garages: garages ? `${garages} car` : null,
-    homeType: "Single Family Home",
+    // Richmond American's feed names no kind of home: the connection's or builder's setting says (sync.ts).
+    homeType: null,
     quickMoveIn: true,
     comingSoon: false,
     relatedPlanName: homePlanName(home.title?.rendered ?? "") || null,

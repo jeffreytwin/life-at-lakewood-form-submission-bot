@@ -105,8 +105,8 @@ export function fromRecord(r: HighlandRecord, links: ReturnType<typeof pageLinks
     baths: baths ?? "",
     sqft: positive(r.totalsqft),
     garages: positive(r.garage) ? `${r.garage} car` : null,
-    // Highland builds single-family homes; its feed names no other kind.
-    homeType: "Single Family Home",
+    // Highland's feed names no kind of home: the connection's or builder's setting says (sync.ts).
+    homeType: null,
     quickMoveIn: home,
     comingSoon: false,
     // The page's own link where it has one; the feed's cards are drawn by
@@ -147,7 +147,7 @@ export async function extractHighland(params: { url?: string; runDeadline?: numb
     const named = [...byKey.values()].find((p) => !p.quickMoveIn && slugKey(p.name) === key);
     if (!named && [...byKey.values()].some((p) => p.quickMoveIn && slugKey(p.relatedPlanName ?? "") === key)) {
       const name = planUrl.split("/").pop()!.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bIi\b/g, "II");
-      byKey.set(normKey(name), { planKey: normKey(name), name, price: null, priceDisplay: null, beds: "", baths: "", sqft: null, garages: null, homeType: "Single Family Home", quickMoveIn: false, comingSoon: false, sourceUrl: planUrl, galleryImages: [], blueprintImages: [] });
+      byKey.set(normKey(name), { planKey: normKey(name), name, price: null, priceDisplay: null, beds: "", baths: "", sqft: null, garages: null, homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: planUrl, galleryImages: [], blueprintImages: [] });
     }
   }
   if (!byKey.size) throw new Error(`no plans or homes in Highland's feed for community ${id}`);
