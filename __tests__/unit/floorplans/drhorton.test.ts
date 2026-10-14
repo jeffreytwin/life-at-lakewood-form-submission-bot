@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, homesOnPage, planLinks, planNameFrom, readDrhPage, homePageUrl } from "@/lib/floorplans/extractors/drhorton";
+import { communityHomeType, homesOnPage, planLinks, planNameFrom, planPageHomeType, readDrhPage, homePageUrl } from "@/lib/floorplans/extractors/drhorton";
 
 // Shaped like Oakfield Lakes as fetched on 2026-09-23, pruned.
 const COMMUNITY = "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes";
@@ -91,6 +91,23 @@ describe("what D.R. Horton's pages say besides their pictures", () => {
     // Rye Crossing's description names no kind of home; its title does.
     expect(communityHomeType("<title>Houses For Sale in Parrish, FL | Rye Crossing | D.R. Horton</title><h1>Rye Crossing</h1>")).toBe("Single Family Home");
     expect(communityHomeType("<title>Townhomes For Sale in Venice, FL | Ashcombe</title>")).toBe("Townhome");
+  });
+
+  it("guesses no type for a community that builds more than one kind of home (Star Farms' Siesta, 2026-10-14)", () => {
+    const starFarms = `<title>Houses For Sale in Lakewood Ranch, FL | Star Farms</title>
+      <h2>About our community</h2><p>Star Farms offers single-family homes, paired villas and townhomes.</p><h2>Tour</h2>`;
+    expect(communityHomeType(starFarms)).toBeNull();
+    // The same kind named twice is still one kind.
+    expect(communityHomeType(`<h2>About our community</h2><p>Paired villas and more villas.</p><h2>x</h2>`)).toBe("Attached Villa");
+  });
+
+  it("reads a plan's type from its own page", () => {
+    expect(planPageHomeType("Welcome to the Pearson Townhome, built by D.R. Horton.")).toBe("Townhome");
+    expect(planPageHomeType("Siesta Villa This one-story paired villa features an open concept design.")).toBe("Attached Villa");
+    expect(planPageHomeType("A detached villa with a two-car garage.")).toBe("Single Family Home");
+    expect(planPageHomeType("This one-story floor plan features an open concept design.")).toBeNull();
+    const page = readDrhPage(`<h1>Siesta</h1><div class="about-this-plan"><h2>About this floor plan</h2><p>This one-story villa shares one wall.</p></div>`);
+    expect(page.homeType).toBe("Attached Villa");
   });
 
   it("takes a picture titled Floor Plan but named for an elevation as a photo (Fletcher, 2026-09-23)", () => {
