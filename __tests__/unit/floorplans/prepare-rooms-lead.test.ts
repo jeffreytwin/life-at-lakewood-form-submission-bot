@@ -71,9 +71,17 @@ describe("the page's lead, where the rooms decide what leads", () => {
     expect(fieldChanges(record as CanonicalRecord, run).map((c) => c.label)).not.toContain("photos");
   });
 
-  it("still leads when it is a front the rooms put first: the builder chose another front", async () => {
+  it("keeps the front the record leads with when the page leads with another picture of the front (eight homes, 2026-10-14)", async () => {
     const run = await read([at("rear"), front, at("08"), at("10"), at("11"), at("14"), at("16")]);
-    expect(run.galleryImages[0]).toBe(at("rear"));
-    expect(fieldChanges(record as CanonicalRecord, run).map((c) => c.label)).toContain("photos");
+    expect(run.galleryImages).toEqual(record.galleryImages);
+    expect(fieldChanges(record as CanonicalRecord, run).map((c) => c.label)).not.toContain("photos");
+    // A home shows its lead alone: the same holds.
+    const home = { ...record, quickMoveIn: true };
+    const [lead] = await preparePlans([{ ...plan([at("rear"), front, at("08"), at("10"), at("11"), at("14"), at("16")]), quickMoveIn: true }], scope, {
+      rewordDescriptions: false,
+      known: new Map([[home.planKey, home]]),
+    });
+    expect(lead.galleryImages[0]).toBe(front);
+    expect(fieldChanges(home as CanonicalRecord, lead).map((c) => c.label)).not.toContain("photos");
   });
 });

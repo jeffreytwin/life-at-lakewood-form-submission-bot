@@ -129,9 +129,9 @@ export function primaryReplaced(live: Partial<NormalizedPlan> | null | undefined
  * photo the record has or not: it is the one picture a home's row shows,
  * and the one a plan opens with, and a builder that puts another in front
  * has changed what the site should show (2143 Sylvester Palm Lane,
- * 2026-09-28; primaryReplaced). Where the rooms put it further back, it
- * leads nothing, and is ordered as the rest are (pageLead false;
- * preparePlans, sync.ts). Pure.
+ * 2026-09-28; primaryReplaced). In a gallery the rooms put in order, the
+ * rooms decide what leads, and the page's lead is ordered as the rest are
+ * (pageLead false; preparePlans, sync.ts). Pure.
  */
 export function inKnownOrder(
   plan: NormalizedPlan,
