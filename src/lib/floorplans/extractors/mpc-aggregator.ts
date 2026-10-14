@@ -167,14 +167,16 @@ export function parseHotelCards(html: string, origin: string): { plan: Normalize
 const LEASEBACK = /^(.+?)\s+(?:model\s+)?lease[\s-]*back\b/i;
 
 /**
- * The site's home type for what the aggregator calls a home. Wellen Park
- * files M/I's Palm, Sabal, Foxtail and Bismark as "Multi-Family", and the
- * site carries every one of them as a townhome (2026-09-23).
+ * The site's home type for what the aggregator calls a home, or its own
+ * label where that names none of the site's types: "Multi-Family", which
+ * Wellen Park files M/I's townhomes under, could as well be villas or
+ * condominiums, so it is kept as the builder's label (homeTypeRaw) and a
+ * setting or a person decides (Jeff, 2026-10-14).
  */
 export function mpcHomeType(label: string | null | undefined): string | null {
   const text = (label ?? "").replace(/-/g, " ").trim();
   if (!text) return null;
-  return standardHomeType(text) ?? (/\bmulti\s*family\b/i.test(text) ? "Townhome" : text.replace(/\b\w/g, (c) => c.toUpperCase()));
+  return standardHomeType(text) ?? text.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function normalizeCard(card: Card): NormalizedPlan | null {

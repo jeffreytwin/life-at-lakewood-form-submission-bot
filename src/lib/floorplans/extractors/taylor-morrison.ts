@@ -127,9 +127,13 @@ export function tourUrl(link: string | null | undefined): string | null {
   return s.replace(/^(https?:\/\/my\.matterport\.com\/show)\?/i, "$1/?");
 }
 
-/** The home type a collection or community name says; single-family when neither says anything. */
-export function homeTypeOf(collectionName: string | null | undefined, communityName: string | null | undefined): HomeType {
-  return standardHomeType(collectionName) ?? standardHomeType(communityName) ?? "Single Family Home";
+/**
+ * The home type a collection or community name says ("Twin Villa
+ * Collection", "The Towns at Firethorn"); null when neither says one, for
+ * the connection's setting or a person to decide (Jeff, 2026-10-14).
+ */
+export function homeTypeOf(collectionName: string | null | undefined, communityName: string | null | undefined): HomeType | null {
+  return standardHomeType(collectionName) ?? standardHomeType(communityName);
 }
 
 /** Marketing copy without its markup. */

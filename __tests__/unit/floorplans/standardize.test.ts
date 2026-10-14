@@ -21,7 +21,6 @@ describe("standardHomeType", () => {
     expect(standardHomeType("Single-Family Home")).toBe("Single Family Home");
     expect(standardHomeType("single family")).toBe("Single Family Home");
     expect(standardHomeType("Detached")).toBe("Single Family Home");
-    expect(standardHomeType("Estate Homes")).toBe("Single Family Home");
     expect(standardHomeType("Townhomes")).toBe("Townhome");
     expect(standardHomeType("Town House")).toBe("Townhome");
     expect(standardHomeType("Condo")).toBe("Condominium");
@@ -38,6 +37,13 @@ describe("standardHomeType", () => {
     expect(standardHomeType(null)).toBeNull();
     expect(standardHomeType("  ")).toBeNull();
     expect(standardHomeType("Lot")).toBeNull();
+  });
+
+  it("reads no kind of home into a word that names none (2026-10-14: never guessed)", () => {
+    for (const label of ["Homes", "Houses For Sale", "Estate Homes", "Single-Story", "Two-story", "Ranch", "Multi-Family", "SingleFamilyResidence"]) {
+      expect(standardHomeType(label)).toBeNull();
+    }
+    expect(standardHomeType("Detached Villa Golf Collection")).toBe("Single Family Home");
   });
 });
 
@@ -232,8 +238,14 @@ describe("builderDefaults", () => {
     expect(builderDefaults(null)).toEqual({ homeType: null });
   });
 
-  it("writes the builder's type over whatever the page said, keeping the page's own in raw", () => {
-    // Stock builds single-family homes and nothing else (Jeff, 2026-09-22).
+  it("takes the community's setting before the builder's", () => {
+    expect(builderDefaults({ homeType: "Single Family Home" }, "Townhome")).toEqual({ homeType: "Townhome" });
+    expect(builderDefaults({ homeType: "Single Family Home" }, null)).toEqual({ homeType: "Single Family Home" });
+    expect(builderDefaults(null, "Mansion")).toEqual({ homeType: null });
+  });
+
+  it("fills in a floor plan's type only where the page names none, and leaves a home's for its plan", () => {
+    // Stock builds single-family homes and its pages name no type at all (Jeff, 2026-09-22).
     const plan = {
       planKey: "wyndam-iv",
       name: "Wyndam IV",
@@ -243,18 +255,25 @@ describe("builderDefaults", () => {
       baths: "4",
       sqft: null,
       garages: null,
-      homeType: "Townhome",
+      homeType: null as string | null,
       quickMoveIn: false,
       comingSoon: false,
       sourceUrl: null,
       galleryImages: [],
       blueprintImages: [],
     };
-    const out = standardizePlan(plan, { homeType: "Single Family Home" });
-    expect(out.homeType).toBe("Single Family Home");
-    expect(out.raw?.homeTypeRaw).toBe("Townhome");
-    // And with no setting the page still decides.
-    expect(standardizePlan(plan).homeType).toBe("Townhome");
+    const sfh = { homeType: "Single Family Home" as const };
+    expect(standardizePlan(plan, sfh).homeType).toBe("Single Family Home");
+    // What the builder's page says comes first (2026-10-14).
+    expect(standardizePlan({ ...plan, homeType: "Townhome" }, sfh).homeType).toBe("Townhome");
+    // A label that names no kind of home is no type, and the setting fills in.
+    const said = standardizePlan({ ...plan, homeType: "Homes" }, sfh);
+    expect(said.homeType).toBe("Single Family Home");
+    expect(said.raw?.homeTypeRaw).toBe("Homes");
+    // With no setting nothing is guessed.
+    expect(standardizePlan({ ...plan, homeType: "Homes" }).homeType).toBeNull();
+    // A home waits for its plan's type (quick-move-ins.ts, withPlanTypesOnHomes).
+    expect(standardizePlan({ ...plan, quickMoveIn: true }, sfh).homeType).toBeNull();
   });
 });
 

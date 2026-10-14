@@ -92,9 +92,9 @@ export function planFromRecord(r: WestBayPlan): NormalizedPlan | null {
     baths: range(r.baths),
     sqft: size(r.sqft),
     garages: clean(r.garage) ? `${clean(r.garage)} car` : null,
-    // WestBay builds single-family homes in these communities; a series of
-    // villas or townhomes says so in its name.
-    homeType: standardHomeType(/villa|town/i.test(series ?? "") ? series : "Single Family Home"),
+    // A series of villas or townhomes says so in its name; the others name
+    // no kind of home, and the connection's setting says (sync.ts).
+    homeType: standardHomeType(series),
     quickMoveIn: false,
     comingSoon: false,
     sourceUrl: clean(r.url) || null,
@@ -122,7 +122,7 @@ export function homeFromRecord(r: WestBayHome): NormalizedPlan | null {
     baths: range(r.baths),
     sqft: size(r.sqft),
     garages: clean(r.garage) ? `${clean(r.garage)} car` : null,
-    homeType: standardHomeType(/villa|town/i.test(series ?? "") ? series : "Single Family Home"),
+    homeType: standardHomeType(series),
     quickMoveIn: true,
     comingSoon: false,
     sourceUrl: clean(r.url) || null,

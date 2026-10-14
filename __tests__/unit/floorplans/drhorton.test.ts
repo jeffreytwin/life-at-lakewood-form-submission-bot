@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, homesOnPage, planLinks, planNameFrom, planPageHomeType, readDrhPage, homePageUrl } from "@/lib/floorplans/extractors/drhorton";
+import { homesOnPage, planLinks, planNameFrom, planPageHomeType, readDrhPage, homePageUrl } from "@/lib/floorplans/extractors/drhorton";
 
 // Shaped like Oakfield Lakes as fetched on 2026-09-23, pruned.
 const COMMUNITY = "https://www.drhorton.com/florida/manatee-sarasota/parrish/oakfield-lakes";
@@ -82,23 +82,13 @@ describe("D.R. Horton's plan page", () => {
 });
 
 describe("what D.R. Horton's pages say besides their pictures", () => {
-  it("reads the community's home type from its own description", () => {
-    const lakes = `<h2>About our community</h2><p>Oakfield Lakes offers a variety of carefully crafted single-family home floorplans.</p><h2>Tour</h2>`;
-    const ashcombe = `<h2>About our community</h2><p>Ashcombe brings a fresh take on modern townhome living.</p><h3>Schools</h3>`;
-    expect(communityHomeType(lakes)).toBe("Single Family Home");
-    expect(communityHomeType(ashcombe)).toBe("Townhome");
-    expect(communityHomeType("<h1>Oakfield</h1>")).toBeNull();
-    // Rye Crossing's description names no kind of home; its title does.
-    expect(communityHomeType("<title>Houses For Sale in Parrish, FL | Rye Crossing | D.R. Horton</title><h1>Rye Crossing</h1>")).toBe("Single Family Home");
-    expect(communityHomeType("<title>Townhomes For Sale in Venice, FL | Ashcombe</title>")).toBe("Townhome");
-  });
-
-  it("guesses no type for a community that builds more than one kind of home (Star Farms' Siesta, 2026-10-14)", () => {
-    const starFarms = `<title>Houses For Sale in Lakewood Ranch, FL | Star Farms</title>
-      <h2>About our community</h2><p>Star Farms offers single-family homes, paired villas and townhomes.</p><h2>Tour</h2>`;
-    expect(communityHomeType(starFarms)).toBeNull();
-    // The same kind named twice is still one kind.
-    expect(communityHomeType(`<h2>About our community</h2><p>Paired villas and more villas.</p><h2>x</h2>`)).toBe("Attached Villa");
+  it("reads no type off the community: its description is no guide to one plan (Star Farms' Siesta, 2026-10-14)", () => {
+    // The community page's words go nowhere: a plan or home is what its own page says, or the connection's setting.
+    const page = readDrhPage(`<title>Houses For Sale in Lakewood Ranch, FL | Star Farms</title><h1>Siesta</h1>
+      <div class="about-this-plan"><h2>About this floor plan</h2><p>This one-story floor plan features an open concept design.</p></div>`);
+    expect(page.homeType).toBeNull();
+    // A home's own page says it: Buckskin Drive's "This townhome features 3 bedrooms".
+    expect(readDrhPage(`<h1>18618 Buckskin Drive</h1><div class="about-this-plan"><h2>About this home</h2><p>This townhome features 3 bedrooms.</p></div>`).homeType).toBe("Townhome");
   });
 
   it("reads a plan's type from its own page", () => {

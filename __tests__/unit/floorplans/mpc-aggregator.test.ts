@@ -82,14 +82,15 @@ describe("a Wellen Park home's page names its type and describes it (M/I's Palm,
     </div>
     <h2>More Homes in Palmera At Wellen Park</h2>`;
 
-  it("reads a Multi-Family home as the townhome the site files it as, and keeps the description", () => {
+  it("keeps a Multi-Family home's label as it is, for a setting or a person to name, and keeps the description", () => {
+    // "Multi-Family" could as well be villas or condominiums: never guessed (2026-10-14).
     const read = readDetailPage(page);
-    expect(read.homeType).toBe("Townhome");
+    expect(read.homeType).toBe("Multi Family");
     expect(read.description).toBe("Introducing the Palm by M/I Homes! This 2-story floorplan features 3 bedrooms, a loft & 2.5 bathrooms.");
   });
 
   it("reads the same word on a card", () => {
-    expect(mpcHomeType("multi-family")).toBe("Townhome");
+    expect(mpcHomeType("multi-family")).toBe("Multi Family");
     expect(mpcHomeType("single-family")).toBe("Single Family Home");
     expect(mpcHomeType(null)).toBeNull();
   });

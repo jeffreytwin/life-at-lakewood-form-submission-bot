@@ -31,7 +31,8 @@ describe("plansFromScData (Taylor Morrison)", () => {
     expect(finch.sourceUrl).toBe(`${ORIGIN}/fl/tampa/parrish/firethorn/floor-plans/finch`);
     expect(finch.raw?.series).toBe("50' Journey Series");
     expect(finch.galleryImages[0]).toMatch(/^https:\/\/www\.taylormorrison\.com\/-\/media\//);
-    expect(finch.homeType).toBe("Single Family Home");
+    // "50' Journey Series" names no kind of home: the connection's setting says (2026-10-14).
+    expect(finch.homeType).toBeNull();
     expect(finch.description).toMatch(/^Finch is a thoughtfully designed single-story home/);
   });
 
@@ -46,16 +47,16 @@ describe("plansFromScData (Taylor Morrison)", () => {
     expect(tourUrl("https://example.com/tour")).toBe("https://example.com/tour");
   });
 
-  it("files plans by their collection: twin villas are attached villas, towns are townhomes, the rest single-family", () => {
+  it("files plans by their collection: twin villas are attached villas, towns are townhomes, the rest left to a setting", () => {
     expect(homeTypeOf("Twin Villa Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Attached Villa");
     expect(homeTypeOf("Detached Villa Golf Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Single Family Home");
-    expect(homeTypeOf("62' Golf Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Single Family Home");
+    expect(homeTypeOf("62' Golf Collection", "Esplanade at Azario Lakewood Ranch")).toBeNull();
     expect(homeTypeOf("16' Collection", "The Towns at Firethorn")).toBe("Townhome");
-    expect(homeTypeOf("Signature Collection", "Esplanade at Azario Lakewood Ranch")).toBe("Single Family Home");
-    expect(homeTypeOf("50' Journey Series", "Firethorn")).toBe("Single Family Home");
+    expect(homeTypeOf("Signature Collection", "Esplanade at Azario Lakewood Ranch")).toBeNull();
+    expect(homeTypeOf("50' Journey Series", "Firethorn")).toBeNull();
     expect(homeTypeOf(null, "The Towns at Firethorn")).toBe("Townhome");
     expect(homeTypeOf(null, "The Townhomes at Azario")).toBe("Townhome");
-    expect(homeTypeOf(null, null)).toBe("Single Family Home");
+    expect(homeTypeOf(null, null)).toBeNull();
   });
 
   it("maps availableHomesList homes to address-named QMIs", () => {
@@ -68,7 +69,7 @@ describe("plansFromScData (Taylor Morrison)", () => {
     expect(camelot.sqft).toBe(1603);
     expect(camelot.raw?.relatedPlan).toBe("spruce");
     expect(camelot.raw?.relatedPlanName).toBe("Spruce");
-    expect(camelot.homeType).toBe("Single Family Home");
+    expect(camelot.homeType).toBeNull();
     expect(camelot.sourceUrl).toContain("/home-available-now-at-13509-camelot-court");
   });
 

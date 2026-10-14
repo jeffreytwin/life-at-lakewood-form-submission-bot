@@ -7,6 +7,7 @@ import {
   nearlySameKey,
   planNameOf,
   withPlanPicturesOnHomes,
+  withPlanTypesOnHomes,
   withLinksAsRead,
   withQuickMoveInPictures,
   withQuickMoveInPrices,
@@ -596,5 +597,28 @@ describe("codeAndName with only a space after the code (David Weekley's Palmera,
     const brendlyn = plan({ planKey: "the-brendlyn", name: "The Brendlyn", raw: { planId: "F158" } });
     const home = plan({ planKey: "18050-foxtail-loop", name: "18050 Foxtail Loop", quickMoveIn: true, relatedPlanName: "F158 Brendlyn" });
     expect(linkQuickMoveIns([brendlyn, home])[1]).toMatchObject({ relatedPlanKey: "the-brendlyn", relatedPlanName: "The Brendlyn", relatedPlanMatch: "plan-id" });
+  });
+});
+
+describe("withPlanTypesOnHomes (Palmera's Foxtail, Jeff 2026-10-14)", () => {
+  const foxtail = plan({ planKey: "foxtail", name: "Foxtail", homeType: "Townhome" });
+  const home = (over: Partial<NormalizedPlan> = {}) =>
+    plan({ planKey: "17912-broadleaf-loop", name: "17912 Broadleaf Loop", quickMoveIn: true, homeType: null, relatedPlanKey: "foxtail", ...over });
+
+  it("gives a home with no type of its own its plan's, as this run read it", () => {
+    expect(withPlanTypesOnHomes([foxtail, home()])[1].homeType).toBe("Townhome");
+  });
+
+  it("else the plan's as the site has it, else the setting, else nothing", () => {
+    const known = new Map([["foxtail", { homeType: "Townhome" }]]);
+    expect(withPlanTypesOnHomes([home()], known)[0].homeType).toBe("Townhome");
+    expect(withPlanTypesOnHomes([home({ relatedPlanKey: null })], known, "Single Family Home")[0].homeType).toBe("Single Family Home");
+    expect(withPlanTypesOnHomes([home({ relatedPlanKey: null })], known)[0].homeType).toBeNull();
+  });
+
+  it("keeps a type the home's own page gives, and leaves plans alone", () => {
+    expect(withPlanTypesOnHomes([foxtail, home({ homeType: "Attached Villa" })])[1].homeType).toBe("Attached Villa");
+    const bare = plan({ homeType: null });
+    expect(withPlanTypesOnHomes([bare], undefined, "Townhome")[0]).toBe(bare);
   });
 });

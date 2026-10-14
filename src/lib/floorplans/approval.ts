@@ -9,7 +9,8 @@ import { speaksAsOwner } from "@/lib/floorplans/owner-words";
  * What a floor plan must carry before it is approved (Jeff, 2026-09-19 for
  * the score, 2026-09-20 for the rest): the sites filter and sort on these,
  * so a row without them is a row the site cannot place. A quick move-in's
- * row shows only its price, so that is all it needs.
+ * row shows its price, and its home type since types stopped being guessed
+ * (Jeff, 2026-10-14): one its plan does not give waits for a person.
  */
 const REQUIRED: [key: string, label: string][] = [
   ["priceDisplay", "a price"],
@@ -26,7 +27,7 @@ const present = (v: unknown): boolean =>
 /** What a record still lacks before approval, in the words the queue shows: "a price", "bedrooms", "a score". */
 export function missingFields(record: unknown): string[] {
   const rec = (record ?? {}) as Record<string, unknown>;
-  const required = rec.quickMoveIn === true ? REQUIRED.slice(0, 1) : REQUIRED;
+  const required = rec.quickMoveIn === true ? REQUIRED.filter(([key]) => key === "priceDisplay" || key === "homeType") : REQUIRED;
   const missing = required.filter(([key]) => !present(rec[key])).map(([, label]) => label);
   if (rec.quickMoveIn !== true && !(typeof rec.score === "number" && Number.isFinite(rec.score))) missing.push("a score");
   // A quick move-in shows on the sites only under its floor plan (Jeff, 2026-09-21):
@@ -46,8 +47,8 @@ const listOf = (items: string[]): string =>
  * Why a change cannot be approved yet, or null when it can. A base plan
  * needs its score (the sites list high scores first; the freelancers used
  * 1 to 10), its price, bedrooms, bathrooms, square feet, garages and home
- * type; a quick move-in needs its price; a removal needs nothing. What is
- * missing can be typed in the edit overlay.
+ * type; a quick move-in needs its price and home type; a removal needs
+ * nothing. What is missing can be typed in the edit overlay.
  */
 export function approvalBlocker(changeType: string, record: unknown): string | null {
   if (changeType === "remove") return null;

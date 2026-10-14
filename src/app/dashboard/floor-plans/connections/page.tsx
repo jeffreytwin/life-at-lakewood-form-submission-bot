@@ -25,6 +25,8 @@ interface Connection {
    * separate page of homes for sale, where the builder keeps one.
    */
   extractor_params: { url?: string; listUrls?: string[]; quickMoveInUrl?: string } | null;
+  /** What this community's plans are where the builder's pages do not say (migration 081). */
+  home_type: string | null;
   fp_communities: { name: string; fp_sites: { domain: string } | null } | null;
 }
 
@@ -297,13 +299,29 @@ export default function BuildersSettingsPage() {
   }
 
   /**
-   * What every plan of this builder is, whatever its pages say. Stock
-   * Luxury Homes builds single-family homes and nothing else, and its
-   * pages name no type at all (Jeff, 2026-09-22). Blank leaves it to the
-   * pages, as before.
+   * What this builder's plans are where its pages do not say. Stock Luxury
+   * Homes builds single-family homes and nothing else, and its pages name
+   * no type at all (Jeff, 2026-09-22). A type the builder's own pages give
+   * comes first, and a community's own setting before this (Jeff,
+   * 2026-10-14). Blank leaves it to a person in the queue.
    */
   async function setHomeType(b: Builder, homeType: string) {
     await fetch(`/api/internal/floorplans/builders/${b.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ homeType: homeType || null }),
+    });
+    fetchBuilders();
+  }
+
+  /**
+   * What this community's plans are where the builder's pages do not say
+   * (Jeff, 2026-10-14): a run no longer guesses one, and a builder can build
+   * villas in one community and only houses in the next. Blank leaves it to
+   * the builder's setting, then to a person in the queue.
+   */
+  async function setConnectionHomeType(c: Connection, homeType: string) {
+    await fetch(`/api/internal/floorplans/connections/${c.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ homeType: homeType || null }),
@@ -601,7 +619,7 @@ export default function BuildersSettingsPage() {
                   <th style={{ width: 28 }}></th>
                   <th>Builder</th>
                   <th>Method</th>
-                  <th title="What every plan of this builder is, whatever its pages say. Blank leaves it to the pages.">Home type</th>
+                  <th title="What this builder's plans are where its pages do not say, in every community without its own setting. Blank: you choose in the queue.">Home type</th>
                   <th>Health</th>
                   <th>Last run</th>
                   <th></th>
@@ -693,9 +711,9 @@ export default function BuildersSettingsPage() {
                             style={{ padding: "2px 6px", minWidth: 150 }}
                             value={b.engine_config?.homeType ?? ""}
                             onChange={(e) => setHomeType(b, e.target.value)}
-                            title="What every plan of this builder is, whatever its pages say. Blank leaves it to the pages."
+                            title="What this builder's plans are where its pages do not say, in every community without its own setting. Blank: you choose in the queue."
                           >
-                            <option value="">From the page</option>
+                            <option value="">Ask in the queue</option>
                             {HOME_TYPES.map((t) => (
                               <option key={t} value={t}>{t}</option>
                             ))}
@@ -720,6 +738,23 @@ export default function BuildersSettingsPage() {
                             <td className="text-sm">
                               ↳ {c.fp_communities?.name}
                               <span className="text-muted"> · {c.fp_communities?.fp_sites?.domain}</span>
+                              <div className="text-muted text-sm" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                                home type where the pages don&apos;t say:
+                                <select
+                                  className="form-input"
+                                  style={{ padding: "0 4px", fontSize: 11, width: "auto" }}
+                                  value={c.home_type ?? ""}
+                                  onChange={(e) => setConnectionHomeType(c, e.target.value)}
+                                  title="Only for a community where every plan is this type. Blank: the builder's setting, or you choose in the queue."
+                                >
+                                  <option value="">
+                                    {b.engine_config?.homeType ? `Builder's (${b.engine_config.homeType})` : "Ask in the queue"}
+                                  </option>
+                                  {HOME_TYPES.map((t) => (
+                                    <option key={t} value={t}>{t}</option>
+                                  ))}
+                                </select>
+                              </div>
                               <div>
                                 {c.extractor_params?.url ? (
                                   <a href={c.extractor_params.url} target="_blank" rel="noreferrer" className="text-muted text-sm">

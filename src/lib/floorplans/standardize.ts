@@ -13,10 +13,13 @@ export const isHomeType = (value: unknown): value is HomeType => HOME_TYPES.incl
 
 /**
  * The standard home type a builder's label means, or null when the label
- * says nothing recognizable (the Hub then asks for it). Order matters:
- * "Townhome" before the "home" fallback, "Coach Home" before the
- * condominium words, "detached" before the villa words (a detached villa
- * is a single-family home), villas before the single-family fallback.
+ * names none (the Hub then asks for it). Only a label that names a kind of
+ * home counts: "Homes", "Houses", "Estates" or "Single-Story" say nothing
+ * of whether the house stands alone, and reading them as single-family
+ * filed townhomes and villas as houses (Jeff, 2026-10-14: "we should not
+ * guess"). Order matters: "Coach Home" before the condominium words,
+ * "detached" before the villa words (a detached villa is a single-family
+ * home).
  */
 export function standardHomeType(raw: string | null | undefined): HomeType | null {
   const t = (raw ?? "")
@@ -32,7 +35,7 @@ export function standardHomeType(raw: string | null | undefined): HomeType | nul
   // A "detached villa" (Taylor Morrison's Detached Villa Golf Collection) stands alone: single-family.
   if (/\bdetached\b/.test(t)) return "Single Family Home";
   if (/\bvillas?\b|\bduplex\b|\bpaired\b|\btwin\b/.test(t)) return "Attached Villa";
-  if (/single|detached|estate|\bsfh\b|\bhomes?\b|\bhouses?\b/.test(t)) return "Single Family Home";
+  if (/\bsingle ?family\b|\bsfh\b|\bsfr\b/.test(t)) return "Single Family Home";
   return null;
 }
 
@@ -189,13 +192,14 @@ export function standardGarages(text: string | null | undefined): string | null 
 }
 
 /**
- * What is true of every plan a builder offers, whatever its own pages say.
- * Stock Luxury Homes builds single-family homes and nothing else (Jeff,
- * 2026-09-22), and its pages name no type at all, so the builder's setting
- * says it once rather than a person saying it on every plan.
+ * What a plan is where the builder's own pages do not say. Stock Luxury
+ * Homes builds single-family homes and nothing else (Jeff, 2026-09-22), and
+ * its pages name no type at all, so a setting says it once rather than a
+ * person saying it on every plan. Set for one community (Builder
+ * Connections, migration 081) or for the builder (Jeff, 2026-10-14).
  */
 export interface BuilderDefaults {
-  /** The home type every plan of this builder is, when the builder only builds one. */
+  /** The home type of a plan whose pages name none: the community's setting, else the builder's. */
   homeType?: HomeType | null;
 }
 
@@ -227,8 +231,12 @@ export function withPlanNamePrefix(plans: NormalizedPlan[], builderName: string)
   );
 }
 
-/** The builder's settings, as far as standardizing cares; anything unrecognized is ignored. */
-export function builderDefaults(config: Record<string, unknown> | null | undefined): BuilderDefaults {
+/**
+ * The settings, as far as standardizing cares: the community's home type
+ * (its connection's) before the builder's; anything unrecognized is ignored.
+ */
+export function builderDefaults(config: Record<string, unknown> | null | undefined, communityHomeType?: unknown): BuilderDefaults {
+  if (isHomeType(communityHomeType)) return { homeType: communityHomeType };
   const homeType = config?.homeType;
   return { homeType: isHomeType(homeType) ? homeType : null };
 }
@@ -368,12 +376,13 @@ export function showablePicture(url: string | null | undefined): boolean {
 /**
  * The plan as the site files it: its name in title case (readableName),
  * standard home type, one number for beds, baths and garages, and only
- * pictures the site can show. A builder that
- * only builds one type has it written in whatever its page said; the
- * builder's own labels are kept in raw either way.
+ * pictures the site can show. The home type is the builder's own label;
+ * where its pages give none, a floor plan takes the setting (defaults) and
+ * a quick move-in is left for its floor plan's (withPlanTypesOnHomes), and
+ * neither is guessed. The builder's own labels are kept in raw.
  */
 export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults = {}): NormalizedPlan {
-  const homeType = defaults.homeType ?? standardHomeType(plan.homeType);
+  const homeType = standardHomeType(plan.homeType) ?? (plan.quickMoveIn ? null : (defaults.homeType ?? null));
   const garages = standardGarages(plan.garages);
   const tour = asTour(plan.virtualTourUrl);
   const galleryImages = (plan.galleryImages ?? []).filter(showablePicture);
