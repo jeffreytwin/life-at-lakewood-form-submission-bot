@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 // someone sets once.
 const TABS = [
   { href: "/dashboard/floor-plans", label: "Changes" },
+  { href: "/dashboard/floor-plans/adjust", label: "Adjust a Floor Plan" },
   { href: "/dashboard/floor-plans/campaign", label: "Email Campaign" },
   { href: "/dashboard/floor-plans/connections", label: "Builder Connections" },
 ];

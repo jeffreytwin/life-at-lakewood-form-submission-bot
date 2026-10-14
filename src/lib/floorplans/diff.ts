@@ -10,6 +10,7 @@ import { asTour } from "@/lib/floorplans/standardize";
 import { looksLikeSpecList } from "@/lib/floorplans/description";
 import { onePerPicture, pictureKey, sharperCopy } from "@/lib/floorplans/extractors/plan-page";
 import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
+import { ADJUSTMENT_LABEL, adjustedOnto } from "@/lib/floorplans/adjustment";
 
 /** Canonical records written by the first slice carry the main image here instead of in galleryImages. */
 export type CanonicalRecord = NormalizedPlan & { primaryImage?: string | null };
@@ -680,6 +681,8 @@ export function ownFieldOnto(latest: NormalizedPlan | null, queued: NormalizedPl
   }
   // A tour the weekly review put to a person: only the tour comes off.
   if (label === TOUR_REVIEW_LABEL) return { ...latest, virtualTourUrl: null, virtualTourImage: null };
+  // A person's adjustment of a live plan: only what they set (adjustment.ts).
+  if (label === ADJUSTMENT_LABEL) return adjustedOnto(latest, queued);
   return queued;
 }
 

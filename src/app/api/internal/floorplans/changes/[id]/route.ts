@@ -4,6 +4,7 @@ import { logger } from "@/lib/shared/logger";
 import { HOME_TYPES, isHomeType, standardGarages } from "@/lib/floorplans/standardize";
 import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
 import { picturesAdded, picturesRemoved, primaryReplaced } from "@/lib/floorplans/pictures";
+import { ADJUSTMENT_LABEL, adjustmentSummary } from "@/lib/floorplans/adjustment";
 
 /**
  * Whether a base plan of this name exists for the scope: live, or waiting
@@ -232,11 +233,25 @@ export async function PATCH(
     // an approval sends, and the check that keeps a rejected change from
     // coming back (Kolter's Bahia with Bonus, 2026-09-28).
     const priceRow = change.change_type === "add" || change.field_changed === "price";
+    // An adjustment's row says what it changes from the plan on the site (adjustment.ts).
+    let values: { old_value?: string | null; new_value: string | null } = {
+      new_value: priceRow ? ((record.priceDisplay as string) ?? change.new_value) : change.new_value,
+    };
+    if (change.field_changed === ADJUSTMENT_LABEL) {
+      const { data: live } = await supabase
+        .from("fp_floor_plans")
+        .select("record")
+        .match({ site_id: change.site_id, community_id: change.community_id, builder_id: change.builder_id, plan_key: change.plan_key })
+        .is("removed_at", null)
+        .maybeSingle();
+      const summary = adjustmentSummary(live?.record as Partial<NormalizedPlan> | null, record as Partial<NormalizedPlan>);
+      values = { old_value: summary.oldValue, new_value: summary.newValue };
+    }
     const { data: updated, error } = await supabase
       .from("fp_pending_changes")
       .update({
         proposed_record: record,
-        new_value: priceRow ? ((record.priceDisplay as string) ?? change.new_value) : change.new_value,
+        ...values,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

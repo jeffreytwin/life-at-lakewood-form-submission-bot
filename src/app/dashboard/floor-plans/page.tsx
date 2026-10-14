@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { groupChanges, groupKeyOf, type ChangeGroup } from "@/lib/floorplans/group-changes";
 import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
+import { ADJUSTMENT_LABEL } from "@/lib/floorplans/adjustment";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
 import { HOME_TYPES, standardGarages } from "@/lib/floorplans/standardize";
@@ -1131,6 +1132,22 @@ export default function FloorPlansPage() {
       .catch(() => {});
   }
 
+  // A plan the Adjust tab queued opens here at once (?edit=<change id>),
+  // once the queue holding it has been read; the address forgets it after.
+  const editOnLoad = useRef<string | null>(null);
+  useEffect(() => {
+    editOnLoad.current = new URLSearchParams(window.location.search).get("edit");
+  }, []);
+  useEffect(() => {
+    const id = editOnLoad.current;
+    if (!id || !changes.length) return;
+    const group = groupChanges(changes).find((g) => g.rows.some((r) => r.id === id));
+    if (!group) return;
+    editOnLoad.current = null;
+    window.history.replaceState(null, "", window.location.pathname);
+    openEdit(group);
+  }, [changes]);
+
   /** Writes the form onto every pending row of the plan, so whichever row is approved carries the edits. */
   /**
    * Writes the form onto every pending row of the plan, so whichever row is
@@ -1943,6 +1960,11 @@ export default function FloorPlansPage() {
                                   {r.proposed_record?.tourReview?.reason && (
                                     <div className="text-muted">Why: {r.proposed_record.tourReview.reason}. Approve takes it off the site; Reject keeps it.</div>
                                   )}
+                                </div>
+                              ) : r.field_changed === ADJUSTMENT_LABEL && !r.new_value ? (
+                                // Queued from the Adjust tab and not yet changed (adjustment.ts).
+                                <div key={r.id}>
+                                  {r.field_changed}: <span className="text-muted">nothing changed yet. Edit to adjust, or Reject to drop it.</span>
                                 </div>
                               ) : (
                                 <div key={r.id}>
