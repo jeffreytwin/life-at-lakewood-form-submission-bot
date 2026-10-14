@@ -265,22 +265,41 @@ export function readDrhPage(html: string): {
     tour: tourUrlIn(html),
     gallery,
     drawings,
-    // A townhome community says so; anything else is left to the builder's default.
-    homeType: /\btown ?homes?\b/i.test(`${h1 ?? ""} ${description ?? ""}`) ? standardHomeType("Townhome") : null,
+    homeType: planPageHomeType(`${h1 ?? ""} ${description ?? ""}`),
   };
+}
+
+/**
+ * The home type a plan's own heading and description name: Pearson's
+ * "Welcome to the Pearson Townhome" is a townhome, a "paired villa" an
+ * attached villa. Null where they name none, which leaves it to the
+ * community's. Exported for tests.
+ */
+export function planPageHomeType(text: string): string | null {
+  const said = text.match(/\b(town ?homes?|detached villas?|paired villas?|villas?)\b/i)?.[1];
+  return said ? standardHomeType(said) : null;
 }
 
 /**
  * What a community page says it builds, in its own description: Oakfield
  * Lakes "offers a variety of carefully crafted single-family home
  * floorplans"; Ashcombe "brings a fresh take on modern townhome living".
- * Null where it says neither. Exported for tests.
+ * Null where it says neither — and where it names more than one kind of
+ * home: Star Farms builds single-family homes, villas and townhomes, and
+ * the first it named made its Siesta villa a single-family home (Jeff,
+ * 2026-10-14). A plan whose own page names no type is then asked about
+ * in the Hub rather than guessed. Exported for tests.
  */
 export function communityHomeType(html: string): string | null {
   const about = html.match(/About our community\s*<\/h\d>([\s\S]{0,6000}?)<h\d\b/i)?.[1] ?? "";
   const text = words(about);
-  const said = text.match(/\b(single[- ]family|town ?homes?|paired villas?|villas?|condominiums?|condos?)\b/i)?.[1];
-  if (said) return standardHomeType(said);
+  const said = new Set(
+    [...text.matchAll(/\b(single[- ]family|town ?homes?|detached villas?|paired villas?|villas?|condominiums?|condos?)\b/gi)].map((m) =>
+      standardHomeType(m[1])
+    )
+  );
+  if (said.size > 1) return null;
+  if (said.size === 1) return [...said][0];
   // Failing that, what the page's title says is for sale: "Houses For Sale
   // in Parrish, FL | Rye Crossing" (2026-09-23), whose description names
   // no kind of home at all.
@@ -404,9 +423,14 @@ export async function extractDrHorton(params: {
     }
   });
 
+  // A home is the kind of home its plan is, where its plan was read.
+  const planTypes = new Map<string, string>();
+  for (const plan of plans) if (plan?.homeType) planTypes.set(plan.planKey, plan.homeType);
+
   const homePlans = await mapLimit([...homes.values()], 8, async ({ home, listedOn }): Promise<NormalizedPlan> => {
     const address = (home.Address ?? "").trim();
     const sourceUrl = homePageUrl(home, listedOn);
+    const planType = home.PlanName ? planTypes.get(normKey(home.PlanName)) : undefined;
     const base: NormalizedPlan = {
       planKey: normKey(address),
       name: address,
@@ -416,7 +440,7 @@ export async function extractDrHorton(params: {
       baths: home.NumberOfBathrooms != null ? String(home.NumberOfBathrooms) : "",
       sqft: home.SquareFootage ?? null,
       garages: home.NumberOfGarages ? `${home.NumberOfGarages} car` : null,
-      homeType: communityType,
+      homeType: planType ?? communityType,
       quickMoveIn: true,
       comingSoon: false,
       sourceUrl,
