@@ -244,6 +244,25 @@ export function looksLikeSpecList(text: string | null | undefined): boolean {
 }
 
 /**
+ * Whether the list's "description" is only a card's tagline beside the
+ * prose the plan's own page writes: a line of a few words where the page
+ * gives sentences several times as long. William Ryan's cards print
+ * "Executive Series 60'" or "Walk-In Closets, Optional Guest Suite" above
+ * the plan's name, and the line was kept over the page's "About the …":
+ * every William Ryan plan went out with its card's line as its description,
+ * the Charlotte with "Executive Series 60'" (Jeff, 2026-10-15). Ashton
+ * Woods' "Open concept family, dining and kitchen space; Covered lanai"
+ * did the same. Pure; exported for tests.
+ */
+export function looksLikeTagline(listed: string | null | undefined, written: string | null | undefined): boolean {
+  const line = String(listed ?? "").trim();
+  const prose = String(written ?? "").trim();
+  if (!line || !prose) return false;
+  if (line.split(/\s+/).length > 12) return false;
+  return /[.!?]/.test(prose) && prose.length >= line.length * 3;
+}
+
+/**
  * Gives every base plan the builder left without a description one of its
  * own (describePlan). A spec line counts as no description: it is dropped,
  * and the plan gets a written one, or none at all where a quick move-in

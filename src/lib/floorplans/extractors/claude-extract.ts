@@ -24,7 +24,7 @@ import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
 import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
 import { asTour, bathsStated, namesAnAddress, planInHomeLabel, weekleyCounts } from "@/lib/floorplans/standardize";
-import { looksLikeSpecList } from "@/lib/floorplans/description";
+import { looksLikeSpecList, looksLikeTagline } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 import { isMedallionPage, medallionTour } from "@/lib/floorplans/extractors/medallion";
@@ -958,9 +958,11 @@ export function withoutSharedAddress(plans: NormalizedPlan[]): NormalizedPlan[] 
  * prose. Kolter's Cresswind cards print "Island Collection - 3,433 Total
  * Sq. Ft. 3 Bedroom (up to 4 Bedroom), Den, …", which kept out the "About
  * this floorplan" its plan pages give, and every Cresswind plan went out
- * with our sentence (Jeff, 2026-09-28). The line is kept beside the prose
- * (raw.featuresLine) for the baths it says in words. Pure; exported for
- * tests.
+ * with our sentence (Jeff, 2026-09-28). A card's tagline gives way to the
+ * page's prose too: William Ryan's Charlotte went out as "Executive Series
+ * 60'" (looksLikeTagline; Jeff, 2026-10-15). The line is kept beside the
+ * prose (raw.featuresLine) for the baths it says in words. Pure; exported
+ * for tests.
  */
 export function descriptionFromPage(
   plan: NormalizedPlan,
@@ -969,7 +971,9 @@ export function descriptionFromPage(
   const listed = plan.description?.trim() || null;
   const written = fromPage?.trim() || null;
   if (!listed) return { description: written, raw: plan.raw };
-  if (!written || !looksLikeSpecList(listed) || looksLikeSpecList(written)) return { description: plan.description ?? null, raw: plan.raw };
+  if (!written || looksLikeSpecList(written) || !(looksLikeSpecList(listed) || looksLikeTagline(listed, written))) {
+    return { description: plan.description ?? null, raw: plan.raw };
+  }
   const raw = plan.raw?.featuresLine ? plan.raw : { ...(plan.raw ?? {}), featuresLine: listed };
   return { description: written, raw };
 }

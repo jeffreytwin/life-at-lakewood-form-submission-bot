@@ -53,3 +53,32 @@ describe("descriptionFromPage: a plan page's prose over a card's line of facts (
     expect(out.baths).toBe("2.5");
   });
 });
+
+// William Ryan's River Preserve Estates: the card's line above the plan's
+// name, and the plan page's "About the 60' - Charlotte" (Jeff, 2026-10-15).
+const charlotte =
+  "Welcome to the Charlotte - where spacious living meets customizable luxury. This exceptional floor plan offers the perfect blend of functionality and flexibility, designed to cater to your every need. Whether you're seeking a cozy family retreat or an entertainer's paradise, The Charlotte by William Ryan Homes exceeds expectations.";
+
+describe("descriptionFromPage: a plan page's prose over a card's tagline (William Ryan)", () => {
+  it("takes the page's prose over the card's line, and keeps the line beside it", () => {
+    const got = descriptionFromPage(plan({ name: "Charlotte", description: "Executive Series 60'" }), charlotte);
+    expect(got.description).toBe(charlotte);
+    expect(got.raw?.featuresLine).toBe("Executive Series 60'");
+  });
+
+  it("does so for every William Ryan and Ashton Woods card line the run kept", () => {
+    for (const line of [
+      "5 Bedroom Multi Gen Option Home!",
+      "Walk-In Closets, Optional Guest Suite",
+      "Lanai Included, Optional 1st Floor Bonus Room",
+      "Open concept family, dining and kitchen space; Covered lanai",
+    ]) {
+      expect(descriptionFromPage(plan({ description: line }), charlotte).description).toBe(charlotte);
+    }
+  });
+
+  it("keeps the card's line where the page's text is no longer, or is no prose", () => {
+    expect(descriptionFromPage(plan({ description: "Executive Series 60'" }), "Executive Series 60' - Charlotte").description).toBe("Executive Series 60'");
+    expect(descriptionFromPage(plan({ description: "Executive Series 60'" }), null).description).toBe("Executive Series 60'");
+  });
+});
