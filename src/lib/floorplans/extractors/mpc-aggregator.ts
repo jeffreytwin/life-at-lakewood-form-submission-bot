@@ -325,8 +325,22 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return out;
 }
 
-/** The home with what its own page adds; a page that will not load leaves it as its card had it. */
-async function withDetailPage(plan: NormalizedPlan, origin: string): Promise<NormalizedPlan> {
+/**
+ * Whether a home's page sent the reader somewhere other than a home: Wellen
+ * Park sends the address of a home it has taken down to its home search
+ * (wellenpark.com/home/3050629/detail/ → /find-a-home, 2026-10-15). Pure;
+ * exported for tests.
+ */
+export function movedAway(res: { redirected: boolean; url: string }): boolean {
+  return res.redirected && !/\/home\/\d+/i.test(res.url);
+}
+
+/**
+ * The home with what its own page adds; a page that will not load leaves it
+ * as its card had it. A page that has gone (movedAway) is not read, and its
+ * address is added to `gone`.
+ */
+async function withDetailPage(plan: NormalizedPlan, origin: string, gone: string[]): Promise<NormalizedPlan> {
   if (!plan.sourceUrl) return plan;
   const url = new URL(plan.sourceUrl, origin).href;
   try {
@@ -335,6 +349,10 @@ async function withDetailPage(plan: NormalizedPlan, origin: string): Promise<Nor
       redirect: "follow",
       signal: AbortSignal.timeout(30_000),
     });
+    if (res.ok && movedAway(res)) {
+      gone.push(url);
+      return { ...plan, sourceUrl: url };
+    }
     if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
     const page = readDetailPage(await res.text());
     // Only the builder's own pictures: a to-be-built page with no gallery
@@ -512,7 +530,21 @@ export async function extractMpcAggregator(params: {
   // picture is taken out only when it repeats within its own plan: sister
   // plans show the same model (Foxtail and Foxtail II, M/I at Palmera), and
   // each keeps every picture its page shows (Jeff, 2026-09-24).
-  const read = await mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin));
+  const gone: string[] = [];
+  const read = await mapLimit([...byKey.values()], 4, (plan) => withDetailPage(plan, new URL(listUrl).origin, gone));
+  // A list with a home whose page has gone is not the live one. In the
+  // small hours Wellen Park has served an old copy of its listings: homes
+  // taken down weeks before, Oakbend's plans filed under Palmera, and the
+  // prices of the time on homes still listed, which went to the site as
+  // price changes (ICI and Lee Wetherington, Oct 7 and Oct 15). Nothing is
+  // taken from such a list; the next run reads the live one (Jeff,
+  // 2026-10-15: "I just want it to read the live site").
+  if (gone.length) {
+    const homes = gone.map((u) => u.match(/\/home\/(\d+)/)?.[1] ?? u);
+    throw new Error(
+      `${origin} served an old copy of its listings: ${gone.length} of ${read.length} homes link to pages it no longer has (${homes.join(", ")}); nothing was taken from it`
+    );
+  }
   const planPage = params.planPage ?? (neighborhood ? BUILDER_PLAN_PAGES[builderSlug]?.[neighborhood] : undefined);
   return planPage ? mapLimit(read, 4, (plan) => withBuilderTour(plan, planPage)) : read;
 }
