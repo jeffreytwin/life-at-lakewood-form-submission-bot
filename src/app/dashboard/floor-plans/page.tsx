@@ -1442,7 +1442,7 @@ export default function FloorPlansPage() {
    */
   async function rejectSelected() {
     const list = selectedGroups;
-    if (!confirm(`Reject ${list.length} selected plan${list.length === 1 ? "" : "s"}? A rejected change is not raised again; Restore under the Rejected filter brings one back.`)) return;
+    if (!confirm(`Reject ${list.length} selected plan${list.length === 1 ? "" : "s"}? A rejected change is not raised again, except a price, which comes back while the builder's price differs from the site's; Restore under the Rejected filter brings one back.`)) return;
     const view = changesRef.current.status;
     setSelected(new Set());
     playOut(list, "reject");
