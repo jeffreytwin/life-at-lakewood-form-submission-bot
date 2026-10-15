@@ -17,7 +17,7 @@
 
 import { MlsGridClient, MlsGridError, type MlsGridStats } from "@/lib/listings/mlsgrid";
 import { normalizeListing } from "@/lib/listings/normalize";
-import { classifyListing } from "@/lib/listings/classify";
+import { classifyListing, matchVillage } from "@/lib/listings/classify";
 import { buildListingRecord, recordFingerprint } from "@/lib/listings/transform";
 import { seedSiteMediaFromLive } from "@/lib/listings/media-seed";
 import { runPhotoJob, type PhotoDeps, type PhotoSummary } from "@/lib/listings/photos";
@@ -167,6 +167,8 @@ export interface SiteWriteSummary {
   unstaged: number;
   held: number;
   villagesChanged: number;
+  /** Held listings a neighborhood edit moved to another neighborhood this run. */
+  moved: number;
   skipped?: string;
 }
 
@@ -231,6 +233,44 @@ export function isRelevant(raw: MlsGridProperty, marketCities: ReadonlySet<strin
   if (known.has(raw.ListingId)) return true;
   const city = (raw.City || raw.PostalCity || "").toLowerCase();
   return !!city && marketCities.has(city);
+}
+
+export type Rematch =
+  | { kind: "moved"; listingId: string; from: string | null; to: VillageWithTerms }
+  | { kind: "unmatched"; listingId: string; detail: string };
+
+/**
+ * Pure: held listings whose neighborhood no longer agrees with the terms.
+ *
+ * A pull only classifies the listings it fetched: the hourly ones the MLS
+ * changed, the nightly a slice of 1,500 at a time. A Hub edit -- a term
+ * removed, a neighborhood deactivated, a longer term added elsewhere --
+ * changes nothing in the MLS, so without this a listing could keep a
+ * neighborhood it no longer matches until a full pass happened to reach it,
+ * and one that passed it minutes before the edit kept it for a day (Palm
+ * Grove, 2026-10-15). Every run re-matches the whole held set from what was
+ * last pulled; it is cheap, and the edit lands on the next run.
+ *
+ * Only the neighborhood is decided here. City, status and the rest come from
+ * the MLS, and a pull is what changes them. A row with no subdivision is a
+ * placeholder the pull has not filled yet, never a reason to remove.
+ */
+export function rematchHeld(
+  held: db.HeldNeighborhoodInput[],
+  villages: VillageWithTerms[],
+  skip: ReadonlySet<string>
+): Rematch[] {
+  const out: Rematch[] = [];
+  for (const h of held) {
+    if (skip.has(h.listing_id) || !h.subdivision?.trim()) continue;
+    const match = matchVillage(h.subdivision, h.street_text, villages);
+    if (!match) {
+      out.push({ kind: "unmatched", listingId: h.listing_id, detail: `Subdivision "${h.subdivision}" no longer matches any neighborhood term` });
+    } else if (match.id !== h.village_id) {
+      out.push({ kind: "moved", listingId: h.listing_id, from: h.village_id, to: match });
+    }
+  }
+  return out;
 }
 
 function formatMinutes(mins: number): string {
@@ -458,7 +498,7 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
       const summary: SiteWriteSummary = {
         siteId: site.id, domain: site.domain, writeMode: site.write_mode, target: site.target_collection_id,
         classified: 0, eligible: 0, removedNow: 0, inserted: 0, updated: 0, unchanged: 0,
-        waitingForPhotos: 0, waitingForData: 0, failed: 0, deleted: 0, unstaged: 0, held: 0, villagesChanged: 0,
+        waitingForPhotos: 0, waitingForData: 0, failed: 0, deleted: 0, unstaged: 0, held: 0, villagesChanged: 0, moved: 0,
       };
       summaries.set(site.id, summary);
       const villages = await db.loadVillagesWithTerms(site.id);
@@ -509,6 +549,28 @@ export async function runReconcile(opts: ReconcileOptions): Promise<ReconcileRes
           needs_write: true,
           removed_at: nowIso,
         });
+      }
+      // Hub edits to the neighborhoods reach the listings this run did not pull.
+      const names = new Map(villages.map((v) => [v.id, v.name]));
+      for (const r of rematchHeld(await db.loadHeldNeighborhoodInputs(site.id), villages, new Set([...pulledIds, ...missingIds]))) {
+        if (r.kind === "unmatched") {
+          summary.removedNow += 1;
+          rows.push({
+            site_id: site.id,
+            listing_id: r.listingId,
+            state: "removed",
+            reason_code: "no_village",
+            reason_detail: r.detail,
+            needs_write: true,
+            removed_at: nowIso,
+          });
+        } else {
+          summary.moved += 1;
+          rows.push({ site_id: site.id, listing_id: r.listingId, village_id: r.to.id, needs_write: true });
+          run.event("info", "rematch", `${site.name}: moved from ${(r.from && names.get(r.from)) ?? "no neighborhood"} to ${r.to.name} after a neighborhood term change`, {
+            siteId: site.id, listingId: r.listingId, village: r.to.name,
+          });
+        }
       }
       await db.upsertSiteListings(rows);
     }

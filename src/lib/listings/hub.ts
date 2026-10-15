@@ -1,6 +1,6 @@
 // What the Hub's Listings section reads and edits. Validation lives here so
 // the routes stay thin, and every edit is one the next run picks up on its
-// own: a term change reclassifies on the next pull, a paused site is
+// own: a term change re-matches every held listing on the next run, a paused site is
 // skipped, the engine switch gates the cron tick.
 
 import { supabase } from "@/lib/supabase/client";
