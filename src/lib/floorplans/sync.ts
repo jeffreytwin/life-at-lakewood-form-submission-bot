@@ -284,8 +284,7 @@ async function spentOn(runId: string): Promise<Record<string, unknown>> {
   return totals ? { last_run_reads: totals.reads, last_run_cached: totals.cached, last_run_cost_cents: totals.costCents } : {};
 }
 
-/** Whether an identical change was rejected and the rejection still holds: rejections stick. */
-export async function stillRejected(args: {
+interface ChangeAsked {
   siteId: string;
   communityId: string;
   builderId: string;
@@ -294,7 +293,23 @@ export async function stillRejected(args: {
   fieldChanged?: string;
   newValue?: string | null;
   proposedRecord?: NormalizedPlan | null;
-}): Promise<boolean> {
+}
+
+/**
+ * Whether an identical change was rejected and the rejection still holds:
+ * rejections stick, but for a price. A price read off the builder is
+ * proposed whenever it differs from the record, at a value rejected before
+ * or not (Jeff, 2026-10-15: "It's important that we reflect the current
+ * price from the builder"); one rejected before goes to a person rather
+ * than being approved on its own (runConnection).
+ */
+export async function stillRejected(args: ChangeAsked): Promise<boolean> {
+  if (args.changeType === "update" && args.fieldChanged === "price") return false;
+  return rejectedBefore(args);
+}
+
+/** Whether an identical change was rejected, and the rejection still holds for it. */
+async function rejectedBefore(args: ChangeAsked): Promise<boolean> {
   const fieldKey = args.fieldChanged ?? null;
   // Identical = same plan + change type + field + proposed new value. A
   // rejected new plan comes back once the builder fills in something it
@@ -1009,9 +1024,10 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
         // what is waiting for it in the queue stays.
         await withdrawOutdated(ids, compared, [...reviewed, ...gate.held], current);
         // Nor with anything of the plan's still waiting for a person from an
-        // earlier run: then the price waits with it.
+        // earlier run: then the price waits with it. Nor at a price a person
+        // rejected before: it is proposed again (stillRejected), but to them.
         const price = onItsOwn.find((c) => c.field === "priceDisplay");
-        if (price && (await othersWaiting(ids))) {
+        if (price && ((await othersWaiting(ids)) || (await rejectedBefore({ ...ids, fieldChanged: price.label, newValue: price.newValue })))) {
           onItsOwn.splice(onItsOwn.indexOf(price), 1);
           reviewed.push(price);
         }
