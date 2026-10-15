@@ -62,6 +62,7 @@ const KINDS = [
   "update",
   "delete",
   "unstage",
+  "rematch",
   "write_failed",
   "mass_delete_guard",
   "gap",

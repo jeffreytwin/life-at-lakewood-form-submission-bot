@@ -25,6 +25,7 @@ vi.mock("@/lib/listings/db", () => ({
   loadWritableSiteListings: vi.fn(),
   loadPendingRemovals: vi.fn(),
   countLiveSiteListings: vi.fn(),
+  loadHeldNeighborhoodInputs: vi.fn(),
   loadSiteGalleries: vi.fn(),
   refreshVillageCounts: vi.fn(),
 }));
@@ -66,7 +67,7 @@ import { loadDiscoverCursor, saveDiscoverCursor } from "@/lib/listings/discover"
 import { reimportBrokenPhotos } from "@/lib/listings/audit";
 import { bulkRemoveItems, bulkSaveItems, type WixItemData } from "@/lib/wix/client";
 import { normalizeListing } from "@/lib/listings/normalize";
-import { FULL_VERIFY_MAX_LISTINGS, runReconcile, BROKEN_PHOTO_CHECK_MIN_MS, type ReconcileMode } from "@/lib/listings/reconcile";
+import { FULL_VERIFY_MAX_LISTINGS, runReconcile, rematchHeld, BROKEN_PHOTO_CHECK_MIN_MS, type ReconcileMode } from "@/lib/listings/reconcile";
 import type { MlsGridClient } from "@/lib/listings/mlsgrid";
 import type { LsSite, LsSiteListing, MlsGridProperty, VillageWithTerms } from "@/lib/listings/types";
 
@@ -218,6 +219,7 @@ beforeEach(() => {
   vi.mocked(db.loadPendingRemovals).mockResolvedValue([]);
   vi.mocked(db.loadSiteGalleries).mockResolvedValue(new Map());
   vi.mocked(db.countLiveSiteListings).mockResolvedValue(150);
+  vi.mocked(db.loadHeldNeighborhoodInputs).mockResolvedValue([]);
   vi.mocked(db.refreshVillageCounts).mockResolvedValue({ changed: 0 });
   vi.mocked(db.loadKnownListingIds).mockResolvedValue([]);
   vi.mocked(db.loadFullCursor).mockResolvedValue(null);
@@ -678,5 +680,50 @@ describe("the nightly photo check", () => {
     await runReconcile({ mode: "full", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ byId: [] }) });
 
     expect(events).toContainEqual(expect.objectContaining({ level: "error", kind: "photos_broken", message: expect.stringContaining("too many to act on") }));
+  });
+});
+
+describe("neighborhood edits reach listings the run did not pull", () => {
+  const palmGrove: VillageWithTerms = { ...village, id: "v-palm-grove", name: "Palm Grove", terms: [] };
+  const held = (listing_id: string, village_id: string | null, subdivision: string | null) => ({ listing_id, village_id, subdivision, street_text: null });
+
+  it("flags a listing whose neighborhood lost its last term, and moves one a term now sends elsewhere", () => {
+    const out = rematchHeld(
+      [held("MFRPALM", palmGrove.id, "PALM GROVE"), held("MFRMOVE", palmGrove.id, "BAY ISLES HARBOR"), held("MFRSAME", village.id, "BAY ISLES")],
+      [village, palmGrove],
+      new Set()
+    );
+    expect(out).toEqual([
+      { kind: "unmatched", listingId: "MFRPALM", detail: 'Subdivision "PALM GROVE" no longer matches any neighborhood term' },
+      { kind: "moved", listingId: "MFRMOVE", from: palmGrove.id, to: village },
+    ]);
+  });
+
+  it("treats a deactivated neighborhood like one with no terms", () => {
+    const out = rematchHeld([held("MFR1", village.id, "BAY ISLES")], [{ ...village, active: false }], new Set());
+    expect(out).toMatchObject([{ kind: "unmatched", listingId: "MFR1" }]);
+  });
+
+  it("leaves alone the listings this run pulled, and placeholders with no subdivision yet", () => {
+    expect(rematchHeld([held("MFRPULLED", palmGrove.id, "PALM GROVE"), held("MFRSEED", village.id, null), held("MFRBLANK", village.id, "  ")], [village], new Set(["MFRPULLED"]))).toEqual([]);
+  });
+
+  it("removes and moves on an hourly that pulled neither listing", async () => {
+    const { handle, events } = fakeRun("incremental");
+    vi.mocked(startRun).mockResolvedValue(handle);
+    vi.mocked(db.loadVillagesWithTerms).mockResolvedValue([village, palmGrove]);
+    vi.mocked(db.loadHeldNeighborhoodInputs).mockResolvedValue([held("MFRPALM", palmGrove.id, "PALM GROVE"), held("MFRMOVE", palmGrove.id, "BAY ISLES HARBOR")]);
+    vi.mocked(db.loadPendingRemovals).mockResolvedValue([
+      siteListing("MFRPALM", { state: "removed", wix_item_id: "MFRPALM", reason_code: "no_village", reason_detail: 'Subdivision "PALM GROVE" no longer matches any neighborhood term' }),
+    ]);
+
+    const result = await runReconcile({ mode: "incremental", trigger: "cron", deadline: NOW.getTime() + 240_000, client: fakeClient({ modified: [] }) });
+
+    expect(db.loadHeldNeighborhoodInputs).toHaveBeenCalledWith(site.id);
+    expect(patches()).toContainEqual(expect.objectContaining({ listing_id: "MFRPALM", state: "removed", reason_code: "no_village", needs_write: true, removed_at: NOW.toISOString() }));
+    expect(patches()).toContainEqual({ site_id: site.id, listing_id: "MFRMOVE", village_id: village.id, needs_write: true });
+    expect(events.find((e) => e.kind === "rematch")?.message).toContain("moved from Palm Grove to Bay Isles - Harbor Section");
+    expect(bulkRemoveItems).toHaveBeenCalledWith(site.wix_site_id, "HousesforSale2", ["MFRPALM"]);
+    expect(result.sites[0]).toMatchObject({ removedNow: 1, moved: 1, deleted: 1 });
   });
 });

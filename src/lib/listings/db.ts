@@ -284,6 +284,32 @@ export async function loadPendingRemovals(siteId: string): Promise<LsSiteListing
   );
 }
 
+export interface HeldNeighborhoodInput {
+  listing_id: string;
+  village_id: string | null;
+  subdivision: string | null;
+  street_text: string | null;
+}
+
+/**
+ * Every listing the site holds (staged or live) with what decides its
+ * neighborhood, as last pulled. Narrow on purpose: it is read on every run.
+ */
+export async function loadHeldNeighborhoodInputs(siteId: string): Promise<HeldNeighborhoodInput[]> {
+  const held = await selectAll<{ listing_id: string; village_id: string | null }>("load held site listings", (from, to) =>
+    supabase.from("ls_site_listings").select("listing_id, village_id").eq("site_id", siteId).in("state", ["staged", "live"]).order("listing_id").range(from, to)
+  );
+  const fields = new Map<string, { subdivision: string | null; street_text: string | null }>();
+  for (const part of chunk(held.map((h) => h.listing_id), IN_CHUNK)) {
+    const { data, error } = await supabase.from("ls_listings").select("listing_id, subdivision, street_text").in("listing_id", part);
+    if (error) fail("load held listing subdivisions", error);
+    for (const row of (data ?? []) as Array<{ listing_id: string; subdivision: string | null; street_text: string | null }>) {
+      fields.set(row.listing_id, { subdivision: row.subdivision, street_text: row.street_text });
+    }
+  }
+  return held.map((h) => ({ ...h, subdivision: fields.get(h.listing_id)?.subdivision ?? null, street_text: fields.get(h.listing_id)?.street_text ?? null }));
+}
+
 export async function countLiveSiteListings(siteId: string): Promise<number> {
   const { count, error } = await supabase
     .from("ls_site_listings")
