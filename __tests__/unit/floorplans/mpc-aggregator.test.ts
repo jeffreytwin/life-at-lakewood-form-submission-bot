@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { builderPlanPage, extractMpcAggregator, folderOf, listPageHtml, mpcHomeType, parseCards, normalizeCard, priceOf, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { builderPlanPage, extractMpcAggregator, folderOf, listPageHtml, movedAway, mpcHomeType, parseCards, normalizeCard, priceOf, readDetailPage } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Real Wellen Park home-search cards (round mpc3 capture): a homes-by-towne
 // move-in-ready (address in <h3>), a mattamy move-in-ready, and an M/I
@@ -170,6 +170,57 @@ describe("a plan's tour from its builder's own page (M/I's Candor, 2026-09-24)",
     // A home's tour is of the house itself: its plan's page is not asked.
     expect(tour("17524 Macarthur Loop")).toBeNull();
     expect(asked.some((u) => /macarthur/i.test(u) && u.startsWith(own))).toBe(false);
+  });
+});
+
+describe("an old copy of the listings is not read (ICI's Palmera, Oct 7 and Oct 15)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const card = (id: number, name: string, price: string) => `
+    <article data-comp="property" data-builder-name="ici-homes" data-neighborhood="palmera" data-type="single-family"
+      data-beds="5" data-baths="3" data-sqft="3610" data-availability="">
+      <a href="https://wellenpark.com/home/${id}/detail/" class="box"><figure class="img-box"><img src="https://static.wellenpark.com/Images/Homes/ICI/${id}.jpg"></figure>
+      <div class="content"><h3>${name}</h3><h4>FROM ${price}</h4></div></a>
+    </article>`;
+  const list = "https://wellenpark.com/available-homes/";
+  // Wellen Park sends a home it has taken down to its home search.
+  const sentTo = (url: string, body: string) => {
+    const res = new Response(body, { status: 200 });
+    Object.defineProperty(res, "redirected", { value: true });
+    Object.defineProperty(res, "url", { value: url });
+    return res;
+  };
+  const serve = (pages: Record<string, string>, gone: string[]) =>
+    vi.stubGlobal("fetch", async (url: string) =>
+      gone.includes(url)
+        ? sentTo("https://wellenpark.com/find-a-home/", pages[list])
+        : new Response(pages[url] ?? "", { status: pages[url] ? 200 : 404 })
+    );
+
+  it("tells a home's page that has gone from one that is there", () => {
+    expect(movedAway({ redirected: true, url: "https://wellenpark.com/find-a-home/" })).toBe(true);
+    expect(movedAway({ redirected: true, url: "https://wellenpark.com/home/3911999/detail/" })).toBe(false);
+    expect(movedAway({ redirected: false, url: "https://wellenpark.com/home/3911999/detail/" })).toBe(false);
+  });
+
+  it("takes nothing from a list with a home whose page has gone, and says which", async () => {
+    const pages = {
+      [list]: card(3050629, "Brooke", "$954,900") + card(3911998, "Ava", "$884,900"),
+      "https://wellenpark.com/home/3911998/detail/": "<h1>Ava</h1>",
+    };
+    serve(pages, ["https://wellenpark.com/home/3050629/detail/"]);
+    await expect(extractMpcAggregator({ builderName: "ICI Homes", communityName: "Palmera", url: list })).rejects.toThrow(
+      "https://wellenpark.com served an old copy of its listings: 1 of 2 homes link to pages it no longer has (3050629); nothing was taken from it"
+    );
+  });
+
+  it("reads the live list as before", async () => {
+    const pages = {
+      [list]: card(3911999, "Brooke", "$974,900"),
+      "https://wellenpark.com/home/3911999/detail/": "<h1>Brooke</h1>",
+    };
+    serve(pages, []);
+    const plans = await extractMpcAggregator({ builderName: "ICI Homes", communityName: "Palmera", url: list });
+    expect(plans.map((p) => [p.name, p.price])).toEqual([["Brooke", 974900]]);
   });
 });
 
