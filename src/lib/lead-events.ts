@@ -3,7 +3,7 @@
  * StatusSoundMonitor emits; RoutingToggle (speech bubble) and Sidebar (badge) subscribe.
  */
 
-export type LeadEventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "unavailable_owner" | "followup" | "reroute" | "done" | "text_me" | "bad_data" | "email_draft_new" | "email_draft_approved" | "email_sent" | "listings_alert" | "floorplan_campaign" | "builder_error" | "floorplans_cleared";
+export type LeadEventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "unavailable_owner" | "followup" | "reroute" | "done" | "text_me" | "bad_data" | "email_draft_new" | "email_draft_approved" | "email_sent" | "listings_alert" | "floorplan_campaign" | "builder_error" | "floorplans_cleared" | "community_sold_out";
 
 export interface LeadEvent {
   type: LeadEventType;
@@ -22,6 +22,8 @@ export interface LeadEvent {
   previousAgentName?: string;
   /** "builder_error" only: which connection failed, as "Builder · Community". */
   builderName?: string;
+  /** "community_sold_out" only: the neighborhood that ran out of new builds. */
+  communityName?: string;
 }
 
 type LeadEventListener = (event: LeadEvent) => void;

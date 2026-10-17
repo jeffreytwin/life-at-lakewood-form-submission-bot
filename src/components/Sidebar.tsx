@@ -11,6 +11,7 @@ const navItems = [
   { href: "/dashboard/email-hub/drafts", label: "Email", icon: "\u2709" },
   { href: "/dashboard/floor-plans", label: "Floor Plans", icon: "\u25A6" },
   { href: "/dashboard/listings", label: "Listings", icon: "\u2616" },
+  { href: "/dashboard/community-alerts", label: "Community Alerts", icon: "\u2691" },
   { href: "/dashboard/agents", label: "Agents", icon: "\u263A" },
 ];
 
@@ -29,6 +30,7 @@ export default function Sidebar({
   const [listingErrorCount, setListingErrorCount] = useState(0);
   const [campaignAlertCount, setCampaignAlertCount] = useState(0);
   const [builderErrorCount, setBuilderErrorCount] = useState(0);
+  const [communityAlertCount, setCommunityAlertCount] = useState(0);
 
   useEffect(() => {
     return onFailedCount(setFailedBadge);
@@ -127,6 +129,22 @@ export default function Sidebar({
     return () => clearInterval(interval);
   }, []);
 
+  // Poll for open community alerts: a neighborhood sold out and its
+  // website to-do list is not finished (Jeff, 2026-10-17).
+  useEffect(() => {
+    function fetchCommunityAlerts() {
+      fetch("/api/internal/community-alerts?count=1")
+        .then((r) => r.json())
+        .then((data) => {
+          setCommunityAlertCount(typeof data?.count === "number" ? data.count : 0);
+        })
+        .catch(() => {});
+    }
+    fetchCommunityAlerts();
+    const interval = setInterval(fetchCommunityAlerts, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
   async function handleLogout() {
     await fetch("/api/internal/logout", { method: "POST" });
     router.push("/login");
@@ -195,6 +213,15 @@ export default function Sidebar({
                 )}
                 {item.href === "/dashboard/listings" && listingErrorCount > 0 && (
                   <span className="nav-badge">{listingErrorCount}</span>
+                )}
+                {item.href === "/dashboard/community-alerts" && communityAlertCount > 0 && (
+                  <span
+                    className="nav-badge"
+                    style={{ background: "var(--warning, #b45309)" }}
+                    title="Open community alerts: a neighborhood needs website work"
+                  >
+                    {communityAlertCount}
+                  </span>
                 )}
                 </span>
               </Link>
