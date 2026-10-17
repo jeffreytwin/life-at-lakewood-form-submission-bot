@@ -53,6 +53,8 @@ function getMessage(event: LeadEvent): string {
       return `We lost contact with ${event.builderName ?? "a builder connection"}, Colonel. Floor Plans → Builder Connections, when you can.`;
     case "community_sold_out":
       return `${event.communityName ?? "A neighborhood"} is sold out, Colonel. Community Alerts has the checklist, when you can.`;
+    case "community_new_neighborhood":
+      return `There's a new neighborhood out there, Colonel: ${event.communityName ?? "unknown"}. Community Alerts, when you can.`;
     case "floorplans_cleared":
       return "That's every floor plan squared away, Colonel. Mission complete.";
   }

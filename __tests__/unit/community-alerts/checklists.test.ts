@@ -74,3 +74,13 @@ describe("viewOf", () => {
     expect(view.items.find((i) => i.key === "landing_images")?.hint).toMatch(/Life At Lakewood/);
   });
 });
+
+describe("the new-neighborhood to-do list", () => {
+  const items = checklistFor("new_neighborhood", { legacySite: false });
+
+  it("checks the two engines itself and leaves the rest to the person", () => {
+    expect(items.filter((i) => i.auto).map((i) => i.key).sort()).toEqual(["listings_engine", "new_build_engine"]);
+    expect(items.map((i) => i.key)).toContain("pages");
+    expect(items.map((i) => i.key)).toContain("advertising");
+  });
+});
