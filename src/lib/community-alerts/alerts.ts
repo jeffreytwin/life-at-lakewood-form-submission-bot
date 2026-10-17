@@ -218,7 +218,7 @@ export async function setSelfCheck(alertId: string, key: string, passes: boolean
 }
 
 /**
- * Closes an open new-neighborhood alert and keeps its name off every scan
+ * Closes an open new-neighborhood or announcement alert and keeps its name off every scan
  * of the site from now on (Jeff, 2026-10-17: a neighborhood "flagged as
  * 'ignore'"). The reason is optional; Ignored is the reason enough.
  */
@@ -230,8 +230,8 @@ export async function ignoreAlert(id: string, reason: string): Promise<Outcome> 
     .maybeSingle();
   if (error) throw failed("reading the alert", error);
   if (!alert || alert.status !== "open") return { ok: false, status: 404, error: "No open alert by that id" };
-  if (alert.kind !== "new_neighborhood" || !alert.site_id || !alert.subject_key) {
-    return { ok: false, status: 400, error: "Only a new neighborhood can be ignored" };
+  if (!["new_neighborhood", "announcement"].includes(alert.kind) || !alert.site_id || !alert.subject_key) {
+    return { ok: false, status: 400, error: "Only a new neighborhood or an announcement can be ignored" };
   }
   const why = reason.trim().slice(0, 1000) || null;
   const { error: ignoreError } = await supabase

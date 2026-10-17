@@ -218,6 +218,8 @@ export interface NewNeighborhoodDetail {
   lastSeenAt: string;
   village?: { id: string; name: string } | null;
   pages?: { neighborhood: string | null; homesForSale: string | null } | null;
+  /** Raised for a watched name: what the watch list said about it. */
+  watched?: { note: string | null; sourceUrl: string | null };
 }
 
 /** Whether a name stays quiet: ignored, finished, or dismissed lately. Pure; exported for tests. */
@@ -234,7 +236,7 @@ export function isQuiet(
   );
 }
 
-interface SiteContext {
+export interface SiteContext {
   fpSiteId: string;
   domain: string;
   lsSite: LsSite | null;
@@ -244,7 +246,7 @@ interface SiteContext {
   communities: { id: string; name: string; running: boolean }[];
 }
 
-async function siteContext(domain: string): Promise<SiteContext | null> {
+export async function siteContext(domain: string): Promise<SiteContext | null> {
   const { data: fpSite, error } = await supabase.from("fp_sites").select("id").eq("domain", domain).maybeSingle();
   if (error) throw failed(`reading ${domain}'s site`, error);
   if (!fpSite) return null;
@@ -272,13 +274,15 @@ async function siteContext(domain: string): Promise<SiteContext | null> {
 export interface NewNeighborhoodScan {
   sources: { site: string; source: string; homes: number; neighborhoods: number; error?: string }[];
   raised: string[];
+  /** Watched neighborhoods that have homes now. */
+  watchFound: string[];
   /** Open alerts whose homes were counted again. */
   seenAgain: number;
 }
 
 /** Reads every site's source and raises an alert for each neighborhood we do not have, unless it is quiet. */
 export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
-  const result: NewNeighborhoodScan = { sources: [], raised: [], seenAgain: 0 };
+  const result: NewNeighborhoodScan = { sources: [], raised: [], watchFound: [], seenAgain: 0 };
   const now = new Date();
   for (const [domain, kind] of Object.entries(SITE_SOURCES)) {
     const ctx = await siteContext(domain);
@@ -291,7 +295,8 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
       logger.warn("New-neighborhood source could not be read", { site: domain, source: kind, error: describeError(error) });
       continue;
     }
-    const sightings = groupHomes(homes).filter((s) => kind !== "mls" || s.homes >= MIN_MLS_HOMES);
+    const everyGroup = groupHomes(homes);
+    const sightings = everyGroup.filter((s) => kind !== "mls" || s.homes >= MIN_MLS_HOMES);
     result.sources.push({ site: domain, source: SOURCES[kind].label, homes: homes.length, neighborhoods: sightings.length });
 
     const { data: ignoredRows, error: ignoredError } = await supabase
@@ -308,6 +313,62 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
     const ignored = new Set((ignoredRows ?? []).map((r) => r.name_key as string));
     const open = new Map((alertRows ?? []).filter((a) => a.status === "open").map((a) => [a.subject_key as string, a]));
     const closed = (alertRows ?? []).filter((a) => a.status !== "open") as { subject_key: string; status: string; resolved_at: string | null }[];
+
+    // The watch list first: a watched name needs only one home, from the
+    // site's own source or the MLS, and is raised whatever its quiet.
+    const { data: watchRows, error: watchError } = await supabase
+      .from("ca_watch_list")
+      .select("id, name, name_key, note, source_url")
+      .eq("site_id", ctx.fpSiteId)
+      .eq("status", "watching");
+    if (watchError) throw failed("reading the watch list", watchError);
+    if (watchRows?.length) {
+      const anyHomes = new Map(everyGroup.map((g) => [g.key, { ...g, source: kind }]));
+      if (kind !== "mls" && ctx.lsSite) {
+        for (const g of groupHomes(await readMls(ctx.lsSite, ctx.villages))) {
+          if (!anyHomes.has(g.key)) anyHomes.set(g.key, { ...g, source: "mls" });
+        }
+      }
+      for (const w of watchRows) {
+        const key = w.name_key as string;
+        const found = ctx.known.has(key) ? null : anyHomes.get(key);
+        if (!ctx.known.has(key) && !found) continue;
+        let alertId: string | null = (open.get(key)?.id as string | undefined) ?? null;
+        if (found && !alertId) {
+          const detail: NewNeighborhoodDetail = {
+            site: domain,
+            source: SOURCES[found.source].label,
+            sourceUrl: SOURCES[found.source].url,
+            homes: found.homes,
+            builders: found.builders,
+            priceLow: found.priceLow,
+            priceHigh: found.priceHigh,
+            firstSeenAt: now.toISOString(),
+            lastSeenAt: now.toISOString(),
+            watched: { note: w.note ?? null, sourceUrl: w.source_url ?? null },
+          };
+          const { data: inserted, error: insertError } = await supabase
+            .from("ca_alerts")
+            .insert({ kind: "new_neighborhood", site_id: ctx.fpSiteId, subject_key: key, name: w.name, detail })
+            .select("id, subject_key, status, resolved_at, detail")
+            .single();
+          if (insertError) throw failed(`raising watched ${w.name}'s alert`, insertError);
+          alertId = inserted.id;
+          open.set(key, inserted);
+          await closeAnnouncement(ctx.fpSiteId, key);
+          result.raised.push(w.name);
+          logger.info("Watched neighborhood has homes", { site: domain, neighborhood: w.name, homes: found.homes });
+        }
+        // Found with homes, or already added to an engine by hand: either
+        // way there is nothing left to wait for.
+        const { error: foundError } = await supabase
+          .from("ca_watch_list")
+          .update({ status: "found", found_at: now.toISOString(), alert_id: alertId })
+          .eq("id", w.id);
+        if (foundError) throw failed(`marking ${w.name} found`, foundError);
+        result.watchFound.push(w.name);
+      }
+    }
 
     for (const s of sightings) {
       if (ctx.known.has(s.key)) continue;
@@ -347,11 +408,28 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
       if (!insertError) {
         result.raised.push(s.name);
         logger.info("New neighborhood found", { site: domain, neighborhood: s.name, homes: s.homes, source: kind });
+        await closeAnnouncement(ctx.fpSiteId, s.key);
       }
     }
   }
-  logger.info("New-neighborhood scan", { sources: result.sources, raised: result.raised, seenAgain: result.seenAgain });
+  logger.info("New-neighborhood scan", { sources: result.sources, raised: result.raised, watchFound: result.watchFound, seenAgain: result.seenAgain });
   return result;
+}
+
+/**
+ * An open announcement of a neighborhood that now has homes for sale is
+ * done: the new-neighborhood alert just raised for it carries the work.
+ */
+async function closeAnnouncement(siteId: string, key: string): Promise<void> {
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("ca_alerts")
+    .update({ status: "done", resolved_at: now, updated_at: now })
+    .eq("kind", "announcement")
+    .eq("site_id", siteId)
+    .eq("subject_key", key)
+    .eq("status", "open");
+  if (error) throw failed("closing the announcement", error);
 }
 
 /**

@@ -6,7 +6,7 @@
 // The wording lives here and only the item keys are stored, so rewording
 // an item reaches every alert, open or closed. Pure.
 
-export type AlertKind = "sold_out" | "new_neighborhood";
+export type AlertKind = "sold_out" | "new_neighborhood" | "announcement";
 
 export interface ChecklistChoice {
   value: string;
@@ -142,6 +142,10 @@ export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistI
       return soldOutItems(ctx);
     case "new_neighborhood":
       return newNeighborhoodItems(ctx);
+    // An announcement asks for a decision, not a list: watch it, ignore it
+    // or dismiss it (watch-list.ts).
+    case "announcement":
+      return [];
   }
 }
 

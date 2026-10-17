@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import CommunityAlertTabs from "../tabs";
 import type { AlertView } from "@/lib/community-alerts/alerts";
 
-const KIND_LABEL: Record<string, string> = { sold_out: "sold out", new_neighborhood: "new neighborhood" };
+const KIND_LABEL: Record<string, string> = { sold_out: "sold out", new_neighborhood: "new neighborhood", announcement: "announcement" };
 
 const when = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";
@@ -94,9 +94,11 @@ export default function CommunityAlertHistoryPage() {
                         {a.dismissedReason && <div className="text-muted text-sm">{a.dismissedReason}</div>}
                       </>
                     )}
-                    <div className="text-muted text-sm">
-                      {a.progress.settled} of {a.progress.total} items done
-                    </div>
+                    {a.progress.total > 0 && (
+                      <div className="text-muted text-sm">
+                        {a.progress.settled} of {a.progress.total} items done
+                      </div>
+                    )}
                   </td>
                   <td className="text-sm">{when(a.createdAt)}</td>
                   <td className="text-sm">{when(a.resolvedAt)}</td>
