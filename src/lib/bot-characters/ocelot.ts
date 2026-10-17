@@ -52,6 +52,8 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "A neighborhood"} is sold out, Colonel. Community Alerts has your list. A gunslinger reloads before the next fight.`;
     case "community_new_neighborhood":
       return `A new neighborhood on the map, Colonel: ${event.communityName ?? "unknown"}. Community Alerts. Add it, or ignore it.`;
+    case "community_announcement":
+      return `${event.communityName ?? "A new neighborhood"} has been announced, Colonel. Community Alerts. Watch it, or let it go.`;
     case "floorplans_cleared":
       return "Every floor plan accounted for, Colonel. Not a single round wasted. Beautiful.";
   }

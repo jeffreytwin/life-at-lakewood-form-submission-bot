@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/shared/logger";
 import { describeError } from "@/lib/shared/describe-error";
 import { changeItem, dismissAlert, ignoreAlert, reopenAlert, type Outcome } from "@/lib/community-alerts/alerts";
+import { watchFromAlert } from "@/lib/community-alerts/watch-list";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,8 @@ export const dynamic = "force-dynamic";
  * Body, one of:
  *   { item, done?, choice?, notApplicable?, note? }  work one to-do item
  *   { dismiss: "reason" }                            close it without the list done
- *   { ignore: "reason" }                             a new neighborhood: close it and never raise its name again
+ *   { ignore: "reason" }                             a new neighborhood or announcement: close it and never raise its name again
+ *   { watch: true }                                  an announcement: put it on the watch list and close it
  *   { reopen: true }                                 open a closed alert again
  */
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +22,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     let outcome: Outcome;
     if (typeof body.dismiss === "string") outcome = await dismissAlert(id, body.dismiss);
     else if (typeof body.ignore === "string") outcome = await ignoreAlert(id, body.ignore);
+    else if (body.watch === true) outcome = await watchFromAlert(id);
     else if (body.reopen === true) outcome = await reopenAlert(id);
     else if (typeof body.item === "string") {
       outcome = await changeItem(id, body.item, {
@@ -28,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         notApplicable: typeof body.notApplicable === "boolean" ? body.notApplicable : undefined,
         note: typeof body.note === "string" || body.note === null ? body.note : undefined,
       });
-    } else outcome = { ok: false, status: 400, error: "Nothing to do: send item, dismiss, ignore or reopen" };
+    } else outcome = { ok: false, status: 400, error: "Nothing to do: send item, dismiss, ignore, watch or reopen" };
     if (!outcome.ok) return NextResponse.json({ error: outcome.error }, { status: outcome.status });
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -5,6 +5,7 @@ import type { AlertView } from "@/lib/community-alerts/alerts";
 import type { SoldOutDetail } from "@/lib/community-alerts/sold-out";
 import type { NewNeighborhoodDetail } from "@/lib/community-alerts/new-neighborhoods";
 import type { ChecksResult } from "@/lib/community-alerts/checks";
+import type { AnnouncementDetail } from "@/lib/community-alerts/announcements";
 
 type Item = AlertView["items"][number];
 
@@ -64,6 +65,7 @@ function describeCheck(data: ChecksResult): string {
       );
     }
     parts.push(scan.raised.length ? `New neighborhoods: ${scan.raised.join(", ")}.` : "No new neighborhoods.");
+    if (scan.watchFound.length) parts.push(`Off the watch list: ${scan.watchFound.join(", ")}.`);
   }
   return parts.join(" ");
 }
@@ -195,7 +197,62 @@ function NewNeighborhoodSummary({ alert }: { alert: AlertView }) {
   );
 }
 
-const KIND_BADGE: Record<AlertView["kind"], string> = { sold_out: "sold out", new_neighborhood: "new neighborhood" };
+const KIND_BADGE: Record<AlertView["kind"], string> = {
+  sold_out: "sold out",
+  new_neighborhood: "new neighborhood",
+  announcement: "announced",
+};
+const KIND_BADGE_CLASS: Record<AlertView["kind"], string> = {
+  sold_out: "badge-warning",
+  new_neighborhood: "badge-info",
+  announcement: "badge-purple",
+};
+const KIND_BORDER: Record<AlertView["kind"], string> = {
+  sold_out: "var(--warning)",
+  new_neighborhood: "var(--info)",
+  announcement: "#a78bfa",
+};
+
+const STATUS_LABEL: Record<AnnouncementDetail["status"], string> = {
+  announced: "Announced",
+  coming_soon: "Coming soon",
+  selling: "Selling",
+};
+
+function AnnouncementSummary({ alert }: { alert: AlertView }) {
+  const detail = alert.detail as unknown as AnnouncementDetail;
+  return (
+    <>
+      <div className="text-sm" style={{ marginTop: 8 }}>
+        <strong>{STATUS_LABEL[detail.status] ?? "Announced"}</strong>
+        {detail.opening && <> · opening {detail.opening}</>}
+        {detail.builders?.length > 0 && <> · {detail.builders.join(", ")}</>}
+      </div>
+      {detail.summary && <div style={{ marginTop: 4 }}>{detail.summary}</div>}
+      {detail.sources?.length > 0 && (
+        <div className="text-sm" style={{ marginTop: 6, display: "flex", gap: 14, flexWrap: "wrap" }}>
+          {detail.sources.slice(0, 4).map((u, i) => {
+            let host = u;
+            try {
+              host = new URL(u).hostname.replace(/^www\./, "");
+            } catch {
+              // Shown as given.
+            }
+            return (
+              <a key={i} href={u} target="_blank" rel="noreferrer">
+                {host} ↗
+              </a>
+            );
+          })}
+        </div>
+      )}
+      <div className="text-muted text-sm" style={{ marginTop: 4 }}>
+        Found by the weekly web search on {when(detail.foundAt)}. No homes for sale yet: Watch it and the daily scan raises it
+        as a new neighborhood once homes are listed.
+      </div>
+    </>
+  );
+}
 
 export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () => void }) {
   const [busy, setBusy] = useState(false);
@@ -214,34 +271,45 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
   }
 
   const { settled, total } = alert.progress;
-  const canIgnore = alert.kind === "new_neighborhood";
+  const canIgnore = alert.kind !== "sold_out";
+  const canWatch = alert.kind === "announcement";
 
   return (
     <div
       className="card"
-      style={{ marginBottom: 12, borderLeft: `3px solid ${alert.kind === "sold_out" ? "var(--warning)" : "var(--info)"}` }}
+      style={{ marginBottom: 12, borderLeft: `3px solid ${KIND_BORDER[alert.kind]}` }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <strong style={{ fontSize: 16 }}>{alert.name}</strong>
-        <span className={`badge ${alert.kind === "sold_out" ? "badge-warning" : "badge-info"}`}>{KIND_BADGE[alert.kind]}</span>
+        <span className={`badge ${KIND_BADGE_CLASS[alert.kind]}`}>{KIND_BADGE[alert.kind]}</span>
         <span className="text-muted text-sm">
           {site} · raised {when(alert.createdAt)}
         </span>
-        <span className="fp-progress" title={`${settled} of ${total} done or N/A`}>
-          {settled} of {total} done
-          <span className="fp-progress-track">
-            <span className="fp-progress-fill" style={{ width: `${total ? Math.round((settled / total) * 100) : 0}%` }} />
+        {total > 0 && (
+          <span className="fp-progress" title={`${settled} of ${total} done or N/A`}>
+            {settled} of {total} done
+            <span className="fp-progress-track">
+              <span className="fp-progress-fill" style={{ width: `${Math.round((settled / total) * 100)}%` }} />
+            </span>
           </span>
-        </span>
+        )}
       </div>
 
-      {alert.kind === "sold_out" ? <SoldOutSummary alert={alert} /> : <NewNeighborhoodSummary alert={alert} />}
+      {alert.kind === "sold_out" ? (
+        <SoldOutSummary alert={alert} />
+      ) : alert.kind === "announcement" ? (
+        <AnnouncementSummary alert={alert} />
+      ) : (
+        <NewNeighborhoodSummary alert={alert} />
+      )}
 
-      <div style={{ marginTop: 12 }}>
-        {alert.items.map((item) => (
-          <ItemRow key={item.key} item={item} busy={busy} act={(body) => act({ item: item.key, ...body })} />
-        ))}
-      </div>
+      {total > 0 && (
+        <div style={{ marginTop: 12 }}>
+          {alert.items.map((item) => (
+            <ItemRow key={item.key} item={item} busy={busy} act={(body) => act({ item: item.key, ...body })} />
+          ))}
+        </div>
+      )}
 
       {problem && (
         <div className="text-sm" style={{ marginTop: 8, color: "var(--danger)" }}>
@@ -285,6 +353,16 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
           </>
         ) : (
           <>
+            {canWatch && (
+              <button
+                className="btn btn-sm btn-primary"
+                disabled={busy}
+                onClick={() => act({ watch: true })}
+                title="Put it on the watch list; the daily scan raises it once homes are for sale"
+              >
+                Watch for homes
+              </button>
+            )}
             {canIgnore && (
               <button className="btn btn-sm btn-secondary" onClick={() => setClosing("ignore")} title="Never raise this neighborhood again">
                 Ignore…
@@ -297,7 +375,11 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
             >
               Dismiss…
             </button>
-            {canIgnore && <span className="text-muted text-sm">Ignore never asks again; Dismiss asks again in 30 days if homes are still listed.</span>}
+            {canIgnore && (
+              <span className="text-muted text-sm">
+                Ignore never asks again; Dismiss asks again in 30 days{canWatch ? " if it turns up again" : " if homes are still listed"}.
+              </span>
+            )}
           </>
         )}
       </div>

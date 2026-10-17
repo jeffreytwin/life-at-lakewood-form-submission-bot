@@ -35,7 +35,12 @@ export default function CommunityAlertMonitor() {
       if (fresh) {
         playSound(LISTINGS_ALERT_SOUND);
         emitLeadEvent({
-          type: fresh.kind === "new_neighborhood" ? "community_new_neighborhood" : "community_sold_out",
+          type:
+            fresh.kind === "new_neighborhood"
+              ? "community_new_neighborhood"
+              : fresh.kind === "announcement"
+                ? "community_announcement"
+                : "community_sold_out",
           leadName: "",
           communityName: fresh.name,
         });

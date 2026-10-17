@@ -74,6 +74,12 @@ describe.each(ALL_CHARACTER_IDS)("%s", (id) => {
     expect(msg).toMatch(/community alerts/i);
   });
 
+  it("names an announced neighborhood and sends the person to Community Alerts", () => {
+    const msg = character.getMessage({ type: "community_announcement", leadName: "", communityName: "Seaflower" });
+    expect(msg).toContain("Seaflower");
+    expect(msg).toMatch(/community alerts/i);
+  });
+
   it("never casts the new agent as the one who went quiet", () => {
     const msg = character.getMessage(reroute);
     // If the line names the agent who dropped the lead at all, it must be

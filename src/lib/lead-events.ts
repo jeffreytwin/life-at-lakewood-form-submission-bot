@@ -3,7 +3,7 @@
  * StatusSoundMonitor emits; RoutingToggle (speech bubble) and Sidebar (badge) subscribe.
  */
 
-export type LeadEventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "unavailable_owner" | "followup" | "reroute" | "done" | "text_me" | "bad_data" | "email_draft_new" | "email_draft_approved" | "email_sent" | "listings_alert" | "floorplan_campaign" | "builder_error" | "floorplans_cleared" | "community_sold_out" | "community_new_neighborhood";
+export type LeadEventType = "accepted" | "failed" | "manual" | "new" | "routing" | "owned_by_other" | "unavailable_owner" | "followup" | "reroute" | "done" | "text_me" | "bad_data" | "email_draft_new" | "email_draft_approved" | "email_sent" | "listings_alert" | "floorplan_campaign" | "builder_error" | "floorplans_cleared" | "community_sold_out" | "community_new_neighborhood" | "community_announcement";
 
 export interface LeadEvent {
   type: LeadEventType;
@@ -22,7 +22,7 @@ export interface LeadEvent {
   previousAgentName?: string;
   /** "builder_error" only: which connection failed, as "Builder · Community". */
   builderName?: string;
-  /** "community_sold_out" and "community_new_neighborhood": the neighborhood the alert is about. */
+  /** The community_* events: the neighborhood the alert is about. */
   communityName?: string;
 }
 

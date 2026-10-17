@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/dashboard/community-alerts", label: "Sold Out" },
   { href: "/dashboard/community-alerts/new-neighborhoods", label: "New Neighborhoods" },
+  { href: "/dashboard/community-alerts/announcements", label: "Announcements" },
+  { href: "/dashboard/community-alerts/watch-list", label: "Watch List" },
   { href: "/dashboard/community-alerts/ignored", label: "Ignored" },
   { href: "/dashboard/community-alerts/history", label: "History" },
 ];
