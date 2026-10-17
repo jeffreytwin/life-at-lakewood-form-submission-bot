@@ -68,6 +68,12 @@ describe.each(ALL_CHARACTER_IDS)("%s", (id) => {
     expect(msg).toMatch(/community alerts/i);
   });
 
+  it("names a new neighborhood and sends the person to Community Alerts", () => {
+    const msg = character.getMessage({ type: "community_new_neighborhood", leadName: "", communityName: "River Preserve Estates" });
+    expect(msg).toContain("River Preserve Estates");
+    expect(msg).toMatch(/community alerts/i);
+  });
+
   it("never casts the new agent as the one who went quiet", () => {
     const msg = character.getMessage(reroute);
     // If the line names the agent who dropped the lead at all, it must be

@@ -50,6 +50,8 @@ function getMessage(event: LeadEvent): string {
       return `${event.builderName ?? "A builder connection"} has failed, Colonel. Floor Plans → Builder Connections. It will not repair itself.`;
     case "community_sold_out":
       return `${event.communityName ?? "A neighborhood"} has sold out, Colonel. Community Alerts: the website must change with it. Check the list.`;
+    case "community_new_neighborhood":
+      return `${event.communityName ?? "A new neighborhood"} has homes for sale and we are not there, Colonel. Community Alerts.`;
     case "floorplans_cleared":
       return "The floor plan queue is empty, Colonel. The strong finish what they start.";
   }

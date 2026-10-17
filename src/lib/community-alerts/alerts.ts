@@ -187,3 +187,87 @@ export async function reopenAlert(id: string): Promise<Outcome> {
   if (!data?.length) return { ok: false, status: 404, error: "No closed alert by that id" };
   return { ok: true };
 }
+
+/**
+ * A self-checking item set to what the Hub sees, unless a person has
+ * answered it by hand: their answer stands.
+ */
+export async function setSelfCheck(alertId: string, key: string, passes: boolean, choice: string | null): Promise<void> {
+  const { data: current, error } = await supabase
+    .from("ca_alert_items")
+    .select("done_at, by_hand, not_applicable")
+    .eq("alert_id", alertId)
+    .eq("item_key", key)
+    .maybeSingle();
+  if (error) throw failed(`reading the alert's "${key}" item`, error);
+  if (current?.by_hand || current?.not_applicable) return;
+  if (Boolean(current?.done_at) === passes) return;
+  const now = new Date().toISOString();
+  const { error: writeError } = await supabase.from("ca_alert_items").upsert(
+    {
+      alert_id: alertId,
+      item_key: key,
+      done_at: passes ? now : null,
+      by_hand: false,
+      choice: passes ? choice : null,
+      updated_at: now,
+    },
+    { onConflict: "alert_id,item_key" }
+  );
+  if (writeError) throw failed(`checking the alert's "${key}" item`, writeError);
+}
+
+/**
+ * Closes an open new-neighborhood alert and keeps its name off every scan
+ * of the site from now on (Jeff, 2026-10-17: a neighborhood "flagged as
+ * 'ignore'"). The reason is optional; Ignored is the reason enough.
+ */
+export async function ignoreAlert(id: string, reason: string): Promise<Outcome> {
+  const { data: alert, error } = await supabase
+    .from("ca_alerts")
+    .select("id, kind, status, site_id, subject_key, name")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw failed("reading the alert", error);
+  if (!alert || alert.status !== "open") return { ok: false, status: 404, error: "No open alert by that id" };
+  if (alert.kind !== "new_neighborhood" || !alert.site_id || !alert.subject_key) {
+    return { ok: false, status: 400, error: "Only a new neighborhood can be ignored" };
+  }
+  const why = reason.trim().slice(0, 1000) || null;
+  const { error: ignoreError } = await supabase
+    .from("ca_ignored_neighborhoods")
+    .upsert({ site_id: alert.site_id, name_key: alert.subject_key, name: alert.name, reason: why }, { onConflict: "site_id,name_key" });
+  if (ignoreError) throw failed("ignoring the neighborhood", ignoreError);
+  return dismissAlert(id, why ? `Ignored: ${why}` : "Ignored");
+}
+
+export interface IgnoredNeighborhood {
+  id: string;
+  name: string;
+  site: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+export async function listIgnored(): Promise<IgnoredNeighborhood[]> {
+  const { data, error } = await supabase
+    .from("ca_ignored_neighborhoods")
+    .select("id, name, reason, created_at, fp_sites:site_id(domain)")
+    .order("created_at", { ascending: false });
+  if (error) throw failed("reading the ignored neighborhoods", error);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    site: (r.fp_sites as unknown as { domain: string } | null)?.domain ?? null,
+    reason: r.reason,
+    createdAt: r.created_at,
+  }));
+}
+
+/** Lets an ignored name be raised again by the next scan that finds homes in it. */
+export async function unignore(id: string): Promise<Outcome> {
+  const { data, error } = await supabase.from("ca_ignored_neighborhoods").delete().eq("id", id).select("id");
+  if (error) throw failed("un-ignoring the neighborhood", error);
+  if (!data?.length) return { ok: false, status: 404, error: "No ignored neighborhood by that id" };
+  return { ok: true };
+}

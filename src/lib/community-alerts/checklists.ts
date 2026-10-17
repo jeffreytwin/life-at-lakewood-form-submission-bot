@@ -6,7 +6,7 @@
 // The wording lives here and only the item keys are stored, so rewording
 // an item reaches every alert, open or closed. Pure.
 
-export type AlertKind = "sold_out";
+export type AlertKind = "sold_out" | "new_neighborhood";
 
 export interface ChecklistChoice {
   value: string;
@@ -100,10 +100,48 @@ export function soldOutItems(ctx: ChecklistContext): ChecklistItem[] {
   ];
 }
 
+/**
+ * A neighborhood with homes for sale in a place we cover that is in
+ * neither engine yet. Adding it to the engines is left to the person on
+ * purpose: they choose the listings search terms, and set the new-build
+ * connection up with Claude. The Hub ticks those two once it sees them.
+ */
+export function newNeighborhoodItems(ctx: ChecklistContext): ChecklistItem[] {
+  const pageHint = ctx.legacySite ? LEGACY_PAGES : undefined;
+  return [
+    {
+      key: "pages",
+      label: "Neighborhood page and homes-for-sale page created on the website",
+      hint: pageHint,
+    },
+    {
+      key: "landing_content",
+      label: "Landing page language and images",
+      hint: pageHint,
+    },
+    {
+      key: "listings_engine",
+      label: "Added to the listings engine with search terms",
+      hint: "Listings → Neighborhoods, with whatever terms you want. Checks itself once the neighborhood is there with a search term.",
+      auto: true,
+    },
+    {
+      key: "new_build_engine",
+      label: "Added to the new-build engine with a builder connection",
+      hint: "Set the connection up with Claude. Checks itself once the community has a connection running.",
+      auto: true,
+    },
+    { key: "advertising", label: "Advertising set up" },
+    { key: "live_check", label: "Listings and new builds are showing on the live pages" },
+  ];
+}
+
 export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistItem[] {
   switch (kind) {
     case "sold_out":
       return soldOutItems(ctx);
+    case "new_neighborhood":
+      return newNeighborhoodItems(ctx);
   }
 }
 

@@ -129,8 +129,8 @@ export default function Sidebar({
     return () => clearInterval(interval);
   }, []);
 
-  // Poll for open community alerts: a neighborhood sold out and its
-  // website to-do list is not finished (Jeff, 2026-10-17).
+  // Poll for open community alerts: a neighborhood sold out or turned up
+  // new, and its website to-do list is not finished (Jeff, 2026-10-17).
   useEffect(() => {
     function fetchCommunityAlerts() {
       fetch("/api/internal/community-alerts?count=1")

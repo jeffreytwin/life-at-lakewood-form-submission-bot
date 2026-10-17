@@ -50,6 +50,8 @@ function getMessage(event: LeadEvent): string {
       return `Colonel! ${event.builderName ?? "A builder connection"} just went dark. Check Floor Plans → Builder Connections.`;
     case "community_sold_out":
       return `Colonel! ${event.communityName ?? "A neighborhood"} just sold out of new builds. Community Alerts has the to-do list for the website.`;
+    case "community_new_neighborhood":
+      return `Colonel! New neighborhood spotted: ${event.communityName ?? "unknown"}, with homes for sale. Community Alerts has the intel.`;
     case "floorplans_cleared":
       return "Colonel! That was the last floor plan. The queue is clear — mission complete!";
   }

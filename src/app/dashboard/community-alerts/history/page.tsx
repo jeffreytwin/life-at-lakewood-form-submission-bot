@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import CommunityAlertTabs from "../tabs";
 import type { AlertView } from "@/lib/community-alerts/alerts";
 
-const KIND_LABEL: Record<string, string> = { sold_out: "sold out" };
+const KIND_LABEL: Record<string, string> = { sold_out: "sold out", new_neighborhood: "new neighborhood" };
 
 const when = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";

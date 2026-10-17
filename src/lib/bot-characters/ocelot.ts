@@ -50,6 +50,8 @@ function getMessage(event: LeadEvent): string {
       return `${event.builderName ?? "A builder connection"} has stopped talking to us, Colonel. Floor Plans → Builder Connections — a jam is no excuse.`;
     case "community_sold_out":
       return `${event.communityName ?? "A neighborhood"} is sold out, Colonel. Community Alerts has your list. A gunslinger reloads before the next fight.`;
+    case "community_new_neighborhood":
+      return `A new neighborhood on the map, Colonel: ${event.communityName ?? "unknown"}. Community Alerts. Add it, or ignore it.`;
     case "floorplans_cleared":
       return "Every floor plan accounted for, Colonel. Not a single round wasted. Beautiful.";
   }

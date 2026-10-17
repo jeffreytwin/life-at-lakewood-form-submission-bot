@@ -32,9 +32,13 @@ export default function CommunityAlertMonitor() {
       }
       const fresh = rows.find((a) => a.id && !knownIds.current!.has(a.id));
       knownIds.current = new Set(rows.map((a) => a.id));
-      if (fresh?.kind === "sold_out") {
+      if (fresh) {
         playSound(LISTINGS_ALERT_SOUND);
-        emitLeadEvent({ type: "community_sold_out", leadName: "", communityName: fresh.name });
+        emitLeadEvent({
+          type: fresh.kind === "new_neighborhood" ? "community_new_neighborhood" : "community_sold_out",
+          leadName: "",
+          communityName: fresh.name,
+        });
       }
     } catch {
       // Network error: skip this cycle.

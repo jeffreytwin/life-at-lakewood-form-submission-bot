@@ -21,10 +21,10 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { failedAt as failed } from "@/lib/shared/describe-error";
-import { settleAlert } from "@/lib/community-alerts/alerts";
+import { setSelfCheck, settleAlert } from "@/lib/community-alerts/alerts";
 
 /** How many rows one read brings back before another is needed. */
-const PAGE = 1000;
+export const PAGE = 1000;
 
 export interface ConnectionReading {
   /** The connection and its builder are both switched on. */
@@ -124,7 +124,7 @@ async function pageExists(url: string): Promise<boolean> {
   }
 }
 
-async function findHomesForSalePage(village: VillageRow): Promise<string | null> {
+export async function findHomesForSalePage(village: VillageRow): Promise<string | null> {
   const candidates = homesForSaleCandidates(village.page_url, village.wix_slug);
   // One address that follows from the dynamic page needs no asking.
   if (candidates.length === 1) return candidates[0];
@@ -173,7 +173,7 @@ async function livePlanCounts(): Promise<Map<string, number>> {
   }
 }
 
-async function villagesByDomain(): Promise<Map<string, VillageRow[]>> {
+export async function villagesByDomain(): Promise<Map<string, VillageRow[]>> {
   const { data, error } = await supabase
     .from("ls_villages")
     .select("id, name, wix_slug, page_url, active, ls_sites:site_id(domain)");
@@ -323,33 +323,4 @@ export async function checkSoldOuts(): Promise<SoldOutCheck> {
   }
 
   return result;
-}
-
-/**
- * A self-checking item set to what the Hub sees, unless a person has
- * answered it by hand: their answer stands.
- */
-async function setSelfCheck(alertId: string, key: string, passes: boolean, choice: string | null): Promise<void> {
-  const { data: current, error } = await supabase
-    .from("ca_alert_items")
-    .select("done_at, by_hand, not_applicable")
-    .eq("alert_id", alertId)
-    .eq("item_key", key)
-    .maybeSingle();
-  if (error) throw failed(`reading the alert's "${key}" item`, error);
-  if (current?.by_hand || current?.not_applicable) return;
-  if (Boolean(current?.done_at) === passes) return;
-  const now = new Date().toISOString();
-  const { error: writeError } = await supabase.from("ca_alert_items").upsert(
-    {
-      alert_id: alertId,
-      item_key: key,
-      done_at: passes ? now : null,
-      by_hand: false,
-      choice: passes ? choice : null,
-      updated_at: now,
-    },
-    { onConflict: "alert_id,item_key" }
-  );
-  if (writeError) throw failed(`checking the alert's "${key}" item`, writeError);
 }
