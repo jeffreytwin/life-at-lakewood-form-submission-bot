@@ -17,9 +17,11 @@ export default function NewNeighborhoodsPage() {
         onChecked={load}
         intro={
           <>
-            Neighborhoods with homes for sale that aren&apos;t in the new-build engine or the listings engine yet, read
-            once a day from the Lakewood Ranch and Wellen Park home finders and Parrish&apos;s new-construction MLS
-            listings. Work the list to add one, Ignore it to never hear about it again, or Dismiss it for now.
+            Neighborhoods selling homes that don&apos;t have a village page on the site yet (they aren&apos;t in the
+            listings engine): ones the new-build engine has floor plans for, and ones turned up once a day by the
+            Lakewood Ranch and Wellen Park home finders and Parrish&apos;s new-construction MLS listings. Work the list to
+            add one, Ignore it to never hear about it again (say, one that lives on a parent neighborhood&apos;s page), or
+            Dismiss it for now.
           </>
         }
       />

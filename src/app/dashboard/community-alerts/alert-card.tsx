@@ -172,7 +172,9 @@ function NewNeighborhoodSummary({ alert }: { alert: AlertView }) {
     <>
       <div className="text-sm" style={{ marginTop: 8 }}>
         <strong>
-          {detail.homes} home{detail.homes === 1 ? "" : "s"} for sale
+          {detail.source?.startsWith("new-build engine")
+            ? `${detail.homes} floor plan${detail.homes === 1 ? "" : "s"}, no village page`
+            : `${detail.homes} home${detail.homes === 1 ? "" : "s"} for sale`}
         </strong>
         {prices && <> · {prices}</>}
         {detail.builders?.length > 0 && <> · {detail.builders.join(", ")}</>}
