@@ -5,7 +5,15 @@
 // person: they choose the listings search terms and set the new-build
 // connection up with Claude; the Hub ticks those items once it sees them.
 //
+// A neighborhood is ours when the website has a page for it, which is when
+// the listings engine has it (its villages are the site's village pages).
+// The new-build engine having floor plans for one is not enough: Stillwater,
+// Madera and Westlake sold new builds with no village page (Jeff,
+// 2026-10-18), so every neighborhood with floor plans and no page is read
+// as new too.
+//
 // Where the homes are read, per site:
+//  - every site: the new-build engine's live floor plans;
 //  - Lakewood Ranch and Wellen Park: the master-planned community's own
 //    home finder, which lists every builder's homes with the neighborhood
 //    they are in. It is the community's own list, so a name on it is a
@@ -37,9 +45,10 @@ export const MIN_MLS_HOMES = 3;
 /** How long a dismissed new-neighborhood alert keeps quiet. */
 export const DISMISS_QUIET_DAYS = 30;
 
-type SourceKind = "lakewoodranch" | "wellenpark" | "mls";
+type SourceKind = "lakewoodranch" | "wellenpark" | "mls" | "floorplans";
 
 const SOURCES: Record<SourceKind, { label: string; url: string | null }> = {
+  floorplans: { label: "new-build engine (floor plans, no village page)", url: null },
   lakewoodranch: {
     label: "Lakewood Ranch home finder",
     // The bare page draws no homes until it is searched.
@@ -50,7 +59,7 @@ const SOURCES: Record<SourceKind, { label: string; url: string | null }> = {
 };
 
 /** Where each site's new neighborhoods are read. Longboat Key has no new construction to speak of. */
-export const SITE_SOURCES: Record<string, SourceKind> = {
+export const SITE_SOURCES: Record<string, Exclude<SourceKind, "floorplans">> = {
   "lifeatlakewood.com": "lakewoodranch",
   "lifeinwellenpark.com": "wellenpark",
   "lifeatparrish.com": "mls",
@@ -243,6 +252,8 @@ export interface SiteContext {
   villages: VillageWithTerms[];
   /** The placeKeys of every neighborhood either engine has on the site. */
   known: Set<string>;
+  /** The placeKeys of the neighborhoods with a page on the site: the listings engine's villages. */
+  pages: Set<string>;
   communities: { id: string; name: string; running: boolean }[];
 }
 
@@ -265,10 +276,28 @@ export async function siteContext(domain: string): Promise<SiteContext | null> {
       (bc) => bc.active && bc.fp_builders?.active !== false
     ),
   }));
-  const known = new Set<string>(
-    [...comms.map((c) => c.name), ...villages.map((v) => v.name), ...villages.map((v) => v.wix_slug ?? "")].map(placeKey).filter(Boolean)
+  const pages = new Set<string>([...villages.map((v) => v.name), ...villages.map((v) => v.wix_slug ?? "")].map(placeKey).filter(Boolean));
+  const known = new Set<string>([...pages, ...comms.map((c) => placeKey(c.name)).filter(Boolean)]);
+  return { fpSiteId: fpSite.id, domain, lsSite: lsSite as LsSite | null, villages, known, pages, communities: comms };
+}
+
+/** The new-build engine's live floor plans on the site, as homes of their community. */
+async function readFloorPlanHomes(ctx: SiteContext): Promise<Home[]> {
+  const names = new Map(ctx.communities.map((c) => [c.id, c.name]));
+  const rows = await selectAll<{ community_id: string; price: number | null; fp_builders: { name: string } | null }>(
+    "load the live floor plans",
+    (from, to) =>
+      supabase
+        .from("fp_floor_plans")
+        .select("community_id, price, fp_builders:builder_id(name)")
+        .eq("site_id", ctx.fpSiteId)
+        .is("removed_at", null)
+        .order("id")
+        .range(from, to)
   );
-  return { fpSiteId: fpSite.id, domain, lsSite: lsSite as LsSite | null, villages, known, communities: comms };
+  return rows
+    .filter((r) => names.has(r.community_id))
+    .map((r) => ({ neighborhood: names.get(r.community_id)!, builder: r.fp_builders?.name ?? null, price: r.price }));
 }
 
 export interface NewNeighborhoodScan {
@@ -287,17 +316,36 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
   for (const [domain, kind] of Object.entries(SITE_SOURCES)) {
     const ctx = await siteContext(domain);
     if (!ctx) continue;
-    let homes: Home[];
+    // The floor plans first: a neighborhood the new-build engine sells and
+    // the site has no page for is named as the engine names it.
+    const planGroups = groupHomes(await readFloorPlanHomes(ctx));
+    result.sources.push({
+      site: domain,
+      source: SOURCES.floorplans.label,
+      homes: planGroups.reduce((n, g) => n + g.homes, 0),
+      neighborhoods: planGroups.filter((g) => !ctx.pages.has(g.key)).length,
+    });
+    let sourceGroups: Sighting[] = [];
     try {
-      homes = await readSource(kind, ctx.lsSite, ctx.villages);
+      const homes = await readSource(kind, ctx.lsSite, ctx.villages);
+      sourceGroups = groupHomes(homes);
+      result.sources.push({
+        site: domain,
+        source: SOURCES[kind].label,
+        homes: homes.length,
+        neighborhoods: sourceGroups.filter((g) => kind !== "mls" || g.homes >= MIN_MLS_HOMES).length,
+      });
     } catch (error) {
       result.sources.push({ site: domain, source: SOURCES[kind].label, homes: 0, neighborhoods: 0, error: describeError(error) });
       logger.warn("New-neighborhood source could not be read", { site: domain, source: kind, error: describeError(error) });
-      continue;
     }
-    const everyGroup = groupHomes(homes);
-    const sightings = everyGroup.filter((s) => kind !== "mls" || s.homes >= MIN_MLS_HOMES);
-    result.sources.push({ site: domain, source: SOURCES[kind].label, homes: homes.length, neighborhoods: sightings.length });
+    const planKeys = new Set(planGroups.map((g) => g.key));
+    const sightings: { s: Sighting; source: SourceKind }[] = [
+      ...planGroups.map((s) => ({ s, source: "floorplans" as SourceKind })),
+      ...sourceGroups
+        .filter((s) => !planKeys.has(s.key) && (kind !== "mls" || s.homes >= MIN_MLS_HOMES))
+        .map((s) => ({ s, source: kind as SourceKind })),
+    ];
 
     const { data: ignoredRows, error: ignoredError } = await supabase
       .from("ca_ignored_neighborhoods")
@@ -323,7 +371,9 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
       .eq("status", "watching");
     if (watchError) throw failed("reading the watch list", watchError);
     if (watchRows?.length) {
-      const anyHomes = new Map(everyGroup.map((g) => [g.key, { ...g, source: kind }]));
+      const anyHomes = new Map<string, Sighting & { source: SourceKind }>();
+      for (const g of planGroups) anyHomes.set(g.key, { ...g, source: "floorplans" });
+      for (const g of sourceGroups) if (!anyHomes.has(g.key)) anyHomes.set(g.key, { ...g, source: kind });
       if (kind !== "mls" && ctx.lsSite) {
         for (const g of groupHomes(await readMls(ctx.lsSite, ctx.villages))) {
           if (!anyHomes.has(g.key)) anyHomes.set(g.key, { ...g, source: "mls" });
@@ -331,8 +381,8 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
       }
       for (const w of watchRows) {
         const key = w.name_key as string;
-        const found = ctx.known.has(key) ? null : anyHomes.get(key);
-        if (!ctx.known.has(key) && !found) continue;
+        const found = ctx.pages.has(key) ? null : anyHomes.get(key);
+        if (!ctx.pages.has(key) && !found) continue;
         let alertId: string | null = (open.get(key)?.id as string | undefined) ?? null;
         if (found && !alertId) {
           const detail: NewNeighborhoodDetail = {
@@ -359,8 +409,8 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
           result.raised.push(w.name);
           logger.info("Watched neighborhood has homes", { site: domain, neighborhood: w.name, homes: found.homes });
         }
-        // Found with homes, or already added to an engine by hand: either
-        // way there is nothing left to wait for.
+        // Found with homes, or given a page by hand: either way there is
+        // nothing left to wait for.
         const { error: foundError } = await supabase
           .from("ca_watch_list")
           .update({ status: "found", found_at: now.toISOString(), alert_id: alertId })
@@ -370,8 +420,8 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
       }
     }
 
-    for (const s of sightings) {
-      if (ctx.known.has(s.key)) continue;
+    for (const { s, source } of sightings) {
+      if (ctx.pages.has(s.key)) continue;
       const seen = {
         homes: s.homes,
         builders: s.builders,
@@ -392,8 +442,8 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
       if (isQuiet(s.key, { ignored, closed, now: now.getTime() })) continue;
       const detail: NewNeighborhoodDetail = {
         site: domain,
-        source: SOURCES[kind].label,
-        sourceUrl: SOURCES[kind].url,
+        source: SOURCES[source].label,
+        sourceUrl: SOURCES[source].url,
         firstSeenAt: now.toISOString(),
         ...seen,
       };
@@ -407,7 +457,7 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
       if (insertError && insertError.code !== "23505") throw failed(`raising ${s.name}'s alert`, insertError);
       if (!insertError) {
         result.raised.push(s.name);
-        logger.info("New neighborhood found", { site: domain, neighborhood: s.name, homes: s.homes, source: kind });
+        logger.info("New neighborhood found", { site: domain, neighborhood: s.name, homes: s.homes, source });
         await closeAnnouncement(ctx.fpSiteId, s.key);
       }
     }

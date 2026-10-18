@@ -91,8 +91,8 @@ export async function addWatch(entry: NewWatch): Promise<Outcome & { id?: string
   if (sourceUrl && !/^https?:\/\//.test(sourceUrl)) return { ok: false, status: 400, error: "The link must start with http(s)://" };
   const ctx = await siteContext(entry.site);
   if (!ctx) return { ok: false, status: 400, error: `No site ${entry.site} in the new-build engine` };
-  if (ctx.known.has(key)) {
-    return { ok: false, status: 409, error: `${name} is already in the new-build or listings engine for ${entry.site}` };
+  if (ctx.pages.has(key)) {
+    return { ok: false, status: 409, error: `${name} already has a village page on ${entry.site} (it is in the listings engine)` };
   }
   const { error: unignoreError } = await supabase
     .from("ca_ignored_neighborhoods")
