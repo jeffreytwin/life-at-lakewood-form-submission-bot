@@ -22,7 +22,9 @@ vi.mock("@anthropic-ai/sdk", () => ({
 }));
 
 import { isWilliamRyanPage, williamRyanPictures } from "@/lib/floorplans/extractors/william-ryan";
-import { readPlanPageWithClaude } from "@/lib/floorplans/extractors/claude-extract";
+import { readPlanPages, readPlanPageWithClaude } from "@/lib/floorplans/extractors/claude-extract";
+import { pictureKey } from "@/lib/floorplans/extractors/plan-page";
+import { fileNameWords, nextImageSource } from "@/lib/floorplans/gallery-order";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 process.env.ANTHROPIC_API_KEY = "test";
@@ -111,5 +113,56 @@ describe("a William Ryan page's pictures (River Preserve Estates, Jeff 2026-10-0
     );
     expect(out.galleryMeta?.[media("floorplan/24777/image/elevation-5060211.jpg")]?.kind).toBe("exterior");
     expect(out.galleryMeta?.[media("floorplan/24777/image/interior-1160464.jpg")]?.kind).not.toBe("exterior");
+  });
+});
+
+// Cross Creek (Jeff, 2026-10-24): the community page's read gave each of
+// six plans its card's picture as a floor plan drawing. The card shows the
+// plan's front through Next.js's image service; the plan's page shows the
+// same front from storage, and leads its gallery with it.
+describe("a William Ryan card's picture read as a drawing", () => {
+  const front = media("floorplan/24777/image/elevation-5060210.jpg");
+  const card = `https://www.williamryanhomes.com/_next/image?url=${encodeURIComponent(front)}&w=3840&q=75`;
+  const listed = (over: Partial<NormalizedPlan> = {}): NormalizedPlan => ({
+    planKey: "strabane",
+    name: "Strabane",
+    price: 683_990,
+    priceDisplay: "$683,990",
+    beds: "4",
+    baths: "3",
+    sqft: 2_710,
+    garages: "3",
+    homeType: null,
+    quickMoveIn: false,
+    comingSoon: false,
+    sourceUrl: pageUrl,
+    galleryImages: [],
+    blueprintImages: [card],
+    description: null,
+    ...over,
+  });
+
+  it("is the picture the service serves, by its own name", () => {
+    expect(nextImageSource(card)).toBe(front);
+    expect(pictureKey(card)).toBe(pictureKey(front));
+    expect(fileNameWords(card)).toBe("elevation");
+    expect(nextImageSource("https://www.williamryanhomes.com/_next/image?url=%2Fimages%2Fsite-plan.png&w=640&q=75")).toBe(
+      "https://www.williamryanhomes.com/images/site-plan.png"
+    );
+    expect(nextImageSource(front)).toBeNull();
+    expect(nextImageSource("https://www.williamryanhomes.com/_next/static/media/logo.d1041f31.png")).toBeNull();
+  });
+
+  it("stays one of the plan's photographs, once, and the plan is given no drawing", async () => {
+    const [plan] = await readPlanPages([listed()], { read: async (url) => ({ url, html }), atOnce: 1 });
+    expect(plan.blueprintImages).toEqual([]);
+    expect(plan.galleryImages.filter((u) => pictureKey(u) === pictureKey(front))).toHaveLength(1);
+    expect(plan.galleryImages).toHaveLength(elevations.length + interiors.length);
+  });
+
+  it("is a view of the house where the plan's page goes unread", async () => {
+    const [plan] = await readPlanPages([listed({ sourceUrl: undefined })], { read: async (url) => ({ url, html }), atOnce: 1 });
+    expect(plan.blueprintImages).toEqual([]);
+    expect(plan.galleryImages).toEqual([card]);
   });
 });

@@ -47,10 +47,38 @@ const ROOM_KEYWORDS: [Room, RegExp][] = [
   ["exterior", /\b(exterior|exteriors|elevation|elevations|facade|curb|garage|streetscape|rendering)\b/i],
 ];
 
+/**
+ * The picture a Next.js site's image service serves, where an address is
+ * one: ".../_next/image?url=<the picture>&w=3840&q=75" is that picture at
+ * the width the page asked for. William Ryan's community page shows each
+ * plan's front this way, and its plan pages show the same front at its own
+ * address in Google's storage. Taken for two pictures, the card's was
+ * proposed as the floor plan drawing of six plans at Cross Creek, each the
+ * photograph leading its plan's gallery, named "elevation-4931042.jpg" and
+ * the like (Jeff, 2026-10-24). Null for any other address. Pure.
+ */
+export function nextImageSource(src: string): string | null {
+  let at: URL;
+  try {
+    at = new URL(src);
+  } catch {
+    return null;
+  }
+  if (!/\/_next\/image\/?$/i.test(at.pathname)) return null;
+  const inner = at.searchParams.get("url");
+  if (!inner) return null;
+  try {
+    return new URL(inner, at.origin).href;
+  } catch {
+    return null;
+  }
+}
+
 /** The words a file name carries, for builders that name photos by room ("cascadia-kitchen-4.jpeg", "02_KitchenDining.jpg"). */
 export function fileNameWords(src: string): string {
   try {
-    const last = decodeURIComponent(new URL(src).pathname.split("/").pop() ?? "");
+    // A Next.js image is named by the picture it serves (nextImageSource).
+    const last = decodeURIComponent(new URL(nextImageSource(src) ?? src).pathname.split("/").pop() ?? "");
     return last
       .replace(/\.[a-z0-9]+$/i, "")
       .replace(/([a-z])([A-Z])/g, "$1 $2")
