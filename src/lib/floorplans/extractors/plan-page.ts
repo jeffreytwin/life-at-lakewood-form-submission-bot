@@ -22,7 +22,7 @@
 // gallery, a page that keeps no more than it draws yields what it draws,
 // and either way the plan keeps exactly what it had.
 
-import { classifyRoom } from "@/lib/floorplans/gallery-order";
+import { classifyRoom, nextImageSource } from "@/lib/floorplans/gallery-order";
 
 export interface PageImage {
   src: string;
@@ -665,6 +665,10 @@ export function pictureKey(src: string): string {
   // res.cloudinary.com/…/image/fetch/ar_1.5,c_fill,w_768/https://pultegroup.picturepark.com/….
   const fetched = src.match(/\/image\/fetch\/(?:[^/]*\/)*?(https?:\/\/?[^/].*)$/i)?.[1];
   if (fetched) return pictureKey(fetched.replace(/^(https?:)\/(?!\/)/i, "$1//"));
+  // And so is one a Next.js site's image service serves: William Ryan's
+  // ".../_next/image?url=…elevation-4931042.jpg&w=3840" (nextImageSource).
+  const served = nextImageSource(src);
+  if (served) return pictureKey(served);
   // And a picture uploaded to one is its public id (cloudinaryUpload).
   const uploaded = cloudinaryUpload(src);
   if (uploaded) return uploaded;
