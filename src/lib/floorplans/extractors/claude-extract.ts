@@ -1362,8 +1362,12 @@ async function listPage(
 ): Promise<{ url: string; plans: NormalizedPlan[]; pressed?: string | null; homesPage?: string | null; series?: string[] }> {
   const page = await (opts.read ?? fetchPage)(url, opts.press ? { press: opts.press } : undefined);
   // Asked to open a tab and the page has no such tab: there is nothing
-  // behind it to read, and nothing to pay a model to read.
-  if (opts.press && !page.pressed) return { url: page.url || url, plans: [], pressed: null };
+  // behind it to read, and nothing to pay a model to read. Unless the page
+  // never drew, and the tab was not there to press (homesBehindTab).
+  if (opts.press && !page.pressed) {
+    if (pageLooksUnrendered(distill(page.html, page.url))) throw new Error("the page never drew, so its tab was not there to press");
+    return { url: page.url || url, plans: [], pressed: null };
+  }
   const content = distill(page.html, page.url);
   if (content.length < 500) {
     throw new Error("page produced almost no text (JS-rendered? use render_claude)");
@@ -1709,6 +1713,37 @@ const HOMES_TAB = [
   "inventory homes",
 ] as const;
 
+/** How many loads of a community's page its homes tab is given before the run goes without its homes. */
+const HOMES_TAB_LOADS = 3;
+
+/**
+ * A community's homes behind its own tab, its page loaded again where a
+ * load of it failed. Richmond American's site loses its own connection on
+ * about half the loads of a page (probed 2026-10-24: six loads of ten
+ * stopped half drawn, with no tab to press, and the night's run pressed
+ * the tab on a page that then came back as 2,930 bytes), and a new load is
+ * as likely to draw as any. One bad load cost Estates at Rivers Edge all
+ * ten of its homes, the run came back "partial: 5 of the 15 plans", and
+ * nothing read it again until a person pressed Run (Jeff, 2026-10-24). A
+ * load that drew and has no such tab is the page's answer, and is not
+ * tried again; nor is one the run has no time left for. Exported for
+ * tests.
+ */
+export async function homesBehindTab<T>(read: () => Promise<T>, url: string, runDeadline?: number): Promise<T> {
+  for (let load = 1; ; load++) {
+    try {
+      return await read();
+    } catch (error) {
+      if (load >= HOMES_TAB_LOADS || Date.now() + PAGE_READ_MS > (runDeadline ?? Infinity)) throw error;
+      logger.warn("A community's homes tab could not be read; loading its page again", {
+        url,
+        load,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+}
+
 /** The generic engine. Reads every page the same way; only the reader differs. */
 async function extractPages(
   params: ClaudeExtractParams,
@@ -1735,7 +1770,11 @@ async function extractPages(
   // The homes behind a community's own tab (below): a page's homes, or none.
   const pressForHomes = async (pageUrl: string): Promise<NormalizedPlan[]> => {
     try {
-      const homes = await listPage(pageUrl, { hint: params.hint, quickMoveIns: true, press: HOMES_TAB, read });
+      const homes = await homesBehindTab(
+        () => listPage(pageUrl, { hint: params.hint, quickMoveIns: true, press: HOMES_TAB, read }),
+        pageUrl,
+        params.runDeadline
+      );
       if (!homes.pressed) return [];
       logger.info("Read a community's homes from behind its own tab", { url: pageUrl, tab: homes.pressed, homes: homes.plans.length });
       return homes.plans;

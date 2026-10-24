@@ -31,3 +31,30 @@ export function describeCoverage(found: number, lastKnown: number | null | undef
 export function countToMeet(lastPlanCount: number | null | undefined, onboardedAt: string | null | undefined): number | null {
   return onboardedAt ? lastPlanCount ?? null : null;
 }
+
+/** How far apart two short runs must be for what they found to be taken for what the builder lists: a night. */
+export const SHORTFALL_NIGHTS_MS = 20 * 60 * 60 * 1000;
+
+/**
+ * The count a run short of its count leaves for the next run to meet:
+ * none of its own, so the next run is held to the same count, until the
+ * connection has come back short on two nights running. Then what it
+ * found is what the builder lists now, and the run after it is held to
+ * that. A short run used to leave its own count, and one bad read was
+ * enough to lower the bar: Richmond American's Estates at Rivers Edge
+ * read its five plans and none of its ten homes one night (10-18), a Run
+ * pressed an hour later read the same, passed as "ok: 5 plans", and
+ * queued every home for removal; approved, ten homes Richmond still sold
+ * came off the site. A run made again the same night (nightly.ts,
+ * retriesOwed) would do that on its own. Null leaves the count as it is.
+ * Pure; exported for tests.
+ */
+export function countAfterShortfall(
+  found: number,
+  before: { lastRunStatus: string | null | undefined; lastRunAt: string | null | undefined },
+  now = Date.now()
+): number | null {
+  const shortBefore = (before.lastRunStatus ?? "").startsWith("partial:");
+  const at = Date.parse(before.lastRunAt ?? "");
+  return shortBefore && Number.isFinite(at) && now - at >= SHORTFALL_NIGHTS_MS ? found : null;
+}
