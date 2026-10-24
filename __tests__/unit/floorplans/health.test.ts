@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
+import { countAfterShortfall, countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { attentionDismissed, CUT_OFF_STATUS, mendsItself, troubledConnections } from "@/lib/floorplans/health";
 
 describe("attentionDismissed", () => {
@@ -104,6 +104,32 @@ describe("countToMeet", () => {
     expect(countToMeet(21, "2026-10-03T21:00:23.309Z")).toBe(21);
     expect(describeCoverage(8, countToMeet(21, "2026-10-03T21:00:23.309Z")).ok).toBe(false);
     expect(countToMeet(null, "2026-10-03T21:00:23.309Z")).toBeNull();
+  });
+});
+
+// Richmond American's Estates at Rivers Edge (2026-10-18): the night's run
+// read 5 of its 15, a Run an hour later read the same 5, was held to them,
+// passed as "ok", and queued all ten homes for removal.
+describe("countAfterShortfall", () => {
+  const now = Date.parse("2026-10-18T07:22:00Z");
+  const short = "partial: 5 of the 15 plans found last time (removals held; check the builder's page); 0 changes queued";
+
+  it("leaves the count where it was after one short run, so the run after it is held to the same", () => {
+    expect(countAfterShortfall(5, { lastRunStatus: "ok: 15 plans, 0 changes queued", lastRunAt: "2026-10-17T06:24:00Z" }, now)).toBeNull();
+    expect(describeCoverage(5, 15).ok).toBe(false);
+  });
+
+  it("leaves it after a second short run the same night", () => {
+    expect(countAfterShortfall(5, { lastRunStatus: short, lastRunAt: "2026-10-18T06:24:00Z" }, now)).toBeNull();
+  });
+
+  it("takes what was found once the connection has come back short on two nights running", () => {
+    expect(countAfterShortfall(5, { lastRunStatus: short, lastRunAt: "2026-10-17T07:02:00Z" }, now)).toBe(5);
+  });
+
+  it("leaves it where the run before was not a short one, whenever it was", () => {
+    expect(countAfterShortfall(5, { lastRunStatus: "zero results (treated as failure)", lastRunAt: "2026-10-16T06:00:00Z" }, now)).toBeNull();
+    expect(countAfterShortfall(5, { lastRunStatus: null, lastRunAt: null }, now)).toBeNull();
   });
 });
 

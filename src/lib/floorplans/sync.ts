@@ -41,7 +41,7 @@ import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { refusedTours, withoutRefusedTours } from "@/lib/floorplans/tour-review";
 import { alreadyFiled, filedAsBefore, knownRecordsOf, type FiledHome } from "@/lib/floorplans/home-identity";
 import { linkQuickMoveIns, withLinksAsRead, withPlanPicturesOnHomes, withPlanTypesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
-import { countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
+import { countAfterShortfall, countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
 import { builderDefaults, standardizePlan, withPlanNamePrefix } from "@/lib/floorplans/standardize";
 import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutBanners, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
@@ -766,7 +766,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
-      "id, active, extractor_params, last_plan_count, last_run_status, onboarded_at, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
+      "id, active, extractor_params, last_plan_count, last_run_status, last_run_at, onboarded_at, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
     )
     .eq("id", connectionId)
     .single();
@@ -1096,7 +1096,12 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       const detail = coverage.ok
         ? `ok: ${plans.length} plans, ${queued} changes queued${heldNote}`
         : `${coverage.detail}; ${queued} changes queued${heldNote}`;
-      await setRunStatus(conn.id, detail, plans.length, !coverage.ok, await spentOn(runId));
+      // A short run leaves the count it was held to for the next run, until
+      // the shortfall has lasted from one night to the next (coverage.ts).
+      const count = coverage.ok
+        ? plans.length
+        : countAfterShortfall(plans.length, { lastRunStatus: conn.last_run_status, lastRunAt: conn.last_run_at });
+      await setRunStatus(conn.id, detail, count, !coverage.ok, await spentOn(runId));
       // First successful run marks the connection nightly-eligible.
       await supabase
         .from("fp_builder_communities")

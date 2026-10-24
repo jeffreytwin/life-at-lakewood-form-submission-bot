@@ -6,6 +6,10 @@
 // resumes across ticks until every connection is covered), and sends the
 // digest SMS when the cycle completes.
 //
+// A connection whose run fails is run once more before the cycle
+// completes, so a page that misdrew once does not wait for a person to
+// press Run (retriesOwed).
+//
 // Eligibility: connection active, builder active, and onboarded_at set —
 // i.e. the connection has succeeded at least one manual run. New builders
 // never reach automation without passing through human review first.
@@ -19,7 +23,7 @@
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
-import { readsThroughBrowser } from "@/lib/floorplans/sync";
+import { readsThroughBrowser, type RunResult } from "@/lib/floorplans/sync";
 import { AUTO_RUN } from "@/lib/floorplans/run-state";
 import { holdRun, runHeld, sweepCutOffRuns } from "@/lib/floorplans/runs";
 import { withRunContext } from "@/lib/floorplans/run-context";
@@ -48,6 +52,8 @@ export interface NightlyState {
   cached?: number;
   /** Connections given their second reading this cycle (secondReadingsOwed). */
   reread?: string[];
+  /** Connections run once more this cycle after their run failed (retriesOwed). */
+  retried?: string[];
 }
 
 /** A tick holds the lock no longer than a function lives. */
@@ -137,6 +143,32 @@ export async function owedRuns(startedAt: string) {
     c.fp_builders as { name: string; active: boolean; extraction_method: string | null } | null;
   return (pending ?? [])
     .filter((c) => builderOf(c)?.active)
+    .map((c) => ({ id: c.id as string, builder: builderOf(c)!, params: c.extractor_params as Record<string, unknown> | null }));
+}
+
+/**
+ * The connections whose run this cycle failed and have not been run again
+ * for it: each is run once more once every connection has had its run, as
+ * a person pressing Run would have to. Richmond American's Estates at
+ * Rivers Edge came back "partial" from a page that draws about half the
+ * times it loads, and stayed so until Jeff pressed Run in the morning,
+ * which read every plan and home (2026-10-24: "is not retried until I do
+ * it myself"). A run cut off by the time limit is not among them: it is
+ * still owed its run (owedRuns). Exported for tests.
+ */
+export async function retriesOwed(startedAt: string, retried: string[]) {
+  const { data: rows } = await supabase
+    .from("fp_builder_communities")
+    .select("id, extractor_params, fp_builders:builder_id(name, active, extraction_method)")
+    .eq("active", true)
+    .not("onboarded_at", "is", null)
+    .gte("last_run_at", startedAt)
+    .gt("consecutive_failures", 0);
+  const done = new Set(retried);
+  const builderOf = (c: { fp_builders: unknown }) =>
+    c.fp_builders as { name: string; active: boolean; extraction_method: string | null } | null;
+  return (rows ?? [])
+    .filter((c) => builderOf(c)?.active && !done.has(c.id as string))
     .map((c) => ({ id: c.id as string, builder: builderOf(c)!, params: c.extractor_params as Record<string, unknown> | null }));
 }
 
@@ -286,13 +318,12 @@ async function tick(): Promise<Record<string, unknown>> {
 
   let remaining = todo.length - processed;
   const nextState: NightlyState = { ...state, ran, failed };
+  const source = state.manual ? "sync-now" : "nightly";
 
-  // Every connection run, the second readings: each connection that held
-  // something is run again (sync.ts, runConnection under secondReading).
-  // Marked done before it runs, so one cut off is not run again and again.
-  if (remaining <= 0) {
-    const reread = [...(state.reread ?? [])];
-    const owed = await secondReadingsOwed(startedAt, reread);
+  // Each connection the tick has room for, run in turn, marked done in the
+  // cycle's state before it runs, so one cut off is not run again and
+  // again. How many are left for the next tick.
+  const runEach = async (owed: Awaited<ReturnType<typeof owedRuns>>, mark: (id: string) => void, run: (id: string) => Promise<RunResult>) => {
     let left = owed.length;
     for (const conn of owed) {
       const needs = readsThroughBrowser(conn.builder.name, conn.builder.extraction_method, conn.params) ? RENDER_RESERVE_MS : 0;
@@ -304,13 +335,49 @@ async function tick(): Promise<Record<string, unknown>> {
         busy += 1;
         continue;
       }
-      reread.push(conn.id);
-      nextState.reread = reread;
+      mark(conn.id);
       await supabase.from("system_settings").update({ fp_nightly_state: nextState }).eq("id", 1);
-      await withRunContext({ source: state.manual ? "sync-now" : "nightly", secondReading: { freshPages: new Set(), freshPlans: new Set() } }, () => runHeld(conn.id));
+      await run(conn.id);
       left -= 1;
     }
-    remaining = left;
+    return left;
+  };
+
+  // Every connection run, each one whose run failed is run once more
+  // (retriesOwed): before the second readings, so what the run made again
+  // holds is read a second time the same night. One that comes back well
+  // is no longer counted among the cycle's failures.
+  if (remaining <= 0) {
+    const retried = [...(state.retried ?? [])];
+    remaining = await runEach(
+      await retriesOwed(startedAt, retried),
+      (id) => {
+        retried.push(id);
+        nextState.retried = retried;
+      },
+      async (id) => {
+        const result = await withRunContext({ source }, () => runHeld(id));
+        if (result.status === "ok" && failed > 0) {
+          failed -= 1;
+          nextState.failed = failed;
+        }
+        return result;
+      }
+    );
+  }
+
+  // Every connection run, the second readings: each connection that held
+  // something is run again (sync.ts, runConnection under secondReading).
+  if (remaining <= 0) {
+    const reread = [...(state.reread ?? [])];
+    remaining = await runEach(
+      await secondReadingsOwed(startedAt, reread),
+      (id) => {
+        reread.push(id);
+        nextState.reread = reread;
+      },
+      (id) => withRunContext({ source, secondReading: { freshPages: new Set(), freshPlans: new Set() } }, () => runHeld(id))
+    );
   }
 
   if (remaining <= 0) {
