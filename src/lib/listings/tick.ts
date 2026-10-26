@@ -29,6 +29,7 @@ import { lastOkRunStartedAt, purgeOldRuns, purgeUnmatchedListings, runningRun, t
 import { runStandalonePhotoJob, type StandalonePhotoResult } from "@/lib/listings/photos";
 import type { FullCursor, RunTrigger } from "@/lib/listings/types";
 import type { DiscoverCursor } from "@/lib/listings/discover";
+import { refreshVillageRanges } from "@/lib/villages/sync";
 
 export const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
 export const FULL_RUN_HOUR_UTC = 3;
@@ -152,6 +153,12 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
   }
   await supabase.from("system_settings").update({ ls_engine_state: nextState }).eq("id", 1);
 
+  // Rows written or removed change what is for sale in a village: its
+  // price and size ranges follow (villages/sync.ts). Never fails the run.
+  const rowsChanged = result.counts.inserted + result.counts.updated + result.counts.deleted;
+  let villageRanges: Awaited<ReturnType<typeof refreshVillageRanges>> | null = null;
+  if (rowsChanged > 0 && Date.now() < deadline - 30_000) villageRanges = await refreshVillageRanges("listings-run");
+
   // The run's own photo step is capped; with time left the tick keeps draining the backlog.
   let photosAfter: StandalonePhotoResult | null = null;
   if (Date.now() < deadline - PHOTOS_MIN_REMAINING_MS) {
@@ -162,7 +169,7 @@ export async function runEngineTick(opts: TickOptions = {}): Promise<Record<stri
       logger.warn("Listings photo backlog pass failed", { error: String(photoError) });
     }
   }
-  return { mode, ...summarize(result), purged, photosAfter };
+  return { mode, ...summarize(result), purged, photosAfter, villageRanges };
 }
 
 export function summarize(result: ReconcileResult): Record<string, unknown> {

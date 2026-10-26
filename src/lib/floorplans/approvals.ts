@@ -14,6 +14,7 @@ import { groupChanges } from "@/lib/floorplans/group-changes";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { isWritten } from "@/lib/floorplans/leaving-rows";
 import { wixThrottleWaitMs } from "@/lib/wix/client";
+import { refreshVillageRanges } from "@/lib/villages/sync";
 
 /**
  * A worker writes for this long and leaves the rest to the next. Two
@@ -274,6 +275,10 @@ export async function drainApprovals(budgetMs = APPROVE_BUDGET_MS): Promise<Drai
     await letGo(holdUntil).catch(() => undefined);
   }
   if (result.written || result.failed || result.waiting) logger.info("Approval worker ran", { ...result });
+  // Plans written change what is for sale: the villages' price and size
+  // ranges follow (villages/sync.ts), once the line is empty. Idempotent,
+  // so a second pass after the recursion below writes nothing more.
+  if (emptied && result.written) await refreshVillageRanges("floorplan-approvals");
   // Plans approved while this worker was letting go found the lock held and
   // left their writes to it; they are written now, not at the next minute.
   const left = budgetMs - (Date.now() - started);
