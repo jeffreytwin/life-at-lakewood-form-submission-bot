@@ -31,6 +31,7 @@ const items: WixDataItem[] = [
     bedroomsDropdown: "2, 3, 4, 5, 6, Show All",
     homeTypeNew: ["Single Family Home", "Villa"],
     homeTypesDropdown: "Single Family Home, Attached Villas, Show All",
+    homeTypes: "Single Family\nVillas",
     description: "Gated, with a clubhouse.",
   }),
   item("aurora", {

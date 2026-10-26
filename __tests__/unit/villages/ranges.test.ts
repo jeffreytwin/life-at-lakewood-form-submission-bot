@@ -167,6 +167,7 @@ describe("bedrooms, bathrooms, garages and home types", () => {
       garagesDropdown: "1, 2, 3, Show All",
       homeTypeNew: ["Single Family Home", "Villa", "Townhome"],
       homeTypesDropdown: "Single Family Home, Attached Villas, Townhomes, Show All",
+      homeTypes: "Single Family\nVillas\nTownhomes",
     });
   });
 

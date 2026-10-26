@@ -24,7 +24,7 @@ home is not in either set.
 
 Lakewood's villages are the `AmenitiesbyVillage` items, matched by `title`
 (then `villagesTitle`) to the village name the rows carry, ignoring case,
-spacing, dash style and "&" vs "and". Fifteen fields, in the formats the
+spacing, dash style and "&" vs "and". Sixteen fields, in the formats the
 site's page code already filters on (Jeff, 2026-10-26: so a buyer can
 narrow villages by price, size, bedrooms, bathrooms, garages and home type):
 
@@ -45,6 +45,7 @@ narrow villages by price, size, bedrooms, bathrooms, garages and home type):
 | `garagesDropdown` | `2, 3, Show All` |
 | `homeTypeNew` (tags) | `["Single Family Home", "Villa", "Townhome", "Condominium"]`, the page's filter values |
 | `homeTypesDropdown` | `Single Family Home, Attached Villas, Townhomes, Condominiums, Show All` |
+| `homeTypes` | the display text, one type a line: `Single Family`, `Villas`, `Townhomes`, `Condominiums` |
 
 A price bucket is a hundred-thousand up to $999,999 and a whole million
 from there, consecutive from the lowest price to the highest. The

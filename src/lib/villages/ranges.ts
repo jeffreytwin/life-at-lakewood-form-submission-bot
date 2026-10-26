@@ -21,6 +21,7 @@
 //   garagesDropdown     "2, 3, Show All"
 //   homeTypeNew         ["Single Family Home", "Villa", "Townhome", "Condominium"]  (the page's filter values)
 //   homeTypesDropdown   "Single Family Home, Attached Villas, Townhomes, Condominiums, Show All"
+//   homeTypes           "Single Family\nVillas\nTownhomes\nCondominiums"  (the display text, one type a line)
 // A price bucket is a hundred-thousand up to $999,999 ("$300s" is $300,000
 // to $399,999) and a whole million from there ("$2M+" is $2,000,000 to
 // $2,999,999), consecutive from the lowest to the highest price. (Jeff,
@@ -82,6 +83,7 @@ export interface RangeFields {
   garagesDropdown: string;
   homeTypeNew: string[];
   homeTypesDropdown: string;
+  homeTypes: string;
 }
 
 export const RANGE_FIELD_KEYS: Array<keyof RangeFields> = [
@@ -100,6 +102,7 @@ export const RANGE_FIELD_KEYS: Array<keyof RangeFields> = [
   "garagesDropdown",
   "homeTypeNew",
   "homeTypesDropdown",
+  "homeTypes",
 ];
 
 /** The tag fields: arrays of strings in Wix. */
@@ -113,6 +116,14 @@ export type HomeTypeTag = (typeof HOME_TYPE_ORDER)[number];
 export const HOME_TYPE_DROPDOWN_LABEL: Record<HomeTypeTag, string> = {
   "Single Family Home": "Single Family Home",
   Villa: "Attached Villas",
+  Townhome: "Townhomes",
+  Condominium: "Condominiums",
+};
+
+/** How each home type reads in the homeTypes display text, one a line. */
+export const HOME_TYPE_DISPLAY_LABEL: Record<HomeTypeTag, string> = {
+  "Single Family Home": "Single Family",
+  Villa: "Villas",
   Townhome: "Townhomes",
   Condominium: "Condominiums",
 };
@@ -359,6 +370,7 @@ export function rangeFields(range: VillageRange): Partial<RangeFields> {
   if (range.homeTypes.length) {
     out.homeTypeNew = [...range.homeTypes];
     out.homeTypesDropdown = optionsDropdown(range.homeTypes.map((t) => HOME_TYPE_DROPDOWN_LABEL[t]));
+    out.homeTypes = range.homeTypes.map((t) => HOME_TYPE_DISPLAY_LABEL[t]).join("\n");
   }
   return out;
 }
