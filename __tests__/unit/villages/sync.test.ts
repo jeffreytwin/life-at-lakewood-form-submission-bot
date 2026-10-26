@@ -11,7 +11,7 @@ vi.mock("@/lib/wix/client", () => ({
 }));
 
 import { aggregateVillageRanges, type VillageRow } from "@/lib/villages/ranges";
-import { planVillageUpdates, VILLAGE_RANGE_TARGETS } from "@/lib/villages/sync";
+import { garageCount, listingBaths, listingGarages, planVillageUpdates, VILLAGE_RANGE_TARGETS } from "@/lib/villages/sync";
 import type { WixDataItem } from "@/lib/wix/client";
 
 const target = VILLAGE_RANGE_TARGETS[0];
@@ -26,6 +26,12 @@ const items: WixDataItem[] = [
     priceRange: "$500s - $1M+",
     priceRangeDropdown: "Show All Price Ranges, $500s, $600s, $700s, $800s, $900s, $1M+",
     priceRangeNew: ["$500s", "$600s", "$700s", "$800s", "$900s", "1M+"],
+    bedrooms: "2 - 6",
+    bedroomsNew: ["2", "3", "4", "5", "6"],
+    bedroomsDropdown: "2, 3, 4, 5, 6, Show All",
+    homeTypeNew: ["Single Family Home", "Villa"],
+    homeTypesDropdown: "Single Family Home, Attached Villas, Show All",
+    homeTypes: "Single Family\nVillas",
     description: "Gated, with a clubhouse.",
   }),
   item("aurora", {
@@ -42,8 +48,8 @@ const items: WixDataItem[] = [
 ];
 
 const rows: VillageRow[] = [
-  { village: "Arbor Grande", source: "listing", price: 379_900, sqft: 1_571 },
-  { village: "Arbor Grande", source: "listing", price: 999_999, sqft: 3_899 },
+  { village: "Arbor Grande", source: "listing", price: 379_900, sqft: 1_571, beds: 2, baths: 2, garages: 2, homeType: "Villa" },
+  { village: "Arbor Grande", source: "listing", price: 999_999, sqft: 3_899, beds: 6, baths: 4.5, garages: 3, homeType: "Single Family Residence" },
   { village: "Aurora", source: "listing", price: 274_900, sqft: 1_352 },
   { village: "Aurora", source: "listing", price: 432_300, sqft: 2_214 },
   { village: "Summerfield & Riverwalk", source: "listing", price: 234_999, sqft: 1_680 },
@@ -58,12 +64,30 @@ describe("planVillageUpdates", () => {
   it("writes the items whose range moved, with before and after of the changed fields only", () => {
     const arbor = plan.updates.find((u) => u.itemId === "arbor");
     expect(arbor).toBeDefined();
-    expect(arbor!.changed).toEqual(["priceRange", "priceRangeDropdown", "priceRangeNew", "squareFootageRange"]);
+    // Bedrooms and home types already say what the range says: not among the changed fields.
+    expect(arbor!.changed).toEqual([
+      "priceRange",
+      "priceRangeDropdown",
+      "priceRangeNew",
+      "squareFootageRange",
+      "bathrooms",
+      "bathroomsNew",
+      "bathroomsDropdown",
+      "garages",
+      "garagesNew",
+      "garagesDropdown",
+    ]);
     expect(arbor!.after).toEqual({
       priceRange: "$300s - $900s",
       priceRangeDropdown: "Show All Price Ranges, $300s, $400s, $500s, $600s, $700s, $800s, $900s",
       priceRangeNew: ["$300s", "$400s", "$500s", "$600s", "$700s", "$800s", "$900s"],
       squareFootageRange: "1,600 - 3,900 square feet",
+      bathrooms: "2 - 4.5",
+      bathroomsNew: ["2", "3", "4"],
+      bathroomsDropdown: "2, 3, 4, Show All",
+      garages: "2 - 3 Car",
+      garagesNew: ["2", "3"],
+      garagesDropdown: "2, 3, Show All",
     });
     expect(arbor!.before.priceRange).toBe("$500s - $1M+");
     expect(arbor!.before.squareFootageRange).toBeUndefined();
@@ -89,5 +113,26 @@ describe("planVillageUpdates", () => {
 
   it("counts what it saw", () => {
     expect(plan).toMatchObject({ domain: "lifeatlakewood.com", collectionId: "AmenitiesbyVillage", items: 6, villages: 5 });
+  });
+});
+
+describe("listing and plan field readers", () => {
+  it("reads garage bays off the builders' text", () => {
+    expect(garageCount("3 car")).toBe(3);
+    expect(garageCount("2-Car Garage")).toBe(2);
+    expect(garageCount("0 car")).toBe(0);
+    expect(garageCount(null)).toBeNull();
+    expect(garageCount("none")).toBeNull();
+  });
+  it("counts a half bath as a half, falling back to the MLS total", () => {
+    expect(listingBaths({ bathrooms: "3", baths_full: "2", baths_half: "1" })).toBe(2.5);
+    expect(listingBaths({ bathrooms: "2", baths_full: "2", baths_half: null })).toBe(2);
+    expect(listingBaths({ bathrooms: "3", baths_full: null, baths_half: null })).toBe(3);
+  });
+  it("takes GarageSpaces, else a stated no-garage, else nothing", () => {
+    expect(listingGarages({ garage_spaces: "2", garage_yn: "true" })).toBe(2);
+    expect(listingGarages({ garage_spaces: null, garage_yn: "false" })).toBe(0);
+    expect(listingGarages({ garage_spaces: null, garage_yn: "true" })).toBeNull();
+    expect(listingGarages({ garage_spaces: null, garage_yn: null })).toBeNull();
   });
 });

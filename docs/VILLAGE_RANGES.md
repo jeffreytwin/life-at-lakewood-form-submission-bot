@@ -24,8 +24,9 @@ home is not in either set.
 
 Lakewood's villages are the `AmenitiesbyVillage` items, matched by `title`
 (then `villagesTitle`) to the village name the rows carry, ignoring case,
-spacing, dash style and "&" vs "and". Four fields, in the formats the
-site's page code already filters on:
+spacing, dash style and "&" vs "and". Sixteen fields, in the formats the
+site's page code already filters on (Jeff, 2026-10-26: so a buyer can
+narrow villages by price, size, bedrooms, bathrooms, garages and home type):
 
 | Field | Example |
 |---|---|
@@ -33,15 +34,40 @@ site's page code already filters on:
 | `priceRangeDropdown` | `Show All Price Ranges, $300s, $400s, ..., $900s, $1M+, $2M+` |
 | `priceRangeNew` (tags) | `["$300s", "$400s", ..., "$900s", "1M+", "2M+"]` |
 | `squareFootageRange` | `2,300 - 4,700 square feet` (nearest 100) |
+| `bedrooms` | `2 - 6` (one value alone: `3`) |
+| `bedroomsNew` (tags) | `["2", "3", "4", "5", "6"]`, every whole number low to high |
+| `bedroomsDropdown` | `2, 3, 4, 5, 6, Show All` |
+| `bathrooms` | `2 - 4.5` (halves kept) |
+| `bathroomsNew` (tags) | `["2", "3", "4"]`, whole numbers from the floor of each end |
+| `bathroomsDropdown` | `2, 3, 4, Show All` |
+| `garages` | `2 - 3 Car` (one value alone: `3 Car`; a known no-garage low end reads `0 - 3 Car`) |
+| `garagesNew` (tags) | `["2", "3"]` (0 is never a tag) |
+| `garagesDropdown` | `2, 3, Show All` |
+| `homeTypeNew` (tags) | `["Single Family Home", "Villa", "Townhome", "Condominium"]`, the page's filter values |
+| `homeTypesDropdown` | `Single Family Home, Attached Villas, Townhomes, Condominiums, Show All` |
+| `homeTypes` | the display text, one type a line: `Single Family`, `Villas`, `Townhomes`, `Condominiums` |
 
-A bucket is a hundred-thousand up to $999,999 and a whole million from
-there, consecutive from the lowest price to the highest. The
+A price bucket is a hundred-thousand up to $999,999 and a whole million
+from there, consecutive from the lowest price to the highest. The
 `squareFootageRange` field is added to the collection (TEXT) by the first
 run that finds it missing.
 
-An item is written only when a field differs from the range. An item with
-nothing for sale is left as it is (never blanked), and a village with homes
-but no item of that name is reported, not created. Wellen Park and Parrish
+Where the counts come from: floor plans carry beds, baths, the builder's
+garage text ("3 car") and home type ("Attached Villa"); listings carry
+bedrooms, full and half baths (2 full + 1 half is 2.5; the MLS total
+integer, which counts a half as a whole, is the fallback), `GarageSpaces`
+(0 when `GarageYN` is false, unknown when both are blank) and the RESO
+`PropertySubType`. Home types map to the four filter values: Single Family
+Home or Residence; Villa and Attached Villa; Townhome and Townhouse;
+Condominium and Coach Home. A type outside those is left out, never
+guessed. Counts of 0 bedrooms or bathrooms, or beyond 12, are left out as
+data errors.
+
+An item is written only when a field differs from the range, and each
+group of fields needs its own data: a village with prices but no bedroom
+counts gets its price fields and nothing else. A tag list is never written
+empty. An item with nothing for sale is left as it is (never blanked), and
+a village with homes but no item of that name is reported, not created. Wellen Park and Parrish
 join `VILLAGE_RANGE_TARGETS` (`src/lib/villages/sync.ts`) once their
 neighborhoods collections carry the same four fields.
 

@@ -26,6 +26,7 @@ import {
   aggregateVillageRanges,
   rangeFields,
   RANGE_FIELD_KEYS,
+  RANGE_TAG_KEYS,
   sameFieldValue,
   villageKey,
   type RangeFields,
@@ -104,14 +105,14 @@ function indexItems(items: WixDataItem[]): Map<string, WixDataItem> {
 }
 
 function currentFields(item: WixDataItem): Partial<RangeFields> {
-  const out: Partial<RangeFields> = {};
+  const out: Record<string, string | string[]> = {};
   for (const key of RANGE_FIELD_KEYS) {
     const value = item.data?.[key];
     if (value === undefined || value === null) continue;
-    if (key === "priceRangeNew") out.priceRangeNew = Array.isArray(value) ? value.map(String) : [String(value)];
+    if (RANGE_TAG_KEYS.has(key)) out[key] = Array.isArray(value) ? value.map(String) : [String(value)];
     else out[key] = String(value);
   }
-  return out;
+  return out as Partial<RangeFields>;
 }
 
 /**
@@ -188,10 +189,10 @@ export async function loadVillageRows(domain: string): Promise<{ rows: VillageRo
     const site = fpSite as FpSiteRow;
     wixSiteId = site.wix_site_id ?? wixSiteId;
     const [plans, communities] = await Promise.all([
-      selectAll<{ community_id: string; price: number | string | null; sqft: number | null }>("load floor plans", (from, to) =>
+      selectAll<FpPlanRow>("load floor plans", (from, to) =>
         supabase
           .from("fp_floor_plans")
-          .select("community_id, price, sqft")
+          .select("community_id, price, sqft, beds, baths, home_type:record->>homeType, garages:record->>garages")
           .eq("site_id", site.id)
           .is("removed_at", null)
           .not("wix_record_id", "is", null)
@@ -206,7 +207,16 @@ export async function loadVillageRows(domain: string): Promise<{ rows: VillageRo
     for (const plan of plans) {
       const village = nameOf.get(plan.community_id);
       if (!village) continue;
-      rows.push({ village, source: "plan", price: numberOrNull(plan.price), sqft: numberOrNull(plan.sqft) });
+      rows.push({
+        village,
+        source: "plan",
+        price: numberOrNull(plan.price),
+        sqft: numberOrNull(plan.sqft),
+        beds: numberOrNull(plan.beds),
+        baths: numberOrNull(plan.baths),
+        garages: garageCount(plan.garages),
+        homeType: plan.home_type,
+      });
     }
   }
 
@@ -236,20 +246,32 @@ export async function loadVillageRows(domain: string): Promise<{ rows: VillageRo
     ]);
     const villageOf = new Map(villages.map((v) => [v.id, v.name]));
     const ids = [...new Set(siteListings.map((l) => l.listing_id))];
-    const listingOf = new Map<string, { list_price: number | string | null; living_area: number | string | null }>();
+    const listingOf = new Map<string, LsListingRow>();
     for (let i = 0; i < ids.length; i += 200) {
       const chunk = ids.slice(i, i + 200);
-      const { data, error } = await supabase.from("ls_listings").select("listing_id, list_price, living_area").in("listing_id", chunk);
+      const { data, error } = await supabase
+        .from("ls_listings")
+        .select(
+          "listing_id, list_price, living_area, bedrooms, bathrooms, property_sub_type, garage_spaces:raw->>GarageSpaces, garage_yn:raw->>GarageYN, baths_full:raw->>BathroomsFull, baths_half:raw->>BathroomsHalf"
+        )
+        .in("listing_id", chunk);
       if (error) throw new Error(`load listings: ${errorMessage(error)}`);
-      for (const l of (data ?? []) as Array<{ listing_id: string; list_price: number | string | null; living_area: number | string | null }>) {
-        listingOf.set(l.listing_id, l);
-      }
+      for (const l of (data ?? []) as LsListingRow[]) listingOf.set(l.listing_id, l);
     }
     for (const sl of siteListings) {
       const village = sl.village_id ? villageOf.get(sl.village_id) : undefined;
       const listing = listingOf.get(sl.listing_id);
       if (!village || !listing) continue;
-      rows.push({ village, source: "listing", price: numberOrNull(listing.list_price), sqft: numberOrNull(listing.living_area) });
+      rows.push({
+        village,
+        source: "listing",
+        price: numberOrNull(listing.list_price),
+        sqft: numberOrNull(listing.living_area),
+        beds: numberOrNull(listing.bedrooms),
+        baths: listingBaths(listing),
+        garages: listingGarages(listing),
+        homeType: listing.property_sub_type,
+      });
     }
   }
 
@@ -260,6 +282,57 @@ function numberOrNull(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null;
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+interface FpPlanRow {
+  community_id: string;
+  price: number | string | null;
+  sqft: number | null;
+  beds: number | string | null;
+  baths: number | string | null;
+  /** record.homeType: the builder's words ("Attached Villa"). */
+  home_type: string | null;
+  /** record.garages: "2 car", "3-car", "2". */
+  garages: string | null;
+}
+
+interface LsListingRow {
+  listing_id: string;
+  list_price: number | string | null;
+  living_area: number | string | null;
+  bedrooms: number | string | null;
+  /** BathroomsTotalInteger: full and half baths counted alike, so the raw full/half pair is preferred. */
+  bathrooms: number | string | null;
+  property_sub_type: string | null;
+  garage_spaces: string | null;
+  garage_yn: string | null;
+  baths_full: string | null;
+  baths_half: string | null;
+}
+
+/** The first number in a garage text ("2 car", "3-Car Garage"); null when there is none. Exported for tests. */
+export function garageCount(text: string | null | undefined): number | null {
+  const m = (text ?? "").match(/\d+(\.\d+)?/);
+  return m ? Number(m[0]) : null;
+}
+
+/**
+ * Bathrooms as a buyer counts them: full baths plus a half for each half
+ * bath (2 full + 1 half is 2.5). The MLS total integer counts a half as a
+ * whole, so it is the fallback only.
+ */
+export function listingBaths(l: Pick<LsListingRow, "bathrooms" | "baths_full" | "baths_half">): number | null {
+  const full = numberOrNull(l.baths_full);
+  if (full !== null) return full + 0.5 * (numberOrNull(l.baths_half) ?? 0);
+  return numberOrNull(l.bathrooms);
+}
+
+/** GarageSpaces when the listing gives it; 0 when it says there is no garage; otherwise unknown. */
+export function listingGarages(l: Pick<LsListingRow, "garage_spaces" | "garage_yn">): number | null {
+  const spaces = numberOrNull(l.garage_spaces);
+  if (spaces !== null) return spaces;
+  if (String(l.garage_yn ?? "").toLowerCase() === "false") return 0;
+  return null;
 }
 
 export interface VillageRangeSyncResult {
