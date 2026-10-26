@@ -33,20 +33,22 @@ const items: WixDataItem[] = [
     homeTypesDropdown: "Single Family Home, Attached Villas, Show All",
     homeTypes: "Single Family\nVillas",
     hasListingsOrNewConstruction: true,
+    hasNewConstruction: false,
     buildYourHomeColor: "#A0A09F",
     description: "Gated, with a clubhouse.",
   }),
   item("aurora", {
     title: "Aurora",
     hasListingsOrNewConstruction: true,
+    hasNewConstruction: false,
     buildYourHomeColor: "#A0A09F",
     priceRange: "$200s - $400s",
     priceRangeDropdown: "Show All Price Ranges, $200s, $300s, $400s",
     priceRangeNew: ["$200s", "$300s", "$400s"],
     squareFootageRange: "1,400 - 2,200 square feet",
   }),
-  item("amber", { title: "Amber Creek", priceRange: "$300s", hasListingsOrNewConstruction: true, buildYourHomeColor: "#2C9E37" }),
-  item("hidden", { title: "Sold Out Village", priceRange: "$500s", hasListingsOrNewConstruction: false, buildYourHomeColor: "#a0a09f" }),
+  item("amber", { title: "Amber Creek", priceRange: "$300s", hasListingsOrNewConstruction: true, hasNewConstruction: true, buildYourHomeColor: "#2C9E37" }),
+  item("hidden", { title: "Sold Out Village", priceRange: "$500s", hasListingsOrNewConstruction: false, hasNewConstruction: false, buildYourHomeColor: "#a0a09f" }),
   item("summerfield", { title: "Summerfield", villagesTitle: "Summerfield & Riverwalk", priceRange: "$200s - $800s" }),
   item("isles-draft", { title: "The Isles", _publishStatus: "DRAFT", priceRange: "old" }),
   item("isles", { title: "The Isles", priceRange: "$1M+ - $2M+" }),
@@ -118,9 +120,9 @@ describe("planVillageUpdates", () => {
     expect(plan.itemsWithoutAvailability).toEqual(["Amber Creek", "Sold Out Village"]);
     const amber = plan.updates.find((u) => u.itemId === "amber");
     expect(amber).toBeDefined();
-    expect(amber!.changed).toEqual(["hasListingsOrNewConstruction", "buildYourHomeColor"]);
-    expect(amber!.after).toEqual({ hasListingsOrNewConstruction: false, buildYourHomeColor: "#A0A09F" });
-    expect(amber!.before).toEqual({ hasListingsOrNewConstruction: true, buildYourHomeColor: "#2C9E37" });
+    expect(amber!.changed).toEqual(["hasListingsOrNewConstruction", "buildYourHomeColor", "hasNewConstruction"]);
+    expect(amber!.after).toEqual({ hasListingsOrNewConstruction: false, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
+    expect(amber!.before).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: true, buildYourHomeColor: "#2C9E37" });
     // Already false and grey (whatever the hex case): no write.
     expect(plan.updates.map((u) => u.itemId)).not.toContain("hidden");
     // A draft copy of a village that has a range is neither flagged nor written.
@@ -130,6 +132,12 @@ describe("planVillageUpdates", () => {
   it("flags a village with homes true along with its ranges", () => {
     expect(plan.updates.find((u) => u.itemId === "summerfield")?.after.hasListingsOrNewConstruction).toBe(true);
     expect(plan.updates.find((u) => u.itemId === "arbor")?.changed).not.toContain("hasListingsOrNewConstruction");
+  });
+
+  it("says whether a village has new construction", () => {
+    expect(plan.updates.find((u) => u.itemId === "isles")?.after.hasNewConstruction).toBe(true);
+    expect(plan.updates.find((u) => u.itemId === "summerfield")?.after.hasNewConstruction).toBe(false);
+    expect(plan.updates.find((u) => u.itemId === "arbor")?.changed).not.toContain("hasNewConstruction");
   });
 
   it("colours the Build Your Home button green with a plan for sale and grey without", () => {

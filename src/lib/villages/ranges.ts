@@ -26,6 +26,8 @@
 //                       (Jeff, 2026-10-26: the villages page hides a village that reads false)
 //   buildYourHomeColor  "#2C9E37" (green) while the village has a floor plan for sale, "#A0A09F" (grey) otherwise
 //                       (Jeff, 2026-10-26: the Build Your Home button's colour, in the collection's own two values)
+//   hasNewConstruction  true while the village has a floor plan for sale, false otherwise
+//                       (Jeff, 2026-10-26: so a buyer can filter to villages with new construction)
 // A price bucket is a hundred-thousand up to $999,999 ("$300s" is $300,000
 // to $399,999) and a whole million from there ("$2M+" is $2,000,000 to
 // $2,999,999), consecutive from the lowest to the highest price. (Jeff,
@@ -90,6 +92,7 @@ export interface RangeFields {
   homeTypes: string;
   hasListingsOrNewConstruction: boolean;
   buildYourHomeColor: string;
+  hasNewConstruction: boolean;
 }
 
 export const RANGE_FIELD_KEYS: Array<keyof RangeFields> = [
@@ -111,7 +114,11 @@ export const RANGE_FIELD_KEYS: Array<keyof RangeFields> = [
   "homeTypes",
   "hasListingsOrNewConstruction",
   "buildYourHomeColor",
+  "hasNewConstruction",
 ];
+
+/** The boolean fields, read as booleans off an item. */
+export const RANGE_BOOLEAN_KEYS: ReadonlySet<string> = new Set(["hasListingsOrNewConstruction", "hasNewConstruction"]);
 
 /** The one field a village with nothing for sale is written: false, so the villages page can hide it. */
 export const AVAILABILITY_FLAG: keyof RangeFields = "hasListingsOrNewConstruction";
@@ -121,8 +128,15 @@ export const BUILD_COLOR_FIELD: keyof RangeFields = "buildYourHomeColor";
 export const BUILD_COLOR_GREEN = "#2C9E37";
 export const BUILD_COLOR_GREY = "#A0A09F";
 
-/** What a village with nothing for sale is written: hidden, and no plans to build. */
-export const NO_AVAILABILITY_FIELDS: Partial<RangeFields> = { hasListingsOrNewConstruction: false, buildYourHomeColor: BUILD_COLOR_GREY };
+/** Whether the village has a floor plan for sale, for the new construction filter. */
+export const NEW_CONSTRUCTION_FLAG: keyof RangeFields = "hasNewConstruction";
+
+/** What a village with nothing for sale is written: hidden, no new construction, and no plans to build. */
+export const NO_AVAILABILITY_FIELDS: Partial<RangeFields> = {
+  hasListingsOrNewConstruction: false,
+  hasNewConstruction: false,
+  buildYourHomeColor: BUILD_COLOR_GREY,
+};
 
 /** The tag fields: arrays of strings in Wix. */
 export const RANGE_TAG_KEYS: ReadonlySet<string> = new Set(["priceRangeNew", "bedroomsNew", "bathroomsNew", "garagesNew", "homeTypeNew"]);
@@ -355,6 +369,7 @@ export function rangeFields(range: VillageRange): Partial<RangeFields> {
   const out: Partial<RangeFields> = {};
   // A range exists only for a village with at least one plan or listing.
   if (range.plans + range.listings > 0) out.hasListingsOrNewConstruction = true;
+  out.hasNewConstruction = range.plans > 0;
   out.buildYourHomeColor = range.plans > 0 ? BUILD_COLOR_GREEN : BUILD_COLOR_GREY;
   if (range.minPrice !== null && range.maxPrice !== null) {
     const buckets = priceBuckets(range.minPrice, range.maxPrice);

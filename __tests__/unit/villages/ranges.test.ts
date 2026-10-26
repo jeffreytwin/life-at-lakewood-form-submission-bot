@@ -86,13 +86,14 @@ describe("aggregateVillageRanges", () => {
     const lot = ranges[0];
     expect(lot).toMatchObject({ listings: 1, minPrice: null, maxPrice: null, minSqft: null, maxSqft: null });
     // A row of any kind means something is for sale: the flag goes true, nothing else is written.
-    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true, buildYourHomeColor: "#A0A09F" });
+    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
   });
   it("writes only the fields a village has data for", () => {
     const [, palisades, star] = aggregateVillageRanges(rows);
     // Listings only: the Build Your Home button is grey.
     expect(rangeFields(palisades)).toEqual({
       hasListingsOrNewConstruction: true,
+      hasNewConstruction: false,
       buildYourHomeColor: "#A0A09F",
       priceRange: "$400s",
       priceRangeDropdown: "Show All Price Ranges, $400s",
@@ -101,6 +102,7 @@ describe("aggregateVillageRanges", () => {
     // Plans for sale: green.
     expect(rangeFields(star)).toEqual({
       hasListingsOrNewConstruction: true,
+      hasNewConstruction: true,
       buildYourHomeColor: "#2C9E37",
       priceRange: "$200s - $3M+",
       priceRangeDropdown: "Show All Price Ranges, $200s, $300s, $400s, $500s, $600s, $700s, $800s, $900s, $1M+, $2M+, $3M+",
@@ -196,6 +198,6 @@ describe("bedrooms, bathrooms, garages and home types", () => {
 
   it("takes no counts or types from a row that is not a home", () => {
     expect(lot).toMatchObject({ minBeds: null, minBaths: null, minGarages: null, homeTypes: [] });
-    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true, buildYourHomeColor: "#A0A09F" });
+    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
   });
 });

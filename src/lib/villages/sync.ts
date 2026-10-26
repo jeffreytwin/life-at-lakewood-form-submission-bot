@@ -25,8 +25,10 @@ import {
 import {
   aggregateVillageRanges,
   AVAILABILITY_FLAG,
+  NEW_CONSTRUCTION_FLAG,
   NO_AVAILABILITY_FIELDS,
   rangeFields,
+  RANGE_BOOLEAN_KEYS,
   RANGE_FIELD_KEYS,
   RANGE_TAG_KEYS,
   sameFieldValue,
@@ -52,7 +54,8 @@ export const VILLAGE_RANGE_TARGETS: VillageRangeTarget[] = [{ domain: "lifeatlak
 /** Fields the collection may not have yet; each is added on the first run that finds it missing. */
 export const SQFT_FIELD: WixCollectionField = { key: "squareFootageRange", displayName: "Square Footage Range", type: "TEXT" };
 export const FLAG_FIELD: WixCollectionField = { key: AVAILABILITY_FLAG, displayName: "Has Listings or New Construction", type: "BOOLEAN" };
-export const ADDED_FIELDS: WixCollectionField[] = [SQFT_FIELD, FLAG_FIELD];
+export const NEW_CONSTRUCTION_FIELD: WixCollectionField = { key: NEW_CONSTRUCTION_FLAG, displayName: "Has New Construction", type: "BOOLEAN" };
+export const ADDED_FIELDS: WixCollectionField[] = [SQFT_FIELD, FLAG_FIELD, NEW_CONSTRUCTION_FIELD];
 
 /** The fields an item's village name may be in, best first. */
 const TITLE_KEYS = ["title", "villagesTitle"];
@@ -83,8 +86,8 @@ export interface VillageRangePlan {
   unmatchedVillages: string[];
   /**
    * Items with nothing for sale right now. Their ranges are left as they
-   * are; the one write they get sets the availability flag false and the
-   * Build Your Home colour grey (among `updates` when either differs).
+   * are; the one write they get sets the availability flags false and the
+   * Build Your Home colour grey (among `updates` when any differs).
    */
   itemsWithoutAvailability: string[];
 }
@@ -117,7 +120,7 @@ function currentFields(item: WixDataItem): Partial<RangeFields> {
   for (const key of RANGE_FIELD_KEYS) {
     const value = item.data?.[key];
     if (value === undefined || value === null) continue;
-    if (key === AVAILABILITY_FLAG) out[key] = value === true || value === "true";
+    if (RANGE_BOOLEAN_KEYS.has(key)) out[key] = value === true || value === "true";
     else if (RANGE_TAG_KEYS.has(key)) out[key] = Array.isArray(value) ? value.map(String) : [String(value)];
     else out[key] = String(value);
   }
