@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   if (denied) return denied;
   try {
     const [{ data: settings }, { data: sites }, { data: runs }, openErrors, perSite, villages] = await Promise.all([
-      supabase.from("system_settings").select("ls_engine_enabled, ls_engine_state").eq("id", 1).single(),
+      supabase.from("system_settings").select("ls_engine_enabled, ls_engine_state, village_ranges_enabled, village_ranges_state").eq("id", 1).single(),
       supabase.from("ls_sites").select("*").order("domain"),
       supabase.from("ls_sync_runs").select("*").order("started_at", { ascending: false }).limit(10),
       listOpenErrors(50),
