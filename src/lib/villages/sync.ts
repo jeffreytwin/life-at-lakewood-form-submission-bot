@@ -25,6 +25,7 @@ import {
 import {
   aggregateVillageRanges,
   AVAILABILITY_FLAG,
+  NO_AVAILABILITY_FIELDS,
   rangeFields,
   RANGE_FIELD_KEYS,
   RANGE_TAG_KEYS,
@@ -82,8 +83,8 @@ export interface VillageRangePlan {
   unmatchedVillages: string[];
   /**
    * Items with nothing for sale right now. Their ranges are left as they
-   * are; the one write they get is the availability flag set to false
-   * (among `updates` when it does not already read false).
+   * are; the one write they get sets the availability flag false and the
+   * Build Your Home colour grey (among `updates` when either differs).
    */
   itemsWithoutAvailability: string[];
 }
@@ -177,25 +178,28 @@ export function planVillageUpdates(target: VillageRangeTarget, items: WixDataIte
     });
   }
   // Items no range reached have nothing for sale: their ranges stay as
-  // they are, and the availability flag goes false so the villages page
-  // can hide them. A second item of a village that has a range (a draft
-  // copy, say) is not one of these: it is left alone entirely.
+  // they are, the availability flag goes false so the villages page can
+  // hide them, and the Build Your Home button goes grey. A second item of
+  // a village that has a range (a draft copy, say) is not one of these:
+  // it is left alone entirely.
   const rangeKeys = new Set(ranges.map((r) => r.key));
   for (const item of items) {
     if (matched.has(item.id)) continue;
     if (itemKeys(item).some((k) => rangeKeys.has(k))) continue;
     plan.itemsWithoutAvailability.push(titleOf(item));
     const before = currentFields(item);
-    if (before[AVAILABILITY_FLAG] === false) continue;
+    const after = NO_AVAILABILITY_FIELDS;
+    const changed = RANGE_FIELD_KEYS.filter((key) => after[key] !== undefined && !sameFieldValue(before[key], after[key]));
+    if (changed.length === 0) continue;
     plan.updates.push({
       itemId: item.id,
       title: titleOf(item),
       village: titleOf(item),
       plans: 0,
       listings: 0,
-      before: { [AVAILABILITY_FLAG]: before[AVAILABILITY_FLAG] } as Partial<RangeFields>,
-      after: { [AVAILABILITY_FLAG]: false } as Partial<RangeFields>,
-      changed: [AVAILABILITY_FLAG],
+      before: Object.fromEntries(changed.map((key) => [key, before[key]])) as Partial<RangeFields>,
+      after: Object.fromEntries(changed.map((key) => [key, after[key]])) as Partial<RangeFields>,
+      changed,
     });
   }
   plan.updates.sort((a, b) => a.title.localeCompare(b.title));
