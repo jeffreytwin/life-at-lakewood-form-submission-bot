@@ -247,7 +247,7 @@ function villageTriggerLabel(trigger: string): string {
     case "listings-run":
       return "after a listings run";
     case "manual":
-      return "Update Now";
+      return "Update Ranges";
     default:
       return trigger;
   }
@@ -519,6 +519,13 @@ export default function ListingsOverviewPage() {
           )}
 
           <div className="card" style={{ marginBottom: 16 }}>
+            {/*
+              Both switches on one row. The villages collection's price and
+              size ranges follow the inventory (docs/VILLAGE_RANGES.md): both
+              the floor plans and the listings, after either changes. Lakewood
+              only until the other sites' neighborhoods collections carry the
+              same fields.
+            */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center" }}>
               <Toggle
                 on={updatesOn}
@@ -527,16 +534,38 @@ export default function ListingsOverviewPage() {
                 disabled={busy !== null}
                 onChange={toggleEngine}
               />
+              <Toggle
+                on={villagesOn}
+                label="Village Ranges"
+                action={villagesOn ? "Pause Village Ranges" : "Resume Village Ranges"}
+                disabled={busy !== null}
+                onChange={toggleVillageRanges}
+              />
               <span className="text-muted text-sm">
-                {updatesOn
-                  ? "Updated every hour."
-                  : "Listing updates are off: the hourly pull and the daily verify are skipped; runs happen only from the buttons here."}
-              </span>
-              <span className="text-muted text-sm">
-                Last run {ago(state.lastRunAt)}
+                {updatesOn ? "Listings updated every hour" : "Listing updates are off: runs happen only from Maintenance"}
+                {" · last run "}
+                {ago(state.lastRunAt)}
                 {state.lastMode ? ` (${modeLabel(state.lastMode)}, ${state.lastStatus ?? "?"})` : ""}
                 {state.lastFullDate ? ` · last full ${state.lastFullDate}` : ""}
               </span>
+            </div>
+            <div className="text-muted text-sm" style={{ marginTop: 8 }}>
+              {villagesOn
+                ? "Village ranges follow each Lakewood village's floor plans and homes for sale after every sync, and every two hours"
+                : "Village ranges are off: the villages collection keeps what it has; updates happen only from Update Ranges below"}
+              {" · last run "}
+              {ago(villageState.lastRunAt)}
+              {villageState.lastTrigger ? ` (${villageTriggerLabel(villageState.lastTrigger)})` : ""}
+              {(villageState.lastResults ?? []).map((r) => (
+                <span key={r.domain}>
+                  {" · "}
+                  {r.skipped
+                    ? `${siteName(r.domain)}: ${r.skipped}`
+                    : `${siteName(r.domain)}: ${r.written} written, ${r.unchanged} unchanged${r.failed ? `, ${r.failed} failed` : ""}${
+                        r.unmatchedVillages.length ? `, no item for ${r.unmatchedVillages.join(", ")}` : ""
+                      }`}
+                </span>
+              ))}
             </div>
             {/*
               Starting a run by hand is for onboarding a location and for
@@ -559,6 +588,9 @@ export default function ListingsOverviewPage() {
                 <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => runNow("discover")} title="Find Active listings in a location's market that the engine does not hold yet (a new location's starting inventory)">
                   {busy === "run:discover" ? "Running…" : "Run Discovery"}
                 </button>
+                <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={updateVillageRangesNow} title="Rewrite each village's price and square footage ranges in Wix now, from its floor plans and homes for sale; only the villages whose range moved are written">
+                  {busy === "villages:run" ? "Updating…" : "Update Ranges"}
+                </button>
                 <span className="text-muted text-sm">
                   The schedule already runs these; start one by hand only to onboard a location or to put something right.
                 </span>
@@ -569,57 +601,9 @@ export default function ListingsOverviewPage() {
                 <strong>Result:</strong> {lastResult}
               </p>
             )}
-          </div>
-
-          {/*
-            The villages collection's price and size ranges follow the
-            inventory (docs/VILLAGE_RANGES.md): both the floor plans and the
-            listings, after either changes. Lakewood only until the other
-            sites' neighborhoods collections carry the same fields.
-          */}
-          <div className="card" style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center" }}>
-              <Toggle
-                on={villagesOn}
-                label="Village Ranges"
-                action={villagesOn ? "Pause Village Ranges" : "Resume Village Ranges"}
-                disabled={busy !== null}
-                onChange={toggleVillageRanges}
-              />
-              <span className="text-muted text-sm">
-                {villagesOn
-                  ? "Each Lakewood village's price and square footage ranges are rewritten from its floor plans and homes for sale after every sync, and every two hours."
-                  : "Village ranges are off: the villages collection keeps what it has; updates happen only from the button here."}
-              </span>
-              <span className="text-muted text-sm">
-                Last run {ago(villageState.lastRunAt)}
-                {villageState.lastTrigger ? ` (${villageTriggerLabel(villageState.lastTrigger)})` : ""}
-                {(villageState.lastResults ?? []).map((r) => (
-                  <span key={r.domain}>
-                    {" · "}
-                    {r.skipped
-                      ? `${siteName(r.domain)}: ${r.skipped}`
-                      : `${siteName(r.domain)}: ${r.written} written, ${r.unchanged} unchanged${r.failed ? `, ${r.failed} failed` : ""}${
-                          r.unmatchedVillages.length ? `, no item for ${r.unmatchedVillages.join(", ")}` : ""
-                        }`}
-                  </span>
-                ))}
-              </span>
-            </div>
-            <details style={{ marginTop: 12 }}>
-              <summary className="text-muted text-sm" style={{ cursor: "pointer" }}>
-                Maintenance
-              </summary>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 10 }}>
-                <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={updateVillageRangesNow}>
-                  {busy === "villages:run" ? "Updating…" : "Update Now"}
-                </button>
-                <span className="text-muted text-sm">Writes only the villages whose range moved; the schedule already does this.</span>
-              </div>
-            </details>
             {villageResult && (
               <p className="text-sm" style={{ marginTop: 12, marginBottom: 0 }}>
-                <strong>Result:</strong> {villageResult}
+                <strong>Village ranges:</strong> {villageResult}
               </p>
             )}
           </div>
