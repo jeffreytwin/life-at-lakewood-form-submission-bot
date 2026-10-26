@@ -56,7 +56,8 @@ Where the counts come from: floor plans carry beds, baths, the builder's
 garage text ("3 car") and home type ("Attached Villa"); listings carry
 bedrooms, full and half baths (2 full + 1 half is 2.5; the MLS total
 integer, which counts a half as a whole, is the fallback), `GarageSpaces`
-(0 when `GarageYN` is false, unknown when both are blank) and the RESO
+(0 when `GarageYN` is false, unknown when both are blank, and unknown too
+when the listing claims a garage with 0 spaces, which is an agent's blank) and the RESO
 `PropertySubType`. Home types map to the four filter values: Single Family
 Home or Residence; Villa and Attached Villa; Townhome and Townhouse;
 Condominium and Coach Home. A type outside those is left out, never

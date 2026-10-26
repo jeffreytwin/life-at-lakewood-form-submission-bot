@@ -327,11 +327,19 @@ export function listingBaths(l: Pick<LsListingRow, "bathrooms" | "baths_full" | 
   return numberOrNull(l.bathrooms);
 }
 
-/** GarageSpaces when the listing gives it; 0 when it says there is no garage; otherwise unknown. */
+/**
+ * GarageSpaces when the listing gives it; 0 when it says there is no
+ * garage; otherwise unknown. A listing that says it has a garage with 0
+ * spaces contradicts itself (14310 Lilac Sky Terrace in Aurora, 2026-10-26:
+ * GarageYN true, GarageSpaces 0, every neighbor 1 or 2) and is unknown
+ * too, so an agent's blank never puts "0 Car" on a village.
+ */
 export function listingGarages(l: Pick<LsListingRow, "garage_spaces" | "garage_yn">): number | null {
   const spaces = numberOrNull(l.garage_spaces);
-  if (spaces !== null) return spaces;
-  if (String(l.garage_yn ?? "").toLowerCase() === "false") return 0;
+  const hasGarage = String(l.garage_yn ?? "").toLowerCase();
+  if (spaces !== null && spaces > 0) return spaces;
+  if (hasGarage === "false") return 0;
+  if (spaces === 0 && hasGarage !== "true") return 0;
   return null;
 }
 

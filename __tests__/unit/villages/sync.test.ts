@@ -132,7 +132,12 @@ describe("listing and plan field readers", () => {
   it("takes GarageSpaces, else a stated no-garage, else nothing", () => {
     expect(listingGarages({ garage_spaces: "2", garage_yn: "true" })).toBe(2);
     expect(listingGarages({ garage_spaces: null, garage_yn: "false" })).toBe(0);
+    expect(listingGarages({ garage_spaces: "0", garage_yn: "false" })).toBe(0);
+    expect(listingGarages({ garage_spaces: "0", garage_yn: null })).toBe(0);
     expect(listingGarages({ garage_spaces: null, garage_yn: "true" })).toBeNull();
     expect(listingGarages({ garage_spaces: null, garage_yn: null })).toBeNull();
+  });
+  it("treats a garage with 0 spaces as unknown, not as no garage", () => {
+    expect(listingGarages({ garage_spaces: "0", garage_yn: "true" })).toBeNull();
   });
 });
