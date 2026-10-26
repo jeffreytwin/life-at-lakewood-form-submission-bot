@@ -81,8 +81,30 @@ interface EngineState {
   lastFullDate?: string;
 }
 
+interface VillageRangesState {
+  lastRunAt?: string;
+  lastTrigger?: string;
+  lastResults?: Array<{ domain: string; written: number; failed: number; unchanged: number; unmatchedVillages: string[]; skipped?: string }>;
+}
+
+interface VillageRangesRun {
+  results: Array<{
+    domain: string;
+    fieldAdded: boolean;
+    written: string[];
+    failed: Array<{ title: string; error: string }>;
+    plan: { unchanged: string[]; unmatchedVillages: string[]; itemsWithoutAvailability: string[] };
+    skipped?: string;
+  }>;
+}
+
 interface Status {
-  engine: { ls_engine_enabled: boolean; ls_engine_state: EngineState | null } | null;
+  engine: {
+    ls_engine_enabled: boolean;
+    ls_engine_state: EngineState | null;
+    village_ranges_enabled?: boolean;
+    village_ranges_state?: VillageRangesState | null;
+  } | null;
   listingsInFeed: number;
   sites: Site[];
   runs: Run[];
@@ -213,6 +235,38 @@ function errorHref(e: EngineEvent): string {
   return "/dashboard/listings/change-log";
 }
 
+/** What woke the village ranges job, in the page's words. */
+function villageTriggerLabel(trigger: string): string {
+  switch (trigger) {
+    case "cron":
+      return "schedule";
+    case "floorplan-cycle":
+      return "after the floor plan sync";
+    case "floorplan-approvals":
+      return "after approved plans were written";
+    case "listings-run":
+      return "after a listings run";
+    case "manual":
+      return "Update Now";
+    default:
+      return trigger;
+  }
+}
+
+function summarizeVillageRun(body: VillageRangesRun): string {
+  return (body.results ?? [])
+    .map((r) => {
+      if (r.skipped) return `${r.domain}: ${r.skipped}`;
+      const parts = [`${r.written.length} written`, `${r.plan.unchanged.length} unchanged`];
+      if (r.failed.length) parts.push(`${r.failed.length} failed (${r.failed.map((f) => f.title).join(", ")})`);
+      if (r.plan.unmatchedVillages.length) parts.push(`no item for ${r.plan.unmatchedVillages.join(", ")}`);
+      if (r.plan.itemsWithoutAvailability.length) parts.push(`${r.plan.itemsWithoutAvailability.length} village(s) with nothing for sale left as they are`);
+      if (r.fieldAdded) parts.push("square footage field added");
+      return `${r.domain}: ${parts.join(", ")}`;
+    })
+    .join(" · ");
+}
+
 export default function ListingsOverviewPage() {
   const router = useRouter();
   const [status, setStatus] = useState<Status | null>(null);
@@ -220,6 +274,7 @@ export default function ListingsOverviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [villageResult, setVillageResult] = useState<string | null>(null);
 
   const fetchStatus = useCallback(() => {
     fetch("/api/internal/listings/status")
@@ -315,6 +370,25 @@ export default function ListingsOverviewPage() {
     call("engine", "/api/internal/listings/engine", { method: "POST", body: JSON.stringify({ enabled }) });
   }
 
+  function toggleVillageRanges(enabled: boolean) {
+    if (
+      enabled &&
+      !confirm(
+        "Turn village ranges on? After every floor plan and listings sync, and every two hours, each Lakewood village's price and square footage ranges are rewritten in Wix from what is for sale."
+      )
+    ) {
+      return;
+    }
+    call("villages", "/api/internal/villages/enabled", { method: "POST", body: JSON.stringify({ enabled }) });
+  }
+
+  function updateVillageRangesNow() {
+    if (!confirm("Rewrite each village's price and square footage ranges in Wix now, from what is for sale?")) return;
+    call("villages:run", "/api/internal/villages/ranges", { method: "POST", body: JSON.stringify({}) }, (body) =>
+      setVillageResult(summarizeVillageRun(body as VillageRangesRun))
+    );
+  }
+
   function runNow(mode: "incremental" | "full" | "discover") {
     const question =
       mode === "full"
@@ -343,6 +417,8 @@ export default function ListingsOverviewPage() {
   const engine = status?.engine;
   const updatesOn = !!engine?.ls_engine_enabled;
   const state = engine?.ls_engine_state ?? {};
+  const villagesOn = !!engine?.village_ranges_enabled;
+  const villageState = engine?.village_ranges_state ?? {};
   const totals = (status?.sites ?? []).reduce(
     (acc, s) => ({ live: acc.live + s.counts.live, staged: acc.staged + s.counts.staged, galleryPending: acc.galleryPending + s.counts.galleryPending }),
     { live: 0, staged: 0, galleryPending: 0 }
@@ -491,6 +567,59 @@ export default function ListingsOverviewPage() {
             {lastResult && (
               <p className="text-sm" style={{ marginTop: 12, marginBottom: 0 }}>
                 <strong>Result:</strong> {lastResult}
+              </p>
+            )}
+          </div>
+
+          {/*
+            The villages collection's price and size ranges follow the
+            inventory (docs/VILLAGE_RANGES.md): both the floor plans and the
+            listings, after either changes. Lakewood only until the other
+            sites' neighborhoods collections carry the same fields.
+          */}
+          <div className="card" style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center" }}>
+              <Toggle
+                on={villagesOn}
+                label="Village Ranges"
+                action={villagesOn ? "Pause Village Ranges" : "Resume Village Ranges"}
+                disabled={busy !== null}
+                onChange={toggleVillageRanges}
+              />
+              <span className="text-muted text-sm">
+                {villagesOn
+                  ? "Each Lakewood village's price and square footage ranges are rewritten from its floor plans and homes for sale after every sync, and every two hours."
+                  : "Village ranges are off: the villages collection keeps what it has; updates happen only from the button here."}
+              </span>
+              <span className="text-muted text-sm">
+                Last run {ago(villageState.lastRunAt)}
+                {villageState.lastTrigger ? ` (${villageTriggerLabel(villageState.lastTrigger)})` : ""}
+                {(villageState.lastResults ?? []).map((r) => (
+                  <span key={r.domain}>
+                    {" · "}
+                    {r.skipped
+                      ? `${siteName(r.domain)}: ${r.skipped}`
+                      : `${siteName(r.domain)}: ${r.written} written, ${r.unchanged} unchanged${r.failed ? `, ${r.failed} failed` : ""}${
+                          r.unmatchedVillages.length ? `, no item for ${r.unmatchedVillages.join(", ")}` : ""
+                        }`}
+                  </span>
+                ))}
+              </span>
+            </div>
+            <details style={{ marginTop: 12 }}>
+              <summary className="text-muted text-sm" style={{ cursor: "pointer" }}>
+                Maintenance
+              </summary>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", marginTop: 10 }}>
+                <button className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={updateVillageRangesNow}>
+                  {busy === "villages:run" ? "Updating…" : "Update Now"}
+                </button>
+                <span className="text-muted text-sm">Writes only the villages whose range moved; the schedule already does this.</span>
+              </div>
+            </details>
+            {villageResult && (
+              <p className="text-sm" style={{ marginTop: 12, marginBottom: 0 }}>
+                <strong>Result:</strong> {villageResult}
               </p>
             )}
           </div>
