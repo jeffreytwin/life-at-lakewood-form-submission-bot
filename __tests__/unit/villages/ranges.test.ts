@@ -85,16 +85,19 @@ describe("aggregateVillageRanges", () => {
     expect(ranges.map((r) => r.village)).toEqual(["Lot Only", "Palisades", "Star Farms"]);
     const lot = ranges[0];
     expect(lot).toMatchObject({ listings: 1, minPrice: null, maxPrice: null, minSqft: null, maxSqft: null });
-    expect(rangeFields(lot)).toEqual({});
+    // A row of any kind means something is for sale: the flag goes true, nothing else is written.
+    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true });
   });
   it("writes only the fields a village has data for", () => {
     const [, palisades, star] = aggregateVillageRanges(rows);
     expect(rangeFields(palisades)).toEqual({
+      hasListingsOrNewConstruction: true,
       priceRange: "$400s",
       priceRangeDropdown: "Show All Price Ranges, $400s",
       priceRangeNew: ["$400s"],
     });
     expect(rangeFields(star)).toEqual({
+      hasListingsOrNewConstruction: true,
       priceRange: "$200s - $3M+",
       priceRangeDropdown: "Show All Price Ranges, $200s, $300s, $400s, $500s, $600s, $700s, $800s, $900s, $1M+, $2M+, $3M+",
       priceRangeNew: ["$200s", "$300s", "$400s", "$500s", "$600s", "$700s", "$800s", "$900s", "1M+", "2M+", "3M+"],
@@ -110,6 +113,9 @@ describe("sameFieldValue", () => {
     expect(sameFieldValue(["1M+", "$400s"], ["$400s", "1M+"])).toBe(false);
     expect(sameFieldValue(undefined, "$400s")).toBe(false);
     expect(sameFieldValue("$400s", ["$400s"])).toBe(false);
+    expect(sameFieldValue(true, true)).toBe(true);
+    expect(sameFieldValue(false, undefined)).toBe(false);
+    expect(sameFieldValue("true", true)).toBe(false);
   });
 });
 
@@ -184,6 +190,6 @@ describe("bedrooms, bathrooms, garages and home types", () => {
 
   it("takes no counts or types from a row that is not a home", () => {
     expect(lot).toMatchObject({ minBeds: null, minBaths: null, minGarages: null, homeTypes: [] });
-    expect(rangeFields(lot)).toEqual({});
+    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true });
   });
 });

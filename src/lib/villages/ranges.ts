@@ -22,6 +22,8 @@
 //   homeTypeNew         ["Single Family Home", "Villa", "Townhome", "Condominium"]  (the page's filter values)
 //   homeTypesDropdown   "Single Family Home, Attached Villas, Townhomes, Condominiums, Show All"
 //   homeTypes           "Single Family\nVillas\nTownhomes\nCondominiums"  (the display text, one type a line)
+//   hasListingsOrNewConstruction  true while the village has a plan or a listing for sale, false otherwise
+//                       (Jeff, 2026-10-26: the villages page hides a village that reads false)
 // A price bucket is a hundred-thousand up to $999,999 ("$300s" is $300,000
 // to $399,999) and a whole million from there ("$2M+" is $2,000,000 to
 // $2,999,999), consecutive from the lowest to the highest price. (Jeff,
@@ -84,6 +86,7 @@ export interface RangeFields {
   homeTypeNew: string[];
   homeTypesDropdown: string;
   homeTypes: string;
+  hasListingsOrNewConstruction: boolean;
 }
 
 export const RANGE_FIELD_KEYS: Array<keyof RangeFields> = [
@@ -103,7 +106,11 @@ export const RANGE_FIELD_KEYS: Array<keyof RangeFields> = [
   "homeTypeNew",
   "homeTypesDropdown",
   "homeTypes",
+  "hasListingsOrNewConstruction",
 ];
+
+/** The one field a village with nothing for sale is written: false, so the villages page can hide it. */
+export const AVAILABILITY_FLAG: keyof RangeFields = "hasListingsOrNewConstruction";
 
 /** The tag fields: arrays of strings in Wix. */
 export const RANGE_TAG_KEYS: ReadonlySet<string> = new Set(["priceRangeNew", "bedroomsNew", "bathroomsNew", "garagesNew", "homeTypeNew"]);
@@ -334,6 +341,8 @@ export function optionsDropdown(values: string[]): string {
  */
 export function rangeFields(range: VillageRange): Partial<RangeFields> {
   const out: Partial<RangeFields> = {};
+  // A range exists only for a village with at least one plan or listing.
+  if (range.plans + range.listings > 0) out.hasListingsOrNewConstruction = true;
   if (range.minPrice !== null && range.maxPrice !== null) {
     const buckets = priceBuckets(range.minPrice, range.maxPrice);
     out.priceRange = priceRangeText(range.minPrice, range.maxPrice);
@@ -377,6 +386,7 @@ export function rangeFields(range: VillageRange): Partial<RangeFields> {
 
 /** Whether two values of a range field say the same thing (tags compare as sets in order). */
 export function sameFieldValue(a: unknown, b: unknown): boolean {
+  if (typeof a === "boolean" || typeof b === "boolean") return a === b;
   if (Array.isArray(a) || Array.isArray(b)) {
     if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
     return a.every((v, i) => String(v) === String(b[i]));
