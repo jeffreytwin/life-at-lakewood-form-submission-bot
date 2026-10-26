@@ -30,6 +30,7 @@ import { withRunContext } from "@/lib/floorplans/run-context";
 import { totalsSince } from "@/lib/floorplans/ai-usage";
 import { showCost } from "@/lib/floorplans/run-state";
 import { mendsItself } from "@/lib/floorplans/health";
+import { refreshVillageRanges } from "@/lib/villages/sync";
 
 const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
 // A builder read through a browser takes minutes, not seconds, so the tick
@@ -420,6 +421,9 @@ async function tick(): Promise<Record<string, unknown>> {
       (attention.length ? ` Needs attention: ${attention.join("; ")}.` : "");
     logger.info("Floor plan sync cycle complete", { ran, failed, pendingCount, manual: state.manual === true });
     if (settings.fp_digest_phone) await sendDigest(settings.fp_digest_phone, digest);
+    // Each village's price and size ranges follow what the cycle found
+    // (villages/sync.ts); never fails the cycle.
+    await refreshVillageRanges("floorplan-cycle");
   }
 
   await supabase.from("system_settings").update({ fp_nightly_state: nextState }).eq("id", 1);
