@@ -32,16 +32,23 @@ const items: WixDataItem[] = [
     homeTypeNew: ["Single Family Home", "Villa"],
     homeTypesDropdown: "Single Family Home, Attached Villas, Show All",
     homeTypes: "Single Family\nVillas",
+    hasListingsOrNewConstruction: true,
+    hasNewConstruction: false,
+    buildYourHomeColor: "#A0A09F",
     description: "Gated, with a clubhouse.",
   }),
   item("aurora", {
     title: "Aurora",
+    hasListingsOrNewConstruction: true,
+    hasNewConstruction: false,
+    buildYourHomeColor: "#A0A09F",
     priceRange: "$200s - $400s",
     priceRangeDropdown: "Show All Price Ranges, $200s, $300s, $400s",
     priceRangeNew: ["$200s", "$300s", "$400s"],
     squareFootageRange: "1,400 - 2,200 square feet",
   }),
-  item("amber", { title: "Amber Creek", priceRange: "$300s" }),
+  item("amber", { title: "Amber Creek", priceRange: "$300s", hasListingsOrNewConstruction: true, hasNewConstruction: true, buildYourHomeColor: "#2C9E37" }),
+  item("hidden", { title: "Sold Out Village", priceRange: "$500s", hasListingsOrNewConstruction: false, hasNewConstruction: false, buildYourHomeColor: "#a0a09f" }),
   item("summerfield", { title: "Summerfield", villagesTitle: "Summerfield & Riverwalk", priceRange: "$200s - $800s" }),
   item("isles-draft", { title: "The Isles", _publishStatus: "DRAFT", priceRange: "old" }),
   item("isles", { title: "The Isles", priceRange: "$1M+ - $2M+" }),
@@ -105,14 +112,43 @@ describe("planVillageUpdates", () => {
     expect(plan.updates.map((u) => u.itemId)).not.toContain("isles-draft");
   });
 
-  it("reports villages with no item and items with nothing for sale, writing neither", () => {
+  it("reports villages with no item, writing nothing for them", () => {
     expect(plan.unmatchedVillages).toEqual(["Woodleaf Hammock"]);
-    expect(plan.itemsWithoutAvailability).toEqual(["Amber Creek", "The Isles"]);
-    expect(plan.updates.map((u) => u.itemId)).not.toContain("amber");
+  });
+
+  it("flags an item with nothing for sale false, greys its button, and touches nothing else on it", () => {
+    expect(plan.itemsWithoutAvailability).toEqual(["Amber Creek", "Sold Out Village"]);
+    const amber = plan.updates.find((u) => u.itemId === "amber");
+    expect(amber).toBeDefined();
+    expect(amber!.changed).toEqual(["hasListingsOrNewConstruction", "buildYourHomeColor", "hasNewConstruction"]);
+    expect(amber!.after).toEqual({ hasListingsOrNewConstruction: false, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
+    expect(amber!.before).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: true, buildYourHomeColor: "#2C9E37" });
+    // Already false and grey (whatever the hex case): no write.
+    expect(plan.updates.map((u) => u.itemId)).not.toContain("hidden");
+    // A draft copy of a village that has a range is neither flagged nor written.
+    expect(plan.updates.map((u) => u.itemId)).not.toContain("isles-draft");
+  });
+
+  it("flags a village with homes true along with its ranges", () => {
+    expect(plan.updates.find((u) => u.itemId === "summerfield")?.after.hasListingsOrNewConstruction).toBe(true);
+    expect(plan.updates.find((u) => u.itemId === "arbor")?.changed).not.toContain("hasListingsOrNewConstruction");
+  });
+
+  it("says whether a village has new construction", () => {
+    expect(plan.updates.find((u) => u.itemId === "isles")?.after.hasNewConstruction).toBe(true);
+    expect(plan.updates.find((u) => u.itemId === "summerfield")?.after.hasNewConstruction).toBe(false);
+    expect(plan.updates.find((u) => u.itemId === "arbor")?.changed).not.toContain("hasNewConstruction");
+  });
+
+  it("colours the Build Your Home button green with a plan for sale and grey without", () => {
+    // The Isles has a plan; Arbor Grande (listings only) already reads grey.
+    expect(plan.updates.find((u) => u.itemId === "isles")?.after.buildYourHomeColor).toBe("#2C9E37");
+    expect(plan.updates.find((u) => u.itemId === "arbor")?.changed).not.toContain("buildYourHomeColor");
+    expect(plan.updates.find((u) => u.itemId === "summerfield")?.after.buildYourHomeColor).toBe("#A0A09F");
   });
 
   it("counts what it saw", () => {
-    expect(plan).toMatchObject({ domain: "lifeatlakewood.com", collectionId: "AmenitiesbyVillage", items: 6, villages: 5 });
+    expect(plan).toMatchObject({ domain: "lifeatlakewood.com", collectionId: "AmenitiesbyVillage", items: 7, villages: 5 });
   });
 });
 

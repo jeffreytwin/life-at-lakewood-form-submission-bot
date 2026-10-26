@@ -24,7 +24,7 @@ home is not in either set.
 
 Lakewood's villages are the `AmenitiesbyVillage` items, matched by `title`
 (then `villagesTitle`) to the village name the rows carry, ignoring case,
-spacing, dash style and "&" vs "and". Sixteen fields, in the formats the
+spacing, dash style and "&" vs "and". Nineteen fields, in the formats the
 site's page code already filters on (Jeff, 2026-10-26: so a buyer can
 narrow villages by price, size, bedrooms, bathrooms, garages and home type):
 
@@ -46,11 +46,15 @@ narrow villages by price, size, bedrooms, bathrooms, garages and home type):
 | `homeTypeNew` (tags) | `["Single Family Home", "Villa", "Townhome", "Condominium"]`, the page's filter values |
 | `homeTypesDropdown` | `Single Family Home, Attached Villas, Townhomes, Condominiums, Show All` |
 | `homeTypes` | the display text, one type a line: `Single Family`, `Villas`, `Townhomes`, `Condominiums` |
+| `hasListingsOrNewConstruction` | `true` while the village has a plan or a listing for sale, `false` otherwise; the villages page hides a `false` village (Jeff, 2026-10-26) |
+| `buildYourHomeColor` | `#2C9E37` (green) while the village has a floor plan for sale, `#A0A09F` (grey) otherwise: the Build Your Home button's colour, in the collection's own two values |
+| `hasNewConstruction` | `true` while the village has a floor plan for sale, `false` otherwise, for the new construction filter (Jeff, 2026-10-26) |
 
 A price bucket is a hundred-thousand up to $999,999 and a whole million
 from there, consecutive from the lowest price to the highest. The
-`squareFootageRange` field is added to the collection (TEXT) by the first
-run that finds it missing.
+`squareFootageRange` (TEXT), `hasListingsOrNewConstruction` (BOOLEAN) and
+`hasNewConstruction` (BOOLEAN) fields are added to the collection by the
+first run that finds any missing.
 
 Where the counts come from: floor plans carry beds, baths, the builder's
 garage text ("3 car") and home type ("Attached Villa"); listings carry
@@ -67,8 +71,13 @@ data errors.
 An item is written only when a field differs from the range, and each
 group of fields needs its own data: a village with prices but no bedroom
 counts gets its price fields and nothing else. A tag list is never written
-empty. An item with nothing for sale is left as it is (never blanked), and
-a village with homes but no item of that name is reported, not created. Wellen Park and Parrish
+empty. An item with nothing for sale keeps every range it has (never
+blanked) and gets exactly one write: both availability flags set to
+`false`, so the villages page can hide it, and the Build Your Home colour
+grey; the flags go back to `true` with the first plan or listing. A village with homes but no item of that name is
+reported, not created. An empty read of the inventory (no plans and no
+listings at all) writes nothing, so a broken mirror can never hide every
+village. Wellen Park and Parrish
 join `VILLAGE_RANGE_TARGETS` (`src/lib/villages/sync.ts`) once their
 neighborhoods collections carry the same four fields.
 

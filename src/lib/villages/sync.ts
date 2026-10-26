@@ -24,7 +24,11 @@ import {
 } from "@/lib/wix/client";
 import {
   aggregateVillageRanges,
+  AVAILABILITY_FLAG,
+  NEW_CONSTRUCTION_FLAG,
+  NO_AVAILABILITY_FIELDS,
   rangeFields,
+  RANGE_BOOLEAN_KEYS,
   RANGE_FIELD_KEYS,
   RANGE_TAG_KEYS,
   sameFieldValue,
@@ -47,8 +51,11 @@ export interface VillageRangeTarget {
  */
 export const VILLAGE_RANGE_TARGETS: VillageRangeTarget[] = [{ domain: "lifeatlakewood.com", collectionId: "AmenitiesbyVillage" }];
 
-/** The one field the collection may not have yet; added on the first run that needs it. */
+/** Fields the collection may not have yet; each is added on the first run that finds it missing. */
 export const SQFT_FIELD: WixCollectionField = { key: "squareFootageRange", displayName: "Square Footage Range", type: "TEXT" };
+export const FLAG_FIELD: WixCollectionField = { key: AVAILABILITY_FLAG, displayName: "Has Listings or New Construction", type: "BOOLEAN" };
+export const NEW_CONSTRUCTION_FIELD: WixCollectionField = { key: NEW_CONSTRUCTION_FLAG, displayName: "Has New Construction", type: "BOOLEAN" };
+export const ADDED_FIELDS: WixCollectionField[] = [SQFT_FIELD, FLAG_FIELD, NEW_CONSTRUCTION_FIELD];
 
 /** The fields an item's village name may be in, best first. */
 const TITLE_KEYS = ["title", "villagesTitle"];
@@ -77,7 +84,11 @@ export interface VillageRangePlan {
   unchanged: string[];
   /** Villages with homes for sale but no item of that name: nothing to write to. */
   unmatchedVillages: string[];
-  /** Items with nothing for sale right now: left as they are. */
+  /**
+   * Items with nothing for sale right now. Their ranges are left as they
+   * are; the one write they get sets the availability flags false and the
+   * Build Your Home colour grey (among `updates` when any differs).
+   */
   itemsWithoutAvailability: string[];
 }
 
@@ -105,14 +116,25 @@ function indexItems(items: WixDataItem[]): Map<string, WixDataItem> {
 }
 
 function currentFields(item: WixDataItem): Partial<RangeFields> {
-  const out: Record<string, string | string[]> = {};
+  const out: Record<string, string | string[] | boolean> = {};
   for (const key of RANGE_FIELD_KEYS) {
     const value = item.data?.[key];
     if (value === undefined || value === null) continue;
-    if (RANGE_TAG_KEYS.has(key)) out[key] = Array.isArray(value) ? value.map(String) : [String(value)];
+    if (RANGE_BOOLEAN_KEYS.has(key)) out[key] = value === true || value === "true";
+    else if (RANGE_TAG_KEYS.has(key)) out[key] = Array.isArray(value) ? value.map(String) : [String(value)];
     else out[key] = String(value);
   }
   return out as Partial<RangeFields>;
+}
+
+/** Every village name an item carries, as matched. */
+function itemKeys(item: WixDataItem): string[] {
+  const keys: string[] = [];
+  for (const key of TITLE_KEYS) {
+    const value = item.data?.[key];
+    if (typeof value === "string" && value.trim()) keys.push(villageKey(value));
+  }
+  return keys;
 }
 
 /**
@@ -158,7 +180,31 @@ export function planVillageUpdates(target: VillageRangeTarget, items: WixDataIte
       changed,
     });
   }
-  for (const item of items) if (!matched.has(item.id)) plan.itemsWithoutAvailability.push(titleOf(item));
+  // Items no range reached have nothing for sale: their ranges stay as
+  // they are, the availability flag goes false so the villages page can
+  // hide them, and the Build Your Home button goes grey. A second item of
+  // a village that has a range (a draft copy, say) is not one of these:
+  // it is left alone entirely.
+  const rangeKeys = new Set(ranges.map((r) => r.key));
+  for (const item of items) {
+    if (matched.has(item.id)) continue;
+    if (itemKeys(item).some((k) => rangeKeys.has(k))) continue;
+    plan.itemsWithoutAvailability.push(titleOf(item));
+    const before = currentFields(item);
+    const after = NO_AVAILABILITY_FIELDS;
+    const changed = RANGE_FIELD_KEYS.filter((key) => after[key] !== undefined && !sameFieldValue(before[key], after[key]));
+    if (changed.length === 0) continue;
+    plan.updates.push({
+      itemId: item.id,
+      title: titleOf(item),
+      village: titleOf(item),
+      plans: 0,
+      listings: 0,
+      before: Object.fromEntries(changed.map((key) => [key, before[key]])) as Partial<RangeFields>,
+      after: Object.fromEntries(changed.map((key) => [key, after[key]])) as Partial<RangeFields>,
+      changed,
+    });
+  }
   plan.updates.sort((a, b) => a.title.localeCompare(b.title));
   plan.unchanged.sort();
   plan.itemsWithoutAvailability.sort();
@@ -347,7 +393,7 @@ export interface VillageRangeSyncResult {
   domain: string;
   collectionId: string;
   dryRun: boolean;
-  /** The collection's field list gained squareFootageRange (or would, on a dry run). */
+  /** The collection's field list gained a missing field (or would, on a dry run). */
   fieldAdded: boolean;
   plan: VillageRangePlan;
   /** Items written; on a dry run, none. */
@@ -365,14 +411,16 @@ export interface SyncVillageRangesOptions {
   trigger: string;
 }
 
-/** Whether the collection has the field; adds it when it does not (unless dryRun). */
-async function ensureSqftField(wixSiteId: string, collectionId: string, dryRun: boolean): Promise<boolean> {
+/** Whether the collection lacks any of ADDED_FIELDS; adds the missing ones (unless dryRun). */
+async function ensureFields(wixSiteId: string, collectionId: string, dryRun: boolean): Promise<boolean> {
   const collection = await getDataCollection(wixSiteId, collectionId);
   if (!collection) throw new Error(`${collectionId} not found on the site`);
-  if (collection.fields.some((f) => f.key === SQFT_FIELD.key)) return false;
+  const have = new Set(collection.fields.map((f) => f.key));
+  const missing = ADDED_FIELDS.filter((f) => !have.has(f.key));
+  if (missing.length === 0) return false;
   if (!dryRun) {
-    await updateDataCollection(wixSiteId, { ...collection, fields: [...collection.fields, { ...SQFT_FIELD }] });
-    logger.info("Village ranges: square footage field added", { collectionId, field: SQFT_FIELD.key });
+    await updateDataCollection(wixSiteId, { ...collection, fields: [...collection.fields, ...missing.map((f) => ({ ...f }))] });
+    logger.info("Village ranges: fields added", { collectionId, fields: missing.map((f) => f.key) });
   }
   return true;
 }
@@ -396,7 +444,7 @@ async function syncOne(target: VillageRangeTarget, dryRun: boolean): Promise<Vil
   // writing from it would blank every village.
   if (ranges.length === 0) return { ...base, plan: emptyPlan, skipped: "no plans or listings loaded; nothing written" };
 
-  const fieldAdded = await ensureSqftField(wixSiteId, target.collectionId, dryRun);
+  const fieldAdded = await ensureFields(wixSiteId, target.collectionId, dryRun);
   const items = await queryAllItems(wixSiteId, target.collectionId, { includeDrafts: true });
   const plan = planVillageUpdates(target, items, ranges);
   const result: VillageRangeSyncResult = { ...base, fieldAdded, plan };
