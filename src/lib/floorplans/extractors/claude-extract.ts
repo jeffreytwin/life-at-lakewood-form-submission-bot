@@ -1601,11 +1601,21 @@ export function linkOnPage(reported: string | null | undefined, html: string, pa
  * two would be taken for different plans. Only "Design" in front of a
  * numbered code goes — "Plan 2016" may be what a builder and the site
  * both call a plan, and "The Design House" is a name.
+ * Nor the lot width a card puts in front of a name: William Ryan's card
+ * for Charlotte reads "Executive Series 60' - Charlotte" and its page
+ * "60' - Charlotte", and a run that read the card whole offered Charlotte
+ * as a new plan beside the Charlotte on the site (Jeff, 2026-10-26).
  * Exported for tests.
  */
 export function planName(name: string): string {
-  return name.trim().replace(/^design\s+(?=\d{3,5}[a-z]{0,2}\b)/i, "");
+  return name
+    .trim()
+    .replace(/^design\s+(?=\d{3,5}[a-z]{0,2}\b)/i, "")
+    .replace(LOT_WIDTH, "");
 }
+
+/** A lot width in front of a plan's name, its series' name with it or not: "Executive Series 60' - ", "60' - ". */
+const LOT_WIDTH = /^(?:[a-z][a-z&'’ ]*?\bseries\s+)?\d{2,3}\s*(?:'|’|′|&#x27;|&#39;|ft\.?|feet|-?foot)\s*(?:[-–—|:]\s*|(?=[a-z]))(?=\S)/i;
 
 /**
  * A key no base plan already has. A quick move-in named for the plan it is

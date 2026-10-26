@@ -473,6 +473,20 @@ describe("planName: a plan's code without the word in front of it (Perry, 2026-0
     expect(planName("The Design House")).toBe("The Design House");
     expect(planName("Model Home Aspen")).toBe("Model Home Aspen");
   });
+
+  it("drops the lot width in front of a name, so Charlotte stays Charlotte (William Ryan, 2026-10-26)", () => {
+    expect(planName("Executive Series 60' - Charlotte")).toBe("Charlotte");
+    expect(planName("60' - Charlotte")).toBe("Charlotte");
+    expect(planName("60’ – Charlotte")).toBe("Charlotte");
+    expect(planName("Executive Series 60&#x27; - Charlotte")).toBe("Charlotte");
+    expect(planName("75' - 3220F")).toBe("3220F");
+    expect(planName("50 ft Sweet Bay")).toBe("Sweet Bay");
+    // A width with no name after it, or a name with a width in it, is left alone.
+    expect(planName("Seaire 40'")).toBe("Seaire 40'");
+    expect(planName("Executive Series 60'")).toBe("Executive Series 60'");
+    expect(planName("Charlotte")).toBe("Charlotte");
+    expect(planName("1820")).toBe("1820");
+  });
 });
 
 describe("distill leaves out the site's menus and footer", () => {
