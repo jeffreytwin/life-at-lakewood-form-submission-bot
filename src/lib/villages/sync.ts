@@ -21,6 +21,7 @@ import {
   updateItem,
   type WixCollectionField,
   type WixDataItem,
+  type WixItemData,
 } from "@/lib/wix/client";
 import {
   aggregateVillageRanges,
@@ -487,11 +488,8 @@ async function syncOne(target: VillageRangeTarget, dryRun: boolean): Promise<Vil
   for (const update of plan.updates) {
     const item = items.find((i) => i.id === update.itemId);
     if (!item) continue;
-    // The row as read, minus Wix's own fields, plus the four: a full-item
-    // update (PUT) keeps everything else the row carries.
-    const kept = Object.fromEntries(Object.entries(item.data ?? {}).filter(([k]) => !k.startsWith("_")));
     try {
-      await updateItem(wixSiteId, target.collectionId, update.itemId, { ...kept, ...update.after });
+      await updateItem(wixSiteId, target.collectionId, update.itemId, writePayload(item, update.after));
       result.written.push(update.title);
     } catch (error) {
       result.failed.push({ title: update.title, error: errorMessage(error) });
@@ -506,6 +504,19 @@ async function syncOne(target: VillageRangeTarget, dryRun: boolean): Promise<Vil
     unmatchedVillages: plan.unmatchedVillages,
   });
   return result;
+}
+
+/**
+ * What a full-item update (PUT) sends for a row: the row as read, minus
+ * Wix's own fields, plus the changed ones. One of Wix's fields is kept:
+ * _publishStatus. An update that leaves it out publishes the row (Jeff,
+ * 2026-10-27: several draft villages went live on a run), so a draft stays
+ * a draft and a published row stays published. Exported for tests.
+ */
+export function writePayload(item: WixDataItem, after: Record<string, unknown>): WixItemData {
+  const kept = Object.fromEntries(Object.entries(item.data ?? {}).filter(([k]) => !k.startsWith("_")));
+  const status = item.data?._publishStatus;
+  return { ...kept, ...after, ...(status ? { _publishStatus: status } : {}) };
 }
 
 /** Runs the sync for one site or all of them. Does not consult the enabled flag: the caller decides. */
