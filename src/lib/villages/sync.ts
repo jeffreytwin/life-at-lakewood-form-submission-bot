@@ -24,8 +24,6 @@ import {
 } from "@/lib/wix/client";
 import {
   aggregateVillageRanges,
-  AVAILABILITY_FLAG,
-  NEW_CONSTRUCTION_FLAG,
   NO_AVAILABILITY_FIELDS,
   rangeFields,
   RANGE_BOOLEAN_KEYS,
@@ -35,30 +33,43 @@ import {
   villageKey,
   type RangeFields,
   type VillageRange,
+  type VillageRangeProfile,
   type VillageRow,
 } from "@/lib/villages/ranges";
+import { LAKEWOOD_PROFILE, WELLEN_PARK_PROFILE } from "@/lib/villages/profiles";
 
-/** A site whose villages collection carries the range fields, and which collection that is. */
+/** A site whose villages collection carries the range fields: which collection, spelled how (profiles.ts). */
 export interface VillageRangeTarget {
   domain: string;
   collectionId: string;
+  profile: VillageRangeProfile;
 }
 
 /**
- * Lakewood's villages live in AmenitiesbyVillage (Wellen Park and Parrish
- * keep theirs in HousesforSale-DynamicPages, whose fields differ; they join
- * here once their collections carry the same four fields).
+ * Lakewood's villages live in AmenitiesbyVillage, Wellen Park's in
+ * HousesforSale-DynamicPages ("Neighborhoods"), each in its own words.
+ * Parrish joins here with a profile of its own.
  */
-export const VILLAGE_RANGE_TARGETS: VillageRangeTarget[] = [{ domain: "lifeatlakewood.com", collectionId: "AmenitiesbyVillage" }];
+export const VILLAGE_RANGE_TARGETS: VillageRangeTarget[] = [
+  { domain: "lifeatlakewood.com", collectionId: "AmenitiesbyVillage", profile: LAKEWOOD_PROFILE },
+  { domain: "lifeinwellenpark.com", collectionId: "HousesforSale-DynamicPages", profile: WELLEN_PARK_PROFILE },
+];
 
-/** Fields the collection may not have yet; each is added on the first run that finds it missing. */
-export const SQFT_FIELD: WixCollectionField = { key: "squareFootageRange", displayName: "Square Footage Range", type: "TEXT" };
-export const FLAG_FIELD: WixCollectionField = { key: AVAILABILITY_FLAG, displayName: "Has Listings or New Construction", type: "BOOLEAN" };
-export const NEW_CONSTRUCTION_FIELD: WixCollectionField = { key: NEW_CONSTRUCTION_FLAG, displayName: "Has New Construction", type: "BOOLEAN" };
-export const ADDED_FIELDS: WixCollectionField[] = [SQFT_FIELD, FLAG_FIELD, NEW_CONSTRUCTION_FIELD];
-
-/** The fields an item's village name may be in, best first. */
-const TITLE_KEYS = ["title", "villagesTitle"];
+/**
+ * Fields a collection may not have yet, by the site's key for each; added
+ * on the first run that finds one missing. The square footage text and the
+ * two availability flags; the rest the collections have always had.
+ */
+export function addedFields(profile: VillageRangeProfile): WixCollectionField[] {
+  const out: WixCollectionField[] = [];
+  const sqft = profile.fields.squareFootageRange;
+  if (sqft) out.push({ key: sqft, displayName: sqft === "squareFeet" ? "Square Feet" : "Square Footage Range", type: "TEXT" });
+  const flag = profile.fields.hasListingsOrNewConstruction;
+  if (flag) out.push({ key: flag, displayName: "Has Listings or New Construction", type: "BOOLEAN" });
+  const build = profile.fields.hasNewConstruction;
+  if (build) out.push({ key: build, displayName: "Has New Construction", type: "BOOLEAN" });
+  return out;
+}
 
 export interface PlannedUpdate {
   itemId: string;
@@ -66,9 +77,12 @@ export interface PlannedUpdate {
   village: string;
   plans: number;
   listings: number;
-  before: Partial<RangeFields>;
-  after: Partial<RangeFields>;
-  changed: Array<keyof RangeFields>;
+  /** The changed fields as the item has them, by the site's keys. */
+  before: Record<string, unknown>;
+  /** The changed fields as they will be written, by the site's keys. */
+  after: Record<string, unknown>;
+  /** The site's keys of the fields written. */
+  changed: string[];
 }
 
 export interface VillageRangePlan {
@@ -92,8 +106,8 @@ export interface VillageRangePlan {
   itemsWithoutAvailability: string[];
 }
 
-function titleOf(item: WixDataItem): string {
-  for (const key of TITLE_KEYS) {
+function titleOf(item: WixDataItem, profile: VillageRangeProfile): string {
+  for (const key of profile.titleKeys) {
     const value = item.data?.[key];
     if (typeof value === "string" && value.trim()) return value.trim();
   }
@@ -101,10 +115,10 @@ function titleOf(item: WixDataItem): string {
 }
 
 /** Items by every name they carry; a published item wins over a draft of the same name. */
-function indexItems(items: WixDataItem[]): Map<string, WixDataItem> {
+function indexItems(items: WixDataItem[], profile: VillageRangeProfile): Map<string, WixDataItem> {
   const index = new Map<string, WixDataItem>();
   for (const item of items) {
-    for (const key of TITLE_KEYS) {
+    for (const key of profile.titleKeys) {
       const value = item.data?.[key];
       if (typeof value !== "string" || !value.trim()) continue;
       const k = villageKey(value);
@@ -115,10 +129,13 @@ function indexItems(items: WixDataItem[]): Map<string, WixDataItem> {
   return index;
 }
 
-function currentFields(item: WixDataItem): Partial<RangeFields> {
+/** The range fields an item carries, read by the site's keys into the logical fields; a logical field the site lacks is absent. */
+function currentFields(item: WixDataItem, profile: VillageRangeProfile): Partial<RangeFields> {
   const out: Record<string, string | string[] | boolean> = {};
   for (const key of RANGE_FIELD_KEYS) {
-    const value = item.data?.[key];
+    const wixKey = profile.fields[key];
+    if (!wixKey) continue;
+    const value = item.data?.[wixKey];
     if (value === undefined || value === null) continue;
     if (RANGE_BOOLEAN_KEYS.has(key)) out[key] = value === true || value === "true";
     else if (RANGE_TAG_KEYS.has(key)) out[key] = Array.isArray(value) ? value.map(String) : [String(value)];
@@ -127,10 +144,20 @@ function currentFields(item: WixDataItem): Partial<RangeFields> {
   return out as Partial<RangeFields>;
 }
 
+/** The logical fields `after` says, as the site's keys, leaving out the fields the site lacks. */
+function toSiteFields(after: Partial<RangeFields>, keys: Array<keyof RangeFields>, profile: VillageRangeProfile): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of keys) {
+    const wixKey = profile.fields[key];
+    if (wixKey && after[key] !== undefined) out[wixKey] = after[key];
+  }
+  return out;
+}
+
 /** Every village name an item carries, as matched. */
-function itemKeys(item: WixDataItem): string[] {
+function itemKeys(item: WixDataItem, profile: VillageRangeProfile): string[] {
   const keys: string[] = [];
-  for (const key of TITLE_KEYS) {
+  for (const key of profile.titleKeys) {
     const value = item.data?.[key];
     if (typeof value === "string" && value.trim()) keys.push(villageKey(value));
   }
@@ -143,7 +170,8 @@ function itemKeys(item: WixDataItem): string[] {
  * for tests and the preview.
  */
 export function planVillageUpdates(target: VillageRangeTarget, items: WixDataItem[], ranges: VillageRange[]): VillageRangePlan {
-  const index = indexItems(items);
+  const { profile } = target;
+  const index = indexItems(items, profile);
   const plan: VillageRangePlan = {
     domain: target.domain,
     collectionId: target.collectionId,
@@ -162,22 +190,24 @@ export function planVillageUpdates(target: VillageRangeTarget, items: WixDataIte
       continue;
     }
     matched.add(item.id);
-    const after = rangeFields(range);
-    const before = currentFields(item);
-    const changed = RANGE_FIELD_KEYS.filter((key) => after[key] !== undefined && !sameFieldValue(before[key], after[key]));
+    const after = rangeFields(range, profile);
+    const before = currentFields(item, profile);
+    const changed = RANGE_FIELD_KEYS.filter(
+      (key) => profile.fields[key] && after[key] !== undefined && !sameFieldValue(before[key], after[key])
+    );
     if (changed.length === 0) {
-      plan.unchanged.push(titleOf(item));
+      plan.unchanged.push(titleOf(item, profile));
       continue;
     }
     plan.updates.push({
       itemId: item.id,
-      title: titleOf(item),
+      title: titleOf(item, profile),
       village: range.village,
       plans: range.plans,
       listings: range.listings,
-      before: Object.fromEntries(changed.map((key) => [key, before[key]])) as Partial<RangeFields>,
-      after: Object.fromEntries(changed.map((key) => [key, after[key]])) as Partial<RangeFields>,
-      changed,
+      before: toSiteFields(before, changed, profile),
+      after: toSiteFields(after, changed, profile),
+      changed: changed.map((key) => profile.fields[key] as string),
     });
   }
   // Items no range reached have nothing for sale: their ranges stay as
@@ -188,21 +218,23 @@ export function planVillageUpdates(target: VillageRangeTarget, items: WixDataIte
   const rangeKeys = new Set(ranges.map((r) => r.key));
   for (const item of items) {
     if (matched.has(item.id)) continue;
-    if (itemKeys(item).some((k) => rangeKeys.has(k))) continue;
-    plan.itemsWithoutAvailability.push(titleOf(item));
-    const before = currentFields(item);
+    if (itemKeys(item, profile).some((k) => rangeKeys.has(k))) continue;
+    plan.itemsWithoutAvailability.push(titleOf(item, profile));
+    const before = currentFields(item, profile);
     const after = NO_AVAILABILITY_FIELDS;
-    const changed = RANGE_FIELD_KEYS.filter((key) => after[key] !== undefined && !sameFieldValue(before[key], after[key]));
+    const changed = RANGE_FIELD_KEYS.filter(
+      (key) => profile.fields[key] && after[key] !== undefined && !sameFieldValue(before[key], after[key])
+    );
     if (changed.length === 0) continue;
     plan.updates.push({
       itemId: item.id,
-      title: titleOf(item),
-      village: titleOf(item),
+      title: titleOf(item, profile),
+      village: titleOf(item, profile),
       plans: 0,
       listings: 0,
-      before: Object.fromEntries(changed.map((key) => [key, before[key]])) as Partial<RangeFields>,
-      after: Object.fromEntries(changed.map((key) => [key, after[key]])) as Partial<RangeFields>,
-      changed,
+      before: toSiteFields(before, changed, profile),
+      after: toSiteFields(after, changed, profile),
+      changed: changed.map((key) => profile.fields[key] as string),
     });
   }
   plan.updates.sort((a, b) => a.title.localeCompare(b.title));
@@ -411,12 +443,12 @@ export interface SyncVillageRangesOptions {
   trigger: string;
 }
 
-/** Whether the collection lacks any of ADDED_FIELDS; adds the missing ones (unless dryRun). */
-async function ensureFields(wixSiteId: string, collectionId: string, dryRun: boolean): Promise<boolean> {
+/** Whether the collection lacks any of addedFields(profile); adds the missing ones (unless dryRun). */
+async function ensureFields(wixSiteId: string, collectionId: string, profile: VillageRangeProfile, dryRun: boolean): Promise<boolean> {
   const collection = await getDataCollection(wixSiteId, collectionId);
   if (!collection) throw new Error(`${collectionId} not found on the site`);
   const have = new Set(collection.fields.map((f) => f.key));
-  const missing = ADDED_FIELDS.filter((f) => !have.has(f.key));
+  const missing = addedFields(profile).filter((f) => !have.has(f.key));
   if (missing.length === 0) return false;
   if (!dryRun) {
     await updateDataCollection(wixSiteId, { ...collection, fields: [...collection.fields, ...missing.map((f) => ({ ...f }))] });
@@ -444,7 +476,7 @@ async function syncOne(target: VillageRangeTarget, dryRun: boolean): Promise<Vil
   // writing from it would blank every village.
   if (ranges.length === 0) return { ...base, plan: emptyPlan, skipped: "no plans or listings loaded; nothing written" };
 
-  const fieldAdded = await ensureFields(wixSiteId, target.collectionId, dryRun);
+  const fieldAdded = await ensureFields(wixSiteId, target.collectionId, target.profile, dryRun);
   const items = await queryAllItems(wixSiteId, target.collectionId, { includeDrafts: true });
   const plan = planVillageUpdates(target, items, ranges);
   const result: VillageRangeSyncResult = { ...base, fieldAdded, plan };

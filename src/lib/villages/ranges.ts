@@ -4,8 +4,14 @@
 // its Homes for Sale rows (the live listings), nothing historical. Pure;
 // sync.ts loads the rows and writes the fields.
 //
-// The formats are the ones the Lakewood AmenitiesbyVillage rows already
-// carry, because the site's page code filters on them:
+// The fields below are named by Lakewood's AmenitiesbyVillage keys and
+// carry the formats its rows already use, because the site's page code
+// filters on them. Another site's collection names and spells them its own
+// way: profiles.ts maps each logical field to that site's key and words
+// (Wellen Park's tags read "2 Car" and "Single Family Homes", its home
+// types text is one comma-separated line, and it has no dropdown fields),
+// and a site's own methodology stays intact where it differs (Jeff,
+// 2026-10-27). Lakewood's formats:
 //   priceRange          "$300s - $2M+"   (one bucket alone: "$1M+"; both ends in the millions: "$1M - $2M+",
 //                       one plus sign, not two, Jeff 2026-10-27)
 //   priceRangeDropdown  "Show All Price Ranges, $300s, $400s, ..., $1M+, $2M+"
@@ -47,7 +53,7 @@ export interface VillageRow {
   baths?: number | null;
   /** Garage bays; 0 when the home is known to have none. */
   garages?: number | null;
-  /** The source's own words ("Attached Villa", "Townhouse"); homeTypeTag maps them. */
+  /** The source's own words ("Attached Villa", "Townhouse"); homeTypeKind maps them. */
   homeType?: string | null;
 }
 
@@ -69,8 +75,8 @@ export interface VillageRange {
   maxBaths: number | null;
   minGarages: number | null;
   maxGarages: number | null;
-  /** The page's filter values, in HOME_TYPE_ORDER. */
-  homeTypes: HomeTypeTag[];
+  /** The kinds of home for sale, in HOME_TYPE_KINDS order; a profile puts them in the site's words. */
+  homeTypes: HomeTypeKind[];
 }
 
 /** The fields written; a group is left out when the village has no data for it. */
@@ -142,40 +148,56 @@ export const NO_AVAILABILITY_FIELDS: Partial<RangeFields> = {
 /** The tag fields: arrays of strings in Wix. */
 export const RANGE_TAG_KEYS: ReadonlySet<string> = new Set(["priceRangeNew", "bedroomsNew", "bathroomsNew", "garagesNew", "homeTypeNew"]);
 
-/** The page's home type filter values, in the order the dropdown lists them. */
-export const HOME_TYPE_ORDER = ["Single Family Home", "Villa", "Townhome", "Condominium"] as const;
-export type HomeTypeTag = (typeof HOME_TYPE_ORDER)[number];
-
-/** How each home type reads in homeTypesDropdown. */
-export const HOME_TYPE_DROPDOWN_LABEL: Record<HomeTypeTag, string> = {
-  "Single Family Home": "Single Family Home",
-  Villa: "Attached Villas",
-  Townhome: "Townhomes",
-  Condominium: "Condominiums",
-};
-
-/** How each home type reads in the homeTypes display text, one a line. */
-export const HOME_TYPE_DISPLAY_LABEL: Record<HomeTypeTag, string> = {
-  "Single Family Home": "Single Family",
-  Villa: "Villas",
-  Townhome: "Townhomes",
-  Condominium: "Condominiums",
-};
+/** The kinds of home the sites tell apart, in the order their filters list them. */
+export const HOME_TYPE_KINDS = ["single-family", "villa", "townhome", "condominium", "coach-home"] as const;
+export type HomeTypeKind = (typeof HOME_TYPE_KINDS)[number];
 
 /**
- * The filter value a source's home type maps to: the builders' "Attached
- * Villa" and the MLS's "Villa" are the one tag, "Townhouse" is "Townhome",
- * a coach home is a condominium. Null for a type the page has no filter
- * for, which is then left out rather than guessed.
+ * The kind a source's home type names: the builders' "Attached Villa" and
+ * the MLS's "Villa" are one kind, "Townhouse" is a townhome, a "Garage
+ * Condo" is a condominium, a coach home is its own kind (a profile may
+ * fold it into condominiums where the site has no coach home filter). Null
+ * for a type no site filters on, which is then left out rather than
+ * guessed.
  */
-export function homeTypeTag(raw: string | null | undefined): HomeTypeTag | null {
+export function homeTypeKind(raw: string | null | undefined): HomeTypeKind | null {
   const t = (raw ?? "").toLowerCase().replace(/[^a-z]+/g, " ").trim();
   if (!t) return null;
-  if (/\bsingle family\b/.test(t) || t === "sfr" || t === "sfh" || t === "detached") return "Single Family Home";
-  if (/\bvilla/.test(t)) return "Villa";
-  if (/\btown ?(home|house)/.test(t)) return "Townhome";
-  if (/\bcondo/.test(t) || /\bcoach home/.test(t) || /\bcarriage home/.test(t)) return "Condominium";
+  if (/\bsingle family\b/.test(t) || t === "sfr" || t === "sfh" || t === "detached") return "single-family";
+  if (/\bvilla/.test(t)) return "villa";
+  if (/\btown ?(home|house)/.test(t)) return "townhome";
+  if (/\bcoach home/.test(t) || /\bcarriage home/.test(t)) return "coach-home";
+  if (/\bcondo/.test(t)) return "condominium";
   return null;
+}
+
+/** How one kind of home reads on a site: its filter tag, its dropdown label (where the site has dropdowns), its display text. */
+export interface HomeTypeWords {
+  kind: HomeTypeKind;
+  tag: string;
+  dropdown: string;
+  display: string;
+}
+
+/**
+ * A site's spelling of the range fields: which collection key each
+ * logical field lives in (null where the collection has no such field),
+ * which item fields carry a village's name, and the words its tags and
+ * texts use. profiles.ts holds one per site.
+ */
+export interface VillageRangeProfile {
+  name: string;
+  fields: Record<keyof RangeFields, string | null>;
+  /** The item fields a village's name may be in, best first. */
+  titleKeys: string[];
+  /** What follows the number in a garage tag: "" for ["2", "3"], " Car" for ["2 Car", "3 Car"]. */
+  garageTagSuffix: string;
+  /** The kinds the site filters on, in its order, with its words for each. */
+  homeTypes: HomeTypeWords[];
+  /** Kinds the site has no filter for, counted as another kind (Lakewood: a coach home is a condominium). */
+  foldHomeTypes: Partial<Record<HomeTypeKind, HomeTypeKind>>;
+  /** What joins the display text's types: a line break on Lakewood, ", " on Wellen Park. */
+  homeTypesSeparator: string;
 }
 
 /**
@@ -268,11 +290,11 @@ export function aggregateVillageRanges(rows: VillageRow[]): VillageRange[] {
     if (plausibleCount(row.beds, 1, MAX_PLAUSIBLE_BEDS)) widen(range, "minBeds", "maxBeds", row.beds);
     if (plausibleCount(row.baths, 1, MAX_PLAUSIBLE_BATHS)) widen(range, "minBaths", "maxBaths", row.baths);
     if (plausibleCount(row.garages, 0, MAX_PLAUSIBLE_GARAGES)) widen(range, "minGarages", "maxGarages", row.garages);
-    const tag = homeTypeTag(row.homeType);
-    if (tag && !range.homeTypes.includes(tag)) range.homeTypes.push(tag);
+    const kind = homeTypeKind(row.homeType);
+    if (kind && !range.homeTypes.includes(kind)) range.homeTypes.push(kind);
   }
   for (const range of byKey.values()) {
-    range.homeTypes.sort((a, b) => HOME_TYPE_ORDER.indexOf(a) - HOME_TYPE_ORDER.indexOf(b));
+    range.homeTypes.sort((a, b) => HOME_TYPE_KINDS.indexOf(a) - HOME_TYPE_KINDS.indexOf(b));
   }
   return [...byKey.values()].sort((a, b) => a.village.localeCompare(b.village));
 }
@@ -366,13 +388,23 @@ export function optionsDropdown(values: string[]): string {
 }
 
 /**
- * The fields a village's range writes. Each group needs its own data:
- * price fields a price, the square footage field a size, bedroom fields a
- * bedroom count, and so on; a group with no data is left out, and a
- * village with no data at all gets nothing (its row is left as it is). A
- * tag list is never written empty.
+ * The site's words for the kinds of home a village has: folded where the
+ * site has no filter for a kind, in the site's order, each once.
  */
-export function rangeFields(range: VillageRange): Partial<RangeFields> {
+export function homeTypeWords(kinds: HomeTypeKind[], profile: VillageRangeProfile): HomeTypeWords[] {
+  const present = new Set(kinds.map((k) => profile.foldHomeTypes[k] ?? k));
+  return profile.homeTypes.filter((w) => present.has(w.kind));
+}
+
+/**
+ * The fields a village's range writes, as logical fields (the profile's
+ * `fields` says where each lives on the site, or that it does not). Each
+ * group needs its own data: price fields a price, the square footage field
+ * a size, bedroom fields a bedroom count, and so on; a group with no data
+ * is left out, and a village with no data at all gets nothing (its row is
+ * left as it is). A tag list is never written empty.
+ */
+export function rangeFields(range: VillageRange, profile: VillageRangeProfile): Partial<RangeFields> {
   const out: Partial<RangeFields> = {};
   // A range exists only for a village with at least one plan or listing.
   if (range.plans + range.listings > 0) out.hasListingsOrNewConstruction = true;
@@ -404,17 +436,18 @@ export function rangeFields(range: VillageRange): Partial<RangeFields> {
     }
   }
   if (range.minGarages !== null && range.maxGarages !== null) {
-    const tags = wholeNumberTags(range.minGarages, range.maxGarages);
+    const tags = wholeNumberTags(range.minGarages, range.maxGarages).map((n) => `${n}${profile.garageTagSuffix}`);
     out.garages = countRangeText(range.minGarages, range.maxGarages, " Car");
     if (tags.length) {
       out.garagesNew = tags;
       out.garagesDropdown = optionsDropdown(tags);
     }
   }
-  if (range.homeTypes.length) {
-    out.homeTypeNew = [...range.homeTypes];
-    out.homeTypesDropdown = optionsDropdown(range.homeTypes.map((t) => HOME_TYPE_DROPDOWN_LABEL[t]));
-    out.homeTypes = range.homeTypes.map((t) => HOME_TYPE_DISPLAY_LABEL[t]).join("\n");
+  const words = homeTypeWords(range.homeTypes, profile);
+  if (words.length) {
+    out.homeTypeNew = words.map((w) => w.tag);
+    out.homeTypesDropdown = optionsDropdown(words.map((w) => w.dropdown));
+    out.homeTypes = words.map((w) => w.display).join(profile.homeTypesSeparator);
   }
   return out;
 }

@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   aggregateVillageRanges,
   countRangeText,
-  homeTypeTag,
+  homeTypeKind,
+  homeTypeWords,
   optionsDropdown,
   priceBucket,
   priceBuckets,
@@ -17,6 +18,7 @@ import {
   wholeNumberTags,
   type VillageRow,
 } from "@/lib/villages/ranges";
+import { LAKEWOOD_PROFILE, WELLEN_PARK_PROFILE } from "@/lib/villages/profiles";
 
 describe("villageKey", () => {
   it("ignores case, spacing, dash style and ampersands", () => {
@@ -89,12 +91,12 @@ describe("aggregateVillageRanges", () => {
     const lot = ranges[0];
     expect(lot).toMatchObject({ listings: 1, minPrice: null, maxPrice: null, minSqft: null, maxSqft: null });
     // A row of any kind means something is for sale: the flag goes true, nothing else is written.
-    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
+    expect(rangeFields(lot, LAKEWOOD_PROFILE)).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
   });
   it("writes only the fields a village has data for", () => {
     const [, palisades, star] = aggregateVillageRanges(rows);
     // Listings only: the Build Your Home button is grey.
-    expect(rangeFields(palisades)).toEqual({
+    expect(rangeFields(palisades, LAKEWOOD_PROFILE)).toEqual({
       hasListingsOrNewConstruction: true,
       hasNewConstruction: false,
       buildYourHomeColor: "#A0A09F",
@@ -103,7 +105,7 @@ describe("aggregateVillageRanges", () => {
       priceRangeNew: ["$400s"],
     });
     // Plans for sale: green.
-    expect(rangeFields(star)).toEqual({
+    expect(rangeFields(star, LAKEWOOD_PROFILE)).toEqual({
       hasListingsOrNewConstruction: true,
       hasNewConstruction: true,
       buildYourHomeColor: "#2C9E37",
@@ -131,17 +133,28 @@ describe("sameFieldValue", () => {
 });
 
 describe("bedrooms, bathrooms, garages and home types", () => {
-  it("maps each source's home type words to the page's filter values", () => {
-    expect(homeTypeTag("Single Family Home")).toBe("Single Family Home");
-    expect(homeTypeTag("Single Family Residence")).toBe("Single Family Home");
-    expect(homeTypeTag("Attached Villa")).toBe("Villa");
-    expect(homeTypeTag("Villa")).toBe("Villa");
-    expect(homeTypeTag("Townhouse")).toBe("Townhome");
-    expect(homeTypeTag("Townhome")).toBe("Townhome");
-    expect(homeTypeTag("Condominium")).toBe("Condominium");
-    expect(homeTypeTag("Coach Home")).toBe("Condominium");
-    expect(homeTypeTag("Mobile Home")).toBeNull();
-    expect(homeTypeTag(null)).toBeNull();
+  it("maps each source's home type words to a kind", () => {
+    expect(homeTypeKind("Single Family Home")).toBe("single-family");
+    expect(homeTypeKind("Single Family Residence")).toBe("single-family");
+    expect(homeTypeKind("Attached Villa")).toBe("villa");
+    expect(homeTypeKind("Villa")).toBe("villa");
+    expect(homeTypeKind("Townhouse")).toBe("townhome");
+    expect(homeTypeKind("Townhome")).toBe("townhome");
+    expect(homeTypeKind("Condominium")).toBe("condominium");
+    expect(homeTypeKind("Garage Condo")).toBe("condominium");
+    expect(homeTypeKind("Coach Home")).toBe("coach-home");
+    expect(homeTypeKind("Mobile Home")).toBeNull();
+    expect(homeTypeKind(null)).toBeNull();
+  });
+
+  it("puts the kinds in each site's words, folding where a site has no filter", () => {
+    const kinds = ["single-family", "coach-home", "villa"] as const;
+    // Lakewood: a coach home is a condominium; filter values singular.
+    expect(homeTypeWords([...kinds], LAKEWOOD_PROFILE).map((w) => w.tag)).toEqual(["Single Family Home", "Villa", "Condominium"]);
+    // Wellen Park: coach homes are their own filter; values plural.
+    expect(homeTypeWords([...kinds], WELLEN_PARK_PROFILE).map((w) => w.tag)).toEqual(["Single Family Homes", "Villas", "Coach Homes"]);
+    // A kind present twice after folding reads once.
+    expect(homeTypeWords(["condominium", "coach-home"], LAKEWOOD_PROFILE).map((w) => w.tag)).toEqual(["Condominium"]);
   });
 
   it("writes counts the way the site does", () => {
@@ -171,8 +184,8 @@ describe("bedrooms, bathrooms, garages and home types", () => {
 
   it("spans both sources and orders the home types the way the dropdown lists them", () => {
     expect(palm).toMatchObject({ minBeds: 2, maxBeds: 5, minBaths: 2, maxBaths: 4.5, minGarages: 1, maxGarages: 3 });
-    expect(palm.homeTypes).toEqual(["Single Family Home", "Villa", "Townhome"]);
-    expect(rangeFields(palm)).toMatchObject({
+    expect(palm.homeTypes).toEqual(["single-family", "villa", "townhome"]);
+    expect(rangeFields(palm, LAKEWOOD_PROFILE)).toMatchObject({
       bedrooms: "2 - 5",
       bedroomsNew: ["2", "3", "4", "5"],
       bedroomsDropdown: "2, 3, 4, 5, Show All",
@@ -189,11 +202,11 @@ describe("bedrooms, bathrooms, garages and home types", () => {
   });
 
   it("keeps a 0-car low end in the text but not in the tags", () => {
-    expect(rangeFields(calusa)).toMatchObject({ garages: "0 - 3 Car", garagesNew: ["1", "2", "3"], garagesDropdown: "1, 2, 3, Show All" });
+    expect(rangeFields(calusa, LAKEWOOD_PROFILE)).toMatchObject({ garages: "0 - 3 Car", garagesNew: ["1", "2", "3"], garagesDropdown: "1, 2, 3, Show All" });
   });
 
   it("writes the garage text but no tags when nothing has a garage", () => {
-    const fields = rangeFields(carport);
+    const fields = rangeFields(carport, LAKEWOOD_PROFILE);
     expect(fields.garages).toBe("0 Car");
     expect(fields.garagesNew).toBeUndefined();
     expect(fields.garagesDropdown).toBeUndefined();
@@ -201,6 +214,43 @@ describe("bedrooms, bathrooms, garages and home types", () => {
 
   it("takes no counts or types from a row that is not a home", () => {
     expect(lot).toMatchObject({ minBeds: null, minBaths: null, minGarages: null, homeTypes: [] });
-    expect(rangeFields(lot)).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
+    expect(rangeFields(lot, LAKEWOOD_PROFILE)).toEqual({ hasListingsOrNewConstruction: true, hasNewConstruction: false, buildYourHomeColor: "#A0A09F" });
+  });
+});
+
+describe("Wellen Park's words", () => {
+  const rows: VillageRow[] = [
+    { village: "Palmera", source: "plan", price: 450_000, sqft: 1_900, beds: 2, baths: 2, garages: 2, homeType: "Coach Home" },
+    { village: "Palmera", source: "plan", price: 1_200_000, sqft: 4_600, beds: 5, baths: 4, garages: 4, homeType: "Single Family Home" },
+    { village: "Palmera", source: "listing", price: 600_000, sqft: 2_500, beds: 3, baths: 2.5, garages: 3, homeType: "Condominium" },
+  ];
+  const [palmera] = aggregateVillageRanges(rows);
+  const fields = rangeFields(palmera, WELLEN_PARK_PROFILE);
+
+  it("writes garage tags with the word Car and keeps coach homes as their own type", () => {
+    expect(fields.garages).toBe("2 - 4 Car");
+    expect(fields.garagesNew).toEqual(["2 Car", "3 Car", "4 Car"]);
+    expect(fields.homeTypeNew).toEqual(["Single Family Homes", "Condominiums", "Coach Homes"]);
+    expect(fields.homeTypes).toBe("Single Family, Condos, Coach Homes");
+  });
+
+  it("shares the price, size, bedroom and bathroom formats with Lakewood", () => {
+    expect(fields.priceRange).toBe("$400s - $1M+");
+    expect(fields.priceRangeNew).toEqual(["$400s", "$500s", "$600s", "$700s", "$800s", "$900s", "1M+"]);
+    expect(fields.squareFootageRange).toBe("1,900 - 4,600 square feet");
+    expect(fields.bedrooms).toBe("2 - 5");
+    expect(fields.bedroomsNew).toEqual(["2", "3", "4", "5"]);
+    expect(fields.bathrooms).toBe("2 - 4");
+    expect(fields.bathroomsNew).toEqual(["2", "3", "4"]);
+    expect(fields.buildYourHomeColor).toBe("#2C9E37");
+    expect(fields.hasNewConstruction).toBe(true);
+  });
+
+  it("names no dropdown fields, so the sync never writes them there", () => {
+    expect(WELLEN_PARK_PROFILE.fields.priceRangeDropdown).toBeNull();
+    expect(WELLEN_PARK_PROFILE.fields.bedroomsDropdown).toBeNull();
+    expect(WELLEN_PARK_PROFILE.fields.homeTypesDropdown).toBeNull();
+    expect(WELLEN_PARK_PROFILE.fields.priceRangeNew).toBe("priceRangeTags");
+    expect(WELLEN_PARK_PROFILE.fields.squareFootageRange).toBe("squareFeet");
   });
 });

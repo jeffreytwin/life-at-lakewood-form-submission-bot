@@ -11,13 +11,14 @@ vi.mock("@/lib/wix/client", () => ({
 }));
 
 import { aggregateVillageRanges, type VillageRow } from "@/lib/villages/ranges";
-import { garageCount, listingBaths, listingGarages, planVillageUpdates, VILLAGE_RANGE_TARGETS } from "@/lib/villages/sync";
+import { addedFields, garageCount, listingBaths, listingGarages, planVillageUpdates, VILLAGE_RANGE_TARGETS } from "@/lib/villages/sync";
 import type { WixDataItem } from "@/lib/wix/client";
 
-const target = VILLAGE_RANGE_TARGETS[0];
+const target = VILLAGE_RANGE_TARGETS.find((t) => t.domain === "lifeatlakewood.com")!;
+const wellen = VILLAGE_RANGE_TARGETS.find((t) => t.domain === "lifeinwellenpark.com")!;
 
-function item(id: string, data: Record<string, unknown>): WixDataItem {
-  return { id, dataCollectionId: target.collectionId, data: { _id: id, _publishStatus: "PUBLISHED", ...data } };
+function item(id: string, data: Record<string, unknown>, collectionId = target.collectionId): WixDataItem {
+  return { id, dataCollectionId: collectionId, data: { _id: id, _publishStatus: "PUBLISHED", ...data } };
 }
 
 const items: WixDataItem[] = [
@@ -175,5 +176,74 @@ describe("listing and plan field readers", () => {
   });
   it("treats a garage with 0 spaces as unknown, not as no garage", () => {
     expect(listingGarages({ garage_spaces: "0", garage_yn: "true" })).toBeNull();
+  });
+});
+
+describe("planVillageUpdates for Wellen Park", () => {
+  const items: WixDataItem[] = [
+    item(
+      "wpcc",
+      {
+        title: "Wellen Park Golf & Country Club",
+        villageNameForFiltering: "Wellen Park Country Club",
+        priceRange: "$300s - $1M+",
+        priceRangeTags: ["$300s", "$400s", "$500s", "$600s", "$700s", "$800s", "$900s", "1M+"],
+        squareFeet: "1,100 - 3,600 square feet",
+        garageSizeRange: "1 - 3 Car",
+        garageSizeTags: ["1 Car", "2 Car", "3 Car"],
+        homeTypes: "Single Family, Condos, Coach Homes",
+        homeTypeTags: ["Single Family Homes", "Condominiums", "Coach Homes"],
+        buildYourHomeColor: "#2C9E37",
+      },
+      wellen.collectionId
+    ),
+    item("westlake", { title: "Westlake", _publishStatus: "DRAFT" }, wellen.collectionId),
+    item("deerpark", { title: "Deer Park", _publishStatus: "DRAFT" }, wellen.collectionId),
+  ];
+  const rows: VillageRow[] = [
+    { village: "Wellen Park Country Club", source: "plan", price: 320_000, sqft: 1_120, beds: 2, baths: 2, garages: 1, homeType: "Coach Home" },
+    { village: "Wellen Park Country Club", source: "plan", price: 1_050_000, sqft: 3_600, beds: 4, baths: 3, garages: 3, homeType: "Single Family Home" },
+    { village: "Wellen Park Country Club", source: "listing", price: 400_000, sqft: 1_500, beds: 2, baths: 2, garages: 2, homeType: "Condominium" },
+    { village: "Westlake", source: "plan", price: 500_000, sqft: 2_000, beds: 3, baths: 2, garages: 2, homeType: "Single Family Home" },
+  ];
+  const plan = planVillageUpdates(wellen, items, aggregateVillageRanges(rows));
+
+  it("matches a row by its filtering name and writes with the site's keys and words", () => {
+    const wpcc = plan.updates.find((u) => u.itemId === "wpcc");
+    expect(wpcc).toBeDefined();
+    // Price, size, garages and home types already read right; what differs is written under the site's keys.
+    expect(wpcc!.changed).toEqual(["bedroomRange", "bedroomTags", "bathroomRange", "bathroomTags", "hasListingsOrNewConstruction", "hasNewConstruction"]);
+    expect(wpcc!.after).toEqual({
+      bedroomRange: "2 - 4",
+      bedroomTags: ["2", "3", "4"],
+      bathroomRange: "2 - 3",
+      bathroomTags: ["2", "3"],
+      hasListingsOrNewConstruction: true,
+      hasNewConstruction: true,
+    });
+    expect(Object.keys(wpcc!.after)).not.toContain("bedroomsDropdown");
+  });
+
+  it("fills a draft village that has plans and flags a draft with nothing false", () => {
+    const westlake = plan.updates.find((u) => u.itemId === "westlake");
+    expect(westlake?.after).toMatchObject({
+      priceRange: "$500s",
+      priceRangeTags: ["$500s"],
+      squareFeet: "2,000 square feet",
+      garageSizeTags: ["2 Car"],
+      homeTypeTags: ["Single Family Homes"],
+      homeTypes: "Single Family",
+      hasListingsOrNewConstruction: true,
+      hasNewConstruction: true,
+      buildYourHomeColor: "#2C9E37",
+    });
+    const deer = plan.updates.find((u) => u.itemId === "deerpark");
+    expect(deer?.after).toEqual({ hasListingsOrNewConstruction: false, buildYourHomeColor: "#A0A09F", hasNewConstruction: false });
+    expect(plan.itemsWithoutAvailability).toEqual(["Deer Park"]);
+  });
+
+  it("adds only the fields the site may lack, by the site's keys", () => {
+    expect(addedFields(wellen.profile).map((f) => f.key)).toEqual(["squareFeet", "hasListingsOrNewConstruction", "hasNewConstruction"]);
+    expect(addedFields(target.profile).map((f) => f.key)).toEqual(["squareFootageRange", "hasListingsOrNewConstruction", "hasNewConstruction"]);
   });
 });
