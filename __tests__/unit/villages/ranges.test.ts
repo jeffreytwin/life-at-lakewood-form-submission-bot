@@ -275,9 +275,9 @@ describe("Parrish's words", () => {
     expect(crosswind).toMatchObject({ plans: 2, listings: 1, minBeds: 3, maxBeds: 7 });
   });
 
-  it("writes square feet without a suffix and Parrish's grey", () => {
+  it("writes square feet with the suffix and Parrish's grey", () => {
     const crosswind = rangeFields(ranges[0], PARRISH_PROFILE);
-    expect(crosswind.squareFootageRange).toBe("1,500 - 4,900");
+    expect(crosswind.squareFootageRange).toBe("1,500 - 4,900 square feet");
     expect(crosswind.priceRange).toBe("$300s - $1M+");
     expect(crosswind.garagesNew).toEqual(["2 Car", "3 Car"]);
     expect(crosswind.homeTypeNew).toEqual(["Single Family Homes", "Villas"]);

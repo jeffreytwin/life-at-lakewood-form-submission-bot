@@ -190,7 +190,7 @@ export interface VillageRangeProfile {
   titleKeys: string[];
   /** What follows the number in a garage tag: "" for ["2", "3"], " Car" for ["2 Car", "3 Car"]. */
   garageTagSuffix: string;
-  /** What follows the square footage range: " square feet" on Lakewood and Wellen Park, nothing on Parrish ("1,500 - 4,900"). */
+  /** What follows the square footage range: " square feet" on every site today; a site may spell it otherwise. */
   sqftSuffix: string;
   /** The Build Your Home button's two colours, as the collection's rows already carry them. */
   buildColors: { green: string; grey: string };
