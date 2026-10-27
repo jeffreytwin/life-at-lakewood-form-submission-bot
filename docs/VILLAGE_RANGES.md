@@ -26,7 +26,10 @@ Lakewood's villages are the `AmenitiesbyVillage` items, matched by `title`
 (then `villagesTitle`) to the village name the rows carry, ignoring case,
 spacing, dash style and "&" vs "and". Nineteen fields, in the formats the
 site's page code already filters on (Jeff, 2026-10-26: so a buyer can
-narrow villages by price, size, bedrooms, bathrooms, garages and home type):
+narrow villages by price, size, bedrooms, bathrooms, garages and home type).
+The table below is Lakewood's spelling; each site has a profile
+(`src/lib/villages/profiles.ts`) naming its own keys and words, and keeps
+its own methodology where it differs (see "Sites" below):
 
 | Field | Example |
 |---|---|
@@ -80,6 +83,26 @@ listings at all) writes nothing, so a broken mirror can never hide every
 village. Wellen Park and Parrish
 join `VILLAGE_RANGE_TARGETS` (`src/lib/villages/sync.ts`) once their
 neighborhoods collections carry the same four fields.
+
+## Sites
+
+| | Life At Lakewood | Life in Wellen Park |
+|---|---|---|
+| Collection | `AmenitiesbyVillage` | `HousesforSale-DynamicPages` ("Neighborhoods") |
+| Village name | `title`, then `villagesTitle` | `title`, then `villageNameForFiltering` ("Wellen Park Country Club" is the filtering name of "Wellen Park Golf & Country Club") |
+| Tags fields | `priceRangeNew`, `bedroomsNew`, `bathroomsNew`, `garagesNew`, `homeTypeNew` | `priceRangeTags`, `bedroomTags`, `bathroomTags`, `garageSizeTags`, `homeTypeTags` |
+| Range texts | `bedrooms`, `bathrooms`, `garages`, `squareFootageRange` | `bedroomRange`, `bathroomRange`, `garageSizeRange`, `squareFeet` |
+| Dropdown texts | `priceRangeDropdown`, `bedroomsDropdown`, ... | none (not written) |
+| Garage tags | `"2"`, `"3"` | `"2 Car"`, `"3 Car"` |
+| Home type tags | `Single Family Home`, `Villa`, `Townhome`, `Condominium`; a coach home counts as a condominium | `Single Family Homes`, `Villas`, `Townhomes`, `Condominiums`, `Coach Homes` (their own filter) |
+| `homeTypes` text | one type a line: `Single Family`, `Villas`, `Townhomes`, `Condominiums` | one line, comma separated: `Single Family, Condos, Coach Homes` |
+
+Price, square footage, bedroom and bathroom formats, the colour values and
+the two flags are the same on both. Wellen Park's draft villages (Westlake,
+Madera, Deer Park as of 2026-10-27) are matched like any other: one with
+plans for sale is filled in, one with nothing is flagged false; the API
+never changes a row's draft or published state. Parrish joins with a
+profile of its own once its collection is looked at.
 
 ## When it runs
 
