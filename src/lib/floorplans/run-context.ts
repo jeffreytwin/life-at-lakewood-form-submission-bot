@@ -2,13 +2,14 @@
 // under it (ai-usage.ts) without threading it through every function: a
 // nightly tick, a Sync now, a Run pressed on Builder Connections, the
 // background photo sort, the Sort button, a stand-in built from the
-// overlay, or the connection check on a preview build. A run of a
+// overlay, the connection check on a preview build, or the re-check of
+// removals an earlier run held (removal-recheck.ts). A run of a
 // connection adds the connection and the run id, so a call can be summed
 // back to the run that made it.
 
 import { AsyncLocalStorage } from "node:async_hooks";
 
-export type RunSource = "nightly" | "sync-now" | "run" | "photo-sort" | "sort-button" | "stand-in" | "check";
+export type RunSource = "nightly" | "sync-now" | "run" | "photo-sort" | "sort-button" | "stand-in" | "check" | "recheck";
 
 export interface RunContext {
   source: RunSource;

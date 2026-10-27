@@ -11,6 +11,7 @@ const db = vi.hoisted(() => {
     /** What each query of the connections answers, by the filter that tells them apart. */
     retries: [] as Record<string, unknown>[],
     rereads: [] as Record<string, unknown>[],
+    rechecks: [] as Record<string, unknown>[],
     saved: [] as Record<string, unknown>[],
   };
   const respond = (table: string, calls: Call[]) => {
@@ -26,6 +27,7 @@ const db = vi.hoisted(() => {
       return { data: state.settings, error: null };
     }
     if (table === "fp_builder_communities") {
+      if (used("lte")) return { data: state.rechecks, error: null }; // rechecksDue
       if (used("or")) return { data: [], error: null }; // owedRuns: every connection has had its run
       if (used("ilike")) return { data: state.rereads, error: null }; // secondReadingsOwed
       if (used("gte") && used("gt")) return { data: state.retries, error: null }; // retriesOwed
@@ -36,7 +38,7 @@ const db = vi.hoisted(() => {
   const from = vi.fn((table: string) => {
     const calls: Call[] = [];
     const api: Record<string, unknown> = {};
-    for (const m of ["select", "update", "eq", "or", "not", "gte", "gt", "lt", "ilike", "like", "order", "limit", "is", "in"]) {
+    for (const m of ["select", "update", "eq", "or", "not", "gte", "gt", "lt", "lte", "ilike", "like", "order", "limit", "is", "in"]) {
       api[m] = (...args: unknown[]) => {
         calls.push([m, args]);
         return api;
@@ -69,16 +71,17 @@ const cycle = (extra: Record<string, unknown> = {}) => ({
 });
 const lastSaved = () => db.state.saved[db.state.saved.length - 1];
 
-let seen: { id: string; secondReading: boolean; retriedWhenRun: unknown }[] = [];
+let seen: { id: string; secondReading: boolean; retriedWhenRun: unknown; source?: string }[] = [];
 beforeEach(() => {
   db.state.saved = [];
   db.state.retries = [];
   db.state.rereads = [];
+  db.state.rechecks = [];
   seen = [];
   runs.sweepCutOffRuns.mockResolvedValue(0);
   runs.holdRun.mockResolvedValue(true);
   runs.runHeld.mockImplementation(async (id: string) => {
-    seen.push({ id, secondReading: Boolean(runContext()?.secondReading), retriedWhenRun: lastSaved()?.retried });
+    seen.push({ id, secondReading: Boolean(runContext()?.secondReading), retriedWhenRun: lastSaved()?.retried, source: runContext()?.source });
     return { status: "ok", detail: "ok: 15 plans" };
   });
 });
@@ -88,7 +91,7 @@ describe("a run that failed in the cycle", () => {
     db.state.settings = cycle();
     db.state.retries = [estates];
     const result = await runNightlyTick();
-    expect(seen).toEqual([{ id: "estates", secondReading: false, retriedWhenRun: ["estates"] }]);
+    expect(seen).toEqual([{ id: "estates", secondReading: false, retriedWhenRun: ["estates"], source: "nightly" }]);
     expect(result).toMatchObject({ complete: true, failed: 0 });
     expect(lastSaved()).toMatchObject({ retried: ["estates"], failed: 0 });
     expect(lastSaved().completedAt).toBeTruthy();
@@ -124,6 +127,32 @@ describe("a run that failed in the cycle", () => {
     db.state.retries = [estates];
     runs.holdRun.mockResolvedValue(false);
     expect(await runNightlyTick()).toMatchObject({ complete: false, busy: 1 });
+    expect(seen).toEqual([]);
+  });
+});
+
+// Removals held an hour ago for a re-check (removal-recheck.ts; Jeff, 2026-10-27).
+describe("a connection whose removals were held for a re-check", () => {
+  const held = {
+    ...estates,
+    id: "star-farms",
+    removals_held: ["a", "b", "c"],
+    removal_recheck_at: "2026-10-27T15:00:00Z",
+    last_run_at: "2026-10-27T14:00:00Z",
+    last_run_status: "suspicious: 17 plans, 3 missing held for a re-check at 11:00 AM; 0 changes queued",
+  };
+
+  it("is run again once its hour is up, though tonight's cycle is done", async () => {
+    db.state.settings = { ...cycle({ completedAt: "2026-10-24T07:00:00Z" }), fp_nightly_enabled: false };
+    db.state.rechecks = [held];
+    expect(await runNightlyTick()).toMatchObject({ rechecked: 1 });
+    expect(seen.map((s) => [s.id, s.source])).toEqual([["star-farms", "recheck"]]);
+  });
+
+  it("is not run again once a run has been made since its hour came", async () => {
+    db.state.settings = cycle({ completedAt: "2026-10-24T07:00:00Z" });
+    db.state.rechecks = [{ ...held, last_run_at: "2026-10-27T15:01:00Z", last_run_status: "error: page timed out" }];
+    expect(await runNightlyTick()).toMatchObject({ rechecked: 0 });
     expect(seen).toEqual([]);
   });
 });
