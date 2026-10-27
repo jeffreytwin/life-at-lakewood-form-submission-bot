@@ -6,7 +6,8 @@
 //
 // The formats are the ones the Lakewood AmenitiesbyVillage rows already
 // carry, because the site's page code filters on them:
-//   priceRange          "$300s - $2M+"   (one bucket alone: "$1M+")
+//   priceRange          "$300s - $2M+"   (one bucket alone: "$1M+"; both ends in the millions: "$1M - $2M+",
+//                       one plus sign, not two, Jeff 2026-10-27)
 //   priceRangeDropdown  "Show All Price Ranges, $300s, $400s, ..., $1M+, $2M+"
 //   priceRangeNew       ["$300s", "$400s", ..., "1M+", "2M+"]  (tags; millions drop the $)
 //   squareFootageRange  "2,300 - 4,700 square feet"  (nearest 100)
@@ -300,11 +301,17 @@ export function priceBuckets(minPrice: number, maxPrice: number): string[] {
   return out;
 }
 
-/** "$300s - $2M+", or the one bucket when both ends share it. */
+/**
+ * "$300s - $2M+", or the one bucket when both ends share it. When both ends
+ * are millions the low end drops its plus sign ("$1M - $2M+"), so the range
+ * does not read as two open-ended figures.
+ */
 export function priceRangeText(minPrice: number, maxPrice: number): string {
   const lo = priceBucket(Math.min(minPrice, maxPrice));
   const hi = priceBucket(Math.max(minPrice, maxPrice));
-  return lo === hi ? lo : `${lo} - ${hi}`;
+  if (lo === hi) return lo;
+  const low = lo.endsWith("M+") && hi.endsWith("M+") ? lo.slice(0, -1) : lo;
+  return `${low} - ${hi}`;
 }
 
 export function priceRangeDropdown(buckets: string[]): string {

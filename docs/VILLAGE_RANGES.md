@@ -30,7 +30,7 @@ narrow villages by price, size, bedrooms, bathrooms, garages and home type):
 
 | Field | Example |
 |---|---|
-| `priceRange` | `$300s - $2M+` (one bucket alone: `$1M+`) |
+| `priceRange` | `$300s - $2M+` (one bucket alone: `$1M+`; both ends in the millions: `$1M - $2M+`, one plus sign) |
 | `priceRangeDropdown` | `Show All Price Ranges, $300s, $400s, ..., $900s, $1M+, $2M+` |
 | `priceRangeNew` (tags) | `["$300s", "$400s", ..., "$900s", "1M+", "2M+"]` |
 | `squareFootageRange` | `2,300 - 4,700 square feet` (nearest 100) |

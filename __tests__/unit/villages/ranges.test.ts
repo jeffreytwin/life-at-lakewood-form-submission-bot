@@ -48,6 +48,9 @@ describe("price buckets", () => {
     expect(priceRangeText(399_999, 1_995_000)).toBe("$300s - $1M+");
     expect(priceRangeText(419_990, 465_000)).toBe("$400s");
     expect(priceRangeText(1_399_990, 1_632_990)).toBe("$1M+");
+    // Both ends in the millions: one plus sign, on the high end.
+    expect(priceRangeText(1_475_000, 4_245_000)).toBe("$1M - $4M+");
+    expect(priceRangeText(2_000_000, 4_800_000)).toBe("$2M - $4M+");
     const buckets = priceBuckets(594_500, 1_050_000);
     expect(priceRangeDropdown(buckets)).toBe("Show All Price Ranges, $500s, $600s, $700s, $800s, $900s, $1M+");
     expect(priceRangeTags(buckets)).toEqual(["$500s", "$600s", "$700s", "$800s", "$900s", "1M+"]);
