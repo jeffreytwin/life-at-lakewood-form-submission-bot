@@ -138,12 +138,10 @@ export const BUILD_COLOR_GREY = "#A0A09F";
 /** Whether the village has a floor plan for sale, for the new construction filter. */
 export const NEW_CONSTRUCTION_FLAG: keyof RangeFields = "hasNewConstruction";
 
-/** What a village with nothing for sale is written: hidden, no new construction, and no plans to build. */
-export const NO_AVAILABILITY_FIELDS: Partial<RangeFields> = {
-  hasListingsOrNewConstruction: false,
-  hasNewConstruction: false,
-  buildYourHomeColor: BUILD_COLOR_GREY,
-};
+/** What a village with nothing for sale is written: hidden, no new construction, and no plans to build (in the site's grey). */
+export function noAvailabilityFields(profile: VillageRangeProfile): Partial<RangeFields> {
+  return { hasListingsOrNewConstruction: false, hasNewConstruction: false, buildYourHomeColor: profile.buildColors.grey };
+}
 
 /** The tag fields: arrays of strings in Wix. */
 export const RANGE_TAG_KEYS: ReadonlySet<string> = new Set(["priceRangeNew", "bedroomsNew", "bathroomsNew", "garagesNew", "homeTypeNew"]);
@@ -192,6 +190,17 @@ export interface VillageRangeProfile {
   titleKeys: string[];
   /** What follows the number in a garage tag: "" for ["2", "3"], " Car" for ["2 Car", "3 Car"]. */
   garageTagSuffix: string;
+  /** What follows the square footage range: " square feet" on Lakewood and Wellen Park, nothing on Parrish ("1,500 - 4,900"). */
+  sqftSuffix: string;
+  /** The Build Your Home button's two colours, as the collection's rows already carry them. */
+  buildColors: { green: string; grey: string };
+  /**
+   * Village names the plans or listings use for a village the collection
+   * names otherwise, data name to row name ("Crosswind Ranch" is the row
+   * "Crosswind"; "Del Webb Explore North River Ranch" is "Del Webb
+   * Explore"). Compared as villageKey.
+   */
+  villageAliases: Record<string, string>;
   /** The kinds the site filters on, in its order, with its words for each. */
   homeTypes: HomeTypeWords[];
   /** Kinds the site has no filter for, counted as another kind (Lakewood: a coach home is a condominium). */
@@ -213,12 +222,14 @@ export const MAX_PLAUSIBLE_GARAGES = 8;
 
 /**
  * Village names as matched between the pipeline's rows and the collection's
- * titles: case, stray spaces, dash style and "&" vs "and" do not count.
- * "Azario – Esplanade" and "Azario - Esplanade" are the same village.
+ * titles: case, stray spaces, dash style, apostrophes and "&" vs "and" do
+ * not count. "Azario – Esplanade" and "Azario - Esplanade" are the same
+ * village; so are "River's Reach" and "Rivers Reach" (Parrish, 2026-10-27).
  */
 export function villageKey(name: string): string {
   return name
     .toLowerCase()
+    .replace(/['‘’]/g, "")
     .replace(/[–—]/g, "-")
     .replace(/&/g, " and ")
     .replace(/\s*-\s*/g, " - ")
@@ -354,11 +365,24 @@ function withCommas(n: number): string {
   return n.toLocaleString("en-US");
 }
 
-/** "2,300 - 4,700 square feet", or "2,300 square feet" when both ends round the same. */
-export function sqftRangeText(minSqft: number, maxSqft: number): string {
+/** "2,300 - 4,700 square feet", or "2,300 square feet" when both ends round the same; the suffix is the site's. */
+export function sqftRangeText(minSqft: number, maxSqft: number, suffix = " square feet"): string {
   const lo = roundSqft(Math.min(minSqft, maxSqft));
   const hi = roundSqft(Math.max(minSqft, maxSqft));
-  return lo === hi ? `${withCommas(lo)} square feet` : `${withCommas(lo)} - ${withCommas(hi)} square feet`;
+  return (lo === hi ? withCommas(lo) : `${withCommas(lo)} - ${withCommas(hi)}`) + suffix;
+}
+
+/**
+ * The rows with each alias of the profile's replaced by the village name
+ * the collection uses, so a village the sources name two ways is one range.
+ */
+export function applyVillageAliases(rows: VillageRow[], profile: VillageRangeProfile): VillageRow[] {
+  const aliases = new Map(Object.entries(profile.villageAliases).map(([from, to]) => [villageKey(from), to]));
+  if (aliases.size === 0) return rows;
+  return rows.map((row) => {
+    const to = aliases.get(villageKey(row.village ?? ""));
+    return to ? { ...row, village: to } : row;
+  });
 }
 
 /** A number as the site writes it: "2", "2.5", never "2.50". */
@@ -409,7 +433,7 @@ export function rangeFields(range: VillageRange, profile: VillageRangeProfile): 
   // A range exists only for a village with at least one plan or listing.
   if (range.plans + range.listings > 0) out.hasListingsOrNewConstruction = true;
   out.hasNewConstruction = range.plans > 0;
-  out.buildYourHomeColor = range.plans > 0 ? BUILD_COLOR_GREEN : BUILD_COLOR_GREY;
+  out.buildYourHomeColor = range.plans > 0 ? profile.buildColors.green : profile.buildColors.grey;
   if (range.minPrice !== null && range.maxPrice !== null) {
     const buckets = priceBuckets(range.minPrice, range.maxPrice);
     out.priceRange = priceRangeText(range.minPrice, range.maxPrice);
@@ -417,7 +441,7 @@ export function rangeFields(range: VillageRange, profile: VillageRangeProfile): 
     out.priceRangeNew = priceRangeTags(buckets);
   }
   if (range.minSqft !== null && range.maxSqft !== null) {
-    out.squareFootageRange = sqftRangeText(range.minSqft, range.maxSqft);
+    out.squareFootageRange = sqftRangeText(range.minSqft, range.maxSqft, profile.sqftSuffix);
   }
   if (range.minBeds !== null && range.maxBeds !== null) {
     const tags = wholeNumberTags(range.minBeds, range.maxBeds);

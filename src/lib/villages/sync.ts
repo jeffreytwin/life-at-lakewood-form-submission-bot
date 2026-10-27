@@ -24,7 +24,8 @@ import {
 } from "@/lib/wix/client";
 import {
   aggregateVillageRanges,
-  NO_AVAILABILITY_FIELDS,
+  applyVillageAliases,
+  noAvailabilityFields,
   rangeFields,
   RANGE_BOOLEAN_KEYS,
   RANGE_FIELD_KEYS,
@@ -36,7 +37,7 @@ import {
   type VillageRangeProfile,
   type VillageRow,
 } from "@/lib/villages/ranges";
-import { LAKEWOOD_PROFILE, WELLEN_PARK_PROFILE } from "@/lib/villages/profiles";
+import { LAKEWOOD_PROFILE, PARRISH_PROFILE, WELLEN_PARK_PROFILE } from "@/lib/villages/profiles";
 
 /** A site whose villages collection carries the range fields: which collection, spelled how (profiles.ts). */
 export interface VillageRangeTarget {
@@ -46,13 +47,14 @@ export interface VillageRangeTarget {
 }
 
 /**
- * Lakewood's villages live in AmenitiesbyVillage, Wellen Park's in
- * HousesforSale-DynamicPages ("Neighborhoods"), each in its own words.
- * Parrish joins here with a profile of its own.
+ * Lakewood's villages live in AmenitiesbyVillage; Wellen Park's and
+ * Parrish's in their HousesforSale-DynamicPages ("Neighborhoods"), each in
+ * its own words.
  */
 export const VILLAGE_RANGE_TARGETS: VillageRangeTarget[] = [
   { domain: "lifeatlakewood.com", collectionId: "AmenitiesbyVillage", profile: LAKEWOOD_PROFILE },
   { domain: "lifeinwellenpark.com", collectionId: "HousesforSale-DynamicPages", profile: WELLEN_PARK_PROFILE },
+  { domain: "lifeatparrish.com", collectionId: "HousesforSale-DynamicPages", profile: PARRISH_PROFILE },
 ];
 
 /**
@@ -221,7 +223,7 @@ export function planVillageUpdates(target: VillageRangeTarget, items: WixDataIte
     if (itemKeys(item, profile).some((k) => rangeKeys.has(k))) continue;
     plan.itemsWithoutAvailability.push(titleOf(item, profile));
     const before = currentFields(item, profile);
-    const after = NO_AVAILABILITY_FIELDS;
+    const after = noAvailabilityFields(profile);
     const changed = RANGE_FIELD_KEYS.filter(
       (key) => profile.fields[key] && after[key] !== undefined && !sameFieldValue(before[key], after[key])
     );
@@ -459,7 +461,7 @@ async function ensureFields(wixSiteId: string, collectionId: string, profile: Vi
 
 async function syncOne(target: VillageRangeTarget, dryRun: boolean): Promise<VillageRangeSyncResult> {
   const { rows, wixSiteId } = await loadVillageRows(target.domain);
-  const ranges = aggregateVillageRanges(rows);
+  const ranges = aggregateVillageRanges(applyVillageAliases(rows, target.profile));
   const base = { domain: target.domain, collectionId: target.collectionId, dryRun, fieldAdded: false, written: [], failed: [] };
   const emptyPlan: VillageRangePlan = {
     domain: target.domain,
