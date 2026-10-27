@@ -6,6 +6,9 @@
 // - Zero-result scrapes are failures: no diff, no removals, failure counted.
 // - Removals require the plan to have been missing across runs (last_seen_at
 //   older than 24h) AND a scrape covering >= 60% of the last known count.
+//   A bunch at once is queued flagged as suspicious and checked again an
+//   hour later: withdrawn if read again, else flagged double-checked
+//   (removal-recheck.ts).
 // - Rejections stick: a change identical to a rejected row is not re-queued.
 // - A new plan or home with no price is not queued until it has one.
 // - User-edited fields (manual overrides) are never proposed for reversion,
@@ -37,6 +40,7 @@ import { extractArHomes } from "@/lib/floorplans/extractors/arhomes";
 import { extractCardel } from "@/lib/floorplans/extractors/cardel";
 import { comparedFields, fieldChanges, mergeForUpdate, splitOnItsOwn, withDescriptionFrom, withPlainDescription, withPriceFrom, type CanonicalRecord } from "@/lib/floorplans/diff";
 import { withKnownTours } from "@/lib/floorplans/tours";
+import { decideRemovals, doubleCheckedFlag, recheckTime, suspiciousFlag, type RemovalDecision } from "@/lib/floorplans/removal-recheck";
 import { goneModels, withoutDeadTours } from "@/lib/floorplans/dead-tours";
 import { refusedTours, withoutRefusedTours } from "@/lib/floorplans/tour-review";
 import { alreadyFiled, filedAsBefore, knownRecordsOf, type FiledHome } from "@/lib/floorplans/home-identity";
@@ -496,6 +500,8 @@ export async function queueChange(args: {
   wixRecordId?: string | null;
   floorPlanId?: string | null;
   runId: string;
+  /** A note for the person who reviews the change (removal-recheck.ts); left as it is when not given. */
+  reviewFlag?: string;
 }): Promise<boolean> {
   const fieldKey = args.fieldChanged ?? null;
   if (await stillRejected(args)) return false;
@@ -528,6 +534,7 @@ export async function queueChange(args: {
     wix_record_id: args.wixRecordId ?? null,
     run_id: args.runId,
     updated_at: new Date().toISOString(),
+    ...(args.reviewFlag ? { review_flag: args.reviewFlag } : {}),
   };
   if (existing) {
     await supabase.from("fp_pending_changes").update(row).eq("id", existing.id);
@@ -766,7 +773,7 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
   const { data: conn, error } = await supabase
     .from("fp_builder_communities")
     .select(
-      "id, active, extractor_params, last_plan_count, last_run_status, last_run_at, onboarded_at, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
+      "id, active, extractor_params, last_plan_count, last_run_status, last_run_at, onboarded_at, removals_held, removal_recheck_at, fp_builders:builder_id(id, name, active, extraction_method), fp_communities:community_id(id, name, site_id, fp_sites:site_id(id, name, domain))"
     )
     .eq("id", connectionId)
     .single();
@@ -1071,21 +1078,55 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
 
       // Removal guard: plan must have been missing since before this run
       // (last_seen_at > 24h old) and the scrape must cover >= 60% of the last
-      // known plan count.
+      // known plan count. A bunch of removals at once is queued flagged as
+      // suspicious and checked again an hour later (removal-recheck.ts).
       const coverage = describeCoverage(plans.length, countToMeet(conn.last_plan_count, conn.onboarded_at));
+      let removals: RemovalDecision | null = null;
       if (coverage.ok) {
         const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        for (const c of canonical ?? []) {
-          if (scrapedKeys.has(c.plan_key)) continue;
-          if (!c.last_seen_at || new Date(c.last_seen_at).getTime() > cutoff) continue;
+        const missing = (canonical ?? []).filter(
+          (c) => !scrapedKeys.has(c.plan_key) && c.last_seen_at && new Date(c.last_seen_at).getTime() <= cutoff
+        );
+        const isHome = (c: { record: unknown }) => (c.record as NormalizedPlan | null)?.quickMoveIn === true;
+        const asMissing = (list: typeof missing) => list.map((c) => ({ key: c.plan_key, quickMoveIn: isHome(c) }));
+        // Removals already in the queue keep their flag and are not counted again.
+        const { data: queuedRemovals } = missing.length
+          ? await supabase
+              .from("fp_pending_changes")
+              .select("plan_key")
+              .match({ site_id: site.id, community_id: community.id, builder_id: builder.id, change_type: "remove" })
+              .in("status", ["pending", "approving"])
+          : { data: [] };
+        removals = decideRemovals(
+          asMissing(missing),
+          { plans: (canonical ?? []).filter((c) => !isHome(c)).length, homes: (canonical ?? []).filter(isHome).length },
+          { keys: conn.removals_held as string[] | null, recheckAt: conn.removal_recheck_at as string | null },
+          new Set((queuedRemovals ?? []).map((r) => r.plan_key as string))
+        );
+        const suspicious = new Set(removals.suspicious);
+        const confirmed = new Set(removals.confirmed);
+        const suspiciousNote = suspicious.size && removals.recheckAt
+          ? suspiciousFlag(asMissing(missing.filter((c) => suspicious.has(c.plan_key))), removals.recheckAt)
+          : undefined;
+        const confirmedNote = confirmed.size && conn.removal_recheck_at
+          ? doubleCheckedFlag(asMissing(missing.filter((c) => confirmed.has(c.plan_key))), conn.removal_recheck_at as string)
+          : undefined;
+        for (const c of missing) {
+          const reviewFlag = suspicious.has(c.plan_key) ? suspiciousNote : confirmed.has(c.plan_key) ? confirmedNote : undefined;
           if (
             await queueChange({
               siteId: site.id, communityId: community.id, builderId: builder.id,
               planKey: c.plan_key, changeType: "remove",
               oldValue: (c.record as NormalizedPlan | null)?.priceDisplay ?? null,
               wixRecordId: c.wix_record_id, floorPlanId: c.id, runId,
+              ...(reviewFlag ? { reviewFlag } : {}),
             })
           ) queued += 1;
+        }
+        if (suspicious.size) {
+          logger.warn("Removals queued as suspicious: too many at once to trust one reading", {
+            builder: builder.name, community: community.name, keys: removals.suspicious, recheckAt: removals.recheckAt,
+          });
         }
       }
 
@@ -1093,15 +1134,22 @@ export async function runConnection(connectionId: string): Promise<RunResult> {
       // it is recorded as a failure and shows up wherever failures do (the
       // Floor Plans banner, Builder Connections, the digest).
       const heldNote = `${held ? `, ${held} new held until priced` : ""}${unconfirmed ? `, ${unconfirmed} waiting for a second reading` : ""}`;
+      const recheckNote =
+        (removals?.confirmed.length ? `, ${removals.confirmed.length} removals double-checked` : "") +
+        (removals?.hold.length && removals.recheckAt ? `, ${removals.hold.length} removals to check again at ${recheckTime(removals.recheckAt)}` : "");
       const detail = coverage.ok
-        ? `ok: ${plans.length} plans, ${queued} changes queued${heldNote}`
+        ? `ok: ${plans.length} plans, ${queued} changes queued${recheckNote}${heldNote}`
         : `${coverage.detail}; ${queued} changes queued${heldNote}`;
       // A short run leaves the count it was held to for the next run, until
       // the shortfall has lasted from one night to the next (coverage.ts).
+      // A run whose removals wait for a re-check does not lower it either: the
+      // page may not have drawn in full.
       const count = coverage.ok
-        ? plans.length
+        ? removals?.hold.length ? Math.max(plans.length, conn.last_plan_count ?? 0) : plans.length
         : countAfterShortfall(plans.length, { lastRunStatus: conn.last_run_status, lastRunAt: conn.last_run_at });
-      await setRunStatus(conn.id, detail, count, !coverage.ok, await spentOn(runId));
+      // What waits for a re-check goes with the run's status; a short run decides nothing about it.
+      const hold = removals ? { removals_held: removals.hold.length ? removals.hold : null, removal_recheck_at: removals.recheckAt } : {};
+      await setRunStatus(conn.id, detail, count, !coverage.ok, { ...(await spentOn(runId)), ...hold });
       // First successful run marks the connection nightly-eligible.
       await supabase
         .from("fp_builder_communities")

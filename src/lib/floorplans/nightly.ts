@@ -17,6 +17,10 @@
 // "Sync now" (Jeff, 2026-09-25) starts the same cycle by hand, whatever the
 // hour and whether or not the nightly one is on; the tick carries it on
 // from there, a minute at a time, until every connection has had its run.
+// A run that queued a bunch of removals as suspicious (removal-recheck.ts)
+// is run again by the first tick after its hour is up, whether or not a
+// cycle is going (rechecksDue).
+//
 // One tick works at a time (fp_tick_lock_until), and each connection is
 // held while it runs (runs.ts), so a Run pressed during a sync does not
 // run the same connection twice at once.
@@ -31,6 +35,7 @@ import { totalsSince } from "@/lib/floorplans/ai-usage";
 import { showCost } from "@/lib/floorplans/run-state";
 import { mendsItself } from "@/lib/floorplans/health";
 import { refreshVillageRanges } from "@/lib/villages/sync";
+import { recheckOwed } from "@/lib/floorplans/removal-recheck";
 
 const TICK_BUDGET_MS = 240_000; // leave headroom under the function limit
 // A builder read through a browser takes minutes, not seconds, so the tick
@@ -197,6 +202,41 @@ export async function secondReadingsOwed(startedAt: string, reread: string[]) {
 }
 
 /**
+ * The connections owed the re-check of removals an earlier run flagged as
+ * suspicious (removal-recheck.ts): the hour is up and no run has been made
+ * since.
+ * Exported for tests.
+ */
+export async function rechecksDue(now = Date.now()) {
+  const { data: rows } = await supabase
+    .from("fp_builder_communities")
+    .select("id, removals_held, removal_recheck_at, last_run_at, last_run_status, extractor_params, fp_builders:builder_id(name, active, extraction_method)")
+    .eq("active", true)
+    .not("onboarded_at", "is", null)
+    .lte("removal_recheck_at", new Date(now).toISOString());
+  const builderOf = (c: { fp_builders: unknown }) =>
+    c.fp_builders as { name: string; active: boolean; extraction_method: string | null } | null;
+  return (rows ?? [])
+    .filter((c) => builderOf(c)?.active && recheckOwed(c as Parameters<typeof recheckOwed>[0], now))
+    .map((c) => ({ id: c.id as string, builder: builderOf(c)!, params: c.extractor_params as Record<string, unknown> | null }));
+}
+
+/** Each re-check the tick has room for, one at a time; how many it made. */
+async function runRechecks(deadline: number): Promise<number> {
+  let made = 0;
+  for (const conn of await rechecksDue()) {
+    const needs = readsThroughBrowser(conn.builder.name, conn.builder.extraction_method, conn.params) ? RENDER_RESERVE_MS : 0;
+    if (Date.now() + needs > deadline) continue;
+    // A connection running already is read; its run makes the decision.
+    if (!(await holdRun(conn.id))) continue;
+    const result = await withRunContext({ source: "recheck" }, () => runHeld(conn.id));
+    logger.info("Re-checked removals flagged as suspicious an hour ago", { connectionId: conn.id, status: result.status, detail: result.detail });
+    made += 1;
+  }
+  return made;
+}
+
+/**
  * Start a cycle by hand ("Sync now"). Null when one is already going;
  * the tick that follows, and every tick after it, carries it on.
  */
@@ -265,19 +305,22 @@ async function tick(): Promise<Record<string, unknown>> {
   // Runs cut off by the function's time limit, whoever started them.
   const cutOff = await sweepCutOffRuns();
   const autoApplied = await applyAutoApproved();
+  const deadline = Date.now() + TICK_BUDGET_MS;
+  // Removals flagged as suspicious an hour ago, read again before anything else (removal-recheck.ts).
+  const rechecked = await runRechecks(deadline);
 
   const { data: settings, error } = await supabase
     .from("system_settings")
     .select("fp_nightly_enabled, fp_nightly_hour, fp_digest_phone, fp_nightly_state")
     .eq("id", 1)
     .single();
-  if (error || !settings) return { skipped: "no settings row", autoApplied };
+  if (error || !settings) return { skipped: "no settings row", autoApplied, rechecked };
 
   let state = (settings.fp_nightly_state ?? {}) as NightlyState;
   if (cycleInProgress(state)) {
     // A nightly cycle stops when the nightly sync is turned off; one
     // started by hand goes on.
-    if (!settings.fp_nightly_enabled && !state.manual) return { skipped: "nightly disabled", cutOff, autoApplied };
+    if (!settings.fp_nightly_enabled && !state.manual) return { skipped: "nightly disabled", cutOff, autoApplied, rechecked };
   } else if (nightlyDue(state, settings)) {
     state = { cycleDate: etParts().date, startedAt: new Date().toISOString(), ran: 0, failed: 0 };
     await supabase.from("system_settings").update({ fp_nightly_state: state }).eq("id", 1);
@@ -287,6 +330,7 @@ async function tick(): Promise<Record<string, unknown>> {
       skipped: !settings.fp_nightly_enabled ? "nightly disabled" : state.completedAt ? "already completed today" : `waiting for ${settings.fp_nightly_hour}:00 ET`,
       cutOff,
       autoApplied,
+      rechecked,
     };
   }
 
@@ -295,7 +339,6 @@ async function tick(): Promise<Record<string, unknown>> {
 
   let ran = state.ran ?? 0;
   let failed = state.failed ?? 0;
-  const deadline = Date.now() + TICK_BUDGET_MS;
   let processed = 0;
   let busy = 0;
 
@@ -427,5 +470,5 @@ async function tick(): Promise<Record<string, unknown>> {
   }
 
   await supabase.from("system_settings").update({ fp_nightly_state: nextState }).eq("id", 1);
-  return { processed, busy, cutOff, autoApplied, remaining: Math.max(0, remaining), ran, failed, complete: remaining <= 0 };
+  return { processed, busy, cutOff, autoApplied, rechecked, remaining: Math.max(0, remaining), ran, failed, complete: remaining <= 0 };
 }
