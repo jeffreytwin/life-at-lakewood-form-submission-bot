@@ -107,7 +107,10 @@ rename what the plans or listings call a village to what its row is called,
 so the two become one range. Wellen Park's draft villages (Westlake,
 Madera, Deer Park as of 2026-10-27) are matched like any other: one with
 plans for sale is filled in, one with nothing is flagged false; the API
-never changes a row's draft or published state. Parrish's fallback fields
+never changes a row's draft or published state: the update carries the
+row's `_publishStatus` back as read, because a Wix update that leaves it
+out publishes the row (found 2026-10-27, when a run published several
+Wellen Park drafts). Parrish's fallback fields
 (`priceRangeFallback` and friends) serve something else and are not
 touched; The Towns at Firethorn and Firethorn are separate communities
 there (Jeff, 2026-10-27).

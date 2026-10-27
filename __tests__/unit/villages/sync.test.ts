@@ -11,7 +11,7 @@ vi.mock("@/lib/wix/client", () => ({
 }));
 
 import { aggregateVillageRanges, type VillageRow } from "@/lib/villages/ranges";
-import { addedFields, garageCount, listingBaths, listingGarages, planVillageUpdates, VILLAGE_RANGE_TARGETS } from "@/lib/villages/sync";
+import { addedFields, garageCount, listingBaths, listingGarages, planVillageUpdates, VILLAGE_RANGE_TARGETS, writePayload } from "@/lib/villages/sync";
 import type { WixDataItem } from "@/lib/wix/client";
 
 const target = VILLAGE_RANGE_TARGETS.find((t) => t.domain === "lifeatlakewood.com")!;
@@ -245,5 +245,18 @@ describe("planVillageUpdates for Wellen Park", () => {
   it("adds only the fields the site may lack, by the site's keys", () => {
     expect(addedFields(wellen.profile).map((f) => f.key)).toEqual(["squareFeet", "hasListingsOrNewConstruction", "hasNewConstruction"]);
     expect(addedFields(target.profile).map((f) => f.key)).toEqual(["squareFootageRange", "hasListingsOrNewConstruction", "hasNewConstruction"]);
+  });
+});
+
+describe("writePayload", () => {
+  it("keeps a draft a draft and a published row published, and drops Wix's other fields", () => {
+    const draft = item("w", { title: "Westlake", _publishStatus: "DRAFT", _createdDate: "2026-01-01", _owner: "o", description: "d" });
+    expect(writePayload(draft, { priceRange: "$500s" })).toEqual({ title: "Westlake", description: "d", priceRange: "$500s", _publishStatus: "DRAFT" });
+    const published = item("p", { title: "Palmera", priceRange: "$400s" });
+    expect(writePayload(published, { priceRange: "$500s" })).toEqual({ title: "Palmera", priceRange: "$500s", _publishStatus: "PUBLISHED" });
+  });
+  it("sends no status when the row carried none", () => {
+    const bare: WixDataItem = { id: "b", dataCollectionId: "c", data: { title: "Bare" } };
+    expect(writePayload(bare, { priceRange: "$500s" })).toEqual({ title: "Bare", priceRange: "$500s" });
   });
 });
