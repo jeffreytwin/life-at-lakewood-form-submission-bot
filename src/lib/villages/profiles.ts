@@ -89,9 +89,10 @@ export const WELLEN_PARK_PROFILE: VillageRangeProfile = {
 };
 
 /**
- * Parrish's HousesforSale-DynamicPages is Wellen Park's shape with two
- * differences (Jeff, 2026-10-27): the square footage has no suffix
- * ("1,500 - 4,900"), and the grey is #BEBEBE. Its fallback fields
+ * Parrish's HousesforSale-DynamicPages is Wellen Park's shape with one
+ * difference (Jeff, 2026-10-27): the grey is #BEBEBE. Its square footage
+ * now reads "1,500 - 4,900 square feet" like Wellen Park's, though its
+ * rows had no suffix before (Jeff, 2026-10-27). Its fallback fields
  * (priceRangeFallback and friends) serve something else and are not
  * touched. Two villages the sources name otherwise are aliased to their
  * rows; The Towns at Firethorn and Firethorn are separate communities.
@@ -99,7 +100,6 @@ export const WELLEN_PARK_PROFILE: VillageRangeProfile = {
 export const PARRISH_PROFILE: VillageRangeProfile = {
   ...WELLEN_PARK_PROFILE,
   name: "parrish",
-  sqftSuffix: "",
   buildColors: { green: BUILD_COLOR_GREEN, grey: "#BEBEBE" },
   villageAliases: {
     "Crosswind Ranch": "Crosswind",

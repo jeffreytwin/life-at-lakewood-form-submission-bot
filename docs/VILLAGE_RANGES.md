@@ -92,7 +92,7 @@ neighborhoods collections carry the same four fields.
 | Village name | `title`, then `villagesTitle` | `title`, then `villageNameForFiltering` ("Wellen Park Country Club" is the filtering name of "Wellen Park Golf & Country Club") | as Wellen Park |
 | Tags fields | `priceRangeNew`, `bedroomsNew`, `bathroomsNew`, `garagesNew`, `homeTypeNew` | `priceRangeTags`, `bedroomTags`, `bathroomTags`, `garageSizeTags`, `homeTypeTags` | as Wellen Park |
 | Range texts | `bedrooms`, `bathrooms`, `garages`, `squareFootageRange` | `bedroomRange`, `bathroomRange`, `garageSizeRange`, `squareFeet` | as Wellen Park |
-| Square feet | `1,500 - 3,700 square feet` | `1,500 - 3,700 square feet` | `1,500 - 3,700` (no suffix) |
+| Square feet | `1,500 - 3,700 square feet` | `1,500 - 3,700 square feet` | `1,500 - 3,700 square feet` (its rows had no suffix before 2026-10-27) |
 | Dropdown texts | `priceRangeDropdown`, `bedroomsDropdown`, ... | none (not written) | none |
 | Garage tags | `"2"`, `"3"` | `"2 Car"`, `"3 Car"` | `"2 Car"`, `"3 Car"` |
 | Home type tags | `Single Family Home`, `Villa`, `Townhome`, `Condominium`; a coach home counts as a condominium | `Single Family Homes`, `Villas`, `Townhomes`, `Condominiums`, `Coach Homes` (their own filter) | as Wellen Park |
