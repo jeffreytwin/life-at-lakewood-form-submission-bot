@@ -17,7 +17,7 @@
 // "Sync now" (Jeff, 2026-09-25) starts the same cycle by hand, whatever the
 // hour and whether or not the nightly one is on; the tick carries it on
 // from there, a minute at a time, until every connection has had its run.
-// A run that held a bunch of removals for a re-check (removal-recheck.ts)
+// A run that queued a bunch of removals as suspicious (removal-recheck.ts)
 // is run again by the first tick after its hour is up, whether or not a
 // cycle is going (rechecksDue).
 //
@@ -202,8 +202,9 @@ export async function secondReadingsOwed(startedAt: string, reread: string[]) {
 }
 
 /**
- * The connections owed the re-check of removals an earlier run held
- * (removal-recheck.ts): the hour is up and no run has been made since.
+ * The connections owed the re-check of removals an earlier run flagged as
+ * suspicious (removal-recheck.ts): the hour is up and no run has been made
+ * since.
  * Exported for tests.
  */
 export async function rechecksDue(now = Date.now()) {
@@ -229,7 +230,7 @@ async function runRechecks(deadline: number): Promise<number> {
     // A connection running already is read; its run makes the decision.
     if (!(await holdRun(conn.id))) continue;
     const result = await withRunContext({ source: "recheck" }, () => runHeld(conn.id));
-    logger.info("Re-checked removals held an hour ago", { connectionId: conn.id, status: result.status, detail: result.detail });
+    logger.info("Re-checked removals flagged as suspicious an hour ago", { connectionId: conn.id, status: result.status, detail: result.detail });
     made += 1;
   }
   return made;
@@ -305,7 +306,7 @@ async function tick(): Promise<Record<string, unknown>> {
   const cutOff = await sweepCutOffRuns();
   const autoApplied = await applyAutoApproved();
   const deadline = Date.now() + TICK_BUDGET_MS;
-  // Removals held an hour ago, read again before anything else (removal-recheck.ts).
+  // Removals flagged as suspicious an hour ago, read again before anything else (removal-recheck.ts).
   const rechecked = await runRechecks(deadline);
 
   const { data: settings, error } = await supabase

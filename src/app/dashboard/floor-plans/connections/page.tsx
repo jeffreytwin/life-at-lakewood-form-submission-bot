@@ -846,14 +846,7 @@ export default function BuildersSettingsPage() {
                                   ? "cut off by the time limit; the sync runs it again"
                                   : c.consecutive_failures > 0
                                     ? `${c.consecutive_failures} consecutive failures`
-                                    : (c.last_run_status ?? "").startsWith("suspicious:")
-                                      ? (
-                                          // Removals held for a re-check (removal-recheck.ts).
-                                          <span style={{ color: "var(--warning)" }} title="Too many plans went missing at once to trust one reading; none were queued for removal. The sync reads the page again an hour later and queues what is still missing.">
-                                            ⚠ {c.last_run_status}
-                                          </span>
-                                        )
-                                      : c.last_run_status ?? "—"}
+                                    : c.last_run_status ?? "—"}
                               {c.last_run_reads != null && !isRunning(c) && (
                                 <div style={{ fontSize: 11, marginTop: 2 }}>
                                   {c.last_run_reads} page{c.last_run_reads === 1 ? "" : "s"} read

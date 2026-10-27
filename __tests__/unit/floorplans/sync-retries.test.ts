@@ -139,7 +139,7 @@ describe("a connection whose removals were held for a re-check", () => {
     removals_held: ["a", "b", "c"],
     removal_recheck_at: "2026-10-27T15:00:00Z",
     last_run_at: "2026-10-27T14:00:00Z",
-    last_run_status: "suspicious: 17 plans, 3 missing held for a re-check at 11:00 AM; 0 changes queued",
+    last_run_status: "ok: 17 plans, 3 changes queued, 3 removals to check again at 11:00 AM",
   };
 
   it("is run again once its hour is up, though tonight's cycle is done", async () => {

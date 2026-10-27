@@ -90,6 +90,8 @@ interface PendingChange {
   created_at: string;
   updated_at: string | null;
   proposed_record: ProposedRecord | null;
+  /** A note for the reviewer: a removal suspicious or double-checked (removal-recheck.ts). */
+  review_flag?: string | null;
   fp_sites: { domain: string; name: string } | null;
   fp_communities: { name: string } | null;
   fp_builders: { name: string } | null;
@@ -1986,6 +1988,15 @@ export default function FloorPlansPage() {
                             title="The builder still lists it, with no price. If it sold out, Remove takes it off the site with its quick move-ins."
                           >
                             ⚠ price gone: sold out?
+                          </div>
+                        )}
+                        {isPending && g.kind === "remove" && c.review_flag && (
+                          <div
+                            className="text-sm"
+                            style={{ color: "var(--warning, #b45309)" }}
+                            title="Too many plans went missing in one run to trust one reading. The sync reads the builder's page again an hour later: a plan it reads again has its removal withdrawn; one still missing is marked double-checked."
+                          >
+                            ⚠ {c.review_flag}
                           </div>
                         )}
                         {rec?.quickMoveIn && rec.relatedPlanMatch === "unmatched" && !blocker && (
