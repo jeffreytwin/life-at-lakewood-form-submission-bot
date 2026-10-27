@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aggregateVillageRanges,
+  applyVillageAliases,
   countRangeText,
   homeTypeKind,
   homeTypeWords,
@@ -15,10 +16,11 @@ import {
   sameFieldValue,
   sqftRangeText,
   villageKey,
+  noAvailabilityFields,
   wholeNumberTags,
   type VillageRow,
 } from "@/lib/villages/ranges";
-import { LAKEWOOD_PROFILE, WELLEN_PARK_PROFILE } from "@/lib/villages/profiles";
+import { LAKEWOOD_PROFILE, PARRISH_PROFILE, WELLEN_PARK_PROFILE } from "@/lib/villages/profiles";
 
 describe("villageKey", () => {
   it("ignores case, spacing, dash style and ampersands", () => {
@@ -26,6 +28,8 @@ describe("villageKey", () => {
     expect(villageKey("Azario-Esplanade")).toBe(villageKey("Azario - Esplanade"));
     expect(villageKey("Esplanade Golf & Country Club")).toBe(villageKey("Esplanade Golf and Country Club"));
     expect(villageKey("  The Isles ")).toBe("the isles");
+    expect(villageKey("River's Reach")).toBe(villageKey("Rivers Reach"));
+    expect(villageKey("Del Webb At Bayview")).toBe(villageKey("Del Webb at BayView"));
   });
   it("keeps distinct villages distinct", () => {
     expect(villageKey("Del Webb")).not.toBe(villageKey("Del Webb Catalina"));
@@ -252,5 +256,42 @@ describe("Wellen Park's words", () => {
     expect(WELLEN_PARK_PROFILE.fields.homeTypesDropdown).toBeNull();
     expect(WELLEN_PARK_PROFILE.fields.priceRangeNew).toBe("priceRangeTags");
     expect(WELLEN_PARK_PROFILE.fields.squareFootageRange).toBe("squareFeet");
+  });
+});
+
+describe("Parrish's words", () => {
+  const rows: VillageRow[] = [
+    { village: "Crosswind Ranch", source: "plan", price: 350_000, sqft: 1_520, beds: 3, baths: 2, garages: 2, homeType: "Single Family Home" },
+    { village: "Crosswind Ranch", source: "plan", price: 1_050_000, sqft: 4_880, beds: 7, baths: 7, garages: 3, homeType: "Attached Villa" },
+    { village: "Crosswind", source: "listing", price: 420_000, sqft: 2_100, beds: 4, baths: 3, garages: 2, homeType: "Single Family Residence" },
+    { village: "Del Webb Explore North River Ranch", source: "plan", price: 400_000, sqft: 1_700, beds: 2, baths: 2, garages: 2, homeType: "Single Family Home" },
+    { village: "Rivers Reach", source: "listing", price: 500_000, sqft: 2_200, beds: 3, baths: 2, garages: 2, homeType: "Single Family Residence" },
+  ];
+  const ranges = aggregateVillageRanges(applyVillageAliases(rows, PARRISH_PROFILE));
+
+  it("merges a village the sources name two ways into the row's name", () => {
+    expect(ranges.map((r) => r.village)).toEqual(["Crosswind", "Del Webb Explore", "Rivers Reach"]);
+    const crosswind = ranges[0];
+    expect(crosswind).toMatchObject({ plans: 2, listings: 1, minBeds: 3, maxBeds: 7 });
+  });
+
+  it("writes square feet without a suffix and Parrish's grey", () => {
+    const crosswind = rangeFields(ranges[0], PARRISH_PROFILE);
+    expect(crosswind.squareFootageRange).toBe("1,500 - 4,900");
+    expect(crosswind.priceRange).toBe("$300s - $1M+");
+    expect(crosswind.garagesNew).toEqual(["2 Car", "3 Car"]);
+    expect(crosswind.homeTypeNew).toEqual(["Single Family Homes", "Villas"]);
+    expect(crosswind.homeTypes).toBe("Single Family, Villas");
+    expect(crosswind.buildYourHomeColor).toBe("#2C9E37");
+    const riversReach = rangeFields(ranges[2], PARRISH_PROFILE);
+    expect(riversReach.buildYourHomeColor).toBe("#BEBEBE");
+    expect(riversReach.hasNewConstruction).toBe(false);
+    expect(noAvailabilityFields(PARRISH_PROFILE)).toEqual({ hasListingsOrNewConstruction: false, hasNewConstruction: false, buildYourHomeColor: "#BEBEBE" });
+    expect(noAvailabilityFields(WELLEN_PARK_PROFILE).buildYourHomeColor).toBe("#A0A09F");
+  });
+
+  it("leaves the other sites' aliases empty and their suffix in place", () => {
+    expect(applyVillageAliases(rows, LAKEWOOD_PROFILE)).toEqual(rows);
+    expect(rangeFields(aggregateVillageRanges(rows)[0], WELLEN_PARK_PROFILE).squareFootageRange).toBe("2,100 square feet");
   });
 });

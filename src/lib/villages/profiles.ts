@@ -6,7 +6,7 @@
 // coach homes as their own filter, a one-line comma-separated home types
 // text, and no dropdown fields.
 
-import type { VillageRangeProfile } from "@/lib/villages/ranges";
+import { BUILD_COLOR_GREEN, BUILD_COLOR_GREY, type VillageRangeProfile } from "@/lib/villages/ranges";
 
 export const LAKEWOOD_PROFILE: VillageRangeProfile = {
   name: "lakewood",
@@ -33,6 +33,9 @@ export const LAKEWOOD_PROFILE: VillageRangeProfile = {
   },
   titleKeys: ["title", "villagesTitle"],
   garageTagSuffix: "",
+  sqftSuffix: " square feet",
+  buildColors: { green: BUILD_COLOR_GREEN, grey: BUILD_COLOR_GREY },
+  villageAliases: {},
   homeTypes: [
     { kind: "single-family", tag: "Single Family Home", dropdown: "Single Family Home", display: "Single Family" },
     { kind: "villa", tag: "Villa", dropdown: "Attached Villas", display: "Villas" },
@@ -71,6 +74,9 @@ export const WELLEN_PARK_PROFILE: VillageRangeProfile = {
   // call it "Wellen Park Country Club", its filtering name.
   titleKeys: ["title", "villageNameForFiltering"],
   garageTagSuffix: " Car",
+  sqftSuffix: " square feet",
+  buildColors: { green: BUILD_COLOR_GREEN, grey: BUILD_COLOR_GREY },
+  villageAliases: {},
   homeTypes: [
     { kind: "single-family", tag: "Single Family Homes", dropdown: "Single Family Homes", display: "Single Family" },
     { kind: "villa", tag: "Villas", dropdown: "Villas", display: "Villas" },
@@ -80,4 +86,23 @@ export const WELLEN_PARK_PROFILE: VillageRangeProfile = {
   ],
   foldHomeTypes: {},
   homeTypesSeparator: ", ",
+};
+
+/**
+ * Parrish's HousesforSale-DynamicPages is Wellen Park's shape with two
+ * differences (Jeff, 2026-10-27): the square footage has no suffix
+ * ("1,500 - 4,900"), and the grey is #BEBEBE. Its fallback fields
+ * (priceRangeFallback and friends) serve something else and are not
+ * touched. Two villages the sources name otherwise are aliased to their
+ * rows; The Towns at Firethorn and Firethorn are separate communities.
+ */
+export const PARRISH_PROFILE: VillageRangeProfile = {
+  ...WELLEN_PARK_PROFILE,
+  name: "parrish",
+  sqftSuffix: "",
+  buildColors: { green: BUILD_COLOR_GREEN, grey: "#BEBEBE" },
+  villageAliases: {
+    "Crosswind Ranch": "Crosswind",
+    "Del Webb Explore North River Ranch": "Del Webb Explore",
+  },
 };
