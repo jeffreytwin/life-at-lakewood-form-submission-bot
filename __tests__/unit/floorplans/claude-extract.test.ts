@@ -3,6 +3,7 @@ import {
   keptFromPage,
   statedPrice,
   statedSqft,
+  statedName,
   livingSqft,
   asList,
   distinctKey,
@@ -815,6 +816,41 @@ describe("withTotalPrices (Starlight's Oakfield Lakes, 2026-10-06)", () => {
   it("leaves what follows the block as it is", () => {
     const got = withTotalPrices(`${toolbar}<div data-price="9"><span class="js-price-toggle__price-value">9</span></div>`);
     expect(got).toContain('<div data-price="9"><span class="js-price-toggle__price-value">9</span></div>');
+  });
+});
+
+describe("statedName (SimplyDwell's Deer Park, 2026-10-28)", () => {
+  const link = (slug: string) => `[LINK https://simplydwellhomes.com/new-homes/deer-park/${slug}/]`;
+  const list =
+    `${link("cedar-2")} Cedar 2 3 Beds 2 Bath 2 Car Garage 1,573 sqft ${link("cedar-2")} View Download Share Contact ` +
+    `${link("cypress-2")} Cypress 2 Beds 2 Bath 2 Car Garage 1,241 sqft ${link("cypress-2")} View Download Share Contact ` +
+    `${link("cassia-2")} Cassia 2 Beds 2 Bath 2 Car Garage 1,312 sqft ${link("cassia-2")} View Download Share Contact ` +
+    `${link("sabal-2")} Sabal 3 Beds 2 Bath 2 Car Garage 1,400 sqft ${link("sabal-2")} View Download Share Contact ` +
+    `${link("jasmine-2-2")} Jasmine 2 5 Beds 2.5 Bath 2 Car Garage 2,576 sqft ${link("jasmine-2-2")} View Download Share Contact`;
+
+  it("leaves out a number the page prints as the plan's bed count", () => {
+    expect(statedName("Cassia 2", { beds: "2", baths: "2", garages: "2" }, list)).toBe("Cassia");
+    expect(statedName("Cypress 2", { beds: "2", baths: "2", garages: "2" }, list)).toBe("Cypress");
+  });
+
+  it("leaves out a number the page never prints with the name, only in the link", () => {
+    expect(statedName("Sabal 2", { beds: "3", baths: "2", garages: "2" }, list)).toBe("Sabal");
+  });
+
+  it("keeps a number that is part of the name", () => {
+    expect(statedName("Cedar 2", { beds: "3", baths: "2", garages: "2" }, list)).toBe("Cedar 2");
+    expect(statedName("Jasmine 2", { beds: "5", baths: "2.5", garages: "2" }, list)).toBe("Jasmine 2");
+    expect(statedName("Palm Bay 2", { beds: "4" }, "3,138 – 4,189 Sq. Ft. Palm Bay 2, 3,138 Sq. Ft. 4 Bedrooms")).toBe("Palm Bay 2");
+  });
+
+  it("keeps a number followed by a count that is not the plan's", () => {
+    // A page that labels before it counts: "Grenada 2 Bedrooms 4".
+    expect(statedName("Grenada 2", { beds: "4" }, "Grenada Series Grenada 2 Bedrooms 4 Baths 3")).toBe("Grenada 2");
+  });
+
+  it("keeps a name whose bare form the page never prints, and a name with no number", () => {
+    expect(statedName("Willow 2", { beds: "2" }, "Willow II 2 Beds")).toBe("Willow 2");
+    expect(statedName("Azalea", { beds: "4" }, list)).toBe("Azalea");
   });
 });
 
