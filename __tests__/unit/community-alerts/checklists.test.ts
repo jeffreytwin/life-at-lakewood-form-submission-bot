@@ -83,4 +83,12 @@ describe("the new-neighborhood to-do list", () => {
     expect(items.map((i) => i.key)).toContain("pages");
     expect(items.map((i) => i.key)).toContain("advertising");
   });
+
+  it("starts with the villages collection row, named the way each site names its collection", () => {
+    expect(items[0].key).toBe("village_row");
+    expect(items[0].auto).toBeFalsy();
+    expect(items[0].label).toMatch(/Neighborhoods collection/);
+    const legacy = checklistFor("new_neighborhood", { legacySite: true });
+    expect(legacy[0].label).toMatch(/Villages collection/);
+  });
 });
