@@ -44,6 +44,9 @@ export const LEGACY_DOMAIN = "lifeatlakewood.com";
 const LEGACY_PAGES =
   "Life At Lakewood's neighborhood pages are sometimes built one by one: if this one is, edit the page itself in the Wix editor.";
 
+const VILLAGE_ROW_HINT =
+  "Start the row as a draft, then ask Claude to fill it in from the builder's and the community's pages: it fills blanks only and the row stays a draft. The price, square feet, bedroom, bathroom, garage and home type ranges fill themselves from the floor plans and listings. The main photo, the video and the map are yours to add.";
+
 /**
  * A sold-out neighborhood: its new-build inventory reached zero, so the
  * website has to stop selling new builds there and start showing the
@@ -108,7 +111,15 @@ export function soldOutItems(ctx: ChecklistContext): ChecklistItem[] {
  */
 export function newNeighborhoodItems(ctx: ChecklistContext): ChecklistItem[] {
   const pageHint = ctx.legacySite ? LEGACY_PAGES : undefined;
+  // Life At Lakewood's villages are AmenitiesbyVillage ("Villages"); Wellen
+  // Park's and Parrish's are the Neighborhoods collection (docs/VILLAGE_RANGES.md).
+  const collection = ctx.legacySite ? "Villages" : "Neighborhoods";
   return [
+    {
+      key: "village_row",
+      label: `Row filled in, in the ${collection} collection: descriptions, amenities and links`,
+      hint: VILLAGE_ROW_HINT,
+    },
     {
       key: "pages",
       label: "Neighborhood page and homes-for-sale page created on the website",
