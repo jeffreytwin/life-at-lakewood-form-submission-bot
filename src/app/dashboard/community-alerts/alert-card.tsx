@@ -6,6 +6,8 @@ import type { SoldOutDetail } from "@/lib/community-alerts/sold-out";
 import type { NewNeighborhoodDetail } from "@/lib/community-alerts/new-neighborhoods";
 import type { ChecksResult } from "@/lib/community-alerts/checks";
 import type { AnnouncementDetail } from "@/lib/community-alerts/announcements";
+import type { SchoolZonesDetail } from "@/lib/school-zones/scan";
+import { LEVEL_LABEL } from "@/lib/school-zones/names";
 import { siteColors } from "@/app/dashboard/listings/format";
 import { emitLeadEvent } from "@/lib/lead-events";
 import { COMMUNITY_ALERT_DONE_SOUND, playSound } from "@/lib/notification-sounds";
@@ -239,11 +241,13 @@ const KIND_BADGE: Record<AlertView["kind"], string> = {
   sold_out: "sold out",
   new_neighborhood: "new neighborhood",
   announcement: "announced",
+  school_zones: "school zones",
 };
 const KIND_BADGE_CLASS: Record<AlertView["kind"], string> = {
   sold_out: "badge-warning",
   new_neighborhood: "badge-info",
   announcement: "badge-purple",
+  school_zones: "badge-success",
 };
 
 const STATUS_LABEL: Record<AnnouncementDetail["status"], string> = {
@@ -287,6 +291,118 @@ function AnnouncementSummary({ alert }: { alert: AlertView }) {
   );
 }
 
+const yearLabel = (year: number | undefined) => (year ? `${year}-${String((year + 1) % 100).padStart(2, "0")}` : "");
+
+/** A school zones alert's levels say what the page already says: nothing is left to write. */
+const schoolsMatch = (alert: AlertView) =>
+  alert.kind === "school_zones" && ((alert.detail as unknown as SchoolZonesDetail).levels ?? []).every((l) => l.verdict === "same");
+
+const VERDICT: Record<string, { label: string; cls: string; title: string }> = {
+  rezoned: { label: "rezoned", cls: "badge-warning", title: "The district zones these homes for another school" },
+  renamed: { label: "name", cls: "badge-muted", title: "The same school, written as the sites write it" },
+};
+
+function SchoolZonesSummary({ alert }: { alert: AlertView }) {
+  const d = alert.detail as unknown as SchoolZonesDetail;
+  const district = d.district === "manatee" ? "Manatee County Schools" : "Sarasota County Schools";
+  // Sarasota publishes each level on its own schedule: name each year once, the odd level beside its own.
+  const yearOf = (lv: "elementary" | "middle" | "high") => d.latestYears?.[lv] ?? d.currentYear;
+  const zonesFor = [
+    yearLabel(yearOf("elementary")),
+    ...(["middle", "high"] as const)
+      .filter((lv) => yearOf(lv) !== yearOf("elementary"))
+      .map((lv) => `${LEVEL_LABEL[lv].toLowerCase()} ${yearLabel(yearOf(lv))}`),
+  ].join(", ");
+  return (
+    <>
+      <div className="table-wrapper" style={{ marginTop: 10 }}>
+        <table>
+          <thead>
+            <tr>
+              <th style={{ width: 120 }} />
+              <th>The page says</th>
+              <th>It should say</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {d.levels.map((l) => {
+              const verdict = VERDICT[l.verdict];
+              const split = l.shares.length > 1;
+              return (
+                <tr key={l.level}>
+                  <td className="text-sm">
+                    <strong>{LEVEL_LABEL[l.level]}</strong>
+                  </td>
+                  <td style={verdict ? { textDecoration: "line-through", color: "var(--text-muted)" } : undefined}>{l.page || "—"}</td>
+                  <td>
+                    {verdict ? <strong>{l.proposed}</strong> : <span className="text-muted">{l.proposed} ✓</span>}
+                    {split && (
+                      <div className="text-muted text-sm">
+                        Homes zoned: {l.shares.map((s) => `${s.name} ${s.homes}`).join(", ")}
+                      </div>
+                    )}
+                    {l.thisYear && (
+                      <div className="text-sm" style={{ color: "var(--warning)" }}>
+                        This school year ({yearLabel(d.currentYear)}): {l.thisYear}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {verdict && (
+                      <span className={`badge ${verdict.cls}`} title={verdict.title}>
+                        {verdict.label}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {schoolsMatch(alert) && (
+        <div className="text-sm" style={{ marginTop: 8, color: "var(--success)" }}>
+          The page now names these schools. Mark it complete.
+        </div>
+      )}
+      <div className="text-muted text-sm" style={{ marginTop: 8 }}>
+        {district}&apos; zones for {zonesFor}, at {d.homes} home{d.homes === 1 ? "" : "s"} in
+        the village
+        {d.placedBy === "subdivision" ? " (found by its MLS subdivision name)" : d.placedBy === "address" ? " (the address given by hand)" : ""}
+        {d.sampleAddress && <>, e.g. {d.sampleAddress}</>}. Check one:{" "}
+        {(["elementary", "middle", "high"] as const)
+          .filter((lv, i, all) => all.findIndex((x) => d.links?.[x] === d.links?.[lv]) === i)
+          .map((lv, i) => (
+            <span key={lv}>
+              {i > 0 && " · "}
+              <a href={d.links?.[lv]} target="_blank" rel="noreferrer">
+                {d.district === "manatee" ? "School Locator" : LEVEL_LABEL[lv]} ↗
+              </a>
+            </span>
+          ))}
+        {d.pageUrl && (
+          <>
+            {" "}
+            ·{" "}
+            <a href={d.pageUrl} target="_blank" rel="noreferrer">
+              Village page ↗
+            </a>
+          </>
+        )}
+        {d.draft && <span className="badge badge-muted" style={{ marginLeft: 6 }}>draft</span>}
+      </div>
+      {d.notes?.length > 0 && (
+        <ul className="text-muted text-sm" style={{ margin: "6px 0 0 18px", padding: 0 }}>
+          {d.notes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
 export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () => void }) {
   const [busy, setBusy] = useState(false);
   const [closing, setClosing] = useState<"dismiss" | "ignore" | null>(null);
@@ -322,15 +438,40 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
     setCompleted(true);
     playSound(COMMUNITY_ALERT_DONE_SOUND);
     emitLeadEvent({
-      type: alert.kind === "sold_out" ? "community_sold_out_done" : "community_new_neighborhood_done",
+      type:
+        alert.kind === "sold_out"
+          ? "community_sold_out_done"
+          : alert.kind === "school_zones"
+            ? "community_schools_done"
+            : "community_new_neighborhood_done",
       leadName: "",
       communityName: alert.name,
     });
     setTimeout(onChange, 2500);
   }
 
-  const { settled, total, complete: listDone } = alert.progress;
-  const canIgnore = alert.kind !== "sold_out";
+  /** Writes the schools to the site's collection; closed as done, and celebrated, when it lands. */
+  async function apply() {
+    if (!confirm(`Write these schools to ${alert.name}'s page on ${site}?`)) return;
+    setBusy(true);
+    setProblem(null);
+    const failed = await patch(alert.id, { apply: true });
+    setBusy(false);
+    if (failed) {
+      setProblem(failed);
+      onChange();
+      return;
+    }
+    setCompleted(true);
+    playSound(COMMUNITY_ALERT_DONE_SOUND);
+    emitLeadEvent({ type: "community_schools_done", leadName: "", communityName: alert.name });
+    setTimeout(onChange, 2500);
+  }
+
+  const { settled, total } = alert.progress;
+  const canApply = alert.kind === "school_zones" && (alert.detail as unknown as SchoolZonesDetail).source === "collection" && !schoolsMatch(alert);
+  const listDone = alert.progress.complete || (alert.kind === "school_zones" && total === 0 && schoolsMatch(alert));
+  const canIgnore = alert.kind !== "sold_out" && alert.kind !== "school_zones";
   const canWatch = alert.kind === "announcement";
 
   return (
@@ -354,6 +495,8 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
         <SoldOutSummary alert={alert} />
       ) : alert.kind === "announcement" ? (
         <AnnouncementSummary alert={alert} />
+      ) : alert.kind === "school_zones" ? (
+        <SchoolZonesSummary alert={alert} />
       ) : (
         <NewNeighborhoodSummary alert={alert} />
       )}
@@ -376,6 +519,16 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
         <div className="text-sm" style={{ marginTop: 12, color: "var(--success)", fontWeight: 600 }}>
           🎉 Mission complete. {alert.name} is closed and kept under History.
         </div>
+      ) : canApply && !closing ? (
+        <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <button className="btn btn-primary" disabled={busy} onClick={apply}>
+            Apply to the website
+          </button>
+          <span className="text-muted text-sm">
+            Writes the new schools to {alert.name}&apos;s row in the Neighborhoods collection
+            {(alert.detail as unknown as SchoolZonesDetail).draft ? " (it stays a draft)" : ""} and closes the alert.
+          </span>
+        </div>
       ) : listDone && !closing ? (
         <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <button className="btn btn-primary" disabled={busy} onClick={complete}>
@@ -397,8 +550,10 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
                 placeholder={
                   closing === "ignore"
                     ? "Why? (optional, e.g. outside the area we cover)"
-                    : canIgnore
-                      ? "Why? (e.g. not ready yet)"
+                    : alert.kind === "school_zones"
+                      ? "Why? (e.g. the district's map is off here)"
+                      : canIgnore
+                        ? "Why? (e.g. not ready yet)"
                       : "Why? (e.g. false alarm: the builder's page changed)"
                 }
                 value={reason}

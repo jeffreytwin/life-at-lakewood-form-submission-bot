@@ -40,7 +40,9 @@ export default function CommunityAlertMonitor() {
               ? "community_new_neighborhood"
               : fresh.kind === "announcement"
                 ? "community_announcement"
-                : "community_sold_out",
+                : fresh.kind === "school_zones"
+                  ? "community_school_zones"
+                  : "community_sold_out",
           leadName: "",
           communityName: fresh.name,
         });

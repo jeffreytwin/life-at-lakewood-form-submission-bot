@@ -5,7 +5,12 @@ import CommunityAlertTabs from "../tabs";
 import type { AlertView } from "@/lib/community-alerts/alerts";
 import { SiteTag, siteStyle } from "../alert-card";
 
-const KIND_LABEL: Record<string, string> = { sold_out: "sold out", new_neighborhood: "new neighborhood", announcement: "announcement" };
+const KIND_LABEL: Record<string, string> = {
+  sold_out: "sold out",
+  new_neighborhood: "new neighborhood",
+  announcement: "announcement",
+  school_zones: "school zones",
+};
 
 const when = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";

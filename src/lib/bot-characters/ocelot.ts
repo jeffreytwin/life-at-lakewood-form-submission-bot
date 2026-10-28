@@ -58,6 +58,10 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "The neighborhood"}: every round accounted for, Colonel. The new builds are gone and the site knows it. Beautiful.`;
     case "community_new_neighborhood_done":
       return `${event.communityName ?? "The new neighborhood"} is in our sights now, Colonel. Pages, listings, advertising. A clean draw.`;
+    case "community_school_zones":
+      return `The school lines moved at ${event.communityName ?? "a neighborhood"}, Colonel. Community Alerts → School Zones. Check your sights.`;
+    case "community_schools_done":
+      return `${event.communityName ?? "The neighborhood"}'s schools, set straight, Colonel. A clean shot. Beautiful.`;
     case "floorplans_cleared":
       return "Every floor plan accounted for, Colonel. Not a single round wasted. Beautiful.";
   }
