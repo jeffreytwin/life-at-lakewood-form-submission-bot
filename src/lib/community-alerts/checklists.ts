@@ -37,6 +37,8 @@ export interface ItemState {
 export interface ChecklistContext {
   /** The neighborhood is on Life At Lakewood, whose pages are sometimes built one by one rather than from the dynamic page. */
   legacySite: boolean;
+  /** A school zones alert whose village page is built by hand, so is edited by hand rather than written with Apply. */
+  staticPage?: boolean;
 }
 
 export const LEGACY_DOMAIN = "lifeatlakewood.com";
@@ -147,6 +149,23 @@ export function newNeighborhoodItems(ctx: ChecklistContext): ChecklistItem[] {
   ];
 }
 
+/**
+ * A village whose page names other schools than its homes are zoned for
+ * (school-zones/scan.ts). A page built by hand (most of Life At Lakewood's
+ * still are) is edited by hand; every other is written with Apply.
+ */
+export function schoolZoneItems(ctx: ChecklistContext): ChecklistItem[] {
+  if (!ctx.staticPage) return [];
+  return [
+    {
+      key: "page_schools",
+      label: "Update the Schools section on the village page",
+      hint: "The page is built by hand: edit it in the Wix editor. Checks itself when the next scan finds the page as it should be.",
+      auto: true,
+    },
+  ];
+}
+
 export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistItem[] {
   switch (kind) {
     case "sold_out":
@@ -157,10 +176,8 @@ export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistI
     // or dismiss it (watch-list.ts).
     case "announcement":
       return [];
-    // A school zones alert asks for one decision too: Apply writes it to the
-    // site's village pages collection (school-zones/scan.ts).
     case "school_zones":
-      return [];
+      return schoolZoneItems(ctx);
   }
 }
 

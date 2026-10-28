@@ -296,7 +296,7 @@ const yearLabel = (year: number | undefined) => (year ? `${year}-${String((year 
 /** A school zones alert's row already says what the zones do: nothing is left to write. */
 const schoolsMatch = (alert: AlertView) =>
   alert.kind === "school_zones" &&
-  !((alert.detail as unknown as SchoolZonesDetail).levels ?? []).some((l) => l.proposed && (l.row ?? l.page) !== l.proposed);
+  !((alert.detail as unknown as SchoolZonesDetail).levels ?? []).some((l) => l.proposed && l.page !== l.proposed);
 
 /** What the site calls the collection its village pages come from. */
 const collectionLabel = (site: string) => (site === "lifeatlakewood.com" ? "Dynamic Village Pages" : "Neighborhoods");
@@ -325,7 +325,7 @@ function SchoolZonesSummary({ alert }: { alert: AlertView }) {
           <thead>
             <tr>
               <th style={{ width: 120 }} />
-              <th>{d.pageSource === "static" ? "The old static page says" : "The page says"}</th>
+              <th>The page says</th>
               <th>It should say</th>
               <th />
             </tr>
@@ -366,11 +366,15 @@ function SchoolZonesSummary({ alert }: { alert: AlertView }) {
           </tbody>
         </table>
       </div>
-      {d.pageSource !== "row" && d.collectionId && (
+      {d.pageSource === "static" && (
         <div className="text-sm" style={{ marginTop: 8 }}>
-          {d.wixItemId
-            ? `${alert.name}'s row in ${collectionLabel(d.site)} has no schools yet.`
-            : `${alert.name} has no row in ${collectionLabel(d.site)} yet: Apply makes one as a draft.`}
+          {alert.name}&apos;s page is built by hand: edit its Schools section in the Wix editor, then mark this complete.
+        </div>
+      )}
+      {d.pageSource === "none" && (
+        <div className="text-sm" style={{ marginTop: 8 }}>
+          {alert.name} has no page yet, neither built by hand nor in {collectionLabel(d.site)}: Apply makes its row there as a
+          draft.
         </div>
       )}
       {schoolsMatch(alert) && (

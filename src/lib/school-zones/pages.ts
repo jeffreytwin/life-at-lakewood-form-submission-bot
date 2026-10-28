@@ -2,8 +2,8 @@
 // fields of the site's village pages collection (HousesforSale-DynamicPages
 // on every site), each a paragraph like
 // <p class="font_7"><strong>Grade School: </strong>Williams Elementary</p>.
-// Life At Lakewood's older village pages were built one by one; while its
-// row has no schools yet, the old static page is read instead.
+// Most of Life At Lakewood's village pages are still built one by one; a
+// village without a row there is read from its live static page.
 // Pure but for the page fetch.
 
 import { cleanText, LEVEL_LABEL, SCHOOL_LEVELS, type SchoolLevel } from "@/lib/school-zones/names";
@@ -50,10 +50,12 @@ export function readPageSchools(html: string): PageSchools | null {
   return SCHOOL_LEVELS.some((l) => out[l]) ? out : null;
 }
 
-export async function fetchPageSchools(url: string): Promise<PageSchools | null> {
+/** A static village page, read live: whether it is there, and the schools it names. A page gone (404) is not there. */
+export async function fetchStaticPage(url: string): Promise<{ exists: false } | { exists: true; schools: PageSchools | null }> {
   const res = await fetch(url, { signal: AbortSignal.timeout(60_000), cache: "no-store" });
+  if (res.status === 404 || res.status === 410) return { exists: false };
   if (!res.ok) throw new Error(`the page answered ${res.status}`);
-  return readPageSchools(await res.text());
+  return { exists: true, schools: readPageSchools(await res.text()) };
 }
 
 /** The collection's field for each level's school, found by its name ("Neighborhood Elementary School"). Pure. */

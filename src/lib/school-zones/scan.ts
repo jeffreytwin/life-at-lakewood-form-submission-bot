@@ -5,13 +5,13 @@
 // alert with what the page should say; its Apply button writes it to the
 // site's Neighborhoods collection.
 //
-// Life At Lakewood's village pages now come from its Dynamic Village
-// Pages collection (HousesforSale-DynamicPages) rather than being built
-// one by one (Jeff, 2026-10-28), so each of its villages is held to a row
-// there: one with no row gets a draft row. Where the old static page
-// already names what the zones say (Jeff verified those pages on
-// 2026-10-28) and the row has no schools yet, the scan fills the row in
-// itself; everything else waits for Apply.
+// Life At Lakewood is moving its village pages from pages built one by
+// one to its Dynamic Village Pages collection (HousesforSale-DynamicPages),
+// a few villages so far (Jeff, 2026-10-28). So each of its villages is
+// checked where its page is now: a village with a row there is written
+// with Apply, as on the other sites; one still on its static page gets a
+// to-do to edit the page by hand, the page read live; only a village with
+// neither gets a row, made as a draft by Apply.
 //
 // A village split between zones names each school with a fair share of
 // its homes ("McNeal and Braden River Elementary", as the pages already do).
@@ -32,7 +32,7 @@ import {
 import { writePayload } from "@/lib/villages/sync";
 import { villageKey, type VillageRangeProfile } from "@/lib/villages/ranges";
 import { PARRISH_PROFILE, WELLEN_PARK_PROFILE } from "@/lib/villages/profiles";
-import type { Outcome } from "@/lib/community-alerts/alerts";
+import { setSelfCheck, type Outcome } from "@/lib/community-alerts/alerts";
 import { SchoolZones, type PointZones, type ZoneSource } from "@/lib/school-zones/districts";
 import {
   cleanText,
@@ -43,14 +43,14 @@ import {
   type LevelVerdict,
   type SchoolLevel,
 } from "@/lib/school-zones/names";
-import { fetchPageSchools, readSchoolField, schoolFields, writeSchoolField, type PageSchools } from "@/lib/school-zones/pages";
+import { fetchStaticPage, readSchoolField, schoolFields, writeSchoolField, type PageSchools } from "@/lib/school-zones/pages";
 import { cleanPoints, placesByHand, subdivisionPoints, villagePoints, type PlacedBy, type Point } from "@/lib/school-zones/places";
 
 /**
  * Where each site's villages name their schools.
  *  - rows: the collection's rows are the villages (Wellen Park, Parrish).
- *  - villages: the listings engine's villages are, each held to a row of
- *    the collection, made as a draft when it has none (Life At Lakewood).
+ *  - villages: the listings engine's villages are, each on its row of the
+ *    collection, its static page, or neither (Life At Lakewood).
  */
 type SchoolTarget =
   | { domain: string; source: "rows"; collectionId: string; profile: VillageRangeProfile }
@@ -73,8 +73,6 @@ export interface LevelDetail {
   level: SchoolLevel;
   /** What the page says. */
   page: string;
-  /** What the collection row says, when that is not what the page column shows (a Lakewood row with no schools yet). */
-  row?: string;
   /** What it should say, by the latest zones published. */
   proposed: string;
   verdict: LevelVerdict;
@@ -86,9 +84,9 @@ export interface LevelDetail {
 
 export interface SchoolZonesDetail {
   site: string;
-  /** Always "collection" now; alerts from before Lakewood's rows read "page". */
+  /** Where the page is: a collection row (written with Apply), or a static page (edited by hand). */
   source: "page" | "collection";
-  /** Where the "page says" column came from: the row, or Lakewood's old static page while its row has no schools. */
+  /** A Lakewood village's page: its row, its static page, or neither yet (Apply makes the row). */
   pageSource?: "row" | "static" | "none";
   pageUrl: string | null;
   collectionId: string | null;
@@ -122,10 +120,6 @@ export interface SiteScan {
   matching: number;
   raised: string[];
   updated: string[];
-  /** Rows the scan filled itself: empty, and the verified static page names what the zones do. */
-  filled?: string[];
-  /** Of those, the ones made as draft rows. */
-  created?: string[];
   /** Villages whose page names no schools: left alone. */
   noSchools: string[];
   /** Villages no home could be found for: an address by hand places them. */
@@ -157,11 +151,12 @@ interface RowTarget {
 interface Subject {
   name: string;
   key: string;
-  /** What the page says: the row, or Lakewood's static page while the row has none. */
+  /** What the page says: the row, or a Lakewood village's static page. */
   page: PageSchools;
   pageSource: "row" | "static" | "none";
   pageUrl: string | null;
-  row: RowTarget;
+  /** The row Apply writes or makes; null for a static page, edited by hand. */
+  row: RowTarget | null;
   draft: boolean;
   points: Point[];
   placedBy: PlacedBy | null;
@@ -199,18 +194,14 @@ export function proposeLevel(answers: (string[] | undefined)[]): { names: string
   return { names, shares };
 }
 
-/**
- * Each level of a village: what the page says against what its homes'
- * zones say; with the row's own text beside it when the page column
- * shows something else. Pure; exported for tests.
- */
-export function levelDetails(page: PageSchools, zones: PointZones[], row?: PageSchools): LevelDetail[] {
+/** Each level of a village: what the page says against what its homes' zones say. Pure; exported for tests. */
+export function levelDetails(page: PageSchools, zones: PointZones[]): LevelDetail[] {
   return SCHOOL_LEVELS.map((level) => {
     const latest = proposeLevel(zones.map((z) => z.latest[level]));
     const current = proposeLevel(zones.map((z) => z.current[level]));
     const proposed = latest.names.length ? combineSchools(latest.names) : cleanText(page[level]);
     const thisYearText = current.names.length ? combineSchools(current.names) : null;
-    const detail: LevelDetail = {
+    return {
       level,
       page: cleanText(page[level]),
       proposed,
@@ -218,19 +209,22 @@ export function levelDetails(page: PageSchools, zones: PointZones[], row?: PageS
       thisYear: thisYearText && thisYearText !== proposed ? thisYearText : null,
       shares: latest.shares,
     };
-    if (row && cleanText(row[level]) !== detail.page) detail.row = cleanText(row[level]);
-    return detail;
   });
 }
 
-/** What the row says for a level: its own text when it differs from the page column. */
-const rowSays = (l: LevelDetail) => l.row ?? l.page;
+/** The levels whose page does not yet say what it should. Pure; exported for tests. */
+export const levelsToWrite = (levels: LevelDetail[]) => levels.filter((l) => l.proposed && l.page !== l.proposed);
 
-/** The levels whose row text is not yet what it should say. Pure; exported for tests. */
-export const levelsToWrite = (levels: LevelDetail[]) => levels.filter((l) => l.proposed && rowSays(l) !== l.proposed);
+export const fingerprintOf = (levels: LevelDetail[]) => levels.map((l) => `${l.level}:${l.page}>${l.proposed}`).join("|");
 
-export const fingerprintOf = (levels: LevelDetail[]) =>
-  levels.map((l) => `${l.level}:${l.page}${l.row !== undefined ? `/${l.row}` : ""}>${l.proposed}`).join("|");
+/** A Lakewood dynamic village page's address (/village/stillwater), as against a page built by hand. */
+const isDynamicPage = (url: string) => {
+  try {
+    return new URL(url).pathname.startsWith("/village/");
+  } catch {
+    return false;
+  }
+};
 
 async function siteIds(domain: string): Promise<{ fpSiteId: string | null; lsSiteId: string | null; wixSiteId: string | null }> {
   const [{ data: fp, error: fpError }, { data: ls, error: lsError }] = await Promise.all([
@@ -319,32 +313,52 @@ async function subjectsOf(target: SchoolTarget, ids: Awaited<ReturnType<typeof s
     }
 
     await mapPool(villages, CONCURRENCY, async (v) => {
+      const base = { name: v.name, key: villageKey(v.name), pageUrl: v.page_url, points: points.get(v.id) ?? [], placedBy: points.get(v.id)?.length ? ("listings" as const) : null };
       // The village's Wix id is its row's Village reference, or the row's own id.
       const item =
         (v.wix_item_id ? (byRef.get(v.wix_item_id) ?? byId.get(v.wix_item_id)) : undefined) ?? byName.get(villageKey(v.name)) ?? null;
-      const says = rowSchools(item, fields);
-      let staticPage: PageSchools | null = null;
-      if (!hasSchools(says) && v.page_url) {
+      if (item) {
+        const says = rowSchools(item, fields);
+        subjects.push({
+          ...base,
+          page: says,
+          pageSource: "row",
+          row: { collectionId: target.collectionId, wixItemId: item.id, newRow: null, says, fields, templates },
+          draft: item.data?._publishStatus === "DRAFT",
+        });
+        return;
+      }
+
+      // No row: the village's static page, if it has one (a /village/ address is the dynamic page, still to be made).
+      if (v.page_url && !isDynamicPage(v.page_url)) {
+        let page: Awaited<ReturnType<typeof fetchStaticPage>>;
         try {
-          staticPage = await fetchPageSchools(v.page_url);
+          page = await fetchStaticPage(v.page_url);
         } catch (error) {
           scan.error = [scan.error, `${v.name}'s page could not be read: ${describeError(error)}`].filter(Boolean).join("; ");
+          return;
+        }
+        if (page.exists) {
+          if (!hasSchools(page.schools)) {
+            scan.noSchools.push(v.name);
+            return;
+          }
+          subjects.push({ ...base, page: page.schools, pageSource: "static", row: null, draft: false });
+          return;
         }
       }
-      const page = hasSchools(says) ? says : (staticPage ?? says);
+
+      // Neither: Apply makes the row, as a draft.
       const newRow: Record<string, unknown> = { [titleKey]: v.name };
       if (refNameKey) newRow[refNameKey] = v.name;
       if (refKey && v.wix_item_id) newRow[refKey] = v.wix_item_id;
+      const none: PageSchools = { elementary: "", middle: "", high: "" };
       subjects.push({
-        name: v.name,
-        key: villageKey(v.name),
-        page,
-        pageSource: hasSchools(says) ? "row" : hasSchools(staticPage) ? "static" : "none",
-        pageUrl: v.page_url,
-        row: { collectionId: target.collectionId, wixItemId: item?.id ?? null, newRow: item ? null : newRow, says, fields, templates },
-        draft: item ? item.data?._publishStatus === "DRAFT" : true,
-        points: points.get(v.id) ?? [],
-        placedBy: points.get(v.id)?.length ? "listings" : null,
+        ...base,
+        page: none,
+        pageSource: "none",
+        row: { collectionId: target.collectionId, wixItemId: null, newRow, says: none, fields, templates },
+        draft: true,
       });
     });
     return subjects;
@@ -423,6 +437,8 @@ async function recordSubject(fpSiteId: string, subject: Subject, detail: SchoolZ
       .update({ name: subject.name, detail, updated_at: new Date().toISOString() })
       .eq("id", open.id);
     if (updateError) throw failed(`refreshing ${subject.name}'s school alert`, updateError);
+    // A static page's to-do ticks itself once the page reads as it should.
+    if (detail.source === "page") await setSelfCheck(open.id, "page_schools", !changed, null);
     scan.updated.push(subject.name);
     return;
   }
@@ -445,8 +461,6 @@ async function scanSite(target: SchoolTarget, zones: SchoolZones, startedAt: str
     matching: 0,
     raised: [],
     updated: [],
-    filled: [],
-    created: [],
     noSchools: [],
     unplaced: [],
     handled: [],
@@ -468,7 +482,6 @@ async function scanSite(target: SchoolTarget, zones: SchoolZones, startedAt: str
   }
 
   const fpSiteId = ids.fpSiteId;
-  const wixSiteId = ids.wixSiteId as string;
   await mapPool(subjects, 2, async (subject) => {
     const points = cleanPoints(subject.points);
     if (!points.length || !subject.placedBy) {
@@ -483,35 +496,22 @@ async function scanSite(target: SchoolTarget, zones: SchoolZones, startedAt: str
       return;
     }
     scan.checked++;
-    const levels = levelDetails(subject.page, answers, subject.pageSource === "row" ? undefined : subject.row.says);
-    const pageRight = levels.every((l) => l.verdict === "same");
+    const levels = levelDetails(subject.page, answers);
     const toWrite = levelsToWrite(levels);
-
-    // A Lakewood row with no schools yet, whose verified static page names
-    // what the zones do: filled in now, made as a draft when missing.
-    if (subject.pageSource === "static" && pageRight && toWrite.length && !hasSchools(subject.row.says)) {
-      const item = subject.row.wixItemId ? await getItem(wixSiteId, subject.row.collectionId, subject.row.wixItemId) : null;
-      await writeRow(wixSiteId, subject.row, levels, item);
-      scan.filled!.push(subject.name);
-      if (!item) scan.created!.push(subject.name);
-      scan.matching++;
-      return;
-    }
-
     const changed = toWrite.length > 0;
     if (!changed) scan.matching++;
     const district = answers[0].district;
     const source = zones.sources.find((s) => s.district === district);
     const detail: SchoolZonesDetail = {
       site: target.domain,
-      source: "collection",
+      source: subject.row ? "collection" : "page",
       pageSource: subject.pageSource,
       pageUrl: subject.pageUrl,
-      collectionId: subject.row.collectionId,
-      wixItemId: subject.row.wixItemId,
-      newRow: subject.row.newRow,
-      fields: subject.row.fields,
-      templates: subject.row.templates,
+      collectionId: subject.row?.collectionId ?? null,
+      wixItemId: subject.row?.wixItemId ?? null,
+      newRow: subject.row?.newRow ?? null,
+      fields: subject.row?.fields ?? {},
+      templates: subject.row?.templates ?? {},
       draft: subject.draft,
       district,
       latestYears: source?.latest ?? {},
@@ -528,7 +528,7 @@ async function scanSite(target: SchoolTarget, zones: SchoolZones, startedAt: str
     await recordSubject(fpSiteId, subject, detail, changed, scan);
   });
 
-  for (const list of [scan.raised, scan.updated, scan.filled!, scan.created!, scan.noSchools, scan.unplaced, scan.handled]) list.sort();
+  for (const list of [scan.raised, scan.updated, scan.noSchools, scan.unplaced, scan.handled]) list.sort();
   return scan;
 }
 
@@ -582,7 +582,7 @@ export async function runSchoolZoneScan(trigger: "cron" | "hub"): Promise<School
     if (error) logger.warn("Could not record the school scan", { error: describeError(error) });
   }
   logger.info("School zone scan", {
-    sites: result.sites.map((s) => ({ site: s.domain, checked: s.checked, raised: s.raised.length, filled: s.filled?.length ?? 0 })),
+    sites: result.sites.map((s) => ({ site: s.domain, checked: s.checked, raised: s.raised.length })),
   });
   return result;
 }
@@ -628,7 +628,7 @@ export async function applySchoolZones(alertId: string): Promise<Outcome> {
   if (!alert || alert.status !== "open" || alert.kind !== "school_zones") return { ok: false, status: 404, error: "No open school zones alert by that id" };
   const detail = alert.detail as SchoolZonesDetail;
   if (detail.source !== "collection" || !detail.collectionId || (!detail.wixItemId && !detail.newRow)) {
-    return { ok: false, status: 409, error: "This alert is from before the village pages moved to the collection: run the scan again" };
+    return { ok: false, status: 400, error: "This village's page is built by hand: edit it in the Wix editor, then mark the alert complete" };
   }
   const ids = await siteIds(detail.site);
   if (!ids.wixSiteId) return { ok: false, status: 400, error: "The site has no Wix site id" };
@@ -641,7 +641,7 @@ export async function applySchoolZones(alertId: string): Promise<Outcome> {
     item = await getItem(ids.wixSiteId, detail.collectionId, detail.wixItemId);
     if (!item) return { ok: false, status: 404, error: `${alert.name} is no longer in the collection` };
     for (const l of levels) {
-      if (cleanText(readSchoolField(item.data?.[fields[l.level]])) !== rowSays(l)) {
+      if (cleanText(readSchoolField(item.data?.[fields[l.level]])) !== l.page) {
         return { ok: false, status: 409, error: `${alert.name}'s schools changed since the scan: run the scan again` };
       }
     }

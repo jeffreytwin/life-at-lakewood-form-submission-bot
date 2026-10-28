@@ -48,7 +48,7 @@ const ALERT_COLUMNS = "id, kind, status, name, detail, dismissed_reason, resolve
 const ITEM_COLUMNS = "item_key, done_at, by_hand, not_applicable, choice, note";
 
 function itemsOf(alert: Pick<AlertRow, "kind" | "detail">): ChecklistItem[] {
-  return checklistFor(alert.kind, { legacySite: alert.detail?.site === LEGACY_DOMAIN });
+  return checklistFor(alert.kind, { legacySite: alert.detail?.site === LEGACY_DOMAIN, staticPage: alert.detail?.source === "page" });
 }
 
 /** An alert with its to-do list in order, each item beside what was done about it. Pure; exported for tests. */
@@ -106,10 +106,9 @@ async function readAlert(id: string): Promise<AlertRow | null> {
 export async function completeAlert(id: string): Promise<Outcome> {
   const alert = await readAlert(id);
   if (!alert || alert.status !== "open") return { ok: false, status: 404, error: "No open alert by that id" };
-  // A school zones alert with no list is done once its row names the schools the zones do.
-  const levels = (alert.detail as { levels?: { page: string; row?: string; proposed: string }[] }).levels;
-  const schoolsMatch =
-    alert.kind === "school_zones" && Array.isArray(levels) && !levels.some((l) => l.proposed && (l.row ?? l.page) !== l.proposed);
+  // A school zones alert with no list is done once its page names the schools the zones do.
+  const levels = (alert.detail as { levels?: { page: string; proposed: string }[] }).levels;
+  const schoolsMatch = alert.kind === "school_zones" && Array.isArray(levels) && !levels.some((l) => l.proposed && l.page !== l.proposed);
   if (!viewOf(alert).progress.complete && !schoolsMatch) return { ok: false, status: 409, error: "Every item has to be done or N/A first" };
   const now = new Date().toISOString();
   const { data, error } = await supabase

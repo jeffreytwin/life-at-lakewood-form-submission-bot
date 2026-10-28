@@ -147,8 +147,7 @@ describe("what a page says now", () => {
   });
 });
 
-describe("a Life At Lakewood row with no schools yet", () => {
-  const staticPage = { elementary: "Willis Elementary", middle: "Nolan Middle", high: "Lakewood Ranch High" };
+describe("a Life At Lakewood village's row", () => {
   const empty = { elementary: "", middle: "", high: "" };
   const zones = [zone({ elementary: ["Willis Elementary"], middle: ["Nolan Middle"], high: ["Lakewood Ranch High"] })];
   const fields = { elementary: "villageElementarySchool", middle: "villageMiddleSchool", high: "villageHighSchool" };
@@ -157,17 +156,11 @@ describe("a Life At Lakewood row with no schools yet", () => {
     middle: '<p class="font_7"><strong>Middle School: </strong>&nbsp;Dr Mona Jain Middle</p>',
   };
 
-  it("matches the verified static page, and still has every level to write", () => {
-    const levels = levelDetails(staticPage, zones, empty);
-    expect(levels.every((l) => l.verdict === "same")).toBe(true);
-    expect(levels.map((l) => l.row)).toEqual(["", "", ""]);
-    expect(levelsToWrite(levels).map((l) => l.level)).toEqual(["elementary", "middle", "high"]);
-    expect(fingerprintOf(levels)).toContain("elementary:Willis Elementary/>Willis Elementary");
-  });
-
-  it("is written in the collection's own markup, the plain one where it has none", () => {
-    const writes = schoolWrites(levelDetails(staticPage, zones, empty), fields, undefined, templates);
-    expect(writes).toEqual({
+  it("made new, with no page anywhere, is written in the collection's own markup, the plain one where it has none", () => {
+    const levels = levelDetails(empty, zones);
+    expect(levels.map((l) => l.verdict)).toEqual(["missing", "missing", "missing"]);
+    expect(levelsToWrite(levels)).toHaveLength(3);
+    expect(schoolWrites(levels, fields, undefined, templates)).toEqual({
       villageElementarySchool: '<p class="font_7"><strong>Grade School:</strong> &nbsp;Willis Elementary</p>',
       villageMiddleSchool: '<p class="font_7"><strong>Middle School: </strong>&nbsp;Nolan Middle</p>',
       villageHighSchool: '<p class="font_7"><strong>High School: </strong>Lakewood Ranch High</p>',
