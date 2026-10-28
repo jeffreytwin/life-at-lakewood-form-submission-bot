@@ -81,11 +81,12 @@ function SiteSummary({ site, onSaved }: { site: SiteScan; onSaved: () => void })
           <span className="text-sm">
             {site.checked} villages checked · {site.matching} match · <strong>{site.raised.length} new alerts</strong>
             {site.updated.length > 0 && <> · {site.updated.length} open alerts refreshed</>}
+            {(site.filled?.length ?? 0) > 0 && <> · {site.filled!.length} rows filled in from their verified pages</>}
 
             {site.handled.length > 0 && <> · {site.handled.length} already dealt with</>}
           </span>
         )}
-        {(site.noSchools.length > 0 || site.handled.length > 0) && (
+        {(site.noSchools.length > 0 || site.handled.length > 0 || (site.filled?.length ?? 0) > 0) && (
           <button className="btn btn-sm btn-secondary" onClick={() => setShowQuiet(!showQuiet)}>
             {showQuiet ? "Hide" : "Details"}
           </button>
@@ -100,6 +101,7 @@ function SiteSummary({ site, onSaved }: { site: SiteScan; onSaved: () => void })
         <div className="text-muted text-sm" style={{ marginTop: 6 }}>
           {site.noSchools.length > 0 && <div>No schools on the page, left alone: {site.noSchools.join(", ")}</div>}
           {site.handled.length > 0 && <div>Raised before for the same change and closed: {site.handled.join(", ")}</div>}
+          {(site.filled?.length ?? 0) > 0 && <div>Filled in from their verified static pages: {site.filled!.join(", ")}</div>}
 
         </div>
       )}
@@ -232,9 +234,9 @@ export default function SchoolZonesPage() {
             Every October the Hub checks each village&apos;s grade, middle and high school against the districts&apos; own zones
             (Manatee&apos;s School Locator, Sarasota&apos;s zone maps) at homes in the village, by the latest school year the
             district has published. A village whose page names other schools, or names them another way, gets an alert here.
-            Apply writes it to the site&apos;s village pages collection. On Life At Lakewood, a village with a row in Dynamic
-            Village Pages is written the same way; one still on a page built by hand gets a to-do to edit it; one with
-            neither gets its row made as a draft by Apply.
+            Apply writes it to the site&apos;s village collection. On Life At Lakewood that is Village Details, every village&apos;s
+            source of truth, and the village&apos;s Dynamic Village Pages row with it; a village whose page is still built by
+            hand also gets a to-do to edit that page.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

@@ -9,7 +9,8 @@ import type { AnnouncementDetail } from "@/lib/community-alerts/announcements";
 import type { SchoolZonesDetail } from "@/lib/school-zones/scan";
 import { LEVEL_LABEL } from "@/lib/school-zones/names";
 import { applyQueued, canApplySchools } from "@/lib/school-zones/apply";
-import { siteColors } from "@/app/dashboard/listings/format";
+import { siteColors, wixCollectionUrl } from "@/app/dashboard/listings/format";
+import type { VillageSetup } from "@/lib/villages/setup";
 import { emitLeadEvent } from "@/lib/lead-events";
 import { COMMUNITY_ALERT_DONE_SOUND, playSound } from "@/lib/notification-sounds";
 
@@ -234,7 +235,85 @@ function NewNeighborhoodSummary({ alert }: { alert: AlertView }) {
           <PageLinks pages={detail.pages} />
         </div>
       )}
+      {(detail as NewNeighborhoodDetail & { setup?: VillageSetup }).setup && (
+        <VillageSetupPanel setup={(detail as NewNeighborhoodDetail & { setup?: VillageSetup }).setup!} />
+      )}
     </>
+  );
+}
+
+/** What Set up village wrote, row by row (villages/setup.ts). */
+function VillageSetupPanel({ setup }: { setup: VillageSetup }) {
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <div className="text-sm" style={{ marginTop: 10, padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 6 }}>
+      <div>
+        <strong>Set up {when(setup.at)}</strong>
+        {setup.schools && (
+          <span className="text-muted">
+            {" "}
+            · schools: {[setup.schools.elementary, setup.schools.middle, setup.schools.high].filter(Boolean).join(", ")}
+          </span>
+        )}
+      </div>
+      {setup.rows.map((r) => {
+        const url = wixCollectionUrl(setup.wixSiteId, r.collectionId);
+        return (
+          <div key={r.collectionId} style={{ marginTop: 4 }}>
+            {r.label}: {r.created ? "made as a draft" : r.draft ? "its draft row" : "its published row"}, {r.filled.length} field
+            {r.filled.length === 1 ? "" : "s"} filled in
+            {r.filled.length > 0 && (
+              <>
+                {" "}
+                <button className="btn btn-sm btn-secondary" onClick={() => setOpen(open === r.collectionId ? null : r.collectionId)}>
+                  {open === r.collectionId ? "Hide" : "Which"}
+                </button>
+              </>
+            )}
+            {url && (
+              <>
+                {" "}
+                ·{" "}
+                <a href={url} target="_blank" rel="noreferrer">
+                  open in Wix ↗
+                </a>
+              </>
+            )}
+            {open === r.collectionId && <div className="text-muted" style={{ marginTop: 2 }}>{r.filled.join(", ")}</div>}
+          </div>
+        );
+      })}
+      {setup.problems.map((p) => (
+        <div key={p} style={{ marginTop: 4, color: "var(--warning)" }}>
+          {p}
+        </div>
+      ))}
+      <div className="text-muted" style={{ marginTop: 4 }}>
+        Left for you: {setup.leftForYou.join("; ")}.
+        {setup.research?.sources?.length ? (
+          <>
+            {" "}
+            From:{" "}
+            {setup.research.sources.slice(0, 4).map((u, i) => {
+              let host = u;
+              try {
+                host = new URL(u).hostname.replace(/^www\./, "");
+              } catch {
+                // Shown as given.
+              }
+              return (
+                <span key={u}>
+                  {i > 0 && ", "}
+                  <a href={u} target="_blank" rel="noreferrer">
+                    {host}
+                  </a>
+                </span>
+              );
+            })}
+          </>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -299,8 +378,13 @@ const schoolsMatch = (alert: AlertView) =>
   alert.kind === "school_zones" &&
   !((alert.detail as unknown as SchoolZonesDetail).levels ?? []).some((l) => l.proposed && l.page !== l.proposed);
 
-/** What the site calls the collection its village pages come from. */
-const collectionLabel = (site: string) => (site === "lifeatlakewood.com" ? "Dynamic Village Pages" : "Neighborhoods");
+/** What the site calls a collection (villages/collections.ts, kept here off the client's way to Wix). */
+const collectionLabel = (site: string, collectionId?: string | null) =>
+  collectionId === "AmenitiesbyVillage" ? "Village Details" : site === "lifeatlakewood.com" ? "Dynamic Village Pages" : "Neighborhoods";
+
+/** Where Apply writes: the row, and its copy beside it. */
+const writesTo = (d: SchoolZonesDetail) =>
+  `${collectionLabel(d.site, d.collectionId)}${d.mirror ? ` and ${collectionLabel(d.site, d.mirror.collectionId)}` : ""}`;
 
 const VERDICT: Record<string, { label: string; cls: string; title: string }> = {
   rezoned: { label: "rezoned", cls: "badge-warning", title: "The district zones these homes for another school" },
@@ -372,13 +456,25 @@ function SchoolZonesSummary({ alert }: { alert: AlertView }) {
           {alert.name}&apos;s page is built by hand: edit its Schools section in the Wix editor, then mark this complete.
         </div>
       )}
+      {d.staticPage && (
+        <div className="text-sm" style={{ marginTop: 8 }}>
+          {d.appliedAt ? <>Written to {writesTo(d)}. </> : null}
+          {alert.name}&apos;s{" "}
+          <a href={d.staticPage.url} target="_blank" rel="noreferrer">
+            page ↗
+          </a>{" "}
+          is built by hand and names{" "}
+          {[d.staticPage.says.elementary, d.staticPage.says.middle, d.staticPage.says.high].filter(Boolean).join(", ")}: edit its
+          Schools section in the Wix editor; the to-do ticks itself once a scan finds it right.
+        </div>
+      )}
       {d.pageSource === "none" && (
         <div className="text-sm" style={{ marginTop: 8 }}>
-          {alert.name} has no page yet, neither built by hand nor in {collectionLabel(d.site)}: Apply makes its row there as a
+          {alert.name} has no page yet, neither built by hand nor in {collectionLabel(d.site, d.collectionId)}: Apply makes its row there as a
           draft.
         </div>
       )}
-      {schoolsMatch(alert) && (
+      {schoolsMatch(alert) && !d.staticPage && (
         <div className="text-sm" style={{ marginTop: 8, color: "var(--success)" }}>
           The page now names these schools. Mark it complete.
         </div>
@@ -426,7 +522,26 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
   const [reason, setReason] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [settingUp, setSettingUp] = useState(false);
   const site = String(alert.detail?.site ?? "");
+
+  /** Set up village: its rows found or made as drafts, and filled in (villages/setup.ts). */
+  async function setUp() {
+    const lakewood = site === "lifeatlakewood.com";
+    const where = lakewood ? "Village Details and Dynamic Village Pages" : "the Neighborhoods collection";
+    if (!confirm(`Find or make ${alert.name}'s draft row${lakewood ? "s" : ""} in ${where}, and fill in the blank fields?`)) return;
+    setSettingUp(true);
+    setProblem(null);
+    try {
+      const res = await fetch(`/api/internal/community-alerts/${alert.id}/setup`, { method: "POST" });
+      if (!res.ok) setProblem((await res.json().catch(() => null))?.error ?? `HTTP ${res.status}`);
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSettingUp(false);
+      onChange();
+    }
+  }
 
   async function act(body: Record<string, unknown>) {
     setBusy(true);
@@ -552,11 +667,12 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
           <span className="text-muted text-sm">
             {(alert.detail as unknown as SchoolZonesDetail).wixItemId ? (
               <>
-                Writes the schools to {alert.name}&apos;s row in {collectionLabel(site)}
-                {(alert.detail as unknown as SchoolZonesDetail).draft ? " (it stays a draft)" : ""} and closes the alert.
+                Writes the schools to {alert.name}&apos;s row in {writesTo(alert.detail as unknown as SchoolZonesDetail)}
+                {(alert.detail as unknown as SchoolZonesDetail).draft ? " (it stays a draft)" : ""}
+                {(alert.detail as unknown as SchoolZonesDetail).staticPage ? "; the static page stays yours to edit." : " and closes the alert."}
               </>
             ) : (
-              <>Makes a draft row for {alert.name} in {collectionLabel(site)} with these schools and closes the alert.</>
+              <>Makes a draft row for {alert.name} in {collectionLabel(site, (alert.detail as unknown as SchoolZonesDetail).collectionId)} with these schools and closes the alert.</>
             )}
           </span>
         </div>
@@ -610,6 +726,16 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
             </>
           ) : (
             <>
+              {alert.kind === "new_neighborhood" && (
+                <button
+                  className="btn btn-sm btn-primary"
+                  disabled={busy || settingUp}
+                  onClick={setUp}
+                  title="Find or make the village's draft rows and fill in their blank fields from the builder's and the community's pages"
+                >
+                  {settingUp ? "Setting up… (a minute or two)" : alert.detail?.setup ? "Set up again" : "Set up village"}
+                </button>
+              )}
               {canWatch && (
                 <button
                   className="btn btn-sm btn-primary"
