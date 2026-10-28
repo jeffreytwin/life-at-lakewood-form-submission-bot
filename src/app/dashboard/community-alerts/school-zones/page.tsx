@@ -81,6 +81,7 @@ function SiteSummary({ site, onSaved }: { site: SiteScan; onSaved: () => void })
           <span className="text-sm">
             {site.checked} villages checked · {site.matching} match · <strong>{site.raised.length} new alerts</strong>
             {site.updated.length > 0 && <> · {site.updated.length} open alerts refreshed</>}
+
             {site.handled.length > 0 && <> · {site.handled.length} already dealt with</>}
           </span>
         )}
@@ -99,6 +100,7 @@ function SiteSummary({ site, onSaved }: { site: SiteScan; onSaved: () => void })
         <div className="text-muted text-sm" style={{ marginTop: 6 }}>
           {site.noSchools.length > 0 && <div>No schools on the page, left alone: {site.noSchools.join(", ")}</div>}
           {site.handled.length > 0 && <div>Raised before for the same change and closed: {site.handled.join(", ")}</div>}
+
         </div>
       )}
       {site.unplaced.length > 0 && (
@@ -230,7 +232,9 @@ export default function SchoolZonesPage() {
             Every October the Hub checks each village&apos;s grade, middle and high school against the districts&apos; own zones
             (Manatee&apos;s School Locator, Sarasota&apos;s zone maps) at homes in the village, by the latest school year the
             district has published. A village whose page names other schools, or names them another way, gets an alert here.
-            Wellen Park and Parrish are updated with Apply; Life At Lakewood&apos;s pages are edited by hand, then marked complete.
+            Apply writes it to the site&apos;s village pages collection. On Life At Lakewood, a village with a row in Dynamic
+            Village Pages is written the same way; one still on a page built by hand gets a to-do to edit it; one with
+            neither gets its row made as a draft by Apply.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

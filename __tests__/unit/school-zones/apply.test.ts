@@ -2,19 +2,23 @@ import { describe, it, expect } from "vitest";
 import { APPLY_STALE_MS, applyQueued, canApplySchools } from "@/lib/school-zones/apply";
 import type { LevelDetail, SchoolZonesDetail } from "@/lib/school-zones/scan";
 
-const level = (verdict: LevelDetail["verdict"]): LevelDetail => ({ level: "elementary", page: "A", proposed: "B", verdict, thisYear: null, shares: [] });
+const level = (page: string, proposed: string): LevelDetail => ({ level: "elementary", page, proposed, verdict: "rezoned", thisYear: null, shares: [] });
 const detail = (over: Partial<SchoolZonesDetail>): SchoolZonesDetail =>
-  ({ source: "collection", wixItemId: "item-1", levels: [level("rezoned")], ...over }) as SchoolZonesDetail;
+  ({ source: "collection", collectionId: "HousesforSale-DynamicPages", wixItemId: "item-1", levels: [level("A", "B")], ...over }) as SchoolZonesDetail;
 
 describe("which alerts Apply all writes", () => {
   it("takes a collection row with a school to change", () => {
     expect(canApplySchools(detail({}))).toBe(true);
-    expect(canApplySchools(detail({ levels: [level("same"), level("renamed")] }))).toBe(true);
+    expect(canApplySchools(detail({ levels: [level("B", "B"), level("", "C")] }))).toBe(true);
+  });
+
+  it("takes a village with no row yet, whose row Apply makes", () => {
+    expect(canApplySchools(detail({ wixItemId: null, newRow: { title: "Stillwater" } }))).toBe(true);
   });
 
   it("leaves Life At Lakewood's static pages, rows already right, and rows it cannot find", () => {
     expect(canApplySchools(detail({ source: "page", wixItemId: null }))).toBe(false);
-    expect(canApplySchools(detail({ levels: [level("same")] }))).toBe(false);
+    expect(canApplySchools(detail({ levels: [level("B", "B"), level("A", "")] }))).toBe(false);
     expect(canApplySchools(detail({ wixItemId: null }))).toBe(false);
   });
 });

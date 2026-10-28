@@ -10,9 +10,14 @@ import type { SchoolZonesDetail } from "@/lib/school-zones/scan";
 /** A queue mark older than any function lives is a run that was cut off: Apply all may take it again. */
 export const APPLY_STALE_MS = 15 * 60_000;
 
-/** Apply can write it: a row in a site's collection, with a school to change. */
+/** Apply can write it: a row in a site's collection, or one Apply makes, with a school to write (applySchoolZones). */
 export function canApplySchools(detail: SchoolZonesDetail): boolean {
-  return detail.source === "collection" && Boolean(detail.wixItemId) && (detail.levels ?? []).some((l) => l.verdict !== "same");
+  return (
+    detail.source === "collection" &&
+    Boolean(detail.collectionId) &&
+    Boolean(detail.wixItemId || detail.newRow) &&
+    (detail.levels ?? []).some((l) => l.proposed && l.page !== l.proposed)
+  );
 }
 
 /** Apply all has it and is still writing it. */

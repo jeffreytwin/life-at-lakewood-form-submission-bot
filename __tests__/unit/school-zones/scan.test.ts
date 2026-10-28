@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { displayName } from "@/lib/school-zones/names";
-import { fingerprintOf, levelDetails, proposeLevel } from "@/lib/school-zones/scan";
+import { fingerprintOf, levelDetails, levelsToWrite, proposeLevel, schoolWrites } from "@/lib/school-zones/scan";
 import { cleanPoints } from "@/lib/school-zones/places";
 import { readPageSchools, readSchoolField, schoolFields, writeSchoolField } from "@/lib/school-zones/pages";
 import type { PointZones } from "@/lib/school-zones/districts";
@@ -104,6 +104,25 @@ describe("what a page says now", () => {
     expect(readPageSchools("<p>No schools here</p>")).toBeNull();
   });
 
+  it("keeps Lakewood's space after the label when it rewrites a paragraph", () => {
+    const lakewood = '<p class="font_7"><strong>Grade School:</strong> &nbsp;Willis Elementary</p>';
+    expect(readSchoolField(lakewood)).toBe("Willis Elementary");
+    expect(writeSchoolField("elementary", "McNeal Elementary", lakewood)).toBe(
+      '<p class="font_7"><strong>Grade School:</strong> &nbsp;McNeal Elementary</p>'
+    );
+  });
+
+  it("finds Lakewood's Village school fields by name", () => {
+    expect(
+      schoolFields([
+        { key: "title", displayName: "Village Name" },
+        { key: "villageElementarySchool", displayName: "Village Elementary School" },
+        { key: "villageMiddleSchool", displayName: "Village Middle School" },
+        { key: "villageHighSchool", displayName: "Village High School" },
+      ])
+    ).toEqual({ elementary: "villageElementarySchool", middle: "villageMiddleSchool", high: "villageHighSchool" });
+  });
+
   it("reads and writes a collection's school paragraph in its own markup", () => {
     const field = '<p class="font_7"><strong>Grade School: </strong>Annie Lucy Williams Elementary</p>';
     expect(readSchoolField(field)).toBe("Annie Lucy Williams Elementary");
@@ -125,5 +144,36 @@ describe("what a page says now", () => {
         { key: "neighborhoodHighSchool", displayName: "Neighborhood High School" },
       ])
     ).toEqual({ elementary: "neighborhoodElementarySchool", middle: "neighborhoodMiddleSchool", high: "neighborhoodHighSchool" });
+  });
+});
+
+describe("a Life At Lakewood village's row", () => {
+  const empty = { elementary: "", middle: "", high: "" };
+  const zones = [zone({ elementary: ["Willis Elementary"], middle: ["Nolan Middle"], high: ["Lakewood Ranch High"] })];
+  const fields = { elementary: "villageElementarySchool", middle: "villageMiddleSchool", high: "villageHighSchool" };
+  const templates = {
+    elementary: '<p class="font_7"><strong>Grade School:</strong> &nbsp;Gullett Elementary</p>',
+    middle: '<p class="font_7"><strong>Middle School: </strong>&nbsp;Dr Mona Jain Middle</p>',
+  };
+
+  it("made new, with no page anywhere, is written in the collection's own markup, the plain one where it has none", () => {
+    const levels = levelDetails(empty, zones);
+    expect(levels.map((l) => l.verdict)).toEqual(["missing", "missing", "missing"]);
+    expect(levelsToWrite(levels)).toHaveLength(3);
+    expect(schoolWrites(levels, fields, undefined, templates)).toEqual({
+      villageElementarySchool: '<p class="font_7"><strong>Grade School:</strong> &nbsp;Willis Elementary</p>',
+      villageMiddleSchool: '<p class="font_7"><strong>Middle School: </strong>&nbsp;Nolan Middle</p>',
+      villageHighSchool: '<p class="font_7"><strong>High School: </strong>Lakewood Ranch High</p>',
+    });
+  });
+
+  it("writes nothing for a level the row already has right", () => {
+    const row = { elementary: "Willis Elementary", middle: "", high: "" };
+    const levels = levelDetails(row, zones);
+    expect(levels.map((l) => l.verdict)).toEqual(["same", "missing", "missing"]);
+    expect(Object.keys(schoolWrites(levels, fields, { villageElementarySchool: templates.elementary }, templates))).toEqual([
+      "villageMiddleSchool",
+      "villageHighSchool",
+    ]);
   });
 });

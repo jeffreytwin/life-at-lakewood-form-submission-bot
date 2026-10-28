@@ -37,6 +37,8 @@ export interface ItemState {
 export interface ChecklistContext {
   /** The neighborhood is on Life At Lakewood, whose pages are sometimes built one by one rather than from the dynamic page. */
   legacySite: boolean;
+  /** A school zones alert whose village page is built by hand, so is edited by hand rather than written with Apply. */
+  staticPage?: boolean;
 }
 
 export const LEGACY_DOMAIN = "lifeatlakewood.com";
@@ -149,16 +151,16 @@ export function newNeighborhoodItems(ctx: ChecklistContext): ChecklistItem[] {
 
 /**
  * A village whose page names other schools than its homes are zoned for
- * (school-zones/scan.ts). Wellen Park's and Parrish's are written from the
- * alert with Apply; Life At Lakewood's static pages are edited by hand.
+ * (school-zones/scan.ts). A page built by hand (most of Life At Lakewood's
+ * still are) is edited by hand; every other is written with Apply.
  */
 export function schoolZoneItems(ctx: ChecklistContext): ChecklistItem[] {
-  if (!ctx.legacySite) return [];
+  if (!ctx.staticPage) return [];
   return [
     {
       key: "page_schools",
       label: "Update the Schools section on the village page",
-      hint: "Edit the page in the Wix editor. Checks itself when the next scan finds the page as it should be.",
+      hint: "The page is built by hand: edit it in the Wix editor. Checks itself when the next scan finds the page as it should be.",
       auto: true,
     },
   ];

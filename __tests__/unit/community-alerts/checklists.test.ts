@@ -92,3 +92,11 @@ describe("the new-neighborhood to-do list", () => {
     expect(legacy[0].label).toMatch(/Villages collection/);
   });
 });
+
+describe("the school zones to-do list", () => {
+  it("is one hand edit for a page built by hand, and nothing for a row Apply writes", () => {
+    expect(checklistFor("school_zones", { legacySite: true, staticPage: true }).map((i) => i.key)).toEqual(["page_schools"]);
+    expect(checklistFor("school_zones", { legacySite: true, staticPage: false })).toEqual([]);
+    expect(checklistFor("school_zones", { legacySite: false })).toEqual([]);
+  });
+});
