@@ -58,6 +58,10 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "The neighborhood"} is finished, Colonel, and the website changed with it. The strong finish what they start.`;
     case "community_new_neighborhood_done":
       return `${event.communityName ?? "The new neighborhood"} is ours now, Colonel. Another territory on the map. That is how it is done.`;
+    case "community_school_zones":
+      return `${event.communityName ?? "A neighborhood"}'s page names the wrong schools, Colonel. Community Alerts → School Zones.`;
+    case "community_schools_done":
+      return `${event.communityName ?? "The neighborhood"}'s schools are right now, Colonel. Precision is its own kind of strength.`;
     case "floorplans_cleared":
       return "The floor plan queue is empty, Colonel. The strong finish what they start.";
   }

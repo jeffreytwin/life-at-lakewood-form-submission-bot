@@ -58,6 +58,10 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "The neighborhood"} is squared away, Colonel! The website has moved on from new builds. Mission complete!`;
     case "community_new_neighborhood_done":
       return `${event.communityName ?? "The new neighborhood"} is on the map, Colonel! Pages up, engines running. Mission complete!`;
+    case "community_school_zones":
+      return `Colonel! The school zones have shifted at ${event.communityName ?? "a neighborhood"}. Community Alerts → School Zones has the details.`;
+    case "community_schools_done":
+      return `${event.communityName ?? "The neighborhood"}'s schools are squared away, Colonel! Families will know exactly where they're headed. Mission complete!`;
     case "floorplans_cleared":
       return "Colonel! That was the last floor plan. The queue is clear — mission complete!";
   }

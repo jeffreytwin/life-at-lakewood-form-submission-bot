@@ -51,6 +51,10 @@
     {
       "path": "/api/cron/village-ranges",
       "schedule": "29 */2 * * *"
+    },
+    {
+      "path": "/api/cron/school-zones",
+      "schedule": "17 13 1 10 *"
     }
   ]
 }
