@@ -29,8 +29,9 @@ const MANATEE_NAMES: Record<string, string> = {
   "Mills ES": "Virgil Mills Elementary",
   "Witt ES": "Gene Witt Elementary",
   "Williams ES": "Annie Lucy Williams Elementary",
-  "Harvey K-8 at Copperstone (PK-3)": "Barbara A. Harvey K-8 at Copperstone",
-  "Harvey K-8 at North River Ranch (4-8)": "Barbara A. Harvey K-8 at North River Ranch",
+  // Two campuses, one school (Jeff, 2026-10-28): the pages name it once.
+  "Harvey K-8 at Copperstone (PK-3)": "Barbara A. Harvey K-8",
+  "Harvey K-8 at North River Ranch (4-8)": "Barbara A. Harvey K-8",
   "Johnson K-8 School of Int'l Studies": "Johnson K-8",
 };
 

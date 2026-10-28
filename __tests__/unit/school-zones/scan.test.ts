@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { displayName } from "@/lib/school-zones/names";
 import { fingerprintOf, levelDetails, levelsToWrite, proposeLevel, schoolWrites } from "@/lib/school-zones/scan";
 import { cleanPoints } from "@/lib/school-zones/places";
 import { readPageSchools, readSchoolField, schoolFields, writeSchoolField } from "@/lib/school-zones/pages";
@@ -21,6 +22,15 @@ describe("a level's schools from its homes' zones", () => {
       { name: "Braden River Elementary", homes: 3 },
       { name: "Willis Elementary", homes: 1 },
     ]);
+  });
+
+  it("counts Harvey's two campuses as the one school they are", () => {
+    const campus = (raw: string) => displayName("manatee", raw);
+    const answers = [
+      ...Array(4).fill([campus("Harvey K-8 at Copperstone (PK-3)")]),
+      ...Array(3).fill([campus("Harvey K-8 at North River Ranch (4-8)")]),
+    ];
+    expect(proposeLevel(answers)).toEqual({ names: ["Barbara A. Harvey K-8"], shares: [{ name: "Barbara A. Harvey K-8", homes: 7 }] });
   });
 
   it("names one school when one home in seven differs", () => {
