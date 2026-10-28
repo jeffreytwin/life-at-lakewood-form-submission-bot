@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import CommunityAlertTabs from "../tabs";
 import type { AlertView } from "@/lib/community-alerts/alerts";
+import { SiteTag, siteStyle } from "../alert-card";
 
 const KIND_LABEL: Record<string, string> = { sold_out: "sold out", new_neighborhood: "new neighborhood", announcement: "announcement" };
 
@@ -79,15 +80,17 @@ export default function CommunityAlertHistoryPage() {
             </thead>
             <tbody>
               {alerts.map((a) => (
-                <tr key={a.id}>
-                  <td>
+                <tr key={a.id} style={{ background: siteStyle(String(a.detail?.site ?? "")).background }}>
+                  <td style={{ borderLeft: siteStyle(String(a.detail?.site ?? "")).borderLeft }}>
                     <strong>{a.name}</strong>
-                    <div className="text-muted text-sm">{String(a.detail?.site ?? "")}</div>
+                    <div style={{ marginTop: 2 }}>
+                      <SiteTag domain={String(a.detail?.site ?? "")} />
+                    </div>
                   </td>
                   <td>{KIND_LABEL[a.kind] ?? a.kind}</td>
                   <td>
                     {a.status === "done" ? (
-                      <span className="badge badge-success">done</span>
+                      <span className="badge badge-success">completed</span>
                     ) : (
                       <>
                         <span className="badge badge-muted">dismissed</span>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import CommunityAlertTabs from "../tabs";
-import { when } from "../alert-card";
+import { SiteTag, siteStyle, when } from "../alert-card";
 import type { WatchEntry } from "@/lib/community-alerts/watch-list";
 
 const SITES = ["lifeatlakewood.com", "lifeinwellenpark.com", "lifeatparrish.com"];
@@ -142,8 +142,8 @@ export default function WatchListPage() {
                 </thead>
                 <tbody>
                   {watching.map((w) => (
-                    <tr key={w.id}>
-                      <td>
+                    <tr key={w.id} style={{ background: siteStyle(w.site).background }}>
+                      <td style={{ borderLeft: siteStyle(w.site).borderLeft }}>
                         <strong>{w.name}</strong>
                         {w.sourceUrl && (
                           <div className="text-sm">
@@ -153,7 +153,9 @@ export default function WatchListPage() {
                           </div>
                         )}
                       </td>
-                      <td className="text-sm">{w.site}</td>
+                      <td className="text-sm">
+                        <SiteTag domain={w.site} />
+                      </td>
                       <td className="text-sm">{w.note ?? <span className="text-muted">—</span>}</td>
                       <td className="text-sm">{when(w.createdAt)}</td>
                       <td>
@@ -172,7 +174,7 @@ export default function WatchListPage() {
               <strong>Found lately</strong>
               {found.map((w) => (
                 <div key={w.id} className="text-sm" style={{ marginTop: 6 }}>
-                  {w.name} <span className="text-muted">· {w.site} · {when(w.foundAt)}</span>
+                  {w.name} <SiteTag domain={w.site} /> <span className="text-muted">· {when(w.foundAt)}</span>
                   {w.alertId ? (
                     <>
                       {" "}

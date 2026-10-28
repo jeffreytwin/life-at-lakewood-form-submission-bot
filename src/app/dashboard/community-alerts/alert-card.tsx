@@ -6,6 +6,9 @@ import type { SoldOutDetail } from "@/lib/community-alerts/sold-out";
 import type { NewNeighborhoodDetail } from "@/lib/community-alerts/new-neighborhoods";
 import type { ChecksResult } from "@/lib/community-alerts/checks";
 import type { AnnouncementDetail } from "@/lib/community-alerts/announcements";
+import { siteColors } from "@/app/dashboard/listings/format";
+import { emitLeadEvent } from "@/lib/lead-events";
+import { COMMUNITY_ALERT_DONE_SOUND, playSound } from "@/lib/notification-sounds";
 
 type Item = AlertView["items"][number];
 
@@ -13,6 +16,39 @@ export const when = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const money = (n: number | null | undefined) => (n == null ? null : `$${Math.round(n).toLocaleString("en-US")}`);
+
+/** The place each site covers, as the alerts name it. */
+const SITE_PLACE: Record<string, string> = {
+  "lifeatlakewood.com": "Lakewood Ranch",
+  "lifeinwellenpark.com": "Wellen Park",
+  "lifeatparrish.com": "Parrish",
+  "lifeinlongboatkey.com": "Longboat Key",
+};
+
+/**
+ * Each alert wears its site's colour, as Listings and Floor Plans do (Jeff,
+ * 2026-10-28: "so I can tell which location it's associated with"): a
+ * faint tint and a left border, for a card or a table row.
+ */
+export function siteStyle(domain: string | null | undefined): React.CSSProperties {
+  const colors = siteColors(domain);
+  return colors ? { background: colors.tint, borderLeft: `3px solid ${colors.accent}` } : {};
+}
+
+/** The site's place name in its colour, the domain on hover. */
+export function SiteTag({ domain }: { domain: string | null | undefined }) {
+  if (!domain) return <span className="text-muted">—</span>;
+  const colors = siteColors(domain);
+  return (
+    <span
+      className="badge"
+      title={domain}
+      style={colors ? { color: colors.solid, background: colors.tint, border: `1px solid ${colors.accent}` } : undefined}
+    >
+      {SITE_PLACE[domain.toLowerCase()] ?? domain}
+    </span>
+  );
+}
 
 async function patch(id: string, body: Record<string, unknown>): Promise<string | null> {
   const res = await fetch(`/api/internal/community-alerts/${id}`, {
@@ -209,11 +245,6 @@ const KIND_BADGE_CLASS: Record<AlertView["kind"], string> = {
   new_neighborhood: "badge-info",
   announcement: "badge-purple",
 };
-const KIND_BORDER: Record<AlertView["kind"], string> = {
-  sold_out: "var(--warning)",
-  new_neighborhood: "var(--info)",
-  announcement: "#a78bfa",
-};
 
 const STATUS_LABEL: Record<AnnouncementDetail["status"], string> = {
   announced: "Announced",
@@ -261,6 +292,7 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
   const [closing, setClosing] = useState<"dismiss" | "ignore" | null>(null);
   const [reason, setReason] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
+  const [completed, setCompleted] = useState(false);
   const site = String(alert.detail?.site ?? "");
 
   async function act(body: Record<string, unknown>) {
@@ -272,21 +304,42 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
     onChange();
   }
 
-  const { settled, total } = alert.progress;
+  /**
+   * The list finished, the person says it's done (Jeff, 2026-10-28): the
+   * character celebrates and says so, the fireworks go up, the victory
+   * plays, and the card stays a moment to say where it went.
+   */
+  async function complete() {
+    setBusy(true);
+    setProblem(null);
+    const failed = await patch(alert.id, { complete: true });
+    setBusy(false);
+    if (failed) {
+      setProblem(failed);
+      onChange();
+      return;
+    }
+    setCompleted(true);
+    playSound(COMMUNITY_ALERT_DONE_SOUND);
+    emitLeadEvent({
+      type: alert.kind === "sold_out" ? "community_sold_out_done" : "community_new_neighborhood_done",
+      leadName: "",
+      communityName: alert.name,
+    });
+    setTimeout(onChange, 2500);
+  }
+
+  const { settled, total, complete: listDone } = alert.progress;
   const canIgnore = alert.kind !== "sold_out";
   const canWatch = alert.kind === "announcement";
 
   return (
-    <div
-      className="card"
-      style={{ marginBottom: 12, borderLeft: `3px solid ${KIND_BORDER[alert.kind]}` }}
-    >
+    <div className="card" style={{ marginBottom: 12, ...siteStyle(site) }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <strong style={{ fontSize: 16 }}>{alert.name}</strong>
+        <SiteTag domain={site} />
         <span className={`badge ${KIND_BADGE_CLASS[alert.kind]}`}>{KIND_BADGE[alert.kind]}</span>
-        <span className="text-muted text-sm">
-          {site} · raised {when(alert.createdAt)}
-        </span>
+        <span className="text-muted text-sm">raised {when(alert.createdAt)}</span>
         {total > 0 && (
           <span className="fp-progress" title={`${settled} of ${total} done or N/A`}>
             {settled} of {total} done
@@ -319,72 +372,89 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
         </div>
       )}
 
-      <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        {closing ? (
-          <>
-            <input
-              className="form-input"
-              style={{ flex: 1, minWidth: 220 }}
-              placeholder={
-                closing === "ignore"
-                  ? "Why? (optional, e.g. outside the area we cover)"
-                  : canIgnore
-                    ? "Why? (e.g. not ready yet)"
-                    : "Why? (e.g. false alarm: the builder's page changed)"
-              }
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              autoFocus
-            />
-            <button
-              className="btn btn-sm btn-danger"
-              disabled={busy || (closing === "dismiss" && !reason.trim())}
-              onClick={() => act(closing === "ignore" ? { ignore: reason } : { dismiss: reason })}
-            >
-              {closing === "ignore" ? "Ignore" : "Dismiss"}
-            </button>
-            <button
-              className="btn btn-sm btn-secondary"
-              onClick={() => {
-                setClosing(null);
-                setReason("");
-              }}
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            {canWatch && (
+      {completed ? (
+        <div className="text-sm" style={{ marginTop: 12, color: "var(--success)", fontWeight: 600 }}>
+          🎉 Mission complete. {alert.name} is closed and kept under History.
+        </div>
+      ) : listDone && !closing ? (
+        <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <button className="btn btn-primary" disabled={busy} onClick={complete}>
+            ✓ Mark complete
+          </button>
+          <span className="text-sm" style={{ color: "var(--success)" }}>
+            Every item is done or N/A. Mark it complete to close it.
+          </span>
+        </div>
+      ) : null}
+
+      {!completed && (
+        <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          {closing ? (
+            <>
+              <input
+                className="form-input"
+                style={{ flex: 1, minWidth: 220 }}
+                placeholder={
+                  closing === "ignore"
+                    ? "Why? (optional, e.g. outside the area we cover)"
+                    : canIgnore
+                      ? "Why? (e.g. not ready yet)"
+                      : "Why? (e.g. false alarm: the builder's page changed)"
+                }
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                autoFocus
+              />
               <button
-                className="btn btn-sm btn-primary"
-                disabled={busy}
-                onClick={() => act({ watch: true })}
-                title="Put it on the watch list; the daily scan raises it once homes are for sale"
+                className="btn btn-sm btn-danger"
+                disabled={busy || (closing === "dismiss" && !reason.trim())}
+                onClick={() => act(closing === "ignore" ? { ignore: reason } : { dismiss: reason })}
               >
-                Watch for homes
+                {closing === "ignore" ? "Ignore" : "Dismiss"}
               </button>
-            )}
-            {canIgnore && (
-              <button className="btn btn-sm btn-secondary" onClick={() => setClosing("ignore")} title="Never raise this neighborhood again">
-                Ignore…
+              <button
+                className="btn btn-sm btn-secondary"
+                onClick={() => {
+                  setClosing(null);
+                  setReason("");
+                }}
+              >
+                Cancel
               </button>
-            )}
-            <button
-              className="btn btn-sm btn-secondary"
-              onClick={() => setClosing("dismiss")}
-              title={canIgnore ? "Close it for now: raised again in 30 days if homes are still listed" : "Close it without the list done"}
-            >
-              Dismiss…
-            </button>
-            {canIgnore && (
-              <span className="text-muted text-sm">
-                Ignore never asks again; Dismiss asks again in 30 days{canWatch ? " if it turns up again" : " if homes are still listed"}.
-              </span>
-            )}
-          </>
-        )}
-      </div>
+            </>
+          ) : (
+            <>
+              {canWatch && (
+                <button
+                  className="btn btn-sm btn-primary"
+                  disabled={busy}
+                  onClick={() => act({ watch: true })}
+                  title="Put it on the watch list; the daily scan raises it once homes are for sale"
+                >
+                  Watch for homes
+                </button>
+              )}
+              {canIgnore && (
+                <button className="btn btn-sm btn-secondary" onClick={() => setClosing("ignore")} title="Never raise this neighborhood again">
+                  Ignore…
+                </button>
+              )}
+              <button
+                className="btn btn-sm btn-secondary"
+                onClick={() => setClosing("dismiss")}
+                title={canIgnore ? "Close it for now: raised again in 30 days if homes are still listed" : "Close it without the list done"}
+              >
+                Dismiss…
+              </button>
+              {canIgnore && (
+                <span className="text-muted text-sm">
+                  Ignore never asks again; Dismiss asks again in 30 days{canWatch ? " if it turns up again" : " if homes are still listed"}.
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

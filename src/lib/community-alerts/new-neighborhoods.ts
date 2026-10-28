@@ -37,7 +37,7 @@ import { listPageHtml, parseCards, parseHotelCards, priceOf } from "@/lib/floorp
 import { loadVillagesWithTerms, selectAll } from "@/lib/listings/db";
 import { matchVillage as termMatch } from "@/lib/listings/classify";
 import type { LsSite, VillageWithTerms } from "@/lib/listings/types";
-import { setSelfCheck, settleAlert } from "@/lib/community-alerts/alerts";
+import { setSelfCheck } from "@/lib/community-alerts/alerts";
 import { findHomesForSalePage, nameKey, type VillageRow } from "@/lib/community-alerts/sold-out";
 
 /** A subdivision needs this many new-construction listings on the MLS to be read as a neighborhood. */
@@ -488,7 +488,7 @@ async function closeAnnouncement(siteId: string, key: string): Promise<void> {
  * new-build engine has it with a connection running. Once the listings
  * engine has it, its pages are linked. Reads the database only.
  */
-export async function refreshNewNeighborhoodAlerts(): Promise<{ refreshed: number; closed: number }> {
+export async function refreshNewNeighborhoodAlerts(): Promise<{ refreshed: number }> {
   const { data: open, error } = await supabase
     .from("ca_alerts")
     .select("id, subject_key, detail")
@@ -497,7 +497,6 @@ export async function refreshNewNeighborhoodAlerts(): Promise<{ refreshed: numbe
   if (error) throw failed("reading the open new-neighborhood alerts", error);
   const contexts = new Map<string, SiteContext | null>();
   let refreshed = 0;
-  let closed = 0;
   for (const alert of open ?? []) {
     const detail = { ...(alert.detail as NewNeighborhoodDetail) };
     if (!contexts.has(detail.site)) contexts.set(detail.site, await siteContext(detail.site));
@@ -523,7 +522,6 @@ export async function refreshNewNeighborhoodAlerts(): Promise<{ refreshed: numbe
     await setSelfCheck(alert.id, "listings_engine", Boolean(village && village.active !== false && village.terms.length > 0), null);
     await setSelfCheck(alert.id, "new_build_engine", Boolean(community?.running), null);
     refreshed += 1;
-    if (await settleAlert(alert.id)) closed += 1;
   }
-  return { refreshed, closed };
+  return { refreshed };
 }

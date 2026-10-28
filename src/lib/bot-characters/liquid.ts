@@ -54,6 +54,10 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "A new neighborhood"} has homes for sale and we are not there, Colonel. Community Alerts.`;
     case "community_announcement":
       return `They have announced ${event.communityName ?? "a new neighborhood"}, Colonel. Community Alerts: decide whether we watch it.`;
+    case "community_sold_out_done":
+      return `${event.communityName ?? "The neighborhood"} is finished, Colonel, and the website changed with it. The strong finish what they start.`;
+    case "community_new_neighborhood_done":
+      return `${event.communityName ?? "The new neighborhood"} is ours now, Colonel. Another territory on the map. That is how it is done.`;
     case "floorplans_cleared":
       return "The floor plan queue is empty, Colonel. The strong finish what they start.";
   }

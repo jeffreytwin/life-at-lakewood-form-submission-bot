@@ -54,6 +54,10 @@ function getMessage(event: LeadEvent): string {
       return `A new neighborhood on the map, Colonel: ${event.communityName ?? "unknown"}. Community Alerts. Add it, or ignore it.`;
     case "community_announcement":
       return `${event.communityName ?? "A new neighborhood"} has been announced, Colonel. Community Alerts. Watch it, or let it go.`;
+    case "community_sold_out_done":
+      return `${event.communityName ?? "The neighborhood"}: every round accounted for, Colonel. The new builds are gone and the site knows it. Beautiful.`;
+    case "community_new_neighborhood_done":
+      return `${event.communityName ?? "The new neighborhood"} is in our sights now, Colonel. Pages, listings, advertising. A clean draw.`;
     case "floorplans_cleared":
       return "Every floor plan accounted for, Colonel. Not a single round wasted. Beautiful.";
   }

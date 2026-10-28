@@ -46,6 +46,9 @@ export const FLOOR_PLAN_SOUNDS: Record<"approve" | "reject" | "remove" | "cleare
   cleared: SOUNDS.victory,
 };
 
+/** A Community Alert marked complete (Jeff, 2026-10-28): the victory, as the floor plan queue emptied gets. */
+export const COMMUNITY_ALERT_DONE_SOUND = SOUNDS.victory;
+
 // Browsers refuse to play audio before the page has had a user gesture.
 // The first blocked sound is held and played once the person clicks or
 // types anywhere, so an alert that fires on a freshly opened tab is not

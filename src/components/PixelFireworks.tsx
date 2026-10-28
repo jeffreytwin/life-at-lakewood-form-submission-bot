@@ -84,7 +84,7 @@ export default function PixelFireworks() {
 
   useEffect(() => {
     return onLeadEvent((event) => {
-      if (event.type !== "accepted" && event.type !== "owned_by_other" && event.type !== "done" && event.type !== "email_sent" && event.type !== "floorplans_cleared") return;
+      if (event.type !== "accepted" && event.type !== "owned_by_other" && event.type !== "done" && event.type !== "email_sent" && event.type !== "floorplans_cleared" && event.type !== "community_sold_out_done" && event.type !== "community_new_neighborhood_done") return;
       startFireworks();
     });
   }, []);

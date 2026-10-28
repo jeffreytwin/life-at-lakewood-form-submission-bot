@@ -21,7 +21,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { failedAt as failed } from "@/lib/shared/describe-error";
-import { setSelfCheck, settleAlert } from "@/lib/community-alerts/alerts";
+import { setSelfCheck } from "@/lib/community-alerts/alerts";
 
 /** How many rows one read brings back before another is needed. */
 export const PAGE = 1000;
@@ -206,8 +206,6 @@ export interface SoldOutCheck {
   raised: string[];
   /** Open alerts whose self-checking items were looked at again. */
   refreshed: number;
-  /** Alerts that closed because their last item was settled by a self-check. */
-  closed: number;
 }
 
 /**
@@ -238,7 +236,7 @@ export async function checkSoldOuts(): Promise<SoldOutCheck> {
   if (stateError) throw failed("reading what the last check saw", stateError);
   const previous = new Map((stateRows ?? []).map((s) => [s.community_id as string, s.sold_out as boolean]));
 
-  const result: SoldOutCheck = { communities: 0, seeded: 0, raised: [], refreshed: 0, closed: 0 };
+  const result: SoldOutCheck = { communities: 0, seeded: 0, raised: [], refreshed: 0 };
   const now = new Date().toISOString();
   const states: Record<string, unknown>[] = [];
 
@@ -319,7 +317,6 @@ export async function checkSoldOuts(): Promise<SoldOutCheck> {
     await setSelfCheck(alert.id, "listings_engine", Boolean(village?.active && village.terms > 0), null);
     await setSelfCheck(alert.id, "connections", !conns.some(running), "retire");
     result.refreshed += 1;
-    if (await settleAlert(alert.id)) result.closed += 1;
   }
 
   return result;

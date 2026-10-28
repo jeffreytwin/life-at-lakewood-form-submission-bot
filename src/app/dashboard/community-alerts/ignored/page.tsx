@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import CommunityAlertTabs from "../tabs";
-import { when } from "../alert-card";
+import { SiteTag, siteStyle, when } from "../alert-card";
 import type { IgnoredNeighborhood } from "@/lib/community-alerts/alerts";
 
 /** The neighborhoods no scan raises; un-ignoring one lets the next scan that finds homes there raise it again. */
@@ -72,11 +72,13 @@ export default function IgnoredNeighborhoodsPage() {
             </thead>
             <tbody>
               {ignored.map((n) => (
-                <tr key={n.id}>
-                  <td>
+                <tr key={n.id} style={{ background: siteStyle(n.site).background }}>
+                  <td style={{ borderLeft: siteStyle(n.site).borderLeft }}>
                     <strong>{n.name}</strong>
                   </td>
-                  <td className="text-sm">{n.site ?? "—"}</td>
+                  <td className="text-sm">
+                    <SiteTag domain={n.site} />
+                  </td>
                   <td className="text-sm">{n.reason ?? <span className="text-muted">—</span>}</td>
                   <td className="text-sm">{when(n.createdAt)}</td>
                   <td>
