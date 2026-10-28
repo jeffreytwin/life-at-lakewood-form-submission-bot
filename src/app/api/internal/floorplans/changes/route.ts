@@ -11,7 +11,7 @@ const PAGE = 1000;
 const MOST = 5000;
 
 const COLUMNS =
-  "*, fp_sites:site_id(domain, name), fp_communities:community_id(name), fp_builders:builder_id(name), fp_floor_plans:floor_plan_id(id, starred)";
+  "*, fp_sites:site_id(domain, name), fp_communities:community_id(name), fp_builders:builder_id(name), fp_floor_plans:floor_plan_id(id, starred, quick_move_in)";
 
 type RowQuery = ReturnType<ReturnType<typeof supabase.from>["select"]>;
 
