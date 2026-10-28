@@ -14,7 +14,8 @@ describe("a district's name for a school, as the sites write it", () => {
   it("keeps the fuller names the pages already use", () => {
     expect(displayName("manatee", "Jain MS")).toBe("Dr Mona Jain Middle");
     expect(displayName("manatee", "Williams ES")).toBe("Annie Lucy Williams Elementary");
-    expect(displayName("manatee", "Harvey K-8 at Copperstone (PK-3)")).toBe("Barbara A. Harvey K-8 at Copperstone");
+    expect(displayName("manatee", "Harvey K-8 at Copperstone (PK-3)")).toBe("Barbara A. Harvey K-8");
+    expect(displayName("manatee", "Harvey K-8 at North River Ranch (4-8)")).toBe("Barbara A. Harvey K-8");
   });
 
   it("drops Sarasota's Zone, and reads its K-8s and casing as the pages do", () => {
@@ -49,8 +50,8 @@ describe("the same school, however it is written", () => {
 describe("a level with more than one school", () => {
   it("is written the way the Lakewood pages write it", () => {
     expect(combineSchools(["McNeal Elementary", "Braden River Elementary"])).toBe("McNeal and Braden River Elementary");
-    expect(combineSchools(["Barbara A. Harvey K-8 at North River Ranch", "Buffalo Creek Middle"])).toBe(
-      "Barbara A. Harvey K-8 at North River Ranch and Buffalo Creek Middle"
+    expect(combineSchools(["Barbara A. Harvey K-8", "Buffalo Creek Middle"])).toBe(
+      "Barbara A. Harvey K-8 and Buffalo Creek Middle"
     );
     expect(combineSchools(["Gullett Elementary"])).toBe("Gullett Elementary");
   });
@@ -73,6 +74,7 @@ describe("a page's school against the district's", () => {
     expect(compareLevel("Williams Elementary", "Annie Lucy Williams Elementary")).toBe("renamed");
     expect(compareLevel("Parrish Community High School", "Parrish Community High")).toBe("renamed");
     expect(compareLevel("Braden River and McNeal Elementary", "McNeal and Braden River Elementary")).toBe("renamed");
+    expect(compareLevel("Barbara A. Harvey K-8 at North River Ranch", "Barbara A. Harvey K-8")).toBe("renamed");
   });
 
   it("is rezoned when the school is another", () => {
