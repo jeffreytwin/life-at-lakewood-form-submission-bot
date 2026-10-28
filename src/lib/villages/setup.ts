@@ -9,6 +9,8 @@
 // by name is used as it is, draft or not; one that is missing is made as
 // a draft. Only blank fields are written (fill.ts), so nothing a person
 // typed is changed, and every row stays as it was published or drafted.
+// Blank picture fields get the builder's photos (photos.ts), to stand in
+// until the village's own are taken.
 
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
@@ -28,6 +30,7 @@ import { proposeLevel, siteIds } from "@/lib/school-zones/scan";
 import { collectionLabel, ensureSchoolFields, fieldNamed, indexRows, rowNames, VILLAGE_DETAILS, VILLAGE_PAGES } from "@/lib/villages/collections";
 import { detailAmenityIcons, planDetailsRow, planPagesRow, type FieldInfo, type RowData, type Schools } from "@/lib/villages/fill";
 import { researchVillage, type VillageResearch } from "@/lib/villages/research";
+import { photoFills, villagePhotos, wantsPhotos, type VillagePhotos } from "@/lib/villages/photos";
 
 export interface SetupRow {
   collectionId: string;
@@ -47,14 +50,40 @@ export interface VillageSetup {
   research: { found: boolean; sources: string[] } | null;
   problems: string[];
   leftForYou: string[];
+  /** The builder photos used, where each went, as viewable URLs. */
+  photos?: { where: string; src: string }[];
 }
 
 const LEFT_FOR_YOU = [
-  "the main photo, gallery and background images",
+  "the village's own photos, to replace the builder's that stand in for now",
   "the video and the interactive map",
   "the nearby villages",
   "the price, size, bedroom, bathroom and garage ranges (the village ranges sync fills them from the floor plans and listings)",
 ];
+
+/** How a photo's alt text names where the village is. */
+const PHOTO_PLACES: Record<string, string> = {
+  "lifeatlakewood.com": "Lakewood Ranch, Florida",
+  "lifeinwellenpark.com": "Wellen Park, Florida",
+  "lifeatparrish.com": "Parrish, Florida",
+};
+
+/** A wix:image URI as a URL a browser can show. */
+const viewable = (uri: string) => {
+  const id = /^wix:image:\/\/v1\/([^/#]+)/.exec(uri)?.[1];
+  return id ? `https://static.wixstatic.com/media/${id}` : uri;
+};
+
+/** Where each photo went, for the card. */
+function photosUsed(photos: VillagePhotos | null): { where: string; src: string }[] {
+  if (!photos) return [];
+  const out: { where: string; src: string }[] = [];
+  if (photos.main) out.push({ where: "Main image", src: viewable(photos.main.uri) });
+  if (photos.about) out.push({ where: "About background", src: viewable(photos.about.uri) });
+  if (photos.amenities) out.push({ where: "Amenities background", src: viewable(photos.amenities.uri) });
+  photos.gallery.forEach((g, i) => out.push({ where: `Gallery ${i + 1}: ${g.title}`, src: viewable(g.src) }));
+  return out;
+}
 
 const PROFILES: Record<string, typeof LAKEWOOD_PROFILE> = {
   "lifeatlakewood.com": LAKEWOOD_PROFILE,
@@ -179,6 +208,25 @@ export async function setUpVillage(alertId: string): Promise<Outcome & { setup?:
   if (sortKey) fixed[sortKey] = name;
   if (refKey && details) fixed[refKey] = details.item.id;
   const pages = await rowFor(wixSiteId, VILLAGE_PAGES, pagesFound ?? null, fixed);
+
+  // The builder's photos, imported only when a row has a picture field still blank.
+  const wanted =
+    wantsPhotos(pagesFields, pages.item.data ?? {}) || (details !== null && wantsPhotos(toFieldInfo(details.schema.fields), details.item.data ?? {}));
+  const photos =
+    wanted && ids.fpSiteId
+      ? await villagePhotos({
+          fpSiteId: ids.fpSiteId,
+          wixSiteId,
+          name,
+          place: PHOTO_PLACES[site] ?? site,
+          builders: detail.builders ?? [],
+          sources: research?.sources ?? [],
+          problems,
+        }).catch((e) => {
+          problems.push(`The builder photos could not be brought in: ${describeError(e)}`);
+          return null;
+        })
+      : null;
   if (details) {
     // The ranges Village Details already has, copied across.
     const price = fieldNamed(pagesSchema.fields, /^price range$/i);
@@ -186,7 +234,7 @@ export async function setUpVillage(alertId: string): Promise<Outcome & { setup?:
     if (price && details.item.data?.priceRange) fixed[price] = details.item.data.priceRange;
     if (sqft && details.item.data?.squareFootageRange) fixed[sqft] = details.item.data.squareFootageRange;
   }
-  const pagesFills = planPagesRow({
+  const pagesFills: RowData = planPagesRow({
     fields: pagesFields,
     rows: pagesItems.filter((i) => i.id !== pages.item.id).map((i) => i.data ?? {}),
     current: pages.item.data ?? {},
@@ -196,6 +244,7 @@ export async function setUpVillage(alertId: string): Promise<Outcome & { setup?:
     fixed,
     fallbackIcons: details ? detailAmenityIcons(details.keys, details.rows) : {},
   });
+  Object.assign(pagesFills, photoFills(pagesFields, pages.item.data ?? {}, photos));
   await writeFills(wixSiteId, VILLAGE_PAGES, pages.item, pagesFills);
   rows.push({
     collectionId: VILLAGE_PAGES,
@@ -228,6 +277,7 @@ export async function setUpVillage(alertId: string): Promise<Outcome & { setup?:
       ) as Partial<Record<SchoolLevel, string>>,
       pageUrl: typeof link === "string" ? `https://www.lifeatlakewood.com${link}` : null,
     });
+    Object.assign(detailFills, photoFills(detailFields, details.item.data ?? {}, photos));
     await writeFills(wixSiteId, VILLAGE_DETAILS, details.item, detailFills);
     rows.unshift({
       collectionId: VILLAGE_DETAILS,
@@ -247,6 +297,7 @@ export async function setUpVillage(alertId: string): Promise<Outcome & { setup?:
     research: research ? { found: research.found, sources: research.sources } : null,
     problems,
     leftForYou: LEFT_FOR_YOU,
+    photos: photosUsed(photos),
   };
   const { error: saveError } = await supabase
     .from("ca_alerts")
