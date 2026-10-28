@@ -587,6 +587,41 @@ export function livingSqft(sqft: number | null | undefined, text: string): numbe
   return sqft;
 }
 
+/**
+ * A plan's name as the page prints it, where a reading took a number into
+ * it that is not part of it. SimplyDwell's Deer Park cards read "Cassia 2
+ * Beds 2 Bath" under a link to ".../cassia-2/", and a reading named the
+ * plan "Cassia 2" — "Sabal 2" too, its card "Sabal 3 Beds" on
+ * ".../sabal-2/" — so five plans on the site came up for removal and the
+ * same five were offered as new, one night one way and another night back
+ * (Jeff, 2026-10-28). A name ending in a number the page prints only as the
+ * plan's count of beds, baths or garages after it, or never prints at all,
+ * is the name before the number, where the page prints that. A number
+ * that is part of the name stays: "Cedar 2 3 Beds" is Cedar 2, and Palm
+ * Bay 2 is printed "Palm Bay 2, 3,138 Sq. Ft.". Exported for tests.
+ */
+export function statedName(name: string, counts: { beds?: string | null; baths?: string | null; garages?: string | null }, text: string): string {
+  const m = name.match(/^(.*\S)\s+(\d{1,2})$/);
+  if (!m) return name;
+  const [, bare, number] = m;
+  const pattern = (s: string) => s.trim().split(/\s+/).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+");
+  // The words alone: a picture's or a link's address is not the page printing a name.
+  const said = text.replace(/\[(?:IMG|LINK) [^\]]*\]/g, " ").replace(/\s+/g, " ");
+  const whole = (s: string) => (n: number) => Math.floor(parseFloat(s)) === n;
+  const counted: [RegExp, string | null | undefined][] = [
+    [/^\s*(?:beds?|bedrooms?|br)\b/i, counts.beds],
+    [/^\s*(?:baths?|bathrooms?|ba)\b/i, counts.baths],
+    [/^\s*(?:car|cars|garages?)\b/i, counts.garages],
+  ];
+  // Its number heads the count the plan has after it: "Cassia 2 Beds" for two beds.
+  const isCount = (after: string) => counted.some(([word, count]) => word.test(after) && Boolean(count) && whole(count!)(Number(number)));
+  // A thousands comma or a decimal after the number is a figure, not the name ending.
+  const printed = [...said.matchAll(new RegExp(`(?<![\\w])${pattern(name)}(?![\\w]|[.,]\\d)`, "gi"))];
+  if (printed.some((p) => !isCount(said.slice(p.index! + p[0].length, p.index! + p[0].length + 20)))) return name;
+  // The bare name printed as itself, not as "Willow II", which a reading may give as "Willow 2".
+  return new RegExp(`(?<![\\w])${pattern(bare)}(?![\\w])(?!\\s+(?:i{1,3}|iv|vi{0,3}|ix|x)\\b)`, "i").test(said) ? bare : name;
+}
+
 /** How far after a plan's name its size is looked for: a card's price and size, not the next card's. */
 const SIZE_REACH = 120;
 
@@ -1473,10 +1508,12 @@ async function listPage(
   }
 
   const listed = plans.map((p) => {
-    const name = planName(p.name);
+    const read = planName(p.name);
     // A home named by its street address is a home, whatever this reading
     // said (namesAnAddress).
-    const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true || namesAnAddress(name);
+    const quickMoveIn = opts.quickMoveIns || p.quickMoveIn === true || namesAnAddress(read);
+    // A plan's name as the page prints it, not with its bed count taken in (statedName).
+    const name = quickMoveIn ? read : statedName(read, p, content);
     const price = statedPrice(p.price, content);
     return {
       planKey: normKey(name),
