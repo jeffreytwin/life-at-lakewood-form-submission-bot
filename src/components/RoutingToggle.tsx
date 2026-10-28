@@ -129,7 +129,8 @@ export default function RoutingToggle() {
   }, []);
 
   // Play celebration animation when a lead is accepted, marked done, an email
-  // is sent, or the last pending floor plan is dealt with (Jeff, 2026-09-29)
+  // is sent, the last pending floor plan is dealt with (Jeff, 2026-09-29), or
+  // a Community Alert is marked complete (Jeff, 2026-10-28)
   const playCelebration = useRef<() => void>(() => {});
   useEffect(() => {
     playCelebration.current = () => {
@@ -157,7 +158,9 @@ export default function RoutingToggle() {
         event.type !== "accepted" &&
         event.type !== "done" &&
         event.type !== "email_sent" &&
-        event.type !== "floorplans_cleared"
+        event.type !== "floorplans_cleared" &&
+        event.type !== "community_sold_out_done" &&
+        event.type !== "community_new_neighborhood_done"
       ) {
         return;
       }

@@ -13,7 +13,7 @@ import {
 export interface ChecksResult {
   soldOut: SoldOutCheck;
   newNeighborhoods: NewNeighborhoodScan | null;
-  selfChecks: { refreshed: number; closed: number };
+  selfChecks: { refreshed: number };
 }
 
 export async function runChecks({ scan }: { scan: boolean }): Promise<ChecksResult> {

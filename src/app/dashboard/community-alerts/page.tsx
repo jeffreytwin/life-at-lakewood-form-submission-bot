@@ -6,8 +6,8 @@ import { AlertCard, AlertsHeader, useOpenAlerts } from "./alert-card";
 /**
  * Community Alerts (Jeff, 2026-10-17): a neighborhood whose new-build
  * inventory reached zero, and the website work that calls for, as a
- * to-do list. An alert closes when its list is finished or when it is
- * dismissed with a reason; nothing clears it on its own.
+ * to-do list. An alert closes when its finished list is marked complete
+ * or when it is dismissed with a reason; nothing clears it on its own.
  */
 export default function SoldOutPage() {
   const { alerts, loading, error, load } = useOpenAlerts("sold_out");
@@ -18,8 +18,8 @@ export default function SoldOutPage() {
         intro={
           <>
             When a neighborhood&apos;s new-build inventory reaches zero, an alert appears here with the website work a
-            sell-out calls for. Check items off as they&apos;re done; the alert closes when every item is done or marked
-            N/A, or when you dismiss it with a reason. Checked twice an hour.
+            sell-out calls for. Check items off as they&apos;re done; once every item is done or marked N/A, mark it
+            complete to close it, or dismiss it with a reason. Checked twice an hour.
           </>
         }
       />

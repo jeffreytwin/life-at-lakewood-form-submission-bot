@@ -1,7 +1,7 @@
 // The to-do list each Community Alert carries (Jeff, 2026-10-17). An alert
-// is a job for the frontlines person, not a notice: it closes when every
-// item is done or marked not applicable, or when they dismiss it with a
-// reason, and never on its own.
+// is a job for the frontlines person, not a notice: once every item is
+// done or marked not applicable they mark it complete, or they dismiss it
+// with a reason. It never closes on its own.
 //
 // The wording lives here and only the item keys are stored, so rewording
 // an item reaches every alert, open or closed. Pure.

@@ -1,6 +1,8 @@
 // Community Alerts as the Hub shows and works them (Jeff, 2026-10-17): an
-// open alert stays open until its to-do list is settled or a person
-// dismisses it with a reason. Closed ones are kept, and can be reopened.
+// open alert stays open until a person marks its settled to-do list
+// complete (Jeff, 2026-10-28: "a button to officially mark it as
+// complete"), or dismisses it with a reason. Closed ones are kept, and can
+// be reopened.
 
 import { supabase } from "@/lib/supabase/client";
 import { failedAt as failed } from "@/lib/shared/describe-error";
@@ -97,18 +99,24 @@ async function readAlert(id: string): Promise<AlertRow | null> {
   return (data as unknown as AlertRow | null) ?? null;
 }
 
-/** Closes an open alert whose every item is done or not applicable. True when it closed. */
-export async function settleAlert(id: string): Promise<boolean> {
+/**
+ * Closes an open alert as done, once a person says so. Only when every
+ * item is done or not applicable: a settled list is never closed for them.
+ */
+export async function completeAlert(id: string): Promise<Outcome> {
   const alert = await readAlert(id);
-  if (!alert || alert.status !== "open" || !viewOf(alert).progress.complete) return false;
+  if (!alert || alert.status !== "open") return { ok: false, status: 404, error: "No open alert by that id" };
+  if (!viewOf(alert).progress.complete) return { ok: false, status: 409, error: "Every item has to be done or N/A first" };
   const now = new Date().toISOString();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("ca_alerts")
     .update({ status: "done", resolved_at: now, updated_at: now })
     .eq("id", id)
-    .eq("status", "open");
-  if (error) throw failed("closing the finished alert", error);
-  return true;
+    .eq("status", "open")
+    .select("id");
+  if (error) throw failed("completing the alert", error);
+  if (!data?.length) return { ok: false, status: 404, error: "No open alert by that id" };
+  return { ok: true };
 }
 
 export interface ItemChange {
@@ -153,7 +161,6 @@ export async function changeItem(alertId: string, key: string, change: ItemChang
 
   const { error } = await supabase.from("ca_alert_items").upsert(row, { onConflict: "alert_id,item_key" });
   if (error) throw failed(`saving the "${key}" item`, error);
-  await settleAlert(alertId);
   return { ok: true };
 }
 

@@ -142,7 +142,14 @@ export default function Sidebar({
     }
     fetchCommunityAlerts();
     const interval = setInterval(fetchCommunityAlerts, 30_000);
-    return () => clearInterval(interval);
+    // An alert marked complete: the badge goes with the fireworks.
+    const unsub = onLeadEvent((event) => {
+      if (event.type === "community_sold_out_done" || event.type === "community_new_neighborhood_done") fetchCommunityAlerts();
+    });
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
   }, []);
 
   async function handleLogout() {
