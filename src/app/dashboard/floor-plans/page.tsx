@@ -95,7 +95,8 @@ interface PendingChange {
   fp_sites: { domain: string; name: string } | null;
   fp_communities: { name: string } | null;
   fp_builders: { name: string } | null;
-  fp_floor_plans: { id: string; starred: boolean } | null;
+  /** The plan on the site the change is to: a removal carries no proposed record, so whether it is a quick move-in is read here. */
+  fp_floor_plans: { id: string; starred: boolean; quick_move_in?: boolean } | null;
 }
 
 type Group = ChangeGroup<PendingChange>;
@@ -135,7 +136,8 @@ function reorder<T>(list: T[], from: number, to: number): T[] {
 
 const idsAt = (g: Group, status: string) => g.rows.filter((r) => r.status === status).map((r) => r.id);
 const pendingIds = (g: Group) => idsAt(g, "pending");
-const isQuickMoveIn = (g: Group) => g.lead.proposed_record?.quickMoveIn === true;
+// A removal carries no proposed record: the plan on the site says what it is.
+const isQuickMoveIn = (g: Group) => (g.lead.proposed_record?.quickMoveIn ?? g.lead.fp_floor_plans?.quick_move_in) === true;
 
 /** Plans in requests to the bulk route: whole plans each, up to its cap, so no plan's rows are split across two. */
 function inRequests(list: Group[]): Group[][] {
@@ -882,7 +884,8 @@ export default function FloorPlansPage() {
   const pagePending = useMemo(() => pageGroups.filter((g) => pendingIds(g).length > 0 && !leaving.has(g.key)), [pageGroups, leaving]);
   useEffect(() => setPage(0), [statusFilter, siteFilter, builderFilter, kindFilter, sort]);
   const pendingQuickMoveIns = useMemo(
-    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && !leaving.has(g.key)),
+    // Not their removals: a home taken off the site is approved one by one, as before.
+    () => siteGroups.filter((g) => pendingIds(g).length > 0 && isQuickMoveIn(g) && g.kind !== "remove" && !leaving.has(g.key)),
     [siteGroups, leaving]
   );
   // Plans still waiting for a person in the whole queue, whatever the
