@@ -26,6 +26,7 @@ import {
   queryAllItems,
   queryItems,
   updateItem,
+  WixApiError,
   type WixCollectionField,
   type WixDataItem,
 } from "@/lib/wix/client";
@@ -45,6 +46,7 @@ import {
 } from "@/lib/school-zones/names";
 import { fetchStaticPage, readSchoolField, schoolFields, writeSchoolField, type PageSchools } from "@/lib/school-zones/pages";
 import { cleanPoints, placesByHand, subdivisionPoints, villagePoints, type PlacedBy, type Point } from "@/lib/school-zones/places";
+import { applyQueued, canApplySchools } from "@/lib/school-zones/apply";
 
 /**
  * Where each site's villages name their schools.
@@ -112,6 +114,11 @@ export interface SchoolZonesDetail {
   scannedAt: string;
   /** What the page said and what it should say, so a closed alert is not raised again for the same thing. */
   fingerprint: string;
+  /** Apply all has it queued, since when (school-zones/apply.ts). */
+  applyQueuedAt?: string | null;
+  /** Why Apply all could not write it. */
+  applyError?: string | null;
+  appliedAt?: string;
 }
 
 export interface SiteScan {
@@ -532,17 +539,21 @@ async function scanSite(target: SchoolTarget, zones: SchoolZones, startedAt: str
   return scan;
 }
 
-/** Every site's villages against the districts' zones; one scan at a time. */
-export async function runSchoolZoneScan(trigger: "cron" | "hub"): Promise<SchoolScan> {
-  const now = new Date();
-  const { data: running, error: runningError } = await supabase
+async function scanRunning(now: Date): Promise<boolean> {
+  const { data: running, error } = await supabase
     .from("ca_school_scans")
     .select("id, started_at")
     .is("finished_at", null)
     .gte("started_at", new Date(now.getTime() - STALE_MS).toISOString())
     .limit(1);
-  if (runningError) throw failed("reading the school scans", runningError);
-  if (running?.length) throw new Error("A school zone scan is already running; it takes a few minutes");
+  if (error) throw failed("reading the school scans", error);
+  return Boolean(running?.length);
+}
+
+/** Every site's villages against the districts' zones; one scan at a time. */
+export async function runSchoolZoneScan(trigger: "cron" | "hub"): Promise<SchoolScan> {
+  const now = new Date();
+  if (await scanRunning(now)) throw new Error("A school zone scan is already running; it takes a few minutes");
 
   const { data: row, error: insertError } = await supabase
     .from("ca_school_scans")
@@ -666,10 +677,85 @@ export async function applySchoolZones(alertId: string): Promise<Outcome> {
   const now = new Date().toISOString();
   const { error: closeError } = await supabase
     .from("ca_alerts")
-    .update({ status: "done", resolved_at: now, updated_at: now, detail: { ...detail, appliedAt: now } })
+    .update({ status: "done", resolved_at: now, updated_at: now, detail: { ...detail, applyQueuedAt: null, applyError: null, appliedAt: now } })
     .eq("id", alertId)
     .eq("status", "open");
   if (closeError) throw failed("closing the alert", closeError);
   logger.info("School zones applied", { site: detail.site, village: alert.name, created: !item });
   return { ok: true };
+}
+
+/** Sets or clears an open alert's Apply all marks, the rest of its detail as it is now. */
+async function markApply(alertId: string, mark: Pick<SchoolZonesDetail, "applyQueuedAt" | "applyError">): Promise<void> {
+  const { data, error } = await supabase.from("ca_alerts").select("detail").eq("id", alertId).eq("status", "open").maybeSingle();
+  if (error) throw failed("reading the alert", error);
+  if (!data) return;
+  const { error: updateError } = await supabase
+    .from("ca_alerts")
+    .update({ detail: { ...(data.detail as SchoolZonesDetail), ...mark } })
+    .eq("id", alertId)
+    .eq("status", "open");
+  if (updateError) throw failed("marking the alert", updateError);
+}
+
+/**
+ * Apply all, its first half: marks every open alert Apply can write and
+ * returns their ids for drainApplyAll. One already queued by a run still
+ * going is left to it. Refused while a scan runs, which rewrites the
+ * alerts it would write from.
+ */
+export async function queueApplyAll(): Promise<{ ok: true; ids: string[] } | { ok: false; status: 409; error: string }> {
+  const now = new Date();
+  if (await scanRunning(now)) return { ok: false, status: 409, error: "A school zone scan is running: Apply all once it has finished" };
+  const { data, error } = await supabase.from("ca_alerts").select("id, name, detail").eq("kind", "school_zones").eq("status", "open").order("name");
+  if (error) throw failed("reading the school zones alerts", error);
+  const ids: string[] = [];
+  for (const row of data ?? []) {
+    const detail = row.detail as SchoolZonesDetail;
+    if (!canApplySchools(detail) || applyQueued(detail, now.getTime())) continue;
+    const { error: markError } = await supabase
+      .from("ca_alerts")
+      .update({ detail: { ...detail, applyQueuedAt: now.toISOString(), applyError: null } })
+      .eq("id", row.id)
+      .eq("status", "open");
+    if (markError) throw failed(`queueing ${row.name}`, markError);
+    ids.push(row.id);
+  }
+  return { ok: true, ids };
+}
+
+/**
+ * Apply all, its second half, run after the answer has gone: writes each
+ * queued alert as its own Apply would, one at a time (the Wix client
+ * spaces the calls to stay under Wix's rate). One that cannot be written
+ * keeps its card, with why. Wix still refusing after the client's own
+ * cooldown ends the run: the rest are left for Apply all again.
+ */
+export async function drainApplyAll(ids: string[]): Promise<{ applied: number; failed: number }> {
+  let applied = 0;
+  let refused = 0;
+  for (let i = 0; i < ids.length; i++) {
+    let problem: string | null = null;
+    try {
+      const outcome = await applySchoolZones(ids[i]);
+      if (!outcome.ok) problem = outcome.error;
+    } catch (error) {
+      if (error instanceof WixApiError && error.rateLimited) {
+        const busy = "Wix is refusing calls for now: press Apply all again in a few minutes";
+        for (const rest of ids.slice(i)) await markApply(rest, { applyQueuedAt: null, applyError: busy }).catch(() => {});
+        refused += ids.length - i;
+        logger.warn("Apply all stopped: Wix is throttling", { applied, left: ids.length - i });
+        break;
+      }
+      problem = describeError(error);
+    }
+    if (problem) {
+      refused++;
+      await markApply(ids[i], { applyQueuedAt: null, applyError: problem }).catch((error) =>
+        logger.warn("Could not mark an alert Apply all failed on", { id: ids[i], error: describeError(error) })
+      );
+    } else applied++;
+  }
+  logger.info("Apply all school zones", { applied, failed: refused });
+  return { applied, failed: refused };
 }

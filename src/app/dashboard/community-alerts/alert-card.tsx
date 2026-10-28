@@ -8,6 +8,7 @@ import type { ChecksResult } from "@/lib/community-alerts/checks";
 import type { AnnouncementDetail } from "@/lib/community-alerts/announcements";
 import type { SchoolZonesDetail } from "@/lib/school-zones/scan";
 import { LEVEL_LABEL } from "@/lib/school-zones/names";
+import { applyQueued, canApplySchools } from "@/lib/school-zones/apply";
 import { siteColors } from "@/app/dashboard/listings/format";
 import { emitLeadEvent } from "@/lib/lead-events";
 import { COMMUNITY_ALERT_DONE_SOUND, playSound } from "@/lib/notification-sounds";
@@ -485,7 +486,9 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
   }
 
   const { settled, total } = alert.progress;
-  const canApply = alert.kind === "school_zones" && (alert.detail as unknown as SchoolZonesDetail).source === "collection" && !schoolsMatch(alert);
+  const schools = alert.kind === "school_zones" ? (alert.detail as unknown as SchoolZonesDetail) : null;
+  const canApply = schools !== null && canApplySchools(schools);
+  const queued = schools !== null && applyQueued(schools);
   const listDone = alert.progress.complete || (alert.kind === "school_zones" && total === 0 && schoolsMatch(alert));
   const canIgnore = alert.kind !== "sold_out" && alert.kind !== "school_zones";
   const canWatch = alert.kind === "announcement";
@@ -525,9 +528,9 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
         </div>
       )}
 
-      {problem && (
+      {(problem || (schools?.applyError && !queued)) && (
         <div className="text-sm" style={{ marginTop: 8, color: "var(--danger)" }}>
-          {problem}
+          {problem ?? `Apply all could not write it: ${schools?.applyError}`}
         </div>
       )}
 
@@ -535,7 +538,13 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
         <div className="text-sm" style={{ marginTop: 12, color: "var(--success)", fontWeight: 600 }}>
           🎉 Mission complete. {alert.name} is closed and kept under History.
         </div>
-      ) : canApply && !closing ? (
+      ) : queued ? (
+        <div className="text-sm text-muted" style={{ marginTop: 12 }}>
+          ⏳ Apply all is writing these schools to the website; the card closes once they land.
+        </div>
+      ) : null}
+
+      {completed || queued ? null : canApply && !closing ? (
         <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <button className="btn btn-primary" disabled={busy} onClick={apply}>
             Apply to the website
@@ -562,7 +571,7 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
         </div>
       ) : null}
 
-      {!completed && (
+      {!completed && !queued && (
         <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           {closing ? (
             <>

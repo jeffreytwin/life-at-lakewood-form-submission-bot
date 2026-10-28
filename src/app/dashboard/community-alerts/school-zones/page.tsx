@@ -1,10 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CommunityAlertTabs from "../tabs";
 import { AlertCard, SiteTag, siteStyle, useOpenAlerts, when } from "../alert-card";
-import type { ScanRecord, SchoolScan, SiteScan } from "@/lib/school-zones/scan";
+import type { ScanRecord, SchoolScan, SchoolZonesDetail, SiteScan } from "@/lib/school-zones/scan";
 import type { PlaceView } from "@/lib/school-zones/places";
+import { applyQueued, canApplySchools } from "@/lib/school-zones/apply";
+import { emitLeadEvent } from "@/lib/lead-events";
+import { COMMUNITY_ALERT_DONE_SOUND, playSound } from "@/lib/notification-sounds";
 
 const yearLabel = (year: number) => `${year}-${String((year + 1) % 100).padStart(2, "0")}`;
 
@@ -127,6 +130,9 @@ export default function SchoolZonesPage() {
   const [places, setPlaces] = useState<PlaceView[]>([]);
   const [running, setRunning] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+  /** The alerts Apply all was writing when this page last saw it, to say how it ended. */
+  const watching = useRef<Set<string>>(new Set());
 
   const loadScans = useCallback(() => {
     fetch("/api/internal/community-alerts/school-zones")
@@ -162,6 +168,24 @@ export default function SchoolZonesPage() {
     }
   }
 
+  /** Apply all: the server writes them in the background; the page follows the cards. */
+  async function applyAll() {
+    if (!confirm(`Write the new schools to ${applicable.length} village page${applicable.length === 1 ? "" : "s"}? It carries on if you leave this page.`)) return;
+    setApplying(true);
+    setNote(null);
+    try {
+      const res = await fetch("/api/internal/community-alerts/school-zones/apply-all", { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) setNote(data?.error ?? `HTTP ${res.status}`);
+      else if (!data?.queued) setNote("Nothing to apply.");
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : String(e));
+    } finally {
+      setApplying(false);
+      load();
+    }
+  }
+
   async function forget(id: string) {
     await fetch(`/api/internal/community-alerts/school-zones/places?id=${id}`, { method: "DELETE" });
     loadScans();
@@ -172,6 +196,32 @@ export default function SchoolZonesPage() {
   const sorted = [...alerts].sort(
     (a, b) => String(a.detail?.site ?? "").localeCompare(String(b.detail?.site ?? "")) || a.name.localeCompare(b.name)
   );
+  const schoolsOf = (a: (typeof alerts)[number]) => a.detail as unknown as SchoolZonesDetail;
+  const queued = alerts.filter((a) => applyQueued(schoolsOf(a)));
+  const applicable = alerts.filter((a) => canApplySchools(schoolsOf(a)) && !applyQueued(schoolsOf(a)));
+  const queuedKey = queued.map((a) => a.id).join(",");
+
+  // While Apply all is writing, the cards are read again every few seconds; when it ends, how it went.
+  useEffect(() => {
+    const ids = queuedKey ? queuedKey.split(",") : [];
+    if (ids.length) {
+      ids.forEach((id) => watching.current.add(id));
+      const timer = setInterval(load, 4000);
+      return () => clearInterval(timer);
+    }
+    if (!watching.current.size) return;
+    const open = new Map(alerts.map((a) => [a.id, a]));
+    const was = [...watching.current];
+    watching.current = new Set();
+    const failed = was.filter((id) => open.get(id) && schoolsOf(open.get(id)!).applyError).length;
+    const applied = was.filter((id) => !open.has(id)).length;
+    setNote(`Apply all is done: ${applied} village${applied === 1 ? "" : "s"} updated${failed ? `; ${failed} could not be, each card says why` : ""}.`);
+    if (applied) {
+      playSound(COMMUNITY_ALERT_DONE_SOUND);
+      if (!failed) emitLeadEvent({ type: "community_schools_done", leadName: "", communityName: "Every village" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs on the queue changing, not on every reload
+  }, [queuedKey]);
 
   return (
     <div>
@@ -187,11 +237,29 @@ export default function SchoolZonesPage() {
             neither gets its row made as a draft by Apply.
           </p>
         </div>
-        <button className="btn btn-secondary" onClick={runNow} disabled={running || Boolean(unfinished)} title="October's scan, now">
-          {running || unfinished ? "Scanning…" : "Run the scan now"}
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {(applicable.length > 0 || queued.length > 0) && (
+            <button
+              className="btn btn-primary"
+              onClick={applyAll}
+              disabled={applying || queued.length > 0 || running || Boolean(unfinished)}
+              title="Apply on every Wellen Park and Parrish alert, in the background"
+            >
+              {queued.length > 0 ? `Applying… ${queued.length} left` : `Apply all (${applicable.length})`}
+            </button>
+          )}
+          <button className="btn btn-secondary" onClick={runNow} disabled={running || Boolean(unfinished)} title="October's scan, now">
+            {running || unfinished ? "Scanning…" : "Run the scan now"}
+          </button>
+        </div>
       </div>
       <CommunityAlertTabs />
+      {queued.length > 0 && (
+        <div className="card text-sm" style={{ marginBottom: 12 }}>
+          ⏳ Apply all is writing {queued.length} village{queued.length === 1 ? "" : "s"}&apos; schools to the website, about fifty a
+          minute. It carries on if you leave this page; each card closes as it lands.
+        </div>
+      )}
       {note && (
         <div className="card text-sm" style={{ marginBottom: 12 }}>
           {note}
