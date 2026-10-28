@@ -283,6 +283,25 @@ function VillageSetupPanel({ setup }: { setup: VillageSetup }) {
           </div>
         );
       })}
+      {setup.photos && setup.photos.length > 0 && (
+        <div style={{ marginTop: 6 }}>
+          <div className="text-muted">Builder photos, standing in until the village&apos;s own:</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+            {setup.photos.map((p) => (
+              <a key={`${p.where}-${p.src}`} href={p.src} target="_blank" rel="noreferrer" title={p.where}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${p.src}/v1/fill/w_160,h_100,al_c,q_80/thumb.jpg`}
+                  alt={p.where}
+                  width={80}
+                  height={50}
+                  style={{ objectFit: "cover", borderRadius: 4, border: "1px solid var(--border)", display: "block" }}
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       {setup.problems.map((p) => (
         <div key={p} style={{ marginTop: 4, color: "var(--warning)" }}>
           {p}
