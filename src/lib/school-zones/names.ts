@@ -108,14 +108,16 @@ export function combineSchools(names: string[]): string {
   return shared ? `${body} ${shared}` : body;
 }
 
-export type LevelVerdict = "same" | "renamed" | "rezoned";
+export type LevelVerdict = "same" | "renamed" | "rezoned" | "missing";
 
 /**
  * How a page's school for a level stands against the district's: the
- * same text; the same school written another way; or another school.
+ * same text; the same school written another way; another school; or
+ * no school named at all.
  */
 export function compareLevel(current: string, proposed: string): LevelVerdict {
   if (cleanText(current) === proposed) return "same";
+  if (!cleanText(current)) return "missing";
   const now = splitSchools(current);
   const next = splitSchools(proposed);
   if (now.length !== next.length) return "rezoned";

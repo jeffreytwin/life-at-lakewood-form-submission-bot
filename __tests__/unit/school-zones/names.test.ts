@@ -80,4 +80,9 @@ describe("a page's school against the district's", () => {
     expect(compareLevel("Wellen Park Middle School", "Venice Middle")).toBe("rezoned");
     expect(compareLevel("McNeal Elementary", "McNeal and Braden River Elementary")).toBe("rezoned");
   });
+
+  it("is missing when the page names no school", () => {
+    expect(compareLevel("", "Willis Elementary")).toBe("missing");
+    expect(compareLevel("\u202f", "Willis Elementary")).toBe("missing");
+  });
 });

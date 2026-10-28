@@ -1,9 +1,9 @@
-// What each village's page says about its schools now. Life At Lakewood's
-// village pages are static, so the live page is read (Jeff, 2026-10-28:
-// until its school zones are in the collection, then the collection
-// takes over). Wellen Park's and Parrish's say it in three rich-text
-// fields of their Neighborhoods collection, each a paragraph like
+// What each village's page says about its schools now: three rich-text
+// fields of the site's village pages collection (HousesforSale-DynamicPages
+// on every site), each a paragraph like
 // <p class="font_7"><strong>Grade School: </strong>Williams Elementary</p>.
+// Life At Lakewood's older village pages were built one by one; while its
+// row has no schools yet, the old static page is read instead.
 // Pure but for the page fetch.
 
 import { cleanText, LEVEL_LABEL, SCHOOL_LEVELS, type SchoolLevel } from "@/lib/school-zones/names";
@@ -84,7 +84,9 @@ const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
  * markup. Pure; exported for tests.
  */
 export function writeSchoolField(level: SchoolLevel, school: string, existing: unknown): string {
-  const shaped = typeof existing === "string" ? existing.match(/^(\s*<p[^>]*>\s*<strong>[^<]*<\/strong>)[\s\S]*?(<\/p>\s*)$/i) : null;
+  // The space after the label, as the paragraph has it: Lakewood's read "</strong> &nbsp;".
+  const shaped =
+    typeof existing === "string" ? existing.match(/^(\s*<p[^>]*>\s*<strong>[^<]*<\/strong>(?:\s|&nbsp;|\u00a0)*)[\s\S]*?(<\/p>\s*)$/i) : null;
   if (shaped) return `${shaped[1]}${escapeHtml(school)}${shaped[2]}`;
   return `<p class="font_7"><strong>${LEVEL_LABEL[level]}: </strong>${escapeHtml(school)}</p>`;
 }

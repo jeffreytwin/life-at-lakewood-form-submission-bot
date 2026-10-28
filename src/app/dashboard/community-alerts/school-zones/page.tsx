@@ -78,10 +78,17 @@ function SiteSummary({ site, onSaved }: { site: SiteScan; onSaved: () => void })
           <span className="text-sm">
             {site.checked} villages checked · {site.matching} match · <strong>{site.raised.length} new alerts</strong>
             {site.updated.length > 0 && <> · {site.updated.length} open alerts refreshed</>}
+            {(site.filled?.length ?? 0) > 0 && (
+              <>
+                {" "}
+                · {site.filled!.length} rows filled in from the verified pages
+                {(site.created?.length ?? 0) > 0 && <> ({site.created!.length} made as drafts)</>}
+              </>
+            )}
             {site.handled.length > 0 && <> · {site.handled.length} already dealt with</>}
           </span>
         )}
-        {(site.noSchools.length > 0 || site.handled.length > 0) && (
+        {(site.noSchools.length > 0 || site.handled.length > 0 || (site.filled?.length ?? 0) > 0) && (
           <button className="btn btn-sm btn-secondary" onClick={() => setShowQuiet(!showQuiet)}>
             {showQuiet ? "Hide" : "Details"}
           </button>
@@ -96,6 +103,12 @@ function SiteSummary({ site, onSaved }: { site: SiteScan; onSaved: () => void })
         <div className="text-muted text-sm" style={{ marginTop: 6 }}>
           {site.noSchools.length > 0 && <div>No schools on the page, left alone: {site.noSchools.join(", ")}</div>}
           {site.handled.length > 0 && <div>Raised before for the same change and closed: {site.handled.join(", ")}</div>}
+          {(site.filled?.length ?? 0) > 0 && (
+            <div>
+              Filled in, the static page and the zones agreeing: {site.filled!.join(", ")}
+              {(site.created?.length ?? 0) > 0 && <> · made as draft rows: {site.created!.join(", ")}</>}
+            </div>
+          )}
         </div>
       )}
       {site.unplaced.length > 0 && (
@@ -180,7 +193,9 @@ export default function SchoolZonesPage() {
             Every October the Hub checks each village&apos;s grade, middle and high school against the districts&apos; own zones
             (Manatee&apos;s School Locator, Sarasota&apos;s zone maps) at homes in the village, by the latest school year the
             district has published. A village whose page names other schools, or names them another way, gets an alert here.
-            Wellen Park and Parrish are updated with Apply; Life At Lakewood&apos;s pages are edited by hand, then marked complete.
+            Apply writes it to the site&apos;s village pages collection. On Life At Lakewood every village gets a row in
+            Dynamic Village Pages, made as a draft when it has none; where the old static page already names what the zones
+            say, the scan fills the row in itself.
           </p>
         </div>
         <button className="btn btn-secondary" onClick={runNow} disabled={running || Boolean(unfinished)} title="October's scan, now">

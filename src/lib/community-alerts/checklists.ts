@@ -147,23 +147,6 @@ export function newNeighborhoodItems(ctx: ChecklistContext): ChecklistItem[] {
   ];
 }
 
-/**
- * A village whose page names other schools than its homes are zoned for
- * (school-zones/scan.ts). Wellen Park's and Parrish's are written from the
- * alert with Apply; Life At Lakewood's static pages are edited by hand.
- */
-export function schoolZoneItems(ctx: ChecklistContext): ChecklistItem[] {
-  if (!ctx.legacySite) return [];
-  return [
-    {
-      key: "page_schools",
-      label: "Update the Schools section on the village page",
-      hint: "Edit the page in the Wix editor. Checks itself when the next scan finds the page as it should be.",
-      auto: true,
-    },
-  ];
-}
-
 export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistItem[] {
   switch (kind) {
     case "sold_out":
@@ -174,8 +157,10 @@ export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistI
     // or dismiss it (watch-list.ts).
     case "announcement":
       return [];
+    // A school zones alert asks for one decision too: Apply writes it to the
+    // site's village pages collection (school-zones/scan.ts).
     case "school_zones":
-      return schoolZoneItems(ctx);
+      return [];
   }
 }
 

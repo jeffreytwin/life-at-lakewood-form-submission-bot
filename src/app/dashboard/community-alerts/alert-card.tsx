@@ -293,13 +293,18 @@ function AnnouncementSummary({ alert }: { alert: AlertView }) {
 
 const yearLabel = (year: number | undefined) => (year ? `${year}-${String((year + 1) % 100).padStart(2, "0")}` : "");
 
-/** A school zones alert's levels say what the page already says: nothing is left to write. */
+/** A school zones alert's row already says what the zones do: nothing is left to write. */
 const schoolsMatch = (alert: AlertView) =>
-  alert.kind === "school_zones" && ((alert.detail as unknown as SchoolZonesDetail).levels ?? []).every((l) => l.verdict === "same");
+  alert.kind === "school_zones" &&
+  !((alert.detail as unknown as SchoolZonesDetail).levels ?? []).some((l) => l.proposed && (l.row ?? l.page) !== l.proposed);
+
+/** What the site calls the collection its village pages come from. */
+const collectionLabel = (site: string) => (site === "lifeatlakewood.com" ? "Dynamic Village Pages" : "Neighborhoods");
 
 const VERDICT: Record<string, { label: string; cls: string; title: string }> = {
   rezoned: { label: "rezoned", cls: "badge-warning", title: "The district zones these homes for another school" },
   renamed: { label: "name", cls: "badge-muted", title: "The same school, written as the sites write it" },
+  missing: { label: "add", cls: "badge-info", title: "The page names no school here yet" },
 };
 
 function SchoolZonesSummary({ alert }: { alert: AlertView }) {
@@ -320,7 +325,7 @@ function SchoolZonesSummary({ alert }: { alert: AlertView }) {
           <thead>
             <tr>
               <th style={{ width: 120 }} />
-              <th>The page says</th>
+              <th>{d.pageSource === "static" ? "The old static page says" : "The page says"}</th>
               <th>It should say</th>
               <th />
             </tr>
@@ -361,6 +366,13 @@ function SchoolZonesSummary({ alert }: { alert: AlertView }) {
           </tbody>
         </table>
       </div>
+      {d.pageSource !== "row" && d.collectionId && (
+        <div className="text-sm" style={{ marginTop: 8 }}>
+          {d.wixItemId
+            ? `${alert.name}'s row in ${collectionLabel(d.site)} has no schools yet.`
+            : `${alert.name} has no row in ${collectionLabel(d.site)} yet: Apply makes one as a draft.`}
+        </div>
+      )}
       {schoolsMatch(alert) && (
         <div className="text-sm" style={{ marginTop: 8, color: "var(--success)" }}>
           The page now names these schools. Mark it complete.
@@ -525,8 +537,14 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
             Apply to the website
           </button>
           <span className="text-muted text-sm">
-            Writes the new schools to {alert.name}&apos;s row in the Neighborhoods collection
-            {(alert.detail as unknown as SchoolZonesDetail).draft ? " (it stays a draft)" : ""} and closes the alert.
+            {(alert.detail as unknown as SchoolZonesDetail).wixItemId ? (
+              <>
+                Writes the schools to {alert.name}&apos;s row in {collectionLabel(site)}
+                {(alert.detail as unknown as SchoolZonesDetail).draft ? " (it stays a draft)" : ""} and closes the alert.
+              </>
+            ) : (
+              <>Makes a draft row for {alert.name} in {collectionLabel(site)} with these schools and closes the alert.</>
+            )}
           </span>
         </div>
       ) : listDone && !closing ? (

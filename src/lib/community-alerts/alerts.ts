@@ -106,9 +106,10 @@ async function readAlert(id: string): Promise<AlertRow | null> {
 export async function completeAlert(id: string): Promise<Outcome> {
   const alert = await readAlert(id);
   if (!alert || alert.status !== "open") return { ok: false, status: 404, error: "No open alert by that id" };
-  // A school zones alert with no list is done once its page names the schools the zones do.
-  const levels = (alert.detail as { levels?: { verdict: string }[] }).levels;
-  const schoolsMatch = alert.kind === "school_zones" && Array.isArray(levels) && levels.every((l) => l.verdict === "same");
+  // A school zones alert with no list is done once its row names the schools the zones do.
+  const levels = (alert.detail as { levels?: { page: string; row?: string; proposed: string }[] }).levels;
+  const schoolsMatch =
+    alert.kind === "school_zones" && Array.isArray(levels) && !levels.some((l) => l.proposed && (l.row ?? l.page) !== l.proposed);
   if (!viewOf(alert).progress.complete && !schoolsMatch) return { ok: false, status: 409, error: "Every item has to be done or N/A first" };
   const now = new Date().toISOString();
   const { data, error } = await supabase
