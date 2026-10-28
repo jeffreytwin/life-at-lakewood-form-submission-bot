@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { displayName } from "@/lib/school-zones/names";
-import { fingerprintOf, levelDetails, levelsToWrite, proposeLevel, schoolWrites } from "@/lib/school-zones/scan";
+import { fingerprintOf, levelDetails, levelsAgainst, levelsToWrite, proposeLevel, schoolWrites, staticDiffers } from "@/lib/school-zones/scan";
 import { cleanPoints } from "@/lib/school-zones/places";
 import { readPageSchools, readSchoolField, schoolFields, writeSchoolField } from "@/lib/school-zones/pages";
 import type { PointZones } from "@/lib/school-zones/districts";
@@ -175,5 +175,24 @@ describe("a Life At Lakewood village's row", () => {
       "villageMiddleSchool",
       "villageHighSchool",
     ]);
+  });
+});
+
+describe("Life At Lakewood's Village Details and the pages beside it", () => {
+  const zones = [zone({ elementary: ["Willis Elementary"], middle: ["Nolan Middle"], high: ["Lakewood Ranch High"] })];
+  const fields = { elementary: "villageElementarySchool", middle: "villageMiddleSchool", high: "villageHighSchool" };
+
+  it("holds a static page to what the zones say, and a copy to the source of truth", () => {
+    const levels = levelDetails({ elementary: "", middle: "", high: "" }, zones);
+    expect(staticDiffers(levels, { elementary: "Willis Elementary", middle: "Nolan Middle", high: "Lakewood Ranch High" })).toBe(false);
+    expect(staticDiffers(levels, { elementary: "Willis Elementary", middle: "Nolan Middle", high: "Rangeland High" })).toBe(true);
+
+    const copy = {
+      villageElementarySchool: '<p class="font_7"><strong>Grade School:</strong> &nbsp;Willis Elementary</p>',
+      villageMiddleSchool: '<p class="font_7"><strong>Middle School: </strong>&nbsp;Haile Middle</p>',
+    };
+    const against = levelsAgainst(levels, fields, copy);
+    expect(against.map((l) => l.page)).toEqual(["Willis Elementary", "Haile Middle", ""]);
+    expect(Object.keys(schoolWrites(against, fields, copy))).toEqual(["villageMiddleSchool", "villageHighSchool"]);
   });
 });

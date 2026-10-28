@@ -48,7 +48,9 @@ const ALERT_COLUMNS = "id, kind, status, name, detail, dismissed_reason, resolve
 const ITEM_COLUMNS = "item_key, done_at, by_hand, not_applicable, choice, note";
 
 function itemsOf(alert: Pick<AlertRow, "kind" | "detail">): ChecklistItem[] {
-  return checklistFor(alert.kind, { legacySite: alert.detail?.site === LEGACY_DOMAIN, staticPage: alert.detail?.source === "page" });
+  // A school zones alert's to-do is the village's static page, while it names other schools.
+  const staticPage = alert.detail?.source === "page" || Boolean(alert.detail?.staticPage);
+  return checklistFor(alert.kind, { legacySite: alert.detail?.site === LEGACY_DOMAIN, staticPage });
 }
 
 /** An alert with its to-do list in order, each item beside what was done about it. Pure; exported for tests. */
