@@ -52,6 +52,34 @@ describe("team landing page", () => {
     expect(html).toContain(`${count} five-star Google reviews and on pace`);
   });
 
+  it("leads off the page only to the reviews, the office map and the legal pages", () => {
+    // The page exists to fill in the form; every other way out is a visitor
+    // who didn't.
+    const allowed = [
+      "https://share.google/",
+      "https://www.google.com/maps/",
+      "https://www.lifeatlakewood.com/privacy-policy",
+      "https://www.lifeatlakewood.com/terms-of-use",
+    ];
+    const external = [...html.matchAll(/<a\b[^>]*\bhref="(https?:[^"]+)"/g)].map((m) => m[1]);
+    expect(external.length).toBeGreaterThan(0);
+    expect(external.filter((href) => !allowed.some((prefix) => href.startsWith(prefix)))).toEqual([]);
+  });
+
+  it("starts only offers and steps the form has", () => {
+    const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1] ?? "";
+    const block = (name: string) => script.match(new RegExp(`const ${name} = \\{([\\s\\S]*?)\\n  \\};`))?.[1] ?? "";
+
+    const offers = [...block("OFFERS").matchAll(/^\s+(\w+): \{/gm)].map((m) => m[1]);
+    const intents = new Set([...html.matchAll(/data-intent="([^"]+)"/g)].map((m) => m[1]));
+    expect(offers).toEqual(["buy", "buy_and_sell", "build", "sell"]);
+    expect([...intents].filter((intent) => !offers.includes(intent))).toEqual([]);
+
+    const steps = new Set([...html.matchAll(/<fieldset class="step" data-step="([^"]+)"/g)].map((m) => m[1]));
+    const flowSteps = new Set([...block("FLOWS").matchAll(/"(\w+)"/g)].map((m) => m[1]));
+    expect([...flowSteps].sort()).toEqual([...steps].sort());
+  });
+
   it("links only to sections and files that exist", () => {
     const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
     const anchors = [...html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);

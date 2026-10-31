@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lakewood Ranch Real Estate Team | Life at Lakewood</title>
-<meta name="description" content="Life at Lakewood is a Lakewood Ranch real estate team with Coldwell Banker Realty: 10 agents, 74 five-star Google reviews and on pace for 150+ closings in 2026.">
+<title>Free Lakewood Ranch Village Match | Life at Lakewood</title>
+<meta name="description" content="Get your top 3 Lakewood Ranch villages with real prices and fees, free within 24 hours. 10 local agents, 74 five-star Google reviews and on pace for 150+ closings in 2026.">
 <meta name="theme-color" content="#0B1630">
 <!-- Before launch, point these at the page's live address (see landing/README.md). -->
 <!-- <link rel="canonical" href="https://team.lifeatlakewood.com/"> -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Life at Lakewood">
-<meta property="og:title" content="Life at Lakewood | Lakewood Ranch Real Estate Team">
-<meta property="og:description" content="10 agents with Coldwell Banker Realty, 74 five-star Google reviews and on pace for 150+ closings in 2026. We know Lakewood Ranch village by village.">
+<meta property="og:title" content="Find your Lakewood Ranch village before you tour a single home">
+<meta property="og:description" content="A free Village Match from Life at Lakewood, with Coldwell Banker Realty: 10 local agents, 74 five-star Google reviews and on pace for 150+ closings in 2026.">
 <meta property="og:image" content="assets/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -53,6 +53,16 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is the Village Match really free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. There’s no cost, no obligation and nothing to sign. It’s the easiest way to get real numbers on the villages that fit you before you spend a weekend touring." }
+    },
+    {
+      "@type": "Question",
+      "name": "Will you flood me with calls and emails?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. One local agent reaches out with your Village Match and answers your questions. If you’d rather not hear from us, just say so or reply STOP, and we’ll stop." }
+    },
     {
       "@type": "Question",
       "name": "Is Lakewood Ranch in Manatee County or Sarasota County?",
@@ -105,6 +115,9 @@
     --blue-700: #1F6FA8;
     --sky: #7FD1F2;
     --star: #F6B93B;
+    --gold-top: #FFCD6B;
+    --gold: #F4A62A;
+    --gold-edge: #DB8F14;
     --brand-gradient: linear-gradient(135deg, #6B4FA0 0%, #2A78B5 100%);
     --shadow: 0 1px 2px rgba(11, 22, 48, .06), 0 18px 40px -18px rgba(11, 22, 48, .22);
     --serif: "Fraunces", Georgia, "Times New Roman", serif;
@@ -123,8 +136,8 @@
   }
   img { max-width: 100%; height: auto; display: block; }
   a { color: inherit; }
-  h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.1; letter-spacing: -.01em; margin: 0; color: var(--navy-900); }
-  p { margin: 0; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.1; letter-spacing: -.01em; margin: 0; color: var(--navy-900); text-wrap: balance; }
+  p { margin: 0; text-wrap: pretty; }
   section[id] { scroll-margin-top: 84px; }
   :focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -139,42 +152,45 @@
   .section-head h2 { font-size: clamp(34px, 4.4vw, 52px); }
   .section-head p:not(.eyebrow) { margin-top: 18px; font-size: 19px; color: var(--muted); }
   .stars { color: var(--star); letter-spacing: 2px; }
+  .center-row { margin-top: 44px; text-align: center; }
 
-  /* Buttons */
+  /* Buttons. Gold is the one color that means "get your Village Match". */
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: .5em;
     min-height: 50px; padding: 0 24px; border-radius: 999px; border: 1.5px solid transparent;
-    font: 600 16px/1 var(--sans); letter-spacing: .01em; text-decoration: none; cursor: pointer;
-    transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
+    font: 600 16px/1.1 var(--sans); letter-spacing: .01em; text-align: center; text-decoration: none; cursor: pointer;
+    transition: box-shadow .2s ease, background-color .2s ease, border-color .2s ease;
   }
-  .btn:hover { transform: translateY(-1px); }
-  .btn-primary { color: #fff; background: var(--brand-gradient); box-shadow: 0 10px 22px -10px rgba(74, 62, 160, .7); }
-  .btn-primary:hover { box-shadow: 0 14px 28px -12px rgba(74, 62, 160, .8); }
+  /* Hover never moves a button or card: a cursor resting on its edge would
+     slip off, un-hover it and set it bouncing. */
+  .btn-cta {
+    color: var(--navy-900); background: linear-gradient(180deg, var(--gold-top) 0%, var(--gold) 100%); border-color: var(--gold-edge);
+    box-shadow: 0 10px 24px -12px rgba(219, 143, 20, .9), inset 0 1px 0 rgba(255, 255, 255, .45);
+  }
+  .btn-cta:hover { box-shadow: 0 14px 30px -12px rgba(219, 143, 20, .95), inset 0 1px 0 rgba(255, 255, 255, .45); filter: brightness(1.04); }
   .btn-light { color: var(--navy-900); background: #fff; }
   .btn-outline { color: var(--navy-900); border-color: rgba(11, 22, 48, .25); background: transparent; }
   .btn-outline:hover { border-color: var(--navy-900); }
-  .btn-ghost { color: #fff; border-color: rgba(255, 255, 255, .35); }
+  .btn-ghost { color: #fff; border-color: rgba(255, 255, 255, .4); }
   .btn-ghost:hover { border-color: #fff; }
   .btn-sm { min-height: 42px; padding: 0 18px; font-size: 15px; }
+  .btn-lg { min-height: 58px; padding: 0 30px; font-size: 18px; }
 
   /* Header */
   .site-header { position: fixed; inset: 0 0 auto; z-index: 50; color: #fff; transition: background-color .25s ease, box-shadow .25s ease; }
-  .site-header.scrolled { background: rgba(11, 22, 48, .9); -webkit-backdrop-filter: saturate(140%) blur(12px); backdrop-filter: saturate(140%) blur(12px); box-shadow: 0 1px 0 rgba(255, 255, 255, .08); }
-  .header-inner { display: flex; align-items: center; gap: 28px; height: 78px; }
+  .site-header.scrolled { background: rgba(11, 22, 48, .92); -webkit-backdrop-filter: saturate(140%) blur(12px); backdrop-filter: saturate(140%) blur(12px); box-shadow: 0 1px 0 rgba(255, 255, 255, .08); }
+  .header-inner { display: flex; align-items: center; gap: 24px; height: 78px; }
   .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; margin-right: auto; }
   .brand img { width: 44px; height: 44px; }
   .brand-name { display: block; font: 600 15px/1.1 var(--sans); letter-spacing: .18em; text-transform: uppercase; }
   .brand-broker { display: block; margin-top: 4px; font: 500 12px/1.2 var(--sans); letter-spacing: .06em; color: rgba(255, 255, 255, .75); }
-  .nav { display: flex; gap: 30px; }
-  .nav a { color: rgba(255, 255, 255, .82); text-decoration: none; font-weight: 500; font-size: 16px; }
-  .nav a:hover { color: #fff; }
   .header-cta { display: flex; align-items: center; gap: 22px; }
   .header-phone { color: #fff; text-decoration: none; font-weight: 600; font-size: 16px; white-space: nowrap; }
   .header-call { display: none; width: 42px; height: 42px; border-radius: 50%; place-items: center; border: 1.5px solid rgba(255, 255, 255, .35); color: #fff; }
 
   /* Hero */
   .hero {
-    position: relative; overflow: hidden; color: #fff; padding: 168px 0 170px;
+    position: relative; overflow: hidden; color: #fff; padding: 150px 0 168px;
     background:
       radial-gradient(1000px 640px at 88% 8%, rgba(132, 103, 176, .55), transparent 62%),
       radial-gradient(900px 620px at 6% 100%, rgba(68, 157, 211, .42), transparent 60%),
@@ -184,38 +200,100 @@
   .hero-ripples g { animation: drift 9s ease-in-out infinite alternate; }
   .hero-ripples g:nth-child(2) { animation-duration: 12s; animation-delay: -4s; }
   @keyframes drift { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
-  .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.12fr .88fr; gap: 64px; align-items: center; }
+  .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.08fr .92fr; gap: 64px; align-items: center; }
   .hero .eyebrow { color: #C9B8EC; }
-  .hero h1 { color: #fff; font-size: clamp(44px, 6.2vw, 78px); line-height: 1.02; letter-spacing: -.02em; }
+  .hero h1 { color: #fff; font-size: clamp(40px, 5vw, 66px); line-height: 1.04; letter-spacing: -.02em; }
   .hero h1 em {
     font-style: italic; font-weight: 400;
     background: linear-gradient(90deg, #CDBAF2 0%, #93D5F6 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .lede { margin-top: 26px; max-width: 34em; font-size: 20px; color: rgba(255, 255, 255, .84); }
-  .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 36px; }
-  .rating-line { display: inline-flex; align-items: center; gap: 12px; color: rgba(255, 255, 255, .92); text-decoration: none; font-size: 17px; }
-  .rating-line strong { color: #fff; font-weight: 600; }
-  .rating-line:hover span:last-child { text-decoration: underline; text-underline-offset: 3px; }
+  .lede { margin-top: 24px; max-width: 34em; font-size: 20px; color: rgba(255, 255, 255, .86); }
+  .hero-proof { display: flex; flex-wrap: wrap; gap: 10px 26px; margin: 30px 0 0; padding: 0; list-style: none; font-size: 16px; color: rgba(255, 255, 255, .84); }
+  .hero-proof strong { color: #fff; font-weight: 600; }
+  .hero-proof a { color: inherit; text-decoration: none; }
+  .hero-proof a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
 
-  .path-card { background: #fff; color: var(--ink); border-radius: 26px; padding: 30px; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .55); }
-  .path-card h2 { font-size: 28px; }
-  .path-card > p { margin-top: 6px; color: var(--muted); font-size: 16px; }
-  .paths { display: grid; gap: 12px; margin-top: 22px; }
-  .path {
-    display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 18px; text-align: left;
-    font: inherit; color: inherit; background: #fff; border: 1.5px solid var(--line); border-radius: 18px; cursor: pointer;
-    transition: border-color .2s ease, transform .15s ease, box-shadow .2s ease;
+  /* Village Match form card */
+  .match-card { scroll-margin-top: 96px; padding: 28px; color: var(--ink); background: #fff; border-radius: 26px; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .55); }
+  .match-kicker { font: 600 12px/1.2 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--purple-600); }
+  .match-title { margin-top: 8px; font-size: 27px; }
+  .match-village { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 4px 6px 4px 12px; border-radius: 999px; font-size: 14px; color: #4A3590; background: var(--purple-50); }
+  .match-village[hidden] { display: none; }
+  .match-village button { width: 26px; height: 26px; border: 0; border-radius: 50%; font-size: 18px; line-height: 1; color: inherit; background: transparent; cursor: pointer; }
+  .match-village button:hover { background: rgba(107, 79, 160, .12); }
+  .progress { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  .back { flex: none; padding: 4px 2px; border: 0; background: none; font: 500 14px/1 var(--sans); color: var(--blue-700); cursor: pointer; }
+  .back:hover { text-decoration: underline; }
+  .back[hidden] { display: none; }
+  .progress-bar { flex: 1; height: 6px; overflow: hidden; border-radius: 999px; background: #EEE8F6; }
+  .progress-bar span { display: block; width: 20%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--purple), var(--blue)); transition: width .3s ease; }
+  .progress-label { flex: none; font-size: 13px; color: var(--muted); }
+  .step { min-width: 0; margin: 20px 0 0; padding: 0; border: 0; }
+  .step[hidden] { display: none; }
+  .step legend { margin-bottom: 14px; padding: 0; font: 500 21px/1.3 var(--serif); color: var(--navy-900); }
+  .step legend span { margin-left: 6px; font: 400 14px/1 var(--sans); color: var(--muted); }
+  .opt { font: inherit; color: inherit; background: #fff; border: 1.5px solid var(--line); border-radius: 14px; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+  .opt:hover { border-color: #B9A6DD; box-shadow: 0 10px 24px -16px rgba(74, 62, 160, .55); }
+  .opt[aria-pressed="true"] { border-color: var(--purple-600); background: var(--purple-50); }
+  .opts-rows { display: grid; gap: 10px; }
+  .opt-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px; text-align: left; }
+  .opt-icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; color: var(--purple-600); background: linear-gradient(135deg, #EFE8FA, #E2F2FB); }
+  .opt-title { display: block; font-weight: 600; font-size: 17px; line-height: 1.3; color: var(--navy-900); }
+  .opt-desc { display: block; font-size: 14.5px; line-height: 1.35; color: var(--muted); }
+  .opts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opts-grid .opt { min-height: 54px; padding: 10px 12px; font-weight: 500; font-size: 16px; }
+  .opts-grid .opt:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .check { position: relative; }
+  .check input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+  .check span {
+    display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 12px;
+    font-size: 15px; font-weight: 500; line-height: 1.25; border: 1.5px solid var(--field); border-radius: 12px; background: #FDFCFA; cursor: pointer;
   }
-  .path:hover { border-color: #B9A6DD; transform: translateY(-1px); box-shadow: 0 10px 24px -14px rgba(74, 62, 160, .5); }
-  .path-icon { flex: none; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 15px; color: var(--purple-600); background: linear-gradient(135deg, #EFE8FA, #E2F2FB); }
-  .path-title { display: block; font-weight: 600; font-size: 18px; line-height: 1.3; color: var(--navy-900); }
-  .path-desc { display: block; font-size: 15px; line-height: 1.4; color: var(--muted); }
-  .path-arrow { margin-left: auto; color: #8C7BC0; transition: transform .2s ease; }
-  .path:hover .path-arrow { transform: translateX(3px); }
-  .path-call { margin-top: 18px; text-align: center; font-size: 15px; color: var(--muted); }
-  .path-call a { color: var(--blue-700); font-weight: 600; text-decoration: none; }
-  .path-call a:hover { text-decoration: underline; }
+  .check span::before { content: ""; flex: none; width: 18px; height: 18px; border: 1.5px solid #B8B0A3; border-radius: 5px; background: #fff center / 12px no-repeat; }
+  .check input:checked + span { color: #4A3590; background-color: var(--purple-50); border-color: var(--purple-600); }
+  .check input:checked + span::before {
+    border-color: var(--purple-600);
+    background-color: var(--purple-600);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  }
+  .check input:focus-visible + span { outline: 3px solid var(--sky); outline-offset: 2px; }
+  .step .btn { width: 100%; margin-top: 18px; min-height: 56px; font-size: 17px; }
+  .field { display: flex; flex-direction: column; margin-top: 12px; }
+  .field:first-of-type { margin-top: 0; }
+  .field label { margin-bottom: 6px; font-size: 15px; font-weight: 500; color: var(--ink); }
+  .field .optional { font-weight: 400; color: var(--muted); }
+  .field input, .field select {
+    width: 100%; padding: 13px 14px; font: 400 16px/1.4 var(--sans); color: var(--ink);
+    background: #FDFCFA; border: 1.5px solid var(--field); border-radius: 12px; transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: #7F67C2; box-shadow: 0 0 0 4px rgba(127, 103, 194, .18); }
+  .field [aria-invalid="true"] { border-color: #B42318; }
+  .field-error { display: block; margin-top: 6px; font-size: 13.5px; color: #B42318; }
+  .field-error:empty { display: none; }
+  .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  .btn[disabled] { opacity: .7; cursor: progress; }
+  .consent { margin-top: 12px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .consent a { color: var(--blue-700); }
+  .form-status { margin-top: 12px; padding: 12px 14px; border-radius: 12px; font-size: 15px; color: #912018; background: #FEF3F2; }
+  .form-status:empty { display: none; }
+  .match-trust { display: flex; align-items: center; gap: 14px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .faces { display: flex; flex: none; }
+  .faces img { width: 36px; height: 36px; margin-left: -10px; border-radius: 50%; box-shadow: 0 0 0 2px #fff; }
+  .faces img:first-child { margin-left: 0; }
+  .match-trust p { font-size: 14px; line-height: 1.45; color: var(--muted); }
+  .match-trust strong { color: var(--ink); font-weight: 600; }
+  .match-trust .stars { font-size: 13px; letter-spacing: 1px; }
+  .match-quote { margin: 16px 0 0; padding: 14px 16px; border-radius: 14px; background: var(--sand-50); font-size: 15px; }
+  .match-quote[hidden] { display: none; }
+  .match-quote blockquote { margin: 0 0 6px; color: var(--ink); }
+  .match-quote figcaption { font-size: 13.5px; color: var(--muted); }
+  .form-success { padding: 30px 6px 10px; text-align: center; }
+  .form-success .check-badge { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; color: var(--navy-900); background: linear-gradient(180deg, var(--gold-top), var(--gold)); }
+  .form-success h2 { font-size: 30px; }
+  .form-success p { margin-top: 12px; color: var(--muted); }
+  .form-success a { color: var(--blue-700); font-weight: 600; }
 
   /* Stats */
   .stats { position: relative; z-index: 2; margin-top: -84px; }
@@ -225,63 +303,94 @@
   .stat-num { display: block; font: 500 clamp(42px, 5vw, 58px)/1 var(--serif); color: var(--navy-900); font-variant-numeric: lining-nums tabular-nums; }
   .stat-label { display: block; margin-top: 12px; font-size: 16px; line-height: 1.35; color: var(--muted); }
 
-  /* Why */
-  .why-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 72px; align-items: start; }
-  .why .section-head { position: sticky; top: 120px; }
-  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-  .feature { background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: 30px 26px; }
-  .feature-icon { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 22px; border-radius: 16px; color: #fff; background: var(--brand-gradient); }
-  .feature h3 { font-size: 23px; margin-bottom: 10px; }
-  .feature p { font-size: 16.5px; color: var(--muted); }
+  /* The offer */
+  .offer-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 72px; align-items: start; }
+  .stack { display: grid; gap: 20px; margin: 34px 0 0; padding: 0; list-style: none; }
+  .stack li { display: flex; gap: 16px; }
+  .tick { flex: none; display: grid; place-items: center; width: 30px; height: 30px; margin-top: 2px; border-radius: 50%; color: #fff; background: var(--brand-gradient); }
+  .stack strong { display: block; font-size: 18.5px; font-weight: 600; line-height: 1.35; color: var(--navy-900); }
+  .stack li > span:last-child { font-size: 16.5px; color: var(--muted); }
+  .pill { display: inline-block; margin-right: 6px; padding: 3px 9px; border-radius: 999px; font: 600 11px/1.4 var(--sans); letter-spacing: .12em; text-transform: uppercase; vertical-align: 2px; color: var(--navy-900); background: linear-gradient(180deg, var(--gold-top), var(--gold)); }
+  .offer-note { margin-top: 28px; padding-left: 16px; font-size: 16px; color: var(--muted); border-left: 3px solid var(--gold); }
+  .offer-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 30px; }
+  .offer-cta small { font-size: 14px; color: var(--muted); }
+  .promise { display: flex; gap: 14px; margin-top: 30px; padding: 20px 22px; border-radius: 18px; background: var(--sand-100); }
+  .promise svg { flex: none; color: var(--purple-600); }
+  .promise p { font-size: 16px; color: var(--ink); }
+  .offer-side { display: grid; gap: 24px; }
+  .mock { position: relative; margin: 0; padding: 26px 26px 20px; background: #fff; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); }
+  .mock-badge { position: absolute; top: -14px; right: 22px; padding: 7px 12px; border-radius: 999px; font: 600 11.5px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--navy-900); background: linear-gradient(180deg, var(--gold-top), var(--gold)); box-shadow: 0 8px 18px -10px rgba(219, 143, 20, .9); }
+  .mock-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .mock-head p { font: 500 22px/1.2 var(--serif); color: var(--navy-900); }
+  .mock-head .faces img { width: 30px; height: 30px; }
+  .mock-row { display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding: 16px 0; border-bottom: 1px dashed var(--line); }
+  .mock-rank { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font: 500 16px/1 var(--serif); color: #fff; background: var(--navy-900); }
+  .mock-name { font: 500 19px/1.3 var(--serif); color: var(--navy-900); }
+  .mock-facts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; font-size: 14px; color: var(--muted); }
+  .blur { filter: blur(5px); user-select: none; }
+  .mock-foot { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 14.5px; color: var(--muted); }
+  .seller-card { padding: 26px; border-radius: 22px; background: var(--navy-900); color: rgba(255, 255, 255, .84); }
+  .seller-card .eyebrow { color: #C9B8EC; margin-bottom: 10px; }
+  .seller-card h3 { font-size: 25px; color: #fff; }
+  .seller-card p:not(.eyebrow) { margin-top: 10px; font-size: 16px; }
+  .seller-card .btn { margin-top: 18px; }
+  .how3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 64px 0 0; padding: 0; list-style: none; counter-reset: how; }
+  .how3 li { counter-increment: how; padding: 26px; border: 1px solid var(--line); border-radius: 22px; background: #fff; }
+  .how3 li::before { content: counter(how); display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 16px; border-radius: 50%; font: 500 19px/1 var(--serif); color: var(--navy-900); background: linear-gradient(180deg, var(--gold-top), var(--gold)); }
+  .how3 strong { display: block; font: 500 21px/1.25 var(--serif); color: var(--navy-900); }
+  .how3 span { display: block; margin-top: 6px; font-size: 16px; color: var(--muted); }
 
   /* Villages */
   .villages { background: #fff; border-block: 1px solid var(--line); }
-  .villages-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 28px; }
   .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 40px; }
-  .chip {
-    font: 500 15px/1 var(--sans); color: var(--ink); padding: 12px 18px; border-radius: 999px;
-    border: 1.5px solid var(--line); background: var(--sand-50); cursor: pointer; transition: all .2s ease;
-  }
+  .chip { font: 500 15px/1 var(--sans); color: var(--ink); padding: 12px 18px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--sand-50); cursor: pointer; transition: all .2s ease; }
   .chip:hover { border-color: #B9A6DD; }
   .chip[aria-pressed="true"] { color: #fff; background: var(--navy-900); border-color: var(--navy-900); }
   .village-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 28px; }
   .village {
-    position: relative; display: flex; flex-direction: column; gap: 10px; padding: 28px 26px 24px;
-    background: var(--sand-50); border: 1px solid var(--line); border-radius: 22px; overflow: hidden;
-    transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+    position: relative; display: flex; flex-direction: column; gap: 10px; padding: 28px 26px 24px; overflow: hidden;
+    background: var(--sand-50); border: 1px solid var(--line); border-radius: 22px; transition: box-shadow .2s ease, background-color .2s ease;
   }
   .village::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, var(--purple), var(--blue)); opacity: 0; transition: opacity .2s ease; }
-  .village:hover { background: #fff; transform: translateY(-2px); box-shadow: var(--shadow); }
+  .village:hover { background: #fff; box-shadow: var(--shadow); }
   .village:hover::before { opacity: 1; }
   .village[hidden] { display: none; }
   .village-kicker { font: 600 12px/1.2 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--purple-600); }
   .village h3 { font-size: 26px; }
   .village p { flex: 1; font-size: 16px; line-height: 1.55; color: var(--muted); }
-  .village a { margin-top: 6px; font-weight: 600; font-size: 15px; color: var(--blue-700); text-decoration: none; }
-  .village a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .village-cta { align-self: flex-start; margin-top: 6px; padding: 0; border: 0; background: none; font: 600 15px/1.4 var(--sans); text-align: left; color: var(--blue-700); cursor: pointer; }
+  .village-cta:hover { text-decoration: underline; text-underline-offset: 3px; }
   .villages-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; margin-top: 36px; padding: 26px 30px; border-radius: 22px; background: var(--sand-100); }
   .villages-foot p { font-size: 17px; }
   .villages-foot strong { font-weight: 600; }
-  .villages-foot .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+  /* Why */
+  .why-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 72px; align-items: start; }
+  .why .section-head { position: sticky; top: 120px; }
+  .why .section-head .btn { margin-top: 30px; }
+  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .feature { padding: 30px 26px; background: #fff; border: 1px solid var(--line); border-radius: 22px; }
+  .feature-icon { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 22px; border-radius: 16px; color: #fff; background: var(--brand-gradient); }
+  .feature h3 { font-size: 23px; margin-bottom: 10px; }
+  .feature p { font-size: 16.5px; color: var(--muted); }
 
   /* How we help */
-  .tabs { display: inline-flex; gap: 4px; margin-top: 36px; padding: 6px; background: #fff; border: 1px solid var(--line); border-radius: 999px; }
+  .how { background: #fff; border-block: 1px solid var(--line); }
+  .tabs { display: inline-flex; gap: 4px; padding: 6px; background: var(--sand-50); border: 1px solid var(--line); border-radius: 999px; }
   .tab { font: 600 16px/1 var(--sans); color: var(--muted); padding: 14px 24px; border: 0; border-radius: 999px; background: transparent; cursor: pointer; transition: background-color .2s ease, color .2s ease; }
   .tab:hover { color: var(--navy-900); }
   .tab[aria-selected="true"] { color: #fff; background: var(--navy-900); }
-  .how .center-row { text-align: center; }
   .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 40px 0 0; padding: 0; list-style: none; counter-reset: step; }
-  .step { counter-increment: step; padding: 30px 26px; background: #fff; border: 1px solid var(--line); border-radius: 22px; }
-  .step::before {
+  .step-card { counter-increment: step; padding: 30px 26px; background: var(--sand-50); border: 1px solid var(--line); border-radius: 22px; }
+  .step-card::before {
     content: counter(step, decimal-leading-zero); display: block; margin-bottom: 20px;
     font: 500 42px/1 var(--serif); background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .step h3 { font-size: 22px; margin-bottom: 10px; }
-  .step p { font-size: 16px; color: var(--muted); }
+  .step-card h3 { font-size: 22px; margin-bottom: 10px; }
+  .step-card p { font-size: 16px; color: var(--muted); }
   .panel-cta { margin-top: 32px; text-align: center; }
 
   /* Team */
-  .team { background: #fff; border-block: 1px solid var(--line); }
   .leads { display: flex; justify-content: center; gap: 56px; margin: 56px 0 0; padding: 0; list-style: none; }
   .agents { display: grid; grid-template-columns: repeat(5, 1fr); gap: 40px 20px; margin: 56px 0 0; padding: 0; list-style: none; }
   .person { text-align: center; }
@@ -290,7 +399,7 @@
   .person-name { font: 500 20px/1.2 var(--serif); color: var(--navy-900); }
   .leads .person-name { font-size: 23px; }
   .person-role { margin-top: 4px; font-size: 14px; letter-spacing: .02em; color: var(--muted); }
-  .team-note { margin-top: 48px; text-align: center; font-size: 16px; color: var(--muted); }
+  .team-note { margin-top: 44px; text-align: center; font-size: 16px; color: var(--muted); }
 
   /* Reviews */
   .reviews {
@@ -304,7 +413,7 @@
   .reviews .stars { display: block; margin-top: 8px; font-size: 30px; letter-spacing: 6px; }
   .reviews h2 { margin-top: 22px; color: #fff; font-size: clamp(28px, 3.4vw, 40px); }
   .reviews .sub { margin: 14px auto 0; max-width: 34em; font-size: 19px; color: rgba(255, 255, 255, .8); }
-  .reviews .btn { margin-top: 34px; }
+  .reviews-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 34px; }
   .quote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 56px; text-align: left; }
   .quote-grid[hidden] { display: none; }
   .quote { margin: 0; padding: 28px; border-radius: 22px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); }
@@ -314,12 +423,10 @@
 
   /* FAQ */
   .faq-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 72px; align-items: start; }
+  .faq .section-head .btn { margin-top: 28px; }
   .faq-list { border-top: 1px solid var(--line); }
   .faq-item { border-bottom: 1px solid var(--line); }
-  .faq-item summary {
-    position: relative; padding: 26px 48px 26px 0; cursor: pointer; list-style: none;
-    font: 500 21px/1.35 var(--serif); color: var(--navy-900);
-  }
+  .faq-item summary { position: relative; padding: 26px 48px 26px 0; cursor: pointer; list-style: none; font: 500 21px/1.35 var(--serif); color: var(--navy-900); }
   .faq-item summary::-webkit-details-marker { display: none; }
   .faq-item summary::after {
     content: ""; position: absolute; right: 8px; top: 50%; width: 12px; height: 12px;
@@ -329,81 +436,50 @@
   .faq-item[open] summary::after { transform: translateY(-25%) rotate(-135deg); }
   .faq-item p { padding: 0 40px 26px 0; font-size: 17px; color: var(--muted); }
 
-  /* Contact */
-  .contact {
+  /* Closing call to action */
+  .final {
     color: #fff;
     background:
       radial-gradient(900px 520px at 0% 0%, rgba(132, 103, 176, .5), transparent 60%),
       radial-gradient(800px 520px at 100% 100%, rgba(68, 157, 211, .4), transparent 60%),
       linear-gradient(180deg, var(--navy-800) 0%, var(--navy-900) 100%);
   }
-  .contact-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 72px; align-items: start; }
-  .contact .eyebrow { color: #C9B8EC; }
-  .contact h2 { color: #fff; font-size: clamp(36px, 4.6vw, 56px); }
-  .contact-copy > p:not(.eyebrow) { margin-top: 20px; font-size: 19px; color: rgba(255, 255, 255, .84); }
-  .contact-list { display: grid; gap: 22px; margin: 40px 0 0; padding: 0; list-style: none; }
+  .final-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 72px; align-items: center; }
+  .final .eyebrow { color: #C9B8EC; }
+  .final h2 { color: #fff; font-size: clamp(36px, 4.6vw, 56px); }
+  .final-copy > p:not(.eyebrow) { margin-top: 20px; font-size: 19px; color: rgba(255, 255, 255, .84); }
+  .final-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
+  .contact-list { display: grid; gap: 22px; margin: 0; padding: 28px; list-style: none; border-radius: 22px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); }
   .contact-list li { display: flex; gap: 16px; align-items: flex-start; }
   .ci-icon { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: rgba(255, 255, 255, .1); color: #CDBAF2; }
-  .ci-label { display: block; font: 600 12px/1.2 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: rgba(255, 255, 255, .62); margin-bottom: 5px; }
+  .ci-label { display: block; margin-bottom: 5px; font: 600 12px/1.2 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: rgba(255, 255, 255, .62); }
   .contact-list a { color: #fff; text-decoration: none; font-weight: 500; }
   .contact-list a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .contact-list .big { font-size: 22px; font-weight: 600; }
 
-  .lead-form { padding: 34px; color: var(--ink); background: #fff; border-radius: 26px; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .55); }
-  .lead-form h3 { font-size: 26px; }
-  .lead-form .form-intro { margin-top: 6px; font-size: 15.5px; color: var(--muted); }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
-  .form-grid .full { grid-column: 1 / -1; }
-  .intent { margin: 0; padding: 0; border: 0; min-width: 0; }
-  .intent legend, .field label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 500; color: var(--ink); }
-  .intent-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .intent-options label { position: relative; }
-  .intent-options input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  .intent-options span {
-    display: grid; place-items: center; min-height: 48px; padding: 8px; text-align: center;
-    font-size: 15px; font-weight: 500; line-height: 1.2; border: 1.5px solid var(--field); border-radius: 12px;
-    background: #FDFCFA; cursor: pointer; transition: all .15s ease;
-  }
-  .intent-options input:checked + span { color: #4A3590; background: var(--purple-50); border-color: var(--purple-600); }
-  .intent-options input:focus-visible + span { outline: 3px solid var(--sky); outline-offset: 2px; }
-  .field input, .field select, .field textarea {
-    width: 100%; padding: 13px 14px; font: 400 16px/1.4 var(--sans); color: var(--ink);
-    background: #FDFCFA; border: 1.5px solid var(--field); border-radius: 12px;
-    transition: border-color .15s ease, box-shadow .15s ease;
-  }
-  .field textarea { resize: vertical; min-height: 96px; }
-  .field .optional { font-weight: 400; color: var(--muted); }
-  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #7F67C2; box-shadow: 0 0 0 4px rgba(127, 103, 194, .18); }
-  .field [aria-invalid="true"] { border-color: #B42318; }
-  .field-error { display: block; margin-top: 6px; font-size: 13.5px; color: #B42318; }
-  .field-error:empty { display: none; }
-  .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-  .lead-form .btn { width: 100%; margin-top: 22px; min-height: 56px; font-size: 17px; }
-  .lead-form .btn[disabled] { opacity: .7; cursor: progress; }
-  .consent { margin-top: 14px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
-  .consent a { color: var(--blue-700); }
-  .form-status { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: 15px; background: #FEF3F2; color: #912018; }
-  .form-status:empty { display: none; }
-  .form-success { padding: 36px 8px; text-align: center; }
-  .form-success .check { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; color: #fff; background: var(--brand-gradient); }
-  .form-success h3 { font-size: 30px; }
-  .form-success p { margin-top: 12px; color: var(--muted); }
-  .form-success a { color: var(--blue-700); font-weight: 600; }
-
   /* Footer */
-  .site-footer { padding: 76px 0 44px; font-size: 15px; color: rgba(255, 255, 255, .74); background: var(--navy-950); }
-  .footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 48px; }
+  .site-footer { padding: 72px 0 44px; font-size: 15px; color: rgba(255, 255, 255, .74); background: var(--navy-950); }
+  .footer-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; }
   .footer-brand img { width: 56px; height: 56px; }
   .footer-brand .brand-name { margin-top: 16px; color: #fff; }
   .footer-brand p { margin-top: 12px; max-width: 26em; }
-  .site-footer h2 { font: 600 13px/1.2 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: #fff; margin-bottom: 18px; }
+  .site-footer h2 { margin-bottom: 18px; font: 600 13px/1.2 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: #fff; }
   .site-footer address { font-style: normal; line-height: 1.75; }
   .site-footer a { color: rgba(255, 255, 255, .86); text-decoration: none; }
   .site-footer a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
-  .footer-links { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
   .footer-legal { display: grid; gap: 12px; margin-top: 56px; padding-top: 30px; font-size: 13px; line-height: 1.65; color: rgba(255, 255, 255, .6); border-top: 1px solid rgba(255, 255, 255, .12); }
   .eho { display: flex; align-items: center; gap: 10px; }
   .eho svg { flex: none; color: rgba(255, 255, 255, .8); }
+
+  /* Exit offer (desktop only) */
+  .exit-offer { width: min(540px, calc(100% - 32px)); padding: 0; color: var(--ink); border: 0; border-radius: 26px; box-shadow: 0 40px 100px -20px rgba(0, 0, 0, .6); }
+  .exit-offer::backdrop { background: rgba(8, 17, 42, .62); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+  .exit-inner { position: relative; padding: 42px 38px 30px; text-align: center; }
+  .exit-inner h2 { font-size: 32px; }
+  .exit-inner > p:not(.eyebrow) { margin-top: 12px; color: var(--muted); }
+  .exit-opts { display: grid; gap: 10px; margin-top: 26px; }
+  .exit-close { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border: 0; border-radius: 50%; font-size: 24px; line-height: 1; color: var(--ink); background: var(--sand-100); cursor: pointer; }
+  .exit-dismiss { margin-top: 16px; border: 0; background: none; font: 500 15px/1.4 var(--sans); color: var(--muted); text-decoration: underline; cursor: pointer; }
 
   /* Mobile call bar */
   .mobile-bar {
@@ -413,32 +489,36 @@
     box-shadow: 0 -8px 28px -14px rgba(11, 22, 48, .4); transform: translateY(110%); transition: transform .25s ease;
   }
   .mobile-bar.show { transform: none; }
-  .mobile-bar .btn { flex: 1; min-height: 48px; }
+  .mobile-bar .btn { min-height: 48px; }
+  .mobile-bar .btn-outline { flex: 0 0 auto; }
+  .mobile-bar .btn-cta { flex: 1; }
 
   @media (max-width: 1080px) {
-    .nav { display: none; }
-    .hero-grid, .why-grid, .faq-grid, .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+    .hero-grid, .offer-grid, .why-grid, .faq-grid, .final-grid { grid-template-columns: 1fr; gap: 48px; }
+    .match-card { max-width: 560px; }
     .why .section-head { position: static; }
-    .path-card { max-width: 560px; }
     .village-grid { grid-template-columns: repeat(2, 1fr); }
     .steps { grid-template-columns: repeat(2, 1fr); }
     .agents { grid-template-columns: repeat(4, 1fr); }
-    .footer-grid { grid-template-columns: 1fr 1fr; }
-    .footer-brand { grid-column: 1 / -1; }
   }
   @media (max-width: 760px) {
     body { font-size: 17px; }
     .section { padding: 84px 0; }
-    .hero { padding: 128px 0 132px; }
+    .hero { padding: 116px 0 128px; }
+    .hero-grid { gap: 32px; }
     .hero-ripples { bottom: 40px; }
-    .lede { font-size: 18px; }
+    .lede { margin-top: 18px; font-size: 17.5px; }
+    .hero-proof { margin-top: 22px; font-size: 15px; }
+    .match-card { padding: 22px 18px; }
+    .match-title { font-size: 24px; }
     .stats { margin-top: -72px; }
     .stats-card { grid-template-columns: repeat(2, 1fr); }
     .stat { padding: 24px 12px; }
     .stat:nth-child(3)::before { display: none; }
     .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
     .stat-label { font-size: 15px; }
-    .features, .village-grid, .steps { grid-template-columns: 1fr; }
+    .how3, .features, .village-grid, .steps { grid-template-columns: 1fr; }
+    .how3 { margin-top: 44px; }
     .tabs { display: flex; width: 100%; }
     .tab { flex: 1; padding: 13px 8px; font-size: 15px; }
     .leads { gap: 28px; }
@@ -447,9 +527,6 @@
     .person img { width: 120px; height: 120px; }
     .quote-grid { grid-template-columns: 1fr; }
     .faq-item summary { font-size: 19px; }
-    .lead-form { padding: 26px 20px; }
-    .form-grid { grid-template-columns: 1fr; }
-    .intent-options { grid-template-columns: repeat(2, 1fr); }
     .footer-grid { grid-template-columns: 1fr; }
     .site-footer { padding-bottom: 120px; }
     .mobile-bar { display: flex; }
@@ -461,6 +538,8 @@
     .brand img { width: 40px; height: 40px; }
     .brand-name { font-size: 13px; letter-spacing: .14em; }
     .brand-broker { font-size: 11px; }
+    .opt-row { padding: 12px 14px; }
+    .opt-icon { width: 40px; height: 40px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -480,15 +559,9 @@
         <span class="brand-broker">Coldwell Banker Realty</span>
       </span>
     </a>
-    <nav class="nav" aria-label="Primary">
-      <a href="#villages">Villages</a>
-      <a href="#how">How we help</a>
-      <a href="#team">Our team</a>
-      <a href="#faq">FAQ</a>
-    </nav>
     <div class="header-cta">
       <a class="header-phone" href="tel:+19417774049">(941) 777-4049</a>
-      <a class="btn btn-light btn-sm" href="#contact">Talk to an agent</a>
+      <a class="btn btn-cta btn-sm" href="#match" data-start>Free Village Match</a>
     </div>
     <a class="header-call" href="tel:+19417774049" aria-label="Call (941) 777-4049">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
@@ -521,46 +594,196 @@
 
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow">Lakewood Ranch real estate team</p>
-        <h1 id="hero-title">We know Lakewood Ranch <em>village by village.</em></h1>
-        <p class="lede">Life at Lakewood is a team of 10 agents with Coldwell Banker Realty, focused on Lakewood Ranch. Whether you’re buying, building new or selling, you’ll work with people who know the villages, the builders and the fees, and what homes really sell for on your street.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#contact">Talk to an agent</a>
-          <a class="rating-line" href="https://share.google/JxnIsIzYYQIfJrc1S" target="_blank" rel="noopener">
-            <span class="stars" aria-hidden="true">★★★★★</span>
-            <span><strong>5.0 on Google</strong> · <span data-stat="reviews">74</span> reviews</span>
-          </a>
-        </div>
+        <p class="eyebrow" id="hero-eyebrow">Lakewood Ranch real estate team</p>
+        <h1 id="hero-title">Find your Lakewood Ranch village <em>before you tour a single home.</em></h1>
+        <p class="lede" id="hero-lede">Lakewood Ranch has 45+ villages, each with its own prices, fees and lifestyle. Answer 4 quick questions and a local agent will send your top 3, with real prices, HOA and CDD fees, and homes that fit your budget. Free, within 24 hours.</p>
+        <ul class="hero-proof">
+          <li><a href="https://share.google/JxnIsIzYYQIfJrc1S" target="_blank" rel="noopener"><span class="stars" aria-hidden="true">★★★★★</span> <strong>5.0 on Google</strong> · <span data-stat="reviews">74</span> reviews</a></li>
+          <li><strong>150+</strong> closings on pace for 2026</li>
+          <li>With <strong>Coldwell Banker Realty</strong></li>
+        </ul>
       </div>
 
-      <aside class="path-card" aria-labelledby="path-title">
-        <h2 id="path-title">Where are you in your move?</h2>
-        <p>Pick one and we’ll connect you with the right agent.</p>
-        <div class="paths">
-          <button class="path" type="button" data-intent="buy">
-            <span class="path-icon" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></svg>
-            </span>
-            <span><span class="path-title">I’m buying</span><span class="path-desc">Find the right village, then the right home</span></span>
-            <svg class="path-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
-          </button>
-          <button class="path" type="button" data-intent="build">
-            <span class="path-icon" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h9V3"/><path d="M12 21v-6h9"/><path d="M12 10v2"/></svg>
-            </span>
-            <span><span class="path-title">I’m building new</span><span class="path-desc">Your advocate with the builder, start to finish</span></span>
-            <svg class="path-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
-          </button>
-          <button class="path" type="button" data-intent="sell">
-            <span class="path-icon" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V3"/><path d="M5 5h14v9H5"/><path d="M9 9.5h6"/><path d="M3 21h4"/></svg>
-            </span>
-            <span><span class="path-title">I’m selling</span><span class="path-desc">Pricing and marketing that know your village</span></span>
-            <svg class="path-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
-          </button>
+      <div class="match-card" id="match">
+        <form id="lead-form" novalidate>
+          <p class="match-kicker">Free · About 60 seconds</p>
+          <h2 class="match-title" id="match-title">Get your free Village Match</h2>
+          <p class="match-village" id="match-village" hidden>Including <strong></strong> <button type="button" aria-label="Remove this village">×</button></p>
+          <div class="progress">
+            <button class="back" type="button" hidden>← Back</button>
+            <div class="progress-bar" role="progressbar" aria-labelledby="progress-label" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1"><span></span></div>
+            <p class="progress-label" id="progress-label">Step 1 of 5</p>
+          </div>
+
+          <fieldset class="step" data-step="intent">
+            <legend>What are you planning?</legend>
+            <div class="opts-rows">
+              <button class="opt opt-row" type="button" data-field="interest" data-value="buy">
+                <span class="opt-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></svg></span>
+                <span><span class="opt-title">Buy a home</span><span class="opt-desc">Find the right village, then the right home</span></span>
+              </button>
+              <button class="opt opt-row" type="button" data-field="interest" data-value="build">
+                <span class="opt-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h9V3"/><path d="M12 21v-6h9"/><path d="M12 10v2"/></svg></span>
+                <span><span class="opt-title">Build a new home</span><span class="opt-desc">Compare every builder in your budget</span></span>
+              </button>
+              <button class="opt opt-row" type="button" data-field="interest" data-value="sell">
+                <span class="opt-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V3"/><path d="M5 5h14v9H5"/><path d="M9 9.5h6"/><path d="M3 21h4"/></svg></span>
+                <span><span class="opt-title">Sell my home</span><span class="opt-desc">See what it would sell for today</span></span>
+              </button>
+              <button class="opt opt-row" type="button" data-field="interest" data-value="buy_and_sell">
+                <span class="opt-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14"/><path d="m15 4 4 4-4 4"/><path d="M20 16H6"/><path d="m9 12-4 4 4 4"/></svg></span>
+                <span><span class="opt-title">Buy and sell</span><span class="opt-desc">Time the move from one home to the next</span></span>
+              </button>
+            </div>
+          </fieldset>
+
+          <fieldset class="step" data-step="price" hidden>
+            <legend>What price range are you considering?</legend>
+            <div class="opts-grid">
+              <button class="opt" type="button" data-field="price_range" data-value="Under $500K">Under $500K</button>
+              <button class="opt" type="button" data-field="price_range" data-value="$500K–$750K">$500K–$750K</button>
+              <button class="opt" type="button" data-field="price_range" data-value="$750K–$1M">$750K–$1M</button>
+              <button class="opt" type="button" data-field="price_range" data-value="$1M–$2M">$1M–$2M</button>
+              <button class="opt" type="button" data-field="price_range" data-value="$2M+">$2M+</button>
+              <button class="opt" type="button" data-field="price_range" data-value="Not sure yet">Not sure yet</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="step" data-step="musts" hidden>
+            <legend>What matters most? <span>Pick any</span></legend>
+            <div class="checks">
+              <label class="check"><input type="checkbox" name="must_haves" value="55+ community"><span>55+ community</span></label>
+              <label class="check"><input type="checkbox" name="must_haves" value="Golf"><span>Golf</span></label>
+              <label class="check"><input type="checkbox" name="must_haves" value="Gated"><span>Gated</span></label>
+              <label class="check"><input type="checkbox" name="must_haves" value="On the water"><span>On the water</span></label>
+              <label class="check"><input type="checkbox" name="must_haves" value="Low maintenance"><span>Low maintenance</span></label>
+              <label class="check"><input type="checkbox" name="must_haves" value="Top-rated schools"><span>Top-rated schools</span></label>
+              <label class="check"><input type="checkbox" name="must_haves" value="New construction"><span>New construction</span></label>
+              <label class="check"><input type="checkbox" name="must_haves" value="Near Main Street"><span>Near Main Street</span></label>
+            </div>
+            <button class="btn btn-cta step-next" type="button">Next</button>
+          </fieldset>
+
+          <fieldset class="step" data-step="home" hidden>
+            <legend>Where is your home?</legend>
+            <div class="field">
+              <label for="home_village">Village or neighborhood</label>
+              <select id="home_village" name="home_village">
+                <option value="">Choose your village</option>
+                <option>Amber Creek</option>
+                <option>Arbor Grande</option>
+                <option>Aurora</option>
+                <option>Avalon Woods</option>
+                <option>Azario - Esplanade</option>
+                <option>Azario - Park East</option>
+                <option>Bridgewater</option>
+                <option>Calusa Country Club</option>
+                <option>Central Park</option>
+                <option>Country Club</option>
+                <option>Country Club East</option>
+                <option>Cresswind</option>
+                <option>Del Webb</option>
+                <option>Del Webb Catalina</option>
+                <option>Edgewater Village</option>
+                <option>Esplanade Golf and Country Club</option>
+                <option>Greenbrook Village</option>
+                <option>Harmony</option>
+                <option>Indigo</option>
+                <option>Lakewood National Golf &amp; Country Club</option>
+                <option>Lorraine Lakes</option>
+                <option>Mallory Park</option>
+                <option>Monterey</option>
+                <option>Palisades</option>
+                <option>Palm Grove</option>
+                <option>Polo Run</option>
+                <option>Sapphire Point</option>
+                <option>Savanna</option>
+                <option>Solera</option>
+                <option>Star Farms</option>
+                <option>Summerfield &amp; Riverwalk</option>
+                <option>Sweetwater</option>
+                <option>The Isles</option>
+                <option>The Lake Club</option>
+                <option>Waterbury Park</option>
+                <option>Waterside - Avanti</option>
+                <option>Waterside - Bungalow Walk</option>
+                <option>Waterside - Emerald Landing</option>
+                <option>Waterside - Kingfisher Estates</option>
+                <option>Waterside - LakeHouse Cove</option>
+                <option>Waterside - Nautique</option>
+                <option>Waterside - Shellstone</option>
+                <option>Waterside - Shoreview</option>
+                <option>Waterside - The Alcove</option>
+                <option>Waterside - Wild Blue</option>
+                <option>Windward</option>
+                <option>Woodleaf Hammock</option>
+                <option>Somewhere else in Lakewood Ranch</option>
+                <option>Outside Lakewood Ranch</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="address">Street address <span class="optional">(optional, for a sharper value)</span></label>
+              <input id="address" name="address" autocomplete="street-address">
+            </div>
+            <button class="btn btn-cta step-next" type="button">Next</button>
+          </fieldset>
+
+          <fieldset class="step" data-step="timeline" hidden>
+            <legend id="timeline-legend">When are you hoping to move?</legend>
+            <div class="opts-grid">
+              <button class="opt" type="button" data-field="timeline" data-value="As soon as possible">As soon as possible</button>
+              <button class="opt" type="button" data-field="timeline" data-value="1–3 months">1–3 months</button>
+              <button class="opt" type="button" data-field="timeline" data-value="3–6 months">3–6 months</button>
+              <button class="opt" type="button" data-field="timeline" data-value="6–12 months">6–12 months</button>
+              <button class="opt" type="button" data-field="timeline" data-value="Just exploring">Just exploring</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="step" data-step="contact" hidden>
+            <legend id="contact-legend">Where should we send your Village Match?</legend>
+            <div class="field">
+              <label for="full_name">Full name</label>
+              <input id="full_name" name="full_name" autocomplete="name" required aria-describedby="full_name-error">
+              <span class="field-error" id="full_name-error"></span>
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="email-error">
+              <span class="field-error" id="email-error"></span>
+            </div>
+            <div class="field">
+              <label for="phone">Mobile phone</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required aria-describedby="phone-error">
+              <span class="field-error" id="phone-error"></span>
+            </div>
+            <div class="hp" aria-hidden="true">
+              <label for="company">Leave this field empty</label>
+              <input id="company" name="company" tabindex="-1" autocomplete="off">
+            </div>
+            <button class="btn btn-cta" type="submit" id="submit-button">Send my free Village Match</button>
+            <p class="consent">By submitting, you agree that Life at Lakewood and Coldwell Banker Realty may contact you by call, text or email, including by automated means, about your real estate needs. Consent isn’t a condition of any purchase. Message and data rates may apply; reply STOP to opt out. See our <a href="https://www.lifeatlakewood.com/privacy-policy">Privacy Policy</a>.</p>
+            <p class="form-status" id="form-status" role="alert"></p>
+          </fieldset>
+
+          <input type="hidden" name="interest">
+          <input type="hidden" name="price_range">
+          <input type="hidden" name="timeline">
+          <input type="hidden" name="village_interest">
+        </form>
+        <noscript><p class="form-status">This form needs JavaScript. Please call (941) 777-4049 and we’ll help you right away.</p></noscript>
+
+        <div class="match-trust">
+          <div class="faces" aria-hidden="true">
+            <img src="assets/team/lynn-brown.webp" width="240" height="240" alt="">
+            <img src="assets/team/michael-dailey.webp" width="240" height="240" alt="">
+            <img src="assets/team/aleksandra-tarica.webp" width="240" height="240" alt="">
+            <img src="assets/team/ricardo-ortiz.webp" width="240" height="240" alt="">
+            <img src="assets/team/natalie-pankonin.webp" width="240" height="240" alt="">
+          </div>
+          <p><span class="stars" aria-hidden="true">★★★★★</span> <strong>5.0</strong> from <span data-stat="reviews">74</span> Google reviews<br>No spam. No obligation.</p>
         </div>
-        <p class="path-call">Rather talk now? <a href="tel:+19417774049">Call (941) 777-4049</a></p>
-      </aside>
+        <figure class="match-quote" id="match-quote" hidden></figure>
+      </div>
     </div>
   </section>
 
@@ -587,12 +810,210 @@
     </div>
   </section>
 
+  <section class="section offer" id="offer" aria-labelledby="offer-title">
+    <div class="wrap">
+      <div class="offer-grid">
+        <div>
+          <div class="section-head">
+            <p class="eyebrow">Your free Village Match</p>
+            <h2 id="offer-title">Everything you need to choose a village, in one free report.</h2>
+            <p>Skip the weekends of driving from model to model. Here’s what a local agent sends you:</p>
+          </div>
+          <ul class="stack">
+            <li>
+              <span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+              <span><strong>Your top 3 villages, ranked for you</strong><span>Matched to your budget, lifestyle and commute from 45+ villages and neighborhoods.</span></span>
+            </li>
+            <li>
+              <span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+              <span><strong>Real numbers, no surprises</strong><span>Current price ranges, HOA dues and CDD fees for each village, so nothing catches you off guard at closing.</span></span>
+            </li>
+            <li>
+              <span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+              <span><strong>Homes and floor plans that fit</strong><span>Resale homes and new-construction floor plans in your budget, from every builder.</span></span>
+            </li>
+            <li>
+              <span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+              <span><strong>What’s available right now</strong><span>Quick move-in homes and the incentives builders are offering this month.</span></span>
+            </li>
+            <li>
+              <span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+              <span><strong><span class="pill">Bonus</span>A live video tour</strong><span>Relocating? Tour your top village by live video before you fly in.</span></span>
+            </li>
+          </ul>
+          <p class="offer-note">Builder incentives and quick move-in homes change week to week, so your match is built from what’s available now.</p>
+          <div class="offer-cta">
+            <a class="btn btn-cta btn-lg" href="#match" data-intent="buy">Get my free Village Match</a>
+            <small>Free · No obligation · About 60 seconds</small>
+          </div>
+          <div class="promise">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 19 6v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+            <p><strong>Our no-pressure promise.</strong> Your Village Match is free, with no obligation and nothing to sign. If it isn’t helpful, tell us and we’ll stop reaching out.</p>
+          </div>
+        </div>
+
+        <div class="offer-side">
+          <figure class="mock" aria-labelledby="mock-caption">
+            <figcaption class="sr-only" id="mock-caption">A sample Village Match: three ranked villages, each with a price range, HOA and CDD fees, and the number of homes in your budget.</figcaption>
+            <span class="mock-badge" aria-hidden="true">Sample</span>
+            <div aria-hidden="true">
+              <div class="mock-head">
+                <p>Your Village Match</p>
+                <div class="faces">
+                  <img src="assets/team/jeff-brown.webp" width="240" height="240" alt="" loading="lazy" decoding="async">
+                  <img src="assets/team/meridith-stalnaker.webp" width="240" height="240" alt="" loading="lazy" decoding="async">
+                </div>
+              </div>
+              <div class="mock-row">
+                <span class="mock-rank">1</span>
+                <div>
+                  <p class="mock-name"><span class="blur">Village name here</span> · Best fit</p>
+                  <p class="mock-facts"><span>Prices <span class="blur">$000K–$0.0M</span></span><span>HOA <span class="blur">$000/mo</span></span><span>CDD <span class="blur">$0,000/yr</span></span></p>
+                  <p class="mock-facts"><span><span class="blur">00</span> homes and <span class="blur">00</span> floor plans in your budget</span></p>
+                </div>
+              </div>
+              <div class="mock-row">
+                <span class="mock-rank">2</span>
+                <div>
+                  <p class="mock-name"><span class="blur">Village name</span></p>
+                  <p class="mock-facts"><span>Prices <span class="blur">$000K–$0.0M</span></span><span>HOA <span class="blur">$000/mo</span></span><span>CDD <span class="blur">$0,000/yr</span></span></p>
+                </div>
+              </div>
+              <div class="mock-row">
+                <span class="mock-rank">3</span>
+                <div>
+                  <p class="mock-name"><span class="blur">Another village</span></p>
+                  <p class="mock-facts"><span>Prices <span class="blur">$000K–$0.0M</span></span><span>HOA <span class="blur">$000/mo</span></span><span>CDD <span class="blur">$0,000/yr</span></span></p>
+                </div>
+              </div>
+              <p class="mock-foot"><span class="stars">★</span> Plus this month’s builder incentives and quick move-in homes</p>
+            </div>
+          </figure>
+
+          <aside class="seller-card" aria-labelledby="seller-title">
+            <p class="eyebrow">Selling instead?</p>
+            <h3 id="seller-title">Get a free home value report.</h3>
+            <p>A price based on your own village’s recent sales and the new homes competing with yours, plus a prep plan showing which fixes pay off.</p>
+            <a class="btn btn-cta" href="#match" data-intent="sell">Get my free home value</a>
+          </aside>
+        </div>
+      </div>
+
+      <ol class="how3" aria-label="How the Village Match works">
+        <li><strong>Answer 4 quick questions</strong><span>About 60 seconds, all taps until your contact details.</span></li>
+        <li><strong>A local agent builds your match</strong><span>From current listings and builder data, not a generic list.</span></li>
+        <li><strong>Get it within 24 hours</strong><span>By text and email, with no obligation and nothing to sign.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section villages" id="villages" aria-labelledby="villages-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Find your village</p>
+        <h2 id="villages-title">A few of the villages we know by heart.</h2>
+        <p>Filter by lifestyle, then tap any village for its current prices and fees, sent to you free.</p>
+      </div>
+
+      <div class="chips" role="group" aria-label="Filter villages">
+        <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="chip" type="button" data-filter="55" aria-pressed="false">55+</button>
+        <button class="chip" type="button" data-filter="golf" aria-pressed="false">Golf</button>
+        <button class="chip" type="button" data-filter="gated" aria-pressed="false">Gated</button>
+        <button class="chip" type="button" data-filter="water" aria-pressed="false">On the water</button>
+        <button class="chip" type="button" data-filter="eco" aria-pressed="false">Eco-minded</button>
+      </div>
+      <p class="sr-only" id="village-status" role="status" aria-live="polite"></p>
+
+      <div class="village-grid">
+        <article class="village" data-tags="water">
+          <span class="village-kicker">Lakes · Town center</span>
+          <h3>Waterside</h3>
+          <p>Seven lakes, about 20 miles of shoreline and Waterside Place, a lakefront town center with shops and dining.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Waterside">Get Waterside prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="gated water">
+          <span class="village-kicker">Gated · Lakefront</span>
+          <h3>The Lake Club</h3>
+          <p>A gated village on a 300-acre lake, with custom homes, single-family homes and villas, and a resort-style club.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="The Lake Club">Get The Lake Club prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="gated golf">
+          <span class="village-kicker">Gated · Golf</span>
+          <h3>The Country Club</h3>
+          <p>Custom homes behind the gates, with the Arnold Palmer–designed Legacy golf course running through the community.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="The Country Club">Get The Country Club prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="gated golf">
+          <span class="village-kicker">Gated · Golf</span>
+          <h3>Lakewood National</h3>
+          <p>Gated golf and country club living, with single-family and multi-family homes and resort-style amenities.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Lakewood National">Get Lakewood National prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="golf">
+          <span class="village-kicker">Golf · Country club</span>
+          <h3>Esplanade Golf &amp; Country Club</h3>
+          <p>Country club living with golf, dining and resort-style amenities.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Esplanade Golf and Country Club">Get Esplanade prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="55 eco">
+          <span class="village-kicker">55+ · Green certified</span>
+          <h3>Del Webb</h3>
+          <p>A large, active 55+ village with resort-style amenities, and one of the area’s largest green-certified communities.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Del Webb">Get Del Webb prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="55 gated">
+          <span class="village-kicker">55+ · Gated</span>
+          <h3>Del Webb Catalina</h3>
+          <p>A gated 55+ neighborhood with a resort-style pool, fitness lawn, bocce courts and a fire pit.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Del Webb Catalina">Get Del Webb Catalina prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="55">
+          <span class="village-kicker">55+ · Active</span>
+          <h3>Cresswind</h3>
+          <p>55+ living built around staying active: pickleball, tennis, bocce and miles of trails.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Cresswind">Get Cresswind prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="eco">
+          <span class="village-kicker">Solar powered</span>
+          <h3>Polo Run</h3>
+          <p>Lakewood Ranch’s solar-powered village, with plenty of green space and a range of floor plans.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Polo Run">Get Polo Run prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="eco">
+          <span class="village-kicker">Lakes · Preserves</span>
+          <h3>Greenbrook Village</h3>
+          <p>Energy-efficient homes among lakes and nature preserves, next to Greenbrook Adventure Park.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Greenbrook Village">Get Greenbrook prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="">
+          <span class="village-kicker">Near Main Street</span>
+          <h3>Edgewater Village</h3>
+          <p>Five neighborhoods close to Main Street, the Town Center and the Lakewood Ranch hospital.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Edgewater Village">Get Edgewater prices &amp; fees →</button>
+        </article>
+        <article class="village" data-tags="">
+          <span class="village-kicker">Maintenance-free</span>
+          <h3>Harmony</h3>
+          <p>Maintenance-free living about 30 minutes from the beaches of Siesta Key.</p>
+          <button class="village-cta" type="button" data-intent="buy" data-village="Harmony">Get Harmony prices &amp; fees →</button>
+        </article>
+      </div>
+
+      <div class="villages-foot">
+        <p><strong>Not sure where to start?</strong> We cover 45+ villages and neighborhoods, and we’ll narrow them to your top 3.</p>
+        <a class="btn btn-cta btn-sm" href="#match" data-intent="buy">Match me with my top 3</a>
+      </div>
+    </div>
+  </section>
+
   <section class="section why" id="why" aria-labelledby="why-title">
     <div class="wrap why-grid">
       <div class="section-head">
         <p class="eyebrow">Why Life at Lakewood</p>
         <h2 id="why-title">Lakewood Ranch isn’t one market. It’s dozens.</h2>
         <p>Every village has its own fees, amenities, builders, school zones and resale story. Knowing the differences, and being straight with you about them, is the whole job.</p>
+        <a class="btn btn-cta" href="#match" data-start>Get my free Village Match</a>
       </div>
       <div class="features">
         <article class="feature">
@@ -627,111 +1048,6 @@
     </div>
   </section>
 
-  <section class="section villages" id="villages" aria-labelledby="villages-title">
-    <div class="wrap">
-      <div class="villages-head">
-        <div class="section-head">
-          <p class="eyebrow">Find your village</p>
-          <h2 id="villages-title">A few of the villages we know by heart.</h2>
-          <p>Filter by lifestyle, then dig into our full guide to each one on lifeatlakewood.com.</p>
-        </div>
-      </div>
-
-      <div class="chips" role="group" aria-label="Filter villages">
-        <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
-        <button class="chip" type="button" data-filter="55" aria-pressed="false">55+</button>
-        <button class="chip" type="button" data-filter="golf" aria-pressed="false">Golf</button>
-        <button class="chip" type="button" data-filter="gated" aria-pressed="false">Gated</button>
-        <button class="chip" type="button" data-filter="water" aria-pressed="false">On the water</button>
-        <button class="chip" type="button" data-filter="eco" aria-pressed="false">Eco-minded</button>
-      </div>
-      <p class="sr-only" id="village-status" role="status" aria-live="polite"></p>
-
-      <div class="village-grid">
-        <article class="village" data-tags="water">
-          <span class="village-kicker">Lakes · Town center</span>
-          <h3>Waterside</h3>
-          <p>Seven lakes, about 20 miles of shoreline and Waterside Place, a lakefront town center with shops and dining.</p>
-          <a href="https://www.lifeatlakewood.com/villages">Compare the villages →</a>
-        </article>
-        <article class="village" data-tags="gated water">
-          <span class="village-kicker">Gated · Lakefront</span>
-          <h3>The Lake Club</h3>
-          <p>A gated village on a 300-acre lake, with custom homes, single-family homes and villas, and a resort-style club.</p>
-          <a href="https://www.lifeatlakewood.com/the-lake-club">The Lake Club guide →</a>
-        </article>
-        <article class="village" data-tags="gated golf">
-          <span class="village-kicker">Gated · Golf</span>
-          <h3>The Country Club</h3>
-          <p>Custom homes behind the gates, with the Arnold Palmer–designed Legacy golf course running through the community.</p>
-          <a href="https://www.lifeatlakewood.com/country-club">The Country Club guide →</a>
-        </article>
-        <article class="village" data-tags="gated golf">
-          <span class="village-kicker">Gated · Golf</span>
-          <h3>Lakewood National</h3>
-          <p>Gated golf and country club living, with single-family and multi-family homes and resort-style amenities.</p>
-          <a href="https://www.lifeatlakewood.com/lakewood-national">Lakewood National guide →</a>
-        </article>
-        <article class="village" data-tags="golf">
-          <span class="village-kicker">Golf · Country club</span>
-          <h3>Esplanade Golf &amp; Country Club</h3>
-          <p>Country club living with golf, dining and resort-style amenities.</p>
-          <a href="https://www.lifeatlakewood.com/esplanade-golf-and-country-club">Esplanade guide →</a>
-        </article>
-        <article class="village" data-tags="55 eco">
-          <span class="village-kicker">55+ · Green certified</span>
-          <h3>Del Webb</h3>
-          <p>A large, active 55+ village with resort-style amenities, and one of the area’s largest green-certified communities.</p>
-          <a href="https://www.lifeatlakewood.com/del-webb">Del Webb guide →</a>
-        </article>
-        <article class="village" data-tags="55 gated">
-          <span class="village-kicker">55+ · Gated</span>
-          <h3>Del Webb Catalina</h3>
-          <p>A gated 55+ neighborhood with a resort-style pool, fitness lawn, bocce courts and a fire pit.</p>
-          <a href="https://www.lifeatlakewood.com/del-webb-catalina">Del Webb Catalina guide →</a>
-        </article>
-        <article class="village" data-tags="55">
-          <span class="village-kicker">55+ · Active</span>
-          <h3>Cresswind</h3>
-          <p>55+ living built around staying active: pickleball, tennis, bocce and miles of trails.</p>
-          <a href="https://www.lifeatlakewood.com/cresswind">Cresswind guide →</a>
-        </article>
-        <article class="village" data-tags="eco">
-          <span class="village-kicker">Solar powered</span>
-          <h3>Polo Run</h3>
-          <p>Lakewood Ranch’s solar-powered village, with plenty of green space and a range of floor plans.</p>
-          <a href="https://www.lifeatlakewood.com/polo-run">Polo Run guide →</a>
-        </article>
-        <article class="village" data-tags="eco">
-          <span class="village-kicker">Lakes · Preserves</span>
-          <h3>Greenbrook Village</h3>
-          <p>Energy-efficient homes among lakes and nature preserves, next to Greenbrook Adventure Park.</p>
-          <a href="https://www.lifeatlakewood.com/greenbrook-village">Greenbrook guide →</a>
-        </article>
-        <article class="village" data-tags="">
-          <span class="village-kicker">Near Main Street</span>
-          <h3>Edgewater Village</h3>
-          <p>Five neighborhoods close to Main Street, the Town Center and the Lakewood Ranch hospital.</p>
-          <a href="https://www.lifeatlakewood.com/edgewater">Edgewater guide →</a>
-        </article>
-        <article class="village" data-tags="">
-          <span class="village-kicker">Maintenance-free</span>
-          <h3>Harmony</h3>
-          <p>Maintenance-free living about 30 minutes from the beaches of Siesta Key.</p>
-          <a href="https://www.lifeatlakewood.com/harmony">Harmony guide →</a>
-        </article>
-      </div>
-
-      <div class="villages-foot">
-        <p><strong>Looking for somewhere else?</strong> We cover 45+ villages and neighborhoods.</p>
-        <div class="actions">
-          <a class="btn btn-outline btn-sm" href="https://www.lifeatlakewood.com/villages">See every village</a>
-          <a class="btn btn-primary btn-sm" href="#contact" data-intent="buy">Get a personal shortlist</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section class="section how" id="how" aria-labelledby="how-title">
     <div class="wrap">
       <div class="section-head center">
@@ -748,32 +1064,32 @@
 
       <div class="panel" role="tabpanel" id="panel-buy" aria-labelledby="tab-buy">
         <ol class="steps">
-          <li class="step"><h3>Narrow the villages</h3><p>A quick call about budget, lifestyle, commute and must-haves turns 45+ villages into a shortlist that fits.</p></li>
-          <li class="step"><h3>Tour with a local</h3><p>See homes and amenities with someone who knows the HOA, the CDD and what’s being built nearby. Out of state? We’ll tour by live video.</p></li>
-          <li class="step"><h3>Offer with confidence</h3><p>Village-level comps, insurance and flood-zone homework, and a negotiation plan before you write an offer.</p></li>
-          <li class="step"><h3>Close and settle in</h3><p>We coordinate inspections, lender and title, then stay your go-to for local recommendations.</p></li>
+          <li class="step-card"><h3>Narrow the villages</h3><p>Your Village Match turns 45+ villages into a shortlist of three that fit your budget, lifestyle and commute.</p></li>
+          <li class="step-card"><h3>Tour with a local</h3><p>See homes and amenities with someone who knows the HOA, the CDD and what’s being built nearby. Out of state? We’ll tour by live video.</p></li>
+          <li class="step-card"><h3>Offer with confidence</h3><p>Village-level comps, insurance and flood-zone homework, and a negotiation plan before you write an offer.</p></li>
+          <li class="step-card"><h3>Close and settle in</h3><p>We coordinate inspections, lender and title, then stay your go-to for local recommendations.</p></li>
         </ol>
-        <p class="panel-cta"><a class="btn btn-primary" href="#contact" data-intent="buy">Start your search</a></p>
+        <p class="panel-cta"><a class="btn btn-cta" href="#match" data-intent="buy">Get my free Village Match</a></p>
       </div>
 
       <div class="panel" role="tabpanel" id="panel-build" aria-labelledby="tab-build">
         <ol class="steps">
-          <li class="step"><h3>Bring us on the first visit</h3><p>Many builders require your agent with you, or registered, on your first model visit. Call us first so you keep your own representation.</p></li>
-          <li class="step"><h3>Compare builders and lots</h3><p>Floor plans, lot premiums, incentives, standard features and build timelines, side by side across builders.</p></li>
-          <li class="step"><h3>Contract and design center</h3><p>We review the builder contract with you and help you spend your upgrade budget where it holds value at resale.</p></li>
-          <li class="step"><h3>Inspect and walk through</h3><p>Independent inspections at key stages and a punch list at the final walkthrough, so issues are fixed before closing.</p></li>
+          <li class="step-card"><h3>Bring us on the first visit</h3><p>Many builders require your agent with you, or registered, on your first model visit. Call us first so you keep your own representation.</p></li>
+          <li class="step-card"><h3>Compare builders and lots</h3><p>Floor plans, lot premiums, incentives, standard features and build timelines, side by side across builders.</p></li>
+          <li class="step-card"><h3>Contract and design center</h3><p>We review the builder contract with you and help you spend your upgrade budget where it holds value at resale.</p></li>
+          <li class="step-card"><h3>Inspect and walk through</h3><p>Independent inspections at key stages and a punch list at the final walkthrough, so issues are fixed before closing.</p></li>
         </ol>
-        <p class="panel-cta"><a class="btn btn-primary" href="#contact" data-intent="build">Plan your build</a></p>
+        <p class="panel-cta"><a class="btn btn-cta" href="#match" data-intent="build">Get my free New Construction Match</a></p>
       </div>
 
       <div class="panel" role="tabpanel" id="panel-sell" aria-labelledby="tab-sell">
         <ol class="steps">
-          <li class="step"><h3>Price it from your village</h3><p>Recent sales in your own village, the active competition, and the new homes down the road that buyers will compare yours to.</p></li>
-          <li class="step"><h3>Prepare and present</h3><p>A room-by-room prep plan and professional photography, so your home stands out from the first scroll.</p></li>
-          <li class="step"><h3>Reach the right buyers</h3><p>Full MLS and Coldwell Banker exposure, plus our village guides on lifeatlakewood.com, where buyers research Lakewood Ranch.</p></li>
-          <li class="step"><h3>Negotiate and close</h3><p>Offers, inspections, appraisal and closing, handled by a team on pace for 150+ closings this year.</p></li>
+          <li class="step-card"><h3>Price it from your village</h3><p>Recent sales in your own village, the active competition, and the new homes down the road that buyers will compare yours to.</p></li>
+          <li class="step-card"><h3>Prepare and present</h3><p>A room-by-room prep plan and professional photography, so your home stands out from the first scroll.</p></li>
+          <li class="step-card"><h3>Reach the right buyers</h3><p>Full MLS and Coldwell Banker exposure, plus our village guides on lifeatlakewood.com, where buyers research Lakewood Ranch.</p></li>
+          <li class="step-card"><h3>Negotiate and close</h3><p>Offers, inspections, appraisal and closing, handled by a team on pace for 150+ closings this year.</p></li>
         </ol>
-        <p class="panel-cta"><a class="btn btn-primary" href="#contact" data-intent="sell">Get a home value</a></p>
+        <p class="panel-cta"><a class="btn btn-cta" href="#match" data-intent="sell">Get my free home value</a></p>
       </div>
     </div>
   </section>
@@ -783,7 +1099,7 @@
       <div class="section-head center">
         <p class="eyebrow">Our team</p>
         <h2 id="team-title">The people behind the five-star reviews.</h2>
-        <p>Led by Lynn and Jeff Brown, working out of our office on Lakewood Ranch’s Main Street.</p>
+        <p>Led by Lynn and Jeff Brown, working out of our office on Lakewood Ranch’s Main Street. One of us builds your Village Match.</p>
       </div>
 
       <ul class="leads">
@@ -812,6 +1128,7 @@
         <li class="person"><img src="assets/team/lorin-cabrera.webp" width="240" height="240" alt="Lorin Cabrera" loading="lazy" decoding="async"><p class="person-name">Lorin Cabrera</p><p class="person-role">REALTOR®</p></li>
       </ul>
       <p class="team-note">Every agent is licensed in Florida with Coldwell Banker Realty.</p>
+      <p class="center-row"><a class="btn btn-cta" href="#match" data-start>Get matched with a local agent</a></p>
     </div>
   </section>
 
@@ -820,8 +1137,11 @@
       <p class="rating-num" aria-hidden="true">5.0</p>
       <span class="stars" aria-hidden="true">★★★★★</span>
       <h2 id="reviews-title">Rated 5.0 on Google across <span data-stat="reviews">74</span> reviews.</h2>
-      <p class="sub">Don’t take our word for it. Read what our clients say.</p>
-      <a class="btn btn-light" href="https://share.google/JxnIsIzYYQIfJrc1S" target="_blank" rel="noopener">Read our Google reviews</a>
+      <p class="sub">Don’t take our word for it. Read what our clients say, then get your own Village Match.</p>
+      <div class="reviews-actions">
+        <a class="btn btn-cta" href="#match" data-start>Get my free Village Match</a>
+        <a class="btn btn-ghost" href="https://share.google/JxnIsIzYYQIfJrc1S" target="_blank" rel="noopener">Read our Google reviews</a>
+      </div>
       <div class="quote-grid" id="review-quotes" hidden></div>
     </div>
   </section>
@@ -831,9 +1151,18 @@
       <div class="section-head">
         <p class="eyebrow">Good questions</p>
         <h2 id="faq-title">What buyers and sellers ask us most.</h2>
-        <p>Something else on your mind? <a href="#contact">Ask us</a>; there’s no such thing as a silly Lakewood Ranch question.</p>
+        <p>Something else on your mind? Ask your agent when your Village Match arrives; there’s no such thing as a silly Lakewood Ranch question.</p>
+        <a class="btn btn-cta" href="#match" data-start>Get my free Village Match</a>
       </div>
       <div class="faq-list">
+        <details class="faq-item">
+          <summary>Is the Village Match really free?</summary>
+          <p>Yes. There’s no cost, no obligation and nothing to sign. It’s the easiest way to get real numbers on the villages that fit you before you spend a weekend touring.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Will you flood me with calls and emails?</summary>
+          <p>No. One local agent reaches out with your Village Match and answers your questions. If you’d rather not hear from us, just say so or reply STOP, and we’ll stop.</p>
+        </details>
         <details class="faq-item">
           <summary>Is Lakewood Ranch in Manatee County or Sarasota County?</summary>
           <p>Both. Lakewood Ranch spans the Manatee–Sarasota county line, which runs roughly along University Parkway. The county a home sits in affects its property taxes and its public school district, so it’s one of the first things we check.</p>
@@ -862,87 +1191,31 @@
     </div>
   </section>
 
-  <section class="section contact" id="contact" aria-labelledby="contact-title">
-    <div class="wrap contact-grid">
-      <div class="contact-copy">
-        <p class="eyebrow">Let’s talk</p>
-        <h2 id="contact-title">Let’s find your place on the Ranch.</h2>
-        <p>Tell us a little about your plans and the right agent for your search will be in touch right away. Rather talk it through? Call the office; we’re open seven days a week.</p>
-        <ul class="contact-list">
-          <li>
-            <span class="ci-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span>
-            <span><span class="ci-label">Call the office</span><a class="big" href="tel:+19417774049">(941) 777-4049</a></span>
-          </li>
-          <li>
-            <span class="ci-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-            <span><span class="ci-label">Visit us</span><a href="https://www.google.com/maps/search/?api=1&amp;query=8334+Market+Street+Lakewood+Ranch+FL+34202" target="_blank" rel="noopener">Coldwell Banker Realty<br>8334 Market Street, Lakewood Ranch, FL 34202</a></span>
-          </li>
-          <li>
-            <span class="ci-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-            <span><span class="ci-label">Office hours</span>Open 7 days · 8am to 8pm</span>
-          </li>
-        </ul>
+  <section class="section final" id="contact" aria-labelledby="contact-title">
+    <div class="wrap final-grid">
+      <div class="final-copy">
+        <p class="eyebrow">Ready when you are</p>
+        <h2 id="contact-title">Your free Village Match is 60 seconds away.</h2>
+        <p>Four quick questions. Your top 3 villages, with real prices and fees, from a local agent within 24 hours.</p>
+        <div class="final-actions">
+          <a class="btn btn-cta btn-lg" href="#match" data-start>Get my free Village Match</a>
+          <a class="btn btn-ghost btn-lg" href="tel:+19417774049">Call (941) 777-4049</a>
+        </div>
       </div>
-
-      <div class="lead-form" id="lead-card">
-        <form id="lead-form" novalidate>
-          <h3>Tell us about your move</h3>
-          <p class="form-intro">Takes about a minute. No spam, ever.</p>
-          <div class="form-grid">
-            <fieldset class="intent full">
-              <legend>I’m interested in</legend>
-              <div class="intent-options">
-                <label><input type="radio" name="interest" value="buy" checked><span>Buying</span></label>
-                <label><input type="radio" name="interest" value="build"><span>Building new</span></label>
-                <label><input type="radio" name="interest" value="sell"><span>Selling</span></label>
-                <label><input type="radio" name="interest" value="buy_and_sell"><span>Buying &amp; selling</span></label>
-              </div>
-            </fieldset>
-            <div class="field">
-              <label for="first_name">First name</label>
-              <input id="first_name" name="first_name" autocomplete="given-name" required aria-describedby="first_name-error">
-              <span class="field-error" id="first_name-error"></span>
-            </div>
-            <div class="field">
-              <label for="last_name">Last name</label>
-              <input id="last_name" name="last_name" autocomplete="family-name" required aria-describedby="last_name-error">
-              <span class="field-error" id="last_name-error"></span>
-            </div>
-            <div class="field">
-              <label for="email">Email</label>
-              <input id="email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="email-error">
-              <span class="field-error" id="email-error"></span>
-            </div>
-            <div class="field">
-              <label for="phone">Phone</label>
-              <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required aria-describedby="phone-error">
-              <span class="field-error" id="phone-error"></span>
-            </div>
-            <div class="field full">
-              <label for="timeline">When do you plan on moving?</label>
-              <select id="timeline" name="timeline">
-                <option>As soon as possible</option>
-                <option>1–3 months</option>
-                <option>3–6 months</option>
-                <option>6–12 months</option>
-                <option>More than a year out</option>
-                <option>Just exploring</option>
-              </select>
-            </div>
-            <div class="field full">
-              <label for="message">Anything we should know? <span class="optional">(optional)</span></label>
-              <textarea id="message" name="message" rows="3" placeholder="Villages you like, must-haves, questions…"></textarea>
-            </div>
-          </div>
-          <div class="hp" aria-hidden="true">
-            <label for="company">Leave this field empty</label>
-            <input id="company" name="company" tabindex="-1" autocomplete="off">
-          </div>
-          <button class="btn btn-primary" type="submit">Connect me with an agent</button>
-          <p class="consent">By submitting, you agree that Life at Lakewood and Coldwell Banker Realty may contact you by phone, text or email about your real estate needs. Consent is not a condition of any purchase. Message and data rates may apply. See our <a href="https://www.lifeatlakewood.com/privacy-policy">Privacy Policy</a>.</p>
-          <p class="form-status" id="form-status" role="alert"></p>
-        </form>
-      </div>
+      <ul class="contact-list">
+        <li>
+          <span class="ci-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span>
+          <span><span class="ci-label">Call the office</span><a class="big" href="tel:+19417774049">(941) 777-4049</a></span>
+        </li>
+        <li>
+          <span class="ci-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+          <span><span class="ci-label">Visit us</span><a href="https://www.google.com/maps/search/?api=1&amp;query=8334+Market+Street+Lakewood+Ranch+FL+34202" target="_blank" rel="noopener">Coldwell Banker Realty<br>8334 Market Street, Lakewood Ranch, FL 34202</a></span>
+        </li>
+        <li>
+          <span class="ci-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <span><span class="ci-label">Office hours</span>Open 7 days · 8am to 8pm</span>
+        </li>
+      </ul>
     </div>
   </section>
 </main>
@@ -964,16 +1237,6 @@
           8334 Market Street, Lakewood Ranch, FL 34202
         </address>
       </div>
-      <div>
-        <h2>Explore</h2>
-        <ul class="footer-links">
-          <li><a href="https://www.lifeatlakewood.com/villages">Compare villages</a></li>
-          <li><a href="https://www.lifeatlakewood.com/homes-for-sale">Homes for sale</a></li>
-          <li><a href="https://www.lifeatlakewood.com/build-your-home">Build your home</a></li>
-          <li><a href="https://www.lifeatlakewood.com/community-map">Community map</a></li>
-          <li><a href="https://www.lifeatlakewood.com/amenities">Amenities</a></li>
-        </ul>
-      </div>
     </div>
     <div class="footer-legal">
       <p>Life at Lakewood is an independent resource and is not affiliated with the official developers of Lakewood Ranch.</p>
@@ -987,9 +1250,24 @@
   </div>
 </footer>
 
+<dialog class="exit-offer" id="exit-offer" aria-labelledby="exit-title">
+  <form class="exit-inner" method="dialog">
+    <button class="exit-close" value="close" aria-label="Close">×</button>
+    <p class="eyebrow">Before you go</p>
+    <h2 id="exit-title">Want your free Village Match?</h2>
+    <p>Your top 3 Lakewood Ranch villages, with real prices and fees, from a local agent within 24 hours. It takes about 60 seconds.</p>
+    <div class="exit-opts">
+      <button class="btn btn-cta" type="button" data-intent="buy">I’m buying</button>
+      <button class="btn btn-outline" type="button" data-intent="build">I’m building new</button>
+      <button class="btn btn-outline" type="button" data-intent="sell">I’m selling</button>
+    </div>
+    <button class="exit-dismiss" value="dismiss">No thanks</button>
+  </form>
+</dialog>
+
 <div class="mobile-bar" inert>
-  <a class="btn btn-outline" href="tel:+19417774049">Call us</a>
-  <a class="btn btn-primary" href="#contact">Talk to an agent</a>
+  <a class="btn btn-outline" href="tel:+19417774049">Call</a>
+  <a class="btn btn-cta" href="#match" data-start>Get my free Village Match</a>
 </div>
 
 <script>
@@ -1001,8 +1279,8 @@
   // asks the visitor to call, so a lead is never silently dropped.
   const LEAD_ENDPOINT = "";
 
-  // Real Google reviews to feature, copied from the Google profile. Left
-  // empty, the reviews section shows the rating and the link to Google only.
+  // Real Google reviews to feature, copied from the Google profile. The first
+  // one also sits under the form. Left empty, both spots show the rating only.
   //   { name: "Jane D.", text: "Lynn and the team found us the perfect villa…" },
   const REVIEWS = [];
 
@@ -1010,6 +1288,8 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const scrollBehavior = reduceMotion ? "auto" : "smooth";
+  const track = (event, params = {}) => { (window.dataLayer = window.dataLayer || []).push({ event, ...params }); };
 
   // Header turns solid once the page scrolls off the hero.
   const header = $(".site-header");
@@ -1017,18 +1297,172 @@
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });
 
-  // Every "I'm buying / building / selling" control preselects the form's
-  // interest and takes the visitor to it.
+  // What each kind of visitor is offered, and the questions on the way to it.
+  const OFFERS = {
+    buy: { name: "Village Match", title: "Get your free Village Match", send: "Where should we send your Village Match?", button: "Send my free Village Match" },
+    buy_and_sell: { name: "Village Match", title: "Get your free Village Match", send: "Where should we send your Village Match?", button: "Send my free Village Match" },
+    build: { name: "New Construction Match", title: "Get your free New Construction Match", send: "Where should we send your New Construction Match?", button: "Send my free New Construction Match" },
+    sell: { name: "Home Value Report", title: "Get your free home value report", send: "Where should we send your home value report?", button: "Send my free home value report" },
+  };
+  const FLOWS = {
+    buy: ["intent", "price", "musts", "timeline", "contact"],
+    buy_and_sell: ["intent", "price", "musts", "timeline", "contact"],
+    build: ["intent", "price", "musts", "timeline", "contact"],
+    sell: ["intent", "home", "timeline", "contact"],
+  };
+  // Ad campaigns link here with ?intent=sell or ?intent=build, and the hero
+  // speaks to that visitor (the plain page speaks to buyers).
+  const HERO = {
+    build: {
+      eyebrow: "New construction in Lakewood Ranch",
+      title: "Building new? <em>Don’t walk into a model alone.</em>",
+      lede: "Get a free New Construction Match: floor plans, prices and quick move-in homes from every builder in your budget, plus the incentives they’re offering now. Many builders require your agent on your first visit, so start here.",
+    },
+    sell: {
+      eyebrow: "Selling in Lakewood Ranch",
+      title: "What would your home <em>sell for today?</em>",
+      lede: "Get a free home value report from the team on pace for 150+ closings this year: a price based on your own village’s recent sales and the new homes competing with yours, plus a prep plan showing which fixes pay off. Within 24 hours.",
+    },
+  };
+
   const form = $("#lead-form");
+  const card = $("#match");
+  let flow = FLOWS.buy;
+  let current = "intent";
+  let started = false;
+  let submitted = false;
+  // Optional steps count as answered once seen; the rest once they hold a value.
+  const seen = new Set();
+  const answered = {
+    intent: () => Boolean(form.elements.interest.value),
+    price: () => Boolean(form.elements.price_range.value),
+    musts: () => seen.has("musts"),
+    home: () => seen.has("home"),
+    timeline: () => Boolean(form.elements.timeline.value),
+    contact: () => false,
+  };
+  const firstOpenStep = () => flow.find((step) => !answered[step]());
+
+  const showStep = (name) => {
+    current = name;
+    seen.add(name);
+    $$(".step", form).forEach((step) => { step.hidden = step.dataset.step !== name; });
+    const index = flow.indexOf(name);
+    const bar = $(".progress-bar", form);
+    bar.setAttribute("aria-valuemax", String(flow.length));
+    bar.setAttribute("aria-valuenow", String(index + 1));
+    $("span", bar).style.width = `${((index + 1) / flow.length) * 100}%`;
+    $("#progress-label").textContent = `Step ${index + 1} of ${flow.length}`;
+    $(".back", form).hidden = index === 0;
+  };
+  const focusStep = () => {
+    const control = $(`[data-step="${current}"]`, form).querySelector("button, input, select");
+    if (control) control.focus({ preventScroll: true });
+  };
+  // The window is scrolled directly: after a visitor has typed in the form,
+  // Chrome was seen dropping a smooth scrollIntoView while window.scrollTo
+  // still ran.
+  const scrollToEl = (el, align = "start") => {
+    const rect = el.getBoundingClientRect();
+    const margin = parseFloat(getComputedStyle(card).scrollMarginTop) || 0;
+    const offset = align === "center" ? Math.max(margin, (window.innerHeight - rect.height) / 2) : margin;
+    window.scrollTo({ top: rect.top + window.scrollY - offset, behavior: scrollBehavior });
+  };
+  const goTo = (name) => {
+    showStep(name);
+    focusStep();
+    // A shorter step can leave the card's top under the header on a phone.
+    if (card.getBoundingClientRect().top < header.offsetHeight) scrollToEl(card);
+    track("form_step", { form_step: name, form_step_number: flow.indexOf(name) + 1 });
+  };
+
+  const applyIntent = (intent) => {
+    const offer = OFFERS[intent];
+    form.elements.interest.value = intent;
+    flow = FLOWS[intent];
+    $("#match-title").textContent = offer.title;
+    $("#contact-legend").textContent = offer.send;
+    $("#submit-button").textContent = offer.button;
+    $("#timeline-legend").textContent = intent === "sell" ? "When would you like to sell?" : "When are you hoping to move?";
+    $$('.opt[data-field="interest"]', form).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === intent)));
+  };
+  const showVillage = (village) => {
+    form.elements.village_interest.value = village;
+    const note = $("#match-village");
+    $("strong", note).textContent = village;
+    note.hidden = !village;
+  };
+  $("#match-village button").addEventListener("click", () => showVillage(""));
+  const markStarted = (entry) => {
+    if (started) return;
+    started = true;
+    track("form_start", { lead_interest: form.elements.interest.value, form_entry: entry });
+  };
+
+  // Every answer is a tap that moves the visitor on.
+  $$(".opt", form).forEach((button) => {
+    button.addEventListener("click", () => {
+      const { field, value } = button.dataset;
+      if (field === "interest") applyIntent(value);
+      else form.elements[field].value = value;
+      $$(`.opt[data-field="${field}"]`, form).forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+      markStarted("form");
+      goTo(flow[flow.indexOf(current) + 1]);
+    });
+  });
+  $$(".step-next", form).forEach((button) => button.addEventListener("click", () => goTo(flow[flow.indexOf(current) + 1])));
+  $(".back", form).addEventListener("click", () => goTo(flow[Math.max(0, flow.indexOf(current) - 1)]));
+  // Enter in an earlier step (the address, a checkbox) moves on rather than
+  // submitting a form whose contact fields are still hidden.
+  form.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || current === "contact" || !event.target.matches("input")) return;
+    event.preventDefault();
+    goTo(flow[flow.indexOf(current) + 1]);
+  });
+
+  // Buttons elsewhere on the page start the form, already past the
+  // questions they answer (which offer, which village). One that switches
+  // the offer opens the first question that offer still needs.
+  const startForm = (intent, village) => {
+    if (!submitted) {
+      if (intent) applyIntent(intent);
+      if (village) showVillage(village);
+      if (intent) {
+        showStep(firstOpenStep());
+        markStarted("cta");
+      }
+    }
+    scrollToEl(card);
+    if (!submitted) setTimeout(focusStep, reduceMotion ? 0 : 650);
+  };
   $$("[data-intent]").forEach((el) => {
     el.addEventListener("click", (event) => {
       event.preventDefault();
-      const radio = form.querySelector(`input[name="interest"][value="${el.dataset.intent}"]`);
-      if (radio) radio.checked = true;
-      $("#contact").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
-      setTimeout(() => $("#first_name").focus({ preventScroll: true }), reduceMotion ? 0 : 700);
+      const dialog = el.closest("dialog");
+      if (dialog) dialog.close();
+      startForm(el.dataset.intent, el.dataset.village);
     });
   });
+  $$("[data-start]").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      event.preventDefault();
+      startForm();
+    });
+  });
+
+  const urlIntent = new URLSearchParams(window.location.search).get("intent");
+  if (urlIntent && Object.hasOwn(OFFERS, urlIntent)) {
+    const copy = HERO[urlIntent];
+    if (copy) {
+      $("#hero-eyebrow").textContent = copy.eyebrow;
+      $("#hero-title").innerHTML = copy.title;
+      $("#hero-lede").textContent = copy.lede;
+    }
+    applyIntent(urlIntent);
+    showStep(firstOpenStep());
+  } else {
+    showStep("intent");
+  }
 
   // Village filters.
   const chips = $$(".chip");
@@ -1091,24 +1525,24 @@
     $$("[data-count]").forEach((el) => counter.observe(el));
   }
 
-  // Featured reviews, when there are any.
+  // Featured reviews, when there are any: the first under the form, all of
+  // them in the reviews band.
+  const quoteFigure = (review, className) => {
+    const figure = document.createElement("figure");
+    figure.className = className;
+    const quote = document.createElement("blockquote");
+    quote.textContent = `“${review.text}”`;
+    const caption = document.createElement("figcaption");
+    caption.textContent = `★★★★★ ${review.name}`;
+    figure.append(quote, caption);
+    return figure;
+  };
   if (REVIEWS.length) {
     const grid = $("#review-quotes");
-    REVIEWS.forEach((review) => {
-      const figure = document.createElement("figure");
-      figure.className = "quote";
-      const stars = document.createElement("p");
-      stars.className = "stars";
-      stars.textContent = "★★★★★";
-      stars.setAttribute("aria-label", "Five stars");
-      const quote = document.createElement("blockquote");
-      quote.textContent = review.text;
-      const caption = document.createElement("figcaption");
-      caption.textContent = review.name;
-      figure.append(stars, quote, caption);
-      grid.append(figure);
-    });
+    REVIEWS.forEach((review) => grid.append(quoteFigure(review, "quote")));
     grid.hidden = false;
+    const first = quoteFigure(REVIEWS[0], "match-quote");
+    $("#match-quote").replaceWith(first);
   }
 
   // Ad and campaign parameters ride along with the lead. The first landing
@@ -1128,11 +1562,10 @@
   };
   attribution();
 
-  // Lead form.
+  // Contact details: the only typing in the form.
   const status = $("#form-status");
   const rules = {
-    first_name: (v) => (v.trim() ? "" : "Please enter your first name."),
-    last_name: (v) => (v.trim() ? "" : "Please enter your last name."),
+    full_name: (v) => (/\S+\s+\S+/.test(v.trim()) ? "" : "Please enter your first and last name."),
     email: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? "" : "Please enter a valid email address."),
     phone: (v) => (v.replace(/\D/g, "").length >= 10 ? "" : "Please enter a phone number, including area code."),
   };
@@ -1148,9 +1581,20 @@
     form.elements[name].addEventListener("input", () => { if (form.elements[name].getAttribute("aria-invalid") === "true") check(name); });
   });
 
+  // One line an agent can read at a glance, for Zaps that map only a message field.
+  const summary = (f) => [
+    `${f.offer} request`,
+    f.price_range && `Price range: ${f.price_range}`,
+    f.must_haves && `Must-haves: ${f.must_haves}`,
+    f.village_interest && `Asked about: ${f.village_interest}`,
+    f.home_village && `Home: ${f.home_village}${f.address ? `, ${f.address}` : ""}`,
+    f.timeline && `Timeline: ${f.timeline}`,
+  ].filter(Boolean).join(" · ");
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     status.textContent = "";
+    if (current !== "contact") return;
     // Bots fill in every field, including the hidden one people never see.
     if (form.elements.company.value) return;
 
@@ -1165,59 +1609,95 @@
     }
 
     const data = new FormData(form);
-    data.delete("company");
-    const body = new URLSearchParams();
-    data.forEach((value, key) => body.append(key, String(value).trim()));
+    const interest = String(data.get("interest") || "buy");
+    const [firstName, ...lastName] = String(data.get("full_name")).trim().split(/\s+/);
+    const fields = {
+      offer: OFFERS[interest].name,
+      interest,
+      price_range: String(data.get("price_range") || ""),
+      must_haves: data.getAll("must_haves").join(", "),
+      village_interest: String(data.get("village_interest") || ""),
+      home_village: interest === "sell" ? String(data.get("home_village") || "") : "",
+      address: interest === "sell" ? String(data.get("address") || "").trim() : "",
+      timeline: String(data.get("timeline") || ""),
+      first_name: firstName,
+      last_name: lastName.join(" "),
+      email: String(data.get("email")).trim(),
+      phone: String(data.get("phone")).trim(),
+    };
+    fields.message = summary(fields);
+    const body = new URLSearchParams(fields);
     body.append("source", "Life at Lakewood team landing page");
     body.append("page_url", window.location.href);
     body.append("submitted_at", new Date().toISOString());
     Object.entries(attribution()).forEach(([key, value]) => body.append(key, value));
 
-    const button = form.querySelector('button[type="submit"]');
+    const button = $("#submit-button");
+    const label = button.textContent;
     button.disabled = true;
     button.textContent = "Sending…";
     try {
       // A Zapier hook takes the post but doesn't let the page read its reply
       // (no-cors); a network failure still throws and lands in catch.
       await fetch(LEAD_ENDPOINT, { method: "POST", mode: "no-cors", body });
-      (window.dataLayer = window.dataLayer || []).push({ event: "generate_lead", lead_interest: data.get("interest") });
-      const name = String(data.get("first_name")).trim();
-      $("#lead-card").innerHTML = `
+      submitted = true;
+      track("generate_lead", { lead_interest: interest, lead_offer: fields.offer });
+      card.innerHTML = `
         <div class="form-success" role="status" tabindex="-1">
-          <span class="check" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
-          <h3>Thanks<span class="success-name"></span>!</h3>
-          <p>The right agent for your search will be in touch right away. Rather talk now? Call <a href="tel:+19417774049">${OFFICE_PHONE}</a>.</p>
+          <span class="check-badge" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <h2>You’re all set<span class="success-name"></span>!</h2>
+          <p>A local agent will reach out right away, and your <span class="success-offer"></span> will arrive by text and email within 24 hours.</p>
+          <p>Want to talk sooner? Call <a href="tel:+19417774049">${OFFICE_PHONE}</a>, open 8am to 8pm, seven days a week.</p>
         </div>`;
-      $(".success-name").textContent = name ? `, ${name}` : "";
-      // The card is much shorter than the form it replaces, so bring it back
-      // into view rather than leave the visitor looking at the footer.
-      const success = $(".form-success");
+      $(".success-name", card).textContent = firstName ? `, ${firstName}` : "";
+      $(".success-offer", card).textContent = fields.offer === "Home Value Report" ? "home value report" : fields.offer;
+      const success = $(".form-success", card);
       success.focus({ preventScroll: true });
-      success.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+      scrollToEl(success, "center");
     } catch {
-      status.textContent = `Something went wrong sending your message. Please call ${OFFICE_PHONE} and we’ll help you right away.`;
+      status.textContent = `Something went wrong sending your details. Please call ${OFFICE_PHONE} and we’ll help you right away.`;
       button.disabled = false;
-      button.textContent = "Connect me with an agent";
+      button.textContent = label;
     }
   });
 
-  // On phones, a call / contact bar follows the visitor once the hero is out
-  // of view, and steps aside while the form itself is on screen.
-  const bar = $(".mobile-bar");
-  if ("IntersectionObserver" in window) {
-    let heroVisible = true;
-    let contactVisible = false;
-    const update = () => {
-      const show = !heroVisible && !contactVisible;
-      bar.classList.toggle("show", show);
-      bar.inert = !show;
+  // On desktop, a visitor heading for the tab bar without having started
+  // gets one reminder of the offer per visit. Never on touch screens, where
+  // leaving can't be detected and a popup only gets in the way.
+  const exitOffer = $("#exit-offer");
+  if (typeof exitOffer.showModal === "function" && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    const armedAt = performance.now();
+    const onLeave = (event) => {
+      if (event.relatedTarget || event.clientY > 10) return;
+      if (started || submitted || performance.now() - armedAt < 8000) return;
+      document.removeEventListener("mouseout", onLeave);
+      let seen = false;
+      try {
+        seen = sessionStorage.getItem("lal_exit_offer") === "1";
+        sessionStorage.setItem("lal_exit_offer", "1");
+      } catch { /* private mode */ }
+      if (seen) return;
+      exitOffer.showModal();
+      track("exit_offer_shown");
     };
-    // Each observer watches one element, so its newest entry is the current state.
-    const latest = (entries) => entries[entries.length - 1].isIntersecting;
-    new IntersectionObserver((entries) => { heroVisible = latest(entries); update(); }).observe($(".hero"));
-    new IntersectionObserver((entries) => { contactVisible = latest(entries); update(); }, { threshold: 0.1 }).observe($("#contact"));
+    document.addEventListener("mouseout", onLeave);
+    // A click on the dimmed backdrop lands on the dialog itself.
+    exitOffer.addEventListener("click", (event) => { if (event.target === exitOffer) exitOffer.close(); });
   }
 
+  // On phones, a call / Village Match bar follows the visitor once the hero
+  // (and the form in it) is out of view.
+  const bar = $(".mobile-bar");
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((entries) => {
+      // One observed element, so the newest entry is the current state.
+      const show = !entries[entries.length - 1].isIntersecting;
+      bar.classList.toggle("show", show);
+      bar.inert = !show;
+    }).observe($(".hero"));
+  }
+
+  $$('a[href^="tel:"]').forEach((link) => link.addEventListener("click", () => track("click_to_call")));
   $$("[data-year]").forEach((el) => { el.textContent = new Date().getFullYear(); });
 })();
 </script>
