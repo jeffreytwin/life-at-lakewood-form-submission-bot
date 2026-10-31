@@ -83,10 +83,10 @@ https://team.lifeatlakewood.com/?intent=sell&utm_source=facebook&utm_campaign=se
   45+ villages in the hero, the stats strip, the form, the reviews band and the meta
   description; the review count carries `data-stat="reviews"`. `assets/og-image.jpg` shows the
   review and closing numbers too, so regenerate it when they change.
-- **Reviews.** `REVIEWS` in the script holds six Google reviews, word for word, each with the
+- **Reviews.** `REVIEWS` in the script holds seven Google reviews, word for word, each with the
   agent it names, whose headshot sits beside it. The one marked `featured` appears under the
-  form as its `excerpt`; all of them appear in the reviews band. Get each reviewer's OK before
-  launch (Florida § 540.08 covers names used in advertising).
+  form (as its `excerpt`, if it has one); all of them appear in the reviews band. Getting each
+  reviewer's OK before launch is the safe course (Florida § 540.08 covers names in advertising).
 - **Team.** One `<li class="person">` per person. Photos are the circular headshots from
   lifeatlakewood.com/contact-us, resized to 240×240 WebP in `assets/team/`.
 
