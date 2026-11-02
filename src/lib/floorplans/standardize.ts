@@ -4,7 +4,7 @@
 // engine's output before the diff (sync.ts), so a builder engine can pass
 // through whatever its page says. No IO here.
 
-import type { NormalizedPlan } from "@/lib/floorplans/types";
+import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
 
 export const HOME_TYPES = ["Single Family Home", "Townhome", "Condominium", "Coach Home", "Attached Villa"] as const;
 export type HomeType = (typeof HOME_TYPES)[number];
@@ -214,7 +214,7 @@ const PLAN_NAME_PREFIX: Record<string, string> = { "Adams Homes": "Plan" };
 /**
  * Every plan named the builder's way (PLAN_NAME_PREFIX): a plan named by
  * its number alone takes the word in front, and a home's base plan the
- * same. Plan keys are left as they are, so a plan keeps its row on the
+ * same. Plan keys are left as they are (withFiledPlanKeys settles them), so a plan keeps its row on the
  * site and only its name changes. Pure; exported for tests.
  */
 export function withPlanNamePrefix(plans: NormalizedPlan[], builderName: string): NormalizedPlan[] {
@@ -229,6 +229,36 @@ export function withPlanNamePrefix(plans: NormalizedPlan[], builderName: string)
       ? p.relatedPlanName ? { ...p, relatedPlanName: named(p.relatedPlanName) } : p
       : { ...p, name: named(p.name) ?? p.name }
   );
+}
+
+/**
+ * One key for a plan however the page names it that night. The key is
+ * made from the name the engine reads, and Adams' page is read as "Plan
+ * 1512" one night and "1512" another, so one plan took two rows, "plan-1512"
+ * and "1512". Each was in Wix, and whichever the night missed came up for
+ * removal while the plan was still listed (Aviary at Rutland Ranch,
+ * 2026-11-02). A plan whose name is a number, with or without the builder's
+ * word in front, takes the key it is filed under (`taken`: the
+ * connection's rows and its stand-in rules). It takes the key with the word
+ * where both are filed, so the extra row comes up for removal. A plan with
+ * neither filed takes the key with the word too. No key that another plan
+ * of the run was read under is taken. Pure; exported for tests.
+ */
+export function withFiledPlanKeys(plans: NormalizedPlan[], builderName: string, taken: Set<string>): NormalizedPlan[] {
+  const prefix = PLAN_NAME_PREFIX[builderName];
+  if (!prefix) return plans;
+  const lead = new RegExp(`^\\s*${prefix}\\b\\s*`, "i");
+  const read = new Set(plans.map((p) => p.planKey));
+  return plans.map((p) => {
+    if (p.quickMoveIn) return p;
+    const bare = (p.name ?? "").replace(lead, "").trim();
+    if (!/^\d/.test(bare)) return p;
+    const plain = normKey(bare);
+    const named = normKey(`${prefix} ${bare}`);
+    if (p.planKey !== plain && p.planKey !== named) return p;
+    const key = [named, plain].find((k) => taken.has(k)) ?? named;
+    return key === p.planKey || read.has(key) ? p : { ...p, planKey: key };
+  });
 }
 
 /**
