@@ -9,6 +9,7 @@ const TABS = [
   { href: "/dashboard/community-alerts/announcements", label: "Announcements" },
   { href: "/dashboard/community-alerts/watch-list", label: "Watch List" },
   { href: "/dashboard/community-alerts/school-zones", label: "School Zones" },
+  { href: "/dashboard/community-alerts/hoa-cdd", label: "HOA/CDD Info" },
   { href: "/dashboard/community-alerts/ignored", label: "Ignored" },
   { href: "/dashboard/community-alerts/history", label: "History" },
 ];

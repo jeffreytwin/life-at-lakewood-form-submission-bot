@@ -7,6 +7,8 @@ import type { NewNeighborhoodDetail } from "@/lib/community-alerts/new-neighborh
 import type { ChecksResult } from "@/lib/community-alerts/checks";
 import type { AnnouncementDetail } from "@/lib/community-alerts/announcements";
 import type { SchoolZonesDetail } from "@/lib/school-zones/scan";
+import type { HoaCddDetail } from "@/lib/community-alerts/hoa-cdd";
+import { FEE_LABEL } from "@/lib/community-alerts/checklists";
 import { LEVEL_LABEL } from "@/lib/school-zones/names";
 import { applyQueued, canApplySchools } from "@/lib/school-zones/apply";
 import { siteColors, wixCollectionUrl } from "@/app/dashboard/listings/format";
@@ -341,12 +343,14 @@ const KIND_BADGE: Record<AlertView["kind"], string> = {
   new_neighborhood: "new neighborhood",
   announcement: "announced",
   school_zones: "school zones",
+  hoa_cdd: "HOA/CDD",
 };
 const KIND_BADGE_CLASS: Record<AlertView["kind"], string> = {
   sold_out: "badge-warning",
   new_neighborhood: "badge-info",
   announcement: "badge-purple",
   school_zones: "badge-success",
+  hoa_cdd: "badge-muted",
 };
 
 const STATUS_LABEL: Record<AnnouncementDetail["status"], string> = {
@@ -535,6 +539,21 @@ function SchoolZonesSummary({ alert }: { alert: AlertView }) {
   );
 }
 
+function HoaCddSummary({ alert }: { alert: AlertView }) {
+  const d = alert.detail as unknown as HoaCddDetail;
+  const fees = (d.fees ?? []).map((f) => FEE_LABEL[f]).join(" and ");
+  return (
+    <div className="text-sm" style={{ marginTop: 8 }}>
+      Check the {fees} each page below states: ask Claude for the current figures, edit the page if they&apos;ve changed, then
+      pick Updated or No change. A note with the figures shows on the HOA/CDD Info tab next time.
+      <span className="text-muted">
+        {" "}
+        {d.trigger === "hub" ? "Started from the Hub." : "Raised by the twice-yearly schedule."}
+      </span>
+    </div>
+  );
+}
+
 export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () => void }) {
   const [busy, setBusy] = useState(false);
   const [closing, setClosing] = useState<"dismiss" | "ignore" | null>(null);
@@ -594,7 +613,9 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
           ? "community_sold_out_done"
           : alert.kind === "school_zones"
             ? "community_schools_done"
-            : "community_new_neighborhood_done",
+            : alert.kind === "hoa_cdd"
+              ? "community_fee_check_done"
+              : "community_new_neighborhood_done",
       leadName: "",
       communityName: alert.name,
     });
@@ -624,7 +645,7 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
   const canApply = schools !== null && canApplySchools(schools);
   const queued = schools !== null && applyQueued(schools);
   const listDone = alert.progress.complete || (alert.kind === "school_zones" && total === 0 && schoolsMatch(alert));
-  const canIgnore = alert.kind !== "sold_out" && alert.kind !== "school_zones";
+  const canIgnore = alert.kind === "new_neighborhood" || alert.kind === "announcement";
   const canWatch = alert.kind === "announcement";
 
   return (
@@ -650,6 +671,8 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
         <AnnouncementSummary alert={alert} />
       ) : alert.kind === "school_zones" ? (
         <SchoolZonesSummary alert={alert} />
+      ) : alert.kind === "hoa_cdd" ? (
+        <HoaCddSummary alert={alert} />
       ) : (
         <NewNeighborhoodSummary alert={alert} />
       )}
@@ -718,6 +741,8 @@ export function AlertCard({ alert, onChange }: { alert: AlertView; onChange: () 
                     ? "Why? (optional, e.g. outside the area we cover)"
                     : alert.kind === "school_zones"
                       ? "Why? (e.g. the district's map is off here)"
+                      : alert.kind === "hoa_cdd"
+                        ? "Why? (e.g. checked another way this time)"
                       : canIgnore
                         ? "Why? (e.g. not ready yet)"
                       : "Why? (e.g. false alarm: the builder's page changed)"
@@ -820,6 +845,14 @@ function ItemRow({ item, busy, act }: { item: Item; busy: boolean; act: (body: R
           {byHub && <span className="badge badge-success" style={{ marginLeft: 6 }}>checked by the Hub</span>}
           {item.auto && !done && !na && <span className="badge badge-muted" style={{ marginLeft: 6 }}>checks itself</span>}
           {na && <span className="badge badge-muted" style={{ marginLeft: 6 }}>N/A</span>}
+          {item.url && (
+            <>
+              {" "}
+              <a href={item.url} target="_blank" rel="noreferrer" className="text-sm">
+                Open page ↗
+              </a>
+            </>
+          )}
         </div>
         {item.hint && <div className="text-muted text-sm" style={{ marginTop: 2 }}>{item.hint}</div>}
         {item.choices && !na && (

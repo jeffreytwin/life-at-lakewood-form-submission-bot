@@ -12,6 +12,7 @@ import {
   progressOf,
   type AlertKind,
   type ChecklistItem,
+  type FeePage,
   type ItemState,
 } from "@/lib/community-alerts/checklists";
 
@@ -50,7 +51,9 @@ const ITEM_COLUMNS = "item_key, done_at, by_hand, not_applicable, choice, note";
 function itemsOf(alert: Pick<AlertRow, "kind" | "detail">): ChecklistItem[] {
   // A school zones alert's to-do is the village's static page, while it names other schools.
   const staticPage = alert.detail?.source === "page" || Boolean(alert.detail?.staticPage);
-  return checklistFor(alert.kind, { legacySite: alert.detail?.site === LEGACY_DOMAIN, staticPage });
+  // An HOA/CDD alert's list is the pages it was raised with.
+  const feePages = Array.isArray(alert.detail?.pages) ? (alert.detail.pages as FeePage[]) : undefined;
+  return checklistFor(alert.kind, { legacySite: alert.detail?.site === LEGACY_DOMAIN, staticPage, feePages: alert.kind === "hoa_cdd" ? feePages : undefined });
 }
 
 /** An alert with its to-do list in order, each item beside what was done about it. Pure; exported for tests. */
