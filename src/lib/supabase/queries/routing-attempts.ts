@@ -194,14 +194,29 @@ export async function getTodayAcceptedCountsByAgent(
   // but the acceptance happened after.
   const { data, error } = await supabase
     .from("routing_attempts")
-    .select("agent_id, updated_at")
+    .select("agent_id, lead_id, updated_at")
     .eq("status", "accepted")
     .gt("updated_at", windowStart);
 
   if (error) throw error;
 
+  // A lead marked 'Bad Data' is bogus and no longer counts toward the agent's
+  // daily cap — even if it was flagged before Salesforce's next sync dropped it.
+  const leadIds = [...new Set((data ?? []).map((row) => row.lead_id))];
+  const badDataLeadIds = new Set<string>();
+  if (leadIds.length > 0) {
+    const { data: badLeads, error: badErr } = await supabase
+      .from("leads")
+      .select("id")
+      .in("id", leadIds)
+      .eq("routing_status", "bad_data");
+    if (badErr) throw badErr;
+    for (const lead of badLeads ?? []) badDataLeadIds.add(lead.id);
+  }
+
   const counts = new Map<string, number>();
   for (const row of data ?? []) {
+    if (badDataLeadIds.has(row.lead_id)) continue;
     // Filter to only rows whose updated_at falls on today in Eastern time
     const rowETDate = new Date(row.updated_at).toLocaleDateString("en-CA", {
       timeZone: "America/New_York",
