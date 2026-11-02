@@ -47,7 +47,7 @@ import { alreadyFiled, filedAsBefore, knownRecordsOf, type FiledHome } from "@/l
 import { linkQuickMoveIns, withLinksAsRead, withPlanPicturesOnHomes, withPlanTypesOnHomes, withQuickMoveInPictures, withQuickMoveInPrices } from "@/lib/floorplans/quick-move-ins";
 import { countAfterShortfall, countToMeet, describeCoverage } from "@/lib/floorplans/coverage";
 import { withRememberedScore } from "@/lib/floorplans/scores";
-import { builderDefaults, standardizePlan, withPlanNamePrefix } from "@/lib/floorplans/standardize";
+import { builderDefaults, standardizePlan, withFiledPlanKeys, withPlanNamePrefix } from "@/lib/floorplans/standardize";
 import { NAMED_PICTURE_BUILDERS, withoutBadges, withoutBanners, withoutOtherPlansPictures } from "@/lib/floorplans/stray-pictures";
 import { withoutSoldHomes } from "@/lib/floorplans/sold-homes";
 import { SERIES_BUILDERS, withSeriesLabels } from "@/lib/floorplans/series-labels";
@@ -642,8 +642,14 @@ export async function preparePlans(
     supabase.from("fp_builder_communities").select("home_type").match({ builder_id: builder.id, community_id: community.id }).maybeSingle(),
   ]);
   const defaults = builderDefaults(settings?.engine_config as Record<string, unknown> | null, connection?.home_type);
+  // A plan the builder keeps (stand-ins.ts), read before linking so a plan
+  // named by its number takes the key it is filed under.
+  const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
   // As read, before linking: a second link once the stand-ins are in starts from these (withLinksAsRead).
-  const asRead = plans.map((plan) => standardizePlan(plan, defaults));
+  // One key for a plan however the page names it that night: Adams' "1512"
+  // is its "Plan 1512" (standardize.ts, withFiledPlanKeys).
+  const taken = new Set([...(opts.known?.keys() ?? []), ...(opts.filed ?? []).map((f) => f.plan_key), ...rules.map((r) => r.planKey)]);
+  const asRead = withFiledPlanKeys(plans.map((plan) => standardizePlan(plan, defaults)), builder.name, taken);
   plans = link(asRead);
   // The community's own pictures, filed in every plan's gallery, are taken
   // back out (community-pictures.ts).
@@ -656,7 +662,6 @@ export async function preparePlans(
   // A plan the builder no longer lists but a person asked to keep, built
   // from its homes on offer (stand-ins.ts): each is read from the home's own
   // page so it carries every picture, then linked like the rest.
-  const rules = await loadStandInRules({ site_id: site.id, community_id: community.id, builder_id: builder.id });
   const listed = plans.filter((p) => !p.quickMoveIn);
   const standIns = withStandIns(plans, rules);
   if (standIns.standIns.length) {

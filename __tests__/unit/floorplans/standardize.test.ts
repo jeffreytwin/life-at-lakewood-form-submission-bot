@@ -13,6 +13,7 @@ import {
   standardizePlan,
   weekleyCounts,
   withPlanNamePrefix,
+  withFiledPlanKeys,
 } from "@/lib/floorplans/standardize";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
@@ -436,6 +437,41 @@ describe("withPlanNamePrefix", () => {
   it("leaves other builders' plans as they are", () => {
     const plans = [p({ name: "1970" })];
     expect(withPlanNamePrefix(plans, "Lennar")).toBe(plans);
+  });
+});
+
+describe("withFiledPlanKeys (Aviary at Rutland Ranch, 2026-11-02)", () => {
+  const p = (over: Partial<NormalizedPlan>): NormalizedPlan => ({
+    planKey: "x", name: "x", price: null, priceDisplay: null, beds: "", baths: "", sqft: null, garages: null,
+    homeType: null, quickMoveIn: false, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], ...over,
+  });
+  const keys = (plans: NormalizedPlan[], taken: string[]) => withFiledPlanKeys(plans, "Adams Homes", new Set(taken)).map((x) => x.planKey);
+
+  it("files a plan read by its number alone under the key it already has with the word", () => {
+    expect(keys([p({ planKey: "1512", name: "1512" }), p({ planKey: "1635-b", name: "1635-B" })], ["plan-1512", "plan-1635-b"])).toEqual(["plan-1512", "plan-1635-b"]);
+  });
+
+  it("keeps a stand-in's bare key, even when the page names it with the word", () => {
+    expect(keys([p({ planKey: "plan-1970", name: "Plan 1970" })], ["1970"])).toEqual(["1970"]);
+  });
+
+  it("takes the key with the word where both are filed, so the extra row comes up for removal", () => {
+    expect(keys([p({ planKey: "1820", name: "1820" })], ["1820", "plan-1820"])).toEqual(["plan-1820"]);
+  });
+
+  it("gives a new plan the key with the word, whichever way it was read", () => {
+    expect(keys([p({ planKey: "2400", name: "2400" })], [])).toEqual(["plan-2400"]);
+  });
+
+  it("never takes a key another plan of the run was read under", () => {
+    expect(keys([p({ planKey: "1512", name: "1512" }), p({ planKey: "plan-1512", name: "Plan 1512" })], ["plan-1512"])).toEqual(["1512", "plan-1512"]);
+  });
+
+  it("leaves homes, named plans and other builders alone", () => {
+    const plans = [p({ planKey: "7005-166th-place-e", name: "7005 166TH Place E", quickMoveIn: true }), p({ planKey: "the-palm", name: "The Palm" })];
+    expect(keys(plans, ["7005"])).toEqual(["7005-166th-place-e", "the-palm"]);
+    const other = [p({ planKey: "1512", name: "1512" })];
+    expect(withFiledPlanKeys(other, "Lennar", new Set(["plan-1512"]))).toBe(other);
   });
 });
 
