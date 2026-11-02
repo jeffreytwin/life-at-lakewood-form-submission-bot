@@ -43,6 +43,14 @@ export interface ChecklistContext {
   staticPage?: boolean;
   /** An HOA/CDD alert's pages, as it was raised with them. */
   feePages?: FeePage[];
+  /** An HOA/CDD alert raised for a site with no pages on the list yet: the fees to update across the site. */
+  siteFees?: SiteFees;
+}
+
+/** The fees a site's HOA/CDD alert asks about with no pages to name, and where on the site they are stated. */
+export interface SiteFees {
+  fees: Fee[];
+  where: string;
 }
 
 /** HOA dues and CDD fees, the two a fee check asks about. */
@@ -60,6 +68,14 @@ export interface FeePage {
 
 /** An HOA/CDD item's key: the page and the fee. */
 export const feeItemKey = (pageId: string, fee: Fee) => `${pageId}:${fee}`;
+
+/** The key of a to-do for the whole site, raised before any page is on the list. */
+export const siteFeeItemKey = (fee: Fee) => `site:${fee}`;
+
+const FEE_CHOICES: ChecklistChoice[] = [
+  { value: "updated", label: "Updated" },
+  { value: "no_change", label: "No change" },
+];
 
 export const LEGACY_DOMAIN = "lifeatlakewood.com";
 
@@ -195,7 +211,17 @@ const isBlogPost = (url: string) => /\/post\//i.test(url);
  * hand, edits the page if they changed, and says which it was.
  */
 export function hoaCddItems(ctx: ChecklistContext): ChecklistItem[] {
-  return (ctx.feePages ?? []).flatMap((page) =>
+  // A site with no pages listed yet still gets its reminder (Jeff, 2026-11-02): one to-do per fee for the whole site.
+  const siteItems: ChecklistItem[] = (ctx.siteFees?.fees ?? []).map((fee) => ({
+    key: siteFeeItemKey(fee),
+    label: `Update the ${FEE_LABEL[fee]} on ${ctx.siteFees!.where}`,
+    hint:
+      `Ask Claude for the current ${FEE_LABEL[fee]}, compare them with what each page says, and edit any that changed in Wix. ` +
+      "Pick Updated or No change; a note with the figures keeps a record for next time. " +
+      "Add the pages on the HOA/CDD Info tab and each gets its own to-do from the next check.",
+    choices: FEE_CHOICES,
+  }));
+  const pageItems = (ctx.feePages ?? []).flatMap((page) =>
     page.fees.map((fee) => ({
       key: feeItemKey(page.id, fee),
       label: `${page.label}: ${FEE_LABEL[fee]}`,
@@ -204,12 +230,10 @@ export function hoaCddItems(ctx: ChecklistContext): ChecklistItem[] {
         `If they've changed, edit it in ${isBlogPost(page.url) ? "the Wix Blog editor (it's a blog post)" : "the Wix editor"}. ` +
         "Pick Updated or No change; a note with the figures keeps a record for next time.",
       url: page.url,
-      choices: [
-        { value: "updated", label: "Updated" },
-        { value: "no_change", label: "No change" },
-      ],
+      choices: FEE_CHOICES,
     }))
   );
+  return [...siteItems, ...pageItems];
 }
 
 export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistItem[] {

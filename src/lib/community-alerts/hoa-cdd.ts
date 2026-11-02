@@ -9,15 +9,26 @@
 // the frontlines person asks Claude for the current figures by hand (Jeff,
 // 2026-11-02: "a standard to-do"), edits the page if they changed, and
 // picks Updated or No change. The page list is kept on the HOA/CDD Info
-// tab, so a page is added there, not in code; a site with no pages gets
-// no alert (Parrish, for now).
+// tab, so a page is added there, not in code.
+//
+// The sites whose pages state the fees get the alert on schedule whether
+// or not any page is listed yet (Jeff, 2026-11-02: "even if no
+// communities are added"): with none, its to-do is to update the fees
+// across the site. Any other site gets one only once it has pages
+// (Parrish, for now).
 
 import { supabase } from "@/lib/supabase/client";
 import { failedAt as failed } from "@/lib/shared/describe-error";
 import type { Outcome } from "@/lib/community-alerts/alerts";
-import { FEE_LABEL, feeItemKey, type Fee, type FeePage } from "@/lib/community-alerts/checklists";
+import { FEE_LABEL, feeItemKey, type Fee, type FeePage, type SiteFees } from "@/lib/community-alerts/checklists";
 
-export { FEE_LABEL, type Fee, type FeePage };
+export { FEE_LABEL, type Fee, type FeePage, type SiteFees };
+
+/** The sites that state HOA and CDD fees, and where: each is reminded on schedule even with no pages listed. */
+export const FEE_SITES: Record<string, string> = {
+  "lifeatlakewood.com": "Life At Lakewood's blog articles and village pages",
+  "lifeinwellenpark.com": "Wellen Park's master HOA and CDD blog article",
+};
 
 /** Every open HOA/CDD alert of a site shares one subject: a check raised while one is open adds to it. */
 const SUBJECT = "hoa_cdd";
@@ -36,6 +47,8 @@ export interface HoaCddDetail {
   fees: Fee[];
   trigger: "cron" | "hub";
   pages: FeePage[];
+  /** With no pages listed for the site: the fees to update across it. */
+  siteFees?: SiteFees;
 }
 
 /** What the scheduled check asks about in a month (1-12); nothing outside January and October. Pure. */
@@ -69,6 +82,24 @@ export function pagesFor(pages: FeePageRow[], fees: Fee[]): FeePage[] {
   return pages
     .map((p) => ({ id: p.id, label: p.label, url: p.url, fees: FEES.filter((f) => fees.includes(f) && p[f]) }))
     .filter((p) => p.fees.length > 0);
+}
+
+/**
+ * What a site's check asks about: its pages stating the fees, or, for a
+ * site that states fees but has no such page listed, the fees across the
+ * whole site. Null when there is nothing to check. Pure.
+ */
+export function siteCheck(domain: string, pages: FeePage[], fees: Fee[]): { pages: FeePage[]; siteFees?: SiteFees } | null {
+  if (pages.length > 0) return { pages };
+  const where = FEE_SITES[domain];
+  return where ? { pages: [], siteFees: { fees: [...fees], where } } : null;
+}
+
+/** An open alert's site-wide fees with a new check's added. Pure. */
+export function mergeSiteFees(current: SiteFees | undefined, incoming: SiteFees | undefined): SiteFees | undefined {
+  if (!current) return incoming;
+  if (!incoming) return current;
+  return { where: incoming.where, fees: FEES.filter((f) => current.fees.includes(f) || incoming.fees.includes(f)) };
 }
 
 /** An open alert's pages with a new check's added: a page once, with every fee either asks about. Pure. */
@@ -229,7 +260,7 @@ export interface FeeCheckResult {
   raised: string[];
   /** Sites whose open alert was added to. */
   added: string[];
-  /** Sites with no page stating these fees. */
+  /** Sites with nothing to check: no page stating these fees, and not a site that states them. */
   noPages: string[];
 }
 
@@ -248,8 +279,8 @@ export async function raiseFeeCheck(fees: Fee[], trigger: HoaCddDetail["trigger"
   if (pagesError) throw failed("reading the HOA/CDD pages", pagesError);
 
   for (const site of (sites ?? []) as { id: string; domain: string }[]) {
-    const incoming = pagesFor(((pages ?? []) as FeePageRow[]).filter((p) => p.site_id === site.id), fees);
-    if (incoming.length === 0) {
+    const check = siteCheck(site.domain, pagesFor(((pages ?? []) as FeePageRow[]).filter((p) => p.site_id === site.id), fees), fees);
+    if (!check) {
       result.noPages.push(site.domain);
       continue;
     }
@@ -266,7 +297,13 @@ export async function raiseFeeCheck(fees: Fee[], trigger: HoaCddDetail["trigger"
     if (open) {
       const detail = open.detail as HoaCddDetail;
       const allFees = FEES.filter((f) => detail.fees?.includes(f) || fees.includes(f));
-      const merged: HoaCddDetail = { ...detail, fees: allFees, pages: mergePages(detail.pages ?? [], incoming) };
+      const merged: HoaCddDetail = {
+        ...detail,
+        fees: allFees,
+        pages: mergePages(detail.pages ?? [], check.pages),
+        siteFees: mergeSiteFees(detail.siteFees, check.siteFees),
+      };
+      if (!merged.siteFees) delete merged.siteFees;
       const { error: updateError } = await supabase
         .from("ca_alerts")
         .update({ detail: merged, name: checkName(allFees, now), updated_at: now.toISOString() })
@@ -276,7 +313,7 @@ export async function raiseFeeCheck(fees: Fee[], trigger: HoaCddDetail["trigger"
       continue;
     }
 
-    const detail: HoaCddDetail = { site: site.domain, fees, trigger, pages: incoming };
+    const detail: HoaCddDetail = { site: site.domain, fees, trigger, pages: check.pages, ...(check.siteFees ? { siteFees: check.siteFees } : {}) };
     const { error: insertError } = await supabase.from("ca_alerts").insert({
       kind: "hoa_cdd",
       site_id: site.id,
