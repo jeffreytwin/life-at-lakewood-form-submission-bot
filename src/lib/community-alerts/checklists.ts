@@ -6,7 +6,7 @@
 // The wording lives here and only the item keys are stored, so rewording
 // an item reaches every alert, open or closed. Pure.
 
-export type AlertKind = "sold_out" | "new_neighborhood" | "announcement" | "school_zones";
+export type AlertKind = "sold_out" | "new_neighborhood" | "announcement" | "school_zones" | "hoa_cdd";
 
 export interface ChecklistChoice {
   value: string;
@@ -21,6 +21,8 @@ export interface ChecklistItem {
   auto?: boolean;
   /** Answers to pick from; picking one completes the item. */
   choices?: ChecklistChoice[];
+  /** The page the item is about, linked beside it. */
+  url?: string;
 }
 
 /** What an item's row says was done about it. */
@@ -39,7 +41,25 @@ export interface ChecklistContext {
   legacySite: boolean;
   /** A school zones alert whose village page is built by hand, so is edited by hand rather than written with Apply. */
   staticPage?: boolean;
+  /** An HOA/CDD alert's pages, as it was raised with them. */
+  feePages?: FeePage[];
 }
+
+/** HOA dues and CDD fees, the two a fee check asks about. */
+export type Fee = "hoa" | "cdd";
+
+export const FEE_LABEL: Record<Fee, string> = { hoa: "HOA dues", cdd: "CDD fees" };
+
+/** A page that states HOA dues or CDD fees, as an alert carries it: the fees it is to be checked for. */
+export interface FeePage {
+  id: string;
+  label: string;
+  url: string;
+  fees: Fee[];
+}
+
+/** An HOA/CDD item's key: the page and the fee. */
+export const feeItemKey = (pageId: string, fee: Fee) => `${pageId}:${fee}`;
 
 export const LEGACY_DOMAIN = "lifeatlakewood.com";
 
@@ -166,6 +186,32 @@ export function schoolZoneItems(ctx: ChecklistContext): ChecklistItem[] {
   ];
 }
 
+/** A Wix blog post's address has /post/ in it; anything else is a page. */
+const isBlogPost = (url: string) => /\/post\//i.test(url);
+
+/**
+ * The twice-yearly HOA/CDD check (Jeff, 2026-11-02): one item per page
+ * and fee. The frontlines person asks Claude for the current figures by
+ * hand, edits the page if they changed, and says which it was.
+ */
+export function hoaCddItems(ctx: ChecklistContext): ChecklistItem[] {
+  return (ctx.feePages ?? []).flatMap((page) =>
+    page.fees.map((fee) => ({
+      key: feeItemKey(page.id, fee),
+      label: `${page.label}: ${FEE_LABEL[fee]}`,
+      hint:
+        `Ask Claude for the current ${FEE_LABEL[fee]} for the communities this page covers and compare them with what it says. ` +
+        `If they've changed, edit it in ${isBlogPost(page.url) ? "the Wix Blog editor (it's a blog post)" : "the Wix editor"}. ` +
+        "Pick Updated or No change; a note with the figures keeps a record for next time.",
+      url: page.url,
+      choices: [
+        { value: "updated", label: "Updated" },
+        { value: "no_change", label: "No change" },
+      ],
+    }))
+  );
+}
+
 export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistItem[] {
   switch (kind) {
     case "sold_out":
@@ -178,6 +224,8 @@ export function checklistFor(kind: AlertKind, ctx: ChecklistContext): ChecklistI
       return [];
     case "school_zones":
       return schoolZoneItems(ctx);
+    case "hoa_cdd":
+      return hoaCddItems(ctx);
   }
 }
 

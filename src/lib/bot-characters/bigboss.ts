@@ -65,6 +65,10 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "A neighborhood"}'s school zones need a look, Colonel. Community Alerts → School Zones, when you can.`;
     case "community_schools_done":
       return `${event.communityName ?? "The neighborhood"}'s schools are squared away, Colonel. Good work.`;
+    case "community_fee_check":
+      return `${event.communityName ?? "The fee check"} is due, Colonel. Community Alerts → HOA/CDD Info, when you can.`;
+    case "community_fee_check_done":
+      return `${event.communityName ?? "The fee check"} is squared away, Colonel. Good work.`;
     case "floorplans_cleared":
       return "That's every floor plan squared away, Colonel. Mission complete.";
   }

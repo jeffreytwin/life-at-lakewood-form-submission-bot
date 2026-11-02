@@ -10,6 +10,7 @@ const KIND_LABEL: Record<string, string> = {
   new_neighborhood: "new neighborhood",
   announcement: "announcement",
   school_zones: "school zones",
+  hoa_cdd: "HOA/CDD check",
 };
 
 const when = (iso: string | null) =>

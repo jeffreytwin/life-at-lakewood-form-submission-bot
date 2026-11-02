@@ -161,7 +161,8 @@ export default function RoutingToggle() {
         event.type !== "floorplans_cleared" &&
         event.type !== "community_sold_out_done" &&
         event.type !== "community_new_neighborhood_done" &&
-        event.type !== "community_schools_done"
+        event.type !== "community_schools_done" &&
+        event.type !== "community_fee_check_done"
       ) {
         return;
       }

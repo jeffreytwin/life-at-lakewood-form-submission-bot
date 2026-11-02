@@ -62,6 +62,10 @@ function getMessage(event: LeadEvent): string {
       return `Colonel! The school zones have shifted at ${event.communityName ?? "a neighborhood"}. Community Alerts → School Zones has the details.`;
     case "community_schools_done":
       return `${event.communityName ?? "The neighborhood"}'s schools are squared away, Colonel! Families will know exactly where they're headed. Mission complete!`;
+    case "community_fee_check":
+      return `Colonel! ${event.communityName ?? "The HOA/CDD fee check"} is due. Community Alerts → HOA/CDD Info has the pages to sweep.`;
+    case "community_fee_check_done":
+      return `Fee intel confirmed, Colonel! Every page has the right numbers. ${event.communityName ?? "The fee check"}: mission complete!`;
     case "floorplans_cleared":
       return "Colonel! That was the last floor plan. The queue is clear — mission complete!";
   }

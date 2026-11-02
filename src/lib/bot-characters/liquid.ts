@@ -62,6 +62,10 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "A neighborhood"}'s page names the wrong schools, Colonel. Community Alerts → School Zones.`;
     case "community_schools_done":
       return `${event.communityName ?? "The neighborhood"}'s schools are right now, Colonel. Precision is its own kind of strength.`;
+    case "community_fee_check":
+      return `Colonel. ${event.communityName ?? "The fee check"} is due. The fees on our pages won't verify themselves. Community Alerts → HOA/CDD Info.`;
+    case "community_fee_check_done":
+      return `${event.communityName ?? "The fee check"} is finished, Colonel. The numbers bow to us now.`;
     case "floorplans_cleared":
       return "The floor plan queue is empty, Colonel. The strong finish what they start.";
   }
