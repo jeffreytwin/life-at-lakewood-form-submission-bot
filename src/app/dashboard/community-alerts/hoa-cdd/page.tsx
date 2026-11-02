@@ -29,7 +29,7 @@ function describeCheck(r: FeeCheckResult): string {
   const parts: string[] = [];
   if (r.raised.length) parts.push(`New alert for ${r.raised.join(", ")}.`);
   if (r.added.length) parts.push(`Added to the open alert for ${r.added.join(", ")}.`);
-  if (!r.raised.length && !r.added.length) parts.push("No page states these fees yet: add pages below first.");
+  if (!r.raised.length && !r.added.length) parts.push("No site has these fees to check.");
   return parts.join(" ");
 }
 
@@ -262,7 +262,9 @@ export default function HoaCddPage() {
           </div>
         ) : grouped.length === 0 ? (
           <div className="text-muted text-sm" style={{ marginTop: 8 }}>
-            No pages yet. Add each blog article and village page that states HOA dues or CDD fees; a site with none gets no alert.
+            No pages yet. Life At Lakewood and Wellen Park still get their alert on schedule, with a to-do to update the fees
+            across the site. Add each blog article and village page that states HOA dues or CDD fees, and each gets its own
+            to-do instead.
           </div>
         ) : (
           grouped.map((g) => (

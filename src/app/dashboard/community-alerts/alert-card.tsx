@@ -544,8 +544,9 @@ function HoaCddSummary({ alert }: { alert: AlertView }) {
   const fees = (d.fees ?? []).map((f) => FEE_LABEL[f]).join(" and ");
   return (
     <div className="text-sm" style={{ marginTop: 8 }}>
-      Check the {fees} each page below states: ask Claude for the current figures, edit the page if they&apos;ve changed, then
-      pick Updated or No change. A note with the figures shows on the HOA/CDD Info tab next time.
+      Check the {fees} {d.pages?.length ? "each page below states" : `on ${d.siteFees?.where ?? "the site"}`}: ask Claude for the
+      current figures, edit the page if they&apos;ve changed, then pick Updated or No change.
+      {!d.pages?.length && " Add the pages on the HOA/CDD Info tab and each gets its own to-do from the next check."}
       <span className="text-muted">
         {" "}
         {d.trigger === "hub" ? "Started from the Hub." : "Raised by the twice-yearly schedule."}

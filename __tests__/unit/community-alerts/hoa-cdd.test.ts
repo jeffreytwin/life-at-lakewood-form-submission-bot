@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@/lib/supabase/client", () => ({ supabase: {} }));
 
-import { checkName, cleanUrl, feesDueIn, mergePages, nextChecks, pagesFor } from "@/lib/community-alerts/hoa-cdd";
-import { checklistFor, feeItemKey } from "@/lib/community-alerts/checklists";
+import { checkName, cleanUrl, feesDueIn, mergePages, mergeSiteFees, nextChecks, pagesFor, siteCheck } from "@/lib/community-alerts/hoa-cdd";
+import { checklistFor, feeItemKey, siteFeeItemKey } from "@/lib/community-alerts/checklists";
 import { viewOf } from "@/lib/community-alerts/alerts";
 
 const row = (id: string, hoa: boolean, cdd: boolean, url = `https://www.lifeatlakewood.com/post/${id}`) => ({
@@ -95,5 +95,52 @@ describe("the HOA/CDD to-do list", () => {
     expect(view.items).toHaveLength(3);
     expect(view.items[0].state?.choice).toBe("no_change");
     expect(view.progress).toEqual({ settled: 1, total: 3, complete: false });
+  });
+});
+
+describe("a site with no pages listed yet", () => {
+  it("still gets its reminder on Life At Lakewood and Wellen Park, for the whole site", () => {
+    expect(siteCheck("lifeatlakewood.com", [], ["cdd"])).toEqual({
+      pages: [],
+      siteFees: { fees: ["cdd"], where: "Life At Lakewood's blog articles and village pages" },
+    });
+    expect(siteCheck("lifeinwellenpark.com", [], ["hoa"])?.siteFees?.fees).toEqual(["hoa"]);
+  });
+
+  it("gets nothing on a site that states no fees, and its pages' to-dos once it has pages", () => {
+    expect(siteCheck("lifeatparrish.com", [], ["hoa", "cdd"])).toBeNull();
+    const pages = pagesFor([row("a", true, true)], ["hoa"]);
+    expect(siteCheck("lifeatlakewood.com", pages, ["hoa"])).toEqual({ pages });
+  });
+
+  it("is one to-do per fee for the whole site, answered Updated or No change", () => {
+    const siteFees = { fees: ["hoa", "cdd"] as ("hoa" | "cdd")[], where: "Wellen Park's master HOA and CDD blog article" };
+    const items = checklistFor("hoa_cdd", { legacySite: false, siteFees });
+    expect(items.map((i) => i.key)).toEqual([siteFeeItemKey("hoa"), siteFeeItemKey("cdd")]);
+    expect(items[0].label).toBe("Update the HOA dues on Wellen Park's master HOA and CDD blog article");
+    expect(items[0].choices?.map((c) => c.value)).toEqual(["updated", "no_change"]);
+  });
+
+  it("adds a later check's fees to an open site-wide alert", () => {
+    const where = "Life At Lakewood's blog articles and village pages";
+    expect(mergeSiteFees({ fees: ["cdd"], where }, { fees: ["hoa"], where })).toEqual({ fees: ["hoa", "cdd"], where });
+    expect(mergeSiteFees(undefined, { fees: ["hoa"], where })).toEqual({ fees: ["hoa"], where });
+    expect(mergeSiteFees({ fees: ["cdd"], where }, undefined)).toEqual({ fees: ["cdd"], where });
+  });
+
+  it("is read back from the alert it was raised with", () => {
+    const view = viewOf({
+      id: "a2",
+      kind: "hoa_cdd",
+      status: "open",
+      name: "HOA fee check, January 2027",
+      detail: { site: "lifeatlakewood.com", fees: ["hoa"], trigger: "cron", pages: [], siteFees: { fees: ["hoa"], where: "the site" } },
+      dismissed_reason: null,
+      resolved_at: null,
+      created_at: "2027-01-15T13:47:00Z",
+      ca_alert_items: [],
+    });
+    expect(view.items.map((i) => i.key)).toEqual([siteFeeItemKey("hoa")]);
+    expect(view.progress.total).toBe(1);
   });
 });
