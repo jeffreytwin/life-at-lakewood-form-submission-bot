@@ -50,6 +50,16 @@ function normalizeMonth(input: string): string {
   return input;
 }
 
+/** Every "YYYY-MM-DD" date in a "YYYY-MM" month. */
+function datesInMonth(yearMonth: string): string[] {
+  const [year, month] = yearMonth.split("-").map(Number);
+  const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return Array.from(
+    { length: days },
+    (_, i) => `${yearMonth}-${String(i + 1).padStart(2, "0")}`
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -155,23 +165,22 @@ export async function POST(request: NextRequest) {
       // Process daily data if provided (per-agent per-date counts from report detail rows)
       let dailySynced = 0;
       if (parsed.data.daily_data) {
-        let rawDaily: unknown[];
+        // null = unreadable payload: leave existing daily rows alone rather
+        // than treating it as "no leads this month" and wiping them.
+        let rawDaily: unknown[] | null;
         if (typeof parsed.data.daily_data === "string") {
           try {
             rawDaily = JSON.parse(parsed.data.daily_data);
           } catch {
             logger.error("Invalid JSON in daily_data field");
-            rawDaily = [];
+            rawDaily = null;
           }
         } else {
           rawDaily = parsed.data.daily_data;
         }
 
-        if (rawDaily.length > 0) {
+        if (Array.isArray(rawDaily)) {
           const dailyEntries = z.array(dailyAgentEntrySchema).parse(rawDaily);
-
-          // Get unique dates in this batch
-          const dates = [...new Set(dailyEntries.map((d) => d.date))];
 
           const uniqueDaily = [
             ...new Map(
@@ -179,26 +188,40 @@ export async function POST(request: NextRequest) {
             ).values(),
           ];
 
-          const { error: dailyError } = await supabase
-            .from("hand_raise_snapshots")
-            .upsert(
-              uniqueDaily.map((d) => ({
-                type: "daily_by_agent",
-                year_month: d.date,
-                agent_name: null,
-                salesforce_user_id: d.salesforce_user_id,
-                count: d.count,
-                synced_at: syncedAt,
-              })),
-              { onConflict: "type,year_month,salesforce_user_id" }
-            );
+          const { error: dailyError } = uniqueDaily.length > 0
+            ? await supabase
+                .from("hand_raise_snapshots")
+                .upsert(
+                  uniqueDaily.map((d) => ({
+                    type: "daily_by_agent",
+                    year_month: d.date,
+                    agent_name: null,
+                    salesforce_user_id: d.salesforce_user_id,
+                    count: d.count,
+                    synced_at: syncedAt,
+                  })),
+                  { onConflict: "type,year_month,salesforce_user_id" }
+                )
+            : { error: null };
 
           if (dailyError) {
             logger.error("Failed to upsert daily agent data", {
               error: dailyError.message,
             });
           } else {
-            // Drop rows for agents no longer in these dates' report data
+            // daily_data is built from the same month-to-date report, so any
+            // day of the current month missing from it now has zero leads.
+            // Clean up the whole month — not just the dates present in this
+            // batch — otherwise a day whose only lead was re-marked 'Bad Data'
+            // drops out of the payload and its stale row lingers, still
+            // counting against that agent's daily cap.
+            const dates = [
+              ...new Set([
+                ...datesInMonth(yearMonth),
+                ...dailyEntries.map((d) => d.date),
+              ]),
+            ];
+
             const { error: dailyCleanupError } = await supabase
               .from("hand_raise_snapshots")
               .delete()
@@ -214,7 +237,7 @@ export async function POST(request: NextRequest) {
 
             dailySynced = dailyEntries.length;
             logger.info("Daily lead counts synced from Salesforce", {
-              dates,
+              dates: [...new Set(dailyEntries.map((d) => d.date))],
               entries: dailySynced,
             });
           }
