@@ -32,13 +32,13 @@ export function countToMeet(lastPlanCount: number | null | undefined, onboardedA
   return onboardedAt ? lastPlanCount ?? null : null;
 }
 
-/** How far apart two short runs must be for what they found to be taken for what the builder lists: a night. */
+/** How long a connection must have been short for what it finds to be taken for what the builder lists: a night. */
 export const SHORTFALL_NIGHTS_MS = 20 * 60 * 60 * 1000;
 
 /**
  * The count a run short of its count leaves for the next run to meet:
  * none of its own, so the next run is held to the same count, until the
- * connection has come back short on two nights running. Then what it
+ * connection has been short from one night to the next. Then what it
  * found is what the builder lists now, and the run after it is held to
  * that. A short run used to leave its own count, and one bad read was
  * enough to lower the bar: Richmond American's Estates at Rivers Edge
@@ -46,15 +46,27 @@ export const SHORTFALL_NIGHTS_MS = 20 * 60 * 60 * 1000;
  * pressed an hour later read the same, passed as "ok: 5 plans", and
  * queued every home for removal; approved, ten homes Richmond still sold
  * came off the site. A run made again the same night (nightly.ts,
- * retriesOwed) would do that on its own. Null leaves the count as it is.
- * Pure; exported for tests.
+ * retriesOwed) would do that on its own.
+ *
+ * The night is counted from the first short run (short_since), not the
+ * run before: every run moved that on, a night's retry and a Run pressed
+ * in the day alike, and a connection run more often than every twenty
+ * hours never came down. Ashton Woods dropped its Traditional plans at
+ * Oakfield on 11-04 and the connection read the 11 it lists now seven
+ * times that day, each one failed against the 28 of the day before
+ * (Jeff, 2026-11-04). Null leaves the count as it is. Pure; exported for
+ * tests.
  */
-export function countAfterShortfall(
-  found: number,
-  before: { lastRunStatus: string | null | undefined; lastRunAt: string | null | undefined },
-  now = Date.now()
-): number | null {
-  const shortBefore = (before.lastRunStatus ?? "").startsWith("partial:");
-  const at = Date.parse(before.lastRunAt ?? "");
-  return shortBefore && Number.isFinite(at) && now - at >= SHORTFALL_NIGHTS_MS ? found : null;
+export function countAfterShortfall(found: number, shortSince: string | null | undefined, now = Date.now()): number | null {
+  const at = Date.parse(shortSince ?? "");
+  return Number.isFinite(at) && now - at >= SHORTFALL_NIGHTS_MS ? found : null;
+}
+
+/**
+ * What a run leaves in short_since: the first short run sets it, a later
+ * short run keeps it, and a run that meets its count clears it. Pure.
+ */
+export function shortSinceAfter(ok: boolean, shortSince: string | null | undefined, now = Date.now()): string | null {
+  if (ok) return null;
+  return shortSince && Number.isFinite(Date.parse(shortSince)) ? shortSince : new Date(now).toISOString();
 }
