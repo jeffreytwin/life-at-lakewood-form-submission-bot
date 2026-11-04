@@ -42,6 +42,7 @@ export async function POST(
         attention_dismissed_at: null,
         removals_held: null,
         removal_recheck_at: null,
+        short_since: null,
       })
       .eq("id", id);
     if (connError) throw connError;
