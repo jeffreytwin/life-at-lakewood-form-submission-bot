@@ -1796,7 +1796,7 @@ async function extractPages(
   params: ClaudeExtractParams,
   read: PageReader,
   atOnce: number,
-  can: { press?: boolean; readPlanPage?: PageReader; renderAgain?: PageReader } = {}
+  can: { press?: boolean; listsFirst?: boolean; readPlanPage?: PageReader; renderAgain?: PageReader } = {}
 ): Promise<NormalizedPlan[]> {
   // The pages the plans are listed on: the community page, unless the
   // connection names others (a builder that splits a community by lot
@@ -1833,7 +1833,9 @@ async function extractPages(
       return [];
     }
   };
-  const pressedEarly = can.press && planPages.length === 1 ? pressForHomes(planPages[0]) : null;
+  // Not beside the list where the list pages must be loaded one at a time
+  // (extractWithRender, waitFor): the tab is pressed once they are read.
+  const pressedEarly = can.press && !can.listsFirst && planPages.length === 1 ? pressForHomes(planPages[0]) : null;
   // A homes page the connection names is read beside the plans' pages, not
   // after them: Kolter's Cresswind lists twenty plans on one page and its
   // homes on another, each a long answer, and read in turn they took the
@@ -2223,11 +2225,26 @@ export async function extractWithRender(params: ClaudeExtractParams): Promise<No
       }
       return renderSlot(() => renderPage(url, opts));
     };
-    // A list page that fetches its plans after its header: read once it shows them.
+    // A list page that fetches its plans after its header: read once it
+    // shows them, one load of the site at a time, and loaded again as a
+    // first visit when it never did. Neal Signature's Waterbury Park was
+    // loaded twice at once — the plans, and the homes tab it does not have
+    // — and only one load drew its four cards; the one read was the other,
+    // three runs running, and each failed as "zero results" (2026-11-05).
     const waitFor = typeof params.waitFor === "string" && params.waitFor.trim() ? params.waitFor.trim() : null;
-    const readList: PageReader = waitFor ? (url, opts) => renderPage(url, { ...opts, waitFor }) : renderPage;
+    const oneLoadAtATime = slots(1);
+    const readList: PageReader = waitFor
+      ? (url, opts) =>
+          oneLoadAtATime(async () => {
+            const first = await renderPage(url, { ...opts, waitFor });
+            if (first.waited !== false || opts?.press) return first;
+            logger.warn("A list page never showed its plans; loading it again as a first visit", { url, waitFor });
+            return renderPage(url, { ...opts, waitFor, afresh: true }).catch(() => first);
+          })
+      : renderPage;
     return extractPages(params, readList, 8, {
       press: true,
+      listsFirst: waitFor !== null,
       readPlanPage: fetchThenRender,
       renderAgain: (url, opts) => renderSlot(() => renderPage(url, opts)),
     });
