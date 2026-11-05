@@ -50,7 +50,7 @@ let users = 0;
  */
 export async function withRenderer<T>(
   budgetMs: number,
-  work: (render: (url: string, opts?: RenderOptions) => Promise<{ url: string; html: string; pressed: string | null }>) => Promise<T>
+  work: (render: (url: string, opts?: RenderOptions) => Promise<Rendered>) => Promise<T>
 ): Promise<T> {
   users += 1;
   const deadline = Date.now() + budgetMs;
@@ -438,6 +438,22 @@ export interface RenderOptions {
    * as not (Jeff, 2026-09-28: ".p7-home-card").
    */
   waitFor?: string;
+  /**
+   * Visit as if this browser had never been to the site: its cookies and
+   * storage are forgotten first. Neal Signature lets a browser's first
+   * visit through and holds back what it fetches afterwards, so a load
+   * that never showed its plan cards is made again this way (2026-11-05).
+   */
+  afresh?: boolean;
+}
+
+/** A page as the browser drew it. */
+export interface Rendered {
+  url: string;
+  html: string;
+  pressed: string | null;
+  /** Whether the page showed what `waitFor` asked for; null where nothing was asked. */
+  waited?: boolean | null;
 }
 
 /** The longest a page is given to show what `waitFor` asks for. */
@@ -476,7 +492,7 @@ export async function renderPage(
   url: string,
   opts: RenderOptions = {},
   deadline = Infinity
-): Promise<{ url: string; html: string; pressed: string | null }> {
+): Promise<Rendered> {
   // A site whose bot check has stopped this browser once is visited one
   // page at a time from then on, each as a first visit. Neal Signature's
   // lets a browser's first visit through and stops every page after it
@@ -486,7 +502,7 @@ export async function renderPage(
   const site = siteOf(url);
   if (!checkedSites.has(site)) {
     try {
-      return await renderOnce(url, opts, deadline, false);
+      return await renderOnce(url, opts, deadline, opts.afresh === true);
     } catch (error) {
       if (!(error instanceof StoppedAtBotCheck)) throw error;
       checkedSites.add(site);
@@ -524,7 +540,7 @@ async function renderOnce(
   opts: RenderOptions,
   deadline: number,
   firstVisit: boolean
-): Promise<{ url: string; html: string; pressed: string | null }> {
+): Promise<Rendered> {
   if (Date.now() > deadline) throw new Error(`out of rendering time before ${url}`);
   const page = await (await open()).newPage();
   try {
@@ -649,7 +665,7 @@ async function renderOnce(
 
     const html = await settledContent(page);
     logger.info("Floor plan page rendered", { url, quiet, ready, waited, pressed, gathered, videos, bytes: html.length });
-    return { url: page.url(), html, pressed };
+    return { url: page.url(), html, pressed, waited };
   } finally {
     await page.close().catch(() => {});
   }
