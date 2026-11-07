@@ -162,7 +162,8 @@ export default function RoutingToggle() {
         event.type !== "community_sold_out_done" &&
         event.type !== "community_new_neighborhood_done" &&
         event.type !== "community_schools_done" &&
-        event.type !== "community_fee_check_done"
+        event.type !== "community_fee_check_done" &&
+        event.type !== "war_room_task_done"
       ) {
         return;
       }

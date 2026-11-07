@@ -71,6 +71,8 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "The fee check"} is squared away, Colonel. Good work.`;
     case "floorplans_cleared":
       return "That's every floor plan squared away, Colonel. Mission complete.";
+    case "war_room_task_done":
+      return `"${event.leadName}" — objective complete, Colonel. One step closer.`;
   }
 }
 
