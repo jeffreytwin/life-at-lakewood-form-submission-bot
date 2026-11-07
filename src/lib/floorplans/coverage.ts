@@ -70,3 +70,18 @@ export function shortSinceAfter(ok: boolean, shortSince: string | null | undefin
   if (ok) return null;
   return shortSince && Number.isFinite(Date.parse(shortSince)) ? shortSince : new Date(now).toISOString();
 }
+
+/**
+ * The count a connection is held to once a person has taken plans off the
+ * site by hand (remove-plan.ts): the one on file, less what came off. The
+ * run after it finds the builder's page without them, and held to the old
+ * count it failed as short: Lennar dropped its Manor Homes at Stillwater on
+ * 11-07, the 13 plans and homes were removed from the queue, and every run
+ * after it read the 9 Executive Homes left and failed as "9 of the 22 plans
+ * found last time" until the shortfall had lasted a night (Jeff,
+ * 2026-11-07). Null where there is no count on file. Pure.
+ */
+export function countAfterRemoval(lastPlanCount: number | null | undefined, removed: number): number | null {
+  if (lastPlanCount == null) return null;
+  return Math.max(0, lastPlanCount - Math.max(0, removed));
+}
