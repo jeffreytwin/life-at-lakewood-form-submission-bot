@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { countAfterShortfall, countToMeet, describeCoverage, shortSinceAfter } from "@/lib/floorplans/coverage";
+import { countAfterRemoval, countAfterShortfall, countToMeet, describeCoverage, shortSinceAfter } from "@/lib/floorplans/coverage";
 import { attentionDismissed, CUT_OFF_STATUS, mendsItself, troubledConnections } from "@/lib/floorplans/health";
 
 describe("attentionDismissed", () => {
@@ -155,3 +155,22 @@ describe("shortSinceAfter", () => {
   });
 });
 
+
+// Lennar at Stillwater (2026-11-07): the Manor Homes were dropped, their 13
+// plans and homes removed by hand, and the runs after it read the 9 left.
+describe("countAfterRemoval", () => {
+  it("lowers the count on file by what a person took off the site", () => {
+    expect(countAfterRemoval(22, 13)).toBe(9);
+    expect(describeCoverage(9, countToMeet(countAfterRemoval(22, 13), "2026-09-24T20:21:45.068Z")).ok).toBe(true);
+  });
+
+  it("never goes below nothing", () => {
+    expect(countAfterRemoval(3, 5)).toBe(0);
+    expect(countAfterRemoval(3, -1)).toBe(3);
+  });
+
+  it("leaves no count where there was none", () => {
+    expect(countAfterRemoval(null, 4)).toBeNull();
+    expect(countAfterRemoval(undefined, 4)).toBeNull();
+  });
+});

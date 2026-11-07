@@ -17,6 +17,7 @@ import { applyPendingChange } from "@/lib/floorplans/writeback";
 import { runIsGoing } from "@/lib/floorplans/runs";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 import { REMOVE_RUN_PREFIX } from "@/lib/floorplans/removal-guards";
+import { countAfterRemoval } from "@/lib/floorplans/coverage";
 
 export interface RemovedPlan {
   planKey: string;
@@ -62,7 +63,7 @@ export async function removePlanWithHomes(changeId: string): Promise<RemovePlanO
 
   const { data: connection } = await supabase
     .from("fp_builder_communities")
-    .select("id")
+    .select("id, last_plan_count")
     .match({ community_id: scope.community_id, builder_id: scope.builder_id })
     .maybeSingle();
   // A run going on would queue the plan's changes again behind the removal.
@@ -162,6 +163,14 @@ export async function removePlanWithHomes(changeId: string): Promise<RemovePlanO
       if (guardError) logger.warn("A removed plan's rejection could not be recorded", { planKey: target.plan_key, error: guardError.message });
     }
     removed.push({ planKey: target.plan_key, name, quickMoveIn, status, error: failure });
+  }
+  // The next run is held to what the site lists now, not to the count from
+  // before these came off: without them it would fail as short (coverage.ts).
+  const taken = removed.filter((r) => r.status === "synced").length;
+  const count = connection && taken ? countAfterRemoval(connection.last_plan_count as number | null, taken) : null;
+  if (connection && count != null) {
+    const { error: countError } = await supabase.from("fp_builder_communities").update({ last_plan_count: count }).eq("id", connection.id);
+    if (countError) logger.warn("The connection's plan count could not be lowered after a removal", { connectionId: connection.id, error: countError.message });
   }
   logger.info("Plan removed from the queue with its homes", {
     changeId,
