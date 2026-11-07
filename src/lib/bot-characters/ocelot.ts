@@ -68,6 +68,8 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "The fee check"}, done, Colonel. Every figure dead center. Beautiful.`;
     case "floorplans_cleared":
       return "Every floor plan accounted for, Colonel. Not a single round wasted. Beautiful.";
+    case "war_room_task_done":
+      return `"${event.leadName}"... done. One more objective down, Colonel. Beautiful.`;
   }
 }
 

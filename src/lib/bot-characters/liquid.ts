@@ -68,6 +68,8 @@ function getMessage(event: LeadEvent): string {
       return `${event.communityName ?? "The fee check"} is finished, Colonel. The numbers bow to us now.`;
     case "floorplans_cleared":
       return "The floor plan queue is empty, Colonel. The strong finish what they start.";
+    case "war_room_task_done":
+      return `"${event.leadName}" is finished, Colonel. The strong finish what they start.`;
   }
 }
 

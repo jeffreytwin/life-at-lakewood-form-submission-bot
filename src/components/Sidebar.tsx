@@ -244,6 +244,16 @@ export default function Sidebar({
               Simulation
             </Link>
           </li>
+          <li>
+            <Link
+              href="/dashboard/war-room"
+              className={isActive("/dashboard/war-room") ? "active" : ""}
+              onClick={onClose}
+            >
+              <span className="nav-icon">{"\u25CE"}</span>
+              War Room
+            </Link>
+          </li>
         </ul>
         <div className="sidebar-footer">
           <Link

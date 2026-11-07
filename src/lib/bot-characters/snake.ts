@@ -68,6 +68,8 @@ function getMessage(event: LeadEvent): string {
       return `Fee intel confirmed, Colonel! Every page has the right numbers. ${event.communityName ?? "The fee check"}: mission complete!`;
     case "floorplans_cleared":
       return "Colonel! That was the last floor plan. The queue is clear — mission complete!";
+    case "war_room_task_done":
+      return `Objective secured, Colonel! "${event.leadName}" is done. On to the next one.`;
   }
 }
 
