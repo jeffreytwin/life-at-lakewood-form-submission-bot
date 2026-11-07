@@ -55,6 +55,7 @@ export function GoalsCard({
   targets,
   sample,
   loading,
+  error,
   onSaved,
 }: {
   year: number;
@@ -62,6 +63,7 @@ export function GoalsCard({
   targets: GoalTarget[];
   sample: boolean;
   loading: boolean;
+  error: string | null;
   onSaved: () => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -73,11 +75,13 @@ export function GoalsCard({
         </span>
         <h3>Big Goals ({year})</h3>
         <SampleChip show={sample} />
-        <button className="btn btn-secondary btn-sm wr-head-btn" onClick={() => setEditing(true)} disabled={loading}>
+        <button className="btn btn-secondary btn-sm wr-head-btn" onClick={() => setEditing(true)} disabled={loading || error !== null}>
           ✎ Edit Goals
         </button>
       </div>
-      {loading ? (
+      {error ? (
+        <div className="wr-error">Couldn&apos;t load goals: {error}</div>
+      ) : loading ? (
         <div className="wr-empty">Loading…</div>
       ) : goals.length === 0 ? (
         <div className="wr-empty">
@@ -263,7 +267,17 @@ const TASKS_SHOWN = 7;
 
 const PRIORITY_LABEL: Record<TaskPriority, string> = { high: "High", medium: "Medium", low: "Low" };
 
-export function TasksCard({ tasks, now, onChange }: { tasks: WarRoomTask[] | null; now: Date; onChange: () => Promise<void> | void }) {
+export function TasksCard({
+  tasks,
+  loadError,
+  now,
+  onChange,
+}: {
+  tasks: WarRoomTask[] | null;
+  loadError: string | null;
+  now: Date;
+  onChange: () => Promise<void> | void;
+}) {
   const [adding, setAdding] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -337,8 +351,9 @@ export function TasksCard({ tasks, now, onChange }: { tasks: WarRoomTask[] | nul
       )}
       {error && <div className="wr-error">{error}</div>}
 
+      {loadError && <div className="wr-error">{loadError}</div>}
       {tasks === null ? (
-        <div className="wr-empty">Loading…</div>
+        loadError ? null : <div className="wr-empty">Loading…</div>
       ) : list.length === 0 ? (
         <div className="wr-empty">No tasks yet. Add the first objective.</div>
       ) : (
@@ -439,11 +454,13 @@ function AddTaskForm({ today, onAdded }: { today: string; onAdded: () => void })
 
 export function StatusCard({
   totals,
+  error,
   period,
   onPeriod,
   sample,
 }: {
   totals: PeriodTotals | null;
+  error: string | null;
   period: StatusPeriod;
   onPeriod: (p: StatusPeriod) => void;
   sample: boolean;
@@ -484,7 +501,9 @@ export function StatusCard({
           ))}
         </select>
       </div>
-      {!totals ? (
+      {error ? (
+        <div className="wr-error">{error}</div>
+      ) : !totals ? (
         <div className="wr-empty">Loading…</div>
       ) : (
         <>

@@ -26,6 +26,7 @@ import { ToneIcon } from "./icons";
 interface Summary {
   year: number;
   goals: GoalTarget[];
+  goalsError: string | null;
   months: MonthMetrics[];
   sample: boolean;
   leadsToday: number | null;
@@ -36,7 +37,8 @@ const BANNER_KEY = "war-room-banner-hidden";
 export default function WarRoomPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [tasks, setTasks] = useState<WarRoomTask[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [tasksError, setTasksError] = useState<string | null>(null);
   const [period, setPeriod] = useState<StatusPeriod>("month");
   const [bannerHidden, setBannerHidden] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -48,9 +50,10 @@ export default function WarRoomPage() {
       if (!r.ok) throw new Error(data?.error ?? `HTTP ${r.status}`);
       setSummary(data);
       setNow(new Date());
-      setError(null);
+      setSummaryError(null);
     } catch (e) {
-      setError(`Couldn't load the War Room: ${e instanceof Error ? e.message : String(e)}`);
+      // Keep the last numbers on screen if a refresh fails.
+      setSummaryError(`Couldn't load: ${e instanceof Error ? e.message : String(e)}`);
     }
   }, []);
 
@@ -60,8 +63,9 @@ export default function WarRoomPage() {
       const data = await r.json();
       if (!r.ok) throw new Error(data?.error ?? `HTTP ${r.status}`);
       setTasks(data);
+      setTasksError(null);
     } catch (e) {
-      setError(`Couldn't load tasks: ${e instanceof Error ? e.message : String(e)}`);
+      setTasksError(`Couldn't load tasks: ${e instanceof Error ? e.message : String(e)}`);
     }
   }, []);
 
@@ -102,10 +106,11 @@ export default function WarRoomPage() {
   );
 
   const briefing = useMemo<BriefingLine[]>(() => {
-    if (!summary) return [];
+    // Whatever has loaded: tasks alone still make a briefing.
+    if (!summary && tasks === null) return [];
     return buildBriefing({
       goals,
-      leadsToday: summary.leadsToday,
+      leadsToday: summary?.leadsToday ?? null,
       tasks: (tasks ?? []).map((t) => ({ title: t.title, dueDate: t.dueDate, done: t.doneAt !== null })),
       now,
     });
@@ -176,12 +181,24 @@ export default function WarRoomPage() {
         {briefingList}
       </div>
 
-      {error && <div className="wr-error">{error}</div>}
-
       <div className="wr-grid">
-        <GoalsCard year={summary?.year ?? now.getFullYear()} goals={goals} targets={summary?.goals ?? []} sample={summary?.sample ?? true} loading={!summary} onSaved={loadSummary} />
-        <TasksCard tasks={tasks} now={now} onChange={loadTasks} />
-        <StatusCard totals={totals} period={period} onPeriod={setPeriod} sample={summary?.sample ?? true} />
+        <GoalsCard
+          year={summary?.year ?? now.getFullYear()}
+          goals={goals}
+          targets={summary?.goals ?? []}
+          sample={summary?.sample ?? true}
+          loading={!summary && !summaryError}
+          error={summary?.goalsError ?? (summary ? null : summaryError)}
+          onSaved={loadSummary}
+        />
+        <TasksCard tasks={tasks} loadError={tasksError} now={now} onChange={loadTasks} />
+        <StatusCard
+          totals={totals}
+          error={summary ? null : summaryError}
+          period={period}
+          onPeriod={setPeriod}
+          sample={summary?.sample ?? true}
+        />
       </div>
     </div>
   );
