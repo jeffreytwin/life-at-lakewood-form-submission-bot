@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/internal/war-room?year=2026
  * The year's goals, its month-by-month numbers, and today's form
- * submissions. `sample` is true while the numbers are sample figures,
+ * submissions. `goalsError` says why the goals couldn't be read (the
+ * rest still comes back). `sample` is true while the numbers are sample figures,
  * before the Salesforce and ad-spend Zaps are connected.
  */
 export async function GET(request: NextRequest) {
@@ -18,8 +19,14 @@ export async function GET(request: NextRequest) {
   const thisYear = easternParts(now).year;
   const year = Number(request.nextUrl.searchParams.get("year")) || thisYear;
   try {
+    let goalsError: string | null = null;
     const [goals, leadsToday] = await Promise.all([
-      getGoals(year),
+      // A goals failure is shown on the Big Goals card; the rest of the page still loads.
+      getGoals(year).catch((error) => {
+        logger.error("War Room: loading goals failed", { year, error: describeError(error) });
+        goalsError = describeError(error);
+        return [];
+      }),
       // The briefing's count is a nice-to-have: a failure here doesn't take the page down.
       countLeadsToday(easternDate(now)).catch((error) => {
         logger.error("War Room: counting today's form submissions failed", { error: describeError(error) });
@@ -30,6 +37,7 @@ export async function GET(request: NextRequest) {
       year,
       now: now.toISOString(),
       goals,
+      goalsError,
       months: monthlyMetrics(year, now),
       sample: true,
       leadsToday,
