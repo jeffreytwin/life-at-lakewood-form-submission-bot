@@ -987,7 +987,15 @@ export function payloadGallery(html: string, pageUrl: string, names: (string | n
   // plan's own design, only those are its.
   const wanted = new Set(names.filter((n): n is string => Boolean(n)).map(designKey));
   const own = found.filter((f) => f.design && wanted.has(designKey(f.design)));
-  const chosen = own.length ? own : found;
+  // And a plan that is itself a design takes no other design's picture.
+  // Perry's 3345F and 3662F had no photographs yet — a "coming soon" card
+  // on the list, none on their pages — and every Perry page carries its
+  // "Exteriors" album's cover in its menus, a 5573S described as that
+  // design; both plans came to the queue with it as their main picture
+  // (Jeff, 2026-11-11). Where no name is a design (a home named for its
+  // street), the pictures that name one are still its likeliest.
+  const namesDesign = [...wanted].some((k) => DESIGN_CODE.test(k));
+  const chosen = own.length ? own : namesDesign ? found.filter((f) => !f.design) : found;
 
   const seen = new Set<string>();
   const out: PayloadImage[] = [];
@@ -1007,3 +1015,6 @@ export function payloadGallery(html: string, pageUrl: string, names: (string | n
 
 /** "Design 2016F", "2016F" and "2016 F" as one design. */
 const designKey = (name: string) => name.toLowerCase().replace(/\b(?:design|plan|the)\b/g, "").replace(/[^a-z0-9]/g, "");
+
+/** A design's number as designKey leaves it: "3345f", "5573s", "4569mc" — not a street address. */
+const DESIGN_CODE = /^\d{3,5}[a-z]{0,2}$/;

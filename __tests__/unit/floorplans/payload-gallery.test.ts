@@ -96,6 +96,24 @@ describe("payloadGallery", () => {
       ]);
     });
 
+    it("takes no other design's picture for a plan that is a design with none of its own", () => {
+      // Perry's 3345F (2026-11-11): no photographs yet, and the menus'
+      // "Exteriors" album cover, described as design 5573S.
+      const bare = [
+        String.raw`<script>self.__next_f.push([1,"{\"images\":[`,
+        record("market_orlando", String.raw`\"representative_disclaimer\":\"Representative Image.\",\"show_design_id\":\"off\"`),
+        ",",
+        record("5573S_E90_Web", String.raw`\"active\":\"active\",\"design_id\":\"5573S\",\"elevation_id\":90,\"type\":[\"elevation\"]`),
+        String.raw`]}"])</script>`,
+      ].join("");
+      expect(payloadGallery(bare, BASE, ["Design 3345F", null])).toEqual([]);
+      expect(payloadGallery(page, BASE, ["3345F"])).toEqual([]);
+    });
+
+    it("takes every design's pictures where no name is a design", () => {
+      expect(payloadGallery(page, BASE, ["3834 Butte Trail"]).map((g) => g.src)).toHaveLength(4);
+    });
+
     it("takes every design's pictures where none is the plan's", () => {
       expect(payloadGallery(page, BASE, ["Somewhere Else"]).map((g) => g.src)).toEqual([
         at("2016F_E1_Web"),
