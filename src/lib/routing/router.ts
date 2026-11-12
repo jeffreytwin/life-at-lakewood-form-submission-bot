@@ -79,6 +79,7 @@ export async function routeLead(payload: ZapierPayload): Promise<{
       builder: payload.builder ?? null,
       timeline: payload.timeline ?? null,
       message: payload.message ?? null,
+      buy_build_or_sell: payload.buy_build_or_sell ?? null,
       salesforce_owner_id: payload.salesforce_owner_id ?? null,
       is_master_agent_owned: payload.is_master_agent_owned ?? false,
       previous_agent_offboarded: payload.previous_agent_offboarded ?? null,

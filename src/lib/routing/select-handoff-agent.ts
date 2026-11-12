@@ -132,6 +132,7 @@ export async function selectHandoffAgent(
     builder: null,
     timeline: null,
     message: null,
+    buy_build_or_sell: null,
     salesforce_owner_id: null,
     is_master_agent_owned: false,
     previous_agent_offboarded: null,

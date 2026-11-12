@@ -207,7 +207,7 @@ Each Zap has slightly different Wix form fields. Create a mapping document:
 | Zap 2 (Buying) | "Contact Us (Buy)" | property_address, price, home_type |
 | Zap 3 (Contact Us) | "Contact Us" | message |
 | Zap 4 (Builder Page) | "Builder Page" | builder |
-| Zap 5 (Realtor Page) | "Realtor Connect" | message |
+| Zap 5 (Realtor Page) | "Realtor Connect" / "Contact Form (Realtor)" | message, buy_build_or_sell |
 
 ### 3B. Migrate Remaining Zaps (One at a Time)
 For each remaining Zap (1, 2, 4, 5):
