@@ -23,6 +23,7 @@ interface Lead {
   builder: string | null;
   timeline: string | null;
   message: string | null;
+  buy_build_or_sell: string | null;
   url: string | null;
   routing_status: string;
   created_at: string;
@@ -722,6 +723,12 @@ export default function LeadsPage() {
                                 <div>
                                   <span className="text-muted text-sm">Timeline: </span>
                                   {lead.timeline}
+                                </div>
+                              )}
+                              {lead.buy_build_or_sell && (
+                                <div>
+                                  <span className="text-muted text-sm">Buy, Build or Sell: </span>
+                                  {lead.buy_build_or_sell}
                                 </div>
                               )}
                               {lead.url && !lead.floor_plan && (

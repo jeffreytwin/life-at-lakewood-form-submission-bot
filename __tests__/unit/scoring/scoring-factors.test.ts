@@ -57,6 +57,7 @@ function makeLead(overrides: Partial<Lead> = {}): Lead {
     builder: null,
     timeline: null,
     message: null,
+    buy_build_or_sell: null,
     salesforce_owner_id: null,
     is_master_agent_owned: true,
     raw_payload: null,

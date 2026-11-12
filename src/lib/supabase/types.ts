@@ -189,6 +189,7 @@ export interface Lead {
   builder: string | null;
   timeline: string | null;
   message: string | null;
+  buy_build_or_sell: string | null;
   salesforce_owner_id: string | null;
   is_master_agent_owned: boolean;
   previous_agent_offboarded: string | null;

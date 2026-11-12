@@ -29,6 +29,10 @@ export const zapierPayloadSchema = z.object({
   builder: z.string().optional().nullable(),
   timeline: z.string().optional().nullable(),
   message: z.string().optional().nullable(),
+  // Realtor contact form's "Interest" checkboxes: whether the contact wants to
+  // buy, build or sell. Zapier joins the ticked boxes into one string (e.g.
+  // "Buy, Sell") and sends "" when none are ticked.
+  buy_build_or_sell: blankToNull,
   // Salesforce Previous_Agent_Offboarded__c: the former agent's name, set
   // when their leads were moved to the frontlines account, so a lead that
   // looks unowned is really theirs. The Salesforce lead record holds no user
