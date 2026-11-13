@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { type NormalizedPlan } from "@/lib/floorplans/types";
 import { speaksAsOwner } from "@/lib/floorplans/owner-words";
 import { asTour } from "@/lib/floorplans/standardize";
-import { looksLikeSpecList } from "@/lib/floorplans/description";
+import { looksLikeHighlights, looksLikeSpecList, writtenInSentences } from "@/lib/floorplans/description";
 import { onePerPicture, pictureKey, sharperCopy } from "@/lib/floorplans/extractors/plan-page";
 import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
 import { ADJUSTMENT_LABEL, adjustedOnto } from "@/lib/floorplans/adjustment";
@@ -392,6 +392,12 @@ export function descriptionChanged(current: NormalizedPlan, plan: NormalizedPlan
   if (looksLikeSpecList(next)) return false;
   if (!before) return true;
   if (readsAsProse(before) && !readsAsProse(next)) return false;
+  // Nor a list of the plan's highlights where its paragraph stands: the
+  // same page carries both, and a read that took the list one night and
+  // the paragraph the next proposed each over the other (Ashton Woods'
+  // "Plan Highlights", description.ts, looksLikeHighlights; Jeff,
+  // 2026-11-13). A paragraph over a list is still proposed.
+  if (looksLikeHighlights(next) && writtenInSentences(before)) return false;
   // The same words without the entities the site shows as typed
   // ("today&rsquo;s"), or without a listing's headline run into them, put
   // them right: a change, once (withPlainDescription). Reworded, the

@@ -24,7 +24,7 @@ import { pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
 import { planViewerExtras, type PlanViewerExtras } from "@/lib/floorplans/extractors/planviewer";
 import { zondaCountsFor } from "@/lib/floorplans/extractors/zonda";
 import { asTour, bathsStated, namesAnAddress, planInHomeLabel, weekleyCounts } from "@/lib/floorplans/standardize";
-import { looksLikeSpecList, looksLikeTagline } from "@/lib/floorplans/description";
+import { looksLikeHighlights, looksLikeSpecList, looksLikeTagline, writtenInSentences } from "@/lib/floorplans/description";
 import { seriesOf as seriesOfPage } from "@/lib/floorplans/series-labels";
 import { ashtonPictures, ashtonTour, isAshtonPage } from "@/lib/floorplans/extractors/ashton";
 import { isMedallionPage, medallionTour } from "@/lib/floorplans/extractors/medallion";
@@ -1006,7 +1006,10 @@ export function descriptionFromPage(
   const listed = plan.description?.trim() || null;
   const written = fromPage?.trim() || null;
   if (!listed) return { description: written, raw: plan.raw };
-  if (!written || looksLikeSpecList(written) || !(looksLikeSpecList(listed) || looksLikeTagline(listed, written))) {
+  // Nor does a card's list of the plan's highlights stand for the prose
+  // its page writes (Ashton Woods' "Plan Highlights"; looksLikeHighlights).
+  const outshone = looksLikeSpecList(listed) || looksLikeTagline(listed, written) || (looksLikeHighlights(listed) && writtenInSentences(written));
+  if (!written || looksLikeSpecList(written) || !outshone) {
     return { description: plan.description ?? null, raw: plan.raw };
   }
   const raw = plan.raw?.featuresLine ? plan.raw : { ...(plan.raw ?? {}), featuresLine: listed };

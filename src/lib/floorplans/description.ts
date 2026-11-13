@@ -262,6 +262,51 @@ export function looksLikeTagline(listed: string | null | undefined, written: str
   return /[.!?]/.test(prose) && prose.length >= line.length * 3;
 }
 
+const wordsIn = (text: string): number => text.split(/\s+/).filter(Boolean).length;
+
+/**
+ * Whether a "description" is a plan's list of highlights rather than its
+ * prose: Ashton Woods' plan pages print "Plan Highlights" under the
+ * paragraph — "Open kitchen, nook and family room space", "Private dining
+ * room", "Loft" — and their community page shows the same list on the
+ * plan's card. A read of that page took the list for the description one
+ * night and not the next, and the queue proposed the list over the
+ * paragraph and the paragraph back over the list for every Oakfield Trails
+ * plan; the list came back one per line, with semicolons, with full stops
+ * or run together with spaces, so a rejection of one never held for the
+ * next (Tuttle, Amelia, Griffin, Plant…; Jeff, 2026-11-13). Short pieces,
+ * one per line or between semicolons, bullets or full stops; or, with
+ * nothing between them, a line with no stop in it at all where a word in
+ * lower case runs into the capital of the next piece three times or more
+ * ("…open to family room Two-story family room Upstairs laundry…"). Pure;
+ * exported for tests.
+ */
+export function looksLikeHighlights(text: string | null | undefined): boolean {
+  const s = String(text ?? "").trim();
+  if (!s) return false;
+  const pieces = s
+    .split(/\s*(?:[\r\n]+|;|[•·]|(?<=[\p{L}\p{N})'’])[.!?]+(?:\s+|$))\s*/u)
+    .map((piece) => piece.replace(/^[-–—*]\s*/, "").trim())
+    .filter(Boolean);
+  if (pieces.length >= 3) {
+    const counts = pieces.map(wordsIn);
+    return counts.every((n) => n <= 12) && counts.reduce((a, b) => a + b, 0) / counts.length <= 7;
+  }
+  if (/[.!?;\r\n]/.test(s)) return false;
+  return (s.match(/\b[a-z][\p{L}'’/-]*\s+(?=[A-Z])/gu) ?? []).length >= 3;
+}
+
+/**
+ * Whether a text is written in sentences: two or more, and not a list of
+ * highlights with stops between its pieces (looksLikeHighlights). Pure;
+ * exported for tests.
+ */
+export function writtenInSentences(text: string | null | undefined): boolean {
+  const s = String(text ?? "").trim();
+  if (!s || looksLikeHighlights(s)) return false;
+  return (s.match(/[\p{L}\p{N})'’"”][.!?]+["')\]”’]?(?=\s|$)/gu) ?? []).length >= 2;
+}
+
 /**
  * Gives every base plan the builder left without a description one of its
  * own (describePlan). A spec line counts as no description: it is dropped,
