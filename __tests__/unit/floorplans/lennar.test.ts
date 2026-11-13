@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
+import { communityHomeType, homesiteName, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
@@ -209,5 +209,20 @@ describe("preferredPlan: two plans of one name in a community (Jeff, 2026-10-03)
     const more = { ...estates, price: 369990, raw: { ...estates.raw, homesOnOffer: 3 } };
     expect(preferredPlan(manors, more)).toBe(more);
     expect(preferredPlan(manors, { ...more, raw: { ...more.raw, homesOnOffer: 2 } })).toBe(manors);
+  });
+});
+
+describe("homesiteName", () => {
+  it("names a home by its street address", () => {
+    expect(homesiteName({ address: "19707 Conch Dr", number: "0264", id: "h_940587" }, "Victoria")).toBe("19707 Conch Dr");
+  });
+
+  it("names a home with no address yet by its plan and homesite, never Lennar's id (Calusa Country Club, 2026-11-13)", () => {
+    const e = { id: "h_947947", number: "0457", address: null, status: "COMING_SOON" };
+    expect(homesiteName(e, "The Summerville")).toBe("The Summerville - Homesite 0457");
+  });
+
+  it("names a home with neither address nor homesite by its plan alone", () => {
+    expect(homesiteName({ id: "h_1", address: null }, "The Summerville")).toBe("The Summerville - Quick Move-In");
   });
 });

@@ -157,7 +157,11 @@ function normalizeModel(m: TollModel): NormalizedPlan {
 function normalizeQmi(q: TollModel): NormalizedPlan {
   const base = normalizeModel(q);
   const address = (q.address ?? q.street ?? "").trim();
-  const name = address || `${q.modelName ?? q.name ?? "Home"} (Quick Move-In ${q.commPlanID ?? ""})`.trim();
+  // A home with no address yet goes by its plan and lot, never by Toll's
+  // id for the plan (the id put on the site for Lennar's, 2026-11-13).
+  const model = (q.modelName ?? q.name ?? "Home").trim();
+  const lot = String(q.lotNumber ?? "").trim();
+  const name = address || (lot ? `${model} - Homesite ${lot}` : `${model} - Quick Move-In`);
   return {
     ...base,
     planKey: normKey(name),
