@@ -306,10 +306,21 @@ interface ChangeAsked {
  * or not (Jeff, 2026-10-15: "It's important that we reflect the current
  * price from the builder"); one rejected before goes to a person rather
  * than being approved on its own (runConnection).
+ *
+ * A price taken away is not the builder's price, and its rejection sticks:
+ * Homes by Towne shows Banyan only as "Low $500s", which is read as no
+ * price (statedPrice), and the queue proposed $502,900 → nothing every
+ * night, rejected each morning (Jeff, 2026-11-13). Once the page gives a
+ * price again, that price is proposed as any other.
  */
 export async function stillRejected(args: ChangeAsked): Promise<boolean> {
-  if (args.changeType === "update" && args.fieldChanged === "price") return false;
+  if (args.changeType === "update" && args.fieldChanged === "price" && !priceTakenAway(args.newValue)) return false;
   return rejectedBefore(args);
+}
+
+/** Whether a price change proposes no price at all. Pure; exported for tests. */
+export function priceTakenAway(newValue: string | null | undefined): boolean {
+  return !newValue?.trim();
 }
 
 /** Whether an identical change was rejected, and the rejection still holds for it. */
