@@ -116,6 +116,22 @@ export function planDrawings(e: ApolloEntity): string[] {
   return out;
 }
 
+/**
+ * A home's name: its street address, or, where Lennar has not given it one
+ * yet, its plan and homesite as Lennar's own page names it ("The Summerville
+ * Plan, Homesite 0457"). A home coming soon may have no address: The
+ * Summerville on lot 0457 at Calusa Country Club was shown on the site as
+ * "The Summerville (Quick Move-In h_947947)", Lennar's id for it (Jeff,
+ * 2026-11-13). Its own page keeps it the same home when the address comes
+ * (home-identity.ts). Exported for tests.
+ */
+export function homesiteName(e: ApolloEntity, planName: string): string {
+  const address = String(e.address ?? e.streetAddress ?? "").trim();
+  if (address) return address;
+  const lot = String(e.number ?? "").trim();
+  return lot ? `${planName} - Homesite ${lot}` : `${planName} - Quick Move-In`;
+}
+
 export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[] {
   const out: NormalizedPlan[] = [];
   const planNames = new Map<string, string>();
@@ -162,8 +178,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
     const planRef = (e.plan as { __ref?: string } | null)?.__ref;
     const planName = planRef ? planNames.get(planRef) : null;
     if (!planName) continue; // only homesites for this community's plans
-    const address = String(e.address ?? e.streetAddress ?? "").trim();
-    const name = address || `${planName} (Quick Move-In ${String(e.id ?? "")})`;
+    const name = homesiteName(e, planName);
     const price = typeof e.price === "number" && e.price > 0 ? e.price
       : typeof e.wasPrice === "number" && e.wasPrice > 0 ? e.wasPrice : null;
     // A home with no photo of its own is given Lennar's "Coming Soon"
