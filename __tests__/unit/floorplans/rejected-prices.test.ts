@@ -15,6 +15,12 @@ describe("a price rejected before is proposed again (Jeff, 2026-10-15: reflect t
     expect(await stillRejected({ ...asked, fieldChanged: "price", newValue: "$954,900" })).toBe(false);
   });
 
+  it("holds back a price taken away that a person rejected (Banyan, 'Low $500s', 2026-11-13)", async () => {
+    expect(await stillRejected({ ...asked, planKey: "banyan", fieldChanged: "price", newValue: "" })).toBe(true);
+    expect(await stillRejected({ ...asked, planKey: "banyan", fieldChanged: "price", newValue: null })).toBe(true);
+    expect(await stillRejected({ ...asked, planKey: "banyan", fieldChanged: "price", newValue: "  " })).toBe(true);
+  });
+
   it("still holds back any other field's rejected change", async () => {
     expect(await stillRejected({ ...asked, fieldChanged: "photos", newValue: "3 photos · 1a2b3c4d" })).toBe(true);
     expect(await stillRejected({ ...asked, fieldChanged: "sqft", newValue: "3,145" })).toBe(true);
