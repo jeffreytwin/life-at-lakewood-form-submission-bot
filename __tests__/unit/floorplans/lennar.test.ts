@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
-import type { NormalizedPlan } from "@/lib/floorplans/types";
+import { filedAsBefore } from "@/lib/floorplans/home-identity";
+import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
 // caches a plan's first elevation under `elevationImages({"first":1})`; a
@@ -93,16 +94,35 @@ describe("Lennar: what a community builds", () => {
     expect(home.raw?.relatedPlan).toBe("Dover");
   });
 
-  it("leaves out a homesite Lennar has given no address (Calusa Country Club, 2026-11-18)", () => {
+  it("names a homesite with no address yet for its plan, counted, under Lennar's number as its key (Jeff, 2026-11-18)", () => {
+    const lot = (id: string, n: string, address: string | null) => ({
+      id, plan: { __ref: "PlanType:p_61238" }, address, status: "COMING_SOON", price: 736999, beds: 4, baths: 2, url: `/x/dover/${n}`,
+    });
+    const page = "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes";
     const apollo = {
       "PlanType:p_61238": dover,
       "CommunityType:c_7239": { name: "The Estates", types: ["SINGLE_FAMILY"] },
-      "HomesiteType:h_794075": { id: "h_794075", plan: { __ref: "PlanType:p_61238" }, address: null, status: "COMING_SOON", price: 670999, beds: 4, baths: 2, url: "/x/dover/23415600166" },
-      "HomesiteType:h_1": { id: "h_1", plan: { __ref: "PlanType:p_61238" }, address: "12715 Teal Topaz Lane", price: 304400, beds: 3, baths: 2, url: "/x/dover/15198575097" },
+      "HomesiteType:h_987159": lot("h_987159", "23415600642", null),
+      "HomesiteType:h_947947": lot("h_947947", "23415600457", null),
+      "HomesiteType:h_1": lot("h_1", "15198575097", "12715 Teal Topaz Lane"),
     };
-    const plans = plansFromPage(apollo, "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes");
-    expect(plans.filter((p) => p.quickMoveIn).map((p) => p.name)).toEqual(["12715 Teal Topaz Lane"]);
-    expect(plans.some((p) => /Quick Move-In/.test(p.name))).toBe(false);
+    const homes = plansFromPage(apollo, page).filter((p) => p.quickMoveIn);
+    expect(homes.map((p) => [p.name, p.planKey])).toEqual([
+      ["Dover (Quick Move-In 2)", normKey("Dover (Quick Move-In h_987159)")],
+      ["Dover (Quick Move-In 1)", normKey("Dover (Quick Move-In h_947947)")],
+      ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane")],
+    ]);
+
+    // The first lot gets its street: the second closes up to 1 on the row it has.
+    const filed = homes.map((p) => ({ plan_key: p.planKey, record: p }));
+    const later = plansFromPage({ ...apollo, "HomesiteType:h_947947": lot("h_947947", "23415600457", "6031 Mound Key Run") }, page).filter((p) => p.quickMoveIn);
+    const refiled = filedAsBefore(later, filed);
+    expect(refiled.map((p) => [p.name, p.planKey])).toEqual([
+      ["Dover (Quick Move-In 1)", normKey("Dover (Quick Move-In h_987159)")],
+      // And the lot that got its street is the row it was, renamed: no second row.
+      ["6031 Mound Key Run", normKey("Dover (Quick Move-In h_947947)")],
+      ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane")],
+    ]);
   });
 
   it("takes no front for a home whose picture is Lennar's Coming Soon stand-in (Jeff, 2026-09-24)", () => {

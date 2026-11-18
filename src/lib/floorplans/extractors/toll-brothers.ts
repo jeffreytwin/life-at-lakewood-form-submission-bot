@@ -16,6 +16,7 @@
 // after the community page and merges it in. Photos are ordered by room
 // (gallery-order.ts) with the exteriors last.
 
+import { unaddressedHomesNumbered } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 import { orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 
@@ -155,14 +156,16 @@ function normalizeModel(m: TollModel): NormalizedPlan {
 }
 
 /**
- * A home on offer, named by its street. One with no address yet is none to
- * show: it would go to the site under its plan's name and Toll's own number
- * for it, as Lennar's did (Jeff, 2026-11-18).
+ * A home on offer, named by its street. One with no address yet is named
+ * for its plan and counted (unaddressedHomesNumbered), and keyed by Toll's
+ * number for it, as Lennar's are (Jeff, 2026-11-18).
  */
-function normalizeQmi(q: TollModel): NormalizedPlan | null {
+function normalizeQmi(q: TollModel): NormalizedPlan {
   const base = normalizeModel(q);
-  const name = (q.address ?? q.street ?? "").trim();
-  if (!name) return null;
+  const address = (q.address ?? q.street ?? "").trim();
+  const plan = (q.modelName ?? q.name ?? "").trim() || "Home";
+  const unaddressed = address || q.commPlanID == null ? null : String(q.commPlanID);
+  const name = address || `${plan} (Quick Move-In ${unaddressed ?? ""})`.trim();
   return {
     ...base,
     planKey: normKey(name),
@@ -174,6 +177,7 @@ function normalizeQmi(q: TollModel): NormalizedPlan | null {
     raw: {
       ...base.raw,
       relatedPlan: q.modelName ?? null,
+      ...(unaddressed ? { unaddressed } : {}),
       moveInDate: q.moveInDate ?? null,
       lotNumber: q.lotNumber ?? null,
     },
@@ -196,7 +200,7 @@ function collectPlans(container: TollHomesContainer | null | undefined): Normali
       if (plan.planKey && !m.isQMI) out.push(plan);
       for (const q of m.qmis ?? []) {
         const qmi = normalizeQmi(q);
-        if (qmi?.planKey) out.push(qmi);
+        if (qmi.planKey) out.push(qmi);
       }
     }
   }
@@ -216,7 +220,7 @@ export function plansFromNextData(data: unknown): NormalizedPlan[] {
   ];
   const byKey = new Map<string, NormalizedPlan>();
   for (const p of plans) if (!byKey.has(p.planKey)) byKey.set(p.planKey, p);
-  return [...byKey.values()];
+  return unaddressedHomesNumbered([...byKey.values()]);
 }
 
 /**

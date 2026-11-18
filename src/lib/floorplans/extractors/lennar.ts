@@ -13,7 +13,7 @@
 // every plan's page is read too — a plain fetch and a parse, no model.
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
-import { showablePicture, standardHomeType } from "@/lib/floorplans/standardize";
+import { showablePicture, standardHomeType, unaddressedHomesNumbered } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -162,13 +162,13 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
     const planRef = (e.plan as { __ref?: string } | null)?.__ref;
     const planName = planRef ? planNames.get(planRef) : null;
     if (!planName) continue; // only homesites for this community's plans
-    // A homesite Lennar has not given an address is not yet a home to show:
-    // Calusa Country Club's four "COMING_SOON" lots carried none, their
-    // plan's starting price in place of their own, and went to the site as
-    // "The Princeton (Quick Move-In h_794075)" (Jeff, 2026-11-18). It is
-    // read once Lennar gives it its street.
-    const name = String(e.address ?? e.streetAddress ?? "").trim();
-    if (!name) continue;
+    // A homesite Lennar has not given an address yet (Calusa Country Club's
+    // four "COMING_SOON" lots, 2026-11-18) is named for its plan and counted
+    // (unaddressedHomesNumbered), and keyed by Lennar's number for it: the
+    // key those four were first filed under, so each stays the row it is.
+    const address = String(e.address ?? e.streetAddress ?? "").trim();
+    const unaddressed = address ? null : String(e.id ?? key.slice("HomesiteType:".length));
+    const name = address || `${planName} (Quick Move-In ${unaddressed})`;
     const price = typeof e.price === "number" && e.price > 0 ? e.price
       : typeof e.wasPrice === "number" && e.wasPrice > 0 ? e.wasPrice : null;
     // A home with no photo of its own is given Lennar's "Coming Soon"
@@ -191,10 +191,10 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       sourceUrl: e.url ? `https://www.lennar.com${e.url}` : null,
       galleryImages: photo ? [photo] : [],
       blueprintImages: [],
-      raw: { lennarId: e.id, relatedPlan: planName, planId: planRef },
+      raw: { lennarId: e.id, relatedPlan: planName, planId: planRef, ...(unaddressed ? { unaddressed } : {}) },
     });
   }
-  return out;
+  return unaddressedHomesNumbered(out);
 }
 
 /** The Apollo state a Lennar page carries. */
@@ -340,7 +340,8 @@ export async function extractLennar(params: {
       }
     }
   }
-  return withPlanPictures(await mapLimit([...byKey.values()], 6, withPlanPage));
+  // Counted again over the whole community: its series are read a page each.
+  return unaddressedHomesNumbered(withPlanPictures(await mapLimit([...byKey.values()], 6, withPlanPage)));
 }
 
 /**
