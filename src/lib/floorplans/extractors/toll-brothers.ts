@@ -177,7 +177,7 @@ function normalizeQmi(q: TollModel): NormalizedPlan {
     raw: {
       ...base.raw,
       relatedPlan: q.modelName ?? null,
-      ...(unaddressed ? { unaddressed, ...(q.lotNumber != null && String(q.lotNumber).trim() ? { lot: String(q.lotNumber).trim() } : {}) } : {}),
+      ...(unaddressed ? { unaddressed, ...(q.lotNumber != null && String(q.lotNumber).trim() ? { lot: String(q.lotNumber).trim() } : {}), lotComingSoon: q.isComingSoon === true } : {}),
       moveInDate: q.moveInDate ?? null,
       lotNumber: q.lotNumber ?? null,
     },

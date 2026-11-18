@@ -452,7 +452,9 @@ export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults 
 
 /**
  * Homes a builder lists before they have a street address, each named for
- * its plan and its lot: "The Summerville (Lot 0457)" (Jeff, 2026-11-18).
+ * its plan and its lot: "The Summerville (Lot 0457)", and where the builder
+ * says the home is coming soon, "The Summerville (Lot 0457 - Coming Soon)",
+ * so nobody takes it for one ready to move into (Jeff, 2026-11-18).
  * Lennar's Calusa Country Club listed four such lots, and they went to the
  * site under Lennar's own number for them, "The Princeton (Quick Move-In
  * h_794075)". One the builder gives no lot is counted instead: "(Quick
@@ -478,7 +480,7 @@ export function unaddressedHomesNamed(plans: NormalizedPlan[]): NormalizedPlan[]
   return plans.map((p) => {
     const id = idOf(p);
     if (!id) return p;
-    if (lotOf(p)) return { ...p, name: `${planOf(p)} (Lot ${lotOf(p)})` };
+    if (lotOf(p)) return { ...p, name: `${planOf(p)} (Lot ${lotOf(p)}${p.raw?.lotComingSoon === true ? " - Coming Soon" : ""})` };
     return { ...p, name: `${planOf(p)} (Quick Move-In ${ids.get(normKey(planOf(p)))!.indexOf(id) + 1})` };
   });
 }

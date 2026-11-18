@@ -110,17 +110,20 @@ describe("Lennar: what a community builds", () => {
     const homes = plansFromPage(apollo, page).filter((p) => p.quickMoveIn);
     expect(homes.map((p) => [p.name, p.planKey, p.priceDisplay, p.price])).toEqual([
       // Lennar's words stand for the price: the number beside them is the plan's.
-      ["Dover (Lot 0642)", normKey("Dover (Quick Move-In h_987159)"), "Low $800K", null],
-      ["Dover (Lot 0457)", normKey("Dover (Quick Move-In h_947947)"), "Mid $700K", null],
+      ["Dover (Lot 0642 - Coming Soon)", normKey("Dover (Quick Move-In h_987159)"), "Low $800K", null],
+      ["Dover (Lot 0457 - Coming Soon)", normKey("Dover (Quick Move-In h_947947)"), "Mid $700K", null],
       ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane"), "$304,400", 304400],
     ]);
+    // A lot under way with no street yet is its lot alone.
+    const underWay = plansFromPage({ ...apollo, "HomesiteType:h_947947": lot("h_947947", "23415600457", null, { status: "UNDER_CONSTRUCTION" }) }, page);
+    expect(underWay.find((p) => p.raw?.lennarId === "h_947947")?.name).toBe("Dover (Lot 0457)");
 
     // A lot gets its street and its price: the row it was, renamed, and no second row.
     const filed = homes.map((p) => ({ plan_key: p.planKey, record: p }));
     const sold = lot("h_947947", "23415600457", "6031 Mound Key Run", { status: "UNDER_CONSTRUCTION", price: 761250, formattedPrice: "" });
     const later = filedAsBefore(plansFromPage({ ...apollo, "HomesiteType:h_947947": sold }, page).filter((p) => p.quickMoveIn), filed);
     expect(later.map((p) => [p.name, p.planKey, p.priceDisplay])).toEqual([
-      ["Dover (Lot 0642)", normKey("Dover (Quick Move-In h_987159)"), "Low $800K"],
+      ["Dover (Lot 0642 - Coming Soon)", normKey("Dover (Quick Move-In h_987159)"), "Low $800K"],
       ["6031 Mound Key Run", normKey("Dover (Quick Move-In h_947947)"), "$761,250"],
       ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane"), "$304,400"],
     ]);

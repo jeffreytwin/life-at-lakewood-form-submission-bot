@@ -215,7 +215,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       sourceUrl: e.url ? `https://www.lennar.com${e.url}` : null,
       galleryImages: photo ? [photo] : [],
       blueprintImages: [],
-      raw: { lennarId: e.id, relatedPlan: planName, planId: planRef, ...(unaddressed ? { unaddressed, ...(lot ? { lot } : {}) } : {}) },
+      raw: { lennarId: e.id, relatedPlan: planName, planId: planRef, ...(unaddressed ? { unaddressed, ...(lot ? { lot } : {}), lotComingSoon: /coming/i.test(String(e.status ?? "")) } : {}) },
     });
   }
   return unaddressedHomesNamed(out);
