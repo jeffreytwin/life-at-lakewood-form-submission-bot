@@ -9,10 +9,10 @@ Run it again after changing a hat, the box, or a standing animation."""
 import json
 import os
 import sys
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.dirname(__file__))
-from lib import read_gif, write_gif, track, from_rows  # noqa: E402
+from lib import read_gif, write_gif, track, track_eyes, from_rows  # noqa: E402
 import santa_hat as santa  # noqa: E402
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -23,7 +23,11 @@ PUBLIC = os.path.join(ROOT, "public")
 # face it follows from frame to frame, and where a hat band sits (`band_bottom`
 # is its lower edge at the forehead, `head_x` its middle). `turns` is for an
 # animation where the head tips over as well as moving; `lean` is a head that
-# starts out tipped, in degrees anticlockwise. `head_w` sizes the box.
+# starts out tipped, in degrees anticlockwise. `eyes` follows the head by its
+# blue eyes instead of by the patch of face. `tuck` is how many cells further
+# than the band, left and right, hair is tucked under the hat. `front` is the run of frames
+# (first, last) in which something is held up beside the head (a pistol in
+# each hand) and has to stay in front of the hat. `head_w` sizes the box.
 CHARACTERS = {
     "snake": dict(
         head_w=118,
@@ -39,7 +43,7 @@ CHARACTERS = {
         standing=dict(file="Revolver Ocelot - Standing V2.gif", block=8, face=(110, 160, 240, 250),
                       band_bottom=160, head_x=182),
         celebrating=dict(file="Revolver Ocelot - Celebration.gif", block=8, face=(110, 160, 240, 250),
-                         band_bottom=160, head_x=182, turns=True),
+                         band_bottom=160, head_x=182, turns=True, front=(20, 59)),
         sneaking=dict(file="Revolver Ocelot - Crawling.gif", block=8, face=(58, 262, 185, 350),
                       band_bottom=262, head_x=127),
     ),
@@ -48,18 +52,18 @@ CHARACTERS = {
         standing=dict(file="Liquid Snake - Standing.gif", block=8, face=(105, 160, 235, 250),
                       band_bottom=162, head_x=174),
         celebrating=dict(file="Liquid Snake - Celebration.gif", block=8, face=(105, 160, 235, 250),
-                         band_bottom=162, head_x=174, turns=True),
+                         band_bottom=162, head_x=174, eyes=True),
         sneaking=dict(file="Liquid Snake - Crawling.gif", block=7, face=(95, 250, 205, 325),
                       band_bottom=252, head_x=155, lean=10),
     ),
     "bigboss": dict(
         head_w=165,
         standing=dict(file="Big Boss - Standing V3.gif", block=8, face=(85, 175, 235, 255),
-                      band_bottom=144, head_x=158),
+                      band_bottom=144, head_x=158, tuck=(2, 9)),
         celebrating=dict(file="Big Boss - Celebration.gif", block=8, face=(85, 170, 235, 250),
-                         band_bottom=140, head_x=160, turns=True),
+                         band_bottom=140, head_x=160, turns=True, tuck=(2, 9)),
         sneaking=dict(file="Big Boss - Crawling.gif", block=8, face=(60, 205, 225, 290),
-                      band_bottom=207, head_x=139),
+                      band_bottom=207, head_x=139, tuck=(2, 9)),
     ),
 }
 
@@ -109,18 +113,28 @@ def wear(frames, durations, c, hat):
     W, H = frames[0].size
     left = round(c["head_x"] - (hat.BAND_LEFT + hat.BAND_WIDTH / 2) * b) + SIDE
     top = c["band_bottom"] - rows * b + ROOM
-    fx0, fy0, fx1, fy1 = c["face"]
-    cx, cy = (fx0 + fx1) / 2 + SIDE, (fy0 + fy1) / 2 + ROOM
-    moves = track(frames, c["face"], turns=c.get("turns", False))
+    if c.get("eyes"):
+        moves, (cx, cy) = track_eyes(frames)
+        cx, cy = cx + SIDE, cy + ROOM
+    else:
+        fx0, fy0, fx1, fy1 = c["face"]
+        cx, cy = (fx0 + fx1) / 2 + SIDE, (fy0 + fy1) / 2 + ROOM
+        moves = track(frames, c["face"], turns=c.get("turns", False))
     bounces = swing([dy for _, dy, _ in moves], durations, b)
     size = (W + 2 * SIDE, H + ROOM)
-    # Under the hat: the stretch above the band, as wide as the band, up to
-    # the top of the crown. Hands and whatever else is beside the head stay.
+    # Under the hat: the stretch above the band, as wide as the band (and a
+    # little wider for a head of hair that sticks out), up to the top of the
+    # crown. Hands and whatever else is beside the head stay.
+    more_left, more_right = c.get("tuck", (0, 0))
     tuck = Image.new("L", size, 0)
-    for col in range(hat.BAND_WIDTH):
+    for col in range(-more_left, hat.BAND_WIDTH + more_right):
         x = left + (hat.BAND_LEFT + col) * b
-        y = top + (rows - hat.BAND_ROWS + 1 + hat.drop(col)) * b
+        y = top + (rows - hat.BAND_ROWS + 1 + hat.drop(min(col, hat.BAND_WIDTH - 1))) * b
         tuck.paste(255, (x, top - b, x + b, y))
+    # The head and everything under it: a strip as wide as the band, all the
+    # way down. What stands outside it is beside the head, not part of it.
+    strip = Image.new("L", size, 0)
+    strip.paste(255, (left - b, 0, left + (hat.BAND_WIDTH + 1) * b, size[1]))
     out = []
     for f, (dx, dy, ang), bounce in zip(frames, moves, bounces):
         big = Image.new("RGBA", size, (0, 0, 0, 0))
@@ -129,13 +143,29 @@ def wear(frames, durations, c, hat):
         layer.paste(hat.santa_hat(b, bounce), (left + dx, top + dy - hat.SWING * b))
         hide = Image.new("L", size, 0)
         hide.paste(tuck, (dx, dy))
+        head = Image.new("L", size, 0)
+        head.paste(strip, (dx, 0))
         turn = ang + c.get("lean", 0)
         if turn:
             at = (cx + dx, cy + dy)
             layer = layer.rotate(turn, resample=Image.NEAREST, center=at)
             hide = hide.rotate(turn, resample=Image.NEAREST, center=at)
+            head = head.rotate(turn, resample=Image.NEAREST, center=at)
+        bare = big.copy()
         big.paste((0, 0, 0, 0), (0, 0), hide)
         big.alpha_composite(layer)
+        first, last = c.get("front", (1, 0))
+        if first <= len(out) <= last:
+            # Put back whatever the hat covered that is not the head: anything
+            # beside it, and anything dark over it. The hair up there is light
+            # and a pistol is mostly dark, so dark means held in front. Lone
+            # dark specks are hair in shadow and are left alone; the pistol's
+            # bright glints come back with the dark around them.
+            alpha = bare.getchannel("A")
+            dark = bare.convert("L").point(lambda v: 255 if v < 110 else 0)
+            dark = ImageChops.multiply(dark, alpha).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.MaxFilter(9))
+            keep = ImageChops.lighter(dark, Image.eval(head, lambda v: 255 - v))
+            big.paste(bare, (0, 0), ImageChops.multiply(keep, alpha))
         out.append(big)
     boxes = [f.getchannel("A").getbbox() for f in out]
     need = min(bb[1] for bb in boxes)

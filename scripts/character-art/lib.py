@@ -97,6 +97,54 @@ def track(frames, box, turns=False, reach=14):
     return out
 
 
+def track_eyes(frames):
+    """Follows a head by its two blue eyes: a list of (dx, dy, angle) like
+    `track`, and the point between the eyes in the first frame, which is what
+    the shifts and turns are measured about. The eyes say exactly where a
+    face is and how far it has tipped, even when the rest of it changes
+    (looking up, a different mouth), which is where matching a patch of face
+    goes astray. Only for a character whose eyes are the one blue thing drawn."""
+    import math
+    found = []
+    for f in frames:
+        a = np.array(f).astype(np.int32)
+        r, g, b, al = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
+        ys, xs = np.nonzero((al > 127) & (b > 90) & (b * 10 > r * 16) & (b * 10 > g * 13))
+        pose = None
+        if len(xs) >= 12:
+            # Split the blue into a left eye and a right eye.
+            lo, hi = float(xs.min()), float(xs.max())
+            for _ in range(8):
+                right = np.abs(xs - hi) < np.abs(xs - lo)
+                if right.all() or (~right).all():
+                    break
+                lo, hi = xs[~right].mean(), xs[right].mean()
+            if right.any() and (~right).any() and hi - lo > 12:
+                lx, ly = xs[~right].mean(), ys[~right].mean()
+                rx, ry = xs[right].mean(), ys[right].mean()
+                pose = ((lx + rx) / 2, (ly + ry) / 2, -math.degrees(math.atan2(ry - ly, rx - lx)))
+        found.append(pose)
+    # A frame with the eyes shut takes its place from the frames either side.
+    known = [i for i, p in enumerate(found) if p]
+    for i, p in enumerate(found):
+        if p is None:
+            before = max((k for k in known if k < i), default=None)
+            after = min((k for k in known if k > i), default=None)
+            if before is None or after is None:
+                found[i] = found[before if after is None else after]
+            else:
+                t = (i - before) / (after - before)
+                found[i] = tuple(u + (v - u) * t for u, v in zip(found[before], found[after]))
+    # Take the shake out: each frame is averaged with its neighbours.
+    n = len(found)
+    smooth = []
+    for i in range(n):
+        near = [found[k] for k in (i - 1, i, i + 1) if 0 <= k < n]
+        smooth.append(tuple(sum(v[j] for v in near) / len(near) for j in range(3)))
+    x0, y0, a0 = smooth[0]
+    return [(round(x - x0), round(y - y0), a - a0) for x, y, a in smooth], (x0, y0)
+
+
 class Pixels:
     """A small drawing grid whose every cell becomes one fat sprite pixel."""
 
