@@ -13,7 +13,7 @@
 // every plan's page is read too — a plain fetch and a parse, no model.
 
 import { classifyRoom, orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
-import { showablePicture, standardHomeType } from "@/lib/floorplans/standardize";
+import { showablePicture, standardHomeType, unaddressedHomesNamed } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -116,6 +116,29 @@ export function planDrawings(e: ApolloEntity): string[] {
   return out;
 }
 
+/**
+ * The words Lennar shows in place of a home's price: "Mid $700K", "Low
+ * $800K". Each "Coming soon" home at Calusa Country Club carries them, and
+ * beside them a `price` that is its plan's starting price and not its own:
+ * 20414 Hawking Place went to the site at $607,999 where Lennar says "High
+ * $700K" (Jeff, 2026-11-18). Exported for tests.
+ */
+export function priceWording(e: ApolloEntity): string | null {
+  const words = typeof e.formattedPrice === "string" ? e.formattedPrice.trim() : "";
+  return words || null;
+}
+
+/**
+ * A home's own price, or none where Lennar words it instead (priceWording):
+ * the number beside the words is not the home's, so no plan takes it for
+ * its own and the price that replaces it goes to a person.
+ */
+function homePrice(e: ApolloEntity): number | null {
+  if (priceWording(e)) return null;
+  return typeof e.price === "number" && e.price > 0 ? e.price
+    : typeof e.wasPrice === "number" && e.wasPrice > 0 ? e.wasPrice : null;
+}
+
 export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[] {
   const out: NormalizedPlan[] = [];
   const planNames = new Map<string, string>();
@@ -162,10 +185,16 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
     const planRef = (e.plan as { __ref?: string } | null)?.__ref;
     const planName = planRef ? planNames.get(planRef) : null;
     if (!planName) continue; // only homesites for this community's plans
+    // A homesite Lennar has not given an address yet (Calusa Country Club's
+    // four "COMING_SOON" lots, 2026-11-18) is named for its plan and its lot
+    // (unaddressedHomesNamed), and keyed by Lennar's number for it: the key
+    // those four were first filed under, so each stays the row it is.
     const address = String(e.address ?? e.streetAddress ?? "").trim();
-    const name = address || `${planName} (Quick Move-In ${String(e.id ?? "")})`;
-    const price = typeof e.price === "number" && e.price > 0 ? e.price
-      : typeof e.wasPrice === "number" && e.wasPrice > 0 ? e.wasPrice : null;
+    const unaddressed = address ? null : String(e.id ?? key.slice("HomesiteType:".length));
+    const lot = typeof e.number === "string" || typeof e.number === "number" ? String(e.number).trim() : "";
+    const name = address || `${planName} (Quick Move-In ${unaddressed})`;
+    const price = homePrice(e);
+    const worded = priceWording(e);
     // A home with no photo of its own is given Lennar's "Coming Soon"
     // stand-in, which is not the home: it is led by its plan's pictures
     // instead (withPlanPictures; Jeff, 2026-09-24).
@@ -175,7 +204,7 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       planKey: normKey(name),
       name,
       price,
-      priceDisplay: money(price),
+      priceDisplay: worded ?? money(price),
       beds: e.beds != null ? String(e.beds) : "",
       baths: e.halfBaths ? `${e.baths}.5` : e.baths != null ? String(e.baths) : "",
       sqft: typeof e.sqft === "number" ? e.sqft : null,
@@ -186,10 +215,10 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
       sourceUrl: e.url ? `https://www.lennar.com${e.url}` : null,
       galleryImages: photo ? [photo] : [],
       blueprintImages: [],
-      raw: { lennarId: e.id, relatedPlan: planName, planId: planRef },
+      raw: { lennarId: e.id, relatedPlan: planName, planId: planRef, ...(unaddressed ? { unaddressed, ...(lot ? { lot } : {}), lotComingSoon: /coming/i.test(String(e.status ?? "")) } : {}) },
     });
   }
-  return out;
+  return unaddressedHomesNamed(out);
 }
 
 /** The Apollo state a Lennar page carries. */
@@ -335,7 +364,8 @@ export async function extractLennar(params: {
       }
     }
   }
-  return withPlanPictures(await mapLimit([...byKey.values()], 6, withPlanPage));
+  // Counted again over the whole community: its series are read a page each.
+  return unaddressedHomesNamed(withPlanPictures(await mapLimit([...byKey.values()], 6, withPlanPage)));
 }
 
 /**
