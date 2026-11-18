@@ -39,25 +39,46 @@ SHADOW = (86, 86, 98, 255)
 
 # --- hats -------------------------------------------------------------------
 
-def wear(frames, c, hat):
-    """The frames with the hat on. The hat follows the face, and whatever hair
-    stood above the band is tucked away under it."""
+def swing(heights, durations, block):
+    """How far the hat's bobble hangs off its resting place in each frame, in
+    pixels, down being positive. The bobble trails the head: it catches up
+    with where the head has gone a moment late, so it lifts as the head dips
+    and flops as the head comes back up."""
+    lag = 140.0  # ms for the bobble to catch most of the way up
+    at = float(heights[0])
+    out = [0.0] * len(heights)
+    # Round the loop a few times, so the last frame leads into the first.
+    for _ in range(4):
+        for i, (y, ms) in enumerate(zip(heights, durations)):
+            at += (y - at) * (1 - 2.718281828 ** (-ms / lag))
+            out[i] = at - y
+    reach = max(abs(v) for v in out) or 1.0
+    # However gently a character moves, the bobble swings a good cell and a half.
+    return [v / reach * 1.5 * block for v in out]
+
+
+def wear(frames, durations, c, hat):
+    """The frames with the hat on. The hat follows the face, its bobble
+    bounces as the head moves, and whatever hair stood above the band is
+    tucked away under it."""
     b = c["block"]
-    art = hat.santa_hat(b)
     rows = len(hat.ROWS)
     left = round(c["head_x"] - (hat.BAND_LEFT + hat.BAND_WIDTH / 2) * b)
     # `band_bottom` is where the band's lower edge meets the forehead, at the
     # front of the hat; the back of it sits lower, the hat being tipped back.
     top = c["band_bottom"] - rows * b
+    moves = track(frames, c["face"])
+    bounces = swing([dy for _, dy in moves], durations, b)
     out = []
-    for f, (dx, dy) in zip(frames, track(frames, c["face"])):
+    for f, (dx, dy), bounce in zip(frames, moves, bounces):
         f = f.copy()
         for x in range(f.width):
             col = min(hat.BAND_WIDTH - 1, max(0, (x - left - dx) // b - hat.BAND_LEFT))
             tuck = top + dy + (rows - hat.BAND_ROWS + 1 + hat.drop(col)) * b
             if tuck > 0:
                 f.paste((0, 0, 0, 0), (x, 0, x + 1, tuck))
-        f.alpha_composite(art, (left + dx, top + dy))
+        art = hat.santa_hat(b, bounce)
+        f.alpha_composite(art, (left + dx, top + dy - hat.SWING * b))
         out.append(f)
     return out
 
@@ -161,7 +182,7 @@ def box_scenes(standing, c, hat=None, bare=None):
             top = round(ground + b - art.height - lift)
             f.alpha_composite(art, (left, top)) if top + art.height > 0 else None
             if hat_art is not None:
-                hx, hy = left + b, top - len(hat.ROWS) * small + small
+                hx, hy = left + b, top - (len(hat.ROWS) + hat.SWING) * small + small
                 if hy + hat_art.height > 0:
                     f.alpha_composite(hat_art, (hx, hy))
         if bang is not None:
@@ -176,7 +197,7 @@ def box_scenes(standing, c, hat=None, bare=None):
     n = len(standing)
     s = lambda i: standing[i % n]  # noqa: E731
     box_top = ground + b - bh * b
-    hat_room = (hat_art.height if hat_art else 0)
+    hat_room = (len(hat.ROWS) - 1) * small if hat else 0
 
     get_in = [
         scene(s(0)), scene(s(1)),
@@ -216,7 +237,7 @@ def main():
         for name, hat in [(None, None)] + list(HATS.items()):
             out = os.path.join(PUBLIC, "characters", cid, *([name] if name else []))
             os.makedirs(out, exist_ok=True)
-            stand = wear(frames, c, hat) if hat else frames
+            stand = wear(frames, durations, c, hat) if hat else frames
             if hat:
                 write_gif(os.path.join(out, "standing.gif"), stand, durations)
             get_in, in_box, get_out = box_scenes(stand, c, hat, bare=frames[0])

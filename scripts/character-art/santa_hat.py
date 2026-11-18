@@ -1,5 +1,5 @@
 """The Santa hat, drawn by hand in fat pixels."""
-from lib import from_rows
+from PIL import Image
 
 COLOURS = {
     "R": (200, 32, 40, 255),     # red
@@ -9,29 +9,36 @@ COLOURS = {
     "S": (198, 204, 216, 255),   # fur in shadow
 }
 
-# The tail flops over to the right and ends in the bobble. The fur band is
-# the bottom four rows, 20 cells wide, starting at column 0.
+# The crown stands over the fur band; its tail droops over to the right and
+# ends in the bobble. The fur band is the bottom four rows, 22 cells wide,
+# starting at column 0. Short rows are see-through to the right.
 ROWS = [
-    ".........LRRRRDD..........",
-    ".......LLRRRRRRRDD........",
-    "......LLRRRRRRRRRRDD......",
-    ".....LLRRRRRRRRRRRRRDD....",
-    "....LLRRRRRRRRRRRRRRRRD...",
-    "...LLRRRRRRRRRRRRRDLRRRD..",
-    "...LRRRRRRRRRRRRRRD.LRRD..",
-    "..LLRRRRRRRRRRRRRRD..WWWW.",
-    "..LRRRRRRRRRRRRRRRD.WWWWWW",
-    ".LLRRRRRRRRRRRRRRRD.SWWWWW",
-    ".LLRRRRRRRRRRRRRRRD.SSWWWW",
-    "WWWWWWWWWWWWWWWWWWWW.SSSS.",
-    "SWWWWWWWWWWWWWWWWWWW......",
-    "SWWWWWWWWWWWWWWWWWWW......",
-    ".SSSSSSSSSSSSSSSSSS.......",
+    "..........LRRRRRRDD",
+    "........LLRRRRRRRRRDDD",
+    "......LLRRRRRRRRRRRRRRDDD",
+    ".....LLRRRRRRRRRRRRRRRRRRDD",
+    "....LLRRRRRRRRRRRRRRRRRRRRRDD",
+    "...LLRRRRRRRRRRRRRRRDDLRRRRRDD",
+    "...LRRRRRRRRRRRRRRRRRD..LRRRRD",
+    "..LLRRRRRRRRRRRRRRRRRD...LRRRD",
+    "..LRRRRRRRRRRRRRRRRRRD...WWWWW",
+    ".LLRRRRRRRRRRRRRRRRRRD..WWWWWWW",
+    ".LLRRRRRRRRRRRRRRRRRRD..WWWWWWW",
+    ".LRRRRRRRRRRRRRRRRRRRD..SWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWWWW..SSWWWWW",
+    "SWWWWWWWWWWWWWWWWWWWWW...SSSSS",
+    "SWWWWWWWWWWWWWWWWWWWWW",
+    ".SSSSSSSSSSSSSSSSSSSS",
 ]
-BAND_LEFT, BAND_WIDTH, BAND_ROWS = 0, 20, 4
+WIDTH = max(len(r) for r in ROWS)
+BAND_LEFT, BAND_WIDTH, BAND_ROWS = 0, 22, 4
 # The hat sits tipped back: every TIP columns towards the back of the head
 # (the right), the whole hat drops a cell.
 TIP = 6
+# The droop is everything right of this column. It is the part that bounces.
+DROOP_FROM = 21
+# How far the bobble may swing either way, in cells.
+SWING = 2
 
 
 def drop(col):
@@ -39,13 +46,24 @@ def drop(col):
     return max(0, col) // TIP
 
 
-def santa_hat(block):
-    """The hat, tipped back, with each cell `block` pixels across."""
-    width = len(ROWS[0])
-    extra = drop(width - 1)
-    grid = [["."] * width for _ in range(len(ROWS) + extra)]
-    for y, row in enumerate(ROWS):
-        for x, ch in enumerate(row):
-            if ch != ".":
-                grid[y + drop(x)][x] = ch
-    return from_rows(["".join(r) for r in grid], COLOURS, block)
+def santa_hat(block, bounce=0):
+    """The hat, tipped back, with each cell `block` pixels across. `bounce` is
+    how far the bobble has swung down (up, if negative) in pixels; the tail
+    bends with it, most at the bobble and not at all where it leaves the crown.
+
+    The picture has SWING cells of spare room above and below the hat, so it
+    is the same size however far the bobble has swung."""
+    bounce = max(-SWING * block, min(SWING * block, bounce))
+    rows = len(ROWS) + drop(WIDTH - 1) + 2 * SWING
+    im = Image.new("RGBA", (WIDTH * block, rows * block), (0, 0, 0, 0))
+    half = max(1, block // 2)
+    for x in range(WIDTH):
+        bend = 0
+        if x > DROOP_FROM:
+            share = (x - DROOP_FROM) / (WIDTH - 1 - DROOP_FROM)
+            bend = round(bounce * share / half) * half
+        for y, row in enumerate(ROWS):
+            if x < len(row) and row[x] != ".":
+                px, py = x * block, (y + drop(x) + SWING) * block + bend
+                im.paste(COLOURS[row[x]], (px, py, px + block, py + block))
+    return im
