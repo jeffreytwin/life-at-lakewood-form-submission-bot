@@ -10,6 +10,9 @@ export interface BotCharacterGifs {
   sneaking: string;
 }
 
+/** The holidays the characters dress up for. See holidays.ts for the dates. */
+export type HolidayId = "santa" | "pilgrim" | "unclesam" | "stpatrick";
+
 export type CharacterId = "snake" | "ocelot" | "liquid" | "bigboss";
 
 export const ALL_CHARACTER_IDS: CharacterId[] = ["snake", "ocelot", "liquid", "bigboss"];
@@ -42,6 +45,11 @@ export interface BotCharacter {
   welcomeSound: string;
   getMessage: (event: LeadEvent) => string;
   gifs: BotCharacterGifs;
+  /**
+   * Hatted versions of the animations, by holiday. Only the animations that
+   * have been drawn with the hat are listed; the rest stay as they are.
+   */
+  holidayGifs?: Partial<Record<HolidayId, Partial<BotCharacterGifs>>>;
   /** Multiplier applied to the routing-toggle character size. Defaults to 1.0. */
   gifSizeScale?: number;
   /** Optional scale just for the quiet-hours (sneaking) GIF. Falls back to gifSizeScale. */
