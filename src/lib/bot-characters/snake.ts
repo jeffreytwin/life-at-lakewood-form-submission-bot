@@ -1,4 +1,5 @@
 import type { BotCharacter } from "./types";
+import { holidayGifs } from "./holidays";
 import type { LeadEvent } from "@/lib/lead-events";
 
 function pronoun(gender: "male" | "female" | null | undefined, form: "subject" | "object" | "possessive"): string {
@@ -94,11 +95,15 @@ export const snake: BotCharacter = {
   welcomeSound: "/sounds/codec-opening2.mp3",
   gifs: {
     standing: "/standing-there.gif",
-    inBox: "/in-box.gif",
-    getInBox: "/get-in-box.gif",
-    gettingOutOfBox: "/getting-out-of-box.gif",
+    inBox: "/characters/snake/in-box.gif",
+    getInBox: "/characters/snake/get-in-box.gif",
+    gettingOutOfBox: "/characters/snake/getting-out-of-box.gif",
     celebrating: "/celebration.gif",
     sneaking: "/sneaking.gif",
+  },
+  holidayGifs: {
+    pilgrim: holidayGifs("snake", "pilgrim"),
+    santa: holidayGifs("snake", "santa"),
   },
   // Snake's sprites are taller than wide and the character sits in the
   // lower portion of each frame. Anchor cover-crops to the bottom so the

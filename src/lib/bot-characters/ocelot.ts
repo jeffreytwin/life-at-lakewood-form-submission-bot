@@ -1,4 +1,5 @@
 import type { BotCharacter } from "./types";
+import { holidayGifs } from "./holidays";
 import type { LeadEvent } from "@/lib/lead-events";
 
 function pronoun(gender: "male" | "female" | null | undefined, form: "subject" | "object" | "possessive"): string {
@@ -92,14 +93,16 @@ export const ocelot: BotCharacter = {
   // Sharing the codec opening with Snake — same MGS callsign sound works for both.
   welcomeSound: "/sounds/codec-opening2.mp3",
   gifs: {
-    // Ocelot uses Snake's box gifs for the routing-on/off transitions
-    // — we don't have Ocelot equivalents and the user opted to leave those alone.
     standing: "/Revolver Ocelot - Standing V2.gif",
-    inBox: "/in-box.gif",
-    getInBox: "/get-in-box.gif",
-    gettingOutOfBox: "/getting-out-of-box.gif",
+    inBox: "/characters/ocelot/in-box.gif",
+    getInBox: "/characters/ocelot/get-in-box.gif",
+    gettingOutOfBox: "/characters/ocelot/getting-out-of-box.gif",
     celebrating: "/Revolver Ocelot - Celebration.gif",
     sneaking: "/Revolver Ocelot - Crawling.gif",
+  },
+  holidayGifs: {
+    pilgrim: holidayGifs("ocelot", "pilgrim"),
+    santa: holidayGifs("ocelot", "santa"),
   },
   // Default 1.0 keeps Ocelot at the same render size as Snake. Bump up
   // here if his GIFs look noticeably smaller than Snake's in practice.

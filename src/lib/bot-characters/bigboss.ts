@@ -1,4 +1,5 @@
 import type { BotCharacter } from "./types";
+import { holidayGifs } from "./holidays";
 import type { LeadEvent } from "@/lib/lead-events";
 
 function pronoun(gender: "male" | "female" | null | undefined, form: "subject" | "object" | "possessive"): string {
@@ -95,13 +96,15 @@ export const bigboss: BotCharacter = {
   welcomeSound: "/sounds/codec-opening2.mp3",
   gifs: {
     standing: "/Big Boss - Standing V3.gif",
-    // Big Boss uses Snake's box gifs for the routing-on/off transitions —
-    // we don't have Big Boss equivalents and these stay Snake by design.
-    inBox: "/in-box.gif",
-    getInBox: "/get-in-box.gif",
-    gettingOutOfBox: "/getting-out-of-box.gif",
+    inBox: "/characters/bigboss/in-box.gif",
+    getInBox: "/characters/bigboss/get-in-box.gif",
+    gettingOutOfBox: "/characters/bigboss/getting-out-of-box.gif",
     celebrating: "/Big Boss - Celebration.gif",
     sneaking: "/Big Boss - Crawling.gif",
+  },
+  holidayGifs: {
+    pilgrim: holidayGifs("bigboss", "pilgrim"),
+    santa: holidayGifs("bigboss", "santa"),
   },
   // Tune size and celebration duration to taste once we see it in motion.
   gifSizeScale: 1.15,

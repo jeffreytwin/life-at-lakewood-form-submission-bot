@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import SpeechBubble, { type SpeechBubbleHandle } from "./SpeechBubble";
 import { onLeadEvent } from "@/lib/lead-events";
-import { type BotCharacterGifs } from "@/lib/bot-characters";
+import { heightScale, type BotCharacterGifs } from "@/lib/bot-characters";
 import { useActiveCharacter } from "@/lib/bot-characters/use-active-character";
 
 type CharacterState =
@@ -289,7 +289,9 @@ export default function RoutingToggle() {
               }}
               style={{
                 width: size,
-                height: size,
+                // A hatted animation can be a taller picture than the everyday
+                // one; the extra height goes above, so the character stays put.
+                height: Math.round(size * heightScale(src)),
                 imageRendering: "pixelated",
                 objectFit: "contain",
                 transform: activeCharacter.avatarTransform ?? "none",

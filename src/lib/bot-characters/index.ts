@@ -11,6 +11,7 @@ import {
   setCachedSchedule,
   subscribeToSchedule,
 } from "./schedule";
+import { currentHoliday, dressFor } from "./holidays";
 import type { BotCharacter } from "./types";
 import type { CharacterId, CharacterSchedule, DayKey } from "./types";
 
@@ -20,7 +21,9 @@ export type {
   CharacterId,
   CharacterSchedule,
   DayKey,
+  HolidayId,
 } from "./types";
+export { HOLIDAYS, holidayOn, currentHoliday, dressFor, heightScale } from "./holidays";
 export { ALL_CHARACTER_IDS, ALL_DAYS } from "./types";
 export {
   DEFAULT_SCHEDULE,
@@ -39,8 +42,9 @@ const CHARACTERS: Record<CharacterId, BotCharacter> = {
   bigboss,
 };
 
+/** The character, dressed for today's holiday if there is one. */
 export function getCharacter(id: CharacterId): BotCharacter {
-  return CHARACTERS[id];
+  return dressFor(CHARACTERS[id], currentHoliday());
 }
 
 /**
@@ -51,7 +55,7 @@ export function getActiveCharacter(at: Date = new Date()): BotCharacter {
   const schedule = getCachedSchedule();
   const day = easternDayKey(at);
   const id = schedule[day] ?? DEFAULT_SCHEDULE[day];
-  return CHARACTERS[id] ?? snake;
+  return dressFor(CHARACTERS[id] ?? snake, currentHoliday(at));
 }
 
 /**
@@ -60,7 +64,7 @@ export function getActiveCharacter(at: Date = new Date()): BotCharacter {
  */
 export function characterForDay(schedule: CharacterSchedule, day: DayKey): BotCharacter {
   const id = schedule[day] ?? DEFAULT_SCHEDULE[day];
-  return CHARACTERS[id] ?? snake;
+  return dressFor(CHARACTERS[id] ?? snake, currentHoliday());
 }
 
 interface AgentDisplayInput {
@@ -83,11 +87,12 @@ interface AgentDisplay {
 
 const BOT_AGENT_NAME = "Solid Snake Bot";
 
-const BOT_DISPLAY_BY_CHARACTER: Record<CharacterId, { name: string; photo: string | null }> = {
-  snake: { name: BOT_AGENT_NAME, photo: null }, // null → use the agent row's own photo
-  ocelot: { name: "Revolver Ocelot Bot", photo: ocelot.gifs.standing },
-  liquid: { name: "Liquid Snake Bot", photo: liquid.gifs.standing },
-  bigboss: { name: "Big Boss Bot", photo: bigboss.gifs.standing },
+/** The bot's name under each character. Snake keeps the agent row's own. */
+const BOT_NAME_BY_CHARACTER: Record<CharacterId, string> = {
+  snake: BOT_AGENT_NAME,
+  ocelot: "Revolver Ocelot Bot",
+  liquid: "Liquid Snake Bot",
+  bigboss: "Big Boss Bot",
 };
 
 const DEFAULT_OBJECT_POSITION = "center";
@@ -117,11 +122,14 @@ export function getDisplayAgent(agent: AgentDisplayInput): AgentDisplay {
   // framed differently from each other and cover-cropping pulled some
   // off-center.
   const character = getActiveCharacter();
-  const swap = BOT_DISPLAY_BY_CHARACTER[character.id];
+  // Snake leaves the agent row's own photo alone on an ordinary day; in a
+  // hat month his hatted sprite stands in, like everyone else's.
+  const hatted = character.gifs.standing !== CHARACTERS[character.id].gifs.standing;
+  const photo = character.id === "snake" && !hatted ? null : character.gifs.standing;
   return {
-    name: swap.name,
-    photo_url: swap.photo ?? agent.photo_url,
-    photo_thumb_url: swap.photo ?? agent.photo_thumb_url ?? null,
+    name: BOT_NAME_BY_CHARACTER[character.id],
+    photo_url: photo ?? agent.photo_url,
+    photo_thumb_url: photo ?? agent.photo_thumb_url ?? null,
     photoObjectFit: "contain",
     photoObjectPosition: DEFAULT_OBJECT_POSITION,
     photoTransform: "none",

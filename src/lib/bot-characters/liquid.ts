@@ -1,4 +1,5 @@
 import type { BotCharacter } from "./types";
+import { holidayGifs } from "./holidays";
 import type { LeadEvent } from "@/lib/lead-events";
 
 function pronoun(gender: "male" | "female" | null | undefined, form: "subject" | "object" | "possessive"): string {
@@ -92,13 +93,15 @@ export const liquid: BotCharacter = {
   welcomeSound: "/sounds/codec-opening2.mp3",
   gifs: {
     standing: "/Liquid Snake - Standing.gif",
-    // Liquid uses Snake's box gifs for the routing-on/off transitions —
-    // we don't have Liquid equivalents and these stay Snake by design.
-    inBox: "/in-box.gif",
-    getInBox: "/get-in-box.gif",
-    gettingOutOfBox: "/getting-out-of-box.gif",
+    inBox: "/characters/liquid/in-box.gif",
+    getInBox: "/characters/liquid/get-in-box.gif",
+    gettingOutOfBox: "/characters/liquid/getting-out-of-box.gif",
     celebrating: "/Liquid Snake - Celebration.gif",
     sneaking: "/Liquid Snake - Crawling.gif",
+  },
+  holidayGifs: {
+    pilgrim: holidayGifs("liquid", "pilgrim"),
+    santa: holidayGifs("liquid", "santa"),
   },
   // Tune size and celebration duration to taste once we see it in motion.
   gifSizeScale: 1.31,
