@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
 import { filedAsBefore } from "@/lib/floorplans/home-identity";
+import { unaddressedHomesNamed } from "@/lib/floorplans/standardize";
 import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
 
 // Shaped like Prosperity Lakes' Apollo state (2026-09-23): a community page
@@ -94,35 +95,43 @@ describe("Lennar: what a community builds", () => {
     expect(home.raw?.relatedPlan).toBe("Dover");
   });
 
-  it("names a homesite with no address yet for its plan, counted, under Lennar's number as its key (Jeff, 2026-11-18)", () => {
-    const lot = (id: string, n: string, address: string | null) => ({
-      id, plan: { __ref: "PlanType:p_61238" }, address, status: "COMING_SOON", price: 736999, beds: 4, baths: 2, url: `/x/dover/${n}`,
+  it("names a homesite with no address yet for its plan and its lot, under Lennar's number as its key (Jeff, 2026-11-18)", () => {
+    const lot = (id: string, n: string, address: string | null, extra: Record<string, unknown> = {}) => ({
+      id, number: n.slice(-4), plan: { __ref: "PlanType:p_61238" }, address, status: "COMING_SOON", price: 736999, formattedPrice: "Mid $700K", beds: 4, baths: 2, url: `/x/dover/${n}`, ...extra,
     });
     const page = "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes";
     const apollo = {
       "PlanType:p_61238": dover,
       "CommunityType:c_7239": { name: "The Estates", types: ["SINGLE_FAMILY"] },
-      "HomesiteType:h_987159": lot("h_987159", "23415600642", null),
+      "HomesiteType:h_987159": lot("h_987159", "23415600642", null, { formattedPrice: "Low $800K" }),
       "HomesiteType:h_947947": lot("h_947947", "23415600457", null),
-      "HomesiteType:h_1": lot("h_1", "15198575097", "12715 Teal Topaz Lane"),
+      "HomesiteType:h_1": lot("h_1", "15198575097", "12715 Teal Topaz Lane", { status: "UNDER_CONSTRUCTION", price: 304400, formattedPrice: "" }),
     };
     const homes = plansFromPage(apollo, page).filter((p) => p.quickMoveIn);
-    expect(homes.map((p) => [p.name, p.planKey])).toEqual([
-      ["Dover (Quick Move-In 2)", normKey("Dover (Quick Move-In h_987159)")],
-      ["Dover (Quick Move-In 1)", normKey("Dover (Quick Move-In h_947947)")],
-      ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane")],
+    expect(homes.map((p) => [p.name, p.planKey, p.priceDisplay, p.price])).toEqual([
+      // Lennar's words stand for the price: the number beside them is the plan's.
+      ["Dover (Lot 0642)", normKey("Dover (Quick Move-In h_987159)"), "Low $800K", null],
+      ["Dover (Lot 0457)", normKey("Dover (Quick Move-In h_947947)"), "Mid $700K", null],
+      ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane"), "$304,400", 304400],
     ]);
 
-    // The first lot gets its street: the second closes up to 1 on the row it has.
+    // A lot gets its street and its price: the row it was, renamed, and no second row.
     const filed = homes.map((p) => ({ plan_key: p.planKey, record: p }));
-    const later = plansFromPage({ ...apollo, "HomesiteType:h_947947": lot("h_947947", "23415600457", "6031 Mound Key Run") }, page).filter((p) => p.quickMoveIn);
-    const refiled = filedAsBefore(later, filed);
-    expect(refiled.map((p) => [p.name, p.planKey])).toEqual([
-      ["Dover (Quick Move-In 1)", normKey("Dover (Quick Move-In h_987159)")],
-      // And the lot that got its street is the row it was, renamed: no second row.
-      ["6031 Mound Key Run", normKey("Dover (Quick Move-In h_947947)")],
-      ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane")],
+    const sold = lot("h_947947", "23415600457", "6031 Mound Key Run", { status: "UNDER_CONSTRUCTION", price: 761250, formattedPrice: "" });
+    const later = filedAsBefore(plansFromPage({ ...apollo, "HomesiteType:h_947947": sold }, page).filter((p) => p.quickMoveIn), filed);
+    expect(later.map((p) => [p.name, p.planKey, p.priceDisplay])).toEqual([
+      ["Dover (Lot 0642)", normKey("Dover (Quick Move-In h_987159)"), "Low $800K"],
+      ["6031 Mound Key Run", normKey("Dover (Quick Move-In h_947947)"), "$761,250"],
+      ["12715 Teal Topaz Lane", normKey("12715 Teal Topaz Lane"), "$304,400"],
     ]);
+  });
+
+  it("counts the homes with neither an address nor a lot", () => {
+    const home = (id: string): NormalizedPlan => ({
+      planKey: normKey(`Lori (Quick Move-In ${id})`), name: `Lori (Quick Move-In ${id})`, price: null, priceDisplay: null, beds: "", baths: "", sqft: null,
+      garages: null, homeType: null, quickMoveIn: true, comingSoon: false, sourceUrl: null, galleryImages: [], blueprintImages: [], raw: { relatedPlan: "Lori", unaddressed: id },
+    });
+    expect(unaddressedHomesNamed([home("288231"), home("286778")]).map((p) => p.name)).toEqual(["Lori (Quick Move-In 2)", "Lori (Quick Move-In 1)"]);
   });
 
   it("takes no front for a home whose picture is Lennar's Coming Soon stand-in (Jeff, 2026-09-24)", () => {

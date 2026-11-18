@@ -16,7 +16,7 @@
 // after the community page and merges it in. Photos are ordered by room
 // (gallery-order.ts) with the exteriors last.
 
-import { unaddressedHomesNumbered } from "@/lib/floorplans/standardize";
+import { unaddressedHomesNamed } from "@/lib/floorplans/standardize";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 import { orderGallery, type GalleryInput } from "@/lib/floorplans/gallery-order";
 
@@ -157,7 +157,7 @@ function normalizeModel(m: TollModel): NormalizedPlan {
 
 /**
  * A home on offer, named by its street. One with no address yet is named
- * for its plan and counted (unaddressedHomesNumbered), and keyed by Toll's
+ * for its plan and its lot (unaddressedHomesNamed), and keyed by Toll's
  * number for it, as Lennar's are (Jeff, 2026-11-18).
  */
 function normalizeQmi(q: TollModel): NormalizedPlan {
@@ -177,7 +177,7 @@ function normalizeQmi(q: TollModel): NormalizedPlan {
     raw: {
       ...base.raw,
       relatedPlan: q.modelName ?? null,
-      ...(unaddressed ? { unaddressed } : {}),
+      ...(unaddressed ? { unaddressed, ...(q.lotNumber != null && String(q.lotNumber).trim() ? { lot: String(q.lotNumber).trim() } : {}) } : {}),
       moveInDate: q.moveInDate ?? null,
       lotNumber: q.lotNumber ?? null,
     },
@@ -220,7 +220,7 @@ export function plansFromNextData(data: unknown): NormalizedPlan[] {
   ];
   const byKey = new Map<string, NormalizedPlan>();
   for (const p of plans) if (!byKey.has(p.planKey)) byKey.set(p.planKey, p);
-  return unaddressedHomesNumbered([...byKey.values()]);
+  return unaddressedHomesNamed([...byKey.values()]);
 }
 
 /**

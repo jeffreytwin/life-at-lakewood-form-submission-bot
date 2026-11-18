@@ -452,23 +452,24 @@ export function standardizePlan(plan: NormalizedPlan, defaults: BuilderDefaults 
 
 /**
  * Homes a builder lists before they have a street address, each named for
- * its plan and counted: "The Summerville (Quick Move-In 1)", "(Quick
- * Move-In 2)". Lennar's Calusa Country Club listed four such lots, and they
- * went to the site under Lennar's own number for them, "The Princeton
- * (Quick Move-In h_794075)" (Jeff, 2026-11-18). The count is a name only: a
- * home's key is the builder's number for it (raw.unaddressed), so it stays
- * one row when a home beside it gets its address and the count closes up,
- * and its own page ties it to that row when it gets an address itself
- * (home-identity.ts). Counted in the order of the builder's numbers, so
- * two runs count alike. Pure; exported for tests.
+ * its plan and its lot: "The Summerville (Lot 0457)" (Jeff, 2026-11-18).
+ * Lennar's Calusa Country Club listed four such lots, and they went to the
+ * site under Lennar's own number for them, "The Princeton (Quick Move-In
+ * h_794075)". One the builder gives no lot is counted instead: "(Quick
+ * Move-In 1)", "(Quick Move-In 2)", in the order of the builder's numbers,
+ * so two runs count alike. Either is a name only: a home's key is the
+ * builder's number for it (raw.unaddressed), so it stays one row, and its
+ * own page ties it to that row when it gets its address (home-identity.ts).
+ * Pure; exported for tests.
  */
-export function unaddressedHomesNumbered(plans: NormalizedPlan[]): NormalizedPlan[] {
+export function unaddressedHomesNamed(plans: NormalizedPlan[]): NormalizedPlan[] {
   const idOf = (p: NormalizedPlan) => (p.quickMoveIn && p.raw?.unaddressed ? String(p.raw.unaddressed) : "");
+  const lotOf = (p: NormalizedPlan) => String(p.raw?.lot ?? "").trim();
   const planOf = (p: NormalizedPlan) => String(p.raw?.relatedPlan ?? p.relatedPlanName ?? "").trim() || "Home";
   const ids = new Map<string, string[]>();
   for (const p of plans) {
     const id = idOf(p);
-    if (!id) continue;
+    if (!id || lotOf(p)) continue;
     const of = ids.get(normKey(planOf(p))) ?? [];
     if (!of.includes(id)) of.push(id);
     ids.set(normKey(planOf(p)), of);
@@ -477,6 +478,7 @@ export function unaddressedHomesNumbered(plans: NormalizedPlan[]): NormalizedPla
   return plans.map((p) => {
     const id = idOf(p);
     if (!id) return p;
+    if (lotOf(p)) return { ...p, name: `${planOf(p)} (Lot ${lotOf(p)})` };
     return { ...p, name: `${planOf(p)} (Quick Move-In ${ids.get(normKey(planOf(p)))!.indexOf(id) + 1})` };
   });
 }
