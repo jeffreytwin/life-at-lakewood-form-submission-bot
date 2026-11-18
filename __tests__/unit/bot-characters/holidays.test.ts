@@ -30,14 +30,14 @@ describe("the holiday calendar", () => {
 });
 
 describe("dressing a character", () => {
-  it("swaps in the hatted animations and keeps the rest", () => {
+  it("swaps in the hatted animations", () => {
     for (const id of ALL_CHARACTER_IDS) {
       const plain = dressFor(getCharacter(id), null);
       const santa = dressFor(plain, "santa");
       expect(santa.gifs.standing).toBe(`/characters/${id}/santa/standing.gif`);
       expect(santa.gifs.inBox).toBe(`/characters/${id}/santa/in-box.gif`);
-      expect(santa.gifs.celebrating).toBe(plain.gifs.celebrating);
-      expect(santa.gifs.sneaking).toBe(plain.gifs.sneaking);
+      expect(santa.gifs.celebrating).toBe(`/characters/${id}/santa/celebrating.gif`);
+      expect(santa.gifs.sneaking).toBe(`/characters/${id}/santa/sneaking.gif`);
     }
   });
 

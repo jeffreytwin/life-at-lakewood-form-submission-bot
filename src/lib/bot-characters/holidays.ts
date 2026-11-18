@@ -1,3 +1,4 @@
+import taller from "./taller.json";
 import type { BotCharacter, BotCharacterGifs, CharacterId, HolidayId } from "./types";
 
 /**
@@ -53,6 +54,8 @@ export function holidayGifs(id: CharacterId, holiday: HolidayId): Partial<BotCha
   const dir = `/characters/${id}/${holiday}`;
   return {
     standing: `${dir}/standing.gif`,
+    celebrating: `${dir}/celebrating.gif`,
+    sneaking: `${dir}/sneaking.gif`,
     inBox: `${dir}/in-box.gif`,
     getInBox: `${dir}/get-in-box.gif`,
     gettingOutOfBox: `${dir}/getting-out-of-box.gif`,
@@ -67,4 +70,14 @@ export function dressFor(character: BotCharacter, holiday: HolidayId | null): Bo
   const hatted = holiday ? character.holidayGifs?.[holiday] : undefined;
   if (!hatted) return character;
   return { ...character, gifs: { ...character.gifs, ...hatted } };
+}
+
+/**
+ * How much taller than usual to show an animation, 1 for most. A hat can
+ * stand higher than the everyday picture had room for, so build.py makes
+ * that picture taller and records by how much. Giving it the same extra
+ * height on the page keeps the character the size they always are.
+ */
+export function heightScale(src: string): number {
+  return (taller as Record<string, number>)[src] ?? 1;
 }

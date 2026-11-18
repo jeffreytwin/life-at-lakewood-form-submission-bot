@@ -23,7 +23,7 @@ export type {
   DayKey,
   HolidayId,
 } from "./types";
-export { HOLIDAYS, holidayOn, currentHoliday, dressFor } from "./holidays";
+export { HOLIDAYS, holidayOn, currentHoliday, dressFor, heightScale } from "./holidays";
 export { ALL_CHARACTER_IDS, ALL_DAYS } from "./types";
 export {
   DEFAULT_SCHEDULE,

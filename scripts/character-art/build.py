@@ -4,8 +4,9 @@ versions of the standing and box animations.
 
     python3 scripts/character-art/build.py
 
-Reads the standing GIFs in public/ and writes public/characters/<id>/...
+Reads the everyday GIFs in public/ and writes public/characters/<id>/...
 Run it again after changing a hat, the box, or a standing animation."""
+import json
 import os
 import sys
 from PIL import Image, ImageDraw
@@ -17,19 +18,49 @@ import santa_hat as santa  # noqa: E402
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PUBLIC = os.path.join(ROOT, "public")
 
-# What the script has to be told about each standing animation, measured on
-# its first frame: the size of one drawn pixel (`block`), the patch of face it
-# follows from frame to frame, and where a hat band sits (its bottom edge and
-# its middle).
+# What the script has to be told about each animation, measured on its first
+# frame: the size one hat pixel should be drawn at (`block`), the patch of
+# face it follows from frame to frame, and where a hat band sits (`band_bottom`
+# is its lower edge at the forehead, `head_x` its middle). `turns` is for an
+# animation where the head tips over as well as moving; `lean` is a head that
+# starts out tipped, in degrees anticlockwise. `head_w` sizes the box.
 CHARACTERS = {
-    "snake": dict(standing="standing-there.gif", block=6, face=(40, 110, 150, 185),
-                  band_bottom=112, head_x=97, head_w=118),
-    "ocelot": dict(standing="Revolver Ocelot - Standing V2.gif", block=8, face=(110, 160, 240, 250),
-                   band_bottom=160, head_x=182, head_w=165),
-    "liquid": dict(standing="Liquid Snake - Standing.gif", block=8, face=(105, 160, 235, 250),
-                   band_bottom=162, head_x=174, head_w=160),
-    "bigboss": dict(standing="Big Boss - Standing V3.gif", block=8, face=(85, 175, 235, 255),
-                    band_bottom=144, head_x=158, head_w=165),
+    "snake": dict(
+        head_w=118,
+        standing=dict(file="standing-there.gif", block=6, face=(40, 110, 150, 185),
+                      band_bottom=112, head_x=97),
+        celebrating=dict(file="celebration.gif", block=8, face=(50, 130, 195, 225),
+                         band_bottom=130, head_x=126, turns=True),
+        sneaking=dict(file="sneaking.gif", block=14, face=(75, 170, 335, 300),
+                      band_bottom=166, head_x=211),
+    ),
+    "ocelot": dict(
+        head_w=165,
+        standing=dict(file="Revolver Ocelot - Standing V2.gif", block=8, face=(110, 160, 240, 250),
+                      band_bottom=160, head_x=182),
+        celebrating=dict(file="Revolver Ocelot - Celebration.gif", block=8, face=(110, 160, 240, 250),
+                         band_bottom=160, head_x=182, turns=True),
+        sneaking=dict(file="Revolver Ocelot - Crawling.gif", block=8, face=(58, 262, 185, 350),
+                      band_bottom=262, head_x=127),
+    ),
+    "liquid": dict(
+        head_w=160,
+        standing=dict(file="Liquid Snake - Standing.gif", block=8, face=(105, 160, 235, 250),
+                      band_bottom=162, head_x=174),
+        celebrating=dict(file="Liquid Snake - Celebration.gif", block=8, face=(105, 160, 235, 250),
+                         band_bottom=162, head_x=174, turns=True),
+        sneaking=dict(file="Liquid Snake - Crawling.gif", block=7, face=(95, 250, 205, 325),
+                      band_bottom=252, head_x=155, lean=10),
+    ),
+    "bigboss": dict(
+        head_w=165,
+        standing=dict(file="Big Boss - Standing V3.gif", block=8, face=(85, 175, 235, 255),
+                      band_bottom=144, head_x=158),
+        celebrating=dict(file="Big Boss - Celebration.gif", block=8, face=(85, 170, 235, 250),
+                         band_bottom=140, head_x=160, turns=True),
+        sneaking=dict(file="Big Boss - Crawling.gif", block=8, face=(60, 205, 225, 290),
+                      band_bottom=207, head_x=139),
+    ),
 }
 
 HATS = {"santa": santa}
@@ -57,30 +88,63 @@ def swing(heights, durations, block):
     return [v / reach * 1.5 * block for v in out]
 
 
+# Spare canvas above and beside the frame while the hat is drawn; trimmed off
+# afterwards down to whatever the hat actually needed.
+ROOM = 320
+SIDE = 160
+
+
 def wear(frames, durations, c, hat):
-    """The frames with the hat on. The hat follows the face, its bobble
-    bounces as the head moves, and whatever hair stood above the band is
-    tucked away under it."""
+    """The frames with the hat on, and how much taller they came out than they
+    went in (1 for no taller). The hat follows the face, tips over with it,
+    its bobble bounces as the head moves, and whatever hair stood above the
+    band is tucked away under it.
+
+    Where the hat would poke out of the picture, the picture grows to hold
+    it: upwards, and by the same amount on both sides so the character stays
+    in the middle. The page shows every animation as tall as its box allows,
+    so a picture may grow sideways only while it stays narrower than tall."""
     b = c["block"]
     rows = len(hat.ROWS)
-    left = round(c["head_x"] - (hat.BAND_LEFT + hat.BAND_WIDTH / 2) * b)
-    # `band_bottom` is where the band's lower edge meets the forehead, at the
-    # front of the hat; the back of it sits lower, the hat being tipped back.
-    top = c["band_bottom"] - rows * b
-    moves = track(frames, c["face"])
-    bounces = swing([dy for _, dy in moves], durations, b)
+    W, H = frames[0].size
+    left = round(c["head_x"] - (hat.BAND_LEFT + hat.BAND_WIDTH / 2) * b) + SIDE
+    top = c["band_bottom"] - rows * b + ROOM
+    fx0, fy0, fx1, fy1 = c["face"]
+    cx, cy = (fx0 + fx1) / 2 + SIDE, (fy0 + fy1) / 2 + ROOM
+    moves = track(frames, c["face"], turns=c.get("turns", False))
+    bounces = swing([dy for _, dy, _ in moves], durations, b)
+    size = (W + 2 * SIDE, H + ROOM)
+    # Under the hat: the stretch above the band, as wide as the band, up to
+    # the top of the crown. Hands and whatever else is beside the head stay.
+    tuck = Image.new("L", size, 0)
+    for col in range(hat.BAND_WIDTH):
+        x = left + (hat.BAND_LEFT + col) * b
+        y = top + (rows - hat.BAND_ROWS + 1 + hat.drop(col)) * b
+        tuck.paste(255, (x, top - b, x + b, y))
     out = []
-    for f, (dx, dy), bounce in zip(frames, moves, bounces):
-        f = f.copy()
-        for x in range(f.width):
-            col = min(hat.BAND_WIDTH - 1, max(0, (x - left - dx) // b - hat.BAND_LEFT))
-            tuck = top + dy + (rows - hat.BAND_ROWS + 1 + hat.drop(col)) * b
-            if tuck > 0:
-                f.paste((0, 0, 0, 0), (x, 0, x + 1, tuck))
-        art = hat.santa_hat(b, bounce)
-        f.alpha_composite(art, (left + dx, top + dy - hat.SWING * b))
-        out.append(f)
-    return out
+    for f, (dx, dy, ang), bounce in zip(frames, moves, bounces):
+        big = Image.new("RGBA", size, (0, 0, 0, 0))
+        big.paste(f, (SIDE, ROOM))
+        layer = Image.new("RGBA", size, (0, 0, 0, 0))
+        layer.paste(hat.santa_hat(b, bounce), (left + dx, top + dy - hat.SWING * b))
+        hide = Image.new("L", size, 0)
+        hide.paste(tuck, (dx, dy))
+        turn = ang + c.get("lean", 0)
+        if turn:
+            at = (cx + dx, cy + dy)
+            layer = layer.rotate(turn, resample=Image.NEAREST, center=at)
+            hide = hide.rotate(turn, resample=Image.NEAREST, center=at)
+        big.paste((0, 0, 0, 0), (0, 0), hide)
+        big.alpha_composite(layer)
+        out.append(big)
+    boxes = [f.getchannel("A").getbbox() for f in out]
+    need = min(bb[1] for bb in boxes)
+    cut = min(ROOM, need - need % 2)
+    tall = H + ROOM - cut
+    over = max(0, SIDE - min(bb[0] for bb in boxes), max(bb[2] for bb in boxes) - (SIDE + W))
+    wider = min(SIDE, over + over % 2, max(0, (H - W) // 2))
+    out = [f.crop((SIDE - wider, cut, SIDE + W + wider, H + ROOM)) for f in out]
+    return out, tall / H
 
 
 # --- the box ----------------------------------------------------------------
@@ -231,20 +295,40 @@ def box_scenes(standing, c, hat=None, bare=None):
     return get_in, in_box, get_out
 
 
+POSES = {"standing": "standing", "celebrating": "celebrating", "sneaking": "sneaking"}
+
+
 def main():
+    # How much taller than its everyday version each hatted animation is, so
+    # the page can give it the extra room and keep the character the same size.
+    taller = {}
     for cid, c in CHARACTERS.items():
-        frames, durations = read_gif(os.path.join(PUBLIC, c["standing"]))
+        plain, durations = read_gif(os.path.join(PUBLIC, c["standing"]["file"]))
         for name, hat in [(None, None)] + list(HATS.items()):
             out = os.path.join(PUBLIC, "characters", cid, *([name] if name else []))
             os.makedirs(out, exist_ok=True)
-            stand = wear(frames, durations, c, hat) if hat else frames
+            stand, box_hat = plain, None
             if hat:
-                write_gif(os.path.join(out, "standing.gif"), stand, durations)
-            get_in, in_box, get_out = box_scenes(stand, c, hat, bare=frames[0])
+                for pose in POSES:
+                    frames, times = read_gif(os.path.join(PUBLIC, c[pose]["file"]))
+                    worn, grew = wear(frames, times, c[pose], hat)
+                    write_gif(os.path.join(out, f"{pose}.gif"), worn, times)
+                    if grew > 1:
+                        taller[f"/characters/{cid}/{name}/{pose}.gif"] = round(grew, 4)
+                    if pose == "standing":
+                        if worn[0].size != frames[0].size:
+                            raise SystemExit(f"{cid}: the standing hat does not fit the picture")
+                        stand = worn
+                box_hat = hat
+            box = dict(block=c["standing"]["block"], head_x=c["standing"]["head_x"], head_w=c["head_w"])
+            get_in, in_box, get_out = box_scenes(stand, box, box_hat, bare=plain[0])
             write_gif(os.path.join(out, "get-in-box.gif"), get_in, 100, loop=False)
             write_gif(os.path.join(out, "in-box.gif"), [f for f, _ in in_box], [t for _, t in in_box])
             write_gif(os.path.join(out, "getting-out-of-box.gif"), get_out, 100, loop=False)
-            print(cid, name or "plain", "done")
+            print(cid, name or "plain", "done", flush=True)
+    with open(os.path.join(ROOT, "src", "lib", "bot-characters", "taller.json"), "w") as f:
+        json.dump(taller, f, indent=2, sort_keys=True)
+        f.write("\n")
 
 
 if __name__ == "__main__":

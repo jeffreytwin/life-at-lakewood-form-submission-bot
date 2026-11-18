@@ -49,31 +49,49 @@ def write_gif(path, frames, durations, loop=True):
     )
 
 
-def track(frames, box, reach=36):
-    """How far the patch `box` (x0, y0, x1, y1) of the first frame has moved in
-    each later frame: a list of (dx, dy). The head is drawn the same from
-    frame to frame, so the best match is where the head went."""
+def _grey(frame):
+    a = np.array(frame).astype(np.float32)
+    return (a[..., :3].mean(axis=2) + 40) * (a[..., 3] > 127)
+
+
+def track(frames, box, turns=False, reach=14):
+    """Where the patch `box` (x0, y0, x1, y1) of the first frame has got to in
+    each frame: a list of (dx, dy, angle). The face is drawn much the same from
+    frame to frame, so the best match is where the head went. With `turns`,
+    the head may also tip over; `angle` is in degrees, anticlockwise.
+
+    Each frame is searched near where the head was a frame before (heads do
+    not jump), but always matched against the first frame, so small errors do
+    not pile up over a long animation."""
     x0, y0, x1, y1 = box
-
-    def grey(f):
-        a = np.array(f).astype(np.float32)
-        return (a[..., :3].mean(axis=2) + 40) * (a[..., 3] > 127)
-
-    ref = grey(frames[0])[y0:y1, x0:x1]
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    ref = _grey(frames[0])[y0:y1:2, x0:x1:2]
     out = []
-    last = (0, 0)
+    last = (0, 0, 0)
+    pad = 64
     for f in frames:
-        g = np.pad(grey(f), reach + 8)
         best, at = None, last
-        # Look near where the head was a frame ago first; heads do not jump.
-        for dy in range(-reach, reach + 1):
-            for dx in range(-reach, reach + 1):
-                if abs(dy - last[1]) > 8 or abs(dx - last[0]) > 8:
-                    continue
-                yy, xx = y0 + dy + reach + 8, x0 + dx + reach + 8
-                d = np.abs(g[yy:yy + (y1 - y0), xx:xx + (x1 - x0)] - ref).mean()
-                if best is None or d < best:
-                    best, at = d, (dx, dy)
+        angles = [last[2] + d for d in (-9, -6, -3, 0, 3, 6, 9)] if turns else [0]
+        for ang in angles:
+            if abs(ang) > 45:
+                continue
+            g = f
+            if ang:
+                # Turn the frame back by the angle, about where the head was.
+                g = f.rotate(-ang, resample=Image.NEAREST, center=(cx + last[0], cy + last[1]))
+            g = np.pad(_grey(g), pad)
+            for dy in range(last[1] - reach, last[1] + reach + 1):
+                for dx in range(last[0] - reach, last[0] + reach + 1):
+                    yy, xx = y0 + dy + pad, x0 + dx + pad
+                    if yy < 0 or xx < 0:
+                        continue
+                    cut = g[yy:yy + (y1 - y0):2, xx:xx + (x1 - x0):2]
+                    if cut.shape != ref.shape:
+                        continue
+                    # A small pull towards staying put settles ties.
+                    d = np.abs(cut - ref).mean() + 0.02 * (abs(dx - last[0]) + abs(dy - last[1])) + 0.05 * abs(ang - last[2])
+                    if best is None or d < best:
+                        best, at = d, (dx, dy, ang)
         last = at
         out.append(at)
     return out
