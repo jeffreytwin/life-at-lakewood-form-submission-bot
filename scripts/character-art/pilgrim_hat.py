@@ -57,8 +57,59 @@ BAND_LEFT, BAND_WIDTH, BAND_ROWS = 3, 22, 2
 # The hat sits tipped back a little: every TIP columns towards the back of
 # the head (the right), the whole hat drops a cell.
 TIP = 9
-# A stiff hat: nothing on it swings.
+# A stiff hat: nothing on it swings, and when the head under it tips over
+# the whole hat is turned as one piece.
 SWING = 0
+STIFF = True
+
+# --- the pumpkins that sit beside the character in November -----------------
+
+_PROP = {
+    "O": (240, 140, 40, 255),    # pumpkin
+    "o": (212, 108, 30, 255),    # its ribs
+    "D": (166, 78, 26, 255),     # in shadow
+    "L": (255, 180, 84, 255),    # lit
+    "G": (88, 120, 52, 255),     # stem
+    "g": (60, 84, 40, 255),
+}
+_BIG = [
+    ".....Gg....",
+    "....Gg.....",
+    ".LOOoOOoOO.",
+    "LOOoOOOoOOD",
+    "LOOoOOOoOOD",
+    "OOOoOOOoOOD",
+    "OOOoOOOoODD",
+    ".OOoOOOoOD.",
+    "..DDDDDDD..",
+]
+_SMALL = [
+    "...G...",
+    ".LOoOO.",
+    "LOoOoOD",
+    "OOoOoOD",
+    ".OoOoD.",
+    "..DDD..",
+]
+
+
+def _art(rows, colours, block):
+    im = Image.new("RGBA", (len(rows[0]) * block, len(rows) * block), (0, 0, 0, 0))
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                im.paste(colours[ch], (x * block, y * block, (x + 1) * block, (y + 1) * block))
+    return im
+
+
+def prop(block):
+    """Two pumpkins, a big one and a small one in front of it."""
+    big, small = _art(_BIG, _PROP, block), _art(_SMALL, _PROP, block)
+    im = Image.new("RGBA", (big.width + 3 * block, big.height), (0, 0, 0, 0))
+    im.alpha_composite(big, (3 * block, 0))
+    im.alpha_composite(small, (0, big.height - small.height))
+    return im
+
 
 
 def drop(col):
@@ -69,13 +120,14 @@ def drop(col):
     return max(0, col + 2) // TIP
 
 
-def draw(block, bounce=0):
-    """The hat, tipped back, with each cell `block` pixels across."""
-    rows = len(ROWS) + drop(WIDTH - 1)
+def draw(block, bounce=0, flat=False):
+    """The hat, with each cell `block` pixels across. Tipped back in steps,
+    or `flat` (level, no steps) for a caller that will turn it itself."""
+    rows = len(ROWS) + (0 if flat else drop(WIDTH - 1))
     im = Image.new("RGBA", (WIDTH * block, rows * block), (0, 0, 0, 0))
     for y, row in enumerate(ROWS):
         for x, ch in enumerate(row):
             if ch != ".":
-                px, py = x * block, (y + drop(x)) * block
+                px, py = x * block, (y + (0 if flat else drop(x))) * block
                 im.paste(COLOURS[ch], (px, py, px + block, py + block))
     return im

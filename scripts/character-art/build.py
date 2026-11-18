@@ -7,6 +7,7 @@ versions of the standing and box animations.
 Reads the everyday GIFs in public/ and writes public/characters/<id>/...
 Run it again after changing a hat, the box, or a standing animation."""
 import json
+import math
 import os
 import sys
 import numpy as np
@@ -30,7 +31,9 @@ PUBLIC = os.path.join(ROOT, "public")
 # than the band, left and right, hair is tucked under the hat. `stray` clears a tuft
 # of brown hair that hangs out under the back of the band. `front` is the run of frames
 # (first, last) in which something is held up beside the head (a pistol in
-# each hand) and has to stay in front of the hat. `head_w` sizes the box.
+# each hand) and has to stay in front of the hat. `prop_x` says where the
+# middle of the head would be for setting the pumpkins or presents down, for a
+# pose with no room for them in the usual place. `head_w` sizes the box.
 CHARACTERS = {
     "snake": dict(
         head_w=118,
@@ -118,6 +121,14 @@ def swing(heights, durations, block):
     return [v / reach * 1.5 * block for v in out]
 
 
+def _crowd(solid, reach=6):
+    """For every pixel, how many solid pixels lie within `reach` of it."""
+    total = np.pad(solid.astype(np.int32), reach + 1).cumsum(0).cumsum(1)
+    h, w = solid.shape
+    k = 2 * reach + 1
+    return (total[k:k + h, k:k + w] - total[:h, k:k + w] - total[k:k + h, :w] + total[:h, :w])
+
+
 # Spare canvas above and beside the frame while the hat is drawn; trimmed off
 # afterwards down to whatever the hat actually needed.
 ROOM = 320
@@ -165,10 +176,12 @@ def wear(frames, durations, c, hat):
     # Only hair-coloured pixels are taken from here, never the bandana.
     stray = Image.new("L", size, 0)
     if c.get("stray"):
-        for col in range(hat.BAND_WIDTH - 7, hat.BAND_WIDTH + 9):
+        # Only past the very back of the band: any nearer the face and it
+        # would take the sideburn with it.
+        for col in range(hat.BAND_WIDTH - 1, hat.BAND_WIDTH + 9):
             x = left + (hat.BAND_LEFT + col) * b
-            y = top + (rows - hat.BAND_ROWS + hat.drop(hat.BAND_LEFT + min(col, hat.BAND_WIDTH - 1))) * b
-            stray.paste(255, (x, y, x + b, y + (hat.BAND_ROWS + 5) * b))
+            y = top + (rows - hat.BAND_ROWS + hat.drop(hat.BAND_LEFT + hat.BAND_WIDTH - 1)) * b
+            stray.paste(255, (x, y, x + b, y + (hat.BAND_ROWS + 4) * b))
     # Around the hat: from a few cells left of the band to past the hat's
     # right-hand end, and from the top of the picture down to just short of
     # the band's lower edge. Hair that pokes out here is cleared, by colour,
@@ -185,20 +198,36 @@ def wear(frames, durations, c, hat):
     # way down. What stands outside it is beside the head, not part of it.
     strip = Image.new("L", size, 0)
     strip.paste(255, (left - b, 0, left + (hat.BAND_WIDTH + 1) * b, size[1]))
+    # A stiff hat on a head that tips over is drawn level and turned whole,
+    # which keeps its straight edges straight.
+    stiff = getattr(hat, "STIFF", False) and (c.get("turns") or c.get("eyes"))
+    tilt = math.degrees(math.atan(1 / hat.TIP))
+    tilt_cos, tilt_sin = math.cos(math.radians(tilt)), math.sin(math.radians(tilt))
     out = []
     for f, (dx, dy, ang), bounce in zip(frames, moves, bounces):
         big = Image.new("RGBA", size, (0, 0, 0, 0))
         big.paste(f, (SIDE, ROOM))
+        turn = ang + c.get("lean", 0)
+        at = (cx + dx, cy + dy)
         layer = Image.new("RGBA", size, (0, 0, 0, 0))
-        layer.paste(hat.draw(b, bounce), (left + dx, top + dy - hat.SWING * b))
+        if stiff:
+            # Level art, turned once by the head's tip and the hat's own tilt
+            # together, about the head. Two turns one after the other would
+            # roughen the edges twice; `shift` stands in for the first.
+            px, py = left + hat.BAND_LEFT * b + dx - at[0], top + rows * b + dy - at[1]
+            shift = (px * tilt_cos + py * tilt_sin - px, -px * tilt_sin + py * tilt_cos - py)
+            layer.paste(hat.draw(b, bounce, flat=True), (left + dx + round(shift[0]), top + dy + round(shift[1])))
+        else:
+            layer.paste(hat.draw(b, bounce), (left + dx, top + dy - hat.SWING * b))
         hide = Image.new("L", size, 0)
         hide.paste(tuck, (dx, dy))
         head = Image.new("L", size, 0)
         head.paste(strip, (dx, 0))
-        turn = ang + c.get("lean", 0)
-        at = (cx + dx, cy + dy)
-        if turn:
+        if stiff:
+            layer = layer.rotate(turn - tilt, resample=Image.NEAREST, center=at)
+        elif turn:
             layer = layer.rotate(turn, resample=Image.NEAREST, center=at)
+        if turn:
             hide = hide.rotate(turn, resample=Image.NEAREST, center=at)
             head = head.rotate(turn, resample=Image.NEAREST, center=at)
         bare = big.copy()
@@ -233,6 +262,15 @@ def wear(frames, durations, c, hat):
             dark = ImageChops.multiply(dark, alpha).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.MaxFilter(9))
             keep = ImageChops.lighter(dark, Image.eval(head, lambda v: 255 - v))
             big.paste(bare, (0, 0), ImageChops.multiply(keep, alpha))
+        # Clearing hair and laying a hat over the rest can leave a crumb or two
+        # cut off from everything else. A crumb has little around it now but
+        # sat in the thick of something before the hat went on; a spark, a
+        # wisp of smoke or the tip of a bandana was always thin, and stays.
+        now = _crowd(np.array(big.getchannel("A")) > 127)
+        was = _crowd(np.array(bare.getchannel("A")) > 127)
+        crumbs = (np.array(big.getchannel("A")) > 127) & (now < 30) & (was > 70)
+        if crumbs.any():
+            big.paste((0, 0, 0, 0), (0, 0), Image.fromarray((crumbs * 255).astype(np.uint8), "L"))
         out.append(big)
     boxes = [f.getchannel("A").getbbox() for f in out]
     need = min(bb[1] for bb in boxes)
@@ -241,7 +279,29 @@ def wear(frames, durations, c, hat):
     over = max(0, SIDE - min(bb[0] for bb in boxes), max(bb[2] for bb in boxes) - (SIDE + W))
     wider = min(SIDE, over + over % 2, max(0, (H - W) // 2))
     out = [f.crop((SIDE - wider, cut, SIDE + W + wider, H + ROOM)) for f in out]
-    return out, tall / H
+    return out, tall / H, wider
+
+
+def beside(frames, hat, block, head_x, height):
+    """The frames with the hat's holiday things (pumpkins, presents) set down
+    on the ground beside the character, on the side they face, and how far
+    the picture grew to the left to hold them. `height` is how tall the
+    everyday picture is: the page shows each animation as tall as its box
+    allows, so the picture may only widen while it stays narrower than that."""
+    art = hat.prop(block)
+    W, H = frames[0].size
+    ground = frames[0].getchannel("A").getbbox()[3]
+    right = round(head_x - (hat.BAND_WIDTH / 2 + 2) * block)
+    x = right - art.width
+    need = max(0, -x)
+    wider = min(need + need % 2, max(0, (height - W) // 2))
+    out = []
+    for f in frames:
+        big = Image.new("RGBA", (W + 2 * wider, H), (0, 0, 0, 0))
+        big.paste(f, (wider, 0))
+        big.alpha_composite(art, (max(0, x + wider), ground - art.height))
+        out.append(big)
+    return out, wider
 
 
 # --- the box ----------------------------------------------------------------
@@ -405,23 +465,29 @@ def main():
             out = os.path.join(PUBLIC, "characters", cid, *([name] if name else []))
             os.makedirs(out, exist_ok=True)
             stand, box_hat = plain, None
+            shift = 0
             if hat:
                 for pose in POSES:
                     frames, times = read_gif(os.path.join(PUBLIC, c[pose]["file"]))
-                    worn, grew = wear(frames, times, dict(c[pose], hair=HAIR[cid]), hat)
+                    high = frames[0].height
+                    worn, grew, moved = wear(frames, times, dict(c[pose], hair=HAIR[cid]), hat)
+                    if pose == "standing":
+                        stand, shift = worn, moved
+                    at = c[pose].get("prop_x", c[pose]["head_x"] + moved)
+                    worn, _ = beside(worn, hat, c[pose]["block"], at, high)
                     write_gif(os.path.join(out, f"{pose}.gif"), worn, times)
                     if grew > 1:
                         taller[f"/characters/{cid}/{name}/{pose}.gif"] = round(grew, 4)
-                    if pose == "standing":
-                        if worn[0].size != frames[0].size:
-                            raise SystemExit(f"{cid}: the standing hat does not fit the picture")
-                        stand = worn
                 box_hat = hat
-            box = dict(block=c["standing"]["block"], head_x=c["standing"]["head_x"], head_w=c["head_w"])
-            get_in, in_box, get_out = box_scenes(stand, box, box_hat, bare=plain[0])
-            write_gif(os.path.join(out, "get-in-box.gif"), get_in, 100, loop=False)
-            write_gif(os.path.join(out, "in-box.gif"), [f for f, _ in in_box], [t for _, t in in_box])
-            write_gif(os.path.join(out, "getting-out-of-box.gif"), get_out, 100, loop=False)
+            b = c["standing"]["block"]
+            box = dict(block=b, head_x=c["standing"]["head_x"] + shift, head_w=c["head_w"])
+            scenes = list(box_scenes(stand, box, box_hat, bare=plain[0]))
+            scenes[1], waits = [f for f, _ in scenes[1]], [t for _, t in scenes[1]]
+            if hat:
+                scenes = [beside(sc, hat, b, box["head_x"], plain[0].height)[0] for sc in scenes]
+            write_gif(os.path.join(out, "get-in-box.gif"), scenes[0], 100, loop=False)
+            write_gif(os.path.join(out, "in-box.gif"), scenes[1], waits)
+            write_gif(os.path.join(out, "getting-out-of-box.gif"), scenes[2], 100, loop=False)
             print(cid, name or "plain", "done", flush=True)
     with open(os.path.join(ROOT, "src", "lib", "bot-characters", "taller.json"), "w") as f:
         json.dump(taller, f, indent=2, sort_keys=True)

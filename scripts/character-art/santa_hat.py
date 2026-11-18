@@ -67,3 +67,53 @@ def draw(block, bounce=0):
                 px, py = x * block, (y + drop(x) + SWING) * block + bend
                 im.paste(COLOURS[row[x]], (px, py, px + block, py + block))
     return im
+
+
+# --- the presents that sit beside the character in December -----------------
+
+_PROP = {
+    "G": (46, 140, 84, 255),     # green paper
+    "g": (30, 100, 62, 255),
+    "Y": (244, 200, 72, 255),    # gold ribbon
+    "y": (200, 150, 44, 255),
+    "B": (60, 110, 200, 255),    # blue paper
+    "b": (40, 76, 150, 255),
+    "W": (248, 246, 240, 255),   # white ribbon
+    "w": (198, 204, 216, 255),
+}
+_BIG = [
+    "..YY.YY..",
+    "...YYY...",
+    "GGGGYGGGg",
+    "GGGGYGGGg",
+    "YYYYYYYYy",
+    "GGGGYGGGg",
+    "GGGGYGGGg",
+    "ggggyggg.",
+]
+_SMALL = [
+    ".WW.WW",
+    "..WW..",
+    "BBWWBb",
+    "WWWWWw",
+    "BBWWBb",
+    "bbwwb.",
+]
+
+
+def _art(rows, colours, block):
+    im = Image.new("RGBA", (len(rows[0]) * block, len(rows) * block), (0, 0, 0, 0))
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                im.paste(colours[ch], (x * block, y * block, (x + 1) * block, (y + 1) * block))
+    return im
+
+
+def prop(block):
+    """Two wrapped presents, a big one and a small one in front of it."""
+    big, small = _art(_BIG, _PROP, block), _art(_SMALL, _PROP, block)
+    im = Image.new("RGBA", (big.width + 4 * block, big.height), (0, 0, 0, 0))
+    im.alpha_composite(big, (4 * block, 0))
+    im.alpha_composite(small, (0, big.height - small.height))
+    return im

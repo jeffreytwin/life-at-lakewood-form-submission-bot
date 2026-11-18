@@ -135,12 +135,14 @@ def track_eyes(frames):
             else:
                 t = (i - before) / (after - before)
                 found[i] = tuple(u + (v - u) * t for u, v in zip(found[before], found[after]))
-    # Take the shake out: each frame is averaged with its neighbours.
+    # Take the shake out of the angle: each frame takes the middle value of
+    # itself and its neighbours. The position is left exactly as found, so the
+    # hat moves on the same frame the head does, however fast it goes.
     n = len(found)
     smooth = []
     for i in range(n):
-        near = [found[k] for k in (i - 1, i, i + 1) if 0 <= k < n]
-        smooth.append(tuple(sum(v[j] for v in near) / len(near) for j in range(3)))
+        near = sorted(found[k][2] for k in (i - 1, i, i + 1) if 0 <= k < n)
+        smooth.append((found[i][0], found[i][1], near[len(near) // 2]))
     x0, y0, a0 = smooth[0]
     return [(round(x - x0), round(y - y0), a - a0) for x, y, a in smooth], (x0, y0)
 
