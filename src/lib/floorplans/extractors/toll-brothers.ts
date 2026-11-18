@@ -154,10 +154,15 @@ function normalizeModel(m: TollModel): NormalizedPlan {
   };
 }
 
-function normalizeQmi(q: TollModel): NormalizedPlan {
+/**
+ * A home on offer, named by its street. One with no address yet is none to
+ * show: it would go to the site under its plan's name and Toll's own number
+ * for it, as Lennar's did (Jeff, 2026-11-18).
+ */
+function normalizeQmi(q: TollModel): NormalizedPlan | null {
   const base = normalizeModel(q);
-  const address = (q.address ?? q.street ?? "").trim();
-  const name = address || `${q.modelName ?? q.name ?? "Home"} (Quick Move-In ${q.commPlanID ?? ""})`.trim();
+  const name = (q.address ?? q.street ?? "").trim();
+  if (!name) return null;
   return {
     ...base,
     planKey: normKey(name),
@@ -191,7 +196,7 @@ function collectPlans(container: TollHomesContainer | null | undefined): Normali
       if (plan.planKey && !m.isQMI) out.push(plan);
       for (const q of m.qmis ?? []) {
         const qmi = normalizeQmi(q);
-        if (qmi.planKey) out.push(qmi);
+        if (qmi?.planKey) out.push(qmi);
       }
     }
   }

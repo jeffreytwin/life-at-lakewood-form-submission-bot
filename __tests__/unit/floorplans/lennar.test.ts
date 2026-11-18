@@ -93,6 +93,18 @@ describe("Lennar: what a community builds", () => {
     expect(home.raw?.relatedPlan).toBe("Dover");
   });
 
+  it("leaves out a homesite Lennar has given no address (Calusa Country Club, 2026-11-18)", () => {
+    const apollo = {
+      "PlanType:p_61238": dover,
+      "CommunityType:c_7239": { name: "The Estates", types: ["SINGLE_FAMILY"] },
+      "HomesiteType:h_794075": { id: "h_794075", plan: { __ref: "PlanType:p_61238" }, address: null, status: "COMING_SOON", price: 670999, beds: 4, baths: 2, url: "/x/dover/23415600166" },
+      "HomesiteType:h_1": { id: "h_1", plan: { __ref: "PlanType:p_61238" }, address: "12715 Teal Topaz Lane", price: 304400, beds: 3, baths: 2, url: "/x/dover/15198575097" },
+    };
+    const plans = plansFromPage(apollo, "/new-homes/florida/tampa-manatee/parrish/prosperity-lakes");
+    expect(plans.filter((p) => p.quickMoveIn).map((p) => p.name)).toEqual(["12715 Teal Topaz Lane"]);
+    expect(plans.some((p) => /Quick Move-In/.test(p.name))).toBe(false);
+  });
+
   it("takes no front for a home whose picture is Lennar's Coming Soon stand-in (Jeff, 2026-09-24)", () => {
     const apollo = {
       "PlanType:p_61238": dover,

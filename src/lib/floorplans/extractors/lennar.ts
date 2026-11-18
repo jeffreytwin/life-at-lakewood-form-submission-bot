@@ -162,8 +162,13 @@ export function plansFromPage(apollo: Apollo, pagePath: string): NormalizedPlan[
     const planRef = (e.plan as { __ref?: string } | null)?.__ref;
     const planName = planRef ? planNames.get(planRef) : null;
     if (!planName) continue; // only homesites for this community's plans
-    const address = String(e.address ?? e.streetAddress ?? "").trim();
-    const name = address || `${planName} (Quick Move-In ${String(e.id ?? "")})`;
+    // A homesite Lennar has not given an address is not yet a home to show:
+    // Calusa Country Club's four "COMING_SOON" lots carried none, their
+    // plan's starting price in place of their own, and went to the site as
+    // "The Princeton (Quick Move-In h_794075)" (Jeff, 2026-11-18). It is
+    // read once Lennar gives it its street.
+    const name = String(e.address ?? e.streetAddress ?? "").trim();
+    if (!name) continue;
     const price = typeof e.price === "number" && e.price > 0 ? e.price
       : typeof e.wasPrice === "number" && e.wasPrice > 0 ? e.wasPrice : null;
     // A home with no photo of its own is given Lennar's "Coming Soon"
