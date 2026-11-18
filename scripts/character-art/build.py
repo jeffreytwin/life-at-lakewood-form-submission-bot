@@ -14,6 +14,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 sys.path.insert(0, os.path.dirname(__file__))
 from lib import read_gif, write_gif, track, track_eyes, from_rows  # noqa: E402
 import santa_hat as santa  # noqa: E402
+import pilgrim_hat as pilgrim  # noqa: E402
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PUBLIC = os.path.join(ROOT, "public")
@@ -68,7 +69,7 @@ CHARACTERS = {
     ),
 }
 
-HATS = {"santa": santa}
+HATS = {"santa": santa, "pilgrim": pilgrim}
 
 SHADOW = (86, 86, 98, 255)
 
@@ -97,6 +98,7 @@ def swing(heights, durations, block):
 # afterwards down to whatever the hat actually needed.
 ROOM = 320
 SIDE = 160
+FOLLOWED = {}
 
 
 def wear(frames, durations, c, hat):
@@ -114,13 +116,16 @@ def wear(frames, durations, c, hat):
     W, H = frames[0].size
     left = round(c["head_x"] - (hat.BAND_LEFT + hat.BAND_WIDTH / 2) * b) + SIDE
     top = c["band_bottom"] - rows * b + ROOM
-    if c.get("eyes"):
-        moves, (cx, cy) = track_eyes(frames)
-        cx, cy = cx + SIDE, cy + ROOM
-    else:
-        fx0, fy0, fx1, fy1 = c["face"]
-        cx, cy = (fx0 + fx1) / 2 + SIDE, (fy0 + fy1) / 2 + ROOM
-        moves = track(frames, c["face"], turns=c.get("turns", False))
+    # Where the head goes is the same whatever hat is on it: follow it once.
+    if c["file"] not in FOLLOWED:
+        if c.get("eyes"):
+            FOLLOWED[c["file"]] = track_eyes(frames)
+        else:
+            fx0, fy0, fx1, fy1 = c["face"]
+            FOLLOWED[c["file"]] = (track(frames, c["face"], turns=c.get("turns", False)),
+                                   ((fx0 + fx1) / 2, (fy0 + fy1) / 2))
+    moves, (cx, cy) = FOLLOWED[c["file"]]
+    cx, cy = cx + SIDE, cy + ROOM
     bounces = swing([dy for _, dy, _ in moves], durations, b)
     size = (W + 2 * SIDE, H + ROOM)
     # Under the hat: the stretch above the band, as wide as the band (and a
@@ -130,7 +135,7 @@ def wear(frames, durations, c, hat):
     tuck = Image.new("L", size, 0)
     for col in range(-more_left, hat.BAND_WIDTH + more_right):
         x = left + (hat.BAND_LEFT + col) * b
-        y = top + (rows - hat.BAND_ROWS + 1 + hat.drop(min(col, hat.BAND_WIDTH - 1))) * b
+        y = top + (rows - hat.BAND_ROWS + 1 + hat.drop(hat.BAND_LEFT + min(col, hat.BAND_WIDTH - 1))) * b
         tuck.paste(255, (x, top - b, x + b, y))
     # Just under the back of the band, where a tuft of hair can hang out.
     # Only hair-coloured pixels are taken from here, never the bandana.
@@ -138,7 +143,7 @@ def wear(frames, durations, c, hat):
     if c.get("stray"):
         for col in range(hat.BAND_WIDTH - 7, hat.BAND_WIDTH + 9):
             x = left + (hat.BAND_LEFT + col) * b
-            y = top + (rows - hat.BAND_ROWS + hat.drop(min(col, hat.BAND_WIDTH - 1))) * b
+            y = top + (rows - hat.BAND_ROWS + hat.drop(hat.BAND_LEFT + min(col, hat.BAND_WIDTH - 1))) * b
             stray.paste(255, (x, y, x + b, y + (hat.BAND_ROWS + 5) * b))
     # The head and everything under it: a strip as wide as the band, all the
     # way down. What stands outside it is beside the head, not part of it.
@@ -149,7 +154,7 @@ def wear(frames, durations, c, hat):
         big = Image.new("RGBA", size, (0, 0, 0, 0))
         big.paste(f, (SIDE, ROOM))
         layer = Image.new("RGBA", size, (0, 0, 0, 0))
-        layer.paste(hat.santa_hat(b, bounce), (left + dx, top + dy - hat.SWING * b))
+        layer.paste(hat.draw(b, bounce), (left + dx, top + dy - hat.SWING * b))
         hide = Image.new("L", size, 0)
         hide.paste(tuck, (dx, dy))
         head = Image.new("L", size, 0)
@@ -259,7 +264,7 @@ def box_scenes(standing, c, hat=None, bare=None):
     bh = round(tall * 0.62 / b)
     left = round(c["head_x"] - bw * b / 2)
     small = max(3, round(b * 0.6))
-    hat_art = hat.santa_hat(small) if hat else None
+    hat_art = hat.draw(small) if hat else None
 
     def shadow(f):
         d = ImageDraw.Draw(f)

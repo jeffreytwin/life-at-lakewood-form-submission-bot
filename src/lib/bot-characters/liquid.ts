@@ -100,6 +100,7 @@ export const liquid: BotCharacter = {
     sneaking: "/Liquid Snake - Crawling.gif",
   },
   holidayGifs: {
+    pilgrim: holidayGifs("liquid", "pilgrim"),
     santa: holidayGifs("liquid", "santa"),
   },
   // Tune size and celebration duration to taste once we see it in motion.

@@ -43,13 +43,13 @@ describe("dressing a character", () => {
 
   it("leaves a character alone for a holiday with no artwork yet", () => {
     const plain = dressFor(getCharacter("snake"), null);
-    expect(dressFor(plain, "pilgrim").gifs).toEqual(plain.gifs);
+    expect(dressFor(plain, "stpatrick").gifs).toEqual(plain.gifs);
   });
 
   it("only names animations that exist", () => {
     for (const id of ALL_CHARACTER_IDS) {
       const plain = dressFor(getCharacter(id), null);
-      for (const c of [plain, dressFor(plain, "santa")]) {
+      for (const c of [plain, dressFor(plain, "santa"), dressFor(plain, "pilgrim")]) {
         for (const src of Object.values(c.gifs)) {
           expect(existsSync(join(process.cwd(), "public", src)), src).toBe(true);
         }

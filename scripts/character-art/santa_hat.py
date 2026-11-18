@@ -46,7 +46,7 @@ def drop(col):
     return max(0, col) // TIP
 
 
-def santa_hat(block, bounce=0):
+def draw(block, bounce=0):
     """The hat, tipped back, with each cell `block` pixels across. `bounce` is
     how far the bobble has swung down (up, if negative) in pixels; the tail
     bends with it, most at the bobble and not at all where it leaves the crown.

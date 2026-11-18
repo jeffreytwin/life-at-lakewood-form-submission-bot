@@ -103,6 +103,7 @@ export const bigboss: BotCharacter = {
     sneaking: "/Big Boss - Crawling.gif",
   },
   holidayGifs: {
+    pilgrim: holidayGifs("bigboss", "pilgrim"),
     santa: holidayGifs("bigboss", "santa"),
   },
   // Tune size and celebration duration to taste once we see it in motion.

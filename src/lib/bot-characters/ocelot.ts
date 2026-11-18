@@ -101,6 +101,7 @@ export const ocelot: BotCharacter = {
     sneaking: "/Revolver Ocelot - Crawling.gif",
   },
   holidayGifs: {
+    pilgrim: holidayGifs("ocelot", "pilgrim"),
     santa: holidayGifs("ocelot", "santa"),
   },
   // Default 1.0 keeps Ocelot at the same render size as Snake. Bump up

@@ -102,6 +102,7 @@ export const snake: BotCharacter = {
     sneaking: "/sneaking.gif",
   },
   holidayGifs: {
+    pilgrim: holidayGifs("snake", "pilgrim"),
     santa: holidayGifs("snake", "santa"),
   },
   // Snake's sprites are taller than wide and the character sits in the
