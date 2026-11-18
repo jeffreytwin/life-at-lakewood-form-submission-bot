@@ -66,30 +66,46 @@ STIFF = True
 
 _PROP = {
     "O": (240, 140, 40, 255),    # pumpkin
-    "o": (212, 108, 30, 255),    # its ribs
-    "D": (166, 78, 26, 255),     # in shadow
-    "L": (255, 180, 84, 255),    # lit
+    "o": (206, 102, 28, 255),    # its ribs
+    "D": (150, 68, 24, 255),     # in shadow
+    "L": (255, 184, 88, 255),    # lit
     "G": (88, 120, 52, 255),     # stem
     "g": (60, 84, 40, 255),
 }
+# The small pumpkin is a paler, yellower one with a dark edge where it stands
+# against the big one, so it reads as a second pumpkin and not as a bulge on
+# the first.
+_PALE = {
+    "O": (250, 200, 84, 255),
+    "o": (224, 160, 52, 255),
+    "D": (120, 62, 24, 255),
+    "L": (255, 232, 150, 255),
+    "G": (88, 120, 52, 255),
+    "g": (60, 84, 40, 255),
+}
 _BIG = [
-    ".....Gg....",
-    "....Gg.....",
-    ".LOOoOOoOO.",
-    "LOOoOOOoOOD",
-    "LOOoOOOoOOD",
-    "OOOoOOOoOOD",
-    "OOOoOOOoODD",
-    ".OOoOOOoOD.",
-    "..DDDDDDD..",
+    "......Gg.....",
+    ".....Gg......",
+    ".....Gg......",
+    "..LOOoOOoOO..",
+    ".LOOoOOOOoOO.",
+    "LOOOoOOOOoOOD",
+    "LOOOoOOOOoOOD",
+    "OOOOoOOOOoOOD",
+    "OOOOoOOOOoOOD",
+    ".OOOoOOOOoOD.",
+    "..DDDDDDDDD..",
 ]
 _SMALL = [
-    "...G...",
-    ".LOoOO.",
-    "LOoOoOD",
-    "OOoOoOD",
-    ".OoOoD.",
-    "..DDD..",
+    "....Gg....",
+    "...Gg.....",
+    "..LOOoOO..",
+    ".LOOoOOoOD",
+    "LOOOoOOoOD",
+    "LOOOoOOoOD",
+    "OOOOoOOoOD",
+    ".OOOoOOoD.",
+    "..DDDDDD..",
 ]
 
 
@@ -103,13 +119,14 @@ def _art(rows, colours, block):
 
 
 def prop(block):
-    """Two pumpkins, a big one and a small one in front of it."""
-    big, small = _art(_BIG, _PROP, block), _art(_SMALL, _PROP, block)
-    im = Image.new("RGBA", (big.width + 3 * block, big.height), (0, 0, 0, 0))
-    im.alpha_composite(big, (3 * block, 0))
+    """Two pumpkins: a big orange one, and a small pale one set down in front
+    of it and well to the side, so that both can be seen for what they are."""
+    big, small = _art(_BIG, _PROP, block), _art(_SMALL, _PALE, block)
+    aside = 7 * block
+    im = Image.new("RGBA", (big.width + aside, big.height), (0, 0, 0, 0))
+    im.alpha_composite(big, (aside, 0))
     im.alpha_composite(small, (0, big.height - small.height))
     return im
-
 
 
 def drop(col):
