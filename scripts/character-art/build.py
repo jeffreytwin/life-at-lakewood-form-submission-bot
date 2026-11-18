@@ -25,7 +25,8 @@ PUBLIC = os.path.join(ROOT, "public")
 # animation where the head tips over as well as moving; `lean` is a head that
 # starts out tipped, in degrees anticlockwise. `eyes` follows the head by its
 # blue eyes instead of by the patch of face. `tuck` is how many cells further
-# than the band, left and right, hair is tucked under the hat. `front` is the run of frames
+# than the band, left and right, hair is tucked under the hat. `stray` clears a tuft
+# of brown hair that hangs out under the back of the band. `front` is the run of frames
 # (first, last) in which something is held up beside the head (a pistol in
 # each hand) and has to stay in front of the hat. `head_w` sizes the box.
 CHARACTERS = {
@@ -59,11 +60,11 @@ CHARACTERS = {
     "bigboss": dict(
         head_w=165,
         standing=dict(file="Big Boss - Standing V3.gif", block=8, face=(85, 175, 235, 255),
-                      band_bottom=144, head_x=158, tuck=(2, 9)),
+                      band_bottom=144, head_x=158, tuck=(2, 9), stray=True),
         celebrating=dict(file="Big Boss - Celebration.gif", block=8, face=(85, 170, 235, 250),
-                         band_bottom=140, head_x=160, turns=True, tuck=(2, 9)),
+                         band_bottom=140, head_x=160, turns=True, tuck=(2, 9), stray=True),
         sneaking=dict(file="Big Boss - Crawling.gif", block=8, face=(60, 205, 225, 290),
-                      band_bottom=207, head_x=139, tuck=(2, 9)),
+                      band_bottom=207, head_x=139, tuck=(2, 9), stray=True),
     ),
 }
 
@@ -131,6 +132,14 @@ def wear(frames, durations, c, hat):
         x = left + (hat.BAND_LEFT + col) * b
         y = top + (rows - hat.BAND_ROWS + 1 + hat.drop(min(col, hat.BAND_WIDTH - 1))) * b
         tuck.paste(255, (x, top - b, x + b, y))
+    # Just under the back of the band, where a tuft of hair can hang out.
+    # Only hair-coloured pixels are taken from here, never the bandana.
+    stray = Image.new("L", size, 0)
+    if c.get("stray"):
+        for col in range(hat.BAND_WIDTH - 7, hat.BAND_WIDTH + 9):
+            x = left + (hat.BAND_LEFT + col) * b
+            y = top + (rows - hat.BAND_ROWS + hat.drop(min(col, hat.BAND_WIDTH - 1))) * b
+            stray.paste(255, (x, y, x + b, y + (hat.BAND_ROWS + 5) * b))
     # The head and everything under it: a strip as wide as the band, all the
     # way down. What stands outside it is beside the head, not part of it.
     strip = Image.new("L", size, 0)
@@ -153,6 +162,16 @@ def wear(frames, durations, c, hat):
             head = head.rotate(turn, resample=Image.NEAREST, center=at)
         bare = big.copy()
         big.paste((0, 0, 0, 0), (0, 0), hide)
+        if c.get("stray"):
+            zone = Image.new("L", size, 0)
+            zone.paste(stray, (dx, dy))
+            if turn:
+                zone = zone.rotate(turn, resample=Image.NEAREST, center=at)
+            r, g, bl, _ = big.split()
+            # Brown: clearly more red than blue, and not bright (not skin).
+            brown = ImageChops.subtract(r, bl).point(lambda v: 255 if v > 20 else 0)
+            dim = r.point(lambda v: 255 if v < 150 else 0)
+            big.paste((0, 0, 0, 0), (0, 0), ImageChops.multiply(zone, ImageChops.multiply(brown, dim)))
         big.alpha_composite(layer)
         first, last = c.get("front", (1, 0))
         if first <= len(out) <= last:
