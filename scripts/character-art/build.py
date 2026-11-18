@@ -23,13 +23,13 @@ PUBLIC = os.path.join(ROOT, "public")
 # its middle).
 CHARACTERS = {
     "snake": dict(standing="standing-there.gif", block=6, face=(40, 110, 150, 185),
-                  band_bottom=108, head_x=97, head_w=118),
-    "ocelot": dict(standing="Revolver Ocelot - Standing V2.gif", block=9, face=(110, 160, 240, 250),
-                   band_bottom=154, head_x=182, head_w=165),
-    "liquid": dict(standing="Liquid Snake - Standing.gif", block=9, face=(105, 160, 235, 250),
-                   band_bottom=156, head_x=174, head_w=160),
-    "bigboss": dict(standing="Big Boss - Standing V3.gif", block=9, face=(85, 175, 235, 255),
-                    band_bottom=138, head_x=158, head_w=165),
+                  band_bottom=112, head_x=97, head_w=118),
+    "ocelot": dict(standing="Revolver Ocelot - Standing V2.gif", block=8, face=(110, 160, 240, 250),
+                   band_bottom=160, head_x=182, head_w=165),
+    "liquid": dict(standing="Liquid Snake - Standing.gif", block=8, face=(105, 160, 235, 250),
+                   band_bottom=162, head_x=174, head_w=160),
+    "bigboss": dict(standing="Big Boss - Standing V3.gif", block=8, face=(85, 175, 235, 255),
+                    band_bottom=144, head_x=158, head_w=165),
 }
 
 HATS = {"santa": santa}
@@ -44,15 +44,20 @@ def wear(frames, c, hat):
     stood above the band is tucked away under it."""
     b = c["block"]
     art = hat.santa_hat(b)
-    band_h = hat.BAND_ROWS * b
-    left = c["head_x"] - (hat.BAND_LEFT + hat.BAND_WIDTH / 2) * b
-    top = c["band_bottom"] - art.height
+    rows = len(hat.ROWS)
+    left = round(c["head_x"] - (hat.BAND_LEFT + hat.BAND_WIDTH / 2) * b)
+    # `band_bottom` is where the band's lower edge meets the forehead, at the
+    # front of the hat; the back of it sits lower, the hat being tipped back.
+    top = c["band_bottom"] - rows * b
     out = []
     for f, (dx, dy) in zip(frames, track(frames, c["face"])):
         f = f.copy()
-        tuck = c["band_bottom"] + dy - band_h + b
-        f.paste((0, 0, 0, 0), (0, 0, f.width, max(0, tuck)))
-        f.alpha_composite(art, (round(left + dx), round(top + dy)))
+        for x in range(f.width):
+            col = min(hat.BAND_WIDTH - 1, max(0, (x - left - dx) // b - hat.BAND_LEFT))
+            tuck = top + dy + (rows - hat.BAND_ROWS + 1 + hat.drop(col)) * b
+            if tuck > 0:
+                f.paste((0, 0, 0, 0), (x, 0, x + 1, tuck))
+        f.alpha_composite(art, (left + dx, top + dy))
         out.append(f)
     return out
 
@@ -156,7 +161,7 @@ def box_scenes(standing, c, hat=None, bare=None):
             top = round(ground + b - art.height - lift)
             f.alpha_composite(art, (left, top)) if top + art.height > 0 else None
             if hat_art is not None:
-                hx, hy = left + b, top - hat_art.height + small
+                hx, hy = left + b, top - len(hat.ROWS) * small + small
                 if hy + hat_art.height > 0:
                     f.alpha_composite(hat_art, (hx, hy))
         if bang is not None:

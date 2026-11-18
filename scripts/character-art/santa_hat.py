@@ -29,8 +29,23 @@ ROWS = [
     ".SSSSSSSSSSSSSSSSSS.......",
 ]
 BAND_LEFT, BAND_WIDTH, BAND_ROWS = 0, 20, 4
+# The hat sits tipped back: every TIP columns towards the back of the head
+# (the right), the whole hat drops a cell.
+TIP = 6
+
+
+def drop(col):
+    """How many cells lower the hat sits at this column than at its front."""
+    return max(0, col) // TIP
 
 
 def santa_hat(block):
-    """The hat with each cell `block` pixels across."""
-    return from_rows(ROWS, COLOURS, block)
+    """The hat, tipped back, with each cell `block` pixels across."""
+    width = len(ROWS[0])
+    extra = drop(width - 1)
+    grid = [["."] * width for _ in range(len(ROWS) + extra)]
+    for y, row in enumerate(ROWS):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                grid[y + drop(x)][x] = ch
+    return from_rows(["".join(r) for r in grid], COLOURS, block)
