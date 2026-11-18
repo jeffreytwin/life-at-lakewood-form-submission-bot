@@ -62,8 +62,11 @@ SWING = 0
 
 
 def drop(col):
-    """How many cells lower the hat sits at this column than at its front."""
-    return max(0, col) // TIP
+    """How many cells lower the hat sits at this column than at its front.
+    The steps are placed to fall clear of the buckle and well in from the
+    corner of the flat top; a step a single cell in from the corner reads as
+    a pixel sticking up."""
+    return max(0, col + 2) // TIP
 
 
 def draw(block, bounce=0):

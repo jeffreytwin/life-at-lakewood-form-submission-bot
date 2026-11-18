@@ -9,6 +9,7 @@ Run it again after changing a hat, the box, or a standing animation."""
 import json
 import os
 import sys
+import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -68,6 +69,29 @@ CHARACTERS = {
                       band_bottom=207, head_x=139, tuck=(2, 9), stray=True),
     ),
 }
+
+def _brown(r, g, b):
+    # Down to the near-black outline the hair is drawn with, which is still
+    # a little redder than it is blue; a navy or grey bandana never is.
+    brown = (r > 28) & (r < 135) & (r - b > 6) & (r >= g)
+    # And the outline itself where it is all but black, so long as it is not
+    # bluish, which the darkest folds of a bandana are.
+    outline = (np.maximum(np.maximum(r, g), b) < 46) & (r >= b - 2)
+    return brown | outline
+
+
+def _grey(r, g, b):
+    return (r > 125) & (r < 215) & (abs(r - b) < 40)
+
+
+def _blond(r, g, b):
+    # Skin is close to blond, but redder: more red over green than hair has.
+    return (r > 180) & (r - g < 40) & (g - b > 40)
+
+
+# What colour each character's hair is, so that stray locks of it can be
+# told from a bandana, a pistol or a hand.
+HAIR = {"snake": _brown, "bigboss": _brown, "ocelot": _grey, "liquid": _blond}
 
 HATS = {"santa": santa, "pilgrim": pilgrim}
 
@@ -145,6 +169,18 @@ def wear(frames, durations, c, hat):
             x = left + (hat.BAND_LEFT + col) * b
             y = top + (rows - hat.BAND_ROWS + hat.drop(hat.BAND_LEFT + min(col, hat.BAND_WIDTH - 1))) * b
             stray.paste(255, (x, y, x + b, y + (hat.BAND_ROWS + 5) * b))
+    # Around the hat: from a few cells left of the band to past the hat's
+    # right-hand end, and from the top of the picture down to just short of
+    # the band's lower edge. Hair that pokes out here is cleared, by colour,
+    # so that whatever else is here (a bandana, a hand) is left alone.
+    around = Image.new("L", size, 0)
+    for col in range(hat.BAND_LEFT - 4, max(hat.WIDTH, hat.BAND_LEFT + hat.BAND_WIDTH) + 2):
+        x = left + col * b
+        within = min(max(col, hat.BAND_LEFT), hat.BAND_LEFT + hat.BAND_WIDTH - 1)
+        # In front of the band the hair is cleared a cell lower still: a
+        # lock hanging out under the front of a hat reads as a stray pixel.
+        y = top + (rows + (1 if col < hat.BAND_LEFT else -1) + hat.drop(within)) * b
+        around.paste(255, (x, -ROOM, x + b, y))
     # The head and everything under it: a strip as wide as the band, all the
     # way down. What stands outside it is beside the head, not part of it.
     strip = Image.new("L", size, 0)
@@ -160,13 +196,20 @@ def wear(frames, durations, c, hat):
         head = Image.new("L", size, 0)
         head.paste(strip, (dx, 0))
         turn = ang + c.get("lean", 0)
+        at = (cx + dx, cy + dy)
         if turn:
-            at = (cx + dx, cy + dy)
             layer = layer.rotate(turn, resample=Image.NEAREST, center=at)
             hide = hide.rotate(turn, resample=Image.NEAREST, center=at)
             head = head.rotate(turn, resample=Image.NEAREST, center=at)
         bare = big.copy()
         big.paste((0, 0, 0, 0), (0, 0), hide)
+        zone = Image.new("L", size, 0)
+        zone.paste(around, (dx, dy))
+        if turn:
+            zone = zone.rotate(turn, resample=Image.NEAREST, center=at)
+        px = np.array(big).astype(np.int32)
+        locks = c["hair"](px[..., 0], px[..., 1], px[..., 2]) & (np.array(zone) > 0)
+        big.paste((0, 0, 0, 0), (0, 0), Image.fromarray((locks * 255).astype(np.uint8), "L"))
         if c.get("stray"):
             zone = Image.new("L", size, 0)
             zone.paste(stray, (dx, dy))
@@ -365,7 +408,7 @@ def main():
             if hat:
                 for pose in POSES:
                     frames, times = read_gif(os.path.join(PUBLIC, c[pose]["file"]))
-                    worn, grew = wear(frames, times, c[pose], hat)
+                    worn, grew = wear(frames, times, dict(c[pose], hair=HAIR[cid]), hat)
                     write_gif(os.path.join(out, f"{pose}.gif"), worn, times)
                     if grew > 1:
                         taller[f"/characters/{cid}/{name}/{pose}.gif"] = round(grew, 4)
