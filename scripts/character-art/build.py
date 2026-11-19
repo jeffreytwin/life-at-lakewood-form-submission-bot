@@ -283,12 +283,29 @@ def wear(frames, durations, c, hat):
     return out, tall / H, wider
 
 
-def beside(frames, hat, block, head_x, height):
-    """The frames with the hat's holiday things (pumpkins, presents) set down
-    on the ground beside the character, on the side they face, and how far
-    the picture grew to the left to hold them. `height` is how tall the
-    everyday picture is: the page shows each animation as tall as its box
-    allows, so the picture may only widen while it stays narrower than that."""
+def spread(frames, times, least=900, step=None):
+    """The same animation with more frames to it, for things beside the
+    character that move on their own (clovers in the wind, a fizzing fuse)
+    and need frames to move in. A loop shorter than `least` ms is played
+    through more than once; with `step`, a frame held longer than that is
+    split into several shorter ones. Returns (frames, times)."""
+    times = [times] * len(frames) if isinstance(times, int) else list(times)
+    if step:
+        split = [(f, t / n) for f, t in zip(frames, times) for n in [max(1, round(t / step))] for _ in range(n)]
+        frames, times = [f for f, _ in split], [round(t / 10) * 10 for _, t in split]
+    again = max(1, -(-least // sum(times)))
+    return frames * again, times * again
+
+
+def beside(frames, hat, block, head_x, height, times=None):
+    """The frames with the hat's holiday things (pumpkins, presents, clovers,
+    fireworks) set down on the ground beside the character, on the side they
+    face, and how far the picture grew to the left to hold them. `height` is
+    how tall the everyday picture is: the page shows each animation as tall
+    as its box allows, so the picture may only widen while it stays narrower
+    than that. Things that move are drawn afresh for every frame, by how far
+    through the animation (`times`, each frame's ms) that frame comes."""
+    moving = getattr(hat, "PROP_MOVES", False)
     art = hat.prop(block)
     W, H = frames[0].size
     ground = frames[0].getchannel("A").getbbox()[3]
@@ -296,8 +313,14 @@ def beside(frames, hat, block, head_x, height):
     x = right - art.width
     need = max(0, -x)
     wider = min(need + need % 2, max(0, (height - W) // 2))
+    times = [times] * len(frames) if isinstance(times, int) else times
+    whole = sum(times) if moving else 0
+    at = 0
     out = []
-    for f in frames:
+    for i, f in enumerate(frames):
+        if moving:
+            art = hat.prop(block, at, whole)
+            at += times[i]
         big = Image.new("RGBA", (W + 2 * wider, H), (0, 0, 0, 0))
         big.paste(f, (wider, 0))
         big.alpha_composite(art, (max(0, x + wider), ground - art.height))
@@ -475,7 +498,9 @@ def main():
                     if pose == "standing":
                         stand, shift = worn, moved
                     at = c[pose].get("prop_x", c[pose]["head_x"] + moved)
-                    worn, _ = beside(worn, hat, c[pose]["block"], at, high)
+                    if getattr(hat, "PROP_MOVES", False):
+                        worn, times = spread(worn, times)
+                    worn, _ = beside(worn, hat, c[pose]["block"], at, high, times)
                     write_gif(os.path.join(out, f"{pose}.gif"), worn, times)
                     if grew > 1:
                         taller[f"/characters/{cid}/{name}/{pose}.gif"] = round(grew, 4)
@@ -484,11 +509,16 @@ def main():
             box = dict(block=b, head_x=c["standing"]["head_x"] + shift, head_w=c["head_w"])
             scenes = list(box_scenes(stand, box, box_hat, bare=plain[0]))
             scenes[1], waits = [f for f, _ in scenes[1]], [t for _, t in scenes[1]]
+            waits = [100, waits, 100]
             if hat:
-                scenes = [beside(sc, hat, b, box["head_x"], plain[0].height)[0] for sc in scenes]
-            write_gif(os.path.join(out, "get-in-box.gif"), scenes[0], 100, loop=False)
-            write_gif(os.path.join(out, "in-box.gif"), scenes[1], waits)
-            write_gif(os.path.join(out, "getting-out-of-box.gif"), scenes[2], 100, loop=False)
+                if getattr(hat, "PROP_MOVES", False):
+                    # Sitting in the box is mostly long holds; give the
+                    # things beside it frames to move in.
+                    scenes[1], waits[1] = spread(scenes[1], waits[1], step=100)
+                scenes = [beside(sc, hat, b, box["head_x"], plain[0].height, t)[0] for sc, t in zip(scenes, waits)]
+            write_gif(os.path.join(out, "get-in-box.gif"), scenes[0], waits[0], loop=False)
+            write_gif(os.path.join(out, "in-box.gif"), scenes[1], waits[1])
+            write_gif(os.path.join(out, "getting-out-of-box.gif"), scenes[2], waits[2], loop=False)
             print(cid, name or "plain", "done", flush=True)
     with open(os.path.join(ROOT, "src", "lib", "bot-characters", "taller.json"), "w") as f:
         json.dump(taller, f, indent=2, sort_keys=True)

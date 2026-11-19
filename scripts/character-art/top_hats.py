@@ -4,6 +4,8 @@ beside the character while it is worn. Drawn in fat pixels.
 
 Both are made the same way (a crown, a band round the foot of it, a brim),
 so one small class builds either from a description."""
+import math
+
 from PIL import Image
 
 
@@ -34,6 +36,10 @@ class TopHat:
     # hat is turned as one piece.
     SWING = 0
     STIFF = True
+    # What stands beside the character moves by itself, so `prop` is asked
+    # for a fresh picture for every frame: prop(block, ms, whole), where `ms`
+    # is how far into the animation the frame comes and `whole` its length.
+    PROP_MOVES = True
 
     def __init__(self, rows, colours, prop):
         self.ROWS = rows
@@ -127,17 +133,42 @@ _CLOVER_LIGHT = {"G": (86, 184, 92, 255), "L": (150, 226, 140, 255), "D": (50, 1
                  "d": (50, 136, 70, 255), "s": (40, 124, 62, 255)}
 
 
-def _clovers(block):
+def _lean(picture, block, by):
+    """The picture bent over sideways as a stem bends: its foot stays put and
+    each row of cells above leans further, the top by `by` pixels."""
+    rows = picture.height // block
+    out = Image.new("RGBA", picture.size, (0, 0, 0, 0))
+    half = max(1, block // 2)
+    for r in range(rows):
+        up = (rows - 1 - r) / max(1, rows - 1)
+        shift = round(by * up ** 1.6 / half) * half
+        out.alpha_composite(picture.crop((0, r * block, picture.width, (r + 1) * block)), (0, r * block), (0, 0)) if shift == 0 else \
+            out.paste(picture.crop((0, r * block, picture.width, (r + 1) * block)), (shift, r * block))
+    return out
+
+
+def _clovers(block, ms=0, whole=0):
     """A bunch of three clovers standing at different heights: a dark one
     either side and a lighter one between and in front of them, so each
-    one's three leaves can be made out."""
+    one's three leaves can be made out. They sway in the wind, each a
+    little out of step with the others, and come back to where they began
+    at the end of the animation so that it loops without a jump."""
     dark, light = art(_CLOVER, _CLOVER_DARK, block), art(_CLOVER, _CLOVER_LIGHT, block)
-    im = Image.new("RGBA", (22 * block, 13 * block), (0, 0, 0, 0))
-    for leaf, palette, x, y in ((dark, _CLOVER_DARK, 0, 2), (dark, _CLOVER_DARK, 13, 0), (light, _CLOVER_LIGHT, 6, 4)):
+    # About one sway a second, and a whole number of them in the loop.
+    sways = max(1, round(whole / 1100)) if whole else 0
+    turn = 2 * math.pi * sways * ms / whole if whole else 0
+    margin = 2
+    im = Image.new("RGBA", ((22 + 2 * margin) * block, 13 * block), (0, 0, 0, 0))
+    for leaf, palette, x, y, late in ((dark, _CLOVER_DARK, 0, 2, 0.0), (dark, _CLOVER_DARK, 13, 0, 1.3),
+                                      (light, _CLOVER_LIGHT, 6, 4, 0.6)):
         # Each stem runs on down to the ground, however tall the clover.
-        foot = (x + 3) * block
-        im.paste(palette["s"], (foot, (y + len(_CLOVER)) * block, foot + block, im.height))
-        im.alpha_composite(leaf, (x * block, y * block))
+        tall = Image.new("RGBA", ((9 + 2 * margin) * block, im.height - y * block), (0, 0, 0, 0))
+        foot = (margin + 3) * block
+        tall.paste(palette["s"], (foot, len(_CLOVER) * block, foot + block, tall.height))
+        tall.alpha_composite(leaf, (margin * block, 0))
+        # The wind blows mostly one way: a lean, and a sway about it.
+        by = (0.5 + 1.1 * math.sin(turn - late)) * block if whole else 0
+        im.alpha_composite(_lean(tall, block, by), (x * block, y * block))
     return im
 
 
@@ -202,14 +233,30 @@ def _rocket_colours(cap, stripe):
             "t": _STICK, "Y": (255, 226, 96, 255), "o": (250, 150, 40, 255)}
 
 
-def _fireworks(block):
+# The spark at the end of each fuse, turn and turn about: which cells
+# beside the stick are alight, and how brightly.
+_SPARKS = [
+    {(4, 9): "Y", (4, 10): "o"},
+    {(4, 9): "S", (3, 9): "Y", (4, 8): "o", (4, 10): "Y"},
+    {(4, 9): "Y", (4, 8): "Y", (4, 10): "o", (3, 10): "o"},
+    {(4, 9): "o", (4, 7): "o", (4, 10): "Y"},
+]
+_SPARK_COLOURS = {"Y": (255, 226, 96, 255), "o": (250, 150, 40, 255), "S": (255, 255, 240, 255)}
+
+
+def _fireworks(block, ms=0, whole=0):
     """Three rockets on sticks, planted in the ground at different heights:
-    red, white and blue, each with a lit fuse."""
+    red, white and blue. Each fuse is lit and fizzes, the three of them out
+    of step with one another."""
     red, blue = (206, 44, 52, 255), (44, 78, 170, 255)
+    bare = [row.replace("Y", ".").replace("o", ".") for row in _ROCKET]
     im = Image.new("RGBA", (17 * block, len(_ROCKET) * block), (0, 0, 0, 0))
-    for (cap, stripe), x, sunk in (((red, blue), 0, 3), ((blue, red), 6, 0), ((red, red), 12, 4)):
-        rows = _ROCKET[: len(_ROCKET) - sunk]
+    tick = int(ms // 90)
+    for k, ((cap, stripe), x, sunk) in enumerate((((red, blue), 0, 3), ((blue, red), 6, 0), ((red, red), 12, 4))):
+        rows = bare[: len(bare) - sunk]
         rocket = art(rows, _rocket_colours(cap, stripe), block)
+        for (cx, cy), glow in _SPARKS[(tick + 2 * k + (k * tick) // 3) % len(_SPARKS)].items():
+            rocket.paste(_SPARK_COLOURS[glow], (cx * block, cy * block, (cx + 1) * block, (cy + 1) * block))
         im.alpha_composite(rocket, (x * block, sunk * block))
     return im
 
