@@ -1016,6 +1016,41 @@ export function descriptionFromPage(
   return { description: written, raw };
 }
 
+/** What a home's page says of the house before it describes it: that it is being built, or can be moved into. */
+const STATUS_LINE =
+  /((?:under\s+construction|move[\s-]*in[\s-]*ready|ready\s+now|available\s+now|coming\s+soon|quick\s+move[\s-]*in)\s*[–—-]\s*[^.!?\[\]]{3,90}?[.!]?)\s*$/i;
+
+const typed = (text: string) =>
+  text
+    .replace(/&#8211;|&ndash;/gi, "–")
+    .replace(/&#8212;|&mdash;/gi, "—")
+    .replace(/&#8217;|&rsquo;/gi, "’")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ");
+
+/**
+ * A home's description with the line its page leads it with, where the
+ * reading left the line off. Neal writes "UNDER CONSTRUCTION – Vision 2 –
+ * Palmera #102" as a paragraph of its own above the prose; with no full
+ * stop it reads as a heading, and a heading is not asked for, so the
+ * description came back starting at the second paragraph and was put to
+ * the queue that way (Vision 2 at Palmera; Jeff, 2026-11-19). The line is
+ * taken from the page's own text, only where it stands right before the
+ * words the description begins with. Pure; exported for tests.
+ */
+export function withStatusLine(description: string | null, content: string): string | null {
+  const text = description?.trim();
+  if (!text) return description;
+  const page = typed(content);
+  const opening = typed(text).slice(0, 60);
+  if (opening.length < 30) return description;
+  const at = page.indexOf(opening);
+  if (at < 0) return description;
+  const line = page.slice(Math.max(0, at - 200), at).match(STATUS_LINE)?.[1]?.trim();
+  if (!line) return description;
+  return `${line}${/[.!]$/.test(line) ? "" : "."} ${text}`;
+}
+
 /**
  * What Claude is asked about one plan's or home's page. A change to these
  * words reads no page again by itself: raise the version of the builder
@@ -1284,7 +1319,10 @@ export async function readPlanPageWithClaude(
   // viewer, as ranges whose top the site shows (zonda.ts; Homes by Towne,
   // Jeff 2026-09-26). A home's own counts are its own.
   const zonda = plan.quickMoveIn ? null : await zondaCountsFor(html, plan.name);
-  const { description, raw } = descriptionFromPage(plan, page.description);
+  const fromPage = descriptionFromPage(plan, page.description);
+  const raw = fromPage.raw;
+  // A home's page leads its description with the state the house is in.
+  const description = plan.quickMoveIn ? withStatusLine(fromPage.description, content) : fromPage.description;
   // David Weekley's page gives its counts in a strip the list's cards lay
   // out the other way round, and a count read off a card paired the wrong
   // numbers (standardize.ts, weekleyCounts; Jeff, 2026-10-05).

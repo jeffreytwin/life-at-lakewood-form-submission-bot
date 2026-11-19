@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { looksLikeHighlights, writtenInSentences } from "@/lib/floorplans/description";
 import { descriptionChanged } from "@/lib/floorplans/diff";
-import { descriptionFromPage } from "@/lib/floorplans/extractors/claude-extract";
+import { descriptionFromPage, withStatusLine } from "@/lib/floorplans/extractors/claude-extract";
 import type { NormalizedPlan } from "@/lib/floorplans/types";
 
 const plan = (over: Partial<NormalizedPlan> = {}): NormalizedPlan => ({
@@ -94,5 +94,33 @@ describe("descriptionFromPage: the page's paragraph over a card's highlights", (
   it("keeps the list where the page gave no paragraph", () => {
     const listed = tuttleHighlights.join("\n");
     expect(descriptionFromPage(plan({ description: listed }), null).description).toBe(listed);
+  });
+});
+
+describe("withStatusLine: a home's description with the line its page leads it with (Jeff, 2026-11-19)", () => {
+  const prose =
+    "Experience the perfect blend of luxury and comfort in the Vision 2 plan by Neal Communities. This stunning 2-story home boasts 2,962 square feet of thoughtfully designed living space.";
+  // Neal's page for 17810 Sylvester Drive, as the reader is given it.
+  const content = `[IMG https://images.nealcommunities.com/a.jpg] +8 Vision 2 Overview UNDER CONSTRUCTION &#8211; Vision 2 &#8211; Palmera #102 ${prose} **DISCLAIMER: Images represent a completed Vision 2 home. 5 Beds 4.5 Baths`;
+
+  it("puts back the line a reading left off as a heading", () => {
+    expect(withStatusLine(prose, content)).toBe(`UNDER CONSTRUCTION – Vision 2 – Palmera #102. ${prose}`);
+  });
+
+  it("keeps the line's own full stop", () => {
+    const led = content.replace("Palmera #102 ", "Palmera – Homesite #102. ");
+    expect(withStatusLine(prose, led)).toBe(`UNDER CONSTRUCTION – Vision 2 – Palmera – Homesite #102. ${prose}`);
+    expect(withStatusLine(prose, content.replace("UNDER CONSTRUCTION", "Move In Ready"))).toBe(`Move In Ready – Vision 2 – Palmera #102. ${prose}`);
+  });
+
+  it("leaves a description that already has it, or whose page leads with none", () => {
+    const whole = `UNDER CONSTRUCTION – Vision 2 – Palmera #102. ${prose}`;
+    expect(withStatusLine(whole, content)).toBe(whole);
+    expect(withStatusLine(prose, `Vision 2 Overview ${prose}`)).toBe(prose);
+    expect(withStatusLine(prose, `This home is under construction - see it soon. Vision 2 Overview ${prose}`)).toBe(prose);
+    expect(withStatusLine("Not on the page at all, this description of some forty characters.", content)).toBe(
+      "Not on the page at all, this description of some forty characters."
+    );
+    expect(withStatusLine(null, content)).toBeNull();
   });
 });
