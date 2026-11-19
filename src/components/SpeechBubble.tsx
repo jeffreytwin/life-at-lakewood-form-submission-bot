@@ -49,9 +49,13 @@ const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props
     typeTimer.current = setTimeout(typeNext, 200);
   }, [clearTimers, typeNext]);
 
-  const playWelcome = useCallback(() => {
+  // `holidayOnly` is for the first line after the page loads: in a holiday
+  // window that one is always a holiday greeting (Jeff, 2026-11-19). A click
+  // on the character afterwards draws from every greeting.
+  const playWelcome = useCallback((holidayOnly = false) => {
     const character = getActiveCharacter();
-    const messages = character.welcomeMessages;
+    const festive = holidayOnly ? character.holidayWelcomeMessages : undefined;
+    const messages = festive?.length ? festive : character.welcomeMessages;
     const msg = messages[Math.floor(Math.random() * messages.length)];
     showMessage(msg, character.holidayOfLine?.(msg) ?? null);
     const audio = new Audio(character.welcomeSound);
@@ -59,7 +63,7 @@ const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props
     audio.play().catch(() => {});
   }, [showMessage]);
 
-  useImperativeHandle(ref, () => ({ playWelcome }), [playWelcome]);
+  useImperativeHandle(ref, () => ({ playWelcome: () => playWelcome() }), [playWelcome]);
 
   // Welcome message on mount — waits for the schedule to load so we use
   // today's actual character and not the default fallback.
@@ -73,7 +77,7 @@ const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props
     ensureScheduleLoaded().then(() => {
       if (cancelled) return;
       timer = setTimeout(() => {
-        playWelcome();
+        playWelcome(true);
       }, 500);
     });
 
