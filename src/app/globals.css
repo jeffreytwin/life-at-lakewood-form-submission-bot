@@ -676,8 +676,9 @@ select.form-input {
   bottom: 20px;
   right: 100%;
   margin-right: 8px;
+  --bubble-outline: #34d399;
   background: #181820;
-  border: 2px solid #34d399;
+  border: 2px solid var(--bubble-outline);
   border-radius: 4px;
   padding: 10px 14px;
   width: 240px;
@@ -699,8 +700,14 @@ select.form-input {
   height: 0;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-left: 8px solid #34d399;
+  border-left: 8px solid var(--bubble-outline);
 }
+
+/* A holiday line is outlined in its holiday's color, not the everyday green. */
+.speech-bubble--pilgrim { --bubble-outline: #fb923c; }
+.speech-bubble--santa { --bubble-outline: #ef4444; }
+.speech-bubble--stpatrick { --bubble-outline: #f5f5f5; }
+.speech-bubble--unclesam { --bubble-outline: #3b82f6; }
 
 .speech-bubble::before {
   content: "";

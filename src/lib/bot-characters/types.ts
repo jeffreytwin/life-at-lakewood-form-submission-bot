@@ -55,6 +55,13 @@ export interface BotCharacter {
   welcomeMessages: string[];
   welcomeSound: string;
   getMessage: (event: LeadEvent) => string;
+  /**
+   * Which holiday a line this character just said belongs to, or null for
+   * an everyday line. Pass the event when the line came from getMessage.
+   * Only a character with a hat on has this; everyone else's lines are
+   * all everyday ones.
+   */
+  holidayOfLine?: (line: string, event?: LeadEvent) => HolidayId | null;
   gifs: BotCharacterGifs;
   /**
    * Hatted versions of the animations, by holiday. Only the animations that

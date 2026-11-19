@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
 import { onLeadEvent } from "@/lib/lead-events";
-import { getActiveCharacter, ensureScheduleLoaded } from "@/lib/bot-characters";
+import { getActiveCharacter, ensureScheduleLoaded, type HolidayId } from "@/lib/bot-characters";
 
 const CHAR_DELAY = 35; // ms per character — SNES typewriter speed
 const DISPLAY_DURATION = 6000; // ms to show after fully typed
@@ -15,6 +15,8 @@ export interface SpeechBubbleHandle {
 const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props, ref) {
   const [visible, setVisible] = useState(false);
   const [displayText, setDisplayText] = useState("");
+  // The holiday the line on screen belongs to, which colors the outline.
+  const [holiday, setHoliday] = useState<HolidayId | null>(null);
   const fullText = useRef("");
   const charIndex = useRef(0);
   const typeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -37,8 +39,9 @@ const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props
     }
   }, []);
 
-  const showMessage = useCallback((msg: string) => {
+  const showMessage = useCallback((msg: string, lineHoliday: HolidayId | null = null) => {
     clearTimers();
+    setHoliday(lineHoliday);
     fullText.current = msg;
     charIndex.current = 0;
     setDisplayText("");
@@ -50,7 +53,7 @@ const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props
     const character = getActiveCharacter();
     const messages = character.welcomeMessages;
     const msg = messages[Math.floor(Math.random() * messages.length)];
-    showMessage(msg);
+    showMessage(msg, character.holidayOfLine?.(msg) ?? null);
     const audio = new Audio(character.welcomeSound);
     audio.volume = 0.6;
     audio.play().catch(() => {});
@@ -83,7 +86,8 @@ const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props
   useEffect(() => {
     const unsub = onLeadEvent((event) => {
       const character = getActiveCharacter();
-      showMessage(character.getMessage(event));
+      const msg = character.getMessage(event);
+      showMessage(msg, character.holidayOfLine?.(msg, event) ?? null);
     });
     return () => {
       unsub();
@@ -94,7 +98,7 @@ const SpeechBubble = forwardRef<SpeechBubbleHandle>(function SpeechBubble(_props
   if (!visible) return null;
 
   return (
-    <div className="speech-bubble">
+    <div className={holiday ? `speech-bubble speech-bubble--${holiday}` : "speech-bubble"}>
       <span className="speech-bubble-text">{displayText}</span>
       <span className="speech-bubble-cursor">_</span>
     </div>

@@ -75,6 +75,20 @@ describe.each(ALL_CHARACTER_IDS)("%s in a hat", (id) => {
     }
   });
 
+  it("knows which of its lines are holiday ones, so the bubble can color them", () => {
+    // Jeff, 2026-11-19: a holiday line gets its holiday's outline color.
+    for (const { id: holiday } of HOLIDAYS) {
+      const festive = dressFor(plain[id], holiday, always);
+      const everyday = dressFor(plain[id], holiday, never);
+      expect(festive.holidayOfLine?.(festive.getMessage(accepted), accepted)).toBe(holiday);
+      expect(everyday.holidayOfLine?.(everyday.getMessage(accepted), accepted)).toBeNull();
+      const greetings = festive.welcomeMessages;
+      expect(festive.holidayOfLine?.(greetings[greetings.length - 1])).toBe(holiday);
+      expect(festive.holidayOfLine?.(greetings[0])).toBeNull();
+    }
+    expect(plain[id].holidayOfLine).toBeUndefined();
+  });
+
   it("says nothing festive with no hat on", () => {
     expect(dressFor(plain[id], null, always)).toBe(plain[id]);
     const hatless = { ...plain[id], holidayGifs: undefined };
