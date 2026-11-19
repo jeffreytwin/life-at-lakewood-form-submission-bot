@@ -2,5 +2,9 @@
   "/characters/snake/pilgrim/celebrating.gif": 1.085,
   "/characters/snake/pilgrim/sneaking.gif": 1.0121,
   "/characters/snake/santa/celebrating.gif": 1.135,
-  "/characters/snake/santa/sneaking.gif": 1.0966
+  "/characters/snake/santa/sneaking.gif": 1.0966,
+  "/characters/snake/stpatrick/celebrating.gif": 1.085,
+  "/characters/snake/stpatrick/sneaking.gif": 1.0121,
+  "/characters/snake/unclesam/celebrating.gif": 1.125,
+  "/characters/snake/unclesam/sneaking.gif": 1.0684
 }

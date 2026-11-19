@@ -6,9 +6,10 @@ import type { BotCharacter, BotCharacterGifs, CharacterId, HolidayId } from "./t
  * Eastern time, the same clock the day-of-week schedule runs on. Both ends
  * of a range are included, and the dates are [month, day].
  *
- * A holiday with no artwork yet changes nothing: a character with no hatted
- * animation for it keeps its everyday one. The artwork is drawn by
- * scripts/character-art/build.py into public/characters/<id>/<holiday>/.
+ * All four hats are drawn. A holiday added here before its artwork exists
+ * changes nothing: a character with no hatted animation for it keeps its
+ * everyday one. The artwork is drawn by scripts/character-art/build.py into
+ * public/characters/<id>/<holiday>/.
  */
 export const HOLIDAYS: { id: HolidayId; from: [number, number]; to: [number, number] }[] = [
   { id: "stpatrick", from: [3, 1], to: [3, 31] },

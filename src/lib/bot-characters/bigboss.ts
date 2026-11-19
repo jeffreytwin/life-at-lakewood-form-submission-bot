@@ -105,6 +105,8 @@ export const bigboss: BotCharacter = {
   holidayGifs: {
     pilgrim: holidayGifs("bigboss", "pilgrim"),
     santa: holidayGifs("bigboss", "santa"),
+    stpatrick: holidayGifs("bigboss", "stpatrick"),
+    unclesam: holidayGifs("bigboss", "unclesam"),
   },
   // Tune size and celebration duration to taste once we see it in motion.
   gifSizeScale: 1.15,

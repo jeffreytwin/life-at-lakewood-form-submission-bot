@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from lib import read_gif, write_gif, track, track_eyes, from_rows  # noqa: E402
 import santa_hat as santa  # noqa: E402
 import pilgrim_hat as pilgrim  # noqa: E402
+import top_hats  # noqa: E402
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PUBLIC = os.path.join(ROOT, "public")
@@ -96,7 +97,7 @@ def _blond(r, g, b):
 # told from a bandana, a pistol or a hand.
 HAIR = {"snake": _brown, "bigboss": _brown, "ocelot": _grey, "liquid": _blond}
 
-HATS = {"santa": santa, "pilgrim": pilgrim}
+HATS = {"santa": santa, "pilgrim": pilgrim, "stpatrick": top_hats.stpatrick, "unclesam": top_hats.unclesam}
 
 SHADOW = (86, 86, 98, 255)
 
