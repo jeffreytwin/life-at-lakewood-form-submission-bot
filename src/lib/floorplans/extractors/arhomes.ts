@@ -36,7 +36,7 @@
 import { bathsOf } from "@/lib/floorplans/standardize";
 import { streetOf } from "@/lib/floorplans/extractors/cardel";
 import { isTourUrl, tourLinkIn, tourUrlIn } from "@/lib/floorplans/extractors/claude-extract";
-import { parseHotelCards } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { parseHotelCards, sameVillage } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { type NormalizedPlan, normKey } from "@/lib/floorplans/types";
 
 const UA =
@@ -150,7 +150,7 @@ const planName = (name: string) => normKey(name.replace(/^\s*the\s+/i, "").repla
 export function listedPrices(html: string, village: string): ListedPrice[] {
   const wanted = normKey(village);
   return parseHotelCards(html, "https://lakewoodranch.com")
-    .filter((c) => normKey(c.village.replace(/[–—]/g, "-")) === wanted && !c.plan.quickMoveIn)
+    .filter((c) => (normKey(c.village.replace(/[–—]/g, "-")) === wanted || sameVillage(c.village, village)) && !c.plan.quickMoveIn)
     .map((c) => ({ name: c.plan.name, price: c.plan.price || null, page: c.plan.sourceUrl }));
 }
 

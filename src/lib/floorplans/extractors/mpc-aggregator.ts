@@ -163,6 +163,53 @@ export function parseHotelCards(html: string, origin: string): { plan: Normalize
   return out;
 }
 
+/** Words a village's name carries on one site and not on another: "New Homes of …", "… Homes", "… at Lakewood Ranch". */
+const VILLAGE_FILLER = new Set(["new", "home", "homes", "of", "at", "the", "in", "and", "lakewood", "ranch"]);
+
+const villageWords = (name: string): string[] =>
+  name
+    .replace(/&#\d+;|&[a-z]+;/gi, " ")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w && !VILLAGE_FILLER.has(w));
+
+/**
+ * A village's name without the selling words the home finder wraps it in:
+ * "New Homes of Shellstone at Waterside" is "Shellstone at Waterside", and
+ * "Star Farms Homes" is "Star Farms". Pure; exported for tests.
+ */
+export function villageName(label: string): string {
+  return label
+    .replace(/&#8211;|&ndash;|[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^new\s+homes\s+(?:of|in|at)\s+/i, "")
+    .replace(/\s+homes$/i, "");
+}
+
+/**
+ * Whether two names are one village's, however each site writes it. The
+ * home finder renamed its villages overnight — "Waterside – Wild Blue"
+ * became "New Homes of Wildblue at Waterside", "Star Farms" became "Star
+ * Farms Homes" — and every connection that asked for its village by the
+ * old name read no plans (Jeff, 2026-11-19). The selling words and the
+ * order aside, the words both names share are set down and what is left
+ * of each must spell the same: "wild blue" is "wildblue", and Shellstone
+ * is not Wild Blue for sharing Waterside. Pure; exported for tests.
+ */
+export function sameVillage(a: string, b: string): boolean {
+  const left = villageWords(a);
+  const right = villageWords(b);
+  if (!left.length || !right.length) return false;
+  for (let i = left.length - 1; i >= 0; i--) {
+    const j = right.indexOf(left[i]);
+    if (j < 0) continue;
+    left.splice(i, 1);
+    right.splice(j, 1);
+  }
+  return left.join("") === right.join("");
+}
+
 /** A card named for a model sold with a leaseback, and the plan it is a model of: "Sand Dollar Model Leaseback" is the Sand Dollar's. */
 const LEASEBACK = /^(.+?)\s+(?:model\s+)?lease[\s-]*back\b/i;
 
@@ -507,7 +554,8 @@ export async function extractMpcAggregator(params: {
     for (const h of hotels) {
       if (normKey(h.builder) !== builderSlug && !normKey(h.builder).includes(builderSlug)) continue;
       const v = village(h.village);
-      if (wanted && v !== wanted && !(neighborhood && v.endsWith(neighborhood))) continue;
+      const named = sameVillage(h.village, params.communityName ?? "") || sameVillage(h.village, communityShort);
+      if (wanted && v !== wanted && !(neighborhood && v.endsWith(neighborhood)) && !named) continue;
       if (!seen.has(h.plan.planKey)) seen.set(h.plan.planKey, h.plan);
     }
     return mapLimit([...seen.values()], 4, (plan) => withSitePage(plan));

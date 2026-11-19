@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeCard, parseCards, parseHotelCards, readSitePlanPage } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { normalizeCard, parseCards, parseHotelCards, readSitePlanPage, sameVillage, villageName } from "@/lib/floorplans/extractors/mpc-aggregator";
 
 // Lakewood Ranch's home finder, Lee Wetherington only (build[]=34708), as served 2026-09-25.
 const hotel = (name: string, price: string, village: string, picture: string, slug: string, baths = "3", sf = "2,380") => `
@@ -108,5 +108,39 @@ describe("a plan's page on Lakewood Ranch's site", () => {
     const read = readSitePlanPage(page);
     expect(read.photos).toEqual([`${up}/2025/06/sand-dollar-custom-built-home-foyer-study-001.jpg`]);
     expect(read.tour).toBe("https://my.matterport.com/show/?m=bxTr9izXr4F");
+  });
+});
+
+describe("a village by whichever name the home finder gives it (Jeff, 2026-11-19)", () => {
+  it("knows a village under the names the finder took overnight", () => {
+    expect(sameVillage("New Homes of Wildblue at Waterside", "Waterside - Wild Blue")).toBe(true);
+    expect(sameVillage("New Homes of Shellstone at Waterside", "Waterside - Shellstone")).toBe(true);
+    expect(sameVillage("New Homes of Emerald Landing at waterside", "Waterside - Emerald Landing")).toBe(true);
+    expect(sameVillage("New Homes of Esplanade at Azario", "Azario - Esplanade")).toBe(true);
+    expect(sameVillage("Star Farms Homes", "Star Farms")).toBe(true);
+    expect(sameVillage("Calusa Country Club Homes", "Calusa Country Club")).toBe(true);
+    expect(sameVillage("Monterey at Lakewood Ranch", "Monterey")).toBe(true);
+    expect(sameVillage("The Isles", "The Isles")).toBe(true);
+  });
+
+  it("knows it under the names it had", () => {
+    expect(sameVillage("Waterside &#8211; Wild Blue", "Waterside - Wild Blue")).toBe(true);
+    expect(sameVillage("Waterside &#8211; Kingfisher Estates", "Waterside - Kingfisher Estates")).toBe(true);
+    expect(sameVillage("Wildblue", "Wild Blue")).toBe(true);
+  });
+
+  it("keeps a different village different", () => {
+    expect(sameVillage("New Homes of Shellstone at Waterside", "Waterside - Wild Blue")).toBe(false);
+    expect(sameVillage("New Homes of Esplanade at Azario", "The Townhomes at Azario")).toBe(false);
+    expect(sameVillage("Star Farms Homes", "Star Farms East")).toBe(false);
+    expect(sameVillage("Waterbury Park", "Waterbury")).toBe(false);
+    expect(sameVillage("Lakewood Ranch", "New Homes")).toBe(false);
+  });
+
+  it("names a village without the finder's selling words", () => {
+    expect(villageName("New Homes of Shellstone at Waterside")).toBe("Shellstone at Waterside");
+    expect(villageName("Star Farms Homes")).toBe("Star Farms");
+    expect(villageName("Waterside &#8211; Kingfisher Estates")).toBe("Waterside - Kingfisher Estates");
+    expect(villageName("Hawkstone")).toBe("Hawkstone");
   });
 });

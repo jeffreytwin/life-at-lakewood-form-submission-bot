@@ -93,6 +93,13 @@ describe("Arthur Rutenberg's plans from its WordPress (Wild Blue, Jeff 2026-09-2
     expect(listedPrices(finder, "Waterside - Kingfisher Estates")).toEqual([]);
   });
 
+  it("reads the village's prices under the name the finder gave it overnight (Jeff, 2026-11-19)", () => {
+    const renamed = finder.replace(/Waterside (?:&#8211;|–|-) Wild Blue/g, "New Homes of Wildblue at Waterside").replace(/>(\s*)Star Farms</g, ">$1Star Farms Homes<");
+    expect(listedPrices(renamed, "Waterside - Wild Blue")).toEqual(listedPrices(finder, "Waterside - Wild Blue"));
+    expect(listedPrices(renamed, "Star Farms")).toEqual(listedPrices(finder, "Star Farms"));
+    expect(listedPrices(renamed, "Waterside - Kingfisher Estates")).toEqual([]);
+  });
+
   it("makes a plan of a plan's record, priced as Lakewood Ranch advertises it, with its photos and drawing", () => {
     const plan = normalizeArPlan(talise, listedPrices(finder, "Waterside - Wild Blue"))!;
     expect(plan).toMatchObject({
