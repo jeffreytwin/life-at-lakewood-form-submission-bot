@@ -97,7 +97,7 @@ interface PendingChange {
   fp_communities: { name: string } | null;
   fp_builders: { name: string } | null;
   /** The plan on the site the change is to: a removal carries no proposed record, so whether it is a quick move-in is read here. */
-  fp_floor_plans: { id: string; starred: boolean; quick_move_in?: boolean } | null;
+  fp_floor_plans: { id: string; starred: boolean; quick_move_in?: boolean; source_url?: string | null } | null;
 }
 
 type Group = ChangeGroup<PendingChange>;
@@ -406,6 +406,8 @@ export default function FloorPlansPage() {
   const [sort, setSort] = useState<ChangeSort | null>(null);
   const [troubled, setTroubled] = useState<TroubledConnection[]>([]);
   /** Connections whose Run was just clicked in the banner, until the run's own mark shows. */
+  /** Each connection's community page on the builder's site, by builder and community: a removal links it (Jeff, 2026-11-19). */
+  const [communityPages, setCommunityPages] = useState<Map<string, string>>(new Map());
   const [startingRun, setStartingRun] = useState<Set<string>>(new Set());
   const coarse = useCoarsePointer();
   const [loading, setLoading] = useState(true);
@@ -502,7 +504,15 @@ export default function FloorPlansPage() {
     fetch("/api/internal/floorplans/builders")
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data)) setTroubled(troubledConnections(data));
+        if (!Array.isArray(data)) return;
+        setTroubled(troubledConnections(data));
+        const pages = new Map<string, string>();
+        for (const b of data as { id: string; fp_builder_communities?: { community_id: string; extractor_params?: { url?: string } | null }[] }[]) {
+          for (const c of b.fp_builder_communities ?? []) {
+            if (c.extractor_params?.url) pages.set(`${b.id}|${c.community_id}`, c.extractor_params.url);
+          }
+        }
+        setCommunityPages(pages);
       })
       .catch(() => {});
   }, []);
@@ -1852,6 +1862,9 @@ export default function FloorPlansPage() {
                   }
                   const c = g.lead;
                   const rec = c.proposed_record;
+                  // The plan's own page on the builder's site: a removal carries no proposed record, so the plan on the site says where.
+                  const planPage = rec?.sourceUrl || c.fp_floor_plans?.source_url || null;
+                  const communityPage = communityPages.get(`${c.builder_id}|${c.community_id}`) ?? null;
                   // The main image is the gallery's first photo; primaryImage is the first slice's field.
                   const thumb = rec?.galleryImages?.[0] ?? rec?.primaryImage ?? null;
                   const photoCount = rec?.galleryImages?.length ?? 0;
@@ -2008,10 +2021,18 @@ export default function FloorPlansPage() {
                             </a>
                           </div>
                         )}
-                        {rec?.sourceUrl && (
+                        {planPage && (
                           <div>
-                            <a href={rec.sourceUrl} target="_blank" rel="noreferrer" className="text-sm">
+                            <a href={planPage} target="_blank" rel="noreferrer" className="text-sm" title={planPage}>
                               builder page ↗
+                            </a>
+                          </div>
+                        )}
+                        {/* A removal: the community's page too, to see the plan is off the builder's list (Jeff, 2026-11-19). */}
+                        {g.kind === "remove" && communityPage && communityPage !== planPage && (
+                          <div>
+                            <a href={communityPage} target="_blank" rel="noreferrer" className="text-sm" title={communityPage}>
+                              builder&apos;s community page ↗
                             </a>
                           </div>
                         )}
