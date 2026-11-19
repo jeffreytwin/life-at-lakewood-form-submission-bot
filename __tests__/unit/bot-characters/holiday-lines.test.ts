@@ -68,6 +68,39 @@ describe.each(ALL_CHARACTER_IDS)("%s in a hat", (id) => {
     }
   });
 
+  it("has a holiday line for every celebration, bad data, form submission and email event", () => {
+    // Jeff, 2026-11-19. The celebration events are the ones RoutingToggle
+    // plays the celebration animation for.
+    const events: LeadEvent[] = [
+      accepted,
+      { type: "new", leadName: "" },
+      { type: "done", leadName: "" },
+      { type: "bad_data", leadName: "Robert Carnation" },
+      { type: "email_draft_new", leadName: "" },
+      { type: "email_draft_approved", leadName: "" },
+      { type: "email_sent", leadName: "" },
+      { type: "floorplans_cleared", leadName: "" },
+      { type: "community_sold_out_done", leadName: "", communityName: "Star Farms" },
+      { type: "community_new_neighborhood_done", leadName: "", communityName: "Star Farms" },
+      { type: "community_schools_done", leadName: "", communityName: "Star Farms" },
+      { type: "community_fee_check_done", leadName: "", communityName: "Star Farms" },
+      { type: "war_room_task_done", leadName: "Robert Carnation" },
+    ];
+    for (const { id: holiday } of HOLIDAYS) {
+      const festive = dressFor(plain[id], holiday, always);
+      for (const event of events) {
+        const msg = festive.getMessage(event);
+        expect(msg, `${holiday} ${event.type}`).not.toBe(plain[id].getMessage(event));
+        expect(festive.holidayOfLine?.(msg, event)).toBe(holiday);
+        // Whoever or wherever the event is about is still named.
+        if (event.leadName) expect(msg).toContain(event.leadName);
+        if (event.communityName) expect(msg).toContain(event.communityName);
+      }
+      expect(festive.getMessage({ type: "bad_data", leadName: "X" })).toMatch(/bad data/i);
+      expect(festive.getMessage({ type: "email_draft_new", leadName: "" })).toMatch(/email/i);
+    }
+  });
+
   it("keeps the everyday line for an event with no holiday line", () => {
     const failed: LeadEvent = { type: "failed", leadName: "Robert Carnation" };
     for (const { id: holiday } of HOLIDAYS) {
