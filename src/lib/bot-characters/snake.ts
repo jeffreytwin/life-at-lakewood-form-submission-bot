@@ -104,6 +104,8 @@ export const snake: BotCharacter = {
   holidayGifs: {
     pilgrim: holidayGifs("snake", "pilgrim"),
     santa: holidayGifs("snake", "santa"),
+    stpatrick: holidayGifs("snake", "stpatrick"),
+    unclesam: holidayGifs("snake", "unclesam"),
   },
   // Snake's sprites are taller than wide and the character sits in the
   // lower portion of each frame. Anchor cover-crops to the bottom so the

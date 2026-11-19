@@ -102,6 +102,8 @@ export const liquid: BotCharacter = {
   holidayGifs: {
     pilgrim: holidayGifs("liquid", "pilgrim"),
     santa: holidayGifs("liquid", "santa"),
+    stpatrick: holidayGifs("liquid", "stpatrick"),
+    unclesam: holidayGifs("liquid", "unclesam"),
   },
   // Tune size and celebration duration to taste once we see it in motion.
   gifSizeScale: 1.31,

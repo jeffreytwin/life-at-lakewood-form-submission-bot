@@ -103,6 +103,8 @@ export const ocelot: BotCharacter = {
   holidayGifs: {
     pilgrim: holidayGifs("ocelot", "pilgrim"),
     santa: holidayGifs("ocelot", "santa"),
+    stpatrick: holidayGifs("ocelot", "stpatrick"),
+    unclesam: holidayGifs("ocelot", "unclesam"),
   },
   // Default 1.0 keeps Ocelot at the same render size as Snake. Bump up
   // here if his GIFs look noticeably smaller than Snake's in practice.

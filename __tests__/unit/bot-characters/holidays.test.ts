@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { ALL_CHARACTER_IDS, dressFor, getCharacter, holidayOn } from "@/lib/bot-characters";
+import { ALL_CHARACTER_IDS, HOLIDAYS, dressFor, getCharacter, holidayOn } from "@/lib/bot-characters";
 
 /** Noon Eastern on the given date, well clear of either midnight. */
 const noon = (m: number, d: number) => new Date(Date.UTC(2026, m - 1, d, 17));
@@ -41,15 +41,19 @@ describe("dressing a character", () => {
     }
   });
 
-  it("leaves a character alone for a holiday with no artwork yet", () => {
-    const plain = dressFor(getCharacter("snake"), null);
-    expect(dressFor(plain, "stpatrick").gifs).toEqual(plain.gifs);
+  it("has every hat in the calendar drawn for every character", () => {
+    for (const id of ALL_CHARACTER_IDS) {
+      const plain = dressFor(getCharacter(id), null);
+      for (const { id: holiday } of HOLIDAYS) {
+        expect(dressFor(plain, holiday).gifs.standing).toBe(`/characters/${id}/${holiday}/standing.gif`);
+      }
+    }
   });
 
   it("only names animations that exist", () => {
     for (const id of ALL_CHARACTER_IDS) {
       const plain = dressFor(getCharacter(id), null);
-      for (const c of [plain, dressFor(plain, "santa"), dressFor(plain, "pilgrim")]) {
+      for (const c of [plain, ...HOLIDAYS.map((h) => dressFor(plain, h.id))]) {
         for (const src of Object.values(c.gifs)) {
           expect(existsSync(join(process.cwd(), "public", src)), src).toBe(true);
         }
