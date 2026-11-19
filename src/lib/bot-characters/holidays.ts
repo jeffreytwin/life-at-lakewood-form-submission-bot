@@ -87,6 +87,7 @@ export function dressFor(
   return {
     ...dressed,
     welcomeMessages: [...character.welcomeMessages, ...lines.welcome],
+    holidayWelcomeMessages: lines.welcome,
     getMessage: (event) => {
       const festive = lines.events[event.type];
       return festive && random() < 0.5 ? festive(event) : character.getMessage(event);

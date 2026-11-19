@@ -38,6 +38,21 @@ describe.each(ALL_CHARACTER_IDS)("%s in a hat", (id) => {
     }
   });
 
+  it("sets the holiday greetings apart, for the first line after the page loads", () => {
+    // Jeff, 2026-11-19: in a holiday window the first line of every refresh
+    // is a holiday line.
+    for (const { id: holiday } of HOLIDAYS) {
+      const dressed = dressFor(plain[id], holiday);
+      const festive = dressed.holidayWelcomeMessages ?? [];
+      expect(festive.length).toBeGreaterThan(0);
+      for (const line of festive) {
+        expect(dressed.welcomeMessages).toContain(line);
+        expect(dressed.holidayOfLine?.(line)).toBe(holiday);
+      }
+    }
+    expect(plain[id].holidayWelcomeMessages).toBeUndefined();
+  });
+
   it("has different greetings for each holiday", () => {
     const added = HOLIDAYS.map(({ id: holiday }) =>
       dressFor(plain[id], holiday).welcomeMessages.slice(plain[id].welcomeMessages.length)

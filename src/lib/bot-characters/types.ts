@@ -53,6 +53,11 @@ export interface BotCharacter {
   id: CharacterId;
   displayName: string;
   welcomeMessages: string[];
+  /**
+   * The holiday greetings among welcomeMessages, for the first line after
+   * the page loads. Only a character with a hat on has these.
+   */
+  holidayWelcomeMessages?: string[];
   welcomeSound: string;
   getMessage: (event: LeadEvent) => string;
   /**
