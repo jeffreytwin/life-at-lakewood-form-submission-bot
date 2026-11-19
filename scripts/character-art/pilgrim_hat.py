@@ -3,11 +3,12 @@ a brown band with a gold buckle. Drawn in fat pixels."""
 from PIL import Image
 
 COLOURS = {
-    # The felt is charcoal, not black, with a lit edge, so the hat still
-    # shows against the dashboard's dark background.
-    "K": (54, 52, 64, 255),      # felt
-    "H": (104, 102, 122, 255),   # felt, lit edge
-    "D": (30, 28, 36, 255),      # felt, shaded side
+    # The felt is a slate grey, not black. The dashboard behind it is very
+    # nearly black, so anything darker than this (the shaded side most of
+    # all) melts into it and the hat looks as if a piece is missing.
+    "K": (74, 72, 90, 255),      # felt
+    "H": (128, 126, 150, 255),   # felt, lit edge
+    "D": (52, 50, 66, 255),      # felt, shaded side
     "B": (122, 78, 44, 255),     # band
     "b": (88, 54, 32, 255),      # band in shadow
     "G": (238, 190, 60, 255),    # buckle
