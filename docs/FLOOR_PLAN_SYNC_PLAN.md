@@ -366,6 +366,11 @@ nothing. No cutover report has ever been generated.
   where that is not known yet) and a Run button, the same run as on
   Builder Connections. The row shows the run going and the banner looks
   again every few seconds until it ends, then reads the queue.
+- **A removal links the builder's pages** (Jeff, 2026-11-19), to see the
+  plan is gone before approving. A removal carries no proposed record,
+  so the queue reads the plan's own page from the plan on the site
+  (`fp_floor_plans.source_url`) and shows it as "builder page", with the
+  connection's community page beside it.
 - **Taylor Morrison, filled in** (Jeff, 2026-09-21, from Esplanade at
   Azario): the collection a plan belongs to sets its home type ("Twin
   Villa Collection" is attached villas, "The Towns at …" townhomes, the
