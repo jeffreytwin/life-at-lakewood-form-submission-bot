@@ -1,4 +1,4 @@
-import type { LeadEvent } from "@/lib/lead-events";
+import type { LeadEvent, LeadEventType } from "@/lib/lead-events";
 
 export interface BotCharacterGifs {
   standing: string;
@@ -13,7 +13,18 @@ export interface BotCharacterGifs {
 /** The holidays the characters dress up for. See holidays.ts for the dates. */
 export type HolidayId = "santa" | "pilgrim" | "unclesam" | "stpatrick";
 
-export type CharacterId = "snake" | "ocelot" | "liquid" | "bigboss";
+/**
+ * What a character says while wearing one holiday's hat, mixed in with
+ * their everyday lines. See holiday-lines.ts.
+ */
+export interface HolidayLines {
+  /** Extra greetings, added to the everyday ones. */
+  welcome: string[];
+  /** Holiday versions of an event's line, said about half the time. */
+  events: Partial<Record<LeadEventType, (event: LeadEvent) => string>>;
+}
+
+export type CharacterId ="snake" | "ocelot" | "liquid" | "bigboss";
 
 export const ALL_CHARACTER_IDS: CharacterId[] = ["snake", "ocelot", "liquid", "bigboss"];
 

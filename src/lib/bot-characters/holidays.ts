@@ -1,4 +1,5 @@
 import taller from "./taller.json";
+import { HOLIDAY_LINES } from "./holiday-lines";
 import type { BotCharacter, BotCharacterGifs, CharacterId, HolidayId } from "./types";
 
 /**
@@ -64,13 +65,33 @@ export function holidayGifs(id: CharacterId, holiday: HolidayId): Partial<BotCha
 }
 
 /**
- * The character as they look for the given holiday: the same character with
- * the hatted animations swapped in wherever one has been drawn.
+ * The character as they look and sound for the given holiday: the same
+ * character with the hatted animations swapped in wherever one has been
+ * drawn, and the holiday's lines mixed in with their everyday ones. The
+ * lines go with the hat, so a character with no hat for a holiday says
+ * nothing about it.
+ *
+ * Give it the plain character, not one already dressed. `random` picks
+ * between the everyday line and the holiday one, and is there for tests.
  */
-export function dressFor(character: BotCharacter, holiday: HolidayId | null): BotCharacter {
+export function dressFor(
+  character: BotCharacter,
+  holiday: HolidayId | null,
+  random: () => number = Math.random
+): BotCharacter {
   const hatted = holiday ? character.holidayGifs?.[holiday] : undefined;
-  if (!hatted) return character;
-  return { ...character, gifs: { ...character.gifs, ...hatted } };
+  if (!holiday || !hatted) return character;
+  const lines = HOLIDAY_LINES[character.id]?.[holiday];
+  const dressed = { ...character, gifs: { ...character.gifs, ...hatted } };
+  if (!lines) return dressed;
+  return {
+    ...dressed,
+    welcomeMessages: [...character.welcomeMessages, ...lines.welcome],
+    getMessage: (event) => {
+      const festive = lines.events[event.type];
+      return festive && random() < 0.5 ? festive(event) : character.getMessage(event);
+    },
+  };
 }
 
 /**
