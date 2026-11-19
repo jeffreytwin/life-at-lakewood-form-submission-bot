@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardelCommunityOf, cardelHomeType, elevationPictures, homesIn, normalizeCardelHome, readLiteral, streetOf, withElevations } from "@/lib/floorplans/extractors/cardel";
+import { cardelCommunityOf, cardelHomeType, elevationPictures, homePictures, homesIn, normalizeCardelHome, readLiteral, streetOf, withElevations } from "@/lib/floorplans/extractors/cardel";
 
 // The quick move-ins page's data as Cardel's page carried it (2026-09-27), cut down.
 const page = `<script>kit.start(app, element, { node_ids: [0, 18], data: [{type:"data",data:{user:null}},{type:"data",data:{homes:{
@@ -16,7 +16,7 @@ describe("Cardel's homes for sale from its quick move-ins page (North River Ranc
   });
 
   it("finds one community's homes and no other's", () => {
-    const homes = homesIn(page, "north-river-ranch");
+    const homes = homesIn(page, "north-river-ranch")!;
     expect(homes.map((h) => h.address)).toEqual([
       "10709 Wading River Ave Parrish, FL 34219 - Lot 17",
       "10705 Wading River Ave",
@@ -32,7 +32,7 @@ describe("Cardel's homes for sale from its quick move-ins page (North River Ranc
   });
 
   it("makes a quick move-in of each home still for sale, with its plan, page and pictures", () => {
-    const homes = homesIn(page, "north-river-ranch").map((h) => normalizeCardelHome(h, "florida", "north-river-ranch"));
+    const homes = homesIn(page, "north-river-ranch")!.map((h) => normalizeCardelHome(h, "florida", "north-river-ranch"));
     expect(homes[1]).toBeNull();
     expect(homes[0]).toMatchObject({
       planKey: "10709-wading-river-ave",
@@ -52,6 +52,41 @@ describe("Cardel's homes for sale from its quick move-ins page (North River Ranc
       ],
     });
     expect(homes[2]).toMatchObject({ name: "10721 Wading River Ave", relatedPlanName: "Timberland Paired", price: 457390 });
+  });
+
+  // The page as it carried its data from November 2026, cut down: one list of every community's homes.
+  const onelist = `return {type:"data",data:{homes:[{id:"4AIu",slug:"sylvan-10721-wading-river-ave-parrish-fl-34219-lot-14",name:"Sylvan",community:"north-river-ranch",communityName:"North River Ranch",address:"10721 Wading River Ave, Parrish, Fl 34219 - Lot 14",images:[{src:"https://storage.googleapis.com/cardel-website.appspot.com/public/posters/Sylvan_1024x1024.webp",srcset:"https://x 200w",alt:"Sylvan Coastal"}],price:404990,previousPrice:null,squareFootage:2104,bedrooms:3,bathrooms:2.5,status:"available",markerColors:a,homeTypes:[b]},
+{id:"H0pt",slug:"brighton-11830",name:"Brighton",community:"north-river-ranch",address:"11830 Richmond Trail, Parrish FL 34219 - Lot 91",images:[],price:479990,status:"sold"},
+{id:"wUqI",slug:"coral-7612",name:"Coral",community:"seaflower",address:"7612 Merritt Ave, Bradenton FL, 34210 - Lot 823 Block 1",images:[],price:500000,status:"available"}]}}`;
+
+  it("finds a community's homes on the one list of every community's (Jeff, 2026-11-19)", () => {
+    const homes = homesIn(onelist, "north-river-ranch")!;
+    expect(homes.map((h) => h.slug)).toEqual(["sylvan-10721-wading-river-ave-parrish-fl-34219-lot-14", "brighton-11830"]);
+    expect(normalizeCardelHome(homes[0], "florida", "north-river-ranch")).toMatchObject({
+      planKey: "10721-wading-river-ave",
+      price: 404990,
+      beds: "3",
+      baths: "2.5",
+      sqft: 2104,
+      relatedPlanName: "Sylvan",
+      sourceUrl: "https://www1.cardelhomes.com/florida/north-river-ranch/quick-move-ins/sylvan-10721-wading-river-ave-parrish-fl-34219-lot-14",
+      galleryImages: ["https://storage.googleapis.com/cardel-website.appspot.com/public/posters/Sylvan_1024x1024.webp"],
+    });
+    expect(normalizeCardelHome(homes[1], "florida", "north-river-ranch")).toBeNull();
+  });
+
+  it("tells a community with nothing for sale from a page it cannot read", () => {
+    expect(homesIn(onelist, "fieldstone")).toEqual([]);
+    expect(homesIn(page, "fieldstone")).toEqual([]);
+    // Neither shape: the run fails, and no home is queued for removal.
+    expect(homesIn("<html><script>kit.start(app, element, {data:[{type:\"data\",data:{inventory:[]}}]})</script></html>", "north-river-ranch")).toBeNull();
+  });
+
+  it("reads a home's poster and gallery off its own page", () => {
+    const own = `data:{home:{gallery:[{id:"f7",sort:0,image:{alt:"",src:{sm:"https://firebasestorage.googleapis.com/g_640x640.webp","2xl":"https://firebasestorage.googleapis.com/g_1536x1536.webp"}}}],poster:{src:{sm:"https://firebasestorage.googleapis.com/p_640x640.webp","2xl":"https://firebasestorage.googleapis.com/p_1536x1536.webp"},alt:"Front"}}}`;
+    expect(homePictures(own)).toEqual(["https://firebasestorage.googleapis.com/p_1536x1536.webp", "https://firebasestorage.googleapis.com/g_1536x1536.webp"]);
+    expect(homePictures(`data:{home:{gallery:[],name:"x"}}`)).toEqual([]);
+    expect(homePictures("<html></html>")).toBeNull();
   });
 
   it("reads the community from the connection's page", () => {

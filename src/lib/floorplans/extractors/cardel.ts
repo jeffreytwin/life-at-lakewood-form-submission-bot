@@ -14,6 +14,19 @@
 //     gallery:[…], pricing:{current:389990,previous:…}, status:"available", …}, …]
 //
 // and each home has its own page at /florida/<community>/quick-move-ins/<slug>.
+//
+// Since November 2026 the same page carries one list of every community's
+// homes instead, each naming its community:
+//
+//   homes:[{slug:"sylvan-10721-…", name:"Sylvan", community:"north-river-ranch",
+//     address:"10721 Wading River Ave, Parrish, Fl 34219 - Lot 14",
+//     images:[{src:"https://…", srcset:"…", alt:"Sylvan Coastal"}], price:404990,
+//     squareFootage:2104, bedrooms:3, bathrooms:2.5, status:"available", …}, …]
+//
+// The old key was gone, no homes were read, the run still counted as good
+// on its plans, and all six North River Ranch homes were queued for
+// removal while Cardel listed nine (Jeff, 2026-11-19). Both shapes are
+// read, and a page with neither fails the run rather than emptying a site.
 
 import { extractWithClaude, type ClaudeExtractParams } from "@/lib/floorplans/extractors/claude-extract";
 import { standardHomeType } from "@/lib/floorplans/standardize";
@@ -126,24 +139,57 @@ export interface CardelHome {
   name?: string;
   slug?: string;
   status?: string;
+  /** The community's slug, on the one list of every community's homes. */
+  community?: string;
   pricing?: { current?: number | null };
+  /** The price as the one list gives it. */
+  price?: number | null;
   poster?: { src?: Record<string, string> };
   gallery?: unknown[];
+  /** The pictures as the one list gives them, each an address. */
+  images?: { src?: string }[];
 }
 
-/** A community's homes as the quick move-ins page's data lists them. Exported for tests. */
-export function homesIn(html: string, community: string): CardelHome[] {
+const isHome = (h: unknown): h is CardelHome => Boolean(h) && typeof (h as CardelHome).address === "string";
+
+/**
+ * A community's homes as the quick move-ins page's data lists them: under
+ * the community's slug, or on the one list of every community's homes.
+ * Null where the page carries neither, which is a page this cannot read
+ * and not a community with nothing for sale. Exported for tests.
+ */
+export function homesIn(html: string, community: string): CardelHome[] | null {
   const key = `"${community}":[`;
   for (let at = html.indexOf(key); at >= 0; at = html.indexOf(key, at + 1)) {
     try {
       const { value } = readLiteral(html, at + key.length - 1);
       const list = Array.isArray(value) ? (value as CardelHome[]) : [];
-      if (list.some((h) => h && typeof h.address === "string")) return list;
+      if (list.some(isHome)) return list;
     } catch {
       // Not the data this is: the key again somewhere else on the page.
     }
   }
-  return [];
+  // Keyed by community, and this one not among them: it has nothing for sale.
+  const keyed = "homes:{";
+  for (let at = html.indexOf(keyed); at >= 0; at = html.indexOf(keyed, at + 1)) {
+    try {
+      const { value } = readLiteral(html, at + keyed.length - 1);
+      if (Object.values(value as object).some((list) => Array.isArray(list) && list.some(isHome))) return [];
+    } catch {
+      // Not the data this is.
+    }
+  }
+  const all = "homes:[";
+  for (let at = html.indexOf(all); at >= 0; at = html.indexOf(all, at + 1)) {
+    try {
+      const { value } = readLiteral(html, at + all.length - 1);
+      const list = Array.isArray(value) ? value.filter(isHome) : [];
+      if (list.some((h) => typeof h.community === "string")) return list.filter((h) => h.community === community);
+    } catch {
+      // Not the data this is.
+    }
+  }
+  return null;
 }
 
 const SUFFIX =
@@ -183,8 +229,10 @@ export function normalizeCardelHome(home: CardelHome, region: string, community:
   const pictures = [
     biggest(home.poster?.src),
     ...(home.gallery ?? []).map((g) => pictureOf(g)),
+    ...(home.images ?? []).map((g) => (typeof g?.src === "string" ? g.src : null)),
   ].filter((u, i, all): u is string => Boolean(u) && all.indexOf(u) === i);
-  const price = typeof home.pricing?.current === "number" && home.pricing.current > 0 ? home.pricing.current : null;
+  const asked = home.pricing?.current ?? home.price;
+  const price = typeof asked === "number" && asked > 0 ? asked : null;
   return {
     planKey: normKey(name),
     name,
@@ -204,6 +252,32 @@ export function normalizeCardelHome(home: CardelHome, region: string, community:
     blueprintImages: [],
     description: null,
   };
+}
+
+/**
+ * A home's pictures off its own page, its poster and then its gallery: the
+ * one list of every community's homes gives each home its poster alone,
+ * where 17017 Wading River Ave has fifty photographs. Null where the page
+ * carries neither, which is a page this cannot read. Pure; exported for
+ * tests.
+ */
+export function homePictures(html: string): string[] | null {
+  const literal = (key: string): unknown => {
+    for (let at = html.indexOf(key); at >= 0; at = html.indexOf(key, at + 1)) {
+      try {
+        return readLiteral(html, at + key.length - 1).value;
+      } catch {
+        // Not the data this is.
+      }
+    }
+    return undefined;
+  };
+  const poster = literal("poster:{") as { src?: Record<string, string> } | undefined;
+  const gallery = literal("gallery:[");
+  if (poster === undefined && gallery === undefined) return null;
+  return [biggest(poster?.src), ...(Array.isArray(gallery) ? gallery : []).map((g) => pictureOf(g))].filter(
+    (u, i, all): u is string => Boolean(u) && all.indexOf(u) === i
+  );
 }
 
 /** The region and community a Cardel community page names: ".../florida/north-river-ranch/homes". Exported for tests. */
@@ -331,9 +405,24 @@ export async function extractCardel(params: ClaudeExtractParams): Promise<Normal
     signal: AbortSignal.timeout(45_000),
   });
   if (!res.ok) throw new Error(`Cardel's quick move-ins page answered ${res.status}`);
-  const homes = homesIn(await res.text(), where.community)
-    .map((h) => normalizeCardelHome(h, where.region, where.community))
-    .filter((h): h is NormalizedPlan => h !== null);
+  const listed = homesIn(await res.text(), where.community);
+  // No homes data at all is a page this no longer reads, not a community
+  // with nothing for sale: the run fails, and nothing is removed.
+  if (!listed) throw new Error("Cardel's quick move-ins page carries no homes data this can read; its layout may have changed");
+  const homes: NormalizedPlan[] = [];
+  for (let i = 0; i < listed.length; i += 4) {
+    const read = await Promise.all(
+      listed.slice(i, i + 4).map(async (h) => {
+        const home = normalizeCardelHome(h, where.region, where.community);
+        // A home off the one list has its poster alone; its own page has the rest.
+        if (!home || h.gallery || !home.sourceUrl) return home;
+        const pictures = homePictures(await readCardelPage(home.sourceUrl));
+        if (!pictures) throw new Error(`Cardel's page for ${home.name} carries no pictures data this can read`);
+        return pictures.length ? { ...home, galleryImages: pictures } : home;
+      })
+    );
+    homes.push(...read.filter((h): h is NormalizedPlan => h !== null));
+  }
   // The plans' page offered no homes; any it did are left to this list.
   return [...plans.filter((p) => !p.quickMoveIn), ...homes];
 }
