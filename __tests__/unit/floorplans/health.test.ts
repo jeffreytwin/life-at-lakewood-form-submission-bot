@@ -61,6 +61,26 @@ describe("troubledConnections", () => {
     expect(t[1].status).toMatch(/^partial/);
   });
 
+  it("links the community's page on the builder's site, or the builder's site without one", () => {
+    const one = (extractor_params: { url?: string } | null, base_url: string | null) =>
+      troubledConnections([
+        {
+          name: "Toll Brothers",
+          active: true,
+          base_url,
+          fp_builder_communities: [
+            { id: "a", active: true, last_run_at: null, last_run_status: "error: 500", consecutive_failures: 1, run_started_at: "2026-11-19T15:00:00Z", extractor_params },
+          ],
+        },
+      ])[0];
+    expect(one({ url: "https://www.tollbrothers.com/isles" }, "https://www.tollbrothers.com")).toMatchObject({
+      url: "https://www.tollbrothers.com/isles",
+      runStartedAt: "2026-11-19T15:00:00Z",
+    });
+    expect(one(null, "https://www.tollbrothers.com").url).toBe("https://www.tollbrothers.com");
+    expect(one({}, null).url).toBeNull();
+  });
+
   it("is empty when every run succeeded", () => {
     expect(troubledConnections([{ name: "X", active: true, fp_builder_communities: [] }])).toEqual([]);
   });

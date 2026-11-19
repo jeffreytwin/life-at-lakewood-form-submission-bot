@@ -6,6 +6,7 @@ import { TOUR_REVIEW_LABEL } from "@/lib/floorplans/tour-review-label";
 import { ADJUSTMENT_LABEL } from "@/lib/floorplans/adjustment";
 import { approvalBlocker } from "@/lib/floorplans/approval";
 import { troubledConnections, type TroubledConnection } from "@/lib/floorplans/health";
+import { runGoing } from "@/lib/floorplans/run-state";
 import { HOME_TYPES, standardGarages } from "@/lib/floorplans/standardize";
 import { siteColors } from "@/app/dashboard/listings/format";
 import { FIRST_DIRECTION, priceOf, sortChanges, type ChangeSort, type ChangeSortKey } from "@/lib/floorplans/sort-changes";
@@ -404,6 +405,8 @@ export default function FloorPlansPage() {
   // The column the queue is sorted by, or the queue's own order (Jeff, 2026-09-26).
   const [sort, setSort] = useState<ChangeSort | null>(null);
   const [troubled, setTroubled] = useState<TroubledConnection[]>([]);
+  /** Connections whose Run was just clicked in the banner, until the run's own mark shows. */
+  const [startingRun, setStartingRun] = useState<Set<string>>(new Set());
   const coarse = useCoarsePointer();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -520,6 +523,29 @@ export default function FloorPlansPage() {
       )
     );
     fetchHealth();
+  }
+
+  /**
+   * Runs a connection from the banner (Jeff, 2026-11-19), as Run on
+   * Builder Connections does: the run goes on by itself, and the banner
+   * follows it from the connection's mark.
+   */
+  async function runTroubled(id: string) {
+    setStartingRun((s) => new Set(s).add(id));
+    try {
+      const res = await fetch(`/api/internal/floorplans/connections/${id}/run`, { method: "POST" });
+      if (!res.ok && res.status !== 409) {
+        const body = await res.json().catch(() => null);
+        alert(`Run could not start: ${body?.error ?? res.status}`);
+      }
+    } finally {
+      setStartingRun((s) => {
+        const next = new Set(s);
+        next.delete(id);
+        return next;
+      });
+      fetchHealth();
+    }
   }
 
   /** A plan that has played its way out leaves the list for good; the next read agrees. */
@@ -689,6 +715,22 @@ export default function FloorPlansPage() {
   function dropStaleReads() {
     freshFrom.current = fetchSeq.current + 1;
   }
+
+  // While a run of a connection in the banner is going, look again every
+  // few seconds; when the last one ends, read the queue too, for whatever
+  // the run put in it.
+  const bannerRunGoing = troubled.some((t) => runGoing(t.runStartedAt));
+  const bannerRunWasGoing = useRef(false);
+  useEffect(() => {
+    if (!bannerRunGoing) {
+      if (bannerRunWasGoing.current) fetchChanges();
+      bannerRunWasGoing.current = false;
+      return;
+    }
+    bannerRunWasGoing.current = true;
+    const timer = setInterval(fetchHealth, 5_000);
+    return () => clearInterval(timer);
+  }, [bannerRunGoing, fetchHealth, fetchChanges]);
 
   // Timers of rows still playing stop with the page.
   useEffect(() => {
@@ -1587,8 +1629,8 @@ export default function FloorPlansPage() {
           </div>
           <p className="text-muted text-sm" style={{ margin: "4px 0 0" }}>
             These connections failed their last run: an error, no plans at all, or far fewer plans than last time.
-            Nothing is removed from a site on such a run. Open the builder&apos;s page to see what changed, then Run again
-            from Builder Connections; a fixed page clears this on its next good run. Dismiss hides one until a newer run of it fails.
+            Nothing is removed from a site on such a run. Open the builder&apos;s page to see what changed, then Run it again
+            here; a fixed page clears this on its next good run. Dismiss hides one until a newer run of it fails.
           </p>
           {troubled.map((t) => (
             <div key={t.id} className="text-sm" style={{ marginTop: 8, display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -1598,8 +1640,29 @@ export default function FloorPlansPage() {
                   {" "}· {t.domain} · {t.failures} run{t.failures === 1 ? "" : "s"} in a row
                   {t.lastRunAt ? ` · ${new Date(t.lastRunAt).toLocaleString()}` : ""}
                 </span>
-                <div className="text-muted">{t.status}</div>
+                {t.url && (
+                  <>
+                    {" "}·{" "}
+                    <a href={t.url} target="_blank" rel="noreferrer" title={t.url}>
+                      builder&apos;s page ↗
+                    </a>
+                  </>
+                )}
+                <div className="text-muted">
+                  {runGoing(t.runStartedAt)
+                    ? `running since ${new Date(t.runStartedAt!).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}; it keeps going if you leave this page`
+                    : t.status}
+                </div>
               </div>
+              <button
+                className="btn btn-primary"
+                style={{ padding: "2px 10px" }}
+                onClick={() => runTroubled(t.id)}
+                disabled={startingRun.has(t.id) || runGoing(t.runStartedAt)}
+                title="Reads the builder's site again now, as Run on Builder Connections does"
+              >
+                {startingRun.has(t.id) || runGoing(t.runStartedAt) ? "Running…" : "Run"}
+              </button>
               <button
                 className="btn btn-secondary"
                 style={{ padding: "2px 10px" }}
