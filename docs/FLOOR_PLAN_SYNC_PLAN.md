@@ -360,6 +360,12 @@ nothing. No cutover report has ever been generated.
   recorded on the connection (`attention_dismissed_at`, migration 071,
   applied to production) and holds until a newer run of it fails; a Reset
   clears it. The nightly digest still names failing connections.
+- **The banner links the builder's page and runs the connection** (Jeff,
+  2026-11-19). Each row carries a link to the community's page on the
+  builder's site (the connection's source URL; the builder's own site
+  where that is not known yet) and a Run button, the same run as on
+  Builder Connections. The row shows the run going and the banner looks
+  again every few seconds until it ends, then reads the queue.
 - **Taylor Morrison, filled in** (Jeff, 2026-09-21, from Esplanade at
   Azario): the collection a plan belongs to sets its home type ("Twin
   Villa Collection" is attached villas, "The Towns at …" townhomes, the

@@ -15,12 +15,18 @@ export interface ConnectionHealthInput {
   consecutive_failures: number;
   /** When a person dismissed it from the banner; a failing run after that brings it back. */
   attention_dismissed_at?: string | null;
+  /** Set while a run of it is going (runs.ts). */
+  run_started_at?: string | null;
+  /** url: the community's page on the builder's site. */
+  extractor_params?: { url?: string } | null;
   fp_communities?: { name: string; fp_sites?: { domain: string } | null } | null;
 }
 
 export interface BuilderHealthInput {
   name: string;
   active: boolean;
+  /** The builder's own site, linked where a connection has no page of its own yet. */
+  base_url?: string | null;
   fp_builder_communities?: ConnectionHealthInput[];
 }
 
@@ -32,6 +38,10 @@ export interface TroubledConnection {
   status: string | null;
   failures: number;
   lastRunAt: string | null;
+  /** The community's page on the builder's site, or the builder's site where that is not known yet. */
+  url: string | null;
+  /** When the run now going started, for a page that follows it (runGoing). */
+  runStartedAt: string | null;
 }
 
 /** What a run cut off by the function's five minutes leaves as its status (runs.ts, sweepCutOffRuns). */
@@ -71,6 +81,8 @@ export function troubledConnections(builders: BuilderHealthInput[]): TroubledCon
         status: c.last_run_status,
         failures: c.consecutive_failures,
         lastRunAt: c.last_run_at,
+        url: c.extractor_params?.url || b.base_url || null,
+        runStartedAt: c.run_started_at ?? null,
       });
     }
   }
