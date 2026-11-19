@@ -33,7 +33,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { logger } from "@/lib/shared/logger";
 import { failedAt as failed, describeError } from "@/lib/shared/describe-error";
-import { listPageHtml, parseCards, parseHotelCards, priceOf } from "@/lib/floorplans/extractors/mpc-aggregator";
+import { listPageHtml, parseCards, parseHotelCards, priceOf, sameVillage, villageName } from "@/lib/floorplans/extractors/mpc-aggregator";
 import { loadVillagesWithTerms, selectAll } from "@/lib/listings/db";
 import { matchVillage as termMatch } from "@/lib/listings/classify";
 import type { LsSite, VillageWithTerms } from "@/lib/listings/types";
@@ -163,11 +163,23 @@ export function wellenParkHomes(html: string): Home[] {
     }));
 }
 
-/** Every home on Lakewood Ranch's home finder, by the village its card spells out. Pure; exported for tests. */
-export function lakewoodRanchHomes(html: string, origin: string): Home[] {
+/**
+ * Every home on Lakewood Ranch's home finder, by the village its card
+ * spells out: under the name the site already knows it by, where it is
+ * one of `known`, and without the finder's selling words otherwise. The
+ * finder renamed its villages and seven the site has had for months were
+ * raised as new: "New Homes of Wildblue at Waterside", "Star Farms Homes"
+ * (Jeff, 2026-11-19). Pure; exported for tests.
+ */
+export function lakewoodRanchHomes(html: string, origin: string, known: string[] = []): Home[] {
+  const names = new Map<string, string>();
+  const nameOf = (label: string) => {
+    if (!names.has(label)) names.set(label, known.find((k) => sameVillage(label, k)) ?? villageName(label));
+    return names.get(label)!;
+  };
   return parseHotelCards(html, origin)
     .filter((h) => h.village)
-    .map((h) => ({ neighborhood: h.village.replace(/&#8211;|&ndash;/g, "-"), builder: h.builder || null, price: h.plan.price }));
+    .map((h) => ({ neighborhood: nameOf(h.village), builder: h.builder || null, price: h.plan.price }));
 }
 
 interface MlsRow {
@@ -205,11 +217,11 @@ async function readMls(site: LsSite, villages: VillageWithTerms[]): Promise<Home
   return mlsHomes(rows, villages);
 }
 
-async function readSource(kind: SourceKind, site: LsSite | null, villages: VillageWithTerms[]): Promise<Home[]> {
+async function readSource(kind: SourceKind, site: LsSite | null, villages: VillageWithTerms[], known: string[] = []): Promise<Home[]> {
   if (kind === "mls") return site ? readMls(site, villages) : [];
   const url = SOURCES[kind].url!;
   const html = await listPageHtml(url);
-  const homes = kind === "wellenpark" ? wellenParkHomes(html) : lakewoodRanchHomes(html, new URL(url).origin);
+  const homes = kind === "wellenpark" ? wellenParkHomes(html) : lakewoodRanchHomes(html, new URL(url).origin, known);
   // An empty home finder is the page changing shape, not every home selling.
   if (!homes.length) throw new Error(`${SOURCES[kind].label} listed no homes at ${url}; the page may have changed`);
   return homes;
@@ -327,7 +339,7 @@ export async function scanNewNeighborhoods(): Promise<NewNeighborhoodScan> {
     });
     let sourceGroups: Sighting[] = [];
     try {
-      const homes = await readSource(kind, ctx.lsSite, ctx.villages);
+      const homes = await readSource(kind, ctx.lsSite, ctx.villages, [...ctx.communities.map((c) => c.name), ...ctx.villages.map((v) => v.name)]);
       sourceGroups = groupHomes(homes);
       result.sources.push({
         site: domain,

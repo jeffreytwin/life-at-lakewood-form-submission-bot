@@ -113,6 +113,15 @@ describe("lakewoodRanchHomes", () => {
     expect(placeKey(homes[0].neighborhood)).toBe(placeKey("Waterside - Wild Blue"));
     expect(homes[1]).toEqual({ neighborhood: "Hawkstone", builder: "Lee Wetherington Homes", price: 1_368_000 });
   });
+
+  it("files a village the finder renamed under the name the site knows it by (Jeff, 2026-11-19)", () => {
+    const homes = lakewoodRanchHomes(
+      `<div class="hotels">${hotel("Azure", "New Homes of Wildblue at Waterside")}${hotel("Oak", "Star Farms Homes")}${hotel("Pine", "New Homes of Hawkstone")}</div><footer></footer>`,
+      "https://lakewoodranch.com",
+      ["Waterside - Wild Blue", "Waterside - Shellstone", "Star Farms"]
+    );
+    expect(homes.map((h) => h.neighborhood)).toEqual(["Waterside - Wild Blue", "Star Farms", "Hawkstone"]);
+  });
 });
 
 describe("mlsHomes", () => {
