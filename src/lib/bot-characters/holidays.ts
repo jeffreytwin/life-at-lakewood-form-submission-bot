@@ -91,6 +91,10 @@ export function dressFor(
       const festive = lines.events[event.type];
       return festive && random() < 0.5 ? festive(event) : character.getMessage(event);
     },
+    holidayOfLine: (line, event) => {
+      const festive = event ? lines.events[event.type] : undefined;
+      return lines.welcome.includes(line) || (event && festive?.(event) === line) ? holiday : null;
+    },
   };
 }
 
