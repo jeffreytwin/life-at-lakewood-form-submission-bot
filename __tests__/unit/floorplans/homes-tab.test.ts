@@ -34,7 +34,7 @@ vi.mock("@/lib/floorplans/extractors/render", () => ({
   siteStopsBrowsers: () => false,
 }));
 
-import { extractWithRender, homesBehindTab } from "@/lib/floorplans/extractors/claude-extract";
+import { extractWithRender, homesBehindTab, readPlanPages } from "@/lib/floorplans/extractors/claude-extract";
 
 process.env.ANTHROPIC_API_KEY = "test";
 
@@ -93,6 +93,20 @@ describe("a community's homes behind its own tab", () => {
     expect(pressesOf()).toBe(2);
   });
 
+  it("loads it again when the page loaded itself again after the tab was pressed", async () => {
+    let loads = 0;
+    browser.render.mockImplementation(async (_u, opts) => {
+      if (!opts?.press) return { url, html: plansShown, pressed: null };
+      loads += 1;
+      // Rye Manor, the night of 11-20: pressed, and back showing its floor plans (render.ts, pressLost).
+      if (loads === 1) throw new Error(`${url}: the page loaded itself again after its "move-in ready" tab was pressed, and shows what it opens on`);
+      return { url, html: homesShown, pressed: "move-in ready" };
+    });
+    const plans = await extractWithRender({ url });
+    expect(plans.filter((p) => p.quickMoveIn).map((p) => p.name)).toEqual(["14518 Banks Court"]);
+    expect(pressesOf()).toBe(2);
+  });
+
   it("takes a page that drew with no such tab at its word, once", async () => {
     browser.render.mockResolvedValue({ url, html: plansShown, pressed: null });
     const plans = await extractWithRender({ url });
@@ -119,5 +133,65 @@ describe("homesBehindTab", () => {
     const read = vi.fn<() => Promise<string>>().mockResolvedValue("homes");
     expect(await homesBehindTab(read, url, Date.now() + 200_000)).toBe("homes");
     expect(read).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("a plan page still being read when the run's reading time is up", () => {
+  // Rye Manor's re-check, 11-20: its homes read, a plan's page still
+  // drawing seventy seconds past the reading time, and the run cut off at
+  // five minutes with nothing kept.
+  const listed = (name: string, sourceUrl: string, quickMoveIn = false) => ({
+    planKey: name.toLowerCase().replace(/\W+/g, "-"),
+    name,
+    price: 479950,
+    priceDisplay: "$479,950",
+    beds: "4",
+    baths: "3",
+    sqft: 2280,
+    garages: null,
+    homeType: null,
+    quickMoveIn,
+    relatedPlanName: null,
+    comingSoon: false,
+    sourceUrl,
+    description: null,
+    virtualTourUrl: null,
+    galleryImages: [],
+    blueprintImages: [],
+  });
+
+  it("is left unread, and the run keeps the plans and homes its list gave", async () => {
+    claude.create.mockImplementation(async () => ({
+      content: [{ type: "tool_use", id: "t", name: "report_plan_page", input: { beds: "4", sqft: 2280, price: 469950 } }],
+      usage: { input_tokens: 5_000, output_tokens: 300 },
+      stop_reason: "tool_use",
+    }));
+    const slow = `${url}darius/`;
+    let plans: Awaited<ReturnType<typeof readPlanPages>> = [];
+    vi.useFakeTimers();
+    try {
+      const read = vi.fn(async (pageUrl: string) => {
+        // A page that lost its connection, and takes two minutes giving up.
+        if (pageUrl === slow) await new Promise((done) => setTimeout(done, 120_000));
+        return { url: pageUrl, html: plansShown };
+      });
+      const reading = readPlanPages([listed("Slate", `${url}slate/`), listed("Darius", slow), listed("14518 Banks Court", `${url}slate/1/`, true)], {
+        read,
+        atOnce: 3,
+        // Time enough to start every page, and up long before the slow one answers.
+        runDeadline: Date.now() + 40_000,
+      });
+      let done = false;
+      void reading.then(() => (done = true));
+      await vi.advanceTimersByTimeAsync(39_000);
+      expect(done).toBe(false);
+      await vi.advanceTimersByTimeAsync(2_000);
+      expect(done).toBe(true);
+      plans = await reading;
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(plans.map((p) => p.name)).toEqual(["Slate", "Darius", "14518 Banks Court"]);
+    expect(plans.map((p) => p.pageUnread === true)).toEqual([false, true, false]);
   });
 });

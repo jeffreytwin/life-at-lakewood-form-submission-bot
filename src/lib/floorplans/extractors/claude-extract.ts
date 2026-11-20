@@ -2166,12 +2166,26 @@ export async function readPlanPages(
     ...turned([...listed.keys()].filter((i) => listed[i].quickMoveIn)),
   ];
   const deadline = opts.runDeadline ?? Infinity;
-  const readInOrder = await mapLimit(byPlansFirst, opts.atOnce, async (i) => {
-    const plan = listed[i];
-    if (!plan.sourceUrl || opts.listPages?.has(plan.sourceUrl)) return plan;
-    // Out of time: this page is left for the next run, and what an earlier
-    // run found on it stays (diff.ts).
-    if (Date.now() + PAGE_READ_MS > deadline) return { ...plan, pageUnread: true };
+  // A page still being read when the reading time is up is left unread,
+  // not waited for. A page is started only with PAGE_READ_MS left, but one
+  // of Richmond's that loses its connection takes a minute and more to
+  // give up drawing: Rye Manor's re-check found all four of its homes,
+  // was still drawing Darius seventy seconds past its reading time, and
+  // was cut off at five minutes with nothing kept — the three homes it had
+  // just read stayed queued for removal (Jeff, 2026-11-20).
+  let timesUp: ReturnType<typeof setTimeout> | undefined;
+  const late = Number.isFinite(deadline)
+    ? new Promise<null>((resolve) => {
+        timesUp = setTimeout(() => resolve(null), Math.max(0, deadline - Date.now()));
+      })
+    : null;
+  const byDeadline = async (plan: NormalizedPlan, reading: Promise<NormalizedPlan>): Promise<NormalizedPlan> => {
+    const read = late ? await Promise.race([reading, late]) : await reading;
+    if (read) return read;
+    logger.warn("Plan page was still being read when the run's reading time ran out", { planKey: plan.planKey, url: plan.sourceUrl });
+    return { ...plan, pageUnread: true };
+  };
+  const readOne = async (plan: NormalizedPlan): Promise<NormalizedPlan> => {
     try {
       // Drawn again only while the run has time for it.
       const renderAgain = opts.renderAgain
@@ -2190,7 +2204,16 @@ export async function readPlanPages(
       // What that page holds is unknown this run, not gone (diff.ts).
       return { ...plan, pageUnread: true };
     }
+  };
+  const readInOrder = await mapLimit(byPlansFirst, opts.atOnce, async (i) => {
+    const plan = listed[i];
+    if (!plan.sourceUrl || opts.listPages?.has(plan.sourceUrl)) return plan;
+    // Out of time: this page is left for the next run, and what an earlier
+    // run found on it stays (diff.ts).
+    if (Date.now() + PAGE_READ_MS > deadline) return { ...plan, pageUnread: true };
+    return byDeadline(plan, readOne(plan));
   });
+  clearTimeout(timesUp);
   const pages: NormalizedPlan[] = new Array(listed.length);
   byPlansFirst.forEach((i, n) => (pages[i] = readInOrder[n]));
 

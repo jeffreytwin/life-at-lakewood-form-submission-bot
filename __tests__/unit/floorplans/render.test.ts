@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pageIsBotCheck, pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
+import { pressLost } from "@/lib/floorplans/extractors/render";
 
 describe("pageLooksUnrendered", () => {
   it("knows a page that draws its plans after loading", () => {
@@ -43,5 +44,24 @@ describe("pageIsBotCheck", () => {
       "<title>Home Finder - Lakewood Ranch</title><script src='/cdn-cgi/challenge-platform/h/b/jsd/oneshot/d76008a69eab/x'></script>" +
       "<h1>Find Your perfect Florida home.</h1>";
     expect(pageIsBotCheck(page)).toBe(false);
+  });
+});
+
+describe("pressLost", () => {
+  const ryeManor = "https://www.richmondamerican.com/florida/tampa-new-homes/parrish/rye-manor/";
+
+  it("knows a page that loaded itself again after its tab was pressed (Rye Manor, 2026-11-20)", () => {
+    // The mark left before the press is gone, and the page is where it was.
+    expect(pressLost(ryeManor, ryeManor, false)).toBe(true);
+    expect(pressLost(ryeManor, `${ryeManor}#move-in-ready`, false)).toBe(true);
+  });
+
+  it("leaves a page that kept its mark alone", () => {
+    expect(pressLost(ryeManor, ryeManor, true)).toBe(false);
+    expect(pressLost(ryeManor, `${ryeManor}#move-in-ready`, true)).toBe(false);
+  });
+
+  it("takes a tab that went to an address of its own as the tab's page", () => {
+    expect(pressLost(ryeManor, `${ryeManor}?tab=move-in-ready`, false)).toBe(false);
   });
 });
