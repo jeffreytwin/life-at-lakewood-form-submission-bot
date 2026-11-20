@@ -195,6 +195,38 @@ async function pressOne(page: Page, labels: readonly string[]): Promise<string |
 }
 
 /**
+ * A mark left on the page before its tab is pressed, which a page that
+ * loads itself again does not keep. Richmond American's pages do just
+ * that when they lose their connection ("Session timed out. Reload to
+ * resume."): Rye Manor's did seventeen seconds after "Move-in ready" was
+ * pressed, came back showing its floor plans, and was read as a homes tab
+ * with no homes on it — the run queued all three of its homes for removal
+ * while Richmond listed four (Jeff, 2026-11-20).
+ */
+const PAGE_MARK = "__floorPlanTabPressed";
+
+const markPage = (page: Page) =>
+  page
+    .evaluate((mark: string) => {
+      (window as unknown as Record<string, unknown>)[mark] = true;
+    }, PAGE_MARK)
+    .catch(() => {});
+
+const pageMarked = (page: Page): Promise<boolean> =>
+  page.evaluate((mark: string) => (window as unknown as Record<string, unknown>)[mark] === true, PAGE_MARK).catch(() => false);
+
+/**
+ * Whether a pressed tab was lost to the page loading itself again: the
+ * mark is gone and the page is at the address it was pressed on. A tab
+ * that took the browser to an address of its own is the tab's page, and
+ * is read. Pure; exported for tests.
+ */
+export function pressLost(pressedAt: string, nowAt: string, marked: boolean): boolean {
+  const bare = (url: string) => url.split("#")[0];
+  return !marked && bare(pressedAt) === bare(nowAt);
+}
+
+/**
  * What a builder calls the tab that holds photographs, and what it calls
  * the tabs that hold something else. Richmond American's plan pages open
  * on "Interactive Tours", which is an embed, so the eleven interiors and
@@ -634,7 +666,10 @@ async function renderOnce(
     // A page that keeps part of itself behind a tab: press it, let what
     // it draws arrive, and walk the page again for what that loaded.
     let pressed: string | null = null;
+    let pressedAt: string | null = null;
     if (opts.press?.length) {
+      await markPage(page);
+      pressedAt = page.url();
       pressed = await pressOne(page, opts.press).catch(() => null);
       if (pressed) {
         await new Promise((done) => setTimeout(done, 3_000));
@@ -664,6 +699,11 @@ async function renderOnce(
       : 0;
 
     const html = await settledContent(page);
+    // The tab was pressed on a page that has since loaded itself again:
+    // what is showing is the page as it opens, not what the tab held.
+    if (pressed && pressedAt && pressLost(pressedAt, page.url(), await pageMarked(page))) {
+      throw new Error(`${url}: the page loaded itself again after its "${pressed}" tab was pressed, and shows what it opens on`);
+    }
     logger.info("Floor plan page rendered", { url, quiet, ready, waited, pressed, gathered, videos, bytes: html.length });
     return { url: page.url(), html, pressed, waited };
   } finally {
