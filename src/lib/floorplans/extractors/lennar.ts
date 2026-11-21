@@ -255,9 +255,29 @@ export function seriesLinks(html: string, communityPath: string): string[] {
 }
 
 /**
+ * The first level beneath a community of every link that goes deeper: the
+ * series a home's or a plan's address sits in. Stillwater's own page
+ * stopped linking to its Executive Homes once it had a plan of its own,
+ * and the only word of them left was the city's page listing their homes
+ * at ".../executive-homes/maria/23403600099" (2026-11-21). A plan's
+ * address is such a level too, where the community keeps its plans
+ * itself, so what is found is a place to look and not yet a series
+ * (isSeriesPage). Exported for tests.
+ */
+export function seriesAbove(html: string, communityPath: string): string[] {
+  const path = communityPath.replace(/\/+$/, "");
+  const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const out = new Set<string>();
+  for (const m of html.matchAll(new RegExp(`${escaped}/([a-z0-9][a-z0-9-]*)/[a-z0-9]`, "g"))) {
+    out.add(`https://www.lennar.com${path}/${m[1]}`);
+  }
+  return [...out];
+}
+
+/**
  * A community's series pages: those the page it landed on links to, and
  * those the city's page lists beneath it (a region's page may show only
- * some of them).
+ * some of them), then those either page only reaches into (seriesAbove).
  */
 async function seriesOf(target: string, landing: string): Promise<string[]> {
   const path = new URL(target).pathname.replace(/\/+$/, "");
@@ -273,7 +293,20 @@ async function seriesOf(target: string, landing: string): Promise<string[]> {
   } catch {
     // The landing page's links are all there is.
   }
-  return [...new Set([...seriesLinks(landing, path), ...seriesLinks(city, path)])];
+  return [...new Set([...seriesLinks(landing, path), ...seriesLinks(city, path), ...seriesAbove(landing, path), ...seriesAbove(city, path)])];
+}
+
+/**
+ * Whether a page is one of a community's series: a collection with an
+ * address of its own. A plan's page and a home's page sit one level
+ * beneath a community too, and carry their community at its own address,
+ * not theirs. Exported for tests.
+ */
+export function isSeriesPage(apollo: Apollo, pagePath: string): boolean {
+  const path = pagePath.replace(/\/+$/, "");
+  return Object.entries(apollo).some(
+    ([key, e]) => key.startsWith("CommunityType:") && String(e.url ?? "").replace(/\/+$/, "") === path
+  );
 }
 
 /** Runs `fn` over the items a few at a time, keeping order. */
@@ -353,12 +386,25 @@ export async function extractLennar(params: {
     const { apollo, path, html } = await apolloOf(target);
     const plans = plansFromPage(apollo, path);
     keep(plans);
-    if (plans.length) continue;
-    // Nothing here: the community has been split into series.
-    for (const series of (await seriesOf(target, html)).slice(0, 8)) {
+    // A community with no plans of its own has been split into series. One
+    // with plans may still keep a series beside them: Stillwater took the
+    // Richmond and its three homes onto its own page when the Manor Homes
+    // closed, and left the Executive Homes' nine on theirs, so a run that
+    // stopped at the first page read 4 of 13 (2026-11-21). The links
+    // beneath such a community are mostly its own plans' pages, so those
+    // are passed over and the rest are kept only where they are a series.
+    // What the community's page gave stands: a series adds the plans and
+    // homes the page lacks and replaces none, so a community that read
+    // whole from its own page reads as it did.
+    const own = new Set(plans.map((p) => p.sourceUrl));
+    const given = new Set(plans.map((p) => p.planKey));
+    const beneath = (await seriesOf(target, html)).filter((link) => !own.has(link)).slice(0, 8);
+    const split = plans.length === 0;
+    for (const series of beneath) {
       try {
         const page = await apolloOf(series);
-        keep(plansFromPage(page.apollo, page.path));
+        if (!split && !isSeriesPage(page.apollo, page.path)) continue;
+        keep(plansFromPage(page.apollo, page.path).filter((p) => !given.has(p.planKey)));
       } catch {
         // A series page that will not load is left for the next run.
       }
