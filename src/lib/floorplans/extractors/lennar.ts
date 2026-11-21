@@ -393,14 +393,18 @@ export async function extractLennar(params: {
     // stopped at the first page read 4 of 13 (2026-11-21). The links
     // beneath such a community are mostly its own plans' pages, so those
     // are passed over and the rest are kept only where they are a series.
+    // What the community's page gave stands: a series adds the plans and
+    // homes the page lacks and replaces none, so a community that read
+    // whole from its own page reads as it did.
     const own = new Set(plans.map((p) => p.sourceUrl));
+    const given = new Set(plans.map((p) => p.planKey));
     const beneath = (await seriesOf(target, html)).filter((link) => !own.has(link)).slice(0, 8);
     const split = plans.length === 0;
     for (const series of beneath) {
       try {
         const page = await apolloOf(series);
         if (!split && !isSeriesPage(page.apollo, page.path)) continue;
-        keep(plansFromPage(page.apollo, page.path));
+        keep(plansFromPage(page.apollo, page.path).filter((p) => !given.has(p.planKey)));
       } catch {
         // A series page that will not load is left for the next run.
       }
