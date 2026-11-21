@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { communityHomeType, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
+import { communityHomeType, isSeriesPage, planDrawings, planGallery, planPrice, plansFromPage, preferredPlan, seriesAbove, seriesLinks, withPlanPictures } from "@/lib/floorplans/extractors/lennar";
 import { filedAsBefore } from "@/lib/floorplans/home-identity";
 import { unaddressedHomesNamed } from "@/lib/floorplans/standardize";
 import { normKey, type NormalizedPlan } from "@/lib/floorplans/types";
@@ -193,6 +193,47 @@ describe("seriesLinks", () => {
 
   it("does not take a neighbouring community whose name begins the same", () => {
     expect(seriesLinks(`"${aurora}-west/townhomes"`, aurora)).toEqual([]);
+  });
+});
+
+describe("seriesAbove", () => {
+  const stillwater = "/new-homes/florida/sarasota-manatee/lakewood-ranch/stillwater-at-lakewood-ranch";
+
+  it("finds the series a home's address sits in, where nothing links to the series itself", () => {
+    const html = String.raw`{\"url\":\"${stillwater}/executive-homes/maria/23403600099\"}{"url":"${stillwater}/executive-homes/angelina/23403600098"}` +
+      `"${stillwater}/richmond/23404600089" <a href="${stillwater}/schedule-tour">`;
+    expect(seriesAbove(html, stillwater + "/")).toEqual([
+      `https://www.lennar.com${stillwater}/executive-homes`,
+      `https://www.lennar.com${stillwater}/richmond`,
+    ]);
+  });
+
+  it("does not take a neighbouring community whose name begins the same", () => {
+    expect(seriesAbove(`"${stillwater}-west/executive-homes/maria"`, stillwater)).toEqual([]);
+  });
+});
+
+// Stillwater (2026-11-21): the community's page took the Richmond onto
+// itself and left the Executive Homes on a page of their own.
+describe("isSeriesPage", () => {
+  const stillwater = "/new-homes/florida/sarasota-manatee/lakewood-ranch/stillwater-at-lakewood-ranch";
+
+  it("is a series where the page is a collection at its own address", () => {
+    const apollo = { "CommunityType:c_9235": { name: "Executive Homes", url: `${stillwater}/executive-homes` } };
+    expect(isSeriesPage(apollo, `${stillwater}/executive-homes`)).toBe(true);
+    expect(isSeriesPage(apollo, `${stillwater}/executive-homes/`)).toBe(true);
+  });
+
+  it("is not one for a plan's page, which carries its community at the community's address", () => {
+    const apollo = {
+      "CommunityType:c_9237": { name: "Stillwater at Lakewood Ranch", url: stillwater },
+      "PlanType:p_79270": { name: "Richmond", url: `${stillwater}/richmond` },
+    };
+    expect(isSeriesPage(apollo, `${stillwater}/richmond`)).toBe(false);
+  });
+
+  it("is not one for a page with no community on it", () => {
+    expect(isSeriesPage({}, `${stillwater}/schedule-tour`)).toBe(false);
   });
 });
 
