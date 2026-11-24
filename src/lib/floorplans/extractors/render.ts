@@ -34,6 +34,9 @@ const QUIET_MS = 15_000;
 /** How long a bot check in front of a page is given to let the browser through. */
 const BOT_CHECK_MS = 10_000;
 
+/** How many loads a page is given to get its live connection up before it is read as it stands. */
+const WIRE_LOADS = 6;
+
 let browser: Browser | null = null;
 let starting: Promise<Browser> | null = null;
 /** Runs using the browser now; it is closed when the last of them ends. */
@@ -224,6 +227,40 @@ const pageMarked = (page: Page): Promise<boolean> =>
 export function pressLost(pressedAt: string, nowAt: string, marked: boolean): boolean {
   const bare = (url: string) => url.split("#")[0];
   return !marked && bare(pressedAt) === bare(nowAt);
+}
+
+/**
+ * Whether a line a page wrote to its console says its live connection to
+ * its server did not come up on a WebSocket. Richmond American's pages
+ * are filled in over that connection, and its site answers from several
+ * servers that do not keep a visitor to one: the connection is agreed with
+ * one server, the WebSocket opens on another, and that one answers 404
+ * ("The connection could not be found on the server"). Half the loads of
+ * Rye Manor's page went that way (probed 2026-11-24, eight loads, four
+ * lost), each within six seconds of loading. A page left so either never
+ * draws ("Failed to start the circuit") or draws over polling, which the
+ * next server along drops in turn, and the page then loads itself again
+ * under whatever is reading it. Pure; exported for tests.
+ */
+export function wireLost(consoleLine: string): boolean {
+  return /Failed to start the transport 'WebSockets'|Failed to connect via WebSockets|Failed to start the circuit/i.test(consoleLine);
+}
+
+/**
+ * Whether the page stopped fetching within QUIET_MS, not waited for past
+ * the moment `stop` says there is no use: a page whose live connection
+ * failed is loaded again at once.
+ */
+async function wentQuiet(page: Page, stop: () => boolean): Promise<boolean> {
+  const idle = page
+    .waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: QUIET_MS })
+    .then(() => true)
+    .catch(() => false);
+  for (;;) {
+    const quiet = await Promise.race([idle, new Promise<null>((done) => setTimeout(() => done(null), POLL_MS))]);
+    if (quiet !== null) return quiet;
+    if (stop()) return false;
+  }
 }
 
 /**
@@ -604,35 +641,59 @@ async function renderOnce(
     // never goes quiet, and waiting out the whole navigation for each of
     // Richmond's plan pages cost half a minute a page (2026-09-23). The
     // facts check below is what says the page has drawn.
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAVIGATE_MS }).catch(async () => {
-      await page.waitForSelector("body", { timeout: 5_000 }).catch(() => {});
+    //
+    // And loaded again, at once, where its live connection did not come up
+    // (wireLost). Such a page was waited on for all of its settling time
+    // and handed over blank, thirty to eighty seconds a load, so a run had
+    // time for three or four loads of a page that fails half of them: Rye
+    // Manor's list page was blank seven loads running and two nightly runs
+    // read no plans (Jeff, 2026-11-24: "Richmond American Homes is
+    // failing"). The loss shows in six seconds, and a new load is as
+    // likely to connect as any.
+    const wire = { lost: false };
+    page.on("console", (message) => {
+      if (wireLost(message.text())) wire.lost = true;
     });
-    const quiet = await page
-      .waitForNetworkIdle({ idleTime: 500, concurrency: 2, timeout: QUIET_MS })
-      .then(() => true)
-      .catch(() => false);
-
-    // A bot check in front of the page sometimes lets a browser through
-    // after a few seconds; one that does not is not the page, and saying
-    // so leaves what an earlier run found alone (diff.ts, pageUnread).
-    const checkUntil = Date.now() + BOT_CHECK_MS;
-    while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() < checkUntil) {
-      await new Promise((done) => setTimeout(done, POLL_MS));
-    }
-    if (pageIsBotCheck(await page.content().catch(() => ""))) {
-      throw new StoppedAtBotCheck(`${url}: stopped at the site's bot check ("Just a moment...")`);
-    }
-
-    // And then the backstop, for a page still filling in after it went
-    // quiet: wait until it shows a price, a size or a bed count.
-    const until = Date.now() + SETTLE_MS;
+    let quiet = false;
     let ready = false;
-    while (Date.now() < until) {
-      if (!pageLooksUnrendered(await shownText(page).catch(() => ""))) {
-        ready = true;
-        break;
+    for (let load = 1; ; load++) {
+      wire.lost = false;
+      const loading =
+        load === 1
+          ? page.goto(url, { waitUntil: "domcontentloaded", timeout: NAVIGATE_MS })
+          : page.reload({ waitUntil: "domcontentloaded", timeout: NAVIGATE_MS });
+      await loading.catch(async () => {
+        await page.waitForSelector("body", { timeout: 5_000 }).catch(() => {});
+      });
+      const loadAgain = () => wire.lost && load < WIRE_LOADS && Date.now() + SETTLE_MS < deadline;
+      quiet = await wentQuiet(page, loadAgain);
+
+      if (!loadAgain()) {
+        // A bot check in front of the page sometimes lets a browser through
+        // after a few seconds; one that does not is not the page, and saying
+        // so leaves what an earlier run found alone (diff.ts, pageUnread).
+        const checkUntil = Date.now() + BOT_CHECK_MS;
+        while (pageIsBotCheck(await page.content().catch(() => "")) && Date.now() < checkUntil) {
+          await new Promise((done) => setTimeout(done, POLL_MS));
+        }
+        if (pageIsBotCheck(await page.content().catch(() => ""))) {
+          throw new StoppedAtBotCheck(`${url}: stopped at the site's bot check ("Just a moment...")`);
+        }
+
+        // And then the backstop, for a page still filling in after it went
+        // quiet: wait until it shows a price, a size or a bed count.
+        const until = Date.now() + SETTLE_MS;
+        ready = false;
+        while (Date.now() < until && !loadAgain()) {
+          if (!pageLooksUnrendered(await shownText(page).catch(() => ""))) {
+            ready = true;
+            break;
+          }
+          await new Promise((done) => setTimeout(done, POLL_MS));
+        }
       }
-      await new Promise((done) => setTimeout(done, POLL_MS));
+      if (!loadAgain()) break;
+      logger.warn("Floor plan page's live connection did not come up; loading it again", { url, load });
     }
     // A moment more once the facts appear: the first price on the page is
     // rarely the last, and the rest arrive in the same breath.
@@ -704,7 +765,7 @@ async function renderOnce(
     if (pressed && pressedAt && pressLost(pressedAt, page.url(), await pageMarked(page))) {
       throw new Error(`${url}: the page loaded itself again after its "${pressed}" tab was pressed, and shows what it opens on`);
     }
-    logger.info("Floor plan page rendered", { url, quiet, ready, waited, pressed, gathered, videos, bytes: html.length });
+    logger.info("Floor plan page rendered", { url, quiet, ready, wired: !wire.lost, waited, pressed, gathered, videos, bytes: html.length });
     return { url: page.url(), html, pressed, waited };
   } finally {
     await page.close().catch(() => {});
