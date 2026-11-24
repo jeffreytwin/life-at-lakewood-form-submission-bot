@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pageIsBotCheck, pageLooksUnrendered } from "@/lib/floorplans/extractors/rendered";
-import { pressLost } from "@/lib/floorplans/extractors/render";
+import { pressLost, wireLost } from "@/lib/floorplans/extractors/render";
 
 describe("pageLooksUnrendered", () => {
   it("knows a page that draws its plans after loading", () => {
@@ -63,5 +63,27 @@ describe("pressLost", () => {
 
   it("takes a tab that went to an address of its own as the tab's page", () => {
     expect(pressLost(ryeManor, `${ryeManor}?tab=move-in-ready`, false)).toBe(false);
+  });
+});
+
+describe("wireLost", () => {
+  // What Rye Manor's page wrote to its console on a load that never drew (2026-11-24).
+  it("knows a page whose WebSocket opened on a server that had not agreed the connection", () => {
+    expect(
+      wireLost(
+        "[2026-11-24T16:23:32.316Z] Error: Failed to start the transport 'WebSockets': Error: WebSocket failed to connect. The connection could not be found on the server, either the endpoint may not be a SignalR endpoint"
+      )
+    ).toBe(true);
+    expect(
+      wireLost("[2026-11-24T16:23:32.722Z] Warning: Failed to connect via WebSockets, using the Long Polling fallback transport. This may be due to a VPN or proxy blocking the connection.")
+    ).toBe(true);
+    expect(wireLost("[2026-11-24T16:23:33.095Z] Error: Failed to start the circuit.")).toBe(true);
+  });
+
+  it("leaves a page that connected alone, and what else a page says", () => {
+    expect(wireLost("[2026-11-24T16:24:21.821Z] Information: WebSocket connected to wss://www.richmondamerican.com/_blazor?id=jH76Ec5tbsRtBeoMEhGfoQ.")).toBe(false);
+    expect(wireLost("[2026-11-24T16:24:21.530Z] Information: Normalizing '_blazor' to 'https://www.richmondamerican.com/_blazor'.")).toBe(false);
+    expect(wireLost("Failed to load resource: net::ERR_FAILED")).toBe(false);
+    expect(wireLost("")).toBe(false);
   });
 });
